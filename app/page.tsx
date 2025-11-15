@@ -1,65 +1,170 @@
-import Image from "next/image";
+import Link from 'next/link';
+import ProductCard from '@/components/ProductCard';
+import ActressCard from '@/components/ActressCard';
+import CampaignCard from '@/components/CampaignCard';
+import {
+  getFeaturedProducts,
+  getNewProducts,
+  getFeaturedActresses,
+  getActiveCampaigns,
+  actressRankings,
+  genreRankings,
+} from '@/lib/mockData';
 
 export default function Home() {
+  const featuredProducts = getFeaturedProducts().slice(0, 3);
+  const newProducts = getNewProducts();
+  const featuredActresses = getFeaturedActresses(3);
+  const campaigns = getActiveCampaigns().slice(0, 3);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="bg-gray-50 min-h-screen">
+      {/* ヒーロー */}
+      <section className="bg-gray-950 text-white py-20">
+        <div className="container mx-auto px-4 flex flex-col gap-6 text-center max-w-4xl">
+          <p className="text-sm uppercase tracking-[0.7em] text-white/40">
+            Heavy Viewer Intelligence
           </p>
+          <h1 className="text-4xl md:text-5xl font-bold">
+            女優ベースで4プラットフォームを横断
+          </h1>
+          <p className="text-lg text-white/70">
+            DMM / APEX / SOKMIL / DTI のレビュー、ランキング、キャンペーンを一箇所に収集。
+            ヘビー視聴者の回遊を意識した構造でコンテンツを拡張できます。
+          </p>
+          <div className="flex flex-col md:flex-row gap-4 justify-center">
+            <Link
+              href="/actresses"
+              className="px-8 py-3 rounded-full bg-white text-gray-900 font-semibold"
+            >
+              女優図鑑を見る
+            </Link>
+            <Link
+              href="/categories"
+              className="px-8 py-3 rounded-full border border-white/40 text-white font-semibold hover:bg-white/10"
+            >
+              ジャンル別に探す
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* 女優ハイライト */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.4em] text-gray-500">Actress Picks</p>
+              <h2 className="text-3xl font-bold text-gray-900">注目女優の即戦力データ</h2>
+            </div>
+            <Link href="/actresses" className="text-sm font-semibold text-gray-600 hover:text-gray-900">
+              すべて見る →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {featuredActresses.map((actress) => (
+              <ActressCard key={actress.id} actress={actress} />
+            ))}
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* レビュー */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.4em] text-gray-500">Reviews</p>
+              <h2 className="text-3xl font-bold text-gray-900">最新レビューで比較</h2>
+            </div>
+            <Link href="/featured" className="text-sm font-semibold text-gray-600 hover:text-gray-900">
+              レビューページへ →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ランキング */}
+      <section className="py-16 bg-gray-100">
+        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <RankingCard title="女優ランキング" items={actressRankings} />
+          <RankingCard title="ジャンルランキング" items={genreRankings} />
+        </div>
+      </section>
+
+      {/* キャンペーン */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.4em] text-gray-500">Campaigns</p>
+              <h2 className="text-3xl font-bold text-gray-900">キャンペーン速報</h2>
+            </div>
+            <Link href="/new" className="text-sm font-semibold text-gray-600 hover:text-gray-900">
+              一覧を見る →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {campaigns.map((campaign) => (
+              <CampaignCard key={campaign.id} campaign={campaign} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 新着作品 */}
+      {newProducts.length > 0 && (
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4 space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm uppercase tracking-[0.4em] text-gray-500">New Drops</p>
+                <h2 className="text-3xl font-bold text-gray-900">直近追加の作品ログ</h2>
+              </div>
+              <Link href="/featured" className="text-sm font-semibold text-gray-600 hover:text-gray-900">
+                レビューに追加する →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {newProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+interface RankingProps {
+  title: string;
+  items: { id: string; position: number; title: string; metric: string; delta?: string }[];
+}
+
+function RankingCard({ title, items }: RankingProps) {
+  return (
+    <div className="bg-white rounded-3xl shadow-lg p-8">
+      <p className="text-sm uppercase tracking-[0.4em] text-gray-500">{title}</p>
+      <ul className="mt-4 space-y-4">
+        {items.map((item) => (
+          <li key={item.id} className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-3xl font-semibold text-gray-900">{item.position}</span>
+              <div>
+                <p className="text-lg font-semibold text-gray-900">{item.title}</p>
+                <p className="text-sm text-gray-500">{item.metric}</p>
+              </div>
+            </div>
+            {item.delta && <span className="text-sm font-semibold text-emerald-600">{item.delta}</span>}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
