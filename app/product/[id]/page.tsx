@@ -27,7 +27,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   }
 
   const provider = providerMeta[product.provider];
-  const actress = getActressById(product.actressId);
+  const actress = product.actressId ? getActressById(product.actressId) : undefined;
   const relatedProducts = getProductsByActress(product.actressId)
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
@@ -88,15 +88,19 @@ export default function ProductPage({ params }: ProductPageProps) {
                   </p>
                   <h1 className="text-3xl font-bold text-gray-900 mt-2">{product.title}</h1>
                   <p className="text-sm text-gray-500 mt-1">
-                    {product.releaseDate} / {product.duration}分 {product.format && `/ ${product.format}`}
+                  {product.releaseDate ?? '配信日未定'}
+                  {product.duration && ` / ${product.duration}分`}
+                  {product.format && ` / ${product.format}`}
                   </p>
                 </div>
+              {product.actressId && product.actressName && (
                 <Link
                   href={`/actress/${product.actressId}`}
                   className="text-sm font-semibold text-gray-600 hover:text-gray-900"
                 >
                   {product.actressName} →
                 </Link>
+              )}
               </div>
 
               {product.reviewHighlight && (

@@ -22,10 +22,10 @@ export interface Product {
   affiliateUrl: string;
   provider: ProviderId;
   providerLabel: string;
-  actressId: string;
-  actressName: string;
-  releaseDate: string;
-  duration: number; // minutes
+  actressId?: string;
+  actressName?: string;
+  releaseDate?: string;
+  duration?: number; // minutes
   format?: string;
   rating?: number;
   reviewCount?: number;

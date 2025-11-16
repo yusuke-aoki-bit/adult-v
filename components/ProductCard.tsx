@@ -47,7 +47,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div>
           <Link href={`/product/${product.id}`}>
             <p className="text-xs uppercase tracking-wide text-gray-400">
-              {product.actressName} / {product.releaseDate}
+              {product.actressName ?? '出演者情報'} / {product.releaseDate ?? '配信日未定'}
             </p>
             <h3 className="font-semibold text-xl leading-tight mt-1 line-clamp-2 hover:text-gray-900">
               {product.title}
@@ -75,11 +75,15 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {product.rating && (
+        {(product.rating || product.duration) && (
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span className="font-semibold text-gray-900">{product.rating.toFixed(1)}</span>
-            <span>({product.reviewCount ?? 0}件)</span>
-            <span>・ {product.duration}分</span>
+            {product.rating && (
+              <>
+                <span className="font-semibold text-gray-900">{product.rating.toFixed(1)}</span>
+                <span>({product.reviewCount ?? 0}件)</span>
+              </>
+            )}
+            {product.duration && <span>・ {product.duration}分</span>}
           </div>
         )}
 

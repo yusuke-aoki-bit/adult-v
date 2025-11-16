@@ -5,13 +5,14 @@ import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import { getProductsByCategory, getFeaturedActresses } from '@/lib/mockData';
 import { categories, getCategoryName } from '@/lib/categories';
+import type { ProductCategory } from '@/types/product';
 import Link from 'next/link';
 import ActressCard from '@/components/ActressCard';
 
 export default function CategoriesPage() {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get('category') || 'all';
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const initialCategory = (searchParams.get('category') || 'all') as ProductCategory;
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(initialCategory);
 
   const products = getProductsByCategory(selectedCategory);
   const highlightedActresses = getFeaturedActresses(3);
@@ -62,7 +63,7 @@ export default function CategoriesPage() {
         <section>
           <div className="mb-6">
             <p className="text-sm uppercase tracking-[0.4em] text-gray-500">
-              {getCategoryName(selectedCategory as any)}
+              {getCategoryName(selectedCategory)}
             </p>
             <h2 className="text-3xl font-bold mt-2 text-gray-900">
               {products.length}件の作品が見つかりました

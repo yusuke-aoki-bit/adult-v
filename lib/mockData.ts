@@ -6,6 +6,7 @@ import {
   ProviderMeta,
   RankingEntry,
 } from '@/types/product';
+import { apexProducts } from '@/lib/providers/apex';
 
 const now = new Date();
 function addDays(days: number) {
@@ -142,8 +143,8 @@ export const actresses: Actress[] = [
   },
 ];
 
-// 作品データ
-export const mockProducts: Product[] = [
+// 作品データ（手動キュレーション分）
+const curatedProducts: Product[] = [
   {
     id: 'dmm-hina-001',
     title: '4K没入インタラクティブ - 水城ひな',
@@ -369,6 +370,8 @@ export const mockProducts: Product[] = [
   },
 ];
 
+export const mockProducts: Product[] = [...apexProducts, ...curatedProducts];
+
 export const campaigns: Campaign[] = [
   {
     id: 'cmp-dmm-autumn',
@@ -475,7 +478,8 @@ export function getActressById(id: string): Actress | undefined {
   return actresses.find((actress) => actress.id === id);
 }
 
-export function getProductsByActress(actressId: string): Product[] {
+export function getProductsByActress(actressId?: string): Product[] {
+  if (!actressId) return [];
   return mockProducts.filter((product) => product.actressId === actressId);
 }
 
