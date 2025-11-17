@@ -1,4 +1,4 @@
-import apexSource from '@/data/apex.json';
+import { apexData } from '@/data/apex';
 import { Product, ProductCategory } from '@/types/product';
 
 interface ApexEntry {
@@ -17,7 +17,7 @@ interface ApexEntry {
 
 const DEFAULT_IMAGE = 'https://placehold.co/600x800/052e16/ffffff?text=APEX';
 
-const apexRaw = apexSource as ApexEntry[];
+const apexRaw = apexData as unknown as ApexEntry[];
 
 function mapCategory(raw?: string): ProductCategory {
   if (!raw) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import { getProductsByCategory, getFeaturedActresses } from '@/lib/mockData';
@@ -9,7 +9,7 @@ import type { ProductCategory } from '@/types/product';
 import Link from 'next/link';
 import ActressCard from '@/components/ActressCard';
 
-export default function CategoriesPage() {
+function CategoriesContent() {
   const searchParams = useSearchParams();
   const initialCategory = (searchParams.get('category') || 'all') as ProductCategory;
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(initialCategory);
@@ -115,5 +115,21 @@ export default function CategoriesPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+export default function CategoriesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 py-10">
+        <div className="container mx-auto px-4">
+          <div className="bg-white rounded-3xl shadow-xl p-8 text-center">
+            <p className="text-gray-600">読み込み中...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <CategoriesContent />
+    </Suspense>
   );
 }
