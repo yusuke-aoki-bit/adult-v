@@ -147,11 +147,6 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 <h1 className="text-4xl md:text-5xl font-bold mt-2">{actress.name}</h1>
                 <div className="flex flex-wrap gap-2 mt-4">
                   {actress.services
-                    .map((service) => {
-                      // 'apex'を'duga'にマッピング（データベースの移行対応）
-                      const mappedService = service === 'apex' ? 'duga' : service;
-                      return mappedService;
-                    })
                     .filter((service) => providerMeta[service]) // 存在しないプロバイダーを除外
                     .map((service) => {
                       const provider = providerMeta[service];
