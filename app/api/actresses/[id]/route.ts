@@ -5,17 +5,19 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    if (!params.id) {
+    const { id } = await params;
+
+    if (!id) {
       return NextResponse.json(
         { error: 'Actress ID is required' },
         { status: 400 }
       );
     }
 
-    const actress = await getActressById(params.id);
+    const actress = await getActressById(id);
 
     if (!actress) {
       return NextResponse.json(
@@ -26,7 +28,7 @@ export async function GET(
 
     return NextResponse.json(actress);
   } catch (error) {
-    console.error(`Error fetching actress ${params.id}:`, error);
+    console.error('Error fetching actress:', error);
     return NextResponse.json(
       { error: 'Failed to fetch actress' },
       { status: 500 }

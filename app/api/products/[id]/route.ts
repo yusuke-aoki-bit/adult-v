@@ -5,17 +5,19 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    if (!params.id) {
+    const { id } = await params;
+
+    if (!id) {
       return NextResponse.json(
         { error: 'Product ID is required' },
         { status: 400 }
       );
     }
 
-    const product = await getProductById(params.id);
+    const product = await getProductById(id);
 
     if (!product) {
       return NextResponse.json(
@@ -26,7 +28,7 @@ export async function GET(
 
     return NextResponse.json(product);
   } catch (error) {
-    console.error(`Error fetching product ${params.id}:`, error);
+    console.error('Error fetching product:', error);
     return NextResponse.json(
       { error: 'Failed to fetch product' },
       { status: 500 }
