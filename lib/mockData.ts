@@ -7,6 +7,7 @@ import {
   RankingEntry,
 } from '@/types/product';
 import { apexProducts } from '@/lib/providers/apex';
+import { providerMeta } from './providers';
 
 const now = new Date();
 function addDays(days: number) {
@@ -15,40 +16,9 @@ function addDays(days: number) {
   return date.toISOString().split('T')[0];
 }
 
-export const providerMeta: Record<ProviderId, ProviderMeta> = {
-  dmm: {
-    id: 'dmm',
-    label: 'DMM 動画',
-    accentClass: 'from-pink-600 to-orange-500',
-    textClass: 'text-pink-300',
-    description: '王道ラインナップとVR/4Kに強い国内最大級プラットフォーム',
-    siteUrl: 'https://www.dmm.co.jp/digital/videoa/',
-  },
-  apex: {
-    id: 'apex',
-    label: 'APEX',
-    accentClass: 'from-emerald-500 to-teal-500',
-    textClass: 'text-emerald-300',
-    description: '専属女優に強い高画質レーベル。女優別特集が豊富',
-    siteUrl: 'https://www.apex-pictures.com/',
-  },
-  sokmil: {
-    id: 'sokmil',
-    label: 'SOKMIL',
-    accentClass: 'from-purple-600 to-blue-600',
-    textClass: 'text-purple-300',
-    description: '熟女・マニアック系が充実。独占レンタルも多い',
-    siteUrl: 'https://www.sokmil.com/',
-  },
-  dti: {
-    id: 'dti',
-    label: 'DTI 見放題',
-    accentClass: 'from-red-600 to-rose-500',
-    textClass: 'text-rose-300',
-    description: '月額ストリーミング型。見放題派のヘビー視聴者向け',
-    siteUrl: 'https://www.dti.ne.jp/',
-  },
-};
+// プロバイダーメタデータをエクスポート（後方互換性のため）
+export { providerMeta } from './providers';
+// モジュール内で使用するためにもインポート
 
 export const actresses: Actress[] = [
   {
@@ -60,13 +30,13 @@ export const actresses: Actress[] = [
     heroImage: 'https://placehold.co/600x800/111827/ffffff?text=HINA',
     thumbnail: 'https://placehold.co/400x520/312e81/ffffff?text=Hina',
     primaryGenres: ['premium', 'vr', 'cosplay'],
-    services: ['dmm', 'apex'],
+    services: ['dmm', 'duga'],
     metrics: {
       releaseCount: 56,
       trendingScore: 92,
       fanScore: 95,
     },
-    highlightWorks: ['dmm-hina-001', 'apex-hina-az', 'dmm-hina-vr01'],
+    highlightWorks: ['dmm-hina-001', 'duga-hina-az', 'dmm-hina-vr01'],
     tags: ['4K', '独占', 'ハイブリッド'],
   },
   {
@@ -96,7 +66,7 @@ export const actresses: Actress[] = [
     heroImage: 'https://placehold.co/600x800/1b1c3c/ffffff?text=YURI',
     thumbnail: 'https://placehold.co/400x520/3730a3/ffffff?text=Yuri',
     primaryGenres: ['fetish', 'cosplay'],
-    services: ['apex', 'sokmil'],
+    services: ['duga', 'sokmil'],
     metrics: {
       releaseCount: 42,
       trendingScore: 85,
@@ -177,7 +147,7 @@ const curatedProducts: Product[] = [
     category: 'fetish',
     imageUrl: 'https://placehold.co/600x800/34d399/041d16?text=APEX+Hina',
     affiliateUrl: '#',
-    provider: 'apex',
+    provider: 'duga',
     providerLabel: 'APEX (DL配信)',
     actressId: 'mizuki-hina',
     actressName: '水城ひな',
@@ -258,7 +228,7 @@ const curatedProducts: Product[] = [
     category: 'fetish',
     imageUrl: 'https://placehold.co/600x800/10b981/041a12?text=Yuri',
     affiliateUrl: '#',
-    provider: 'apex',
+    provider: 'duga',
     providerLabel: 'APEX フルHD',
     actressId: 'shiina-yuri',
     actressName: '椎名ゆり',
@@ -386,12 +356,12 @@ export const campaigns: Campaign[] = [
   },
   {
     id: 'cmp-apex-core',
-    provider: 'apex',
+    provider: 'duga',
     title: 'APEX CORE女優別パック',
     description: '専属女優の最新作3本セットで25%OFF。フェチラインも対象。',
     highlight: '作品レビュー記事と連動するとCVが伸びやすいキャンペーン。',
     expiresAt: addDays(5),
-    ctaUrl: 'https://www.apex-pictures.com/campaign/core/',
+      ctaUrl: 'https://duga.jp/campaign/core/',
     badge: 'セット割',
     genres: ['premium', 'fetish'],
   },
@@ -463,43 +433,139 @@ export const genreRankings: RankingEntry[] = [
 ];
 
 // 女優関連ユーティリティ
-export function getActresses(): Actress[] {
-  return actresses;
+// データベースから取得する非同期関数
+export async function getActresses(): Promise<Actress[]> {
+  const { getActresses: getActressesFromDb } = await import('./db/queries');
+  const dbActresses = await getActressesFromDb();
+  
+  // モックデータと結合（重複を避ける）
+  const existingIds = new Set(dbActresses.map((a: Actress) => a.id));
+  const uniqueMockActresses = actresses.filter((a: Actress) => !existingIds.has(a.id));
+  
+  return [...dbActresses, ...uniqueMockActresses];
 }
 
-export function getFeaturedActresses(limit = 3): Actress[] {
+export async function getFeaturedActresses(limit = 3): Promise<Actress[]> {
+  if (typeof window === 'undefined') {
+    const { getFeaturedActresses: getFeaturedActressesFromDb } = await import('./db/queries');
+    const dbActresses = await getFeaturedActressesFromDb(limit);
+    return dbActresses;
+  }
+  
+  // クライアントサイドではモックデータのみ返す
   return actresses
     .slice()
     .sort((a, b) => b.metrics.trendingScore - a.metrics.trendingScore)
     .slice(0, limit);
 }
 
-export function getActressById(id: string): Actress | undefined {
+export async function getActressById(id: string): Promise<Actress | undefined> {
+  if (typeof window === 'undefined') {
+    const { getActressById: getActressByIdFromDb } = await import('./db/queries');
+    const dbActress = await getActressByIdFromDb(id);
+    
+    if (dbActress) {
+      return dbActress;
+    }
+  }
+  
+  // データベースにない場合はモックデータから検索
   return actresses.find((actress) => actress.id === id);
 }
 
-export function getProductsByActress(actressId?: string): Product[] {
+export async function getProductsByActress(actressId?: string): Promise<Product[]> {
   if (!actressId) return [];
+  
+  if (typeof window === 'undefined') {
+    const { getProductsByActress: getProductsByActressFromDb } = await import('./db/queries');
+    const dbProducts = await getProductsByActressFromDb(actressId);
+    
+    // モックデータも追加（重複を避ける）
+    const existingIds = new Set(dbProducts.map((p: Product) => p.id));
+    const uniqueMockProducts = mockProducts.filter((p: Product) => p.actressId === actressId && !existingIds.has(p.id));
+    
+    return [...dbProducts, ...uniqueMockProducts];
+  }
+  
+  // クライアントサイドではモックデータのみ返す
   return mockProducts.filter((product) => product.actressId === actressId);
 }
 
 // 作品関連
-export function getProductsByCategory(category: string): Product[] {
+export async function getProductsByCategory(category: string): Promise<Product[]> {
+  if (typeof window === 'undefined') {
+    const { getProducts: getProductsFromDb } = await import('./db/queries');
+    const dbProducts = await getProductsFromDb({
+      category: category === 'all' ? undefined : category,
+      limit: 1000,
+    });
+    
+    // モックデータも追加（重複を避ける）
+    const existingIds = new Set(dbProducts.map((p: Product) => p.id));
+    const filteredMock = category === 'all' 
+      ? mockProducts 
+      : mockProducts.filter((p: Product) => p.category === category);
+    const uniqueMockProducts = filteredMock.filter((p: Product) => !existingIds.has(p.id));
+    
+    return [...dbProducts, ...uniqueMockProducts];
+  }
+  
+  // クライアントサイドではモックデータのみ返す
   if (category === 'all') {
     return mockProducts;
   }
   return mockProducts.filter((product) => product.category === category);
 }
 
-export function getFeaturedProducts(): Product[] {
+export async function getFeaturedProducts(): Promise<Product[]> {
+  if (typeof window === 'undefined') {
+    const { getProducts: getProductsFromDb } = await import('./db/queries');
+    const dbProducts = await getProductsFromDb({
+      isFeatured: true,
+      limit: 100,
+    });
+    
+    // モックデータも追加（重複を避ける）
+    const existingIds = new Set(dbProducts.map((p: Product) => p.id));
+    const uniqueMockProducts = mockProducts.filter((p: Product) => p.isFeatured && !existingIds.has(p.id));
+    
+    return [...dbProducts, ...uniqueMockProducts];
+  }
+  
+  // クライアントサイドではモックデータのみ返す
   return mockProducts.filter((product) => product.isFeatured);
 }
 
-export function getNewProducts(): Product[] {
+export async function getNewProducts(): Promise<Product[]> {
+  if (typeof window === 'undefined') {
+    const { getProducts: getProductsFromDb } = await import('./db/queries');
+    const dbProducts = await getProductsFromDb({
+      isNew: true,
+      limit: 100,
+    });
+    
+    // モックデータも追加（重複を避ける）
+    const existingIds = new Set(dbProducts.map((p: Product) => p.id));
+    const uniqueMockProducts = mockProducts.filter((p: Product) => p.isNew && !existingIds.has(p.id));
+    
+    return [...dbProducts, ...uniqueMockProducts];
+  }
+  
+  // クライアントサイドではモックデータのみ返す
   return mockProducts.filter((product) => product.isNew);
 }
 
-export function getProductById(id: string): Product | undefined {
+export async function getProductById(id: string): Promise<Product | undefined> {
+  if (typeof window === 'undefined') {
+    const { getProductById: getProductByIdFromDb } = await import('./db/queries');
+    const dbProduct = await getProductByIdFromDb(id);
+    
+    if (dbProduct) {
+      return dbProduct;
+    }
+  }
+  
+  // データベースにない場合はモックデータから検索
   return mockProducts.find((product) => product.id === id);
 }
 

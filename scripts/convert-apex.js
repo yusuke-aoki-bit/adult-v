@@ -11,7 +11,8 @@ const iconv = require('iconv-lite');
 
 const INPUT = path.join(process.cwd(), 'data', 'apex.csv');
 const OUTPUT = path.join(process.cwd(), 'data', 'apex.json');
-const LIMIT = Number(process.env.APEX_LIMIT || '400');
+// 全件取り込み: LIMIT設定を削除（環境変数で制限可能）
+const LIMIT = process.env.APEX_LIMIT ? Number(process.env.APEX_LIMIT) : undefined;
 
 function main() {
   if (!fs.existsSync(INPUT)) {
@@ -33,19 +34,19 @@ function main() {
   }
 
   const rows = parsed.data.filter((row) => row['商品ID'] && row['タイトル']);
-  const trimmed = rows.slice(0, LIMIT);
+  const trimmed = LIMIT ? rows.slice(0, LIMIT) : rows;
 
   const simplified = trimmed.map((row) => ({
     id: row['商品ID']?.trim(),
     title: row['タイトル']?.trim(),
     description: row['紹介文']?.trim(),
-    label: row['レーベル']?.trim(),
-    maker: row['メーカー']?.trim(),
+    label: row['レーベル名']?.trim(),
+    maker: row['メーカー名']?.trim(),
     category: row['カテゴリ']?.trim(),
     price: row['価格']?.trim(),
-    sellType: row['販売種別']?.trim(),
-    actress: row['女優']?.trim(),
-    releaseDate: row['配信開始日']?.trim(),
+    sellType: row['レーベル種別']?.trim(),
+    actress: row['出演者']?.trim(), // CSVでは「出演者」カラム
+    releaseDate: row['公開開始日']?.trim(),
     url: row['商品URL']?.trim(),
   }));
 

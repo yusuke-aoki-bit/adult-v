@@ -3,14 +3,23 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/types/product';
-import { providerMeta } from '@/lib/mockData';
+import { providerMeta } from '@/lib/providers';
+import FavoriteButton from './FavoriteButton';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const provider = providerMeta[product.provider];
+  // 'apex'を'duga'にマッピング（データベース移行対応）
+  const providerId = product.provider as string;
+  const mappedProvider = (providerId === 'apex' ? 'duga' : providerId) as Product['provider'];
+  const provider = providerMeta[mappedProvider];
+  
+  if (!provider) {
+    console.error('Unknown provider:', product.provider, 'mapped to:', mappedProvider);
+    return null;
+  }
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300">
@@ -22,6 +31,9 @@ export default function ProductCard({ product }: ProductCardProps) {
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            loading="lazy"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
           />
         </Link>
         <div className="absolute top-4 left-4 flex gap-2">
@@ -35,6 +47,9 @@ export default function ProductCard({ product }: ProductCardProps) {
               NEW
             </span>
           )}
+        </div>
+        <div className="absolute top-4 right-4">
+          <FavoriteButton productId={product.id} />
         </div>
         {product.discount && (
           <span className="absolute bottom-4 right-4 bg-gray-900 text-white text-xs font-bold px-3 py-1 rounded-full">

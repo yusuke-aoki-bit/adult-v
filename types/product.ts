@@ -1,5 +1,5 @@
 // 取り扱いプロバイダ
-export type ProviderId = 'dmm' | 'apex' | 'sokmil' | 'dti';
+export type ProviderId = 'dmm' | 'duga' | 'sokmil' | 'dti';
 
 // 商品カテゴリ（ジャンル）の定義
 export type ProductCategory =
@@ -103,3 +103,13 @@ export interface DMMAffiliateLinkParams {
   affiliateId: string;
   service: string;
 }
+
+// ソートオプション
+export type SortOption = 
+  | 'releaseDateDesc'    // リリース日（新しい順）
+  | 'releaseDateAsc'     // リリース日（古い順）
+  | 'priceDesc'          // 価格（高い順）
+  | 'priceAsc'           // 価格（安い順）
+  | 'ratingDesc'         // 評価（高い順）
+  | 'ratingAsc'          // 評価（低い順）
+  | 'titleAsc';          // タイトル（あいうえお順）

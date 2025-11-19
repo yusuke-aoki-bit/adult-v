@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
-import { getProductsByCategory, getFeaturedActresses } from '@/lib/mockData';
+import FilterSortBar from '@/components/FilterSortBar';
+import { getFeaturedActresses } from '@/lib/mockData';
 import { categories, getCategoryName } from '@/lib/categories';
-import type { ProductCategory } from '@/types/product';
+import type { ProductCategory, Product, Actress } from '@/types/product';
 import Link from 'next/link';
 import ActressCard from '@/components/ActressCard';
 
@@ -13,9 +14,65 @@ function CategoriesContent() {
   const searchParams = useSearchParams();
   const initialCategory = (searchParams.get('category') || 'all') as ProductCategory;
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(initialCategory);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [highlightedActresses, setHighlightedActresses] = useState<Actress[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const products = getProductsByCategory(selectedCategory);
-  const highlightedActresses = getFeaturedActresses(3);
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      try {
+        // URLパラメータからソート・フィルター情報を取得
+        const sort = searchParams.get('sort') || 'releaseDateDesc';
+        const provider = searchParams.get('provider') || 'all';
+        const priceRange = searchParams.get('priceRange') || 'all';
+
+        // 価格範囲の解析
+        let minPrice: string | undefined;
+        let maxPrice: string | undefined;
+        if (priceRange && priceRange !== 'all') {
+          if (priceRange === '3000') {
+            minPrice = '3000';
+          } else {
+            const [min, max] = priceRange.split('-');
+            minPrice = min;
+            maxPrice = max;
+          }
+        }
+
+        // APIからデータを取得
+        const params = new URLSearchParams({
+          category: selectedCategory,
+          limit: '1000',
+          sort,
+        });
+        if (provider !== 'all') {
+          params.set('provider', provider);
+        }
+        if (minPrice !== undefined) {
+          params.set('minPrice', minPrice);
+        }
+        if (maxPrice !== undefined) {
+          params.set('maxPrice', maxPrice);
+        }
+
+        const [productsRes, actresses] = await Promise.all([
+          fetch(`/api/products?${params.toString()}`)
+            .then((res) => res.json())
+            .then((data) => data.products || []),
+          getFeaturedActresses(3),
+        ]);
+
+        setProducts(productsRes);
+        setHighlightedActresses(actresses);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [selectedCategory, searchParams]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-10">
@@ -70,8 +127,19 @@ function CategoriesContent() {
             </h2>
           </div>
 
-          {products.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* フィルター・ソートバー */}
+          <FilterSortBar
+            defaultSort="releaseDateDesc"
+            showProviderFilter={true}
+            showPriceFilter={true}
+          />
+
+          {loading ? (
+            <div className="bg-white rounded-lg shadow-md p-12 text-center">
+              <p className="text-gray-600">読み込み中...</p>
+            </div>
+          ) : products.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

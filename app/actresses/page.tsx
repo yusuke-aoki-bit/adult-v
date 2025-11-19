@@ -1,52 +1,132 @@
-import ActressCard from '@/components/ActressCard';
-import { categories } from '@/lib/categories';
-import { getActresses } from '@/lib/mockData';
-import Link from 'next/link';
+'use client';
 
-export default function ActressesPage() {
-  const actresses = getActresses();
+import { Suspense } from 'react';
+import Link from 'next/link';
+import ActressCard from '@/components/ActressCard';
+import Pagination from '@/components/Pagination';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import type { Actress } from '@/types/product';
+
+const PER_PAGE = 24;
+
+function ActressesContent() {
+  const searchParams = useSearchParams();
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const [actresses, setActresses] = useState<Actress[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    async function loadActresses() {
+      setLoading(true);
+      try {
+        // APIルートからデータを取得
+        const response = await fetch('/api/actresses?limit=10000');
+        const data = await response.json();
+        const allActresses = data.actresses || [];
+        
+        setTotal(allActresses.length);
+        
+        const start = (page - 1) * PER_PAGE;
+        const end = start + PER_PAGE;
+        const paginatedActresses = allActresses.slice(start, end);
+        setActresses(paginatedActresses);
+      } catch (error) {
+        console.error('Error loading actresses:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadActresses();
+  }, [page]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="container mx-auto px-4">
+          <div className="animate-pulse space-y-8">
+            <div className="h-12 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+              {[...Array(24)].map((_, i) => (
+                <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div className="h-48 bg-gray-200"></div>
+                  <div className="p-3">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto px-4 space-y-12">
-        <section className="bg-gray-900 text-white rounded-3xl p-10 shadow-2xl">
-          <p className="text-sm uppercase tracking-[0.4em] text-white/50">
-            Actress Intelligence Hub
-          </p>
-          <h1 className="text-4xl md:text-5xl font-bold mt-4 mb-6">
-            女優軸で配信サービスを横断
+      <div className="container mx-auto px-4">
+        <div className="mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            女優図鑑
           </h1>
-          <p className="text-lg text-white/70 max-w-3xl">
-            王道・フェチ・VR・見放題まで、各プラットフォームの主力女優をソート。レビューやキャンペーンとの連動で指名率を最大化します。
+          <p className="text-lg text-gray-600">
+            {total}名の女優を掲載中
           </p>
-        </section>
+        </div>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {actresses.map((actress) => (
-            <ActressCard key={actress.id} actress={actress} />
-          ))}
-        </section>
-
-        <section className="bg-white rounded-3xl shadow-xl p-8">
-          <h2 className="text-2xl font-semibold mb-4">ジャンルから逆引き</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories
-              .filter((category) => category.id !== 'all')
-              .map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/categories?category=${category.id}`}
-                  className="p-4 rounded-2xl border border-gray-200 hover:border-gray-900 hover:bg-gray-50 transition-all"
-                >
-                  <div className="text-3xl mb-2">{category.icon}</div>
-                  <p className="font-semibold">{category.name}</p>
-                  <p className="text-xs text-gray-500">{category.description}</p>
+        {actresses.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+              {actresses.map((actress) => (
+                <Link key={actress.id} href={`/actress/${actress.id}`} className="block">
+                  <ActressCard actress={actress} compact />
                 </Link>
               ))}
+            </div>
+            <Pagination
+              total={total}
+              page={page}
+              perPage={PER_PAGE}
+              basePath="/actresses"
+            />
+          </>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <p className="text-gray-600">女優が見つかりませんでした</p>
           </div>
-        </section>
+        )}
       </div>
     </div>
   );
 }
 
+export default function ActressesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 py-12">
+          <div className="container mx-auto px-4">
+            <div className="animate-pulse space-y-8">
+              <div className="h-12 bg-gray-200 rounded w-1/3 mb-4"></div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+                {[...Array(24)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div className="h-48 bg-gray-200"></div>
+                    <div className="p-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <ActressesContent />
+    </Suspense>
+  );
+}

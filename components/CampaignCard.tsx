@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Campaign } from '@/types/product';
-import { providerMeta } from '@/lib/mockData';
+import { providerMeta } from '@/lib/providers';
 
 interface Props {
   campaign: Campaign;

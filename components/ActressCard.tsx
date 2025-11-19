@@ -1,7 +1,6 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import { Actress } from '@/types/product';
-import { providerMeta } from '@/lib/mockData';
+import { providerMeta } from '@/lib/providers';
 
 interface Props {
   actress: Actress;
@@ -9,6 +8,52 @@ interface Props {
 }
 
 export default function ActressCard({ actress, compact = false }: Props) {
+  if (compact) {
+    // コンパクト表示: 名前と基本情報のみ
+    return (
+      <div className="bg-gray-900 text-white rounded-lg overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/20 transition-all">
+        <div className="relative">
+          <Image
+            src={actress.thumbnail || actress.heroImage}
+            alt={actress.name}
+            width={400}
+            height={520}
+            className="w-full h-48 object-cover opacity-90"
+            loading="lazy"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent" />
+          <div className="absolute bottom-2 left-2 right-2">
+            <h3 className="text-lg font-semibold truncate">{actress.name}</h3>
+            {actress.catchcopy && (
+              <p className="text-xs text-gray-300 truncate">{actress.catchcopy}</p>
+            )}
+          </div>
+        </div>
+        <div className="p-3 space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-400">出演数</span>
+            <span className="font-semibold">{actress.metrics.releaseCount}本</span>
+          </div>
+          {actress.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {actress.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs bg-white/10 text-gray-200 px-2 py-0.5 rounded"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 通常表示
   return (
     <div className="bg-gray-900 text-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-white/10">
       <div className="relative">
@@ -18,6 +63,9 @@ export default function ActressCard({ actress, compact = false }: Props) {
           width={800}
           height={1000}
           className="w-full h-80 object-cover opacity-90"
+          loading="lazy"
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent" />
         <div className="absolute bottom-4 left-4">
@@ -48,30 +96,19 @@ export default function ActressCard({ actress, compact = false }: Props) {
           <Stat label="支持率" value={`${actress.metrics.fanScore}%`} />
         </div>
 
-        {!compact && (
-          <>
-            <div className="flex flex-wrap gap-2">
-              {actress.services.map((service) => {
-                const meta = providerMeta[service];
-                return (
-                  <span
-                    key={service}
-                    className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${meta.accentClass}`}
-                  >
-                    {meta.label}
-                  </span>
-                );
-              })}
-            </div>
-
-            <Link
-              href={`/actress/${actress.id}`}
-              className="inline-flex items-center justify-center w-full rounded-xl bg-white/10 hover:bg-white/20 transition-colors py-3 text-sm font-semibold"
-            >
-              プロフィールと出演作を見る →
-            </Link>
-          </>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {actress.services.map((service) => {
+            const meta = providerMeta[service];
+            return (
+              <span
+                key={service}
+                className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${meta.accentClass}`}
+              >
+                {meta.label}
+              </span>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

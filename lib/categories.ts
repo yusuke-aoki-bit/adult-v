@@ -6,14 +6,14 @@ export const categories: CategoryInfo[] = [
     name: 'すべて',
     description: '全女優・全ジャンルの作品を表示',
     icon: '🎯',
-    exampleServices: ['dmm', 'apex', 'sokmil', 'dti'],
+    exampleServices: ['dmm', 'duga', 'sokmil', 'dti'],
   },
   {
     id: 'premium',
     name: '王道・人気女優',
     description: '大型専属女優のハイエンド作品を追跡',
     icon: '👑',
-    exampleServices: ['dmm', 'apex'],
+    exampleServices: ['dmm', 'duga'],
   },
   {
     id: 'mature',
@@ -27,7 +27,7 @@ export const categories: CategoryInfo[] = [
     name: 'マニアック',
     description: 'カテゴリ特化・フェチ系の深掘り特集',
     icon: '🌀',
-    exampleServices: ['apex', 'sokmil'],
+    exampleServices: ['duga', 'sokmil'],
   },
   {
     id: 'vr',
@@ -41,7 +41,7 @@ export const categories: CategoryInfo[] = [
     name: 'コスプレ・企画',
     description: '衣装・企画のバリエーション重視',
     icon: '🎭',
-    exampleServices: ['dmm', 'apex'],
+    exampleServices: ['dmm', 'duga'],
   },
   {
     id: 'indies',

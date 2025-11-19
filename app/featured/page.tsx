@@ -2,8 +2,11 @@ import ProductCard from '@/components/ProductCard';
 import { getFeaturedProducts } from '@/lib/mockData';
 import Link from 'next/link';
 
-export default function FeaturedPage() {
-  const featuredProducts = getFeaturedProducts();
+// キャッシュ: 300秒ごとに再検証（注目作品は更新頻度が高いため長めに設定）
+export const revalidate = 300;
+
+export default async function FeaturedPage() {
+  const featuredProducts = await getFeaturedProducts();
 
   return (
     <div className="min-h-screen bg-gray-50 py-10">
@@ -30,7 +33,7 @@ export default function FeaturedPage() {
           </div>
 
           {featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

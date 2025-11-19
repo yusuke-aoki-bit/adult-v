@@ -1,5 +1,6 @@
 import { apexData } from '@/data/apex';
 import { Product, ProductCategory } from '@/types/product';
+import { generateApexImageUrl } from './apex-images';
 
 interface ApexEntry {
   id: string;
@@ -15,7 +16,19 @@ interface ApexEntry {
   url?: string;
 }
 
-const DEFAULT_IMAGE = 'https://placehold.co/600x800/052e16/ffffff?text=APEX';
+const DEFAULT_IMAGE = 'https://placehold.co/600x800/052e16/ffffff?text=DUGA';
+
+/**
+ * 商品IDから画像URLを取得
+ * 生成に失敗した場合はデフォルト画像を返す
+ */
+function getImageUrl(productId: string): string {
+  try {
+    return generateApexImageUrl(productId);
+  } catch {
+    return DEFAULT_IMAGE;
+  }
+}
 
 const apexRaw = apexData as unknown as ApexEntry[];
 
@@ -68,15 +81,15 @@ export const apexProducts: Product[] = apexRaw.map((entry, index) => {
 
   return {
     id: entry.id,
-    title: entry.title ?? 'APEX作品',
-    description: entry.description ?? 'APEXアフィリエイトCSVから取得した作品です。',
+    title: entry.title ?? 'DUGA作品',
+    description: entry.description ?? 'DUGAアフィリエイトCSVから取得した作品です。',
     price: Number.isFinite(price) ? price : 0,
     category: mapCategory(entry.category),
-    imageUrl: DEFAULT_IMAGE,
+    imageUrl: getImageUrl(entry.id),
     affiliateUrl: entry.url ?? '#',
-    provider: 'apex',
-    providerLabel: 'APEX（CSV）',
-    actressId: slug ? `apex-${slug}` : undefined,
+    provider: 'duga',
+    providerLabel: 'DUGA（CSV）',
+    actressId: slug || undefined,
     actressName,
     releaseDate,
     duration: 120,
@@ -86,7 +99,7 @@ export const apexProducts: Product[] = apexRaw.map((entry, index) => {
     isFeatured: index < 12,
     isNew: isRecent(releaseDate),
     reviewHighlight: entry.description ? `${entry.description.slice(0, 70)}…` : undefined,
-    ctaLabel: 'APEX公式で見る',
+    ctaLabel: 'DUGA公式で見る',
   };
 });
 

@@ -41,3 +41,10 @@ yarn-error.log*
 next-env.d.ts
 data/*.csv
 data/*.json
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+data/apex.ts
+build-output.txt
+build.err
+build.log

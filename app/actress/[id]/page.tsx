@@ -1,37 +1,147 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
-import CampaignCard from '@/components/CampaignCard';
+import Pagination from '@/components/Pagination';
+import FilterSortBar from '@/components/FilterSortBar';
+import { providerMeta } from '@/lib/providers';
+import { getActressById, getProducts } from '@/lib/db/queries';
 import {
-  getActressById,
-  getProductsByActress,
-  getActiveCampaigns,
-  providerMeta,
-  getActresses,
-} from '@/lib/mockData';
+  generateBaseMetadata,
+  generatePersonSchema,
+  generateBreadcrumbSchema,
+  generateItemListSchema,
+} from '@/lib/seo';
+import { Metadata } from 'next';
+
+// キャッシュ: 600秒ごとに再検証（女優詳細は更新頻度が低め）
+export const revalidate = 600;
+export const dynamicParams = true;
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
+  searchParams: Promise<{
+    page?: string;
+    sort?: string;
+    provider?: string;
+    priceRange?: string;
+  }>;
 }
 
-export default function ActressDetailPage({ params }: PageProps) {
-  const actress = getActressById(params.id);
+const PER_PAGE = 12;
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  try {
+    const { id } = await params;
+    const actress = await getActressById(id);
+
+    if (!actress) {
+      return {};
+    }
+
+    return generateBaseMetadata(
+      `${actress.name} - 女優詳細`,
+      `${actress.name}のプロフィールと出演作品一覧。${actress.description} 出演作品${actress.metrics.releaseCount}本を掲載中。`,
+      actress.heroImage || actress.thumbnail,
+      `/actress/${actress.id}`,
+    );
+  } catch (error) {
+    console.error('Error generating metadata:', error);
+    return {};
+  }
+}
+
+export default async function ActressDetailPage({ params, searchParams }: PageProps) {
+  const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+  
+  // IDが正しくデコードされているか確認
+  const rawId = id;
+  const decodedId = decodeURIComponent(rawId);
+  
+  // まずデコードしたIDで検索
+  let actress = await getActressById(decodedId);
+  
+  // 見つからない場合は、元のIDで検索
+  if (!actress) {
+    actress = await getActressById(rawId);
+  }
 
   if (!actress) {
+    console.error(`Actress not found. Raw ID: ${rawId}, Decoded ID: ${decodedId}`);
     notFound();
   }
 
-  const works = getProductsByActress(actress.id);
-  const activeCampaigns = getActiveCampaigns().filter((campaign) =>
-    actress.services.includes(campaign.provider),
+  const page = parseInt(resolvedSearchParams.page || '1', 10);
+  const sortBy = (resolvedSearchParams.sort as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'ratingDesc' | 'ratingAsc' | 'titleAsc') || 'releaseDateDesc';
+  const provider = resolvedSearchParams.provider || undefined;
+  const priceRange = resolvedSearchParams.priceRange || undefined;
+
+  // データベースからフィルター・ソート適用して取得
+  let minPrice: number | undefined;
+  let maxPrice: number | undefined;
+  if (priceRange && priceRange !== 'all') {
+    if (priceRange === '3000') {
+      minPrice = 3000;
+    } else {
+      const [min, max] = priceRange.split('-').map(Number);
+      minPrice = min;
+      maxPrice = max;
+    }
+  }
+
+  const allWorks = await getProducts({
+    actressId: actress.id,
+    sortBy,
+    provider,
+    minPrice,
+    maxPrice,
+    limit: 1000,
+  });
+  
+  const total = allWorks.length;
+  const start = (page - 1) * PER_PAGE;
+  const end = start + PER_PAGE;
+  const works = allWorks.slice(start, end);
+
+  const personSchema = generatePersonSchema(
+    actress.name,
+    actress.description,
+    actress.heroImage || actress.thumbnail,
+    `/actress/${actress.id}`,
+  );
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'ホーム', url: '/' },
+    { name: '女優図鑑', url: '/actresses' },
+    { name: actress.name, url: `/actress/${actress.id}` },
+  ]);
+
+  const worksSchema = generateItemListSchema(
+    works.map((w) => ({ name: w.title, url: `/product/${w.id}` })),
+    `${actress.name}の出演作品`,
   );
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      {works.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(worksSchema) }}
+        />
+      )}
+      <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 py-10 space-y-12">
+        {/* 女優プロフィール */}
         <section className="bg-gray-900 text-white rounded-3xl overflow-hidden shadow-2xl">
           <div className="grid grid-cols-1 lg:grid-cols-2">
             <div className="relative">
@@ -47,17 +157,24 @@ export default function ActressDetailPage({ params }: PageProps) {
                 <p className="text-xs uppercase tracking-widest text-white/60">{actress.catchcopy}</p>
                 <h1 className="text-4xl md:text-5xl font-bold mt-2">{actress.name}</h1>
                 <div className="flex flex-wrap gap-2 mt-4">
-                  {actress.services.map((service) => {
-                    const provider = providerMeta[service];
-                    return (
-                      <span
-                        key={service}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${provider.accentClass}`}
-                      >
-                        {provider.label}
-                      </span>
-                    );
-                  })}
+                  {actress.services
+                    .map((service) => {
+                      // 'apex'を'duga'にマッピング（データベースの移行対応）
+                      const mappedService = service === 'apex' ? 'duga' : service;
+                      return mappedService;
+                    })
+                    .filter((service) => providerMeta[service]) // 存在しないプロバイダーを除外
+                    .map((service) => {
+                      const provider = providerMeta[service];
+                      return (
+                        <span
+                          key={service}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${provider.accentClass}`}
+                        >
+                          {provider.label}
+                        </span>
+                      );
+                    })}
                 </div>
               </div>
             </div>
@@ -85,59 +202,46 @@ export default function ActressDetailPage({ params }: PageProps) {
                   </span>
                 ))}
               </div>
-              <div className="flex gap-4">
-                <Link
-                  href="/featured"
-                  className="flex-1 text-center rounded-2xl bg-white text-gray-900 font-semibold py-3"
-                >
-                  最新レビューを見る
-                </Link>
-                <Link
-                  href="/new"
-                  className="flex-1 text-center rounded-2xl border border-white/40 text-white font-semibold py-3"
-                >
-                  対応キャンペーン
-                </Link>
-              </div>
             </div>
           </div>
         </section>
 
+        {/* 出演作品 */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Works</p>
-              <h2 className="text-3xl font-semibold text-gray-900">出演作品レビュー</h2>
+          <div className="mb-6">
+            <h2 className="text-3xl font-semibold text-gray-900">出演作品</h2>
+            <p className="text-gray-600 mt-2">{total}件の作品</p>
+          </div>
+          {total > 0 ? (
+            <>
+              <FilterSortBar
+                defaultSort="releaseDateDesc"
+                showProviderFilter={true}
+                showPriceFilter={true}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {works.map((work) => (
+                  <ProductCard key={work.id} product={work} />
+                ))}
+              </div>
+              {total > PER_PAGE && (
+                <Pagination
+                  total={total}
+                  page={page}
+                  perPage={PER_PAGE}
+                  basePath={`/actress/${actress.id}`}
+                />
+              )}
+            </>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+              <p className="text-gray-600">まだ作品が登録されていません</p>
             </div>
-            <Link
-              href={`/categories?category=all&actress=${actress.id}`}
-              className="text-sm font-semibold text-gray-600 hover:text-gray-900"
-            >
-              全作品を確認 →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {works.map((work) => (
-              <ProductCard key={work.id} product={work} />
-            ))}
-          </div>
+          )}
         </section>
-
-        {activeCampaigns.length > 0 && (
-          <section className="space-y-6">
-            <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Campaigns</p>
-              <h2 className="text-3xl font-semibold text-gray-900">対応キャンペーン</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {activeCampaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -148,11 +252,5 @@ function Metric({ label, value }: { label: string; value: string | number }) {
       <p className="text-2xl font-semibold text-white mt-1">{value}</p>
     </div>
   );
-}
-
-export function generateStaticParams() {
-  return getActresses().map((actress) => ({
-    id: actress.id,
-  }));
 }
 

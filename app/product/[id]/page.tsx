@@ -3,7 +3,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   getProductById,
-  mockProducts,
   getProductsByActress,
   getActressById,
   getCampaignsByProvider,
@@ -12,39 +11,119 @@ import {
 import { getCategoryName } from '@/lib/categories';
 import ProductCard from '@/components/ProductCard';
 import CampaignCard from '@/components/CampaignCard';
+import {
+  generateBaseMetadata,
+  generateProductSchema,
+  generateVideoObjectSchema,
+  generateBreadcrumbSchema,
+} from '@/lib/seo';
+import { Metadata } from 'next';
+
+// キャッシュ: 600秒ごとに再検証（商品詳細は更新頻度が低め）
+export const revalidate = 600;
+export const dynamicParams = true;
 
 interface ProductPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
-  const product = getProductById(params.id);
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const product = await getProductById(id);
+
+  if (!product) {
+    return {};
+  }
+
+  const actressName = product.actressName ? ` - ${product.actressName}` : '';
+
+  return generateBaseMetadata(
+    `${product.title}${actressName} - 作品詳細`,
+    product.reviewHighlight || product.description,
+    product.imageUrl,
+    `/product/${product.id}`,
+  );
+}
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { id } = await params;
+  const product = await getProductById(id);
 
   if (!product) {
     notFound();
   }
 
   const provider = providerMeta[product.provider];
-  const actress = product.actressId ? getActressById(product.actressId) : undefined;
-  const relatedProducts = getProductsByActress(product.actressId)
+  const actress = product.actressId ? await getActressById(product.actressId) : undefined;
+  const allRelatedProducts = await getProductsByActress(product.actressId);
+  const relatedProducts = allRelatedProducts
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
   const providerCampaigns = getCampaignsByProvider(product.provider).slice(0, 2);
 
+  const breadcrumbItems = [{ name: 'ホーム', url: '/' }];
+  if (product.actressId && product.actressName) {
+    breadcrumbItems.push({ name: product.actressName, url: `/actress/${product.actressId}` });
+  }
+  breadcrumbItems.push({ name: product.title, url: `/product/${product.id}` });
+
+  const breadcrumbSchema = generateBreadcrumbSchema(breadcrumbItems);
+
+  const productSchema = generateProductSchema(
+    product.title,
+    product.description,
+    product.imageUrl,
+    `/product/${product.id}`,
+    product.price,
+    product.providerLabel,
+    product.rating && product.reviewCount
+      ? {
+          ratingValue: product.rating,
+          reviewCount: product.reviewCount,
+        }
+      : undefined,
+  );
+
+  const videoSchema = generateVideoObjectSchema(
+    product.title,
+    product.description,
+    product.imageUrl,
+    product.affiliateUrl,
+    product.duration,
+    product.releaseDate,
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(videoSchema) }}
+      />
+      <div className="min-h-screen bg-gray-50 py-10">
       <div className="container mx-auto px-4 space-y-10">
         {/* パンくずリスト */}
         <nav className="text-sm text-gray-500 flex items-center gap-2">
           <Link href="/" className="hover:text-gray-900">
             ホーム
           </Link>
-          <span>/</span>
-          <Link href={`/categories?category=${product.category}`} className="hover:text-gray-900">
-            {getCategoryName(product.category)}
-          </Link>
+          {product.actressId && product.actressName && (
+            <>
+              <span>/</span>
+              <Link href={`/actress/${product.actressId}`} className="hover:text-gray-900">
+                {product.actressName}
+              </Link>
+            </>
+          )}
           <span>/</span>
           <span className="text-gray-900">{product.title}</span>
         </nav>
@@ -187,14 +266,16 @@ export default function ProductPage({ params }: ProductPageProps) {
           <section>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">同女優の他作品</h2>
-              <Link
-                href={`/categories?category=all&actress=${product.actressId}`}
-                className="text-sm font-semibold text-gray-600 hover:text-gray-900"
-              >
-                すべて見る →
-              </Link>
+              {product.actressId && (
+                <Link
+                  href={`/actress/${product.actressId}`}
+                  className="text-sm font-semibold text-gray-600 hover:text-gray-900"
+                >
+                  すべて見る →
+                </Link>
+              )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {relatedProducts.map((relatedProduct) => (
                 <ProductCard key={relatedProduct.id} product={relatedProduct} />
               ))}
@@ -214,7 +295,8 @@ export default function ProductPage({ params }: ProductPageProps) {
           </section>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -227,9 +309,3 @@ function Metric({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-// 動的ルートの生成
-export function generateStaticParams() {
-  return mockProducts.map((product) => ({
-    id: product.id,
-  }));
-}
