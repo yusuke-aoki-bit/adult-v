@@ -1,9 +1,9 @@
 import ProductCard from '@/components/ProductCard';
-import { getFeaturedProducts } from '@/lib/mockData';
+import { getFeaturedProducts } from '@/lib/db/queries';
 import Link from 'next/link';
 
-// キャッシュ: 300秒ごとに再検証（注目作品は更新頻度が高いため長めに設定）
-export const revalidate = 300;
+// 動的生成（DBから毎回取得）
+export const dynamic = 'force-dynamic';
 
 export default async function FeaturedPage() {
   const featuredProducts = await getFeaturedProducts();

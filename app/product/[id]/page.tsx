@@ -5,12 +5,12 @@ import {
   getProductById,
   getProductsByActress,
   getActressById,
-  getCampaignsByProvider,
-  providerMeta,
-} from '@/lib/mockData';
+} from '@/lib/db/queries';
+import { providerMeta } from '@/lib/providers';
 import { getCategoryName } from '@/lib/categories';
 import ProductCard from '@/components/ProductCard';
 import CampaignCard from '@/components/CampaignCard';
+import { JsonLD } from '@/components/JsonLD';
 import {
   generateBaseMetadata,
   generateProductSchema,
@@ -19,9 +19,8 @@ import {
 } from '@/lib/seo';
 import { Metadata } from 'next';
 
-// キャッシュ: 600秒ごとに再検証（商品詳細は更新頻度が低め）
-export const revalidate = 600;
-export const dynamicParams = true;
+// 動的生成（DBから毎回取得）
+export const dynamic = 'force-dynamic';
 
 interface ProductPageProps {
   params: Promise<{
@@ -61,7 +60,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const relatedProducts = allRelatedProducts
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
-  const providerCampaigns = getCampaignsByProvider(product.provider).slice(0, 2);
+  // キャンペーンデータは現在DBに未実装
+  const providerCampaigns: { id: string; title: string; description: string; provider: string; discountType: string; discountValue: number; endDate: string; url: string; }[] = [];
 
   const breadcrumbItems = [{ name: 'ホーム', url: '/' }];
   if (product.actressId && product.actressName) {
@@ -97,18 +97,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(videoSchema) }}
-      />
+      <JsonLD data={breadcrumbSchema} />
+      <JsonLD data={productSchema} />
+      <JsonLD data={videoSchema} />
       <div className="min-h-screen bg-gray-50 py-10">
       <div className="container mx-auto px-4 space-y-10">
         {/* パンくずリスト */}

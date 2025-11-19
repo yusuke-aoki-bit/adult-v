@@ -1,29 +1,29 @@
 import { NextResponse } from 'next/server';
-import { getActresses } from '@/lib/db/queries';
+import { getActresses, getFeaturedActresses } from '@/lib/db/queries';
+import { validatePagination, validateSearchQuery } from '@/lib/api-utils';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = Number(searchParams.get('limit')) || 100;
-    const offset = Number(searchParams.get('offset')) || 0;
-    const query = searchParams.get('query') || undefined;
 
-    // リクエストバリデーション
-    if (limit < 0 || limit > 1000) {
-      return NextResponse.json(
-        { error: 'Limit must be between 0 and 1000' },
-        { status: 400 }
-      );
+    // Check if requesting featured actresses
+    const featured = searchParams.get('featured') === 'true';
+    if (featured) {
+      const limit = Math.min(parseInt(searchParams.get('limit') || '3', 10), 20);
+      const actresses = await getFeaturedActresses(limit);
+      return NextResponse.json({ actresses, total: actresses.length });
     }
 
-    if (offset < 0) {
-      return NextResponse.json(
-        { error: 'Offset must be greater than or equal to 0' },
-        { status: 400 }
-      );
+    // Validate pagination
+    const paginationResult = validatePagination(searchParams);
+    if (!paginationResult.valid) {
+      return paginationResult.error;
     }
+    const { limit, offset } = paginationResult.params!;
+
+    const query = validateSearchQuery(searchParams.get('query'));
 
     const actresses = await getActresses({ limit, offset, query });
 

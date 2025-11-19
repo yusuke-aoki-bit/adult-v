@@ -1,8 +1,9 @@
 import { getDb } from './index';
 import { products, actresses } from './schema';
 import { eq, and, or, like, desc, asc, gte, lte } from 'drizzle-orm';
-import type { Product as ProductType, Actress as ActressType, ProductCategory, ProviderId } from '@/types/product';
+import type { Product as ProductType, Actress as ActressType, ProductCategory } from '@/types/product';
 import type { InferSelectModel } from 'drizzle-orm';
+import { mapLegacyProvider, mapLegacyServices } from '@/lib/provider-utils';
 
 type DbProduct = InferSelectModel<typeof products>;
 type DbActress = InferSelectModel<typeof actresses>;
@@ -243,6 +244,20 @@ export async function getActressById(id: string): Promise<ActressType | null> {
 }
 
 /**
+ * 新着商品を取得
+ */
+export async function getNewProducts(limit = 100): Promise<ProductType[]> {
+  return getProducts({ isNew: true, sortBy: 'releaseDateDesc', limit });
+}
+
+/**
+ * 注目商品を取得
+ */
+export async function getFeaturedProducts(limit = 100): Promise<ProductType[]> {
+  return getProducts({ isFeatured: true, sortBy: 'releaseDateDesc', limit });
+}
+
+/**
  * 注目の女優を取得
  */
 export async function getFeaturedActresses(limit = 3): Promise<ActressType[]> {
@@ -262,18 +277,32 @@ export async function getFeaturedActresses(limit = 3): Promise<ActressType[]> {
 }
 
 /**
+ * Valid product categories
+ */
+const VALID_CATEGORIES: ProductCategory[] = ['all', 'premium', 'mature', 'fetish', 'vr', 'cosplay', 'indies'];
+
+function isValidCategory(value: string): value is ProductCategory {
+  return VALID_CATEGORIES.includes(value as ProductCategory);
+}
+
+/**
  * データベースの商品をProduct型に変換
  */
 function mapProductToType(product: DbProduct): ProductType {
-  // 'apex'を'duga'にマッピング（データベース移行対応）
-  const mappedProvider = (product.provider === 'apex' ? 'duga' : product.provider) as ProviderId;
-  
+  // Map legacy provider using utility function
+  const mappedProvider = mapLegacyProvider(product.provider);
+
+  // Validate category
+  const category: ProductCategory = product.category && isValidCategory(product.category)
+    ? product.category
+    : 'premium';
+
   return {
     id: product.id,
     title: product.title,
     description: product.description || '',
     price: product.price || 0,
-    category: (product.category || 'premium') as ProductCategory,
+    category,
     imageUrl: product.imageUrl || 'https://placehold.co/600x800/052e16/ffffff?text=DUGA',
     affiliateUrl: product.affiliateUrl,
     provider: mappedProvider,
@@ -298,10 +327,14 @@ function mapProductToType(product: DbProduct): ProductType {
  * データベースの女優をActress型に変換
  */
 function mapActressToType(actress: DbActress): ActressType {
-  // 'apex'を'duga'にマッピング（データベース移行対応）
+  // Map legacy services using utility function
   const rawServices: string[] = actress.services ? JSON.parse(actress.services) : [];
-  const mappedServices: ProviderId[] = rawServices.map((s) => (s === 'apex' ? 'duga' : s as ProviderId));
-  
+  const mappedServices = mapLegacyServices(rawServices);
+
+  // Parse and validate primary genres
+  const rawGenres: string[] = actress.primaryGenres ? JSON.parse(actress.primaryGenres) : [];
+  const primaryGenres = rawGenres.filter(isValidCategory) as ProductCategory[];
+
   return {
     id: actress.id,
     name: actress.name,
@@ -309,7 +342,7 @@ function mapActressToType(actress: DbActress): ActressType {
     description: actress.description || '',
     heroImage: actress.heroImage || 'https://placehold.co/600x800/052e16/ffffff?text=Actress',
     thumbnail: actress.thumbnail || actress.heroImage || 'https://placehold.co/400x520/052e16/ffffff?text=Actress',
-    primaryGenres: actress.primaryGenres ? JSON.parse(actress.primaryGenres) : [],
+    primaryGenres,
     services: mappedServices,
     metrics: {
       releaseCount: actress.releaseCount || 0,

@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { getActresses } from '@/lib/mockData';
+import { getActresses } from '@/lib/db/queries';
 import { getProducts } from '@/lib/db/queries';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';

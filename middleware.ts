@@ -1,7 +1,54 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Simple in-memory rate limiting (for production, use Redis or similar)
+const rateLimit = new Map<string, { count: number; resetTime: number }>();
+
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 100; // max requests per window
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimit.get(ip);
+
+  if (!record || now > record.resetTime) {
+    rateLimit.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
+// Cleanup old entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of rateLimit.entries()) {
+    if (now > record.resetTime) {
+      rateLimit.delete(ip);
+    }
+  }
+}, 60 * 1000);
+
 export function middleware(request: NextRequest) {
+  // Rate limiting for API routes
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
+               request.headers.get('x-real-ip') ||
+               'unknown';
+
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+  }
+
   const ageVerified = request.cookies.get('age-verified')?.value === 'true';
   const isAgeVerificationPage = request.nextUrl.pathname === '/age-verification';
 

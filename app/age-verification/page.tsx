@@ -9,17 +9,25 @@ function AgeVerificationContent() {
   const [isVerifying, setIsVerifying] = useState(false);
   const redirectPath = searchParams.get('redirect') || '/';
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     setIsVerifying(true);
-    // Cookieに年齢確認済みフラグを設定（30日間有効）
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 30);
-    document.cookie = `age-verified=true; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
-    
-    // リダイレクト先に移動
-    setTimeout(() => {
-      router.push(redirectPath);
-    }, 100);
+
+    try {
+      // サーバーサイドでセキュアなCookieを設定
+      const response = await fetch('/api/age-verify', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        // リダイレクト先に移動
+        router.push(redirectPath);
+      } else {
+        setIsVerifying(false);
+      }
+    } catch (error) {
+      console.error('Age verification failed:', error);
+      setIsVerifying(false);
+    }
   };
 
   const handleReject = () => {

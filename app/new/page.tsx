@@ -1,9 +1,9 @@
 import ProductCard from '@/components/ProductCard';
-import { getNewProducts } from '@/lib/mockData';
+import { getNewProducts } from '@/lib/db/queries';
 import Link from 'next/link';
 
-// キャッシュ: 180秒ごとに再検証（新着作品は更新頻度が高い）
-export const revalidate = 180;
+// 動的生成（DBから毎回取得）
+export const dynamic = 'force-dynamic';
 
 export default async function NewPage() {
   const newProducts = await getNewProducts();

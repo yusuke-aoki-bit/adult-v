@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import ActressCard from '@/components/ActressCard';
-import { getActresses } from '@/lib/mockData';
+import { getActresses } from '@/lib/db/queries';
 import { generateBaseMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
 
@@ -11,8 +11,8 @@ export const metadata: Metadata = generateBaseMetadata(
   '/',
 );
 
-// キャッシュ: 60秒ごとに再検証（ISR）
-export const revalidate = 60;
+// 動的生成（DBから毎回取得）
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const actresses = await getActresses();

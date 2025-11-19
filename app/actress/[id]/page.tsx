@@ -3,6 +3,7 @@ import Image from 'next/image';
 import ProductCard from '@/components/ProductCard';
 import Pagination from '@/components/Pagination';
 import FilterSortBar from '@/components/FilterSortBar';
+import { JsonLD } from '@/components/JsonLD';
 import { providerMeta } from '@/lib/providers';
 import { getActressById, getProducts } from '@/lib/db/queries';
 import {
@@ -13,9 +14,8 @@ import {
 } from '@/lib/seo';
 import { Metadata } from 'next';
 
-// キャッシュ: 600秒ごとに再検証（女優詳細は更新頻度が低め）
-export const revalidate = 600;
-export const dynamicParams = true;
+// 動的生成（DBから毎回取得）
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{
@@ -125,20 +125,9 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
-      {works.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(worksSchema) }}
-        />
-      )}
+      <JsonLD data={personSchema} />
+      <JsonLD data={breadcrumbSchema} />
+      {works.length > 0 && <JsonLD data={worksSchema} />}
       <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 py-10 space-y-12">
         {/* 女優プロフィール */}

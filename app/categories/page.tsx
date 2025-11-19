@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import FilterSortBar from '@/components/FilterSortBar';
-import { getFeaturedActresses } from '@/lib/mockData';
+// getFeaturedActresses is now fetched via API
 import { categories, getCategoryName } from '@/lib/categories';
 import type { ProductCategory, Product, Actress } from '@/types/product';
 import Link from 'next/link';
@@ -56,12 +56,15 @@ function CategoriesContent() {
           params.set('maxPrice', maxPrice);
         }
 
-        const [productsRes, actresses] = await Promise.all([
+        const [productsRes, actressesRes] = await Promise.all([
           fetch(`/api/products?${params.toString()}`)
             .then((res) => res.json())
             .then((data) => data.products || []),
-          getFeaturedActresses(3),
+          fetch('/api/actresses?featured=true&limit=3')
+            .then((res) => res.json())
+            .then((data) => data.actresses || []),
         ]);
+        const actresses = actressesRes;
 
         setProducts(productsRes);
         setHighlightedActresses(actresses);
