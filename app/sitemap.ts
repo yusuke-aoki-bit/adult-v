@@ -4,15 +4,23 @@ import { getProducts } from '@/lib/db/queries';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
-// Sitemapのキャッシュ: 1日ごとに再生成
-export const revalidate = 86400;
+// 動的生成（DBから毎回取得）
+export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // データベースから女優と商品を取得
-  const [actresses, dbProducts] = await Promise.all([
-    getActresses(),
-    getProducts({ limit: 10000 }), // 最大10000件まで
-  ]);
+  let actresses: Awaited<ReturnType<typeof getActresses>> = [];
+  let dbProducts: Awaited<ReturnType<typeof getProducts>> = [];
+
+  try {
+    [actresses, dbProducts] = await Promise.all([
+      getActresses(),
+      getProducts({ limit: 10000 }), // 最大10000件まで
+    ]);
+  } catch (error) {
+    console.error('Error fetching data for sitemap:', error);
+    // DBエラーの場合は静的ページのみ返す
+  }
 
   // 静的ページ
   const staticPages: MetadataRoute.Sitemap = [
