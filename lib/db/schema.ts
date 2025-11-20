@@ -1,78 +1,165 @@
-import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
+import {
+  pgTable,
+  serial,
+  varchar,
+  text,
+  integer,
+  boolean,
+  timestamp,
+  date,
+  decimal,
+  jsonb,
+  index,
+  uniqueIndex,
+  primaryKey,
+} from 'drizzle-orm/pg-core';
 
 /**
- * 商品テーブル
+ * 作品マスタテーブル
+ * 名寄せ後の統合データを格納
  */
-export const products = sqliteTable(
+export const products = pgTable(
   'products',
   {
-    id: text('id').primaryKey(),
-    title: text('title').notNull(),
+    id: serial('id').primaryKey(),
+    normalizedProductId: varchar('normalized_product_id', { length: 100 }).unique().notNull(),
+    title: varchar('title', { length: 500 }).notNull(),
+    releaseDate: date('release_date'),
     description: text('description'),
-    category: text('category').notNull(),
-    price: integer('price').notNull().default(0),
-    imageUrl: text('image_url'),
-    affiliateUrl: text('affiliate_url').notNull(),
-    provider: text('provider').notNull(),
-    providerLabel: text('provider_label').notNull(),
-    actressId: text('actress_id'),
-    actressName: text('actress_name'),
-    releaseDate: text('release_date'),
-    duration: integer('duration'),
-    format: text('format'),
-    rating: real('rating'),
-    reviewCount: integer('review_count'),
-    reviewHighlight: text('review_highlight'),
-    ctaLabel: text('cta_label'),
-    tags: text('tags'), // JSON文字列として保存
-    isFeatured: integer('is_featured', { mode: 'boolean' }).default(false),
-    isNew: integer('is_new', { mode: 'boolean' }).default(false),
-    discount: integer('discount'),
-    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    duration: integer('duration'), // 再生時間（分）
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => ({
-    categoryIdx: index('category_idx').on(table.category),
-    providerIdx: index('provider_idx').on(table.provider),
-    actressIdIdx: index('actress_id_idx').on(table.actressId),
-    isFeaturedIdx: index('is_featured_idx').on(table.isFeatured),
-    isNewIdx: index('is_new_idx').on(table.isNew),
-    releaseDateIdx: index('release_date_idx').on(table.releaseDate),
+    normalizedIdIdx: index('idx_products_normalized_id').on(table.normalizedProductId),
+    titleIdx: index('idx_products_title').on(table.title),
+    releaseDateIdx: index('idx_products_release_date').on(table.releaseDate),
   }),
 );
 
 /**
- * 女優テーブル
+ * ASP別商品情報テーブル
+ * 各ASPごとの商品情報を保持
  */
-export const actresses = sqliteTable(
-  'actresses',
+export const productSources = pgTable(
+  'product_sources',
   {
-    id: text('id').primaryKey(),
-    name: text('name').notNull(),
-    catchcopy: text('catchcopy'),
-    description: text('description'),
-    heroImage: text('hero_image'),
-    thumbnail: text('thumbnail'),
-    primaryGenres: text('primary_genres'), // JSON文字列として保存
-    services: text('services'), // JSON文字列として保存
-    releaseCount: integer('release_count').default(0),
-    trendingScore: integer('trending_score').default(0),
-    fanScore: integer('fan_score').default(0),
-    highlightWorks: text('highlight_works'), // JSON文字列として保存
-    tags: text('tags'), // JSON文字列として保存
-    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+    id: serial('id').primaryKey(),
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    aspName: varchar('asp_name', { length: 50 }).notNull(), // 'DMM', 'MGS', 'DUGA' など
+    originalProductId: varchar('original_product_id', { length: 100 }).notNull(),
+    affiliateUrl: text('affiliate_url').notNull(),
+    price: integer('price'),
+    dataSource: varchar('data_source', { length: 10 }).notNull(), // 'API' or 'CSV'
+    lastUpdated: timestamp('last_updated').defaultNow(),
   },
   (table) => ({
-    nameIdx: index('name_idx').on(table.name),
-    trendingScoreIdx: index('trending_score_idx').on(table.trendingScore),
-    releaseCountIdx: index('release_count_idx').on(table.releaseCount),
+    productAspUnique: uniqueIndex('idx_sources_product_asp').on(table.productId, table.aspName),
+    productIdx: index('idx_sources_product').on(table.productId),
+    aspIdx: index('idx_sources_asp').on(table.aspName),
   }),
 );
 
+/**
+ * 動的情報キャッシュテーブル
+ * APIから取得した価格・在庫などの頻繁に変わる情報をキャッシュ
+ */
+export const productCache = pgTable(
+  'product_cache',
+  {
+    id: serial('id').primaryKey(),
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    aspName: varchar('asp_name', { length: 50 }).notNull(),
+    price: integer('price'),
+    salePrice: integer('sale_price'), // セール価格
+    inStock: boolean('in_stock').default(true),
+    affiliateUrl: text('affiliate_url'),
+    thumbnailUrl: text('thumbnail_url'),
+    sampleImages: jsonb('sample_images'), // サンプル画像のURL配列
+    pointRate: decimal('point_rate', { precision: 5, scale: 2 }), // ポイント還元率
+    cachedAt: timestamp('cached_at').defaultNow(),
+  },
+  (table) => ({
+    productAspCacheUnique: uniqueIndex('idx_cache_product_asp').on(table.productId, table.aspName),
+    freshnessIdx: index('idx_cache_freshness').on(table.productId, table.aspName, table.cachedAt),
+    productCacheIdx: index('idx_cache_product').on(table.productId),
+  }),
+);
+
+/**
+ * 出演者テーブル
+ */
+export const performers = pgTable(
+  'performers',
+  {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 200 }).unique().notNull(),
+    nameKana: varchar('name_kana', { length: 200 }), // 読み仮名
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    nameIdx: index('idx_performers_name').on(table.name),
+    kanaIdx: index('idx_performers_kana').on(table.nameKana),
+  }),
+);
+
+/**
+ * 作品-出演者 中間テーブル
+ */
+export const productPerformers = pgTable(
+  'product_performers',
+  {
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.productId, table.performerId] }),
+    productIdx: index('idx_pp_product').on(table.productId),
+    performerIdx: index('idx_pp_performer').on(table.performerId),
+  }),
+);
+
+/**
+ * タグ/ジャンルテーブル
+ */
+export const tags = pgTable(
+  'tags',
+  {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 100 }).unique().notNull(),
+    category: varchar('category', { length: 50 }), // 'genre', 'series', 'maker' など
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    nameIdx: index('idx_tags_name').on(table.name),
+    categoryIdx: index('idx_tags_category').on(table.category),
+  }),
+);
+
+/**
+ * 作品-タグ 中間テーブル
+ */
+export const productTags = pgTable(
+  'product_tags',
+  {
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    tagId: integer('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.productId, table.tagId] }),
+    productIdx: index('idx_pt_product').on(table.productId),
+    tagIdx: index('idx_pt_tag').on(table.tagId),
+  }),
+);
+
+// 型エクスポート
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
-export type Actress = typeof actresses.$inferSelect;
-export type NewActress = typeof actresses.$inferInsert;
-
-
+export type ProductSource = typeof productSources.$inferSelect;
+export type NewProductSource = typeof productSources.$inferInsert;
+export type ProductCache = typeof productCache.$inferSelect;
+export type NewProductCache = typeof productCache.$inferInsert;
+export type Performer = typeof performers.$inferSelect;
+export type NewPerformer = typeof performers.$inferInsert;
+export type Tag = typeof tags.$inferSelect;
+export type NewTag = typeof tags.$inferInsert;
