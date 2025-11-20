@@ -56,7 +56,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const provider = providerMeta[product.provider];
   const actress = product.actressId ? await getActressById(product.actressId) : undefined;
-  const allRelatedProducts = await getProductsByActress(product.actressId);
+  const allRelatedProducts = product.actressId
+    ? await getProductsByActress(product.actressId)
+    : [];
   const relatedProducts = allRelatedProducts
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
