@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import ActressCard from '@/components/ActressCard';
 import Pagination from '@/components/Pagination';
+import FilterSortBar from '@/components/FilterSortBar';
 import Link from 'next/link';
 import type { Product, Actress } from '@/types/product';
 
