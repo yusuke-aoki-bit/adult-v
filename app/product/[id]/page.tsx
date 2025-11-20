@@ -18,6 +18,7 @@ import {
   generateBreadcrumbSchema,
 } from '@/lib/seo';
 import { Metadata } from 'next';
+import type { Campaign } from '@/types/product';
 
 // 動的生成（DBから毎回取得）
 export const dynamic = 'force-dynamic';
@@ -63,7 +64,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
   // キャンペーンデータは現在DBに未実装
-  const providerCampaigns: { id: string; title: string; description: string; provider: string; discountType: string; discountValue: number; endDate: string; url: string; }[] = [];
+  const providerCampaigns: Campaign[] = [];
 
   const breadcrumbItems = [{ name: 'ホーム', url: '/' }];
   if (product.actressId && product.actressName) {
