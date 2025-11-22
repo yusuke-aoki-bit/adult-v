@@ -5,6 +5,8 @@ runConfig:
   maxInstances: 4
   cpu: 1
   memoryMiB: 512
+  cloudSqlInstances:
+    - adult-v:us-central1:adult-v
 
 env:
   - variable: NODE_ENV
@@ -13,7 +15,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: DATABASE_URL
-    value: postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres
+    value: postgresql://adult-v:AdultV2024!Secure@/cloudsql/adult-v:us-central1:adult-v/postgres
     availability:
       - RUNTIME
   - variable: NEXT_PUBLIC_SITE_URL
