@@ -1,11 +1,6 @@
-'use client';
-
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
 
-export default function Footer() {
-  const locale = useLocale();
-
+export default function Footer({ locale = 'ja' }: { locale?: string }) {
   return (
     <footer className="bg-gray-900 text-gray-300 mt-auto">
       <div className="container mx-auto px-4 py-8">
