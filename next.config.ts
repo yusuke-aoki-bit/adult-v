@@ -51,12 +51,20 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // 画像最適化設定
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+  // 圧縮を有効化
+  compress: true,
   // ビルド時間を短縮するための設定
   experimental: {
     // 静的ページ生成の並列処理を最適化
-    optimizePackageImports: ['drizzle-orm'],
+    optimizePackageImports: ['drizzle-orm', 'lucide-react'],
   },
+  // ReactのStrict Modeを有効化（開発時のバグ発見に役立つ）
+  reactStrictMode: true,
 };
 
 export default withNextIntl(nextConfig);
