@@ -15,7 +15,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: DATABASE_URL
-    value: postgresql://adult-v:AdultV2024!Secure@/cloudsql/adult-v:us-central1:adult-v/postgres
+    value: postgresql://adult-v:AdultV2024!Secure@/postgres?host=/cloudsql/adult-v:us-central1:adult-v
     availability:
       - RUNTIME
   - variable: NEXT_PUBLIC_SITE_URL
