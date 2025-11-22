@@ -20,7 +20,7 @@ export async function generateMetadata({
     t('title'),
     t('description'),
     undefined,
-    '/',
+    `/${locale}`,
   );
 }
 
