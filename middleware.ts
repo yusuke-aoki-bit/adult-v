@@ -61,9 +61,25 @@ export function middleware(request: NextRequest) {
   const ageVerified = request.cookies.get('age-verified')?.value === 'true';
   const isAgeVerificationPage = request.nextUrl.pathname === '/age-verification';
 
+  // SEOファイル（sitemap.xml, robots.txt）は検索エンジンのクローラーがアクセスできるよう常にアクセス可能
+  const isSEOFile = request.nextUrl.pathname === '/sitemap.xml' ||
+                    request.nextUrl.pathname === '/robots.txt';
+
+  if (isSEOFile) {
+    return NextResponse.next();
+  }
+
   // 年齢確認ページ自体は常にアクセス可能
   if (isAgeVerificationPage) {
     return NextResponse.next();
+  }
+
+  // 検索エンジンボット・PageSpeed Insightsは年齢確認をスキップ
+  const userAgent = request.headers.get('user-agent') || '';
+  const isBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|lighthouse|chrome-lighthouse|gtmetrix|pagespeed/i.test(userAgent);
+
+  if (isBot) {
+    return intlMiddleware(request);
   }
 
   // 年齢確認済みでない場合は年齢確認ページにリダイレクト
