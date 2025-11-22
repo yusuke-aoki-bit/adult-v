@@ -33,6 +33,9 @@ function getDb() {
         max: 20, // 最大接続数
         idleTimeoutMillis: 30000, // アイドル接続のタイムアウト
         connectionTimeoutMillis: 10000, // 接続タイムアウト
+        // PostgreSQL connection options
+        // This ensures client_encoding is set immediately on connection
+        options: '-c client_encoding=UTF8',
       });
 
       dbStore.instance = drizzle(dbStore.pool, { schema });

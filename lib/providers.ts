@@ -6,7 +6,7 @@ import type { ProviderId, ProviderMeta } from '@/types/product';
 export const providerMeta: Record<ProviderId, ProviderMeta> = {
   dmm: {
     id: 'dmm',
-    label: 'DMM 動画',
+    label: 'DMM',
     accentClass: 'from-pink-600 to-orange-500',
     textClass: 'text-pink-300',
     description: '王道ラインナップとVR/4Kに強い国内最大級プラットフォーム',
@@ -30,7 +30,7 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
   },
   dti: {
     id: 'dti',
-    label: 'DTI 見放題',
+    label: 'カリビアンコム',
     accentClass: 'from-red-600 to-rose-500',
     textClass: 'text-rose-300',
     description: '月額ストリーミング型。見放題派のヘビー視聴者向け',

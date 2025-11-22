@@ -22,9 +22,12 @@ export function mapLegacyProvider(provider: string): ProviderId {
     return 'duga';
   }
 
+  // Normalize to lowercase for case-insensitive matching
+  const normalizedProvider = provider.toLowerCase();
+
   // If valid provider, return it
-  if (isValidProviderId(provider)) {
-    return provider;
+  if (isValidProviderId(normalizedProvider)) {
+    return normalizedProvider;
   }
 
   // Default to 'duga' for unknown providers

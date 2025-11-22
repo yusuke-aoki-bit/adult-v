@@ -20,6 +20,7 @@ export default function Pagination({
 }: PaginationProps) {
   const searchParams = useSearchParams();
   const totalPages = Math.ceil(total / perPage);
+
   
   // クエリパラメータを保持
   const getUrl = (pageNum: number) => {
@@ -67,6 +68,18 @@ export default function Pagination({
 
   return (
     <nav className="flex items-center justify-center gap-2 mt-8">
+      <Link
+        href={getUrl(1)}
+        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+          page === 1
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none'
+            : 'bg-white text-gray-900 hover:bg-gray-100 border border-gray-200'
+        }`}
+        aria-disabled={page === 1}
+      >
+        最初
+      </Link>
+
       <Link
         href={getUrl(page - 1)}
         className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
@@ -117,6 +130,18 @@ export default function Pagination({
         aria-disabled={page >= totalPages}
       >
         次へ
+      </Link>
+
+      <Link
+        href={getUrl(totalPages)}
+        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+          page >= totalPages
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none'
+            : 'bg-white text-gray-900 hover:bg-gray-100 border border-gray-200'
+        }`}
+        aria-disabled={page >= totalPages}
+      >
+        最後
       </Link>
 
       <div className="ml-4 text-sm text-gray-600">

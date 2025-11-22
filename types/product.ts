@@ -14,6 +14,8 @@ export type ProductCategory =
 // 作品（商品）の型定義
 export interface Product {
   id: string;
+  normalizedProductId?: string; // 正規化された商品ID
+  originalProductId?: string; // メーカー品番（ASPごと）
   title: string;
   description: string;
   price: number;

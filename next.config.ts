@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
 const nextConfig: NextConfig = {
   images: {
@@ -23,7 +26,31 @@ const nextConfig: NextConfig = {
         protocol: 'http',
         hostname: 'duga.jp',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.heyzo.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.caribbeancompr.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.caribbeancompr.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.1pondo.tv',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.1pondo.tv',
+      },
     ],
+    // SVG画像を許可
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // ビルド時間を短縮するための設定
   experimental: {
@@ -32,4 +59,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

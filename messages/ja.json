@@ -1,0 +1,199 @@
+{
+  "common": {
+    "actress": "女優",
+    "actresses": "女優一覧",
+    "products": "作品",
+    "search": "検索",
+    "filter": "フィルター",
+    "sort": "並び替え",
+    "clear": "クリア",
+    "apply": "適用",
+    "page": "ページ",
+    "releaseCount": "出演数",
+    "items": "件",
+    "loading": "読み込み中",
+    "first": "最初",
+    "previous": "前へ",
+    "next": "次へ",
+    "last": "最後",
+    "etc": "その他",
+    "favorites": "お気に入り",
+    "noResults": "結果が見つかりませんでした",
+    "error": "エラーが発生しました",
+    "viewDetails": "詳細を見る",
+    "addToFavorites": "お気に入りに追加",
+    "removeFromFavorites": "お気に入りから削除",
+    "releaseDate": "配信日",
+    "duration": "再生時間",
+    "price": "価格",
+    "salePrice": "セール価格",
+    "free": "無料",
+    "viewProduct": "作品を見る",
+    "backToList": "一覧に戻る",
+    "relatedProducts": "関連作品",
+    "moreFrom": "{name}の他の作品"
+  },
+  "homepage": {
+    "title": "女優一覧 - アダルト配信ハブ",
+    "description": "人気女優から新進女優まで、あなた好みの女優を見つけよう。",
+    "actressCount": "{count}名の女優を掲載中",
+    "initialSearch": "頭文字で検索",
+    "filterSettings": "フィルター設定"
+  },
+  "header": {
+    "title": "ADULT VIEWER LAB",
+    "subtitle": "heavy user guide",
+    "menu": "メニュー",
+    "close": "閉じる"
+  },
+  "nav": {
+    "home": "ホーム",
+    "actresses": "女優",
+    "products": "作品",
+    "new": "新着",
+    "featured": "特集",
+    "categories": "カテゴリー",
+    "rankings": "ランキング",
+    "favorites": "お気に入り",
+    "search": "検索"
+  },
+  "footer": {
+    "description": "DMM / DUGA / SOKMIL / DTI を横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。",
+    "links": "リンク",
+    "legal": "法的情報",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約",
+    "contact": "お問い合わせ",
+    "copyright": "© {year} Adult Viewer Lab. All rights reserved.",
+    "affiliateNotice": "当サイトは成人向けコンテンツのアフィリエイトリンクを含みます。"
+  },
+  "filter": {
+    "genre": "ジャンル",
+    "site": "配信サイト",
+    "include": "対象（いずれかを含む）",
+    "exclude": "除外（含まない）",
+    "reset": "フィルターをリセット",
+    "noFiltersApplied": "フィルターが適用されていません"
+  },
+  "sort": {
+    "nameAsc": "名前（昇順）",
+    "nameDesc": "名前（降順）",
+    "productCountDesc": "出演数（多い順）",
+    "productCountAsc": "出演数（少ない順）",
+    "recent": "最近追加",
+    "releaseDateDesc": "配信日（新しい順）",
+    "releaseDateAsc": "配信日（古い順）",
+    "priceAsc": "価格（安い順）",
+    "priceDesc": "価格（高い順）",
+    "popularityDesc": "人気順"
+  },
+  "actress": {
+    "profile": "プロフィール",
+    "filmography": "出演作品",
+    "totalProducts": "全{count}作品",
+    "aliases": "別名",
+    "height": "身長",
+    "measurements": "スリーサイズ",
+    "birthday": "生年月日",
+    "bloodType": "血液型",
+    "genres": "ジャンル",
+    "noProducts": "作品がありません",
+    "loadMore": "もっと見る"
+  },
+  "product": {
+    "details": "作品詳細",
+    "description": "説明",
+    "cast": "出演者",
+    "director": "監督",
+    "studio": "スタジオ",
+    "label": "レーベル",
+    "series": "シリーズ",
+    "tags": "タグ",
+    "availableAt": "配信サイト",
+    "comparePrice": "価格比較",
+    "bestPrice": "最安値",
+    "sampleImages": "サンプル画像",
+    "sampleVideo": "サンプル動画",
+    "userReviews": "レビュー",
+    "rating": "評価"
+  },
+  "search": {
+    "placeholder": "女優名や作品名で検索...",
+    "searchResults": "検索結果",
+    "resultsFor": "「{query}」の検索結果",
+    "noResultsFor": "「{query}」に一致する結果が見つかりませんでした",
+    "suggestions": "検索のヒント",
+    "tryDifferentKeywords": "別のキーワードをお試しください",
+    "checkSpelling": "スペルを確認してください"
+  },
+  "productIdSearch": {
+    "title": "商品ID検索",
+    "placeholder": "商品IDを入力...",
+    "searchButton": "検索",
+    "searching": "検索中...",
+    "errorRequired": "商品IDを入力してください",
+    "errorNotFound": "商品が見つかりませんでした",
+    "errorGeneric": "検索中にエラーが発生しました",
+    "helperText": "正規化商品IDまたはASP固有の商品IDで検索できます"
+  },
+  "favorites": {
+    "title": "お気に入り",
+    "noFavorites": "お気に入りはまだありません",
+    "addFavorites": "気になる女優や作品をお気に入りに追加しましょう",
+    "actressesFavorites": "お気に入り女優",
+    "productsFavorites": "お気に入り作品"
+  },
+  "rankings": {
+    "title": "ランキング",
+    "weekly": "週間ランキング",
+    "monthly": "月間ランキング",
+    "allTime": "殿堂入り",
+    "topActresses": "人気女優ランキング",
+    "topProducts": "人気作品ランキング",
+    "newReleases": "新着ランキング"
+  },
+  "categories": {
+    "title": "カテゴリー",
+    "browseByGenre": "ジャンルから探す",
+    "allCategories": "すべてのカテゴリー"
+  },
+  "featured": {
+    "title": "特集",
+    "currentCampaigns": "開催中のキャンペーン",
+    "recommendations": "おすすめ特集",
+    "newArrivals": "新着特集"
+  },
+  "new": {
+    "title": "新着作品",
+    "latestReleases": "最新配信作品",
+    "thisWeek": "今週の新着",
+    "thisMonth": "今月の新着"
+  },
+  "ageVerification": {
+    "title": "年齢確認",
+    "message": "このサイトは成人向けコンテンツを含みます。",
+    "question": "あなたは18歳以上ですか？",
+    "confirm": "はい、18歳以上です",
+    "deny": "いいえ",
+    "warning": "18歳未満の方はアクセスできません。"
+  },
+  "error": {
+    "pageNotFound": "ページが見つかりません",
+    "serverError": "サーバーエラーが発生しました",
+    "tryAgain": "もう一度お試しください",
+    "goHome": "ホームに戻る",
+    "unexpectedError": "予期しないエラーが発生しました",
+    "errorOccurred": "エラーが発生しました",
+    "errorMessage": "申し訳ございません。予期しないエラーが発生しました。",
+    "errorDetails": "エラー詳細:",
+    "retry": "もう一度試す",
+    "criticalError": "重大なエラーが発生しました",
+    "criticalErrorMessage": "アプリケーションで重大なエラーが発生しました。ページを再読み込みしてください。",
+    "reloadPage": "ページを再読み込み"
+  },
+  "affiliate": {
+    "disclosure": "アフィリエイト広告について",
+    "disclaimerShort": "当サイトはアフィリエイト広告を利用しています。",
+    "disclaimerFull": "当サイトは、Amazon.co.jpを宣伝しリンクすることによってサイトが紹介料を獲得できる手段を提供することを目的に設定されたアフィリエイトプログラムである、Amazonアソシエイト・プログラムの参加者です。また、DMM、DUGA、SOKMIL、DTIのアフィリエイトプログラムにも参加しています。"
+  }
+}

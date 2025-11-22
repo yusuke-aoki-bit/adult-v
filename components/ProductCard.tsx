@@ -2,31 +2,34 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
 import { Product } from '@/types/product';
-import { providerMeta } from '@/lib/providers';
+import { normalizeImageUrl } from '@/lib/image-utils';
 import FavoriteButton from './FavoriteButton';
 
 interface ProductCardProps {
   product: Product;
 }
 
+const PLACEHOLDER_IMAGE = 'https://placehold.co/400x560/1f2937/ffffff?text=No+Image';
+
 export default function ProductCard({ product }: ProductCardProps) {
-  // 'apex'を'duga'にマッピング（データベース移行対応）
-  const providerId = product.provider as string;
-  const mappedProvider = (providerId === 'apex' ? 'duga' : providerId) as Product['provider'];
-  const provider = providerMeta[mappedProvider];
-  
-  if (!provider) {
-    console.error('Unknown provider:', product.provider, 'mapped to:', mappedProvider);
-    return null;
-  }
+  const [imgSrc, setImgSrc] = useState(normalizeImageUrl(product.imageUrl));
+  const [hasError, setHasError] = useState(false);
+
+  const handleImageError = () => {
+    if (!hasError) {
+      setHasError(true);
+      setImgSrc(PLACEHOLDER_IMAGE);
+    }
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300">
       <div className="relative h-72">
-        <Link href={`/product/${product.id}`}>
+        <Link href={`/products/${product.id}`}>
           <Image
-            src={product.imageUrl}
+            src={imgSrc}
             alt={product.title}
             fill
             className="object-cover"
@@ -34,22 +37,18 @@ export default function ProductCard({ product }: ProductCardProps) {
             loading="lazy"
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+            onError={handleImageError}
           />
         </Link>
-        <div className="absolute top-4 left-4 flex gap-2">
-          <span
-            className={`text-xs font-semibold px-3 py-1 rounded-full text-white bg-gradient-to-r ${provider.accentClass}`}
-          >
-            {provider.label}
-          </span>
-          {product.isNew && (
+        {product.isNew && (
+          <div className="absolute top-4 left-4">
             <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/90 text-gray-900">
               NEW
             </span>
-          )}
-        </div>
-        <div className="absolute top-4 right-4">
-          <FavoriteButton productId={product.id} />
+          </div>
+        )}
+        <div className="absolute top-4 right-4 bg-white rounded-full shadow-md">
+          <FavoriteButton type="product" id={product.id} />
         </div>
         {product.discount && (
           <span className="absolute bottom-4 right-4 bg-gray-900 text-white text-xs font-bold px-3 py-1 rounded-full">
@@ -60,10 +59,16 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       <div className="p-6 flex flex-col gap-4 flex-1">
         <div>
-          <Link href={`/product/${product.id}`}>
+          <Link href={`/products/${product.id}`}>
             <p className="text-xs uppercase tracking-wide text-gray-400">
               {product.actressName ?? '出演者情報'} / {product.releaseDate ?? '配信日未定'}
             </p>
+            <div className="text-xs text-gray-500 mt-1">
+              <p>作品ID: {product.normalizedProductId || product.id}</p>
+              {product.originalProductId && (
+                <p>メーカー品番: {product.originalProductId}</p>
+              )}
+            </div>
             <h3 className="font-semibold text-xl leading-tight mt-1 line-clamp-2 hover:text-gray-900">
               {product.title}
             </h3>
@@ -102,18 +107,21 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        <div className="flex items-center justify-between mt-auto">
-          <div>
-            <p className="text-xs text-gray-500">{product.providerLabel}</p>
-            <p className="text-2xl font-semibold text-gray-900">
-              ¥{product.price.toLocaleString()}
-            </p>
-          </div>
+        <div className="mt-auto space-y-2">
+          {/* 価格が0より大きい場合のみ表示 */}
+          {product.price > 0 && (
+            <div>
+              <p className="text-xs text-gray-500">{product.providerLabel}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                ¥{product.price.toLocaleString()}
+              </p>
+            </div>
+          )}
           <a
             href={product.affiliateUrl}
             target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 text-white px-4 py-2 text-sm font-semibold hover:bg-gray-800"
+            rel="noopener noreferrer sponsored"
+            className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-gray-900 text-white px-4 py-2 text-sm font-semibold hover:bg-gray-800"
             onClick={(e) => e.stopPropagation()}
           >
             {product.ctaLabel ?? '配信ページへ'}

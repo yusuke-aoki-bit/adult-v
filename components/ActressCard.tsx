@@ -1,6 +1,13 @@
+'use client';
+
 import Image from 'next/image';
+import { useState } from 'react';
 import { Actress } from '@/types/product';
 import { providerMeta } from '@/lib/providers';
+import { normalizeImageUrl } from '@/lib/image-utils';
+import FavoriteButton from './FavoriteButton';
+
+const PLACEHOLDER_IMAGE = 'https://placehold.co/400x520/1f2937/ffffff?text=Actress';
 
 interface Props {
   actress: Actress;
@@ -8,13 +15,23 @@ interface Props {
 }
 
 export default function ActressCard({ actress, compact = false }: Props) {
+  const [imgSrc, setImgSrc] = useState(normalizeImageUrl(actress.thumbnail || actress.heroImage) || PLACEHOLDER_IMAGE);
+  const [hasError, setHasError] = useState(false);
+
+  const handleImageError = () => {
+    if (!hasError) {
+      setHasError(true);
+      setImgSrc(PLACEHOLDER_IMAGE);
+    }
+  };
+
   if (compact) {
     // コンパクト表示: 名前と基本情報のみ
     return (
       <div className="bg-gray-900 text-white rounded-lg overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/20 transition-all">
         <div className="relative">
           <Image
-            src={actress.thumbnail || actress.heroImage}
+            src={imgSrc}
             alt={actress.name}
             width={400}
             height={520}
@@ -22,8 +39,12 @@ export default function ActressCard({ actress, compact = false }: Props) {
             loading="lazy"
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+            onError={handleImageError}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent" />
+          <div className="absolute top-2 right-2 bg-white rounded-full shadow-md">
+            <FavoriteButton type="actress" id={actress.id} />
+          </div>
           <div className="absolute bottom-2 left-2 right-2">
             <h3 className="text-lg font-semibold truncate">{actress.name}</h3>
             {actress.catchcopy && (
@@ -54,11 +75,12 @@ export default function ActressCard({ actress, compact = false }: Props) {
   }
 
   // 通常表示
+  const heroSrc = normalizeImageUrl(actress.heroImage) || imgSrc;
   return (
     <div className="bg-gray-900 text-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-white/10">
       <div className="relative">
         <Image
-          src={actress.heroImage}
+          src={heroSrc}
           alt={actress.name}
           width={800}
           height={1000}
@@ -66,8 +88,12 @@ export default function ActressCard({ actress, compact = false }: Props) {
           loading="lazy"
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+          onError={handleImageError}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent" />
+        <div className="absolute top-4 right-4 bg-white rounded-full shadow-md">
+          <FavoriteButton type="actress" id={actress.id} />
+        </div>
         <div className="absolute bottom-4 left-4">
           <p className="text-sm uppercase tracking-widest text-gray-300">
             {actress.catchcopy}

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import SearchBar from './SearchBar';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -28,19 +29,7 @@ export default function Header() {
           </div>
 
           {/* デスクトップナビゲーション */}
-          <nav className="hidden md:flex items-center space-x-8 flex-shrink-0">
-            <Link
-              href="/"
-              className="hover:text-rose-300 transition-colors font-medium"
-            >
-              ホーム
-            </Link>
-            <Link
-              href="/actresses"
-              className="hover:text-rose-300 transition-colors font-medium"
-            >
-              女優図鑑
-            </Link>
+          <nav className="hidden md:flex items-center space-x-4 flex-shrink-0">
             <Link
               href="/favorites"
               className="hover:text-rose-300 transition-colors font-medium flex items-center gap-1"
@@ -59,6 +48,7 @@ export default function Header() {
               </svg>
               お気に入り
             </Link>
+            <LanguageSwitcher />
           </nav>
 
           {/* モバイルメニューボタン */}
@@ -99,21 +89,17 @@ export default function Header() {
 
         {/* モバイルメニュー */}
         {isMobileMenuOpen && (
-          <nav className="md:hidden py-4 space-y-2">
-            {[
-              { href: '/', label: 'ホーム' },
-              { href: '/actresses', label: '女優図鑑' },
-              { href: '/favorites', label: 'お気に入り' },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="block py-2 hover:text-rose-300 transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav className="md:hidden py-4 space-y-4">
+            <Link
+              href="/favorites"
+              className="block py-2 hover:text-rose-300 transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              お気に入り
+            </Link>
+            <div className="py-2">
+              <LanguageSwitcher />
+            </div>
           </nav>
         )}
       </div>

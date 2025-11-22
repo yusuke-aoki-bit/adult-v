@@ -4,6 +4,7 @@ import "./globals.css";
 import { ConditionalLayout } from "@/components/ConditionalLayout";
 import { JsonLD } from "@/components/JsonLD";
 import { generateBaseMetadata, generateWebSiteSchema } from "@/lib/seo";
+import { defaultLocale } from "@/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = generateBaseMetadata(
-  '女優ベースのアダルト配信ハブ',
-  'DMM / DUGA / SOKMIL / DTI を横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。',
+  'ADULT VIEWER LAB - heavy user guide',
+  'Cross-platform adult streaming hub covering DMM / DUGA / SOKMIL / DTI with actress-based reviews, rankings, and campaign updates for heavy users.',
 );
 
 const websiteSchema = generateWebSiteSchema();
@@ -28,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang={defaultLocale}>
       <head>
         <JsonLD data={websiteSchema} />
       </head>

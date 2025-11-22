@@ -1,0 +1,199 @@
+{
+  "common": {
+    "actress": "女优",
+    "actresses": "女优列表",
+    "products": "作品",
+    "search": "搜索",
+    "filter": "筛选",
+    "sort": "排序",
+    "clear": "清除",
+    "apply": "应用",
+    "page": "页",
+    "releaseCount": "出演数",
+    "items": "项",
+    "loading": "加载中...",
+    "first": "首页",
+    "previous": "上一页",
+    "next": "下一页",
+    "last": "末页",
+    "etc": "其他",
+    "favorites": "收藏",
+    "noResults": "未找到结果",
+    "error": "发生错误",
+    "viewDetails": "查看详情",
+    "addToFavorites": "添加到收藏",
+    "removeFromFavorites": "从收藏中移除",
+    "releaseDate": "发布日期",
+    "duration": "时长",
+    "price": "价格",
+    "salePrice": "促销价",
+    "free": "免费",
+    "viewProduct": "查看作品",
+    "backToList": "返回列表",
+    "relatedProducts": "相关作品",
+    "moreFrom": "{name}的其他作品"
+  },
+  "homepage": {
+    "title": "女优列表 - 成人流媒体中心",
+    "description": "从人气女优到新星，找到您喜欢的女优。",
+    "actressCount": "收录 {count} 位女优",
+    "initialSearch": "按首字母搜索",
+    "filterSettings": "筛选设置"
+  },
+  "header": {
+    "title": "ADULT VIEWER LAB",
+    "subtitle": "heavy user guide",
+    "menu": "菜单",
+    "close": "关闭"
+  },
+  "nav": {
+    "home": "首页",
+    "actresses": "女优",
+    "products": "作品",
+    "new": "最新",
+    "featured": "精选",
+    "categories": "分类",
+    "rankings": "排行榜",
+    "favorites": "收藏",
+    "search": "搜索"
+  },
+  "footer": {
+    "description": "跨平台成人流媒体中心，涵盖 DMM / DUGA / SOKMIL / DTI，为重度用户提供基于女优的评论、排行榜和活动更新。",
+    "links": "链接",
+    "legal": "法律信息",
+    "privacy": "隐私政策",
+    "terms": "服务条款",
+    "contact": "联系我们",
+    "copyright": "© {year} Adult Viewer Lab. 版权所有。",
+    "affiliateNotice": "本站包含成人内容的联盟链接。"
+  },
+  "filter": {
+    "genre": "类型",
+    "site": "流媒体网站",
+    "include": "包含（任一）",
+    "exclude": "排除（不含）",
+    "reset": "重置筛选",
+    "noFiltersApplied": "未应用筛选"
+  },
+  "sort": {
+    "nameAsc": "名称（升序）",
+    "nameDesc": "名称（降序）",
+    "productCountDesc": "作品数（多到少）",
+    "productCountAsc": "作品数（少到多）",
+    "recent": "最近添加",
+    "releaseDateDesc": "最新发布",
+    "releaseDateAsc": "最早发布",
+    "priceAsc": "价格（从低到高）",
+    "priceDesc": "价格（从高到低）",
+    "popularityDesc": "最受欢迎"
+  },
+  "actress": {
+    "profile": "个人资料",
+    "filmography": "作品集",
+    "totalProducts": "共 {count} 部作品",
+    "aliases": "别名",
+    "height": "身高",
+    "measurements": "三围",
+    "birthday": "生日",
+    "bloodType": "血型",
+    "genres": "类型",
+    "noProducts": "暂无作品",
+    "loadMore": "加载更多"
+  },
+  "product": {
+    "details": "作品详情",
+    "description": "简介",
+    "cast": "演员",
+    "director": "导演",
+    "studio": "制作商",
+    "label": "品牌",
+    "series": "系列",
+    "tags": "标签",
+    "availableAt": "观看平台",
+    "comparePrice": "价格比较",
+    "bestPrice": "最低价",
+    "sampleImages": "预览图片",
+    "sampleVideo": "预览视频",
+    "userReviews": "用户评论",
+    "rating": "评分"
+  },
+  "search": {
+    "placeholder": "搜索女优或作品...",
+    "searchResults": "搜索结果",
+    "resultsFor": "\"{query}\"的搜索结果",
+    "noResultsFor": "未找到\"{query}\"的搜索结果",
+    "suggestions": "搜索提示",
+    "tryDifferentKeywords": "尝试不同的关键词",
+    "checkSpelling": "检查拼写"
+  },
+  "productIdSearch": {
+    "title": "商品ID搜索",
+    "placeholder": "输入商品ID...",
+    "searchButton": "搜索",
+    "searching": "搜索中...",
+    "errorRequired": "请输入商品ID",
+    "errorNotFound": "未找到商品",
+    "errorGeneric": "搜索时发生错误",
+    "helperText": "可通过标准化商品ID或ASP专用商品ID搜索"
+  },
+  "favorites": {
+    "title": "收藏",
+    "noFavorites": "您还没有收藏",
+    "addFavorites": "将感兴趣的女优或作品添加到收藏",
+    "actressesFavorites": "收藏的女优",
+    "productsFavorites": "收藏的作品"
+  },
+  "rankings": {
+    "title": "排行榜",
+    "weekly": "周排行",
+    "monthly": "月排行",
+    "allTime": "总排行",
+    "topActresses": "人气女优排行",
+    "topProducts": "热门作品排行",
+    "newReleases": "新作排行"
+  },
+  "categories": {
+    "title": "分类",
+    "browseByGenre": "按类型浏览",
+    "allCategories": "所有分类"
+  },
+  "featured": {
+    "title": "精选",
+    "currentCampaigns": "当前活动",
+    "recommendations": "推荐专题",
+    "newArrivals": "新品专题"
+  },
+  "new": {
+    "title": "最新作品",
+    "latestReleases": "最新发布",
+    "thisWeek": "本周新作",
+    "thisMonth": "本月新作"
+  },
+  "ageVerification": {
+    "title": "年龄验证",
+    "message": "本站包含成人内容。",
+    "question": "您是否年满18岁？",
+    "confirm": "是的，我已年满18岁",
+    "deny": "否",
+    "warning": "您必须年满18岁才能访问本站。"
+  },
+  "error": {
+    "pageNotFound": "页面未找到",
+    "serverError": "服务器错误",
+    "tryAgain": "请重试",
+    "goHome": "返回首页",
+    "unexpectedError": "发生意外错误",
+    "errorOccurred": "发生错误",
+    "errorMessage": "抱歉，发生了意外错误。",
+    "errorDetails": "错误详情：",
+    "retry": "重试",
+    "criticalError": "发生严重错误",
+    "criticalErrorMessage": "应用程序发生严重错误。请重新加载页面。",
+    "reloadPage": "重新加载页面"
+  },
+  "affiliate": {
+    "disclosure": "联盟披露",
+    "disclaimerShort": "本站使用联盟广告。",
+    "disclaimerFull": "本站是亚马逊联盟计划的参与者，该计划旨在通过广告和链接到 Amazon.com 为网站提供赚取广告费的方式。我们还参与 DMM、DUGA、SOKMIL 和 DTI 的联盟计划。"
+  }
+}

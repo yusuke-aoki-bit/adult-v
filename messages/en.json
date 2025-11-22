@@ -1,0 +1,213 @@
+{
+  "common": {
+    "actress": "Actress",
+    "actresses": "Actresses",
+    "products": "Videos",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "clear": "Clear",
+    "apply": "Apply",
+    "page": "Page",
+    "releaseCount": "Videos",
+    "items": "items",
+    "loading": "Loading",
+    "first": "First",
+    "previous": "Previous",
+    "next": "Next",
+    "last": "Last",
+    "etc": "Others",
+    "favorites": "Favorites",
+    "noResults": "No results found",
+    "error": "An error occurred",
+    "viewDetails": "View Details",
+    "addToFavorites": "Add to Favorites",
+    "removeFromFavorites": "Remove from Favorites",
+    "releaseDate": "Release Date",
+    "duration": "Duration",
+    "price": "Price",
+    "salePrice": "Sale Price",
+    "free": "Free",
+    "viewProduct": "View Video",
+    "backToList": "Back to List",
+    "relatedProducts": "Related Videos",
+    "moreFrom": "More from {name}"
+  },
+  "homepage": {
+    "title": "Actresses - Adult Streaming Hub",
+    "description": "Find your favorite actresses from popular to emerging stars.",
+    "actressCount": "{count} actresses listed",
+    "initialSearch": "Search by Initial",
+    "filterSettings": "Filter Settings"
+  },
+  "header": {
+    "title": "ADULT VIEWER LAB",
+    "subtitle": "heavy user guide",
+    "menu": "Menu",
+    "close": "Close"
+  },
+  "nav": {
+    "home": "Home",
+    "actresses": "Actresses",
+    "products": "Videos",
+    "new": "New",
+    "featured": "Featured",
+    "categories": "Categories",
+    "rankings": "Rankings",
+    "favorites": "Favorites",
+    "search": "Search"
+  },
+  "footer": {
+    "description": "Cross-platform adult streaming hub covering DMM / DUGA / SOKMIL / DTI with actress-based reviews, rankings, and campaign updates for heavy users.",
+    "links": "Links",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact",
+    "copyright": "© {year} Adult Viewer Lab. All rights reserved.",
+    "affiliateNotice": "This site contains affiliate links to adult content."
+  },
+  "filter": {
+    "genre": "Genre",
+    "site": "Streaming Site",
+    "include": "Include (any of these)",
+    "exclude": "Exclude (none of these)",
+    "reset": "Reset Filters",
+    "noFiltersApplied": "No filters applied"
+  },
+  "sort": {
+    "nameAsc": "Name (A-Z)",
+    "nameDesc": "Name (Z-A)",
+    "productCountDesc": "Most Videos",
+    "productCountAsc": "Least Videos",
+    "recent": "Recently Added",
+    "releaseDateDesc": "Newest First",
+    "releaseDateAsc": "Oldest First",
+    "priceAsc": "Price: Low to High",
+    "priceDesc": "Price: High to Low",
+    "popularityDesc": "Most Popular"
+  },
+  "actress": {
+    "profile": "Profile",
+    "filmography": "Filmography",
+    "totalProducts": "{count} videos total",
+    "aliases": "Also Known As",
+    "height": "Height",
+    "measurements": "Measurements",
+    "birthday": "Birthday",
+    "bloodType": "Blood Type",
+    "genres": "Genres",
+    "noProducts": "No videos available",
+    "loadMore": "Load More"
+  },
+  "product": {
+    "details": "Video Details",
+    "description": "Description",
+    "cast": "Cast",
+    "director": "Director",
+    "studio": "Studio",
+    "label": "Label",
+    "series": "Series",
+    "tags": "Tags",
+    "availableAt": "Available At",
+    "comparePrice": "Price Comparison",
+    "bestPrice": "Best Price",
+    "sampleImages": "Sample Images",
+    "sampleVideo": "Sample Video",
+    "userReviews": "Reviews",
+    "rating": "Rating"
+  },
+  "search": {
+    "placeholder": "Search actresses or videos...",
+    "searchResults": "Search Results",
+    "resultsFor": "Results for \"{query}\"",
+    "noResultsFor": "No results found for \"{query}\"",
+    "suggestions": "Search Tips",
+    "tryDifferentKeywords": "Try different keywords",
+    "checkSpelling": "Check your spelling"
+  },
+  "productIdSearch": {
+    "title": "Product ID Search",
+    "placeholder": "Enter product ID...",
+    "searchButton": "Search",
+    "searching": "Searching...",
+    "errorRequired": "Please enter a product ID",
+    "errorNotFound": "Product not found",
+    "errorGeneric": "An error occurred during search",
+    "helperText": "Search by normalized product ID or ASP-specific product ID"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "noFavorites": "You have no favorites yet",
+    "addFavorites": "Add actresses or videos to your favorites",
+    "actressesFavorites": "Favorite Actresses",
+    "productsFavorites": "Favorite Videos"
+  },
+  "rankings": {
+    "title": "Rankings",
+    "weekly": "Weekly Rankings",
+    "monthly": "Monthly Rankings",
+    "allTime": "All Time",
+    "topActresses": "Top Actresses",
+    "topProducts": "Top Videos",
+    "newReleases": "New Releases"
+  },
+  "categories": {
+    "title": "Categories",
+    "browseByGenre": "Browse by Genre",
+    "allCategories": "All Categories"
+  },
+  "featured": {
+    "title": "Featured",
+    "currentCampaigns": "Current Campaigns",
+    "recommendations": "Recommendations",
+    "newArrivals": "New Arrivals"
+  },
+  "new": {
+    "title": "New Releases",
+    "latestReleases": "Latest Releases",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month"
+  },
+  "ageVerification": {
+    "title": "Age Verification",
+    "message": "This site contains adult content.",
+    "question": "Are you 18 years or older?",
+    "confirm": "Yes, I am 18 or older",
+    "deny": "No",
+    "warning": "You must be 18 or older to access this site."
+  },
+  "error": {
+    "pageNotFound": "Page Not Found",
+    "serverError": "Server Error Occurred",
+    "tryAgain": "Please try again",
+    "goHome": "Go Home",
+    "unexpectedError": "An unexpected error occurred",
+    "errorOccurred": "An Error Occurred",
+    "errorMessage": "We apologize for the inconvenience. An unexpected error has occurred.",
+    "errorDetails": "Error Details:",
+    "retry": "Try Again",
+    "criticalError": "A Critical Error Occurred",
+    "criticalErrorMessage": "A critical error occurred in the application. Please reload the page.",
+    "reloadPage": "Reload Page"
+  },
+  "common": {
+    "actress": "Actress",
+    "actresses": "Actresses",
+    "products": "Videos",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "clear": "Clear",
+    "apply": "Apply",
+    "page": "Page",
+    "releaseCount": "Videos",
+    "items": "items",
+    "loading": "Loading..."
+  },
+  "affiliate": {
+    "disclosure": "Affiliate Disclosure",
+    "disclaimerShort": "This site uses affiliate advertising.",
+    "disclaimerFull": "This site is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. We also participate in affiliate programs with DMM, DUGA, SOKMIL, and DTI."
+  }
+}

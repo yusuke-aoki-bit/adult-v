@@ -4,36 +4,58 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300 mt-auto">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* サイト情報 */}
+        {/* サイト情報 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-white font-bold text-lg mb-4">ADULT VIEWER LAB</h3>
+            <h3 className="text-white font-bold text-lg mb-2">ADULT VIEWER LAB</h3>
             <p className="text-sm text-gray-400">
               DMM / DUGA / SOKMIL / DTIの4プラットフォームを横断し、
               ヘビー視聴者が欲しい女優ベースの情報を整理しています。
             </p>
           </div>
 
-          {/* リンク */}
+          {/* 法的ページリンク */}
           <div>
-            <h3 className="text-white font-bold text-lg mb-4">リンク</h3>
+            <h4 className="text-white font-semibold mb-3">サイトポリシー</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/" className="hover:text-white transition-colors">
-                  ホーム
+                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
+                  プライバシーポリシー
                 </Link>
               </li>
               <li>
-                <Link href="/actresses" className="hover:text-white transition-colors">
-                  女優図鑑
+                <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
+                  利用規約
                 </Link>
               </li>
             </ul>
           </div>
+
+          {/* お問い合わせ */}
+          <div>
+            <h4 className="text-white font-semibold mb-3">お問い合わせ</h4>
+            <p className="text-sm text-gray-400">
+              ご質問・ご要望はメールにてお問い合わせください。
+            </p>
+            <a
+              href="mailto:adult.vvvv@gmail.com"
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              adult.vvvv@gmail.com
+            </a>
+          </div>
+        </div>
+
+        {/* アフィリエイト開示 */}
+        <div className="border-t border-gray-800 mt-8 pt-6 text-xs text-gray-500">
+          <p className="leading-relaxed">
+            当サイトはDMM、DUGA、SOKMIL、DTIのアフィリエイトプログラムに参加しています。
+            商品リンクから購入された場合、紹介料が発生することがあります。
+          </p>
         </div>
 
         {/* コピーライト */}
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
+        <div className="mt-4 text-center text-sm text-gray-500">
           <p>&copy; {new Date().getFullYear()} Adult Viewer Lab. All rights reserved.</p>
         </div>
       </div>

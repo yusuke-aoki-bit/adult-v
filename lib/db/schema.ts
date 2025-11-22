@@ -152,6 +152,54 @@ export const productTags = pgTable(
   }),
 );
 
+/**
+ * 生データ保存テーブル（CSV）
+ * DUGA CSVの生データを保存し、再解析と重複を避ける
+ */
+export const rawCsvData = pgTable(
+  'raw_csv_data',
+  {
+    id: serial('id').primaryKey(),
+    source: varchar('source', { length: 50 }).notNull(), // 'DUGA' など
+    productId: varchar('product_id', { length: 100 }).notNull(), // 商品ID（CSVの商品ID列）
+    rawData: jsonb('raw_data').notNull(), // CSV行の全データをJSONBで保存
+    downloadedAt: timestamp('downloaded_at').defaultNow().notNull(),
+    processedAt: timestamp('processed_at'), // 処理完了日時
+    hash: varchar('hash', { length: 64 }).notNull(), // データのハッシュ値（重複検出用）
+  },
+  (table) => ({
+    sourceProductUnique: uniqueIndex('idx_raw_csv_source_product').on(table.source, table.productId),
+    hashIdx: index('idx_raw_csv_hash').on(table.hash),
+    sourceIdx: index('idx_raw_csv_source').on(table.source),
+    downloadedIdx: index('idx_raw_csv_downloaded').on(table.downloadedAt),
+  }),
+);
+
+/**
+ * 生データ保存テーブル（HTML）
+ * クロールしたHTMLの生データを保存し、再解析と重複を避ける
+ */
+export const rawHtmlData = pgTable(
+  'raw_html_data',
+  {
+    id: serial('id').primaryKey(),
+    source: varchar('source', { length: 50 }).notNull(), // 'カリビアンコムプレミアム', '一本道', 'HEYZO' など
+    productId: varchar('product_id', { length: 100 }).notNull(), // 商品ID（URL内のID部分）
+    url: text('url').notNull(),
+    htmlContent: text('html_content').notNull(), // HTML全体を保存
+    crawledAt: timestamp('crawled_at').defaultNow().notNull(),
+    processedAt: timestamp('processed_at'), // 処理完了日時
+    hash: varchar('hash', { length: 64 }).notNull(), // コンテンツのハッシュ値（重複・更新検出用）
+  },
+  (table) => ({
+    sourceProductUnique: uniqueIndex('idx_raw_html_source_product').on(table.source, table.productId),
+    hashIdx: index('idx_raw_html_hash').on(table.hash),
+    sourceIdx: index('idx_raw_html_source').on(table.source),
+    crawledIdx: index('idx_raw_html_crawled').on(table.crawledAt),
+    urlIdx: index('idx_raw_html_url').on(table.url),
+  }),
+);
+
 // 型エクスポート
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
@@ -163,3 +211,7 @@ export type Performer = typeof performers.$inferSelect;
 export type NewPerformer = typeof performers.$inferInsert;
 export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;
+export type RawCsvData = typeof rawCsvData.$inferSelect;
+export type NewRawCsvData = typeof rawCsvData.$inferInsert;
+export type RawHtmlData = typeof rawHtmlData.$inferSelect;
+export type NewRawHtmlData = typeof rawHtmlData.$inferInsert;

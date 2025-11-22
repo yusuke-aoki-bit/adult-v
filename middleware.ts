@@ -1,5 +1,14 @@
+import createIntlMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { locales, defaultLocale } from './i18n';
+
+// next-intlのミドルウェアを作成
+const intlMiddleware = createIntlMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'always', // 常にロケールプレフィックスを付ける
+});
 
 // Simple in-memory rate limiting (for production, use Redis or similar)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -50,11 +59,12 @@ export function middleware(request: NextRequest) {
   }
 
   const ageVerified = request.cookies.get('age-verified')?.value === 'true';
-  const isAgeVerificationPage = request.nextUrl.pathname === '/age-verification';
+  const isAgeVerificationPage = request.nextUrl.pathname === '/age-verification' ||
+                                 request.nextUrl.pathname.match(/^\/[a-z]{2}\/age-verification$/);
 
   // 年齢確認ページ自体は常にアクセス可能
   if (isAgeVerificationPage) {
-    return NextResponse.next();
+    return intlMiddleware(request);
   }
 
   // 年齢確認済みでない場合は年齢確認ページにリダイレクト
@@ -65,7 +75,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  // next-intlのミドルウェアを実行
+  return intlMiddleware(request);
 }
 
 export const config = {
