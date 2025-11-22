@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { JsonLD } from '@/components/JsonLD';
 import { getProductById } from '@/lib/db/queries';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
-import { Metadata } from 'next/metadata';
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 
