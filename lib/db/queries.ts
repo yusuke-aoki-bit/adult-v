@@ -1030,7 +1030,7 @@ function mapProductToType(
 
   // キャッシュから価格・画像情報を取得
   const price = cache?.price || source?.price || 0;
-  const imageUrl = cache?.thumbnailUrl || 'https://placehold.co/600x800/052e16/ffffff?text=DUGA';
+  const imageUrl = cache?.thumbnailUrl || 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
   const affiliateUrl = source?.affiliateUrl || cache?.affiliateUrl || '';
 
   // タグからカテゴリを推定（仮実装）
@@ -1071,7 +1071,7 @@ function mapProductToType(
   };
 }
 
-const ACTRESS_PLACEHOLDER = 'https://placehold.co/400x520/1f2937/ffffff?text=Actress';
+const ACTRESS_PLACEHOLDER = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+IMAGE';
 
 /**
  * データベースの出演者(performer)をActress型に変換（同期版）

@@ -1,0 +1,22 @@
+# Crawler Dockerfile for Cloud Run Jobs
+FROM node:20-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy application code
+COPY . .
+
+# Build TypeScript
+RUN npm run build || true
+
+# Set environment
+ENV NODE_ENV=production
+
+# Entry point for different crawler jobs
+# Usage: docker run image CRAWLER_TYPE [options]
+# CRAWLER_TYPE: mgs, caribbeancom, heyzo, etc.
+ENTRYPOINT ["npx", "tsx", "scripts/run-crawler.ts"]

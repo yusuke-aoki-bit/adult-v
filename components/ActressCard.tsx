@@ -7,7 +7,7 @@ import { providerMeta } from '@/lib/providers';
 import { normalizeImageUrl } from '@/lib/image-utils';
 import FavoriteButton from './FavoriteButton';
 
-const PLACEHOLDER_IMAGE = 'https://placehold.co/400x520/1f2937/ffffff?text=Actress';
+const PLACEHOLDER_IMAGE = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+IMAGE';
 
 interface Props {
   actress: Actress;

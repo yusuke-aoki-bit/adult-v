@@ -11,7 +11,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-const PLACEHOLDER_IMAGE = 'https://placehold.co/400x560/1f2937/ffffff?text=No+Image';
+const PLACEHOLDER_IMAGE = 'https://placehold.co/400x560/1f2937/ffffff?text=NO+IMAGE';
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [imgSrc, setImgSrc] = useState(normalizeImageUrl(product.imageUrl));

@@ -11,7 +11,7 @@
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
 import { getDb } from '../lib/db';
-import { rawHtmlData, productSources, products, performers, productPerformers } from '../lib/db/schema';
+import { rawHtmlData, productSources, products, performers, productPerformers, productCache, tags, productTags } from '../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 const AFFILIATE_CODE = '6CS5PGEBQDUYPZLHYEM33TBZFJ'; // MGSアフィリエイトコード
@@ -23,6 +23,8 @@ interface MgsProduct {
   title: string;
   releaseDate?: string;
   performerNames?: string[]; // 出演者名のリスト
+  thumbnailUrl?: string; // サムネイル画像URL
+  price?: number; // 価格
 }
 
 /**
@@ -95,12 +97,29 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
 
     console.log(`  Found ${performerNames.length} performer(s): ${performerNames.join(', ')}`);
 
+    // サムネイル画像を抽出
+    let thumbnailUrl: string | undefined;
+    const ogImage = $('meta[property="og:image"]').attr('content');
+    if (ogImage) {
+      thumbnailUrl = ogImage.startsWith('http') ? ogImage : `https://www.mgstage.com${ogImage}`;
+    }
+
+    // 価格を抽出
+    let price: number | undefined;
+    const priceText = $('th:contains("価格")').next('td').text().trim();
+    const priceMatch = priceText.match(/(\d+(?:,\d+)*)/);
+    if (priceMatch) {
+      price = parseInt(priceMatch[1].replace(/,/g, ''));
+    }
+
     return {
       productId,
       url: productUrl,
       title,
       releaseDate,
       performerNames,
+      thumbnailUrl,
+      price,
     };
   } catch (error) {
     console.error('Error crawling MGS product:', error);
@@ -307,6 +326,119 @@ async function savePerformers(
 }
 
 /**
+ * product_cacheにデータを保存
+ */
+async function saveProductCache(
+  productId: number,
+  mgsProduct: MgsProduct,
+  affiliateWidget: string,
+): Promise<void> {
+  const db = getDb();
+
+  try {
+    // 既存のキャッシュをチェック
+    const existing = await db
+      .select()
+      .from(productCache)
+      .where(
+        and(
+          eq(productCache.productId, productId),
+          eq(productCache.aspName, SOURCE_NAME),
+        ),
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      // 更新
+      await db
+        .update(productCache)
+        .set({
+          price: mgsProduct.price || 0,
+          affiliateUrl: affiliateWidget,
+          thumbnailUrl: mgsProduct.thumbnailUrl,
+          inStock: true,
+          lastUpdated: new Date(),
+        })
+        .where(eq(productCache.id, existing[0].id));
+
+      console.log(`Updated product_cache for product ${productId}`);
+    } else {
+      // 新規挿入
+      await db.insert(productCache).values({
+        productId,
+        aspName: SOURCE_NAME,
+        price: mgsProduct.price || 0,
+        affiliateUrl: affiliateWidget,
+        thumbnailUrl: mgsProduct.thumbnailUrl,
+        inStock: true,
+      });
+
+      console.log(`Saved product_cache for product ${productId}`);
+    }
+  } catch (error) {
+    console.error('Error saving product cache:', error);
+    throw error;
+  }
+}
+
+/**
+ * MGSタグと商品を紐付け
+ */
+async function linkMgsTag(productId: number): Promise<void> {
+  const db = getDb();
+
+  try {
+    // MGSタグを検索または作成
+    let mgsTag = await db
+      .select()
+      .from(tags)
+      .where(eq(tags.name, SOURCE_NAME))
+      .limit(1);
+
+    let tagId: number;
+
+    if (mgsTag.length === 0) {
+      // MGSタグを作成
+      const [newTag] = await db
+        .insert(tags)
+        .values({
+          name: SOURCE_NAME,
+          slug: SOURCE_NAME.toLowerCase(),
+        })
+        .returning();
+
+      tagId = newTag.id;
+      console.log(`Created MGS tag with ID: ${tagId}`);
+    } else {
+      tagId = mgsTag[0].id;
+    }
+
+    // 既存の紐付けをチェック
+    const existingLink = await db
+      .select()
+      .from(productTags)
+      .where(
+        and(
+          eq(productTags.productId, productId),
+          eq(productTags.tagId, tagId),
+        ),
+      )
+      .limit(1);
+
+    if (existingLink.length === 0) {
+      await db.insert(productTags).values({
+        productId,
+        tagId,
+      });
+      console.log(`Linked product ${productId} to MGS tag`);
+    }
+  } catch (error) {
+    console.error('Error linking MGS tag:', error);
+    throw error;
+  }
+}
+
+/**
  * メイン処理
  */
 async function main() {
@@ -362,11 +494,18 @@ async function main() {
 
       if (productRecord.length > 0) {
         const productId = productRecord[0].id;
+        const affiliateWidget = generateAffiliateWidget(mgsProduct.productId);
 
         // 女優データを保存
         if (mgsProduct.performerNames && mgsProduct.performerNames.length > 0) {
           await savePerformers(productId, mgsProduct.performerNames);
         }
+
+        // product_cacheを保存
+        await saveProductCache(productId, mgsProduct, affiliateWidget);
+
+        // MGSタグと紐付け
+        await linkMgsTag(productId);
       }
 
       console.log(`✓ Successfully processed: ${mgsProduct.productId}`);
