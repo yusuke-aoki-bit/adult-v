@@ -1,6 +1,11 @@
+'use client';
+
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 
 export default function Footer() {
+  const locale = useLocale();
+
   return (
     <footer className="bg-gray-900 text-gray-300 mt-auto">
       <div className="container mx-auto px-4 py-8">
@@ -19,12 +24,12 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-3">サイトポリシー</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
+                <Link href={`/${locale}/privacy`} className="text-gray-400 hover:text-white transition-colors">
                   プライバシーポリシー
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
+                <Link href={`/${locale}/terms`} className="text-gray-400 hover:text-white transition-colors">
                   利用規約
                 </Link>
               </li>
