@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = generateBaseMetadata(
   'ADULT VIEWER LAB - heavy user guide',
-  'Cross-platform adult streaming hub covering DMM / DUGA / SOKMIL / DTI with actress-based reviews, rankings, and campaign updates for heavy users.',
+  'Multi-platform adult streaming hub with actress-based reviews, rankings, and campaign updates for heavy users.',
 );
 
 const websiteSchema = generateWebSiteSchema();

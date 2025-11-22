@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 const siteName = 'Adult Viewer Lab';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 const defaultDescription =
-  'DMM / DUGA / SOKMIL / DTI を横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。';
+  '複数のプラットフォームを横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。';
 
 /**
  * ベースのメタタグを生成
