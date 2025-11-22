@@ -12,3 +12,12 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: DATABASE_URL
+    value: postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres
+    availability:
+      - RUNTIME
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://www.adult-v.com
+    availability:
+      - BUILD
+      - RUNTIME
