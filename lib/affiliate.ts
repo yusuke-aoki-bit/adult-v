@@ -208,6 +208,10 @@ export function generateAffiliateLink(originalUrl: string, provider: string): st
     case 'caribbeancom':
     case '1pondo':
       return generateDTILink(originalUrl);
+    case 'mgs':
+      // MGSはウィジェット形式なのでoriginalUrlをそのまま返す
+      // 実際のウィジェットコードはproduct_sourcesテーブルのaffiliateUrlに保存されている
+      return originalUrl;
     default:
       return originalUrl;
   }
