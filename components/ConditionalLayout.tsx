@@ -8,7 +8,8 @@ import FilterPersistence from './FilterPersistence';
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAgeVerificationPage = pathname === '/age-verification';
+  const isAgeVerificationPage = pathname === '/age-verification' ||
+                                 pathname?.includes('/age-verification');
 
   if (isAgeVerificationPage) {
     return <>{children}</>;

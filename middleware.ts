@@ -59,12 +59,11 @@ export function middleware(request: NextRequest) {
   }
 
   const ageVerified = request.cookies.get('age-verified')?.value === 'true';
-  const isAgeVerificationPage = request.nextUrl.pathname === '/age-verification' ||
-                                 request.nextUrl.pathname.match(/^\/[a-z]{2}\/age-verification$/);
+  const isAgeVerificationPage = request.nextUrl.pathname === '/age-verification';
 
   // 年齢確認ページ自体は常にアクセス可能
   if (isAgeVerificationPage) {
-    return intlMiddleware(request);
+    return NextResponse.next();
   }
 
   // 年齢確認済みでない場合は年齢確認ページにリダイレクト
