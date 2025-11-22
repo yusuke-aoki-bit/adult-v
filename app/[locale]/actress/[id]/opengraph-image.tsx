@@ -1,7 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { getActressById } from '@/lib/db/queries';
 
-export const runtime = 'edge';
 export const alt = 'Actress Profile';
 export const size = {
   width: 1200,
@@ -11,31 +9,6 @@ export const contentType = 'image/png';
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const actress = await getActressById(id);
-
-  if (!actress) {
-    return new ImageResponse(
-      (
-        <div
-          style={{
-            fontSize: 48,
-            background: 'linear-gradient(to bottom, #1f2937, #111827)',
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-          }}
-        >
-          女優情報が見つかりません
-        </div>
-      ),
-      {
-        ...size,
-      }
-    );
-  }
 
   return new ImageResponse(
     (
@@ -68,7 +41,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
               textAlign: 'center',
             }}
           >
-            {actress.name}
+            女優プロフィール
           </div>
           <div
             style={{
@@ -77,7 +50,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
               textAlign: 'center',
             }}
           >
-            作品数: {actress.metrics.releaseCount}
+            ID: {id}
           </div>
           <div
             style={{
