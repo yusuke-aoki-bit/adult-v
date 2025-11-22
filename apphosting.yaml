@@ -5,8 +5,8 @@ runConfig:
   maxInstances: 4
   cpu: 1
   memoryMiB: 512
-  cloudSqlInstances:
-    - adult-v:us-central1:adult-v
+  cloudSqlConnections:
+    - instanceConnectionName: adult-v:us-central1:adult-v
 
 env:
   - variable: NODE_ENV
