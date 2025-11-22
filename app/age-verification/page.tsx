@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function AgeVerification() {
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
+function AgeVerificationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isVerifying, setIsVerifying] = useState(false);
@@ -65,5 +68,26 @@ export default function AgeVerification() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AgeVerification() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-gray-800 rounded-2xl shadow-xl p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-4">
+              年齢確認
+            </h1>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              読み込み中...
+            </p>
+          </div>
+        </div>
+      </div>
+    }>
+      <AgeVerificationContent />
+    </Suspense>
   );
 }
