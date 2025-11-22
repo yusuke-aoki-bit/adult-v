@@ -5,6 +5,24 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 const defaultDescription =
   '複数のプラットフォームを横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。';
 
+// SEO向けキーワード
+const defaultKeywords = [
+  'アダルト動画',
+  'AV女優',
+  '女優ランキング',
+  'アダルト配信',
+  'DMM',
+  'DUGA',
+  'MGS',
+  'DTI',
+  'FANZA',
+  '動画レビュー',
+  'アダルトサイト比較',
+  '新作AV',
+  'セール情報',
+  'アダルトキャンペーン',
+];
+
 /**
  * ベースのメタタグを生成
  */
@@ -13,15 +31,18 @@ export function generateBaseMetadata(
   description?: string,
   image?: string,
   path?: string,
+  keywords?: string[],
 ): Metadata {
   const pageTitle = `${title} | ${siteName}`;
   const pageDescription = description || defaultDescription;
   const pageUrl = path ? `${siteUrl}${path}` : siteUrl;
   const pageImage = image || `${siteUrl}/og-image.jpg`;
+  const pageKeywords = keywords || defaultKeywords;
 
   return {
     title: pageTitle,
     description: pageDescription,
+    keywords: pageKeywords.join(', '),
     alternates: {
       canonical: pageUrl,
     },
@@ -58,6 +79,9 @@ export function generateBaseMetadata(
         'max-snippet': -1,
       },
     },
+    other: {
+      'google-site-verification': process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
+    },
   };
 }
 
@@ -69,13 +93,20 @@ export function generateWebSiteSchema() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: siteName,
+    alternateName: 'アダルトビューアーラボ',
     url: siteUrl,
     description: defaultDescription,
+    inLanguage: ['ja', 'en', 'zh'],
+    publisher: {
+      '@type': 'Organization',
+      name: siteName,
+      url: siteUrl,
+    },
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+        urlTemplate: `${siteUrl}/ja/search?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },

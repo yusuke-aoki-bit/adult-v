@@ -46,6 +46,18 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'www.1pondo.tv',
       },
+      {
+        protocol: 'https',
+        hostname: '*.mgstage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.mgstage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static.mgstage.com',
+      },
     ],
     // SVG画像を許可
     dangerouslyAllowSVG: true,
