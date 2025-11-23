@@ -72,7 +72,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       for (const locale of locales) {
         sitemap.push({
           url: `${siteUrl}/${locale}/actress/${actress.id}`,
-          lastModified: new Date(actress.createdAt || new Date()),
+          lastModified: new Date(),
           changeFrequency: 'weekly',
           priority: 0.7,
         });
@@ -93,7 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       for (const locale of locales) {
         sitemap.push({
           url: `${siteUrl}/${locale}/actress/${actress.id}`,
-          lastModified: new Date(actress.createdAt || new Date()),
+          lastModified: new Date(),
           changeFrequency: 'weekly',
           priority: 0.8, // 人気女優は優先度を上げる
         });
