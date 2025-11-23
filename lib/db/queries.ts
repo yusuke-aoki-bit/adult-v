@@ -1,5 +1,5 @@
 import { getDb } from './index';
-import { products, performers, productPerformers, tags, productTags, productSources, productCache } from './schema';
+import { products, performers, productPerformers, tags, productTags, productSources, productCache, performerAliases } from './schema';
 import { eq, and, or, like, desc, asc, gte, lte, sql } from 'drizzle-orm';
 import type { Product as ProductType, Actress as ActressType, ProductCategory } from '@/types/product';
 import type { InferSelectModel } from 'drizzle-orm';
@@ -584,6 +584,14 @@ export async function getActresses(options?: {
   sortBy?: ActressSortOption;
 }): Promise<ActressType[]> {
   try {
+    // キャッシュをチェック
+    const { getCache, setCache, generateCacheKey, CACHE_KEYS } = await import('@/lib/cache');
+    const cacheKey = generateCacheKey(CACHE_KEYS.ACTRESSES_LIST, options || {});
+    const cached = await getCache<ActressType[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const db = getDb();
     const conditions = [];
 
@@ -629,16 +637,49 @@ export async function getActresses(options?: {
     }
 
     // 検索クエリ（名前を検索）- 類似性ベースのあいまい検索を使用
+    // performer_aliases テーブルも検索対象に含める
     if (options?.query) {
+      // 別名から一致する女優IDを取得
+      // 頭文字検索（1文字）の場合は前方一致、それ以外はあいまい検索
+      const isInitialSearch = options.query.length === 1;
+      const searchPattern = isInitialSearch ? options.query + '%' : '%' + options.query + '%';
+
+      const matchingPerformerIds = await db
+        .selectDistinct({ performerId: performerAliases.performerId })
+        .from(performerAliases)
+        .where(
+          or(
+            sql`similarity(${performerAliases.aliasName}, ${options.query}) > 0.2`,
+            sql`${performerAliases.aliasName} ILIKE ${searchPattern}`
+          )!
+        );
+
       // pg_trgmを使用した類似性検索（similarity > 0.2 の結果を返す）
-      conditions.push(
-        or(
-          sql`similarity(${performers.name}, ${options.query}) > 0.2`,
-          sql`similarity(${performers.nameKana}, ${options.query}) > 0.2`,
-          sql`${performers.name} ILIKE ${'%' + options.query + '%'}`,
-          sql`${performers.nameKana} ILIKE ${'%' + options.query + '%'}`
-        )!
-      );
+      // 主名前、カナ名、または別名のいずれかに一致
+      // 頭文字検索の場合、nameKanaがあればnameKanaで、なければnameで検索
+      const nameConditions = isInitialSearch
+        ? or(
+            sql`(${performers.nameKana} IS NOT NULL AND ${performers.nameKana} ILIKE ${searchPattern})`,
+            sql`(${performers.nameKana} IS NULL AND ${performers.name} ILIKE ${searchPattern})`
+          )!
+        : or(
+            sql`similarity(${performers.name}, ${options.query}) > 0.2`,
+            sql`similarity(${performers.nameKana}, ${options.query}) > 0.2`,
+            sql`${performers.name} ILIKE ${searchPattern}`,
+            sql`${performers.nameKana} ILIKE ${searchPattern}`
+          )!;
+
+      // 別名から一致した女優IDがあれば追加
+      if (matchingPerformerIds.length > 0) {
+        conditions.push(
+          or(
+            nameConditions,
+            sql`${performers.id} IN ${sql.raw(`(${matchingPerformerIds.map(p => p.performerId).join(',')})`)}`
+          )!
+        );
+      } else {
+        conditions.push(nameConditions);
+      }
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -672,11 +713,15 @@ export async function getActresses(options?: {
         batchGetPerformerProductCounts(db, performerIds),
         batchGetPerformerThumbnails(db, performerIds),
       ]);
-      return results.map(r => mapPerformerToActressTypeSync(
+      const actresses = results.map(r => mapPerformerToActressTypeSync(
         r.performer,
         productCounts.get(r.performer.id) || 0,
         thumbnails.get(r.performer.id)
       ));
+
+      // キャッシュに保存（5分間）
+      await setCache(cacheKey, actresses, 300);
+      return actresses;
     } else {
       // 名前順または新着順
       switch (sortBy) {
@@ -707,11 +752,15 @@ export async function getActresses(options?: {
         batchGetPerformerProductCounts(db, performerIds),
         batchGetPerformerThumbnails(db, performerIds),
       ]);
-      return results.map(performer => mapPerformerToActressTypeSync(
+      const actresses = results.map(performer => mapPerformerToActressTypeSync(
         performer,
         productCounts.get(performer.id) || 0,
         thumbnails.get(performer.id)
       ));
+
+      // キャッシュに保存（5分間）
+      await setCache(cacheKey, actresses, 300);
+      return actresses;
     }
   } catch (error) {
     console.error('Error fetching actresses:', error);
@@ -914,16 +963,49 @@ export async function getActressesCount(options?: {
     }
 
     // 検索クエリ（名前を検索）- 類似性ベースのあいまい検索を使用
+    // performer_aliases テーブルも検索対象に含める
     if (options?.query) {
+      // 別名から一致する女優IDを取得
+      // 頭文字検索（1文字）の場合は前方一致、それ以外はあいまい検索
+      const isInitialSearch = options.query.length === 1;
+      const searchPattern = isInitialSearch ? options.query + '%' : '%' + options.query + '%';
+
+      const matchingPerformerIds = await db
+        .selectDistinct({ performerId: performerAliases.performerId })
+        .from(performerAliases)
+        .where(
+          or(
+            sql`similarity(${performerAliases.aliasName}, ${options.query}) > 0.2`,
+            sql`${performerAliases.aliasName} ILIKE ${searchPattern}`
+          )!
+        );
+
       // pg_trgmを使用した類似性検索（similarity > 0.2 の結果を返す）
-      conditions.push(
-        or(
-          sql`similarity(${performers.name}, ${options.query}) > 0.2`,
-          sql`similarity(${performers.nameKana}, ${options.query}) > 0.2`,
-          sql`${performers.name} ILIKE ${'%' + options.query + '%'}`,
-          sql`${performers.nameKana} ILIKE ${'%' + options.query + '%'}`
-        )!
-      );
+      // 主名前、カナ名、または別名のいずれかに一致
+      // 頭文字検索の場合、nameKanaがあればnameKanaで、なければnameで検索
+      const nameConditions = isInitialSearch
+        ? or(
+            sql`(${performers.nameKana} IS NOT NULL AND ${performers.nameKana} ILIKE ${searchPattern})`,
+            sql`(${performers.nameKana} IS NULL AND ${performers.name} ILIKE ${searchPattern})`
+          )!
+        : or(
+            sql`similarity(${performers.name}, ${options.query}) > 0.2`,
+            sql`similarity(${performers.nameKana}, ${options.query}) > 0.2`,
+            sql`${performers.name} ILIKE ${searchPattern}`,
+            sql`${performers.nameKana} ILIKE ${searchPattern}`
+          )!;
+
+      // 別名から一致した女優IDがあれば追加
+      if (matchingPerformerIds.length > 0) {
+        conditions.push(
+          or(
+            nameConditions,
+            sql`${performers.id} IN ${sql.raw(`(${matchingPerformerIds.map(p => p.performerId).join(',')})`)}`
+          )!
+        );
+      } else {
+        conditions.push(nameConditions);
+      }
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -966,6 +1048,73 @@ export async function getActressById(id: string): Promise<ActressType | null> {
   } catch (error) {
     console.error(`Error fetching actress ${id}:`, error);
     throw error;
+  }
+}
+
+/**
+ * 女優の別名を取得
+ */
+export async function getPerformerAliases(performerId: number): Promise<Array<{
+  id: number;
+  aliasName: string;
+  source: string | null;
+  isPrimary: boolean;
+  createdAt: Date;
+}>> {
+  try {
+    const db = getDb();
+
+    const aliases = await db
+      .select()
+      .from(performerAliases)
+      .where(eq(performerAliases.performerId, performerId))
+      .orderBy(desc(performerAliases.isPrimary), asc(performerAliases.aliasName));
+
+    return aliases;
+  } catch (error) {
+    console.error(`Error fetching aliases for performer ${performerId}:`, error);
+    return [];
+  }
+}
+
+/**
+ * 女優のサイト別作品数を取得
+ */
+export async function getActressProductCountBySite(actressId: string): Promise<Array<{
+  siteName: string;
+  count: number;
+}>> {
+  try {
+    const db = getDb();
+    const performerId = parseInt(actressId);
+
+    if (isNaN(performerId)) {
+      return [];
+    }
+
+    const results = await db
+      .select({
+        siteName: tags.name,
+        count: sql<number>`COUNT(DISTINCT ${products.id})`,
+      })
+      .from(products)
+      .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
+      .innerJoin(productTags, eq(products.id, productTags.productId))
+      .innerJoin(tags, eq(productTags.tagId, tags.id))
+      .where(and(
+        eq(productPerformers.performerId, performerId),
+        eq(tags.category, 'site')
+      ))
+      .groupBy(tags.name)
+      .orderBy(desc(sql<number>`COUNT(DISTINCT ${products.id})`));
+
+    return results.map(r => ({
+      siteName: r.siteName,
+      count: Number(r.count),
+    }));
+  } catch (error) {
+    console.error(`Error fetching product count by site for actress ${actressId}:`, error);
+    return [];
   }
 }
 
@@ -1033,15 +1182,33 @@ function mapProductToType(
   const imageUrl = cache?.thumbnailUrl || 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
   const affiliateUrl = source?.affiliateUrl || cache?.affiliateUrl || '';
 
+  // サンプル画像を取得（JSONBフィールド）
+  const sampleImages = cache?.sampleImages as string[] | undefined;
+
   // タグからカテゴリを推定（仮実装）
   const category: ProductCategory = 'premium';
 
-  // 出演者情報
+  // 出演者情報（後方互換性のため最初の1人も保持）
   const actressId = performerData.length > 0 ? String(performerData[0].id) : undefined;
   const actressName = performerData.length > 0 ? performerData[0].name : undefined;
 
+  // 全出演者情報
+  const performers = performerData.map(p => ({
+    id: String(p.id),
+    name: p.name
+  }));
+
   // タグ名の配列
   const tags = tagData.map(t => t.name);
+
+  // 新作判定：リリース日が7日以内の場合
+  const isNew = product.releaseDate ? (() => {
+    const releaseDate = new Date(product.releaseDate);
+    const now = new Date();
+    const diffTime = now.getTime() - releaseDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 7;
+  })() : false;
 
   return {
     id: String(product.id),
@@ -1057,6 +1224,7 @@ function mapProductToType(
     providerLabel,
     actressId,
     actressName,
+    performers: performers.length > 0 ? performers : undefined,
     releaseDate: product.releaseDate || undefined,
     duration: product.duration || undefined,
     format: undefined,
@@ -1064,10 +1232,11 @@ function mapProductToType(
     reviewCount: undefined,
     tags,
     isFeatured: false,
-    isNew: false,
+    isNew,
     discount: undefined,
     reviewHighlight: undefined,
     ctaLabel: undefined,
+    sampleImages,
   };
 }
 
@@ -1172,6 +1341,82 @@ export async function fuzzySearchProducts(query: string, limit: number = 20): Pr
     return productDetails.filter((p): p is ProductType => p !== null);
   } catch (error) {
     console.error('Error in fuzzy search:', error);
+    throw error;
+  }
+}
+
+/**
+ * 新作が出た女優を取得（最近リリースされた商品に出演している女優）
+ */
+export async function getActressesWithNewReleases(options: {
+  limit?: number;
+  daysAgo?: number; // 何日前までの新作を対象とするか（デフォルト: 30日）
+} = {}) {
+  const { limit = 20, daysAgo = 30 } = options;
+
+  try {
+    const db = getDb();
+
+    // 指定期間内にリリースされた商品を取得し、その出演者をユニークに取得
+    const recentDate = new Date();
+    recentDate.setDate(recentDate.getDate() - daysAgo);
+
+    // Use raw SQL query to avoid Drizzle ORM issues with aggregation
+    const result = await db.execute<{
+      id: number;
+      name: string;
+      name_kana: string | null;
+      latest_release_date: string;
+      product_count: string;
+    }>(sql`
+      SELECT
+        p.id,
+        p.name,
+        p.name_kana,
+        MAX(pr.release_date)::text as latest_release_date,
+        COUNT(DISTINCT pr.id)::text as product_count
+      FROM performers p
+      INNER JOIN product_performers pp ON p.id = pp.performer_id
+      INNER JOIN products pr ON pp.product_id = pr.id
+      WHERE pr.release_date >= ${recentDate.toISOString()}
+      GROUP BY p.id, p.name, p.name_kana
+      ORDER BY MAX(pr.release_date) DESC
+      LIMIT ${limit}
+    `);
+
+    // Check if result.rows exists and is an array
+    if (!result || !result.rows || !Array.isArray(result.rows)) {
+      console.warn('getActressesWithNewReleases: No rows returned from query');
+      return [];
+    }
+
+    // ActressType形式に変換（getActressByIdで画像など取得）
+    const actressesWithDetails = await Promise.all(
+      result.rows.map(async (actress) => {
+        const fullActress = await getActressById(actress.id.toString());
+        return fullActress || {
+          id: actress.id.toString(),
+          name: actress.name,
+          catchcopy: '',
+          description: '',
+          heroImage: '',
+          thumbnail: '',
+          primaryGenres: [],
+          services: [],
+          metrics: {
+            releaseCount: parseInt(actress.product_count, 10),
+            trendingScore: 0,
+            fanScore: 0,
+          },
+          highlightWorks: [],
+          tags: [],
+        } as ActressType;
+      })
+    );
+
+    return actressesWithDetails;
+  } catch (error) {
+    console.error('Error getting actresses with new releases:', error);
     throw error;
   }
 }

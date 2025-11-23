@@ -1,0 +1,67 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next
+out
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+.vitest
+
+# Development
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Build artifacts
+dist
+build
+
+# Lock files (keep package-lock.json for npm ci)
+yarn.lock
+pnpm-lock.yaml
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Scripts and data files
+scripts
+data
+*.csv
+*.json.backup
+
+# Logs
+logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+.dockerignore
+Dockerfile
+docker-compose.yml

@@ -8,21 +8,30 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/admin/'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/_next/',
+          '/age-verification',
+          '/*/favorites',
+        ],
+        crawlDelay: 1,
       },
       {
         userAgent: 'Googlebot',
         allow: '/',
-        disallow: ['/api/', '/admin/'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/*/favorites',
+        ],
       },
       {
-        userAgent: 'Bingbot',
-        allow: '/',
-        disallow: ['/api/', '/admin/'],
+        userAgent: ['AhrefsBot', 'MJ12bot', 'SemrushBot', 'DotBot', 'PetalBot'],
+        disallow: '/',
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
+    host: siteUrl,
   };
 }
-
-

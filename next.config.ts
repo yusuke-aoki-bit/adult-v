@@ -77,6 +77,8 @@ const nextConfig: NextConfig = {
   },
   // ReactのStrict Modeを有効化（開発時のバグ発見に役立つ）
   reactStrictMode: true,
+  // スタンドアロンモード（Docker用）
+  output: 'standalone',
 };
 
 export default withNextIntl(nextConfig);

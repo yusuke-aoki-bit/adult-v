@@ -1,89 +1,134 @@
 import { MetadataRoute } from 'next';
-import { getActresses } from '@/lib/db/queries';
-import { db } from '@/lib/db';
-import { products } from '@/lib/db/schema';
-import { desc } from 'drizzle-orm';
+import { getActresses, getProducts, getTags } from '@/lib/db/queries';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 const locales = ['ja', 'en', 'zh'];
 
-// 動的生成(DBから毎回取得)
-export const dynamic = 'force-dynamic';
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // データベースから女優と商品を取得
-  let actresses: Awaited<ReturnType<typeof getActresses>> = [];
-  let dbProducts: any[] = [];
+  const sitemap: MetadataRoute.Sitemap = [];
 
-  try {
-    [actresses, dbProducts] = await Promise.all([
-      getActresses({ limit: 5000 }),
-      db.select().from(products).orderBy(desc(products.createdAt)).limit(5000),
-    ]);
-  } catch (error) {
-    console.error('Error fetching data for sitemap:', error);
-    // DBエラーの場合は静的ページのみ返す
-  }
+  // ============================================
+  // 静的ページ
+  // ============================================
 
-  const sitemapEntries: MetadataRoute.Sitemap = [];
-
-  // 各ロケールのホームページ
-  locales.forEach((locale) => {
-    sitemapEntries.push({
+  // ホームページ（各言語）
+  for (const locale of locales) {
+    sitemap.push({
       url: `${siteUrl}/${locale}`,
       lastModified: new Date(),
       changeFrequency: 'daily',
-      priority: 1.0,
-      alternates: {
-        languages: Object.fromEntries(
-          locales.map((l) => [l, `${siteUrl}/${l}`])
-        ),
-      },
+      priority: 1,
     });
+  }
 
-    // 検索ページ
-    sitemapEntries.push({
+  // 検索ページ
+  for (const locale of locales) {
+    sitemap.push({
       url: `${siteUrl}/${locale}/search`,
       lastModified: new Date(),
       changeFrequency: 'daily',
-      priority: 0.8,
+      priority: 0.9,
     });
+  }
 
-    // お気に入りページ
-    sitemapEntries.push({
-      url: `${siteUrl}/${locale}/favorites`,
+  //商品検索ページ
+  for (const locale of locales) {
+    sitemap.push({
+      url: `${siteUrl}/${locale}/products/search`,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.6,
+      changeFrequency: 'daily',
+      priority: 0.9,
     });
-  });
+  }
 
-  // 女優ページ（各ロケール）
-  actresses.forEach((actress) => {
-    locales.forEach((locale) => {
-      sitemapEntries.push({
-        url: `${siteUrl}/${locale}/actress/${actress.id}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly',
-        priority: 0.8,
-        alternates: {
-          languages: Object.fromEntries(
-            locales.map((l) => [`${l}`, `${siteUrl}/${l}/actress/${actress.id}`])
-          ),
-        },
-      });
+  // プライバシーポリシー・利用規約
+  for (const locale of locales) {
+    sitemap.push({
+      url: `${siteUrl}/${locale}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.3,
     });
-  });
-
-  // 商品ページ（最大5000件、日本語のみ）
-  dbProducts.forEach((product) => {
-    sitemapEntries.push({
-      url: `${siteUrl}/ja/products/${product.id}`,
-      lastModified: product.createdAt ? new Date(product.createdAt) : new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
+    sitemap.push({
+      url: `${siteUrl}/${locale}/terms`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.3,
     });
-  });
+  }
 
-  return sitemapEntries;
+  // ============================================
+  // 女優ページ（最新1000件 + 作品数が多い順500件）
+  // ============================================
+
+  try {
+    // 最新の女優1000件
+    const recentActresses = await getActresses({
+      limit: 1000,
+      sortBy: 'recent'
+    });
+
+    for (const actress of recentActresses) {
+      for (const locale of locales) {
+        sitemap.push({
+          url: `${siteUrl}/${locale}/actress/${actress.id}`,
+          lastModified: new Date(actress.createdAt || new Date()),
+          changeFrequency: 'weekly',
+          priority: 0.7,
+        });
+      }
+    }
+
+    // 作品数が多い女優500件（人気女優）
+    const popularActresses = await getActresses({
+      limit: 500,
+      sortBy: 'productCountDesc'
+    });
+
+    for (const actress of popularActresses) {
+      // 既に追加済みの場合はスキップ
+      const alreadyAdded = recentActresses.some(a => a.id === actress.id);
+      if (alreadyAdded) continue;
+
+      for (const locale of locales) {
+        sitemap.push({
+          url: `${siteUrl}/${locale}/actress/${actress.id}`,
+          lastModified: new Date(actress.createdAt || new Date()),
+          changeFrequency: 'weekly',
+          priority: 0.8, // 人気女優は優先度を上げる
+        });
+      }
+    }
+
+  } catch (error) {
+    console.error('Error generating actress sitemap:', error);
+  }
+
+  // ============================================
+  // 商品ページ（最新2000件）
+  // ============================================
+
+  try {
+    // 最新の商品2000件
+    const recentProducts = await getProducts({
+      limit: 2000,
+      sortBy: 'releaseDateDesc'
+    });
+
+    for (const product of recentProducts) {
+      for (const locale of locales) {
+        sitemap.push({
+          url: `${siteUrl}/${locale}/products/${product.id}`,
+          lastModified: new Date(product.releaseDate || new Date()),
+          changeFrequency: 'monthly',
+          priority: 0.6,
+        });
+      }
+    }
+
+  } catch (error) {
+    console.error('Error generating product sitemap:', error);
+  }
+
+  return sitemap;
 }
