@@ -1,6 +1,6 @@
 import { getDb } from './index';
 import { products, performers, productPerformers, tags, productTags, productSources, productCache, performerAliases } from './schema';
-import { eq, and, or, like, desc, asc, gte, lte, sql } from 'drizzle-orm';
+import { eq, and, or, like, desc, asc, gte, lte, sql, inArray, notInArray } from 'drizzle-orm';
 import type { Product as ProductType, Actress as ActressType, ProductCategory } from '@/types/product';
 import type { InferSelectModel } from 'drizzle-orm';
 import { mapLegacyProvider, mapLegacyServices } from '@/lib/provider-utils';
@@ -18,6 +18,53 @@ export function generateActressId(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+
+/**
+ * 商品の関連データ（出演者、タグ、ソース、キャッシュ）を並列取得するヘルパー関数
+ */
+async function fetchProductRelatedData(db: ReturnType<typeof getDb>, productId: number) {
+  const [performerData, tagData, sourceAndCacheData] = await Promise.all([
+    // 出演者情報を取得
+    db
+      .select({
+        id: performers.id,
+        name: performers.name,
+        nameKana: performers.nameKana,
+      })
+      .from(productPerformers)
+      .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+      .where(eq(productPerformers.productId, productId)),
+
+    // タグ情報を取得
+    db
+      .select({
+        id: tags.id,
+        name: tags.name,
+        category: tags.category,
+      })
+      .from(productTags)
+      .innerJoin(tags, eq(productTags.tagId, tags.id))
+      .where(eq(productTags.productId, productId)),
+
+    // ASP情報とキャッシュを1つのクエリで取得
+    db
+      .select({
+        source: productSources,
+        cache: productCache,
+      })
+      .from(productSources)
+      .leftJoin(productCache, eq(productSources.productId, productCache.productId))
+      .where(eq(productSources.productId, productId))
+      .limit(1),
+  ]);
+
+  return {
+    performerData,
+    tagData,
+    sourceData: sourceAndCacheData[0]?.source,
+    cacheData: sourceAndCacheData[0]?.cache,
+  };
+}
 
 /**
  * 商品をIDで取得
@@ -39,42 +86,10 @@ export async function getProductById(id: string): Promise<ProductType | null> {
 
     const product = result[0];
 
-    // 出演者情報を取得
-    const performerData = await db
-      .select({
-        id: performers.id,
-        name: performers.name,
-        nameKana: performers.nameKana,
-      })
-      .from(productPerformers)
-      .innerJoin(performers, eq(productPerformers.performerId, performers.id))
-      .where(eq(productPerformers.productId, product.id));
+    // 関連データを並列で取得
+    const { performerData, tagData, sourceData, cacheData } = await fetchProductRelatedData(db, product.id);
 
-    // タグ情報を取得
-    const tagData = await db
-      .select({
-        id: tags.id,
-        name: tags.name,
-        category: tags.category,
-      })
-      .from(productTags)
-      .innerJoin(tags, eq(productTags.tagId, tags.id))
-      .where(eq(productTags.productId, product.id));
-
-    // ASP情報とキャッシュを取得（最初の1件）
-    const sourceData = await db
-      .select()
-      .from(productSources)
-      .where(eq(productSources.productId, product.id))
-      .limit(1);
-
-    const cacheData = await db
-      .select()
-      .from(productCache)
-      .where(eq(productCache.productId, product.id))
-      .limit(1);
-
-    return mapProductToType(product, performerData, tagData, sourceData[0], cacheData[0]);
+    return mapProductToType(product, performerData, tagData, sourceData, cacheData);
   } catch (error) {
     console.error(`Error fetching product ${id}:`, error);
     throw error;
@@ -98,42 +113,10 @@ export async function searchProductByProductId(productId: string): Promise<Produ
     if (productByNormalizedId.length > 0) {
       const product = productByNormalizedId[0];
 
-      // 出演者情報を取得
-      const performerData = await db
-        .select({
-          id: performers.id,
-          name: performers.name,
-          nameKana: performers.nameKana,
-        })
-        .from(productPerformers)
-        .innerJoin(performers, eq(productPerformers.performerId, performers.id))
-        .where(eq(productPerformers.productId, product.id));
+      // 関連データを並列で取得
+      const { performerData, tagData, sourceData, cacheData } = await fetchProductRelatedData(db, product.id);
 
-      // タグ情報を取得
-      const tagData = await db
-        .select({
-          id: tags.id,
-          name: tags.name,
-          category: tags.category,
-        })
-        .from(productTags)
-        .innerJoin(tags, eq(productTags.tagId, tags.id))
-        .where(eq(productTags.productId, product.id));
-
-      // ASP情報とキャッシュを取得
-      const sourceData = await db
-        .select()
-        .from(productSources)
-        .where(eq(productSources.productId, product.id))
-        .limit(1);
-
-      const cacheData = await db
-        .select()
-        .from(productCache)
-        .where(eq(productCache.productId, product.id))
-        .limit(1);
-
-      return mapProductToType(product, performerData, tagData, sourceData[0], cacheData[0]);
+      return mapProductToType(product, performerData, tagData, sourceData, cacheData);
     }
 
     // originalProductIdで検索
@@ -162,36 +145,36 @@ export async function searchProductByProductId(productId: string): Promise<Produ
 
     const productData = product[0];
 
-    // 出演者情報を取得
-    const performerData = await db
-      .select({
-        id: performers.id,
-        name: performers.name,
-        nameKana: performers.nameKana,
-      })
-      .from(productPerformers)
-      .innerJoin(performers, eq(productPerformers.performerId, performers.id))
-      .where(eq(productPerformers.productId, productData.id));
+    // 関連データを並列で取得（sourceは既に取得済みなので、出演者、タグ、キャッシュのみ）
+    const [performerData, tagData, cacheDataResult] = await Promise.all([
+      db
+        .select({
+          id: performers.id,
+          name: performers.name,
+          nameKana: performers.nameKana,
+        })
+        .from(productPerformers)
+        .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+        .where(eq(productPerformers.productId, productData.id)),
 
-    // タグ情報を取得
-    const tagData = await db
-      .select({
-        id: tags.id,
-        name: tags.name,
-        category: tags.category,
-      })
-      .from(productTags)
-      .innerJoin(tags, eq(productTags.tagId, tags.id))
-      .where(eq(productTags.productId, productData.id));
+      db
+        .select({
+          id: tags.id,
+          name: tags.name,
+          category: tags.category,
+        })
+        .from(productTags)
+        .innerJoin(tags, eq(productTags.tagId, tags.id))
+        .where(eq(productTags.productId, productData.id)),
 
-    // キャッシュを取得
-    const cacheData = await db
-      .select()
-      .from(productCache)
-      .where(eq(productCache.productId, productData.id))
-      .limit(1);
+      db
+        .select()
+        .from(productCache)
+        .where(eq(productCache.productId, productData.id))
+        .limit(1),
+    ]);
 
-    return mapProductToType(productData, performerData, tagData, source, cacheData[0]);
+    return mapProductToType(productData, performerData, tagData, source, cacheDataResult[0]);
   } catch (error) {
     console.error(`Error searching product by product ID ${productId}:`, error);
     throw error;
@@ -246,11 +229,12 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       const productIds = await db
         .selectDistinct({ productId: productSources.productId })
         .from(productSources)
-        .where(sql`${productSources.aspName} IN ${sql.raw(`('${aspNames.join("','")}')`)}`)
+        .where(inArray(productSources.aspName, aspNames));
 
       if (productIds.length > 0) {
+        const productIdValues = productIds.map(p => p.productId);
         conditions.push(
-          sql`${products.id} IN ${sql.raw(`(${productIds.map(p => p.productId).join(',')})`)}`
+          inArray(products.id, productIdValues)
         );
       } else {
         // 該当商品なし
@@ -275,8 +259,9 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         .where(and(...priceConditions));
 
       if (productIds.length > 0) {
+        const productIdValues = productIds.map(p => p.productId);
         conditions.push(
-          sql`${products.id} IN ${sql.raw(`(${productIds.map(p => p.productId).join(',')})`)}`
+          inArray(products.id, productIdValues)
         );
       } else {
         // 該当商品なし
@@ -295,8 +280,9 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
           .where(eq(productPerformers.performerId, performerId));
 
         if (productIds.length > 0) {
+          const productIdValues = productIds.map(p => p.productId);
           conditions.push(
-            sql`${products.id} IN ${sql.raw(`(${productIds.map(p => p.productId).join(',')})`)}`
+            inArray(products.id, productIdValues)
           );
         } else {
           // 該当商品なし
@@ -313,11 +299,12 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         const productIds = await db
           .selectDistinct({ productId: productTags.productId })
           .from(productTags)
-          .where(sql`${productTags.tagId} IN ${sql.raw(`(${tagIds.join(',')})`)}`);
+          .where(inArray(productTags.tagId, tagIds));
 
         if (productIds.length > 0) {
+          const productIdValues = productIds.map(p => p.productId);
           conditions.push(
-            sql`${products.id} IN ${sql.raw(`(${productIds.map(p => p.productId).join(',')})`)}`
+            inArray(products.id, productIdValues)
           );
         } else {
           // 該当商品なし
@@ -334,11 +321,12 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         const excludedProductIds = await db
           .selectDistinct({ productId: productTags.productId })
           .from(productTags)
-          .where(sql`${productTags.tagId} IN ${sql.raw(`(${excludeTagIds.join(',')})`)}`);
+          .where(inArray(productTags.tagId, excludeTagIds));
 
         if (excludedProductIds.length > 0) {
+          const excludedProductIdValues = excludedProductIds.map(p => p.productId);
           conditions.push(
-            sql`${products.id} NOT IN ${sql.raw(`(${excludedProductIds.map(p => p.productId).join(',')})`)}`
+            notInArray(products.id, excludedProductIdValues)
           );
         }
       }
@@ -393,7 +381,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
           })
           .from(productPerformers)
           .innerJoin(performers, eq(productPerformers.performerId, performers.id))
-          .where(sql`${productPerformers.productId} IN ${sql.raw(`(${productIds.join(',')})`)}`),
+          .where(inArray(productPerformers.productId, productIds)),
         db
           .select({
             productId: productTags.productId,
@@ -403,15 +391,15 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
           })
           .from(productTags)
           .innerJoin(tags, eq(productTags.tagId, tags.id))
-          .where(sql`${productTags.productId} IN ${sql.raw(`(${productIds.join(',')})`)}`),
+          .where(inArray(productTags.productId, productIds)),
         db
           .select()
           .from(productSources)
-          .where(sql`${productSources.productId} IN ${sql.raw(`(${productIds.join(',')})`)}`),
+          .where(inArray(productSources.productId, productIds)),
         db
           .select()
           .from(productCache)
-          .where(sql`${productCache.productId} IN ${sql.raw(`(${productIds.join(',')})`)}`),
+          .where(inArray(productCache.productId, productIds)),
       ]);
 
       // Map by productId
@@ -490,7 +478,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         })
         .from(productPerformers)
         .innerJoin(performers, eq(productPerformers.performerId, performers.id))
-        .where(sql`${productPerformers.productId} IN ${sql.raw(`(${productIds.join(',')})`)}`),
+        .where(inArray(productPerformers.productId, productIds)),
       db
         .select({
           productId: productTags.productId,
@@ -500,15 +488,15 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         })
         .from(productTags)
         .innerJoin(tags, eq(productTags.tagId, tags.id))
-        .where(sql`${productTags.productId} IN ${sql.raw(`(${productIds.join(',')})`)}`),
+        .where(inArray(productTags.productId, productIds)),
       db
         .select()
         .from(productSources)
-        .where(sql`${productSources.productId} IN ${sql.raw(`(${productIds.join(',')})`)}`),
+        .where(inArray(productSources.productId, productIds)),
       db
         .select()
         .from(productCache)
-        .where(sql`${productCache.productId} IN ${sql.raw(`(${productIds.join(',')})`)}`),
+        .where(inArray(productCache.productId, productIds)),
     ]);
 
     // Map by productId
@@ -582,6 +570,7 @@ export async function getActresses(options?: {
   includeTags?: string[];
   excludeTags?: string[];
   sortBy?: ActressSortOption;
+  excludeInitials?: boolean; // 'etc'フィルタ用: 50音・アルファベット以外
 }): Promise<ActressType[]> {
   try {
     // キャッシュをチェック
@@ -595,6 +584,15 @@ export async function getActresses(options?: {
     const db = getDb();
     const conditions = [];
 
+    // 'etc'フィルタ: 50音・アルファベット以外で始まる名前
+    if (options?.excludeInitials) {
+      conditions.push(
+        sql`NOT (
+          LEFT(${performers.name}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
+        )`
+      );
+    }
+
     // 対象タグでフィルタ（いずれかを含む）
     if (options?.includeTags && options.includeTags.length > 0) {
       const tagIds = options.includeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
@@ -604,11 +602,12 @@ export async function getActresses(options?: {
           .selectDistinct({ performerId: productPerformers.performerId })
           .from(productTags)
           .innerJoin(productPerformers, eq(productTags.productId, productPerformers.productId))
-          .where(sql`${productTags.tagId} IN ${sql.raw(`(${tagIds.join(',')})`)}`);
+          .where(inArray(productTags.tagId, tagIds));
 
         if (performerIds.length > 0) {
+          const performerIdValues = performerIds.map(p => p.performerId);
           conditions.push(
-            sql`${performers.id} IN ${sql.raw(`(${performerIds.map(p => p.performerId).join(',')})`)}`
+            inArray(performers.id, performerIdValues)
           );
         } else {
           // 該当女優なし
@@ -626,11 +625,12 @@ export async function getActresses(options?: {
           .selectDistinct({ performerId: productPerformers.performerId })
           .from(productTags)
           .innerJoin(productPerformers, eq(productTags.productId, productPerformers.productId))
-          .where(sql`${productTags.tagId} IN ${sql.raw(`(${tagIds.join(',')})`)}`);
+          .where(inArray(productTags.tagId, tagIds));
 
         if (excludedPerformerIds.length > 0) {
+          const excludedPerformerIdValues = excludedPerformerIds.map(p => p.performerId);
           conditions.push(
-            sql`${performers.id} NOT IN ${sql.raw(`(${excludedPerformerIds.map(p => p.performerId).join(',')})`)}`
+            notInArray(performers.id, excludedPerformerIdValues)
           );
         }
       }
@@ -674,7 +674,7 @@ export async function getActresses(options?: {
         conditions.push(
           or(
             nameConditions,
-            sql`${performers.id} IN ${sql.raw(`(${matchingPerformerIds.map(p => p.performerId).join(',')})`)}`
+            inArray(performers.id, matchingPerformerIds.map(p => p.performerId))
           )!
         );
       } else {
@@ -722,17 +722,45 @@ export async function getActresses(options?: {
       // キャッシュに保存（5分間）
       await setCache(cacheKey, actresses, 300);
       return actresses;
+    } else if (sortBy === 'recent') {
+      // 新着順の場合は、作品のリリース日でソート（最新の作品が出ている女優を先に表示）
+      const results = await db
+        .select({
+          performer: performers,
+          latestReleaseDate: sql<Date>`MAX(${products.releaseDate})`,
+        })
+        .from(performers)
+        .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
+        .leftJoin(products, eq(productPerformers.productId, products.id))
+        .where(whereClause)
+        .groupBy(performers.id)
+        .orderBy(desc(sql`MAX(${products.releaseDate})`))
+        .limit(options?.limit || 100)
+        .offset(options?.offset || 0);
+
+      // バッチで作品数とサムネイルを取得
+      const performerIds = results.map(r => r.performer.id);
+      const [productCounts, thumbnails] = await Promise.all([
+        batchGetPerformerProductCounts(db, performerIds),
+        batchGetPerformerThumbnails(db, performerIds),
+      ]);
+      const actresses = results.map(r => mapPerformerToActressTypeSync(
+        r.performer,
+        productCounts.get(r.performer.id) || 0,
+        thumbnails.get(r.performer.id)
+      ));
+
+      // キャッシュに保存（5分間）
+      await setCache(cacheKey, actresses, 300);
+      return actresses;
     } else {
-      // 名前順または新着順
+      // 名前順
       switch (sortBy) {
         case 'nameAsc':
           orderByClause = asc(performers.name);
           break;
         case 'nameDesc':
           orderByClause = desc(performers.name);
-          break;
-        case 'recent':
-          orderByClause = desc(performers.createdAt);
           break;
         default:
           orderByClause = asc(performers.name);
@@ -780,8 +808,7 @@ async function batchGetPerformerProductCounts(db: ReturnType<typeof getDb>, perf
       count: sql<number>`count(*)`,
     })
     .from(productPerformers)
-    .where(sql`${productPerformers.performerId} IN ${sql.raw(`(${performerIds.join(',')})`)}`
-    )
+    .where(inArray(productPerformers.performerId, performerIds))
     .groupBy(productPerformers.performerId);
 
   const map = new Map<number, number>();
@@ -807,7 +834,7 @@ async function batchGetPerformerThumbnails(db: ReturnType<typeof getDb>, perform
     .innerJoin(productCache, eq(productPerformers.productId, productCache.productId))
     .where(
       and(
-        sql`${productPerformers.performerId} IN ${sql.raw(`(${performerIds.join(',')})`)}`,
+        inArray(productPerformers.performerId, performerIds),
         sql`${productCache.thumbnailUrl} IS NOT NULL`
       )
     )
@@ -894,7 +921,7 @@ export async function getTagsForActress(actressId: string, category?: string): P
       .where(
         and(
           category ? eq(tags.category, category) : undefined,
-          sql`${productTags.productId} IN ${sql.raw(`(${productIdList.join(',')})`)}`
+          inArray(productTags.productId, productIdList)
         )
       )
       .groupBy(tags.id, tags.name, tags.category)
@@ -919,10 +946,20 @@ export async function getActressesCount(options?: {
   query?: string;
   includeTags?: string[];
   excludeTags?: string[];
+  excludeInitials?: boolean; // 'etc'フィルタ用: 50音・アルファベット以外
 }): Promise<number> {
   try {
     const db = getDb();
     const conditions = [];
+
+    // 'etc'フィルタ: 50音・アルファベット以外で始まる名前
+    if (options?.excludeInitials) {
+      conditions.push(
+        sql`NOT (
+          LEFT(${performers.name}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
+        )`
+      );
+    }
 
     // 対象タグでフィルタ（いずれかを含む）
     if (options?.includeTags && options.includeTags.length > 0) {
@@ -932,11 +969,12 @@ export async function getActressesCount(options?: {
           .selectDistinct({ performerId: productPerformers.performerId })
           .from(productTags)
           .innerJoin(productPerformers, eq(productTags.productId, productPerformers.productId))
-          .where(sql`${productTags.tagId} IN ${sql.raw(`(${tagIds.join(',')})`)}`);
+          .where(inArray(productTags.tagId, tagIds));
 
         if (performerIds.length > 0) {
+          const performerIdValues = performerIds.map(p => p.performerId);
           conditions.push(
-            sql`${performers.id} IN ${sql.raw(`(${performerIds.map(p => p.performerId).join(',')})`)}`
+            inArray(performers.id, performerIdValues)
           );
         } else {
           return 0;
@@ -952,11 +990,12 @@ export async function getActressesCount(options?: {
           .selectDistinct({ performerId: productPerformers.performerId })
           .from(productTags)
           .innerJoin(productPerformers, eq(productTags.productId, productPerformers.productId))
-          .where(sql`${productTags.tagId} IN ${sql.raw(`(${tagIds.join(',')})`)}`);
+          .where(inArray(productTags.tagId, tagIds));
 
         if (excludedPerformerIds.length > 0) {
+          const excludedPerformerIdValues = excludedPerformerIds.map(p => p.performerId);
           conditions.push(
-            sql`${performers.id} NOT IN ${sql.raw(`(${excludedPerformerIds.map(p => p.performerId).join(',')})`)}`
+            notInArray(performers.id, excludedPerformerIdValues)
           );
         }
       }
@@ -1000,7 +1039,7 @@ export async function getActressesCount(options?: {
         conditions.push(
           or(
             nameConditions,
-            sql`${performers.id} IN ${sql.raw(`(${matchingPerformerIds.map(p => p.performerId).join(',')})`)}`
+            inArray(performers.id, matchingPerformerIds.map(p => p.performerId))
           )!
         );
       } else {

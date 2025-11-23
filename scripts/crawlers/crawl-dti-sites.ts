@@ -2,11 +2,17 @@
  * DTI sites crawler script
  * Crawls product pages directly from DTI affiliated sites
  * Run with: npx tsx scripts/crawl-dti-sites.ts
+ *
+ * Required environment variables:
+ * - DATABASE_URL: PostgreSQL connection string
  */
 
-// Set DATABASE_URL if not already set
+// Ensure DATABASE_URL is set
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres';
+  console.error('ERROR: DATABASE_URL environment variable is not set');
+  console.error('Please set DATABASE_URL before running this script:');
+  console.error('  export DATABASE_URL="postgresql://user:password@host:port/database"');
+  process.exit(1);
 }
 
 import { createHash } from 'crypto';

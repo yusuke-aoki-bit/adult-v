@@ -26,7 +26,7 @@ try {
     case 'mgs':
       {
         const maxPages = args.find((arg, i) => args[i - 1] === '--pages') || '5';
-        const command = `npx tsx scripts/crawl-mgs-list.ts "https://www.mgstage.com/search/cSearch.php?sort=new&disp_type=3" --max-pages ${maxPages}`;
+        const command = `npx tsx scripts/crawlers/crawl-mgs-list.ts "https://www.mgstage.com/search/cSearch.php?sort=new&disp_type=3" --max-pages ${maxPages}`;
         console.log(`Executing: ${command}`);
         execSync(command, { stdio: 'inherit', env: process.env });
       }
@@ -36,7 +36,7 @@ try {
       {
         const limit = args.find((arg, i) => args[i - 1] === '--limit') || '50';
         const start = args.find((arg, i) => args[i - 1] === '--start') || '122024_001';
-        const command = `npx tsx scripts/crawl-dti-sites.ts --site caribbeancom --start "${start}" --limit ${limit}`;
+        const command = `npx tsx scripts/crawlers/crawl-dti-sites.ts --site caribbeancom --start "${start}" --limit ${limit}`;
         console.log(`Executing: ${command}`);
         execSync(command, { stdio: 'inherit', env: process.env });
       }
@@ -46,7 +46,7 @@ try {
       {
         const limit = args.find((arg, i) => args[i - 1] === '--limit') || '100';
         const start = args.find((arg, i) => args[i - 1] === '--start') || '0001';
-        const command = `npx tsx scripts/crawl-dti-sites.ts --site heyzo --start "${start}" --limit ${limit}`;
+        const command = `npx tsx scripts/crawlers/crawl-dti-sites.ts --site heyzo --start "${start}" --limit ${limit}`;
         console.log(`Executing: ${command}`);
         execSync(command, { stdio: 'inherit', env: process.env });
       }
@@ -56,7 +56,7 @@ try {
       {
         const limit = args.find((arg, i) => args[i - 1] === '--limit') || '100';
         const start = args.find((arg, i) => args[i - 1] === '--start') || '122024_001';
-        const command = `npx tsx scripts/crawl-dti-sites.ts --site caribbeancompr --start "${start}" --limit ${limit}`;
+        const command = `npx tsx scripts/crawlers/crawl-dti-sites.ts --site caribbeancompr --start "${start}" --limit ${limit}`;
         console.log(`Executing: ${command}`);
         execSync(command, { stdio: 'inherit', env: process.env });
       }
@@ -66,7 +66,7 @@ try {
       {
         const limit = args.find((arg, i) => args[i - 1] === '--limit') || '100';
         const start = args.find((arg, i) => args[i - 1] === '--start') || '122024_001';
-        const command = `npx tsx scripts/crawl-dti-sites.ts --site 1pondo --start "${start}" --limit ${limit}`;
+        const command = `npx tsx scripts/crawlers/crawl-dti-sites.ts --site 1pondo --start "${start}" --limit ${limit}`;
         console.log(`Executing: ${command}`);
         execSync(command, { stdio: 'inherit', env: process.env });
       }
@@ -74,7 +74,34 @@ try {
 
     case 'duga':
       {
-        const command = `npx tsx scripts/download-and-seed-duga.ts`;
+        const command = `npx tsx scripts/crawlers/download-and-seed-duga.ts`;
+        console.log(`Executing: ${command}`);
+        execSync(command, { stdio: 'inherit', env: process.env });
+      }
+      break;
+
+    case 'av-wiki':
+      {
+        const limit = args.find((arg, i) => args[i - 1] === '--limit') || '100';
+        const command = `npx tsx scripts/crawlers/crawl-wiki-performers.ts av-wiki ${limit}`;
+        console.log(`Executing: ${command}`);
+        execSync(command, { stdio: 'inherit', env: process.env });
+      }
+      break;
+
+    case 'seesaawiki':
+      {
+        const limit = args.find((arg, i) => args[i - 1] === '--limit') || '100';
+        const command = `npx tsx scripts/crawlers/crawl-wiki-performers.ts seesaawiki ${limit}`;
+        console.log(`Executing: ${command}`);
+        execSync(command, { stdio: 'inherit', env: process.env });
+      }
+      break;
+
+    case 'wiki':
+      {
+        const limit = args.find((arg, i) => args[i - 1] === '--limit') || '100';
+        const command = `npx tsx scripts/crawlers/crawl-wiki-performers.ts both ${limit}`;
         console.log(`Executing: ${command}`);
         execSync(command, { stdio: 'inherit', env: process.env });
       }
@@ -82,7 +109,7 @@ try {
 
     default:
       console.error(`Unknown crawler type: ${crawlerType}`);
-      console.log('Available types: mgs, caribbeancom, heyzo, caribbeancompr, 1pondo, duga');
+      console.log('Available types: mgs, caribbeancom, heyzo, caribbeancompr, 1pondo, duga, av-wiki, seesaawiki, wiki');
       process.exit(1);
   }
 

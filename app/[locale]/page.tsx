@@ -68,45 +68,30 @@ export default async function Home({ params, searchParams }: PageProps) {
   const offset = (page - 1) * ITEMS_PER_PAGE;
 
   // "etc"の場合は特別処理（50音・アルファベット以外）
+  const isEtcFilter = initialFilter === 'etc';
   let searchQuery = initialFilter || query;
-  if (initialFilter === 'etc') {
-    // "etc"の場合はクエリとして渡さず、後でフィルタリング
+  if (isEtcFilter) {
+    // "etc"の場合はクエリとして渡さない
     searchQuery = undefined;
   }
 
   const actresses = await getActresses({
-    limit: initialFilter === 'etc' ? 10000 : ITEMS_PER_PAGE, // etcの場合は全件取得してフィルタ
-    offset: initialFilter === 'etc' ? 0 : offset,
+    limit: ITEMS_PER_PAGE,
+    offset,
     query: searchQuery,
     includeTags,
     excludeTags,
-    sortBy
+    sortBy,
+    excludeInitials: isEtcFilter, // データベース側で'etc'フィルタリング
   });
 
-  // "etc"の場合はフィルタリング
-  let filteredActresses = actresses;
-  let actualTotalCount = 0;
-  if (initialFilter === 'etc') {
-    // 50音・アルファベット以外で始まる名前をフィルタ
-    const hiraganaPattern = /^[ぁ-ん]/; // 全ての平仮名（濁点・半濁点を含む）
-    const katakanaPattern = /^[ァ-ヴー]/; // 全てのカタカナ（濁点・半濁点を含む）
-    const alphabetPattern = /^[A-Za-z]/;
-
-    filteredActresses = actresses.filter(actress => {
-      const firstChar = actress.name.charAt(0);
-      return !hiraganaPattern.test(firstChar) && !katakanaPattern.test(firstChar) && !alphabetPattern.test(firstChar);
-    });
-
-    actualTotalCount = filteredActresses.length;
-
-    // ページネーション用に手動でスライス
-    const start = offset;
-    const end = offset + ITEMS_PER_PAGE;
-    filteredActresses = filteredActresses.slice(start, end);
-  }
-
   // 総数を効率的に取得
-  const totalCount = initialFilter === 'etc' ? actualTotalCount : await getActressesCount({ query: initialFilter || query, includeTags, excludeTags });
+  const totalCount = await getActressesCount({
+    query: searchQuery,
+    includeTags,
+    excludeTags,
+    excludeInitials: isEtcFilter,
+  });
 
   // 新作リリース女優を取得（フィルターがない場合のみ）
   let newReleaseActresses: ActressType[] = [];
@@ -309,7 +294,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           </form>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-            {filteredActresses.map((actress) => (
+            {actresses.map((actress) => (
               <Link key={actress.id} href={`/${locale}/actress/${actress.id}`} className="block">
                 <ActressCard actress={actress} compact />
               </Link>

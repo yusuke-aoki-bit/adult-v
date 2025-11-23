@@ -38,9 +38,12 @@ function getDb() {
         connectionString: cleanConnectionString,
         // Cloud SQL Proxy経由の場合はSSL不要、それ以外は環境に応じて設定
         ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
-        max: 20, // 最大接続数
-        idleTimeoutMillis: 30000, // アイドル接続のタイムアウト
-        connectionTimeoutMillis: 10000, // 接続タイムアウト
+        max: 50, // 最大接続数（本番環境での同時リクエスト対応強化）
+        min: 10, // 最小接続数（常に10接続をプールに保持）
+        idleTimeoutMillis: 60000, // アイドル接続のタイムアウト（60秒）
+        connectionTimeoutMillis: 15000, // 接続タイムアウト（15秒）
+        acquireTimeoutMillis: 30000, // 接続取得タイムアウト（30秒）
+        allowExitOnIdle: false, // プロセスがアイドル時でも終了させない
       });
 
       dbStore.instance = drizzle(dbStore.pool, { schema });

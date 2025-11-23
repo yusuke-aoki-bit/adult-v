@@ -57,6 +57,8 @@ export const productSources = pgTable(
     productAspUnique: uniqueIndex('idx_sources_product_asp').on(table.productId, table.aspName),
     productIdx: index('idx_sources_product').on(table.productId),
     aspIdx: index('idx_sources_asp').on(table.aspName),
+    originalProductIdIdx: index('idx_sources_original_product_id').on(table.originalProductId),
+    aspOriginalIdIdx: index('idx_sources_asp_original_id').on(table.aspName, table.originalProductId),
   }),
 );
 
@@ -83,6 +85,7 @@ export const productCache = pgTable(
     productAspCacheUnique: uniqueIndex('idx_cache_product_asp').on(table.productId, table.aspName),
     freshnessIdx: index('idx_cache_freshness').on(table.productId, table.aspName, table.cachedAt),
     productCacheIdx: index('idx_cache_product').on(table.productId),
+    aspCacheIdx: index('idx_cache_asp').on(table.aspName),
   }),
 );
 
