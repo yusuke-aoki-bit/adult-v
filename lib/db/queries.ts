@@ -1058,7 +1058,7 @@ export async function getPerformerAliases(performerId: number): Promise<Array<{
   id: number;
   aliasName: string;
   source: string | null;
-  isPrimary: boolean;
+  isPrimary: boolean | null;
   createdAt: Date;
 }>> {
   try {

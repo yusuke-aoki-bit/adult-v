@@ -47,8 +47,7 @@ pnpm-lock.yaml
 *.db-shm
 *.db-wal
 
-# Scripts and data files
-scripts
+# Data files (keep scripts for crawler container)
 data
 *.csv
 *.json.backup
