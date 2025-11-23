@@ -173,7 +173,7 @@ export default async function Home({ params, searchParams }: PageProps) {
               <h3 className="text-sm font-semibold text-white mb-3">{t('initialSearch')}</h3>
               <InitialSearchMenu
                 locale={locale}
-                initialFilter={initialFilter}
+                initialFilter={initialFilter ?? null}
                 sortBy={sortBy}
                 includeTags={includeTags.map(Number)}
                 excludeTags={excludeTags.map(Number)}
