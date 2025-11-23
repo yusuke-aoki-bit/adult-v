@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { JsonLD } from '@/components/JsonLD';
-import { getProductById } from '@/lib/db/queries';
+import ProductImageGallery from '@/components/ProductImageGallery';
+import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
+import { getProductById, searchProductByProductId } from '@/lib/db/queries';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import Link from 'next/link';
@@ -16,7 +18,11 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   try {
     const { id, locale } = await params;
-    const product = await getProductById(id);
+    // Try to get product by normalized ID first, then by database ID
+    let product = await searchProductByProductId(id);
+    if (!product && !isNaN(parseInt(id))) {
+      product = await getProductById(id);
+    }
     if (!product) return {};
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
@@ -47,7 +53,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const tNav = await getTranslations('nav');
   const tCommon = await getTranslations('common');
 
-  const product = await getProductById(id);
+  // Try to get product by normalized ID first, then by database ID
+  let product = await searchProductByProductId(id);
+  if (!product && !isNaN(parseInt(id))) {
+    product = await getProductById(id);
+  }
   if (!product) notFound();
 
   const basePath = `/${locale}/products/${product.id}`;
@@ -64,9 +74,31 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: tNav('home'), url: `/${locale}` },
-    { name: tNav('products'), url: `/${locale}/products` },
     { name: product.title, url: basePath },
   ]);
+
+  // パンくずリスト用のアイテム作成
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: tNav('home'), href: `/${locale}` },
+  ];
+
+  // 複数女優の場合、それぞれのパンくずリストを追加
+  if (product.performers && product.performers.length > 0) {
+    product.performers.forEach((performer) => {
+      breadcrumbItems.push({
+        label: performer.name,
+        href: `/${locale}/actress/${performer.id}`,
+      });
+    });
+  } else if (product.actressName && product.actressId) {
+    breadcrumbItems.push({
+      label: product.actressName,
+      href: `/${locale}/actress/${product.actressId}`,
+    });
+  }
+
+  // 最後に商品タイトルを追加（リンクなし）
+  breadcrumbItems.push({ label: product.title });
 
   return (
     <>
@@ -75,18 +107,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
       <div className="bg-gray-900 min-h-screen">
         <div className="container mx-auto px-4 py-8">
+          {/* パンくずリスト */}
+          <Breadcrumb items={breadcrumbItems} className="mb-6" />
+
           <div className="bg-gray-800 rounded-lg shadow-md overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
-              {/* Product Image */}
-              <div className="relative aspect-[3/4] w-full">
-                <Image
-                  src={product.imageUrl}
-                  alt={product.title}
-                  fill
-                  className="object-cover rounded-lg"
-                  priority
-                />
-              </div>
+              {/* Product Image Gallery */}
+              <ProductImageGallery
+                mainImage={product.imageUrl}
+                sampleImages={product.sampleImages}
+                productTitle={product.title}
+              />
 
               {/* Product Info */}
               <div className="space-y-6">
@@ -99,7 +130,24 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </p>
                 </div>
 
-                {product.actressName && (
+                {product.performers && product.performers.length > 0 ? (
+                  <div>
+                    <h2 className="text-sm font-semibold text-white mb-2">
+                      {product.performers.length === 1 ? tCommon('actress') : '出演者'}
+                    </h2>
+                    <div className="flex flex-wrap gap-2">
+                      {product.performers.map((performer) => (
+                        <Link
+                          key={performer.id}
+                          href={`/${locale}/actress/${performer.id}`}
+                          className="text-rose-600 hover:text-green-700 hover:underline"
+                        >
+                          {performer.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : product.actressName ? (
                   <div>
                     <h2 className="text-sm font-semibold text-white mb-2">{tCommon('actress')}</h2>
                     {product.actressId ? (
@@ -113,7 +161,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       <p className="text-white">{product.actressName}</p>
                     )}
                   </div>
-                )}
+                ) : null}
 
                 {product.description && (
                   <div>

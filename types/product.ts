@@ -26,6 +26,8 @@ export interface Product {
   providerLabel: string;
   actressId?: string;
   actressName?: string;
+  // Multiple performers support
+  performers?: Array<{ id: string; name: string }>;
   releaseDate?: string;
   duration?: number; // minutes
   format?: string;
@@ -37,6 +39,7 @@ export interface Product {
   discount?: number;
   reviewHighlight?: string;
   ctaLabel?: string;
+  sampleImages?: string[]; // サンプル画像URL配列
 }
 
 // カテゴリ情報

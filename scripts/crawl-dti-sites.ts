@@ -228,6 +228,7 @@ async function parseHtmlContent(html: string, siteName: string): Promise<{
   actors?: string[];
   releaseDate?: string;
   imageUrl?: string;
+  sampleImages?: string[];
   price?: number;
 } | null> {
   try {
@@ -295,12 +296,57 @@ async function parseHtmlContent(html: string, siteName: string): Promise<{
     const imgMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["'](.*?)["']/i);
     const imageUrl = imgMatch ? imgMatch[1] : undefined;
 
+    // Extract sample images (multiple patterns for DTI sites)
+    const sampleImages: string[] = [];
+
+    // Pattern 1: Sample image gallery members (カリビアンコム系)
+    const memberGalleryMatches = html.matchAll(/<a[^>]*href=["']([^"']*members[^"']*gallery[^"']*\.jpg)["']/gi);
+    for (const match of memberGalleryMatches) {
+      if (!sampleImages.includes(match[1])) {
+        sampleImages.push(match[1]);
+      }
+    }
+
+    // Pattern 2: Movie thumb images
+    const movieThumbMatches = html.matchAll(/<img[^>]*src=["']([^"']*moviepages[^"']*\.jpg)["']/gi);
+    for (const match of movieThumbMatches) {
+      if (!sampleImages.includes(match[1])) {
+        sampleImages.push(match[1]);
+      }
+    }
+
+    // Pattern 3: Sample image links (一本道系)
+    const sampleLinkMatches = html.matchAll(/<a[^>]*href=["']([^"']*\/posters\/[^"']*\.jpg)["']/gi);
+    for (const match of sampleLinkMatches) {
+      if (!sampleImages.includes(match[1])) {
+        sampleImages.push(match[1]);
+      }
+    }
+
+    // Pattern 4: HEYZO sample images
+    const heyzoMatches = html.matchAll(/<img[^>]*src=["']([^"']*\/contents\/[^"']*sample[^"']*\.jpg)["']/gi);
+    for (const match of heyzoMatches) {
+      if (!sampleImages.includes(match[1])) {
+        sampleImages.push(match[1]);
+      }
+    }
+
+    // Pattern 5: Generic sample image patterns
+    const genericSampleMatches = html.matchAll(/<img[^>]*src=["']([^"']*sample[^"']*\.jpg)["']/gi);
+    for (const match of genericSampleMatches) {
+      const url = match[1];
+      if (!sampleImages.includes(url) && url !== imageUrl) {
+        sampleImages.push(url);
+      }
+    }
+
     return {
       title: titleMatch ? titleMatch[1].replace(/\s*-.*$/, '').trim() : undefined,
       description: descMatch ? descMatch[1].trim() : undefined,
       actors,
       releaseDate,
       imageUrl,
+      sampleImages: sampleImages.length > 0 ? sampleImages : undefined,
       price,
     };
   } catch (error) {
@@ -492,6 +538,7 @@ async function crawlSite(config: CrawlConfig) {
             price: productData.price || 0,
             affiliateUrl: affiliateUrl,
             thumbnailUrl: productData.imageUrl,
+            sampleImages: productData.sampleImages || null,
             inStock: true,
           });
 

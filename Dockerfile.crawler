@@ -7,8 +7,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 
-# Copy application code
-COPY . .
+# Copy only necessary files
+COPY lib ./lib
+COPY scripts ./scripts
+COPY drizzle ./drizzle
+COPY tsconfig.json ./tsconfig.json
 
 # Build TypeScript
 RUN npm run build || true

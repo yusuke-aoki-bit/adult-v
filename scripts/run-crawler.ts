@@ -25,7 +25,7 @@ try {
   switch (crawlerType) {
     case 'mgs':
       {
-        const maxPages = args.find((arg, i) => args[i - 1] === '--pages') || '10';
+        const maxPages = args.find((arg, i) => args[i - 1] === '--pages') || '5';
         const command = `npx tsx scripts/crawl-mgs-list.ts "https://www.mgstage.com/search/cSearch.php?sort=new&disp_type=3" --max-pages ${maxPages}`;
         console.log(`Executing: ${command}`);
         execSync(command, { stdio: 'inherit', env: process.env });
@@ -34,7 +34,7 @@ try {
 
     case 'caribbeancom':
       {
-        const limit = args.find((arg, i) => args[i - 1] === '--limit') || '100';
+        const limit = args.find((arg, i) => args[i - 1] === '--limit') || '50';
         const start = args.find((arg, i) => args[i - 1] === '--start') || '122024_001';
         const command = `npx tsx scripts/crawl-dti-sites.ts --site caribbeancom --start "${start}" --limit ${limit}`;
         console.log(`Executing: ${command}`);

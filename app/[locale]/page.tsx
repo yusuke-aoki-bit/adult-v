@@ -4,9 +4,11 @@ import { getTranslations } from 'next-intl/server';
 import ActressCard from '@/components/ActressCard';
 import SortDropdown from '@/components/SortDropdown';
 import Pagination from '@/components/Pagination';
-import { getActresses, getActressesCount, getTags } from '@/lib/db/queries';
+import InitialSearchMenu from '@/components/InitialSearchMenu';
+import { getActresses, getActressesCount, getTags, getActressesWithNewReleases } from '@/lib/db/queries';
 import { generateBaseMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
+import type { Actress as ActressType } from '@/types/product';
 
 export async function generateMetadata({
   params,
@@ -106,8 +108,46 @@ export default async function Home({ params, searchParams }: PageProps) {
   // 総数を効率的に取得
   const totalCount = initialFilter === 'etc' ? actualTotalCount : await getActressesCount({ query: initialFilter || query, includeTags, excludeTags });
 
+  // 新作リリース女優を取得（フィルターがない場合のみ）
+  let newReleaseActresses: ActressType[] = [];
+  if (!query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && page === 1) {
+    try {
+      newReleaseActresses = await getActressesWithNewReleases({ limit: 20, daysAgo: 30 });
+    } catch (error) {
+      console.error('Failed to fetch new release actresses:', error);
+      // Gracefully degrade - just don't show the new releases section
+      newReleaseActresses = [];
+    }
+  }
+
   return (
     <div className="bg-gray-900 min-h-screen">
+      {/* 新作リリース女優 */}
+      {newReleaseActresses.length > 0 && (
+        <section className="py-8 md:py-12 border-b border-gray-800">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+              {t('newReleases')}
+            </h2>
+            <div className="relative -mx-4 px-4">
+              <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800">
+                <div className="flex gap-4 md:gap-6 min-w-max">
+                  {newReleaseActresses.map((actress) => (
+                    <Link
+                      key={actress.id}
+                      href={`/${locale}/actress/${actress.id}`}
+                      className="block shrink-0 w-40 md:w-48"
+                    >
+                      <ActressCard actress={actress} compact />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* 女優一覧 */}
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4">
@@ -131,53 +171,23 @@ export default async function Home({ params, searchParams }: PageProps) {
           <div className="mb-6">
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
               <h3 className="text-sm font-semibold text-white mb-3">{t('initialSearch')}</h3>
-              <div className="flex flex-wrap gap-2">
-                {['あ', 'か', 'さ', 'た', 'な', 'は', 'ま', 'や', 'ら', 'わ'].map((char) => (
-                  <Link
-                    key={char}
-                    href={`/${locale}?initial=${char}${sortBy !== 'nameAsc' ? `&sort=${sortBy}` : ''}${includeTags.length > 0 ? `&include=${includeTags.join(',')}` : ''}${excludeTags.length > 0 ? `&exclude=${excludeTags.join(',')}` : ''}`}
-                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                      initialFilter === char
-                        ? 'bg-rose-600 text-white'
-                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                    }`}
-                  >
-                    {char}
-                  </Link>
-                ))}
-                {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'].map((char) => (
-                  <Link
-                    key={char}
-                    href={`/${locale}?initial=${char}${sortBy !== 'nameAsc' ? `&sort=${sortBy}` : ''}${includeTags.length > 0 ? `&include=${includeTags.join(',')}` : ''}${excludeTags.length > 0 ? `&exclude=${excludeTags.join(',')}` : ''}`}
-                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                      initialFilter === char
-                        ? 'bg-rose-600 text-white'
-                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                    }`}
-                  >
-                    {char}
-                  </Link>
-                ))}
-                <Link
-                  key="etc"
-                  href={`/${locale}?initial=etc${sortBy !== 'nameAsc' ? `&sort=${sortBy}` : ''}${includeTags.length > 0 ? `&include=${includeTags.join(',')}` : ''}${excludeTags.length > 0 ? `&exclude=${excludeTags.join(',')}` : ''}`}
-                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    initialFilter === 'etc'
-                      ? 'bg-rose-600 text-white'
-                      : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                  }`}
-                >
-                  {tCommon('etc')}
-                </Link>
-                {initialFilter && (
+              <InitialSearchMenu
+                locale={locale}
+                initialFilter={initialFilter}
+                sortBy={sortBy}
+                includeTags={includeTags.map(Number)}
+                excludeTags={excludeTags.map(Number)}
+              />
+              {initialFilter && (
+                <div className="mt-3">
                   <Link
                     href={`/${locale}${query ? `?q=${query}` : ''}${sortBy !== 'nameAsc' ? `${query ? '&' : '?'}sort=${sortBy}` : ''}${includeTags.length > 0 ? `${query || sortBy !== 'nameAsc' ? '&' : '?'}include=${includeTags.join(',')}` : ''}${excludeTags.length > 0 ? `${query || sortBy !== 'nameAsc' || includeTags.length > 0 ? '&' : '?'}exclude=${excludeTags.join(',')}` : ''}`}
-                    className="px-3 py-1.5 rounded text-sm font-medium bg-gray-700 text-gray-200 hover:bg-gray-600 transition-colors"
+                    className="px-3 py-1.5 rounded text-sm font-medium bg-gray-700 text-gray-200 hover:bg-gray-600 transition-colors inline-block"
                   >
                     {tCommon('clear')}
                   </Link>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 

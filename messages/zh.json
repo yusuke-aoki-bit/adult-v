@@ -31,14 +31,16 @@
     "viewProduct": "查看作品",
     "backToList": "返回列表",
     "relatedProducts": "相关作品",
-    "moreFrom": "{name}的其他作品"
+    "moreFrom": "{name}的其他作品",
+    "statistics": "统计信息"
   },
   "homepage": {
     "title": "女优列表 - 成人流媒体中心",
     "description": "从人气女优到新星，找到您喜欢的女优。",
     "actressCount": "收录 {count} 位女优",
     "initialSearch": "按首字母搜索",
-    "filterSettings": "筛选设置"
+    "filterSettings": "筛选设置",
+    "newReleases": "新作发布女优"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -98,7 +100,9 @@
     "bloodType": "血型",
     "genres": "类型",
     "noProducts": "暂无作品",
-    "loadMore": "加载更多"
+    "loadMore": "加载更多",
+    "adultContentNotice": "※此页面包含成人内容",
+    "latestReleases": "最新作品"
   },
   "product": {
     "details": "作品详情",
@@ -175,7 +179,8 @@
     "question": "您是否年满18岁？",
     "confirm": "是的，我已年满18岁",
     "deny": "否",
-    "warning": "您必须年满18岁才能访问本站。"
+    "warning": "您必须年满18岁才能访问本站。",
+    "legalNotice": "访问本站即表示您同意服务条款和隐私政策。"
   },
   "error": {
     "pageNotFound": "页面未找到",

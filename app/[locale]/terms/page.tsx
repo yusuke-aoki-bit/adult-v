@@ -33,7 +33,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">3. サービス内容</h2>
             <p className="leading-relaxed">
-              当サイトは、DMM、DUGA、SOKMIL、DTIなどのアダルトコンテンツプラットフォームの
+              当サイトは、複数のアダルトコンテンツプラットフォームの
               情報を整理し、ユーザーに提供するサービスです。
               当サイトは情報提供のみを目的としており、
               コンテンツの販売や配信は行っておりません。
@@ -43,7 +43,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">4. アフィリエイトについて</h2>
             <p className="leading-relaxed">
-              当サイトはDMM、DUGA、SOKMIL、DTIのアフィリエイトプログラムに参加しており、
+              当サイトは複数のアフィリエイトプログラムに参加しており、
               商品リンクから購入された場合、当サイトに紹介料が発生することがあります。
               ただし、アフィリエイトリンクの使用によって、
               ユーザーに追加料金が発生することはありません。

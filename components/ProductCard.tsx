@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useLocale } from 'next-intl';
 import { Product } from '@/types/product';
 import { normalizeImageUrl } from '@/lib/image-utils';
 import FavoriteButton from './FavoriteButton';
@@ -14,7 +15,9 @@ interface ProductCardProps {
 const PLACEHOLDER_IMAGE = 'https://placehold.co/400x560/1f2937/ffffff?text=NO+IMAGE';
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const [imgSrc, setImgSrc] = useState(normalizeImageUrl(product.imageUrl));
+  const locale = useLocale();
+  const hasValidImageUrl = product.imageUrl && product.imageUrl.trim() !== '';
+  const [imgSrc, setImgSrc] = useState(hasValidImageUrl ? normalizeImageUrl(product.imageUrl) : PLACEHOLDER_IMAGE);
   const [hasError, setHasError] = useState(false);
 
   const handleImageError = () => {
@@ -26,8 +29,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300">
-      <div className="relative h-72">
-        <Link href={`/products/${product.id}`}>
+      <div className="relative h-72 bg-gradient-to-br from-gray-50 to-gray-100">
+        <Link href={`/${locale}/products/${product.id}`} className="relative block h-full">
+          {/* 画像 */}
           <Image
             src={imgSrc}
             alt={product.title}
@@ -39,10 +43,19 @@ export default function ProductCard({ product }: ProductCardProps) {
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             onError={handleImageError}
           />
+          {/* No Image オーバーレイ */}
+          {(hasError || imgSrc === PLACEHOLDER_IMAGE || !hasValidImageUrl) && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+              <div className="text-7xl mb-3 text-gray-300">📷</div>
+              <span className="inline-block px-4 py-1.5 bg-gray-800 text-white text-xs font-bold rounded-full shadow-md">
+                NO IMAGE
+              </span>
+            </div>
+          )}
         </Link>
         {product.isNew && (
           <div className="absolute top-4 left-4">
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/90 text-gray-900">
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-600 text-white shadow-lg">
               NEW
             </span>
           </div>
@@ -59,7 +72,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       <div className="p-6 flex flex-col gap-4 flex-1">
         <div>
-          <Link href={`/products/${product.id}`}>
+          <Link href={`/${locale}/products/${product.id}`}>
             <p className="text-xs uppercase tracking-wide text-gray-400">
               {product.actressName ?? '出演者情報'} / {product.releaseDate ?? '配信日未定'}
             </p>

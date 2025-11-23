@@ -22,6 +22,11 @@ export function mapLegacyProvider(provider: string): ProviderId {
     return 'duga';
   }
 
+  // Map 'MGS' to 'dmm' (MGS products use DMM/Moshimo affiliate)
+  if (provider.toUpperCase() === 'MGS') {
+    return 'dmm';
+  }
+
   // Normalize to lowercase for case-insensitive matching
   const normalizedProvider = provider.toLowerCase();
 

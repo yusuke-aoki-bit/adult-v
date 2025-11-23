@@ -31,14 +31,16 @@
     "viewProduct": "View Video",
     "backToList": "Back to List",
     "relatedProducts": "Related Videos",
-    "moreFrom": "More from {name}"
+    "moreFrom": "More from {name}",
+    "statistics": "Statistics"
   },
   "homepage": {
     "title": "Actresses - Adult Streaming Hub",
     "description": "Find your favorite actresses from popular to emerging stars.",
     "actressCount": "{count} actresses listed",
     "initialSearch": "Search by Initial",
-    "filterSettings": "Filter Settings"
+    "filterSettings": "Filter Settings",
+    "newReleases": "Actresses with New Releases"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -98,7 +100,9 @@
     "bloodType": "Blood Type",
     "genres": "Genres",
     "noProducts": "No videos available",
-    "loadMore": "Load More"
+    "loadMore": "Load More",
+    "adultContentNotice": "※This page contains adult content",
+    "latestReleases": "Latest Releases"
   },
   "product": {
     "details": "Video Details",
@@ -175,7 +179,8 @@
     "question": "Are you 18 years or older?",
     "confirm": "Yes, I am 18 or older",
     "deny": "No",
-    "warning": "You must be 18 or older to access this site."
+    "warning": "You must be 18 or older to access this site.",
+    "legalNotice": "By accessing this site, you agree to the Terms of Service and Privacy Policy."
   },
   "error": {
     "pageNotFound": "Page Not Found",

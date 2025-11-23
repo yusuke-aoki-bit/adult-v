@@ -3,7 +3,7 @@ import Image from 'next/image';
 import ProductCard from '@/components/ProductCard';
 import Pagination from '@/components/Pagination';
 import { JsonLD } from '@/components/JsonLD';
-import { getActressById, getProducts, getTagsForActress } from '@/lib/db/queries';
+import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountBySite } from '@/lib/db/queries';
 import {
   generateBaseMetadata,
   generatePersonSchema,
@@ -13,7 +13,6 @@ import {
 import { Metadata } from 'next';
 import Link from 'next/link';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
-import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
@@ -92,6 +91,13 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const genreTags = await getTagsForActress(actress.id, 'genre');
   const siteTags = await getTagsForActress(actress.id, 'site');
 
+  // Get aliases for the actress
+  const aliases = await getPerformerAliases(parseInt(actress.id));
+  const nonPrimaryAliases = aliases.filter(alias => !alias.isPrimary);
+
+  // Get product count by site
+  const productCountBySite = await getActressProductCountBySite(actress.id);
+
   // Get products
   const allWorks = await getProducts({
     actressId: actress.id,
@@ -128,7 +134,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-1">
               <Image
                 src={actress.heroImage}
                 alt={actress.name}
@@ -136,9 +142,22 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 height={64}
                 className="w-16 h-16 rounded-full object-cover"
               />
-              <div>
+              <div className="flex-1">
                 <h1 className="text-2xl font-bold text-white">{actress.name}</h1>
                 <p className="text-gray-300">{t('totalProducts', { count: total })}</p>
+                {nonPrimaryAliases.length > 0 && (
+                  <div className="mt-2">
+                    <span className="text-sm text-gray-400">{t('aliases')}: </span>
+                    <span className="text-sm text-gray-300">
+                      {nonPrimaryAliases.map((alias, index) => (
+                        <span key={alias.id}>
+                          {alias.aliasName}
+                          {index < nonPrimaryAliases.length - 1 ? ', ' : ''}
+                        </span>
+                      ))}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             <ProductSortDropdown sortBy={sortBy} basePath={basePath} />

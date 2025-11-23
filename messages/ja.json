@@ -31,14 +31,16 @@
     "viewProduct": "作品を見る",
     "backToList": "一覧に戻る",
     "relatedProducts": "関連作品",
-    "moreFrom": "{name}の他の作品"
+    "moreFrom": "{name}の他の作品",
+    "statistics": "統計情報"
   },
   "homepage": {
     "title": "AV女優一覧 - 動画配信サイト比較・レビュー",
     "description": "DMM、DUGA、MGS、DTIなど複数の動画配信サイトを横断したAV女優データベース。人気女優から新人女優まで、作品数・ランキング・レビューで比較検討。お得なキャンペーン情報も随時更新中。",
     "actressCount": "{count}名の女優を掲載中",
     "initialSearch": "頭文字で検索",
-    "filterSettings": "フィルター設定"
+    "filterSettings": "フィルター設定",
+    "newReleases": "新作リリースした女優"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -98,7 +100,9 @@
     "bloodType": "血液型",
     "genres": "ジャンル",
     "noProducts": "作品がありません",
-    "loadMore": "もっと見る"
+    "loadMore": "もっと見る",
+    "adultContentNotice": "※このページは成人向けコンテンツを含みます",
+    "latestReleases": "最新作品"
   },
   "product": {
     "details": "作品詳細",
@@ -175,7 +179,8 @@
     "question": "あなたは18歳以上ですか？",
     "confirm": "はい、18歳以上です",
     "deny": "いいえ",
-    "warning": "18歳未満の方はアクセスできません。"
+    "warning": "18歳未満の方はアクセスできません。",
+    "legalNotice": "このサイトにアクセスすることで、利用規約とプライバシーポリシーに同意したものとみなされます。"
   },
   "error": {
     "pageNotFound": "ページが見つかりません",

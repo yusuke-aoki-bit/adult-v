@@ -93,7 +93,7 @@ function SearchResults() {
           {products.map((product) => (
             <Link
               key={product.id}
-              href={`/ja/products/${product.id}`}
+              href={`/ja/products/${product.normalizedProductId || product.id}`}
               className="group block bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden"
             >
               <div className="relative aspect-[3/4] w-full bg-gray-700">

@@ -104,6 +104,27 @@ export const performers = pgTable(
 );
 
 /**
+ * 出演者別名テーブル
+ * 1人の女優に複数の別名を持てるようにする
+ */
+export const performerAliases = pgTable(
+  'performer_aliases',
+  {
+    id: serial('id').primaryKey(),
+    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    aliasName: varchar('alias_name', { length: 200 }).notNull(),
+    source: varchar('source', { length: 100 }), // 'av-wiki', 'seesaa-wiki', 'manual' など
+    isPrimary: boolean('is_primary').default(false), // 主要な名前かどうか
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    performerIdIdx: index('idx_aliases_performer').on(table.performerId),
+    aliasNameIdx: index('idx_aliases_name').on(table.aliasName),
+    performerAliasUnique: uniqueIndex('idx_aliases_performer_alias').on(table.performerId, table.aliasName),
+  }),
+);
+
+/**
  * 作品-出演者 中間テーブル
  */
 export const productPerformers = pgTable(
@@ -209,6 +230,8 @@ export type ProductCache = typeof productCache.$inferSelect;
 export type NewProductCache = typeof productCache.$inferInsert;
 export type Performer = typeof performers.$inferSelect;
 export type NewPerformer = typeof performers.$inferInsert;
+export type PerformerAlias = typeof performerAliases.$inferSelect;
+export type NewPerformerAlias = typeof performerAliases.$inferInsert;
 export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;
 export type RawCsvData = typeof rawCsvData.$inferSelect;

@@ -9,7 +9,7 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
           <div>
             <h3 className="text-white font-bold text-lg mb-2">ADULT VIEWER LAB</h3>
             <p className="text-sm text-gray-400">
-              DMM / DUGA / SOKMIL / DTIの4プラットフォームを横断し、
+              複数のプラットフォームを横断し、
               ヘビー視聴者が欲しい女優ベースの情報を整理しています。
             </p>
           </div>

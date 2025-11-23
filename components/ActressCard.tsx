@@ -55,9 +55,9 @@ export default function ActressCard({ actress, compact = false }: Props) {
         <div className="p-3 space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-gray-400">出演数</span>
-            <span className="font-semibold">{actress.metrics.releaseCount}本</span>
+            <span className="font-semibold">{actress.metrics?.releaseCount || 0}本</span>
           </div>
-          {actress.tags.length > 0 && (
+          {actress.tags && actress.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {actress.tags.slice(0, 2).map((tag) => (
                 <span
@@ -103,38 +103,47 @@ export default function ActressCard({ actress, compact = false }: Props) {
       </div>
 
       <div className="p-6 space-y-4">
-        <p className="text-sm text-gray-300 line-clamp-3">{actress.description}</p>
+        {actress.description && (
+          <p className="text-sm text-gray-300 line-clamp-3">{actress.description}</p>
+        )}
 
-        <div className="flex flex-wrap gap-2">
-          {actress.tags.map((tag) => (
-            <span
-              key={tag}
-              className="text-xs uppercase tracking-wide bg-white/10 text-gray-200 px-3 py-1 rounded-full"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <Stat label="出演数" value={`${actress.metrics.releaseCount}本`} />
-          <Stat label="トレンド" value={actress.metrics.trendingScore} />
-          <Stat label="支持率" value={`${actress.metrics.fanScore}%`} />
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {actress.services.map((service) => {
-            const meta = providerMeta[service];
-            return (
+        {actress.tags && actress.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {actress.tags.map((tag) => (
               <span
-                key={service}
-                className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${meta.accentClass}`}
+                key={tag}
+                className="text-xs uppercase tracking-wide bg-white/10 text-gray-200 px-3 py-1 rounded-full"
               >
-                {meta.label}
+                {tag}
               </span>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {actress.metrics && (
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <Stat label="出演数" value={`${actress.metrics.releaseCount || 0}本`} />
+            <Stat label="トレンド" value={actress.metrics.trendingScore || 0} />
+            <Stat label="支持率" value={`${actress.metrics.fanScore || 0}%`} />
+          </div>
+        )}
+
+        {actress.services && actress.services.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {actress.services.map((service) => {
+              const meta = providerMeta[service];
+              if (!meta) return null;
+              return (
+                <span
+                  key={service}
+                  className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${meta.accentClass}`}
+                >
+                  {meta.label}
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

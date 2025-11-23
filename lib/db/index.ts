@@ -30,16 +30,17 @@ function getDb() {
       // Cloud SQL Proxy経由かどうかを判定（Unix socketパスを含むかチェック）
       const isCloudSqlProxy = connectionString.includes('/cloudsql/');
 
+      // URLから接続情報をパースして、スペースなどの余分な文字を除去
+      const url = new URL(connectionString);
+      const cleanConnectionString = `postgresql://${url.username}:${url.password}@${url.host}${url.pathname}`;
+
       dbStore.pool = new Pool({
-        connectionString,
+        connectionString: cleanConnectionString,
         // Cloud SQL Proxy経由の場合はSSL不要、それ以外は環境に応じて設定
         ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
         max: 20, // 最大接続数
         idleTimeoutMillis: 30000, // アイドル接続のタイムアウト
         connectionTimeoutMillis: 10000, // 接続タイムアウト
-        // PostgreSQL connection options
-        // This ensures client_encoding is set immediately on connection
-        options: '-c client_encoding=UTF8',
       });
 
       dbStore.instance = drizzle(dbStore.pool, { schema });

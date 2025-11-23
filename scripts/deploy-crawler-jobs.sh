@@ -4,7 +4,7 @@
 
 set -e
 
-PROJECT_ID="pricewise-huqkr"
+PROJECT_ID="adult-v"
 REGION="us-central1"
 IMAGE_NAME="adult-v-crawler"
 DATABASE_URL="postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres"
@@ -16,7 +16,7 @@ echo "Creating/updating Cloud Run Jobs..."
 
 # MGS Crawler Job - Daily at 2:00 AM JST (17:00 UTC previous day)
 gcloud run jobs create mgs-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="mgs,--pages,20" \
@@ -25,7 +25,7 @@ gcloud run jobs create mgs-crawler \
   --memory 2Gi \
   --cpu 2 \
   || gcloud run jobs update mgs-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="mgs,--pages,20" \
@@ -36,7 +36,7 @@ gcloud run jobs create mgs-crawler \
 
 # Caribbeancom Crawler Job - Daily at 3:00 AM JST (18:00 UTC previous day)
 gcloud run jobs create caribbeancom-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="caribbeancom,--limit,100" \
@@ -45,7 +45,7 @@ gcloud run jobs create caribbeancom-crawler \
   --memory 2Gi \
   --cpu 2 \
   || gcloud run jobs update caribbeancom-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="caribbeancom,--limit,100" \
@@ -56,7 +56,7 @@ gcloud run jobs create caribbeancom-crawler \
 
 # HEYZO Crawler Job - Daily at 4:00 AM JST (19:00 UTC previous day)
 gcloud run jobs create heyzo-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="heyzo,--limit,50" \
@@ -65,7 +65,7 @@ gcloud run jobs create heyzo-crawler \
   --memory 2Gi \
   --cpu 2 \
   || gcloud run jobs update heyzo-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="heyzo,--limit,50" \
@@ -76,7 +76,7 @@ gcloud run jobs create heyzo-crawler \
 
 # Caribbeancom Premium Crawler Job - Daily at 5:00 AM JST (20:00 UTC previous day)
 gcloud run jobs create caribbeancompr-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="caribbeancompr,--limit,100" \
@@ -85,7 +85,7 @@ gcloud run jobs create caribbeancompr-crawler \
   --memory 2Gi \
   --cpu 2 \
   || gcloud run jobs update caribbeancompr-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="caribbeancompr,--limit,100" \
@@ -95,8 +95,8 @@ gcloud run jobs create caribbeancompr-crawler \
   --cpu 2
 
 # 1pondo Crawler Job - Daily at 6:00 AM JST (21:00 UTC previous day)
-gcloud run jobs create 1pondo-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+gcloud run jobs create ippondo-crawler \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="1pondo,--limit,100" \
@@ -104,8 +104,8 @@ gcloud run jobs create 1pondo-crawler \
   --task-timeout 3600s \
   --memory 2Gi \
   --cpu 2 \
-  || gcloud run jobs update 1pondo-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  || gcloud run jobs update ippondo-crawler \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="1pondo,--limit,100" \
@@ -116,7 +116,7 @@ gcloud run jobs create 1pondo-crawler \
 
 # DUGA Crawler Job - Daily at 7:00 AM JST (22:00 UTC previous day)
 gcloud run jobs create duga-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="duga" \
@@ -125,7 +125,7 @@ gcloud run jobs create duga-crawler \
   --memory 4Gi \
   --cpu 2 \
   || gcloud run jobs update duga-crawler \
-  --image gcr.io/${PROJECT_ID}/${IMAGE_NAME} \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="duga" \
@@ -189,14 +189,14 @@ gcloud scheduler jobs create http caribbeancompr-crawler-schedule \
   --time-zone "Asia/Tokyo"
 
 # 1pondo - Daily at 6:00 AM JST
-gcloud scheduler jobs create http 1pondo-crawler-schedule \
+gcloud scheduler jobs create http ippondo-crawler-schedule \
   --location ${REGION} \
   --schedule "0 6 * * *" \
   --time-zone "Asia/Tokyo" \
-  --uri "https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/1pondo-crawler:run" \
+  --uri "https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/ippondo-crawler:run" \
   --http-method POST \
   --oauth-service-account-email "${PROJECT_ID}@appspot.gserviceaccount.com" \
-  || gcloud scheduler jobs update http 1pondo-crawler-schedule \
+  || gcloud scheduler jobs update http ippondo-crawler-schedule \
   --location ${REGION} \
   --schedule "0 6 * * *" \
   --time-zone "Asia/Tokyo"
@@ -221,5 +221,5 @@ echo "  gcloud run jobs execute mgs-crawler --region ${REGION}"
 echo "  gcloud run jobs execute caribbeancom-crawler --region ${REGION}"
 echo "  gcloud run jobs execute heyzo-crawler --region ${REGION}"
 echo "  gcloud run jobs execute caribbeancompr-crawler --region ${REGION}"
-echo "  gcloud run jobs execute 1pondo-crawler --region ${REGION}"
+echo "  gcloud run jobs execute ippondo-crawler --region ${REGION}"
 echo "  gcloud run jobs execute duga-crawler --region ${REGION}"

@@ -143,7 +143,7 @@ export default function FavoritesPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {products.map((product) => (
               <div key={product.id} className="relative group">
-                <Link href={`/${locale}/products/${product.id}`} className="block">
+                <Link href={`/${locale}/products/${product.normalizedProductId || product.id}`} className="block">
                   <div className="aspect-[3/4] relative bg-gray-800 rounded-lg overflow-hidden">
                     {product.thumbnailUrl ? (
                       <Image

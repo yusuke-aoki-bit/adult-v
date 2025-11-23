@@ -3,6 +3,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { locales } from '@/i18n';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
+import AgeVerification from '@/components/AgeVerification';
 
 export default async function LocaleLayout({
   children,
@@ -24,7 +25,9 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <FavoritesProvider>
-        {children}
+        <AgeVerification locale={locale}>
+          {children}
+        </AgeVerification>
       </FavoritesProvider>
     </NextIntlClientProvider>
   );

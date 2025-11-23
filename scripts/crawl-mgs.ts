@@ -2,9 +2,9 @@
  * MGS動画のアフィリエイトリンクをクロールするスクリプト
  *
  * MGSのアフィリエイトウィジェット形式:
- * <div class="4wipfg2"></div>
+ * <div class="gpyivn8"></div>
  * <script id="mgs_Widget_affiliate" type="text/javascript" charset="utf-8"
- *   src="https://static.mgstage.com/mgs/script/common/mgs_Widget_affiliate.js?c=6CS5PGEBQDUYPZLHYEM33TBZFJ&t=image&o=f&b=t&p=857OMG-018&from=ppv&class=4wipfg2">
+ *   src="https://static.mgstage.com/mgs/script/common/mgs_Widget_affiliate.js?c=6CS5PGEBQDUYPZLHYEM33TBZFJ&t=text&o=t&b=t&s=MOMO&p=230OREMO-435&from=ppv&class=gpyivn8">
  * </script>
  */
 
@@ -24,6 +24,7 @@ interface MgsProduct {
   releaseDate?: string;
   performerNames?: string[]; // 出演者名のリスト
   thumbnailUrl?: string; // サムネイル画像URL
+  sampleImages?: string[]; // サンプル画像URL配列
   price?: number; // 価格
 }
 
@@ -32,7 +33,7 @@ interface MgsProduct {
  */
 function generateAffiliateWidget(productId: string): string {
   const className = crypto.randomBytes(4).toString('hex');
-  return `<div class="${className}"></div><script id="mgs_Widget_affiliate" type="text/javascript" charset="utf-8" src="https://static.mgstage.com/mgs/script/common/mgs_Widget_affiliate.js?c=${AFFILIATE_CODE}&t=image&o=f&b=t&p=${productId}&from=ppv&class=${className}"></script>`;
+  return `<div class="${className}"></div><script id="mgs_Widget_affiliate" type="text/javascript" charset="utf-8" src="https://static.mgstage.com/mgs/script/common/mgs_Widget_affiliate.js?c=${AFFILIATE_CODE}&t=text&o=t&b=t&s=MOMO&p=${productId}&from=ppv&class=${className}"></script>`;
 }
 
 /**
@@ -104,6 +105,53 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       thumbnailUrl = ogImage.startsWith('http') ? ogImage : `https://www.mgstage.com${ogImage}`;
     }
 
+    // サンプル画像を抽出（複数）
+    const sampleImages: string[] = [];
+
+    // Helper function to check if URL should be excluded
+    const shouldExcludeImage = (url: string): boolean => {
+      // Exclude sample movie banners
+      if (url.includes('sample_button') || url.includes('sample-button')) return true;
+      if (url.includes('samplemovie') || url.includes('sample_movie')) return true;
+      if (url.includes('btn_sample')) return true;
+      return false;
+    };
+
+    // パターン1: sample-photo クラスの画像
+    $('.sample-photo img').each((_, elem) => {
+      const imgSrc = $(elem).attr('src') || $(elem).attr('data-src');
+      if (imgSrc) {
+        const fullUrl = imgSrc.startsWith('http') ? imgSrc : `https://www.mgstage.com${imgSrc}`;
+        if (!shouldExcludeImage(fullUrl)) {
+          sampleImages.push(fullUrl);
+        }
+      }
+    });
+
+    // パターン2: サンプル画像リンク (.sample-box, .sample-image, etc.)
+    $('.sample-box img, .sample-image img, .product-sample img').each((_, elem) => {
+      const imgSrc = $(elem).attr('src') || $(elem).attr('data-src');
+      if (imgSrc && !sampleImages.includes(imgSrc)) {
+        const fullUrl = imgSrc.startsWith('http') ? imgSrc : `https://www.mgstage.com${imgSrc}`;
+        if (!sampleImages.includes(fullUrl) && !shouldExcludeImage(fullUrl)) {
+          sampleImages.push(fullUrl);
+        }
+      }
+    });
+
+    // パターン3: サムネイル画像ギャラリー
+    $('a[href*="pics/"] img, a[href*="sample"] img').each((_, elem) => {
+      const imgSrc = $(elem).attr('src') || $(elem).attr('data-src');
+      if (imgSrc) {
+        const fullUrl = imgSrc.startsWith('http') ? imgSrc : `https://www.mgstage.com${imgSrc}`;
+        if (!sampleImages.includes(fullUrl) && fullUrl !== thumbnailUrl && !shouldExcludeImage(fullUrl)) {
+          sampleImages.push(fullUrl);
+        }
+      }
+    });
+
+    console.log(`  Found ${sampleImages.length} sample image(s)`);
+
     // 価格を抽出
     let price: number | undefined;
     const priceText = $('th:contains("価格")').next('td').text().trim();
@@ -114,11 +162,12 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
 
     return {
       productId,
-      url: productUrl,
+      url: productUrl, // Keep original product URL for reference
       title,
       releaseDate,
       performerNames,
       thumbnailUrl,
+      sampleImages: sampleImages.length > 0 ? sampleImages : undefined,
       price,
     };
   } catch (error) {
@@ -192,7 +241,7 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
   try {
     // 作品を検索または作成
     const normalizedProductId = mgsProduct.productId.toLowerCase();
-    let productRecord = await db
+    const productRecord = await db
       .select()
       .from(products)
       .where(eq(products.normalizedProductId, normalizedProductId))
@@ -217,7 +266,7 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
       productId = productRecord[0].id;
     }
 
-    // アフィリエイトウィジェットコードを生成
+    // Generate affiliate widget code for MGS
     const affiliateWidget = generateAffiliateWidget(mgsProduct.productId);
 
     // product_sourcesに保存
@@ -278,7 +327,7 @@ async function savePerformers(
   try {
     for (const name of performerNames) {
       // 女優を検索または作成
-      let performerRecord = await db
+      const performerRecord = await db
         .select()
         .from(performers)
         .where(eq(performers.name, name))
@@ -354,8 +403,9 @@ async function saveProductCache(
         .update(productCache)
         .set({
           price: mgsProduct.price || 0,
-          affiliateUrl: affiliateWidget,
+          affiliateUrl: mgsProduct.url,
           thumbnailUrl: mgsProduct.thumbnailUrl,
+          sampleImages: mgsProduct.sampleImages || null,
           inStock: true,
           lastUpdated: new Date(),
         })
@@ -368,8 +418,9 @@ async function saveProductCache(
         productId,
         aspName: SOURCE_NAME,
         price: mgsProduct.price || 0,
-        affiliateUrl: affiliateWidget,
+        affiliateUrl: mgsProduct.url,
         thumbnailUrl: mgsProduct.thumbnailUrl,
+        sampleImages: mgsProduct.sampleImages || null,
         inStock: true,
       });
 
@@ -389,7 +440,7 @@ async function linkMgsTag(productId: number): Promise<void> {
 
   try {
     // MGSタグを検索または作成
-    let mgsTag = await db
+    const mgsTag = await db
       .select()
       .from(tags)
       .where(eq(tags.name, SOURCE_NAME))
@@ -494,12 +545,14 @@ async function main() {
 
       if (productRecord.length > 0) {
         const productId = productRecord[0].id;
-        const affiliateWidget = generateAffiliateWidget(mgsProduct.productId);
 
         // 女優データを保存
         if (mgsProduct.performerNames && mgsProduct.performerNames.length > 0) {
           await savePerformers(productId, mgsProduct.performerNames);
         }
+
+        // Generate affiliate widget for product cache
+        const affiliateWidget = generateAffiliateWidget(mgsProduct.productId);
 
         // product_cacheを保存
         await saveProductCache(productId, mgsProduct, affiliateWidget);
