@@ -42,7 +42,6 @@ function getDb() {
         min: 10, // 最小接続数（常に10接続をプールに保持）
         idleTimeoutMillis: 60000, // アイドル接続のタイムアウト（60秒）
         connectionTimeoutMillis: 15000, // 接続タイムアウト（15秒）
-        acquireTimeoutMillis: 30000, // 接続取得タイムアウト（30秒）
         allowExitOnIdle: false, // プロセスがアイドル時でも終了させない
       });
 
