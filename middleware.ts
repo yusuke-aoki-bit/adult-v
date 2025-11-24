@@ -76,7 +76,12 @@ export function middleware(request: NextRequest) {
 
   // 検索エンジンボット・PageSpeed Insightsは年齢確認をスキップ
   const userAgent = request.headers.get('user-agent') || '';
-  const isBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|lighthouse|chrome-lighthouse|gtmetrix|pagespeed/i.test(userAgent);
+  const isBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|lighthouse|chrome-lighthouse|gtmetrix|pagespeed|google page speed insights|ptst/i.test(userAgent);
+
+  // For debugging - log bot detection
+  if (isBot) {
+    console.log('Bot detected:', userAgent);
+  }
 
   if (isBot) {
     return intlMiddleware(request);
