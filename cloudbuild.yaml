@@ -3,9 +3,9 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/adult-v-crawlers/crawler:latest'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/crawler-images/adult-v-crawler:latest'
       - '-f'
       - 'Dockerfile.crawler'
       - '.'
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/adult-v-crawlers/crawler:latest'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/crawler-images/adult-v-crawler:latest'

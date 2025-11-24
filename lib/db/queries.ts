@@ -1460,3 +1460,36 @@ export async function getActressesWithNewReleases(options: {
   }
 }
 
+/**
+ * 人気タグ(作品数が多いタグ)を取得
+ */
+export async function getPopularTags(options: {
+  category?: string;
+  limit?: number;
+} = {}): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
+  try {
+    const { category, limit = 20 } = options;
+    const db = getDb();
+
+    // タグとその作品数を取得
+    const result = await db
+      .select({
+        id: tags.id,
+        name: tags.name,
+        category: tags.category,
+        count: sql<number>`CAST(COUNT(DISTINCT ${productTags.productId}) AS INTEGER)`,
+      })
+      .from(tags)
+      .leftJoin(productTags, eq(tags.id, productTags.tagId))
+      .where(category ? eq(tags.category, category) : undefined)
+      .groupBy(tags.id, tags.name, tags.category)
+      .orderBy(desc(sql`COUNT(DISTINCT ${productTags.productId})`))
+      .limit(limit);
+
+    return result;
+  } catch (error) {
+    console.error('Error getting popular tags:', error);
+    throw error;
+  }
+}
+

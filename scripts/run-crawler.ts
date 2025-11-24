@@ -114,6 +114,16 @@ try {
   }
 
   console.log(`✓ ${crawlerType} crawler completed successfully`);
+
+  // Run performer normalization after successful crawl
+  console.log('\n--- Running performer normalization ---');
+  try {
+    execSync('npx tsx scripts/normalize-performers.ts', { stdio: 'inherit', env: process.env });
+    console.log('✓ Performer normalization completed');
+  } catch (normError) {
+    console.error('⚠ Performer normalization failed (non-critical):', normError);
+    // Don't exit on normalization failure - it's not critical
+  }
 } catch (error) {
   console.error(`✗ ${crawlerType} crawler failed:`, error);
   process.exit(1);

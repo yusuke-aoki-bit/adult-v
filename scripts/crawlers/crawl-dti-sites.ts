@@ -16,11 +16,11 @@ if (!process.env.DATABASE_URL) {
 }
 
 import { createHash } from 'crypto';
-import { getDb } from '../lib/db/index';
-import { products, performers, productPerformers, tags, productTags, productSources, productCache, rawHtmlData } from '../lib/db/schema';
+import { getDb } from '../../lib/db/index';
+import { products, performers, productPerformers, tags, productTags, productSources, productCache, rawHtmlData } from '../../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import iconv from 'iconv-lite';
-import { generateDTILink } from '../lib/affiliate';
+import { generateDTILink } from '../../lib/affiliate';
 
 /**
  * Detect encoding from HTML content or response headers
@@ -364,7 +364,7 @@ async function parseHtmlContent(html: string, siteName: string): Promise<{
 /**
  * Crawl a single site configuration
  */
-async function crawlSite(config: CrawlConfig) {
+async function crawlSite(config: CrawlConfig & { limit?: number }) {
   console.log(`\nStarting crawl for ${config.siteName}...`);
   console.log(`URL Pattern: ${config.urlPattern}`);
   console.log(`Starting from ID: ${config.startId}\n`);
@@ -379,6 +379,12 @@ async function crawlSite(config: CrawlConfig) {
   const MAX_CONSECUTIVE_NOT_FOUND = 50; // Stop after 50 consecutive 404s
 
   while (currentId) {
+    // Stop if limit is reached
+    if (config.limit && foundCount >= config.limit) {
+      console.log(`Reached limit: ${config.limit} products found`);
+      break;
+    }
+
     // Stop if end ID is specified and reached
     if (config.endId) {
       if (config.reverseMode && currentId < config.endId) {
@@ -665,15 +671,113 @@ async function crawlSite(config: CrawlConfig) {
 }
 
 /**
+ * Parse command line arguments
+ */
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const options: {
+    site?: string;
+    start?: string;
+    limit?: number;
+  } = {};
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === '--site' && i + 1 < args.length) {
+      options.site = args[i + 1];
+      i++;
+    } else if (arg === '--start' && i + 1 < args.length) {
+      options.start = args[i + 1];
+      i++;
+    } else if (arg === '--limit' && i + 1 < args.length) {
+      options.limit = parseInt(args[i + 1]);
+      i++;
+    }
+  }
+
+  return options;
+}
+
+/**
+ * Find config by site name or alias
+ */
+function findConfigBySite(siteName: string): CrawlConfig | null {
+  const normalized = siteName.toLowerCase();
+
+  // Site name aliases mapping
+  const aliases: Record<string, string> = {
+    'caribbeancom': 'カリビアンコム',
+    'caribbeancompr': 'カリビアンコムプレミアム',
+    '1pondo': '一本道',
+    'heyzo': 'HEYZO',
+  };
+
+  const targetSiteName = aliases[normalized] || siteName;
+
+  return CRAWL_CONFIGS.find(
+    config =>
+      config.siteName === targetSiteName ||
+      config.siteName.toLowerCase() === normalized
+  ) || null;
+}
+
+/**
  * Main crawl function
  */
 async function crawlDTISites() {
   try {
-    console.log('Starting DTI sites crawler...\n');
-    console.log(`Crawling ${CRAWL_CONFIGS.length} sites\n`);
+    const options = parseArgs();
 
-    for (const config of CRAWL_CONFIGS) {
+    if (options.site) {
+      // Crawl specific site
+      const config = findConfigBySite(options.site);
+
+      if (!config) {
+        console.error(`Error: Site '${options.site}' not found`);
+        console.error('Available sites:');
+        for (const c of CRAWL_CONFIGS) {
+          console.error(`  - ${c.siteName}`);
+        }
+        process.exit(1);
+      }
+
+      // Override start ID if specified
+      if (options.start) {
+        config.startId = options.start;
+      }
+
+      console.log('Starting DTI sites crawler...\n');
+      console.log(`Site: ${config.siteName}`);
+      if (options.limit) {
+        console.log(`Limit: ${options.limit} products\n`);
+      }
+
+      // Temporarily modify config to apply limit
+      const originalStartId = config.startId;
+      const originalEndId = config.endId;
+
+      if (options.limit) {
+        // We'll limit by modifying the crawlSite function behavior
+        // For now, just pass it to the site crawler
+        (config as any).limit = options.limit;
+      }
+
       await crawlSite(config);
+
+      // Restore original config
+      config.startId = originalStartId;
+      config.endId = originalEndId;
+      delete (config as any).limit;
+
+    } else {
+      // Crawl all sites
+      console.log('Starting DTI sites crawler...\n');
+      console.log(`Crawling ${CRAWL_CONFIGS.length} sites\n`);
+
+      for (const config of CRAWL_CONFIGS) {
+        await crawlSite(config);
+      }
     }
 
     console.log('\n========================================');

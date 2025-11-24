@@ -5,7 +5,7 @@ import ActressCard from '@/components/ActressCard';
 import SortDropdown from '@/components/SortDropdown';
 import Pagination from '@/components/Pagination';
 import InitialSearchMenu from '@/components/InitialSearchMenu';
-import { getActresses, getActressesCount, getTags, getActressesWithNewReleases } from '@/lib/db/queries';
+import { getActresses, getActressesCount, getTags, getActressesWithNewReleases, getPopularTags } from '@/lib/db/queries';
 import { generateBaseMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
 import type { Actress as ActressType } from '@/types/product';
@@ -18,9 +18,12 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'homepage' });
 
+  // Get total actress count for metadata
+  const totalCount = await getActressesCount({});
+
   return generateBaseMetadata(
     t('title'),
-    t('description'),
+    t('description', { count: totalCount }),
     undefined,
     `/${locale}`,
   );
@@ -95,13 +98,22 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   // 新作リリース女優を取得（フィルターがない場合のみ）
   let newReleaseActresses: ActressType[] = [];
+  let popularActresses: ActressType[] = [];
+  let popularGenreTags: Array<{ id: number; name: string; category: string | null; count: number }> = [];
+
   if (!query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && page === 1) {
     try {
-      newReleaseActresses = await getActressesWithNewReleases({ limit: 20, daysAgo: 30 });
+      const [newReleases, popular, popTags] = await Promise.all([
+        getActressesWithNewReleases({ limit: 20, daysAgo: 30 }),
+        getActresses({ sortBy: 'productCountDesc', limit: 15 }),
+        getPopularTags({ category: 'genre', limit: 30 }),
+      ]);
+      newReleaseActresses = newReleases;
+      popularActresses = popular;
+      popularGenreTags = popTags;
     } catch (error) {
-      console.error('Failed to fetch new release actresses:', error);
-      // Gracefully degrade - just don't show the new releases section
-      newReleaseActresses = [];
+      console.error('Failed to fetch homepage sections:', error);
+      // Gracefully degrade - just don't show these sections
     }
   }
 
@@ -128,6 +140,55 @@ export default async function Home({ params, searchParams }: PageProps) {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 人気女優 */}
+      {popularActresses.length > 0 && (
+        <section className="py-8 md:py-12 border-b border-gray-800">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+              {t('popularActresses')}
+            </h2>
+            <div className="relative -mx-4 px-4">
+              <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800">
+                <div className="flex gap-4 md:gap-6 min-w-max">
+                  {popularActresses.map((actress) => (
+                    <Link
+                      key={actress.id}
+                      href={`/${locale}/actress/${actress.id}`}
+                      className="block shrink-0 w-40 md:w-48"
+                    >
+                      <ActressCard actress={actress} compact />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 人気タグ */}
+      {popularGenreTags.length > 0 && (
+        <section className="py-8 md:py-12 border-b border-gray-800">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+              {t('popularTags')}
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {popularGenreTags.map((tag) => (
+                <Link
+                  key={tag.id}
+                  href={`/${locale}?include=${tag.id}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-full text-sm font-medium transition-colors border border-gray-700 hover:border-rose-600"
+                >
+                  <span>{tag.name}</span>
+                  <span className="text-xs text-gray-400">({tag.count})</span>
+                </Link>
+              ))}
             </div>
           </div>
         </section>

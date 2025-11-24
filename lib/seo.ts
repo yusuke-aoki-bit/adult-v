@@ -36,7 +36,8 @@ export function generateBaseMetadata(
   const pageTitle = `${title} | ${siteName}`;
   const pageDescription = description || defaultDescription;
   const pageUrl = path ? `${siteUrl}${path}` : siteUrl;
-  const pageImage = image || `${siteUrl}/og-image.jpg`;
+  // デフォルトOGP画像のパスを設定（publicフォルダ内）
+  const pageImage = image || `${siteUrl}/images/og-default.png`;
   const pageKeywords = keywords || defaultKeywords;
 
   return {

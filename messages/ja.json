@@ -35,12 +35,14 @@
     "statistics": "統計情報"
   },
   "homepage": {
-    "title": "AV女優一覧 - 動画配信サイト比較・レビュー",
-    "description": "DMM、DUGA、MGS、DTIなど複数の動画配信サイトを横断したAV女優データベース。人気女優から新人女優まで、作品数・ランキング・レビューで比較検討。お得なキャンペーン情報も随時更新中。",
+    "title": "AV女優データベース - DMM・DUGA・MGS・DTI作品横断検索 | Adult Viewer Lab",
+    "description": "DMM、DUGA、MGS、DTI、カリビアンコム、一本道、HEYZOなど主要動画配信サイトを横断したAV女優・作品データベース。{count}名以上の女優情報、出演作品、ジャンル別検索、価格比較が可能。ヘビーユーザー向けの詳細レビューとランキング情報を提供。",
     "actressCount": "{count}名の女優を掲載中",
     "initialSearch": "頭文字で検索",
     "filterSettings": "フィルター設定",
-    "newReleases": "新作リリースした女優"
+    "newReleases": "新作リリースした女優",
+    "popularActresses": "人気女優",
+    "popularTags": "人気タグ"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -93,6 +95,7 @@
     "profile": "プロフィール",
     "filmography": "出演作品",
     "totalProducts": "全{count}作品",
+    "metaDescription": "{name}の出演作品{count}本を配信サイト横断で検索。DMM・DUGA・MGS・DTI・カリビアンコム・一本道・HEYZOなど複数サイトの作品情報、価格比較、ジャンル別フィルタリングが可能。ヘビーユーザー向けの詳細レビューとランキング。",
     "aliases": "別名",
     "height": "身長",
     "measurements": "スリーサイズ",

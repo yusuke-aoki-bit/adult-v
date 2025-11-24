@@ -3,6 +3,7 @@ import Image from 'next/image';
 import ProductCard from '@/components/ProductCard';
 import Pagination from '@/components/Pagination';
 import { JsonLD } from '@/components/JsonLD';
+import Breadcrumb from '@/components/Breadcrumb';
 import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountBySite } from '@/lib/db/queries';
 import {
   generateBaseMetadata,
@@ -40,8 +41,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     return {
       ...generateBaseMetadata(
-        `${actress.name}`,
-        t('totalProducts', { count: actress.metrics.releaseCount }),
+        `${actress.name}の出演作品一覧 - ${actress.metrics.releaseCount}作品 | Adult Viewer Lab`,
+        t('metaDescription', { name: actress.name, count: actress.metrics.releaseCount }),
         actress.heroImage || actress.thumbnail,
         `/${locale}/actress/${actress.id}`,
       ),
@@ -132,6 +133,16 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
       <div className="bg-gray-900 min-h-screen">
         <div className="container mx-auto px-4 py-8">
+          {/* Breadcrumb */}
+          <Breadcrumb
+            items={[
+              { label: tNav('home'), href: `/${locale}` },
+              { label: tNav('actresses'), href: `/${locale}` },
+              { label: actress.name },
+            ]}
+            className="mb-6"
+          />
+
           {/* Header */}
           <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
             <div className="flex items-center gap-4 flex-1">
