@@ -5,9 +5,11 @@ import { desc, sql } from 'drizzle-orm';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const db = getDb();
+// Force dynamic generation - do not prerender at build time
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
 
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages with high priority and daily updates
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -51,15 +53,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Recent products (1000 items) - SEO priority for content pages
-  const recentProducts = await db
-    .select({
-      id: products.id,
-      updatedAt: products.updatedAt,
-    })
-    .from(products)
-    .orderBy(desc(products.releaseDate))
-    .limit(1000);
+  // If DATABASE_URL is not available (during build), return static pages only
+  if (!process.env.DATABASE_URL) {
+    console.warn('DATABASE_URL not available - generating sitemap with static pages only');
+    return staticPages;
+  }
+
+  try {
+    const db = getDb();
+
+    // Recent products (1000 items) - SEO priority for content pages
+    const recentProducts = await db
+      .select({
+        id: products.id,
+        updatedAt: products.updatedAt,
+      })
+      .from(products)
+      .orderBy(desc(products.releaseDate))
+      .limit(1000);
 
   const productPages: MetadataRoute.Sitemap = recentProducts.map((product) => ({
     url: `${BASE_URL}/ja/products/${product.id}`,
@@ -104,5 +115,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   }));
 
-  return [...staticPages, ...productPages, ...performerPages];
+    return [...staticPages, ...productPages, ...performerPages];
+  } catch (error) {
+    console.error('Error generating sitemap:', error);
+    // Return static pages only on error
+    return staticPages;
+  }
 }
