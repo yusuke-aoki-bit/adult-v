@@ -58,14 +58,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const allPerformers = await db
       .select({
         id: performers.id,
-        updatedAt: performers.updatedAt,
+        createdAt: performers.createdAt,
       })
       .from(performers)
-      .orderBy(sql`${performers.updatedAt} DESC NULLS LAST`);
+      .orderBy(sql`${performers.createdAt} DESC NULLS LAST`);
 
     const performerPages: MetadataRoute.Sitemap = allPerformers.map((performer) => ({
       url: `${siteUrl}/ja/performers/${performer.id}`,
-      lastModified: performer.updatedAt || new Date(),
+      lastModified: performer.createdAt || new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     }));
@@ -74,14 +74,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const allTags = await db
       .select({
         id: tags.id,
-        updatedAt: tags.updatedAt,
+        createdAt: tags.createdAt,
       })
       .from(tags)
-      .orderBy(sql`${tags.updatedAt} DESC NULLS LAST`);
+      .orderBy(sql`${tags.createdAt} DESC NULLS LAST`);
 
     const tagPages: MetadataRoute.Sitemap = allTags.map((tag) => ({
       url: `${siteUrl}/ja/tags/${tag.id}`,
-      lastModified: tag.updatedAt || new Date(),
+      lastModified: tag.createdAt || new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.6,
     }));
