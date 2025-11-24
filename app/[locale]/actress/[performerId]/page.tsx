@@ -19,7 +19,7 @@ import { getTranslations } from 'next-intl/server';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: Promise<{ id: string; locale: string }>;
+  params: Promise<{ performerId: string; locale: string }>;
   searchParams: Promise<{
     page?: string;
     sort?: string;
@@ -32,8 +32,8 @@ const PER_PAGE = 24;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   try {
-    const { id, locale } = await params;
-    const actress = await getActressById(id);
+    const { performerId, locale } = await params;
+    const actress = await getActressById(performerId);
     if (!actress) return {};
 
     const t = await getTranslations('actress');
@@ -61,16 +61,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ActressDetailPage({ params, searchParams }: PageProps) {
-  const { id, locale } = await params;
+  const { performerId, locale } = await params;
   const resolvedSearchParams = await searchParams;
   const t = await getTranslations('actress');
   const tc = await getTranslations('common');
   const tf = await getTranslations('filter');
   const tNav = await getTranslations('nav');
 
-  const decodedId = decodeURIComponent(id);
+  const decodedId = decodeURIComponent(performerId);
   let actress = await getActressById(decodedId);
-  if (!actress) actress = await getActressById(id);
+  if (!actress) actress = await getActressById(performerId);
   if (!actress) notFound();
 
   const page = parseInt(resolvedSearchParams.page || '1', 10);

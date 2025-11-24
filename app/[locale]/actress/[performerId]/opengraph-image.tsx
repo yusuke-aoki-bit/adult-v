@@ -7,8 +7,8 @@ export const size = {
 };
 export const contentType = 'image/png';
 
-export default async function Image({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function Image({ params }: { params: Promise<{ performerId: string }> }) {
+  const { performerId } = await params;
 
   return new ImageResponse(
     (
@@ -50,7 +50,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
               textAlign: 'center',
             }}
           >
-            ID: {id}
+            ID: {performerId}
           </div>
           <div
             style={{
