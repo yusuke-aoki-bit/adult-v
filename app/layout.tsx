@@ -17,10 +17,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = generateBaseMetadata(
-  'ADULT VIEWER LAB - heavy user guide',
-  'Multi-platform adult streaming hub with actress-based reviews, rankings, and campaign updates for heavy users.',
-);
+export const metadata: Metadata = {
+  ...generateBaseMetadata(
+    'ADULT VIEWER LAB - heavy user guide',
+    'Multi-platform adult streaming hub with actress-based reviews, rankings, and campaign updates for heavy users.',
+  ),
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+    viewportFit: 'cover',
+  },
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'ADULT VIEWER LAB',
+  },
+};
 
 const websiteSchema = generateWebSiteSchema();
 

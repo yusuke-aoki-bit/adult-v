@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useLocale } from 'next-intl';
 import { Product } from '@/types/product';
 import { normalizeImageUrl } from '@/lib/image-utils';
+import { generateAltText } from '@/lib/seo-utils';
 import FavoriteButton from './FavoriteButton';
 
 interface ProductCardProps {
@@ -34,7 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* 画像 */}
           <Image
             src={imgSrc}
-            alt={product.title}
+            alt={generateAltText(product)}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -42,6 +43,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             onError={handleImageError}
+            priority={false}
+            quality={75}
           />
           {/* No Image オーバーレイ */}
           {(hasError || imgSrc === PLACEHOLDER_IMAGE || !hasValidImageUrl) && (

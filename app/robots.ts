@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -12,26 +12,27 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',
           '/admin/',
           '/_next/',
-          '/age-verification',
-          '/*/favorites',
+          '/private/',
+          '/*.json$',
+          '/*?*debug=',
         ],
+      },
+      // Specific rules for well-behaved bots
+      {
+        userAgent: ['Googlebot', 'Googlebot-Image'],
+        allow: '/',
+        disallow: ['/api/', '/admin/', '/private/'],
+        crawlDelay: 0,
+      },
+      // Be more permissive with major search engines
+      {
+        userAgent: ['Bingbot', 'Slurp', 'DuckDuckBot'],
+        allow: '/',
+        disallow: ['/api/', '/admin/', '/private/'],
         crawlDelay: 1,
       },
-      {
-        userAgent: 'Googlebot',
-        allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/*/favorites',
-        ],
-      },
-      {
-        userAgent: ['AhrefsBot', 'MJ12bot', 'SemrushBot', 'DotBot', 'PetalBot'],
-        disallow: '/',
-      },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
-    host: siteUrl,
+    sitemap: `${BASE_URL}/sitemap.xml`,
+    host: BASE_URL,
   };
 }

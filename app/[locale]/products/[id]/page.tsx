@@ -3,8 +3,11 @@ import Image from 'next/image';
 import { JsonLD } from '@/components/JsonLD';
 import ProductImageGallery from '@/components/ProductImageGallery';
 import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
-import { getProductById, searchProductByProductId } from '@/lib/db/queries';
-import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
+import RelatedProducts from '@/components/RelatedProducts';
+import ProductDetailInfo from '@/components/ProductDetailInfo';
+import { getProductById, searchProductByProductId, getProductSources } from '@/lib/db/queries';
+import { getRelatedProducts } from '@/lib/db/recommendations';
+import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription } from '@/lib/seo';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
@@ -27,10 +30,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
+    // SEO最適化されたメタディスクリプション生成
+    const optimizedDescription = generateOptimizedDescription(
+      product.title,
+      product.actressName,
+      product.tags,
+      product.releaseDate,
+      product.normalizedProductId || product.id,
+    );
+
     return {
       ...generateBaseMetadata(
         product.title,
-        product.description || '',
+        optimizedDescription,
         product.imageUrl,
         `/${locale}/products/${product.id}`,
       ),
@@ -99,6 +111,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   // 最後に商品タイトルを追加（リンクなし）
   breadcrumbItems.push({ label: product.title });
+
+  // 関連作品を取得
+  const relatedProducts = await getRelatedProducts(product.id, 12);
+
+  // E-E-A-T強化: 全ASPソース情報を取得
+  const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
+  const sources = await getProductSources(productId);
 
   return (
     <>
@@ -215,6 +234,25 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </div>
             </div>
           </div>
+
+          {/* E-E-A-T強化: 詳細情報セクション */}
+          {sources.length > 0 && (
+            <div className="mt-8">
+              <ProductDetailInfo
+                duration={product.duration || null}
+                releaseDate={product.releaseDate || null}
+                sources={sources}
+                updatedAt={new Date()}
+                performerCount={product.performers?.length || 0}
+                tagCount={product.tags?.length || 0}
+              />
+            </div>
+          )}
+
+          {/* 関連作品セクション */}
+          {relatedProducts.length > 0 && (
+            <RelatedProducts products={relatedProducts} title="関連作品" />
+          )}
         </div>
       </div>
     </>

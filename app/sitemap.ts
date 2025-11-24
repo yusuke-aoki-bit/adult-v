@@ -1,101 +1,108 @@
 import { MetadataRoute } from 'next';
 import { getDb } from '@/lib/db';
-import { products, performers, tags} from '@/lib/db/schema';
-import { sql } from 'drizzle-orm';
+import { products, performers } from '@/lib/db/schema';
+import { desc, sql } from 'drizzle-orm';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Static pages
+  const db = getDb();
+
+  // Static pages with high priority and daily updates
   const staticPages: MetadataRoute.Sitemap = [
     {
-      url: siteUrl,
+      url: `${BASE_URL}/ja`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1.0,
+      alternates: {
+        languages: {
+          ja: `${BASE_URL}/ja`,
+          en: `${BASE_URL}/en`,
+          zh: `${BASE_URL}/zh`,
+        },
+      },
     },
     {
-      url: `${siteUrl}/ja`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1.0,
-    },
-    {
-      url: `${siteUrl}/en`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: `${siteUrl}/zh`,
+      url: `${BASE_URL}/en`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.8,
+      alternates: {
+        languages: {
+          ja: `${BASE_URL}/ja`,
+          en: `${BASE_URL}/en`,
+          zh: `${BASE_URL}/zh`,
+        },
+      },
+    },
+    {
+      url: `${BASE_URL}/zh`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
+      alternates: {
+        languages: {
+          ja: `${BASE_URL}/ja`,
+          en: `${BASE_URL}/en`,
+          zh: `${BASE_URL}/zh`,
+        },
+      },
     },
   ];
 
-  // Skip database queries during build if DATABASE_URL is not set
-  if (!process.env.DATABASE_URL) {
-    console.log('DATABASE_URL not set, returning static pages only');
-    return staticPages;
-  }
+  // Recent products (1000 items) - SEO priority for content pages
+  const recentProducts = await db
+    .select({
+      id: products.id,
+      updatedAt: products.updatedAt,
+    })
+    .from(products)
+    .orderBy(desc(products.releaseDate))
+    .limit(1000);
 
-  try {
-    const db = getDb();
+  const productPages: MetadataRoute.Sitemap = recentProducts.map((product) => ({
+    url: `${BASE_URL}/ja/products/${product.id}`,
+    lastModified: product.updatedAt || new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+    alternates: {
+      languages: {
+        ja: `${BASE_URL}/ja/products/${product.id}`,
+        en: `${BASE_URL}/en/products/${product.id}`,
+        zh: `${BASE_URL}/zh/products/${product.id}`,
+      },
+    },
+  }));
 
-    // Recent products (limit 500)
-    const recentProducts = await db
-      .select({
-        id: products.id,
-        updatedAt: products.updatedAt,
-      })
-      .from(products)
-      .orderBy(sql`${products.updatedAt} DESC NULLS LAST`)
-      .limit(500);
+  // Top performers (500 items) - Prioritize performers with most products
+  const topPerformers = await db
+    .select({
+      id: performers.id,
+      productCount: sql<number>`COUNT(DISTINCT pp.product_id)`.as('product_count'),
+    })
+    .from(performers)
+    .leftJoin(
+      sql`product_performers pp`,
+      sql`${performers.id} = pp.performer_id`
+    )
+    .groupBy(performers.id)
+    .orderBy(desc(sql`product_count`))
+    .limit(500);
 
-    const productPages: MetadataRoute.Sitemap = recentProducts.map((product) => ({
-      url: `${siteUrl}/ja/products/${product.id}`,
-      lastModified: product.updatedAt || new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }));
+  const performerPages: MetadataRoute.Sitemap = topPerformers.map((performer) => ({
+    url: `${BASE_URL}/ja/actress/${performer.id}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+    alternates: {
+      languages: {
+        ja: `${BASE_URL}/ja/actress/${performer.id}`,
+        en: `${BASE_URL}/en/actress/${performer.id}`,
+        zh: `${BASE_URL}/zh/actress/${performer.id}`,
+      },
+    },
+  }));
 
-    // All performers
-    const allPerformers = await db
-      .select({
-        id: performers.id,
-        createdAt: performers.createdAt,
-      })
-      .from(performers)
-      .orderBy(sql`${performers.createdAt} DESC NULLS LAST`);
-
-    const performerPages: MetadataRoute.Sitemap = allPerformers.map((performer) => ({
-      url: `${siteUrl}/ja/performers/${performer.id}`,
-      lastModified: performer.createdAt || new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }));
-
-    // All tags
-    const allTags = await db
-      .select({
-        id: tags.id,
-        createdAt: tags.createdAt,
-      })
-      .from(tags)
-      .orderBy(sql`${tags.createdAt} DESC NULLS LAST`);
-
-    const tagPages: MetadataRoute.Sitemap = allTags.map((tag) => ({
-      url: `${siteUrl}/ja/tags/${tag.id}`,
-      lastModified: tag.createdAt || new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.6,
-    }));
-
-    return [...staticPages, ...productPages, ...performerPages, ...tagPages];
-  } catch (error) {
-    console.error('Error generating sitemap:', error);
-    // Return only static pages on error
-    return staticPages;
-  }
+  return [...staticPages, ...productPages, ...performerPages];
 }

@@ -9,6 +9,7 @@ import {
   date,
   decimal,
   jsonb,
+  bigint,
   index,
   uniqueIndex,
   primaryKey,
@@ -27,6 +28,7 @@ export const products = pgTable(
     releaseDate: date('release_date'),
     description: text('description'),
     duration: integer('duration'), // 再生時間（分）
+    defaultThumbnailUrl: text('default_thumbnail_url'), // デフォルトサムネイル画像（互換性のため）
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -98,6 +100,7 @@ export const performers = pgTable(
     id: serial('id').primaryKey(),
     name: varchar('name', { length: 200 }).unique().notNull(),
     nameKana: varchar('name_kana', { length: 200 }), // 読み仮名
+    profileImageUrl: text('profile_image_url'), // デフォルトプロフィール画像（互換性のため）
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
@@ -224,6 +227,82 @@ export const rawHtmlData = pgTable(
   }),
 );
 
+/**
+ * 女優画像テーブル
+ * 1女優に複数の画像を管理
+ */
+export const performerImages = pgTable(
+  'performer_images',
+  {
+    id: serial('id').primaryKey(),
+    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    imageUrl: text('image_url').notNull(),
+    imageType: varchar('image_type', { length: 50 }), // 'profile', 'thumbnail', 'banner', 'gallery' など
+    width: integer('width'), // 画像の幅
+    height: integer('height'), // 画像の高さ
+    source: varchar('source', { length: 100 }), // 'av-wiki', 'seesaa-wiki', 'manual' など
+    isPrimary: boolean('is_primary').default(false), // メイン画像かどうか
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    performerIdx: index('idx_performer_images_performer').on(table.performerId),
+    typeIdx: index('idx_performer_images_type').on(table.imageType),
+    primaryIdx: index('idx_performer_images_primary').on(table.performerId, table.isPrimary),
+  }),
+);
+
+/**
+ * 作品画像テーブル
+ * 1作品に複数の画像を管理
+ */
+export const productImages = pgTable(
+  'product_images',
+  {
+    id: serial('id').primaryKey(),
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    imageUrl: text('image_url').notNull(),
+    imageType: varchar('image_type', { length: 50 }).notNull(), // 'thumbnail', 'cover', 'sample', 'screenshot' など
+    displayOrder: integer('display_order').default(0), // 表示順序
+    width: integer('width'),
+    height: integer('height'),
+    aspName: varchar('asp_name', { length: 50 }), // 画像の取得元ASP
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productIdx: index('idx_product_images_product').on(table.productId),
+    typeIdx: index('idx_product_images_type').on(table.imageType),
+    orderIdx: index('idx_product_images_order').on(table.productId, table.displayOrder),
+    aspIdx: index('idx_product_images_asp').on(table.aspName),
+  }),
+);
+
+/**
+ * 作品動画テーブル
+ * 1作品に複数の動画URLを管理
+ */
+export const productVideos = pgTable(
+  'product_videos',
+  {
+    id: serial('id').primaryKey(),
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    videoUrl: text('video_url').notNull(),
+    videoType: varchar('video_type', { length: 50 }).notNull(), // 'streaming', 'download', 'preview', 'trailer' など
+    quality: varchar('quality', { length: 50 }), // '1080p', '720p', '480p', '4K' など
+    duration: integer('duration'), // 再生時間（秒）
+    fileSize: bigint('file_size', { mode: 'number' }), // ファイルサイズ（バイト）
+    format: varchar('format', { length: 50 }), // 'mp4', 'wmv', 'm3u8' など
+    aspName: varchar('asp_name', { length: 50 }), // 動画の取得元ASP
+    requiresAuth: boolean('requires_auth').default(false), // 認証が必要かどうか
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productIdx: index('idx_product_videos_product').on(table.productId),
+    typeIdx: index('idx_product_videos_type').on(table.videoType),
+    qualityIdx: index('idx_product_videos_quality').on(table.quality),
+    aspIdx: index('idx_product_videos_asp').on(table.aspName),
+  }),
+);
+
 // 型エクスポート
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
@@ -235,6 +314,12 @@ export type Performer = typeof performers.$inferSelect;
 export type NewPerformer = typeof performers.$inferInsert;
 export type PerformerAlias = typeof performerAliases.$inferSelect;
 export type NewPerformerAlias = typeof performerAliases.$inferInsert;
+export type PerformerImage = typeof performerImages.$inferSelect;
+export type NewPerformerImage = typeof performerImages.$inferInsert;
+export type ProductImage = typeof productImages.$inferSelect;
+export type NewProductImage = typeof productImages.$inferInsert;
+export type ProductVideo = typeof productVideos.$inferSelect;
+export type NewProductVideo = typeof productVideos.$inferInsert;
 export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;
 export type RawCsvData = typeof rawCsvData.$inferSelect;

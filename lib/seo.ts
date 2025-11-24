@@ -5,6 +5,49 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 const defaultDescription =
   '複数のプラットフォームを横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。';
 
+/**
+ * SEO最適化されたメタディスクリプションを生成（150-160文字に制限）
+ */
+export function generateOptimizedDescription(
+  title: string,
+  actressName?: string,
+  tags?: string[],
+  releaseDate?: string,
+  productId?: string,
+): string {
+  const parts: string[] = [];
+
+  if (actressName) {
+    parts.push(`${actressName}出演`);
+  }
+
+  if (title) {
+    const maxTitleLength = 80;
+    const trimmedTitle = title.length > maxTitleLength
+      ? title.substring(0, maxTitleLength) + '...'
+      : title;
+    parts.push(trimmedTitle);
+  }
+
+  if (tags && tags.length > 0) {
+    const genres = tags.slice(0, 3).join('・');
+    parts.push(`【${genres}】`);
+  }
+
+  if (releaseDate) {
+    parts.push(`配信日: ${releaseDate}`);
+  }
+
+  if (productId) {
+    parts.push(`品番: ${productId}`);
+  }
+
+  const description = parts.join(' | ');
+  return description.length > 160
+    ? description.substring(0, 157) + '...'
+    : description;
+}
+
 // SEO向けキーワード
 const defaultKeywords = [
   'アダルト動画',

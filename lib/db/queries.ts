@@ -1184,6 +1184,29 @@ export async function getFeaturedActresses(limit = 3): Promise<ActressType[]> {
 }
 
 /**
+ * 商品の全ASPソース情報を取得（E-E-A-T強化用）
+ */
+export async function getProductSources(productId: number) {
+  try {
+    const db = getDb();
+    const sources = await db
+      .select({
+        aspName: productSources.aspName,
+        originalProductId: productSources.originalProductId,
+        price: productSources.price,
+        affiliateUrl: productSources.affiliateUrl,
+      })
+      .from(productSources)
+      .where(eq(productSources.productId, productId));
+
+    return sources;
+  } catch (error) {
+    console.error(`Error fetching product sources for product ${productId}:`, error);
+    return [];
+  }
+}
+
+/**
  * Valid product categories
  */
 const VALID_CATEGORIES: ProductCategory[] = ['all', 'premium', 'mature', 'fetish', 'vr', 'cosplay', 'indies'];

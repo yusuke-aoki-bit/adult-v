@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { locales } from '@/i18n';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import AgeVerification from '@/components/AgeVerification';
+import PerformanceMonitor from '@/components/PerformanceMonitor';
 
 export default async function LocaleLayout({
   children,
@@ -25,6 +26,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <FavoritesProvider>
+        <PerformanceMonitor />
         <AgeVerification locale={locale}>
           {children}
         </AgeVerification>
