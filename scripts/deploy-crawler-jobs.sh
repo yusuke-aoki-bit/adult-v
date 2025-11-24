@@ -19,19 +19,19 @@ gcloud run jobs create mgs-crawler \
   --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
-  --args="mgs,--pages,20" \
+  --args="mgs" \
   --max-retries 3 \
-  --task-timeout 3600s \
-  --memory 2Gi \
+  --task-timeout 7200s \
+  --memory 4Gi \
   --cpu 2 \
   || gcloud run jobs update mgs-crawler \
   --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
-  --args="mgs,--pages,20" \
+  --args="mgs" \
   --max-retries 3 \
-  --task-timeout 3600s \
-  --memory 2Gi \
+  --task-timeout 7200s \
+  --memory 4Gi \
   --cpu 2
 
 # Caribbeancom Crawler Job - Daily at 3:00 AM JST (18:00 UTC previous day)
@@ -39,19 +39,19 @@ gcloud run jobs create caribbeancom-crawler \
   --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
-  --args="caribbeancom,--limit,100" \
+  --args="caribbeancom" \
   --max-retries 3 \
-  --task-timeout 3600s \
-  --memory 2Gi \
+  --task-timeout 7200s \
+  --memory 4Gi \
   --cpu 2 \
   || gcloud run jobs update caribbeancom-crawler \
   --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
-  --args="caribbeancom,--limit,100" \
+  --args="caribbeancom" \
   --max-retries 3 \
-  --task-timeout 3600s \
-  --memory 2Gi \
+  --task-timeout 7200s \
+  --memory 4Gi \
   --cpu 2
 
 # HEYZO Crawler Job - Daily at 4:00 AM JST (19:00 UTC previous day)
@@ -59,19 +59,19 @@ gcloud run jobs create heyzo-crawler \
   --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
-  --args="heyzo,--limit,50" \
+  --args="heyzo" \
   --max-retries 3 \
-  --task-timeout 3600s \
-  --memory 2Gi \
+  --task-timeout 7200s \
+  --memory 4Gi \
   --cpu 2 \
   || gcloud run jobs update heyzo-crawler \
   --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
-  --args="heyzo,--limit,50" \
+  --args="heyzo" \
   --max-retries 3 \
-  --task-timeout 3600s \
-  --memory 2Gi \
+  --task-timeout 7200s \
+  --memory 4Gi \
   --cpu 2
 
 # Caribbeancom Premium Crawler Job - Daily at 5:00 AM JST (20:00 UTC previous day)
@@ -79,19 +79,19 @@ gcloud run jobs create caribbeancompr-crawler \
   --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
-  --args="caribbeancompr,--limit,100" \
+  --args="caribbeancompr" \
   --max-retries 3 \
-  --task-timeout 3600s \
-  --memory 2Gi \
+  --task-timeout 7200s \
+  --memory 4Gi \
   --cpu 2 \
   || gcloud run jobs update caribbeancompr-crawler \
   --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
-  --args="caribbeancompr,--limit,100" \
+  --args="caribbeancompr" \
   --max-retries 3 \
-  --task-timeout 3600s \
-  --memory 2Gi \
+  --task-timeout 7200s \
+  --memory 4Gi \
   --cpu 2
 
 # 1pondo Crawler Job - Daily at 6:00 AM JST (21:00 UTC previous day)
@@ -99,19 +99,19 @@ gcloud run jobs create ippondo-crawler \
   --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
-  --args="1pondo,--limit,100" \
+  --args="1pondo" \
   --max-retries 3 \
-  --task-timeout 3600s \
-  --memory 2Gi \
+  --task-timeout 7200s \
+  --memory 4Gi \
   --cpu 2 \
   || gcloud run jobs update ippondo-crawler \
   --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
-  --args="1pondo,--limit,100" \
+  --args="1pondo" \
   --max-retries 3 \
-  --task-timeout 3600s \
-  --memory 2Gi \
+  --task-timeout 7200s \
+  --memory 4Gi \
   --cpu 2
 
 # DUGA Crawler Job - Daily at 7:00 AM JST (22:00 UTC previous day)
@@ -129,6 +129,26 @@ gcloud run jobs create duga-crawler \
   --region ${REGION} \
   --set-env-vars DATABASE_URL="${DATABASE_URL}" \
   --args="duga" \
+  --max-retries 3 \
+  --task-timeout 7200s \
+  --memory 4Gi \
+  --cpu 2
+
+# Wiki Crawler Job (both av-wiki and seesaawiki) - Daily at 8:00 AM JST (23:00 UTC previous day)
+gcloud run jobs create wiki-crawler \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
+  --region ${REGION} \
+  --set-env-vars DATABASE_URL="${DATABASE_URL}" \
+  --args="wiki" \
+  --max-retries 3 \
+  --task-timeout 7200s \
+  --memory 4Gi \
+  --cpu 2 \
+  || gcloud run jobs update wiki-crawler \
+  --image us-central1-docker.pkg.dev/${PROJECT_ID}/adult-v-crawlers/crawler:latest \
+  --region ${REGION} \
+  --set-env-vars DATABASE_URL="${DATABASE_URL}" \
+  --args="wiki" \
   --max-retries 3 \
   --task-timeout 7200s \
   --memory 4Gi \
@@ -214,6 +234,19 @@ gcloud scheduler jobs create http duga-crawler-schedule \
   --schedule "0 7 * * *" \
   --time-zone "Asia/Tokyo"
 
+# Wiki - Daily at 8:00 AM JST
+gcloud scheduler jobs create http wiki-crawler-schedule \
+  --location ${REGION} \
+  --schedule "0 8 * * *" \
+  --time-zone "Asia/Tokyo" \
+  --uri "https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/wiki-crawler:run" \
+  --http-method POST \
+  --oauth-service-account-email "${PROJECT_ID}@appspot.gserviceaccount.com" \
+  || gcloud scheduler jobs update http wiki-crawler-schedule \
+  --location ${REGION} \
+  --schedule "0 8 * * *" \
+  --time-zone "Asia/Tokyo"
+
 echo "✓ Deployment complete!"
 echo ""
 echo "To manually trigger a crawler:"
@@ -223,3 +256,4 @@ echo "  gcloud run jobs execute heyzo-crawler --region ${REGION}"
 echo "  gcloud run jobs execute caribbeancompr-crawler --region ${REGION}"
 echo "  gcloud run jobs execute ippondo-crawler --region ${REGION}"
 echo "  gcloud run jobs execute duga-crawler --region ${REGION}"
+echo "  gcloud run jobs execute wiki-crawler --region ${REGION}"
