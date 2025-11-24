@@ -22,6 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           ja: `${BASE_URL}/ja`,
           en: `${BASE_URL}/en`,
           zh: `${BASE_URL}/zh`,
+          ko: `${BASE_URL}/ko`,
         },
       },
     },
@@ -35,6 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           ja: `${BASE_URL}/ja`,
           en: `${BASE_URL}/en`,
           zh: `${BASE_URL}/zh`,
+          ko: `${BASE_URL}/ko`,
         },
       },
     },
@@ -48,6 +50,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           ja: `${BASE_URL}/ja`,
           en: `${BASE_URL}/en`,
           zh: `${BASE_URL}/zh`,
+          ko: `${BASE_URL}/ko`,
+        },
+      },
+    },
+    {
+      url: `${BASE_URL}/ko`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
+      alternates: {
+        languages: {
+          ja: `${BASE_URL}/ja`,
+          en: `${BASE_URL}/en`,
+          zh: `${BASE_URL}/zh`,
+          ko: `${BASE_URL}/ko`,
         },
       },
     },
@@ -82,6 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ja: `${BASE_URL}/ja/products/${product.id}`,
         en: `${BASE_URL}/en/products/${product.id}`,
         zh: `${BASE_URL}/zh/products/${product.id}`,
+        ko: `${BASE_URL}/ko/products/${product.id}`,
       },
     },
   }));
@@ -111,6 +129,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ja: `${BASE_URL}/ja/actress/${performer.id}`,
         en: `${BASE_URL}/en/actress/${performer.id}`,
         zh: `${BASE_URL}/zh/actress/${performer.id}`,
+        ko: `${BASE_URL}/ko/actress/${performer.id}`,
       },
     },
   }));
