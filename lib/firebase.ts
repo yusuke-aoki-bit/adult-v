@@ -1,5 +1,5 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getVertexAI, getGenerativeModel } from 'firebase/vertexai-preview';
+import { getVertexAI, getGenerativeModel } from 'firebase/vertexai';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 const firebaseConfig = {
