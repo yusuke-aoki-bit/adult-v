@@ -6,6 +6,18 @@ import { useRouter, useSearchParams } from 'next/navigation';
 // Force dynamic rendering for this page
 export const dynamic = 'force-dynamic';
 
+// Metadata for age verification page - prevent indexing
+export const metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
+};
+
 function AgeVerificationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();

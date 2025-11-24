@@ -78,21 +78,39 @@ export function middleware(request: NextRequest) {
   const userAgent = request.headers.get('user-agent') || '';
   const xPurpose = request.headers.get('x-purpose') || '';
   const xGooglePageSpeed = request.headers.get('x-mod-pagespeed') || request.headers.get('x-page-speed') || '';
+  const referer = request.headers.get('referer') || '';
 
-  // PageSpeed Insights detection
+  // PageSpeed Insights detection (multiple methods)
   const isPageSpeed = xPurpose.includes('preview') ||
                      xGooglePageSpeed.length > 0 ||
-                     userAgent.includes('Speed Insights');
+                     userAgent.includes('Speed Insights') ||
+                     referer.includes('pagespeed.web.dev') ||
+                     referer.includes('developers.google.com/speed');
 
-  // Bot detection
-  const isBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|lighthouse|chrome-lighthouse|gtmetrix|pagespeed|google page speed insights|ptst|headlesschrome/i.test(userAgent);
+  // Bot detection - comprehensive list
+  const isBot = /bot|crawl|spider|lighthouse|chrome-lighthouse|gtmetrix|pagespeed|headlesschrome|phantomjs|slurp|yahoo|bingbot|googlebot|baiduspider|yandexbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|applebot|duckduckbot|bingpreview|google page speed insights|ptst/i.test(userAgent);
 
-  // For debugging - log bot detection
-  if (isBot || isPageSpeed) {
-    console.log('Bot/PageSpeed detected:', { userAgent, xPurpose, xGooglePageSpeed, isPageSpeed, isBot });
+  // Check if request is coming from bot/crawler IP ranges (simplified check)
+  const xForwardedFor = request.headers.get('x-forwarded-for') || '';
+  const isGoogleIP = xForwardedFor.includes('66.249.') || // Google IP range
+                     xForwardedFor.includes('64.233.') ||
+                     xForwardedFor.includes('72.14.');
+
+  // For debugging - log all bot detection attempts
+  if (isBot || isPageSpeed || isGoogleIP) {
+    console.log('Bot/PageSpeed/GoogleIP detected:', {
+      userAgent: userAgent.substring(0, 100),
+      xPurpose,
+      xGooglePageSpeed,
+      referer,
+      xForwardedFor: xForwardedFor.substring(0, 50),
+      isPageSpeed,
+      isBot,
+      isGoogleIP,
+    });
   }
 
-  if (isBot || isPageSpeed) {
+  if (isBot || isPageSpeed || isGoogleIP) {
     return intlMiddleware(request);
   }
 
