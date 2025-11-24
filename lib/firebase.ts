@@ -1,5 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getVertexAI, getGenerativeModel } from 'firebase/vertexai';
+// TODO: Re-enable Vertex AI when correct import path is determined
+// import { getVertexAI, getGenerativeModel } from 'firebase/vertexai';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 const firebaseConfig = {
@@ -28,12 +29,13 @@ if (!getApps().length) {
   app = getApps()[0];
 }
 
+// TODO: Re-enable Vertex AI when correct import path is determined
 // Initialize Vertex AI
-export const vertexAI = getVertexAI(app);
+// export const vertexAI = getVertexAI(app);
 
 // Get generative model (Gemini)
-export const getAIModel = (modelName: string = 'gemini-2.0-flash-001') => {
-  return getGenerativeModel(vertexAI, { model: modelName });
-};
+// export const getAIModel = (modelName: string = 'gemini-2.0-flash-001') => {
+//   return getGenerativeModel(vertexAI, { model: modelName });
+// };
 
 export { app };
