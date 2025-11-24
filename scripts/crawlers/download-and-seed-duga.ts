@@ -9,7 +9,7 @@ import { parse } from 'csv-parse/sync';
 import * as iconv from 'iconv-lite';
 import { createHash } from 'crypto';
 import { getDb } from '../lib/db/index';
-import { products, performers, productPerformers, tags, productTags, productSources, productCache, rawCsvData } from '../lib/db/schema';
+import { products, performers, productPerformers, tags, productTags, productSources, rawCsvData } from '../lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateDUGALink } from '../lib/affiliate';
 import * as cheerio from 'cheerio';
@@ -239,14 +239,7 @@ async function downloadAndSeedDuga() {
           dataSource: 'CSV',
         });
 
-        // Insert product cache
-        await db.insert(productCache).values({
-          productId,
-          aspName: 'DUGA',
-          price,
-          affiliateUrl,
-          inStock: true,
-        }).onConflictDoNothing();
+        // productCache table removed - product images should be handled separately
 
         // Insert performers if provided (split by comma)
         if (performerName && performerName.trim() !== '') {

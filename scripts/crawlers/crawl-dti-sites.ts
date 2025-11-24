@@ -17,7 +17,7 @@ if (!process.env.DATABASE_URL) {
 
 import { createHash } from 'crypto';
 import { getDb } from '../../lib/db/index';
-import { products, performers, productPerformers, tags, productTags, productSources, productCache, rawHtmlData, productImages } from '../../lib/db/schema';
+import { products, performers, productPerformers, tags, productTags, productSources, rawHtmlData, productImages } from '../../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import iconv from 'iconv-lite';
 import { generateDTILink } from '../../lib/affiliate';
@@ -711,18 +711,7 @@ async function crawlSite(config: CrawlConfig & { limit?: number}) {
             dataSource: 'CRAWL',
           });
 
-          // Insert product cache
-          await db.insert(productCache).values({
-            productId,
-            aspName: 'DTI',
-            price: productData.price || 0,
-            affiliateUrl: affiliateUrl,
-            thumbnailUrl: productData.imageUrl,
-            sampleImages: productData.sampleImages || null,
-            inStock: true,
-          });
-
-          // Save images to product_images table
+          // Save images to product_images table (productCache table removed)
           await saveProductImages(productId, productData.imageUrl, productData.sampleImages, config.siteName);
 
           // Update products.defaultThumbnailUrl

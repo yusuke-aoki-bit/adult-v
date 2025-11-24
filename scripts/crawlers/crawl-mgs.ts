@@ -11,7 +11,7 @@
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
 import { getDb } from '../../lib/db';
-import { rawHtmlData, productSources, products, performers, productPerformers, productCache, tags, productTags, productImages } from '../../lib/db/schema';
+import { rawHtmlData, productSources, products, performers, productPerformers, tags, productTags, productImages } from '../../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 const AFFILIATE_CODE = '6CS5PGEBQDUYPZLHYEM33TBZFJ'; // MGSアフィリエイトコード
@@ -374,63 +374,7 @@ async function savePerformers(
   }
 }
 
-/**
- * product_cacheにデータを保存
- */
-async function saveProductCache(
-  productId: number,
-  mgsProduct: MgsProduct,
-  affiliateWidget: string,
-): Promise<void> {
-  const db = getDb();
-
-  try {
-    // 既存のキャッシュをチェック
-    const existing = await db
-      .select()
-      .from(productCache)
-      .where(
-        and(
-          eq(productCache.productId, productId),
-          eq(productCache.aspName, SOURCE_NAME),
-        ),
-      )
-      .limit(1);
-
-    if (existing.length > 0) {
-      // 更新
-      await db
-        .update(productCache)
-        .set({
-          price: mgsProduct.price || 0,
-          affiliateUrl: mgsProduct.url,
-          thumbnailUrl: mgsProduct.thumbnailUrl,
-          sampleImages: mgsProduct.sampleImages || null,
-          inStock: true,
-          lastUpdated: new Date(),
-        })
-        .where(eq(productCache.id, existing[0].id));
-
-      console.log(`Updated product_cache for product ${productId}`);
-    } else {
-      // 新規挿入
-      await db.insert(productCache).values({
-        productId,
-        aspName: SOURCE_NAME,
-        price: mgsProduct.price || 0,
-        affiliateUrl: mgsProduct.url,
-        thumbnailUrl: mgsProduct.thumbnailUrl,
-        sampleImages: mgsProduct.sampleImages || null,
-        inStock: true,
-      });
-
-      console.log(`Saved product_cache for product ${productId}`);
-    }
-  } catch (error) {
-    console.error('Error saving product cache:', error);
-    throw error;
-  }
-}
+// product_cache table has been removed - images are now stored in product_images table
 
 /**
  * MGSタグと商品を紐付け
@@ -624,12 +568,6 @@ async function main() {
         if (mgsProduct.performerNames && mgsProduct.performerNames.length > 0) {
           await savePerformers(productId, mgsProduct.performerNames);
         }
-
-        // Generate affiliate widget for product cache
-        const affiliateWidget = generateAffiliateWidget(mgsProduct.productId);
-
-        // product_cacheを保存
-        await saveProductCache(productId, mgsProduct, affiliateWidget);
 
         // product_imagesにサムネイルとサンプル画像を保存
         await saveProductImages(productId, mgsProduct.thumbnailUrl, mgsProduct.sampleImages);
