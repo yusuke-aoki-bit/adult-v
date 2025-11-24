@@ -39,22 +39,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const t = await getTranslations('actress');
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
-    return {
-      ...generateBaseMetadata(
-        `${actress.name}の出演作品一覧 - ${actress.metrics.releaseCount}作品 | Adult Viewer Lab`,
-        t('metaDescription', { name: actress.name, count: actress.metrics.releaseCount }),
-        actress.heroImage || actress.thumbnail,
-        `/${locale}/actress/${actress.id}`,
-      ),
-      alternates: {
-        languages: {
-          'ja': `${baseUrl}/ja/actress/${actress.id}`,
-          'en': `${baseUrl}/en/actress/${actress.id}`,
-          'zh': `${baseUrl}/zh/actress/${actress.id}`,
-          'x-default': `${baseUrl}/ja/actress/${actress.id}`,
-        },
-      },
-    };
+    return generateBaseMetadata(
+      `${actress.name}の出演作品一覧 - ${actress.metrics.releaseCount}作品 | Adult Viewer Lab`,
+      t('metaDescription', { name: actress.name, count: actress.metrics.releaseCount }),
+      actress.heroImage || actress.thumbnail,
+      `/${locale}/actress/${actress.id}`,
+      undefined,
+      locale,
+    );
   } catch {
     return {};
   }

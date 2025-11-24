@@ -10,8 +10,8 @@
 
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
-import { getDb } from '../lib/db';
-import { rawHtmlData, productSources, products, performers, productPerformers, productCache, tags, productTags } from '../lib/db/schema';
+import { getDb } from '../../lib/db';
+import { rawHtmlData, productSources, products, performers, productPerformers, productCache, tags, productTags, productImages } from '../../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 const AFFILIATE_CODE = '6CS5PGEBQDUYPZLHYEM33TBZFJ'; // MGSアフィリエイトコード
@@ -490,6 +490,80 @@ async function linkMgsTag(productId: number): Promise<void> {
 }
 
 /**
+ * 作品画像を product_images テーブルに保存
+ */
+async function saveProductImages(
+  productId: number,
+  thumbnailUrl?: string,
+  sampleImages?: string[],
+): Promise<void> {
+  if (!thumbnailUrl && (!sampleImages || sampleImages.length === 0)) {
+    return;
+  }
+
+  const db = getDb();
+
+  try {
+    // Save thumbnail as first image
+    if (thumbnailUrl) {
+      const existing = await db
+        .select()
+        .from(productImages)
+        .where(
+          and(
+            eq(productImages.productId, productId),
+            eq(productImages.imageUrl, thumbnailUrl),
+          ),
+        )
+        .limit(1);
+
+      if (existing.length === 0) {
+        await db.insert(productImages).values({
+          productId,
+          imageUrl: thumbnailUrl,
+          imageType: 'thumbnail',
+          displayOrder: 0,
+          aspName: SOURCE_NAME,
+        });
+        console.log(`  Saved thumbnail image to product_images`);
+      }
+    }
+
+    // Save sample images
+    if (sampleImages && sampleImages.length > 0) {
+      for (let i = 0; i < sampleImages.length; i++) {
+        const imageUrl = sampleImages[i];
+
+        const existing = await db
+          .select()
+          .from(productImages)
+          .where(
+            and(
+              eq(productImages.productId, productId),
+              eq(productImages.imageUrl, imageUrl),
+            ),
+          )
+          .limit(1);
+
+        if (existing.length === 0) {
+          await db.insert(productImages).values({
+            productId,
+            imageUrl,
+            imageType: 'sample',
+            displayOrder: i + 1,
+            aspName: SOURCE_NAME,
+          });
+        }
+      }
+      console.log(`  Saved ${sampleImages.length} sample image(s) to product_images`);
+    }
+  } catch (error) {
+    console.error('Error saving product images:', error);
+    throw error;
+  }
+}
+
+/**
  * メイン処理
  */
 async function main() {
@@ -556,6 +630,18 @@ async function main() {
 
         // product_cacheを保存
         await saveProductCache(productId, mgsProduct, affiliateWidget);
+
+        // product_imagesにサムネイルとサンプル画像を保存
+        await saveProductImages(productId, mgsProduct.thumbnailUrl, mgsProduct.sampleImages);
+
+        // products.defaultThumbnailUrlを更新
+        if (mgsProduct.thumbnailUrl) {
+          await db
+            .update(products)
+            .set({ defaultThumbnailUrl: mgsProduct.thumbnailUrl })
+            .where(eq(products.id, productId));
+          console.log(`  Updated products.defaultThumbnailUrl`);
+        }
 
         // MGSタグと紐付け
         await linkMgsTag(productId);

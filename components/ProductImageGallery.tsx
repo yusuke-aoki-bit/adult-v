@@ -6,17 +6,17 @@ import { useState } from 'react';
 const PLACEHOLDER_IMAGE = 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
 
 interface ProductImageGalleryProps {
-  mainImage: string;
+  mainImage: string | null;
   sampleImages?: string[];
   productTitle: string;
 }
 
 export default function ProductImageGallery({ mainImage, sampleImages, productTitle }: ProductImageGalleryProps) {
-  const [selectedImage, setSelectedImage] = useState(mainImage);
+  const [selectedImage, setSelectedImage] = useState(mainImage || PLACEHOLDER_IMAGE);
   const [imageError, setImageError] = useState(false);
 
-  // メイン画像とサンプル画像を結合
-  const allImages = [mainImage, ...(sampleImages || [])].filter(Boolean);
+  // メイン画像とサンプル画像を結合 (null値を除外)
+  const allImages = [mainImage, ...(sampleImages || [])].filter((img): img is string => Boolean(img));
   const hasMultipleImages = allImages.length > 1;
 
   const handleImageError = () => {

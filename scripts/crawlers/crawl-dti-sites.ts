@@ -17,7 +17,7 @@ if (!process.env.DATABASE_URL) {
 
 import { createHash } from 'crypto';
 import { getDb } from '../../lib/db/index';
-import { products, performers, productPerformers, tags, productTags, productSources, productCache, rawHtmlData } from '../../lib/db/schema';
+import { products, performers, productPerformers, tags, productTags, productSources, productCache, rawHtmlData, productImages } from '../../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import iconv from 'iconv-lite';
 import { generateDTILink } from '../../lib/affiliate';
@@ -452,9 +452,87 @@ async function parseHtmlContent(html: string, siteName: string, productId?: stri
 }
 
 /**
+ * Save product images to product_images table
+ */
+async function saveProductImages(
+  productId: number,
+  thumbnailUrl?: string,
+  sampleImages?: string[],
+  siteName?: string,
+): Promise<void> {
+  if (!thumbnailUrl && (!sampleImages || sampleImages.length === 0)) {
+    return;
+  }
+
+  const db = getDb();
+
+  try {
+    // Save thumbnail as first image
+    if (thumbnailUrl) {
+      const existing = await db
+        .select()
+        .from(productImages)
+        .where(
+          and(
+            eq(productImages.productId, productId),
+            eq(productImages.imageUrl, thumbnailUrl),
+          ),
+        )
+        .limit(1);
+
+      if (existing.length === 0) {
+        await db.insert(productImages).values({
+          productId,
+          imageUrl: thumbnailUrl,
+          imageType: 'thumbnail',
+          displayOrder: 0,
+          aspName: 'DTI',
+        });
+        console.log(`    💾 Saved thumbnail to product_images`);
+      }
+    }
+
+    // Save sample images
+    if (sampleImages && sampleImages.length > 0) {
+      let savedCount = 0;
+      for (let i = 0; i < sampleImages.length; i++) {
+        const imageUrl = sampleImages[i];
+
+        const existing = await db
+          .select()
+          .from(productImages)
+          .where(
+            and(
+              eq(productImages.productId, productId),
+              eq(productImages.imageUrl, imageUrl),
+            ),
+          )
+          .limit(1);
+
+        if (existing.length === 0) {
+          await db.insert(productImages).values({
+            productId,
+            imageUrl,
+            imageType: 'sample',
+            displayOrder: i + 1,
+            aspName: 'DTI',
+          });
+          savedCount++;
+        }
+      }
+      if (savedCount > 0) {
+        console.log(`    💾 Saved ${savedCount} sample image(s) to product_images`);
+      }
+    }
+  } catch (error) {
+    console.error(`    ❌ Error saving product images:`, error);
+  }
+}
+
+/**
  * Crawl a single site configuration
  */
-async function crawlSite(config: CrawlConfig & { limit?: number }) {
+async function crawlSite(config: CrawlConfig & { limit?: number}) {
   console.log(`\nStarting crawl for ${config.siteName}...`);
   console.log(`URL Pattern: ${config.urlPattern}`);
   console.log(`Starting from ID: ${config.startId}\n`);
@@ -643,6 +721,18 @@ async function crawlSite(config: CrawlConfig & { limit?: number }) {
             sampleImages: productData.sampleImages || null,
             inStock: true,
           });
+
+          // Save images to product_images table
+          await saveProductImages(productId, productData.imageUrl, productData.sampleImages, config.siteName);
+
+          // Update products.defaultThumbnailUrl
+          if (productData.imageUrl) {
+            await db
+              .update(products)
+              .set({ defaultThumbnailUrl: productData.imageUrl })
+              .where(eq(products.id, productId));
+            console.log(`    ✓ Updated products.defaultThumbnailUrl`);
+          }
 
           // Insert actors
           if (productData.actors && productData.actors.length > 0) {

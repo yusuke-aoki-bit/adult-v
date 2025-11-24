@@ -48,26 +48,104 @@ export function generateOptimizedDescription(
     : description;
 }
 
-// SEO向けキーワード
-const defaultKeywords = [
-  'アダルト動画',
-  'AV女優',
-  '女優ランキング',
-  'アダルト配信',
-  'DMM',
-  'DUGA',
-  'MGS',
-  'DTI',
-  'FANZA',
-  '動画レビュー',
-  'アダルトサイト比較',
-  '新作AV',
-  'セール情報',
-  'アダルトキャンペーン',
-];
+// SEO向けキーワード（多言語対応）
+const localeKeywords = {
+  ja: [
+    'アダルト動画',
+    'AV女優',
+    '女優ランキング',
+    'アダルト配信',
+    'DMM',
+    'DUGA',
+    'MGS',
+    'DTI',
+    'FANZA',
+    '動画レビュー',
+    'アダルトサイト比較',
+    '新作AV',
+    'セール情報',
+    'アダルトキャンペーン',
+    '無修正動画',
+    'カリビアンコム',
+    '一本道',
+    'HEYZO',
+  ],
+  en: [
+    'adult videos',
+    'JAV actresses',
+    'actress rankings',
+    'adult streaming',
+    'DMM',
+    'DUGA',
+    'MGS',
+    'DTI',
+    'FANZA',
+    'video reviews',
+    'adult site comparison',
+    'new releases',
+    'sales information',
+    'adult campaigns',
+    'uncensored videos',
+    'Caribbeancom',
+    '1Pondo',
+    'HEYZO',
+  ],
+  zh: [
+    '成人影片',
+    'AV女優',
+    '女優排名',
+    '成人影音',
+    'DMM',
+    'DUGA',
+    'MGS',
+    'DTI',
+    'FANZA',
+    '影片评论',
+    '成人网站比较',
+    '新片发布',
+    '优惠信息',
+    '成人活动',
+    '无码影片',
+    '加勒比海',
+    '一本道',
+    'HEYZO',
+  ],
+  ko: [
+    '성인 비디오',
+    'AV 여배우',
+    '여배우 랭킹',
+    '성인 스트리밍',
+    'DMM',
+    'DUGA',
+    'MGS',
+    'DTI',
+    'FANZA',
+    '비디오 리뷰',
+    '성인 사이트 비교',
+    '신작 출시',
+    '세일 정보',
+    '성인 캠페인',
+    '무수정 비디오',
+    '카리비안컴',
+    '잇폰도',
+    'HEYZO',
+  ],
+};
+
+const defaultKeywords = localeKeywords.ja;
 
 /**
- * ベースのメタタグを生成
+ * ロケールマッピング（OpenGraph用）
+ */
+const localeMap: Record<string, string> = {
+  ja: 'ja_JP',
+  en: 'en_US',
+  zh: 'zh_CN',
+  ko: 'ko_KR',
+};
+
+/**
+ * ベースのメタタグを生成（多言語対応）
  */
 export function generateBaseMetadata(
   title: string,
@@ -75,13 +153,15 @@ export function generateBaseMetadata(
   image?: string,
   path?: string,
   keywords?: string[],
+  locale: string = 'ja',
 ): Metadata {
   const pageTitle = `${title} | ${siteName}`;
   const pageDescription = description || defaultDescription;
   const pageUrl = path ? `${siteUrl}${path}` : siteUrl;
   // デフォルトOGP画像のパスを設定（publicフォルダ内）
   const pageImage = image || `${siteUrl}/images/og-default.png`;
-  const pageKeywords = keywords || defaultKeywords;
+  const pageKeywords = keywords || localeKeywords[locale as keyof typeof localeKeywords] || defaultKeywords;
+  const ogLocale = localeMap[locale] || 'ja_JP';
 
   return {
     title: pageTitle,
@@ -89,6 +169,13 @@ export function generateBaseMetadata(
     keywords: pageKeywords.join(', '),
     alternates: {
       canonical: pageUrl,
+      languages: {
+        'ja': `${siteUrl}/ja${path || ''}`,
+        'en': `${siteUrl}/en${path || ''}`,
+        'zh': `${siteUrl}/zh${path || ''}`,
+        'ko': `${siteUrl}/ko${path || ''}`,
+        'x-default': `${siteUrl}/ja${path || ''}`,
+      },
     },
     openGraph: {
       title: pageTitle,
@@ -103,7 +190,7 @@ export function generateBaseMetadata(
           alt: title,
         },
       ],
-      locale: 'ja_JP',
+      locale: ogLocale,
       type: 'website',
     },
     twitter: {
@@ -130,17 +217,24 @@ export function generateBaseMetadata(
 }
 
 /**
- * 構造化データ: WebSite
+ * 構造化データ: WebSite（多言語対応）
  */
-export function generateWebSiteSchema() {
+export function generateWebSiteSchema(locale: string = 'ja') {
+  const localeDescriptions: Record<string, string> = {
+    ja: '複数のプラットフォームを横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。',
+    en: 'Cross-platform adult streaming hub covering DMM, DUGA, MGS, DTI with actress-based reviews, rankings, and campaign updates for heavy users.',
+    zh: '跨平台成人影音中心，涵盖DMM、DUGA、MGS、DTI，提供基于女优的评论、排名和活动更新，专为重度用户打造。',
+    ko: '여러 플랫폼을 아우르는 성인 스트리밍 허브로, DMM, DUGA, MGS, DTI를 다루며 헤비 유저를 위한 여배우 기반 리뷰, 랭킹 및 캠페인 업데이트를 제공합니다.',
+  };
+
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: siteName,
     alternateName: 'アダルトビューアーラボ',
     url: siteUrl,
-    description: defaultDescription,
-    inLanguage: ['ja', 'en', 'zh'],
+    description: localeDescriptions[locale] || localeDescriptions.ja,
+    inLanguage: ['ja', 'en', 'zh', 'ko'],
     publisher: {
       '@type': 'Organization',
       name: siteName,
@@ -150,7 +244,7 @@ export function generateWebSiteSchema() {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${siteUrl}/ja/search?q={search_term_string}`,
+        urlTemplate: `${siteUrl}/${locale}/search?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },

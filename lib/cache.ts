@@ -22,12 +22,15 @@ const CACHE_KEYS = {
  */
 export function generateCacheKey(
   prefix: string,
-  params: Record<string, any>
+  params?: Record<string, any>
 ): string {
-  const sortedParams = Object.keys(params)
+  // paramsがnullまたはundefinedの場合は空オブジェクトとして扱う
+  const safeParams = params || {};
+
+  const sortedParams = Object.keys(safeParams)
     .sort()
     .reduce((acc, key) => {
-      acc[key] = params[key];
+      acc[key] = safeParams[key];
       return acc;
     }, {} as Record<string, any>);
 

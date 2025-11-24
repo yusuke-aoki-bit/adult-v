@@ -40,7 +40,9 @@
     "actressCount": "收录 {count} 位女优",
     "initialSearch": "按首字母搜索",
     "filterSettings": "筛选设置",
-    "newReleases": "新作发布女优"
+    "newReleases": "新作发布女优",
+    "popularActresses": "人气女优",
+    "popularTags": "热门标签"
   },
   "header": {
     "title": "ADULT VIEWER LAB",

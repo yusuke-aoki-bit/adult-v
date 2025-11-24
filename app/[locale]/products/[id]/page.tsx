@@ -51,6 +51,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           'ja': `${baseUrl}/ja/products/${product.id}`,
           'en': `${baseUrl}/en/products/${product.id}`,
           'zh': `${baseUrl}/zh/products/${product.id}`,
+          'ko': `${baseUrl}/ko/products/${product.id}`,
           'x-default': `${baseUrl}/ja/products/${product.id}`,
         },
       },

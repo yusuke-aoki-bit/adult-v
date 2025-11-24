@@ -1,0 +1,207 @@
+{
+  "common": {
+    "actress": "배우",
+    "actresses": "배우 목록",
+    "products": "작품",
+    "search": "검색",
+    "filter": "필터",
+    "sort": "정렬",
+    "clear": "지우기",
+    "apply": "적용",
+    "page": "페이지",
+    "releaseCount": "출연 수",
+    "items": "개",
+    "loading": "로딩 중...",
+    "first": "처음",
+    "previous": "이전",
+    "next": "다음",
+    "last": "마지막",
+    "etc": "기타",
+    "favorites": "즐겨찾기",
+    "noResults": "결과를 찾을 수 없습니다",
+    "error": "오류가 발생했습니다",
+    "viewDetails": "상세 보기",
+    "addToFavorites": "즐겨찾기에 추가",
+    "removeFromFavorites": "즐겨찾기에서 제거",
+    "releaseDate": "배포일",
+    "duration": "재생 시간",
+    "price": "가격",
+    "salePrice": "세일 가격",
+    "free": "무료",
+    "viewProduct": "작품 보기",
+    "backToList": "목록으로 돌아가기",
+    "relatedProducts": "관련 작품",
+    "moreFrom": "{name}의 다른 작품",
+    "statistics": "통계 정보"
+  },
+  "homepage": {
+    "title": "AV여배우 데이터베이스 - DMM・DUGA・MGS・DTI 작품 통합 검색 | Adult Viewer Lab",
+    "description": "DMM, DUGA, MGS, DTI, 카리비안컴, 1폰도, HEYZO 등 주요 동영상 스트리밍 사이트를 통합한 AV여배우・작품 데이터베이스. {count}명 이상의 배우 정보, 출연 작품, 장르별 검색, 가격 비교 가능. 헤비 유저를 위한 상세 리뷰와 랭킹 정보 제공.",
+    "actressCount": "{count}명의 배우 게시 중",
+    "initialSearch": "이니셜로 검색",
+    "filterSettings": "필터 설정",
+    "newReleases": "신작 출시 배우",
+    "popularActresses": "인기 배우",
+    "popularTags": "인기 태그"
+  },
+  "header": {
+    "title": "ADULT VIEWER LAB",
+    "subtitle": "heavy user guide",
+    "menu": "메뉴",
+    "close": "닫기"
+  },
+  "nav": {
+    "home": "홈",
+    "actresses": "배우",
+    "products": "작품",
+    "new": "신작",
+    "featured": "특집",
+    "categories": "카테고리",
+    "rankings": "랭킹",
+    "favorites": "즐겨찾기",
+    "search": "검색"
+  },
+  "footer": {
+    "description": "DMM / DUGA / SOKMIL / DTI를 통합하여, 헤비 시청자를 위한 배우・장르별 리뷰, 랭킹, 캠페인 속보를 제공하는 제휴 사이트.",
+    "links": "링크",
+    "legal": "법적 정보",
+    "privacy": "개인정보 보호정책",
+    "terms": "이용약관",
+    "contact": "문의하기",
+    "copyright": "© {year} Adult Viewer Lab. All rights reserved.",
+    "affiliateNotice": "이 사이트는 성인 콘텐츠의 제휴 링크를 포함합니다."
+  },
+  "filter": {
+    "genre": "장르",
+    "site": "스트리밍 사이트",
+    "include": "포함 (하나 이상)",
+    "exclude": "제외 (포함하지 않음)",
+    "reset": "필터 초기화",
+    "noFiltersApplied": "필터가 적용되지 않았습니다"
+  },
+  "sort": {
+    "nameAsc": "이름 (오름차순)",
+    "nameDesc": "이름 (내림차순)",
+    "productCountDesc": "출연 수 (많은 순)",
+    "productCountAsc": "출연 수 (적은 순)",
+    "recent": "최근 추가",
+    "releaseDateDesc": "배포일 (최신 순)",
+    "releaseDateAsc": "배포일 (오래된 순)",
+    "priceAsc": "가격 (낮은 순)",
+    "priceDesc": "가격 (높은 순)",
+    "popularityDesc": "인기 순"
+  },
+  "actress": {
+    "profile": "프로필",
+    "filmography": "출연 작품",
+    "totalProducts": "전체 {count}작품",
+    "metaDescription": "{name}의 출연 작품 {count}편을 스트리밍 사이트 통합 검색. DMM・DUGA・MGS・DTI・카리비안컴・1폰도・HEYZO 등 여러 사이트의 작품 정보, 가격 비교, 장르별 필터링 가능. 헤비 유저를 위한 상세 리뷰와 랭킹.",
+    "aliases": "별명",
+    "height": "키",
+    "measurements": "쓰리사이즈",
+    "birthday": "생년월일",
+    "bloodType": "혈액형",
+    "genres": "장르",
+    "noProducts": "작품이 없습니다",
+    "loadMore": "더보기",
+    "adultContentNotice": "※이 페이지는 성인 콘텐츠를 포함합니다",
+    "latestReleases": "최신 작품"
+  },
+  "product": {
+    "details": "작품 상세",
+    "description": "설명",
+    "cast": "출연자",
+    "director": "감독",
+    "studio": "스튜디오",
+    "label": "레이블",
+    "series": "시리즈",
+    "tags": "태그",
+    "availableAt": "스트리밍 사이트",
+    "comparePrice": "가격 비교",
+    "bestPrice": "최저가",
+    "sampleImages": "샘플 이미지",
+    "sampleVideo": "샘플 동영상",
+    "userReviews": "리뷰",
+    "rating": "평가"
+  },
+  "search": {
+    "placeholder": "배우명이나 작품명으로 검색...",
+    "searchResults": "검색 결과",
+    "resultsFor": "\"{query}\"의 검색 결과",
+    "noResultsFor": "\"{query}\"에 일치하는 결과를 찾을 수 없습니다",
+    "suggestions": "검색 힌트",
+    "tryDifferentKeywords": "다른 키워드를 시도해 보세요",
+    "checkSpelling": "철자를 확인해 주세요"
+  },
+  "productIdSearch": {
+    "title": "상품 ID 검색",
+    "placeholder": "상품 ID 입력...",
+    "searchButton": "검색",
+    "searching": "검색 중...",
+    "errorRequired": "상품 ID를 입력해 주세요",
+    "errorNotFound": "상품을 찾을 수 없습니다",
+    "errorGeneric": "검색 중 오류가 발생했습니다",
+    "helperText": "표준화 상품 ID 또는 ASP 고유 상품 ID로 검색할 수 있습니다"
+  },
+  "favorites": {
+    "title": "즐겨찾기",
+    "noFavorites": "아직 즐겨찾기가 없습니다",
+    "addFavorites": "관심 있는 배우나 작품을 즐겨찾기에 추가하세요",
+    "actressesFavorites": "즐겨찾는 배우",
+    "productsFavorites": "즐겨찾는 작품"
+  },
+  "rankings": {
+    "title": "랭킹",
+    "weekly": "주간 랭킹",
+    "monthly": "월간 랭킹",
+    "allTime": "명예의 전당",
+    "topActresses": "인기 배우 랭킹",
+    "topProducts": "인기 작품 랭킹",
+    "newReleases": "신작 랭킹"
+  },
+  "categories": {
+    "title": "카테고리",
+    "browseByGenre": "장르별 찾기",
+    "allCategories": "모든 카테고리"
+  },
+  "featured": {
+    "title": "특집",
+    "currentCampaigns": "진행 중인 캠페인",
+    "recommendations": "추천 특집",
+    "newArrivals": "신작 특집"
+  },
+  "new": {
+    "title": "신작",
+    "latestReleases": "최신 배포 작품",
+    "thisWeek": "이번 주 신작",
+    "thisMonth": "이번 달 신작"
+  },
+  "ageVerification": {
+    "title": "연령 확인",
+    "message": "이 사이트는 성인 콘텐츠를 포함합니다.",
+    "question": "당신은 18세 이상입니까?",
+    "confirm": "네, 18세 이상입니다",
+    "deny": "아니요",
+    "warning": "18세 미만은 접근할 수 없습니다.",
+    "legalNotice": "이 사이트에 접속함으로써 이용약관 및 개인정보 보호정책에 동의한 것으로 간주됩니다."
+  },
+  "error": {
+    "pageNotFound": "페이지를 찾을 수 없습니다",
+    "serverError": "서버 오류가 발생했습니다",
+    "tryAgain": "다시 시도해 주세요",
+    "goHome": "홈으로 돌아가기",
+    "unexpectedError": "예기치 않은 오류가 발생했습니다",
+    "errorOccurred": "오류가 발생했습니다",
+    "errorMessage": "죄송합니다. 예기치 않은 오류가 발생했습니다.",
+    "errorDetails": "오류 상세:",
+    "retry": "다시 시도",
+    "criticalError": "심각한 오류가 발생했습니다",
+    "criticalErrorMessage": "애플리케이션에서 심각한 오류가 발생했습니다. 페이지를 새로 고침해 주세요.",
+    "reloadPage": "페이지 새로 고침"
+  },
+  "affiliate": {
+    "disclosure": "제휴 광고 안내",
+    "disclaimerShort": "이 사이트는 제휴 광고를 사용합니다.",
+    "disclaimerFull": "이 사이트는 Amazon.co.jp을 홍보하고 링크함으로써 사이트가 소개 수수료를 획득할 수 있는 수단을 제공하는 것을 목적으로 설정된 제휴 프로그램인 Amazon Associates Program의 참가자입니다. 또한 DMM, DUGA, SOKMIL, DTI의 제휴 프로그램에도 참여하고 있습니다."
+  }
+}

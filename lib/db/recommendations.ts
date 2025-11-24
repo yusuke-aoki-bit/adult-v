@@ -1,5 +1,5 @@
 import { getDb } from './index';
-import { products, productPerformers, productTags, tags } from './schema';
+import { products, productPerformers, productTags } from './schema';
 import { eq, and, inArray, ne, sql, desc } from 'drizzle-orm';
 
 /**
@@ -10,28 +10,32 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
 
   // Get the current product's performers and tags
   const productIdNum = typeof productId === 'string' ? parseInt(productId) : productId;
-  const currentProduct = await (db.query as any).products.findFirst({
-    where: eq(products.id, productIdNum),
-    with: {
-      productPerformers: {
-        with: {
-          performer: true,
-        },
-      },
-      productTags: {
-        with: {
-          tag: true,
-        },
-      },
-    },
-  });
 
-  if (!currentProduct) {
+  // Check if product exists
+  const currentProduct = await db
+    .select()
+    .from(products)
+    .where(eq(products.id, productIdNum))
+    .limit(1);
+
+  if (currentProduct.length === 0) {
     return [];
   }
 
-  const performerIds = currentProduct.productPerformers.map((pp: any) => pp.performerId);
-  const tagIds = currentProduct.productTags.map((pt: any) => pt.tagId);
+  // Get performers for this product
+  const performerData = await db
+    .select({ performerId: productPerformers.performerId })
+    .from(productPerformers)
+    .where(eq(productPerformers.productId, productIdNum));
+
+  // Get tags for this product
+  const tagData = await db
+    .select({ tagId: productTags.tagId })
+    .from(productTags)
+    .where(eq(productTags.productId, productIdNum));
+
+  const performerIds = performerData.map((pp) => pp.performerId);
+  const tagIds = tagData.map((pt) => pt.tagId);
 
   // Strategy 1: Same performers (highest priority)
   let relatedProducts: any[] = [];

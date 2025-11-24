@@ -29,6 +29,13 @@ export const products = pgTable(
     description: text('description'),
     duration: integer('duration'), // 再生時間（分）
     defaultThumbnailUrl: text('default_thumbnail_url'), // デフォルトサムネイル画像（互換性のため）
+    // 多言語対応カラム
+    titleEn: varchar('title_en', { length: 500 }),
+    titleZh: varchar('title_zh', { length: 500 }),
+    titleKo: varchar('title_ko', { length: 500 }),
+    descriptionEn: text('description_en'),
+    descriptionZh: text('description_zh'),
+    descriptionKo: text('description_ko'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -36,6 +43,9 @@ export const products = pgTable(
     normalizedIdIdx: index('idx_products_normalized_id').on(table.normalizedProductId),
     titleIdx: index('idx_products_title').on(table.title),
     releaseDateIdx: index('idx_products_release_date').on(table.releaseDate),
+    titleEnIdx: index('idx_products_title_en').on(table.titleEn),
+    titleZhIdx: index('idx_products_title_zh').on(table.titleZh),
+    titleKoIdx: index('idx_products_title_ko').on(table.titleKo),
   }),
 );
 
@@ -65,33 +75,6 @@ export const productSources = pgTable(
 );
 
 /**
- * 動的情報キャッシュテーブル
- * APIから取得した価格・在庫などの頻繁に変わる情報をキャッシュ
- */
-export const productCache = pgTable(
-  'product_cache',
-  {
-    id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
-    aspName: varchar('asp_name', { length: 50 }).notNull(),
-    price: integer('price'),
-    salePrice: integer('sale_price'), // セール価格
-    inStock: boolean('in_stock').default(true),
-    affiliateUrl: text('affiliate_url'),
-    thumbnailUrl: text('thumbnail_url'),
-    sampleImages: jsonb('sample_images'), // サンプル画像のURL配列
-    pointRate: decimal('point_rate', { precision: 5, scale: 2 }), // ポイント還元率
-    cachedAt: timestamp('cached_at').defaultNow(),
-  },
-  (table) => ({
-    productAspCacheUnique: uniqueIndex('idx_cache_product_asp').on(table.productId, table.aspName),
-    freshnessIdx: index('idx_cache_freshness').on(table.productId, table.aspName, table.cachedAt),
-    productCacheIdx: index('idx_cache_product').on(table.productId),
-    aspCacheIdx: index('idx_cache_asp').on(table.aspName),
-  }),
-);
-
-/**
  * 出演者テーブル
  */
 export const performers = pgTable(
@@ -101,11 +84,22 @@ export const performers = pgTable(
     name: varchar('name', { length: 200 }).unique().notNull(),
     nameKana: varchar('name_kana', { length: 200 }), // 読み仮名
     profileImageUrl: text('profile_image_url'), // デフォルトプロフィール画像（互換性のため）
+    // 多言語対応カラム
+    nameEn: varchar('name_en', { length: 200 }),
+    nameZh: varchar('name_zh', { length: 200 }),
+    nameKo: varchar('name_ko', { length: 200 }),
+    bioJa: text('bio_ja'),
+    bioEn: text('bio_en'),
+    bioZh: text('bio_zh'),
+    bioKo: text('bio_ko'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
     nameIdx: index('idx_performers_name').on(table.name),
     kanaIdx: index('idx_performers_kana').on(table.nameKana),
+    nameEnIdx: index('idx_performers_name_en').on(table.nameEn),
+    nameZhIdx: index('idx_performers_name_zh').on(table.nameZh),
+    nameKoIdx: index('idx_performers_name_ko').on(table.nameKo),
   }),
 );
 
@@ -155,11 +149,22 @@ export const tags = pgTable(
     id: serial('id').primaryKey(),
     name: varchar('name', { length: 100 }).unique().notNull(),
     category: varchar('category', { length: 50 }), // 'genre', 'series', 'maker' など
+    // 多言語対応カラム
+    nameEn: varchar('name_en', { length: 100 }),
+    nameZh: varchar('name_zh', { length: 100 }),
+    nameKo: varchar('name_ko', { length: 100 }),
+    descriptionJa: text('description_ja'),
+    descriptionEn: text('description_en'),
+    descriptionZh: text('description_zh'),
+    descriptionKo: text('description_ko'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
     nameIdx: index('idx_tags_name').on(table.name),
     categoryIdx: index('idx_tags_category').on(table.category),
+    nameEnIdx: index('idx_tags_name_en').on(table.nameEn),
+    nameZhIdx: index('idx_tags_name_zh').on(table.nameZh),
+    nameKoIdx: index('idx_tags_name_ko').on(table.nameKo),
   }),
 );
 
@@ -308,8 +313,6 @@ export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 export type ProductSource = typeof productSources.$inferSelect;
 export type NewProductSource = typeof productSources.$inferInsert;
-export type ProductCache = typeof productCache.$inferSelect;
-export type NewProductCache = typeof productCache.$inferInsert;
 export type Performer = typeof performers.$inferSelect;
 export type NewPerformer = typeof performers.$inferInsert;
 export type PerformerAlias = typeof performerAliases.$inferSelect;

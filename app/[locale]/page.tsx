@@ -26,6 +26,8 @@ export async function generateMetadata({
     t('description', { count: totalCount }),
     undefined,
     `/${locale}`,
+    undefined,
+    locale,
   );
 }
 
