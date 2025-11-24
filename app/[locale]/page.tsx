@@ -18,12 +18,13 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'homepage' });
 
-  // Get total actress count for metadata
-  const totalCount = await getActressesCount({});
+  // Use approximate count to avoid slow DB query in metadata generation
+  // Actual count is displayed on the page itself
+  const approximateCount = '38,000';
 
   return generateBaseMetadata(
     t('title'),
-    t('description', { count: totalCount }),
+    t('description', { count: approximateCount }),
     undefined,
     `/${locale}`,
     undefined,
