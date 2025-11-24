@@ -1,6 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getVertexAI, getGenerativeModel } from '@firebase/ai';
-import { initializeAppCheck, ReCaptchaV3Provider } from '@firebase/app-check';
+import { getVertexAI, getGenerativeModel } from 'firebase/vertexai-preview';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
