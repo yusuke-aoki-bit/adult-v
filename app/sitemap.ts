@@ -6,8 +6,6 @@ import { sql } from 'drizzle-orm';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const db = getDb();
-
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -36,7 +34,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  // Skip database queries during build if DATABASE_URL is not set
+  if (!process.env.DATABASE_URL) {
+    console.log('DATABASE_URL not set, returning static pages only');
+    return staticPages;
+  }
+
   try {
+    const db = getDb();
+
     // Recent products (limit 500)
     const recentProducts = await db
       .select({
