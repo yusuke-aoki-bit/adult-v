@@ -226,9 +226,77 @@ function generateNextId(currentId: string, format: string, reverse: boolean = fa
 }
 
 /**
+ * Fetch actress data from 一本道 JSON API
+ */
+async function fetch1pondoJsonData(productId: string): Promise<{
+  actors?: string[];
+  title?: string;
+  description?: string;
+  releaseDate?: string;
+  imageUrl?: string;
+  sampleImages?: string[];
+} | null> {
+  try {
+    const apiUrl = `https://www.1pondo.tv/dyn/phpauto/movie_details/movie_id/${productId}.json`;
+    console.log(`    🔍 Fetching 一本道 JSON API: ${apiUrl}`);
+
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      console.log(`    ⚠️  JSON API not found for ${productId}`);
+      return null;
+    }
+
+    const jsonData = await response.json();
+
+    // Extract actress names from ActressesJa array
+    const actors: string[] = jsonData.ActressesJa || [];
+
+    // Extract other data
+    const title = jsonData.Title || undefined;
+    const description = jsonData.Desc || undefined;
+
+    // Parse release date from Release (format: "2025-11-23 10:00:00")
+    let releaseDate: string | undefined;
+    if (jsonData.Release) {
+      const dateMatch = jsonData.Release.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (dateMatch) {
+        releaseDate = `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
+      }
+    }
+
+    // Extract thumbnail URL
+    const imageUrl = jsonData.ThumbHigh || jsonData.ThumbUltra || jsonData.ThumbMed || undefined;
+
+    // Extract sample images from SampleFiles array
+    const sampleImages: string[] = [];
+    if (jsonData.SampleFiles && Array.isArray(jsonData.SampleFiles)) {
+      for (const file of jsonData.SampleFiles) {
+        if (file.url) {
+          sampleImages.push(file.url);
+        }
+      }
+    }
+
+    console.log(`    ✓ JSON API data: ${actors.length} actress(es), title: ${title?.substring(0, 30)}...`);
+
+    return {
+      actors: actors.length > 0 ? actors : undefined,
+      title,
+      description,
+      releaseDate,
+      imageUrl,
+      sampleImages: sampleImages.length > 0 ? sampleImages : undefined,
+    };
+  } catch (error) {
+    console.error(`    ❌ Error fetching 一本道 JSON API:`, error);
+    return null;
+  }
+}
+
+/**
  * Parse HTML content and extract basic info
  */
-async function parseHtmlContent(html: string, siteName: string): Promise<{
+async function parseHtmlContent(html: string, siteName: string, productId?: string): Promise<{
   title?: string;
   description?: string;
   actors?: string[];
@@ -238,6 +306,28 @@ async function parseHtmlContent(html: string, siteName: string): Promise<{
   price?: number;
 } | null> {
   try {
+    // For 一本道, fetch data from JSON API first
+    if (siteName === '一本道' && productId) {
+      const jsonData = await fetch1pondoJsonData(productId);
+      if (jsonData && jsonData.actors && jsonData.actors.length > 0) {
+        // JSON API succeeded, use it as primary source
+        console.log(`    ✓ Using JSON API data for 一本道 product ${productId}`);
+
+        // Still parse HTML for price if needed
+        let price: number | undefined;
+        const priceMatch = html.match(/var\s+ec_price\s*=\s*parseFloat\s*\(\s*['"](\d+(?:\.\d+)?)['"]\s*\)/);
+        if (priceMatch) {
+          const usdPrice = parseFloat(priceMatch[1]);
+          price = Math.round(usdPrice * 150);
+        }
+
+        return {
+          ...jsonData,
+          price: price || jsonData.price,
+        };
+      }
+    }
+
     // Basic HTML parsing with regex (simplified)
     const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
     const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']/i);
@@ -485,7 +575,7 @@ async function crawlSite(config: CrawlConfig & { limit?: number }) {
     }
 
     // Parse HTML content
-    productData = await parseHtmlContent(htmlContent, config.siteName);
+    productData = await parseHtmlContent(htmlContent, config.siteName, currentId);
 
     if (!productData || !productData.title) {
       notFoundCount++;
