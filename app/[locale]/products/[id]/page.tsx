@@ -2,9 +2,12 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { JsonLD } from '@/components/JsonLD';
 import ProductImageGallery from '@/components/ProductImageGallery';
+import ProductVideoPlayer from '@/components/ProductVideoPlayer';
 import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
 import RelatedProducts from '@/components/RelatedProducts';
 import ProductDetailInfo from '@/components/ProductDetailInfo';
+import FavoriteButton from '@/components/FavoriteButton';
+import ViewTracker from '@/components/ViewTracker';
 import { getProductById, searchProductByProductId, getProductSources } from '@/lib/db/queries';
 import { getRelatedProducts } from '@/lib/db/recommendations';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription } from '@/lib/seo';
@@ -142,7 +145,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {/* Product Info */}
               <div className="space-y-6">
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">{product.title}</h1>
+                  <div className="flex items-start gap-3 mb-2">
+                    <h1 className="text-3xl font-bold text-white flex-1">{product.title}</h1>
+                    <FavoriteButton
+                      type="product"
+                      id={productId}
+                      title={product.title}
+                      thumbnail={product.imageUrl}
+                      size="lg"
+                    />
+                  </div>
                   <p className="text-gray-300">{product.providerLabel}</p>
                   <p className="text-sm text-gray-400 mt-2">
                     作品ID: {product.normalizedProductId || product.id}
@@ -236,6 +248,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           </div>
 
+          {/* サンプル動画セクション */}
+          {product.sampleVideos && product.sampleVideos.length > 0 && (
+            <div className="mt-8 bg-gray-800 rounded-lg shadow-md p-6">
+              <h2 className="text-2xl font-bold text-white mb-4">サンプル動画</h2>
+              <ProductVideoPlayer
+                sampleVideos={product.sampleVideos}
+                productTitle={product.title}
+              />
+            </div>
+          )}
+
           {/* E-E-A-T強化: 詳細情報セクション */}
           {sources.length > 0 && (
             <div className="mt-8">
@@ -256,6 +279,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
           )}
         </div>
       </div>
+
+      {/* View tracking */}
+      <ViewTracker productId={productId} />
     </>
   );
 }

@@ -1,0 +1,20 @@
+FROM node:20-slim
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Copy necessary files
+COPY lib ./lib
+COPY scripts/merge-performer-aliases.ts ./scripts/
+COPY tsconfig.json ./tsconfig.json
+
+# Set environment
+ENV NODE_ENV=production
+
+# Run the deduplication script
+CMD ["npx", "tsx", "scripts/merge-performer-aliases.ts"]

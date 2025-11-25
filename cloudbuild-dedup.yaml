@@ -1,0 +1,21 @@
+steps:
+  # Build the deduplication job container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/performer-dedup:latest'
+      - '-f'
+      - 'Dockerfile.dedup'
+      - '.'
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/performer-dedup:latest'
+
+images:
+  - 'gcr.io/$PROJECT_ID/performer-dedup:latest'
+
+timeout: 1200s

@@ -1,0 +1,44 @@
+# Adult Viewer Lab - Robots.txt
+# Allow all search engines to crawl
+
+User-agent: *
+Allow: /
+
+# Sitemap locations
+Sitemap: ${NEXT_PUBLIC_SITE_URL}/sitemap.xml
+Sitemap: ${NEXT_PUBLIC_SITE_URL}/sitemap-products.xml
+Sitemap: ${NEXT_PUBLIC_SITE_URL}/sitemap-actresses.xml
+
+# RSS Feed
+# New products feed (updated every 30 minutes)
+# Subscribe: ${NEXT_PUBLIC_SITE_URL}/feed.xml
+
+# Crawl delay (optional - avoid overwhelming server)
+Crawl-delay: 1
+
+# Disallow admin and API endpoints
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+# Allow all content pages
+Allow: /ja/
+Allow: /en/
+Allow: /zh/
+Allow: /ko/
+Allow: /products/
+Allow: /actress/
+Allow: /search/
+
+# Specific bot instructions
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /

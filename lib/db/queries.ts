@@ -1,5 +1,5 @@
 import { getDb } from './index';
-import { products, performers, productPerformers, tags, productTags, productSources, performerAliases } from './schema';
+import { products, performers, productPerformers, tags, productTags, productSources, performerAliases, productImages, productVideos } from './schema';
 import { eq, and, or, like, desc, asc, gte, lte, sql, inArray, notInArray } from 'drizzle-orm';
 import type { Product as ProductType, Actress as ActressType, ProductCategory } from '@/types/product';
 import type { InferSelectModel } from 'drizzle-orm';
@@ -34,10 +34,10 @@ export function generateActressId(name: string): string {
 
 
 /**
- * 商品の関連データ（出演者、タグ、ソース、キャッシュ）を並列取得するヘルパー関数
+ * 商品の関連データ（出演者、タグ、ソース、画像、動画）を並列取得するヘルパー関数
  */
 async function fetchProductRelatedData(db: ReturnType<typeof getDb>, productId: number) {
-  const [performerData, tagData, sourceData] = await Promise.all([
+  const [performerData, tagData, sourceData, imagesData, videosData] = await Promise.all([
     // 出演者情報を取得
     db
       .select({
@@ -66,12 +66,27 @@ async function fetchProductRelatedData(db: ReturnType<typeof getDb>, productId: 
       .from(productSources)
       .where(eq(productSources.productId, productId))
       .limit(1),
+
+    // サンプル画像を取得
+    db
+      .select()
+      .from(productImages)
+      .where(eq(productImages.productId, productId))
+      .orderBy(asc(productImages.displayOrder)),
+
+    // サンプル動画を取得
+    db
+      .select()
+      .from(productVideos)
+      .where(eq(productVideos.productId, productId)),
   ]);
 
   return {
     performerData,
     tagData,
     sourceData: sourceData[0],
+    imagesData,
+    videosData,
   };
 }
 
@@ -96,9 +111,9 @@ export async function getProductById(id: string): Promise<ProductType | null> {
     const product = result[0];
 
     // 関連データを並列で取得
-    const { performerData, tagData, sourceData } = await fetchProductRelatedData(db, product.id);
+    const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product.id);
 
-    return mapProductToType(product, performerData, tagData, sourceData);
+    return mapProductToType(product, performerData, tagData, sourceData, undefined, imagesData, videosData);
   } catch (error) {
     console.error(`Error fetching product ${id}:`, error);
     throw error;
@@ -218,10 +233,14 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     const conditions = [];
 
     // DTI系商品を除外（DMMアフィリエイト規約遵守）
-    const dtiProductIds = await excludeDTIProducts(db);
-    if (dtiProductIds.length > 0) {
-      conditions.push(notInArray(products.id, dtiProductIds));
-    }
+    // EXISTSを使用してサブクエリにする（IN配列を避ける）
+    conditions.push(
+      sql`NOT EXISTS (
+        SELECT 1 FROM ${productSources} ps
+        WHERE ps.product_id = ${products.id}
+        AND ps.asp_name = 'DTI'
+      )`
+    );
 
     // プロバイダー（ASP）でフィルタ
     if (options?.provider) {
@@ -234,20 +253,23 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       };
       const aspNames = aspMapping[options.provider.toLowerCase()] || [options.provider];
 
-      // サブクエリでこのASPを持つ商品IDを取得
-      const productIds = await db
-        .selectDistinct({ productId: productSources.productId })
-        .from(productSources)
-        .where(inArray(productSources.aspName, aspNames));
-
-      if (productIds.length > 0) {
-        const productIdValues = productIds.map(p => p.productId);
+      // EXISTSを使用（IN配列を避ける）
+      if (aspNames.length === 1) {
         conditions.push(
-          inArray(products.id, productIdValues)
+          sql`EXISTS (
+            SELECT 1 FROM ${productSources} ps
+            WHERE ps.product_id = ${products.id}
+            AND ps.asp_name = ${aspNames[0]}
+          )`
         );
       } else {
-        // 該当商品なし
-        return [];
+        conditions.push(
+          sql`EXISTS (
+            SELECT 1 FROM ${productSources} ps
+            WHERE ps.product_id = ${products.id}
+            AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
+          )`
+        );
       }
     }
 
@@ -255,48 +277,34 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     if (options?.minPrice !== undefined || options?.maxPrice !== undefined) {
       const priceConditions = [];
       if (options.minPrice !== undefined) {
-        priceConditions.push(sql`${productSources.price} >= ${options.minPrice}`);
+        priceConditions.push(sql`ps.price >= ${options.minPrice}`);
       }
       if (options.maxPrice !== undefined) {
-        priceConditions.push(sql`${productSources.price} <= ${options.maxPrice}`);
+        priceConditions.push(sql`ps.price <= ${options.maxPrice}`);
       }
 
-      // サブクエリで価格条件を満たす商品IDを取得
-      const productIds = await db
-        .selectDistinct({ productId: productSources.productId })
-        .from(productSources)
-        .where(and(...priceConditions));
-
-      if (productIds.length > 0) {
-        const productIdValues = productIds.map(p => p.productId);
-        conditions.push(
-          inArray(products.id, productIdValues)
-        );
-      } else {
-        // 該当商品なし
-        return [];
-      }
+      // EXISTSを使用
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productSources} ps
+          WHERE ps.product_id = ${products.id}
+          AND ${sql.join(priceConditions, sql` AND `)}
+        )`
+      );
     }
 
     // 女優IDでフィルタ（多対多リレーション）
     if (options?.actressId) {
       const performerId = parseInt(options.actressId);
       if (!isNaN(performerId)) {
-        // サブクエリで出演者を持つ商品IDを取得
-        const productIds = await db
-          .selectDistinct({ productId: productPerformers.productId })
-          .from(productPerformers)
-          .where(eq(productPerformers.performerId, performerId));
-
-        if (productIds.length > 0) {
-          const productIdValues = productIds.map(p => p.productId);
-          conditions.push(
-            inArray(products.id, productIdValues)
-          );
-        } else {
-          // 該当商品なし
-          return [];
-        }
+        // EXISTSを使用
+        conditions.push(
+          sql`EXISTS (
+            SELECT 1 FROM ${productPerformers} pp
+            WHERE pp.product_id = ${products.id}
+            AND pp.performer_id = ${performerId}
+          )`
+        );
       }
     }
 
@@ -304,21 +312,14 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     if (options?.tags && options.tags.length > 0) {
       const tagIds = options.tags.map(t => parseInt(t)).filter(id => !isNaN(id));
       if (tagIds.length > 0) {
-        // サブクエリでタグを持つ商品IDを取得
-        const productIds = await db
-          .selectDistinct({ productId: productTags.productId })
-          .from(productTags)
-          .where(inArray(productTags.tagId, tagIds));
-
-        if (productIds.length > 0) {
-          const productIdValues = productIds.map(p => p.productId);
-          conditions.push(
-            inArray(products.id, productIdValues)
-          );
-        } else {
-          // 該当商品なし
-          return [];
-        }
+        // EXISTSを使用
+        conditions.push(
+          sql`EXISTS (
+            SELECT 1 FROM ${productTags} pt
+            WHERE pt.product_id = ${products.id}
+            AND pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
+          )`
+        );
       }
     }
 
@@ -326,31 +327,23 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     if (options?.excludeTags && options.excludeTags.length > 0) {
       const excludeTagIds = options.excludeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
       if (excludeTagIds.length > 0) {
-        // サブクエリで除外タグを持つ商品IDを取得
-        const excludedProductIds = await db
-          .selectDistinct({ productId: productTags.productId })
-          .from(productTags)
-          .where(inArray(productTags.tagId, excludeTagIds));
-
-        if (excludedProductIds.length > 0) {
-          const excludedProductIdValues = excludedProductIds.map(p => p.productId);
-          conditions.push(
-            notInArray(products.id, excludedProductIdValues)
-          );
-        }
+        // NOT EXISTSを使用
+        conditions.push(
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${productTags} pt
+            WHERE pt.product_id = ${products.id}
+            AND pt.tag_id IN (${sql.join(excludeTagIds.map(id => sql`${id}`), sql`, `)})
+          )`
+        );
       }
     }
 
-    // 検索クエリ（タイトル、説明を検索）- 類似性ベースのあいまい検索を使用
+    // 検索クエリ（PostgreSQL Full Text Search使用）
+    // search_vectorを使用した高速全文検索（GINインデックス使用）
     if (options?.query) {
-      // pg_trgmを使用した類似性検索（similarity > 0.2 の結果を返す）
+      // Full Text Searchを使用（plainto_tsqueryで自動的にトークン化）
       conditions.push(
-        or(
-          sql`similarity(${products.title}, ${options.query}) > 0.2`,
-          sql`similarity(${products.description}, ${options.query}) > 0.15`,
-          sql`${products.title} ILIKE ${'%' + options.query + '%'}`,
-          sql`${products.description} ILIKE ${'%' + options.query + '%'}`
-        )!
+        sql`${products}.search_vector @@ plainto_tsquery('simple', ${options.query})`
       );
     }
 
@@ -923,6 +916,9 @@ export async function getTags(category?: string): Promise<Array<{ id: number; na
   try {
     const db = getDb();
 
+    // DTI系サイトタグを除外するリスト
+    const dtiSiteTags = ['カリビアンコム', 'カリビアンコムプレミアム', 'HEYZO', '一本道'];
+
     // タグとその使用数を取得
     const results = await db
       .select({
@@ -937,12 +933,15 @@ export async function getTags(category?: string): Promise<Array<{ id: number; na
       .groupBy(tags.id, tags.name, tags.category)
       .orderBy(desc(sql`count(${productTags.productId})`));
 
-    return results.map(r => ({
-      id: r.id,
-      name: r.name,
-      category: r.category,
-      count: Number(r.count),
-    }));
+    // DTI系サイトタグを除外してから返す
+    return results
+      .filter(r => !dtiSiteTags.includes(r.name))
+      .map(r => ({
+        id: r.id,
+        name: r.name,
+        category: r.category,
+        count: Number(r.count),
+      }));
   } catch (error) {
     console.error('Error fetching tags:', error);
     throw error;
@@ -1298,7 +1297,9 @@ function mapProductToType(
   performerData: Array<{ id: number; name: string; nameKana: string | null }> = [],
   tagData: Array<{ id: number; name: string; category: string | null }> = [],
   source?: any,
-  cache?: any
+  cache?: any,
+  imagesData?: Array<{ imageUrl: string; imageType: string; displayOrder: number | null }>,
+  videosData?: Array<{ videoUrl: string; videoType: string; quality: string | null; duration: number | null }>
 ): ProductType {
   // ASP情報から provider を取得
   const aspName = source?.aspName || 'DUGA';
@@ -1316,11 +1317,13 @@ function mapProductToType(
 
   // キャッシュから価格・画像情報を取得
   const price = cache?.price || source?.price || 0;
-  const imageUrl = cache?.thumbnailUrl || 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
+  const imageUrl = cache?.thumbnailUrl || product.defaultThumbnailUrl || 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
   const affiliateUrl = source?.affiliateUrl || cache?.affiliateUrl || '';
 
-  // サンプル画像を取得（JSONBフィールド）
-  const sampleImages = cache?.sampleImages as string[] | undefined;
+  // サンプル画像を取得（product_imagesテーブルまたはcache）
+  const sampleImages = imagesData && imagesData.length > 0
+    ? imagesData.map(img => img.imageUrl)
+    : (cache?.sampleImages as string[] | undefined);
 
   // タグからカテゴリを推定（仮実装）
   const category: ProductCategory = 'premium';
@@ -1346,6 +1349,16 @@ function mapProductToType(
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     return diffDays >= 0 && diffDays <= 7;
   })() : false;
+
+  // サンプル動画を整形
+  const sampleVideos = videosData && videosData.length > 0
+    ? videosData.map(video => ({
+        url: video.videoUrl,
+        type: video.videoType,
+        quality: video.quality || undefined,
+        duration: video.duration || undefined,
+      }))
+    : undefined;
 
   return {
     id: String(product.id),
@@ -1374,6 +1387,7 @@ function mapProductToType(
     reviewHighlight: undefined,
     ctaLabel: undefined,
     sampleImages,
+    sampleVideos,
   };
 }
 
@@ -1587,6 +1601,59 @@ export async function getPopularTags(options: {
     return result;
   } catch (error) {
     console.error('Error getting popular tags:', error);
+    throw error;
+  }
+}
+
+/**
+ * 最新の商品を取得（RSS用）
+ */
+export async function getRecentProducts(options?: {
+  limit?: number;
+}): Promise<ProductType[]> {
+  try {
+    const db = getDb();
+    const limit = options?.limit || 100;
+
+    // DTI系商品を除外
+    const dtiProductIds = await excludeDTIProducts(db);
+
+    // 最新の商品を取得
+    const whereConditions = [];
+    if (dtiProductIds.length > 0) {
+      whereConditions.push(notInArray(products.id, dtiProductIds));
+    }
+
+    const results = await db
+      .select()
+      .from(products)
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .orderBy(desc(products.releaseDate), desc(products.createdAt))
+      .limit(limit);
+
+    // 関連データを並列で取得
+    const productsWithData = await Promise.all(
+      results.map(async (product) => {
+        const { performerData, tagData, sourceData } = await fetchProductRelatedData(db, product.id);
+
+        return {
+          id: product.id,
+          title: product.title,
+          thumbnailUrl: product.defaultThumbnailUrl || null,
+          releaseDate: product.releaseDate,
+          duration: product.duration,
+          provider: sourceData?.aspName || null,
+          performers: performerData.map(p => ({
+            id: p.id,
+            name: p.name,
+          })),
+        } as ProductType;
+      })
+    );
+
+    return productsWithData;
+  } catch (error) {
+    console.error('Error getting recent products:', error);
     throw error;
   }
 }

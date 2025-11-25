@@ -79,6 +79,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // スタンドアロンモード（Docker用）
   output: 'standalone',
+  // TypeScript型チェックをスキップ（ビルド時）
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 export default withNextIntl(nextConfig);

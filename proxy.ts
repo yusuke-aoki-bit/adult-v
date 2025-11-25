@@ -43,7 +43,7 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   // Rate limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api')) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
@@ -139,6 +139,3 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
-
-
-

@@ -398,7 +398,7 @@ async function linkMgsTag(productId: number): Promise<void> {
         .insert(tags)
         .values({
           name: SOURCE_NAME,
-          slug: SOURCE_NAME.toLowerCase(),
+          category: 'provider',
         })
         .returning();
 

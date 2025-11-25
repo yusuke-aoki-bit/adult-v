@@ -6,6 +6,7 @@ import { JsonLD } from "@/components/JsonLD";
 import { generateBaseMetadata, generateWebSiteSchema } from "@/lib/seo";
 import { defaultLocale } from "@/i18n";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import PWAInstaller from "@/components/PWAInstaller";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,6 +65,7 @@ export default function RootLayout({
       >
         {gaId && <GoogleAnalytics gaId={gaId} />}
         <ConditionalLayout>{children}</ConditionalLayout>
+        <PWAInstaller />
       </body>
     </html>
   );

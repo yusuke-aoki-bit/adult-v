@@ -191,3 +191,132 @@ export async function getProductsByTag(tagId: number, limit: number = 20) {
 
   return productsByTag;
 }
+
+/**
+ * Get trending products based on recent views
+ */
+export async function getTrendingProducts(limit: number = 20, days: number = 7) {
+  const db = getDb();
+
+  const trendingProducts = await db.execute(sql`
+    SELECT
+      p.id,
+      p.title,
+      p.normalized_product_id as "normalizedProductId",
+      p.release_date as "releaseDate",
+      p.default_thumbnail_url as "imageUrl",
+      COUNT(pv.id) as view_count
+    FROM products p
+    LEFT JOIN product_views pv ON p.id = pv.product_id
+      AND pv.viewed_at >= NOW() - INTERVAL '${sql.raw(days.toString())} days'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM product_sources ps
+      WHERE ps.product_id = p.id
+      AND ps.asp_name = 'DTI'
+    )
+    GROUP BY p.id, p.title, p.normalized_product_id, p.release_date, p.default_thumbnail_url
+    HAVING COUNT(pv.id) > 0
+    ORDER BY view_count DESC, p.release_date DESC
+    LIMIT ${limit}
+  `);
+
+  return trendingProducts.rows;
+}
+
+/**
+ * Get personalized recommendations based on user's favorite items
+ * (localStorage based, so this is a client-side utility function)
+ */
+export async function getRecommendationsFromFavorites(
+  favoriteProductIds: number[],
+  limit: number = 12
+) {
+  if (favoriteProductIds.length === 0) {
+    return [];
+  }
+
+  const db = getDb();
+
+  // Get performers and tags from favorite products
+  const favoritePerformers = await db
+    .select({ performerId: productPerformers.performerId })
+    .from(productPerformers)
+    .where(inArray(productPerformers.productId, favoriteProductIds))
+    .groupBy(productPerformers.performerId);
+
+  const favoriteTags = await db
+    .select({ tagId: productTags.tagId })
+    .from(productTags)
+    .where(inArray(productTags.productId, favoriteProductIds))
+    .groupBy(productTags.tagId);
+
+  const performerIds = favoritePerformers.map((fp) => fp.performerId);
+  const tagIds = favoriteTags.map((ft) => ft.tagId);
+
+  let recommendations: any[] = [];
+
+  // Strategy 1: Products with favorite performers
+  if (performerIds.length > 0) {
+    const performerMatches = await db
+      .select({
+        id: products.id,
+        title: products.title,
+        normalizedProductId: products.normalizedProductId,
+        releaseDate: products.releaseDate,
+        imageUrl: products.defaultThumbnailUrl,
+        matchScore: sql<number>`COUNT(DISTINCT ${productPerformers.performerId})`.as('match_score'),
+      })
+      .from(products)
+      .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
+      .where(
+        and(
+          inArray(productPerformers.performerId, performerIds),
+          sql`${products.id} NOT IN (${sql.join(favoriteProductIds, sql`, `)})`
+        )
+      )
+      .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
+      .orderBy(desc(sql`match_score`), desc(products.releaseDate))
+      .limit(limit);
+
+    recommendations = performerMatches.map((p: any) => ({
+      ...p,
+      matchType: 'favorite_performer' as const,
+    }));
+  }
+
+  // Strategy 2: Products with favorite tags (if need more)
+  if (recommendations.length < limit && tagIds.length > 0) {
+    const existingIds = recommendations.map((r) => r.id);
+    const allExcludedIds = [...favoriteProductIds, ...existingIds];
+
+    const tagMatches = await db
+      .select({
+        id: products.id,
+        title: products.title,
+        normalizedProductId: products.normalizedProductId,
+        releaseDate: products.releaseDate,
+        imageUrl: products.defaultThumbnailUrl,
+        matchScore: sql<number>`COUNT(DISTINCT ${productTags.tagId})`.as('match_score'),
+      })
+      .from(products)
+      .innerJoin(productTags, eq(products.id, productTags.productId))
+      .where(
+        and(
+          inArray(productTags.tagId, tagIds),
+          sql`${products.id} NOT IN (${sql.join(allExcludedIds, sql`, `)})`
+        )
+      )
+      .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
+      .orderBy(desc(sql`match_score`), desc(products.releaseDate))
+      .limit(limit - recommendations.length);
+
+    recommendations.push(
+      ...tagMatches.map((p: any) => ({
+        ...p,
+        matchType: 'favorite_tag' as const,
+      }))
+    );
+  }
+
+  return recommendations.slice(0, limit);
+}

@@ -1,0 +1,5 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.duga', '-t', 'gcr.io/adult-v/duga-image-crawler:latest', '.']
+images:
+  - 'gcr.io/adult-v/duga-image-crawler:latest'

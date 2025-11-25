@@ -40,6 +40,12 @@ export interface Product {
   reviewHighlight?: string;
   ctaLabel?: string;
   sampleImages?: string[]; // サンプル画像URL配列
+  sampleVideos?: Array<{
+    url: string;
+    type: string; // 'streaming', 'download', 'preview', 'trailer'
+    quality?: string; // '720p', '1080p', '4k'
+    duration?: number; // seconds
+  }>; // サンプル動画URL配列
 }
 
 // カテゴリ情報

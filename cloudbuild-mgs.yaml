@@ -1,0 +1,5 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.mgs', '-t', 'gcr.io/adult-v/mgs-image-crawler:latest', '.']
+images:
+  - 'gcr.io/adult-v/mgs-image-crawler:latest'

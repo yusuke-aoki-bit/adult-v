@@ -1,183 +1,196 @@
 'use client';
 
-import { useFavorites } from '@/contexts/FavoritesContext';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import Image from 'next/image';
+import { Heart, Trash2, Film, User } from 'lucide-react';
+import { useFavorites } from '@/hooks/useFavorites';
 import FavoriteButton from '@/components/FavoriteButton';
 
-interface Actress {
-  id: number;
-  name: string;
-  slug: string;
-  thumbnailUrl?: string;
-}
-
-interface Product {
-  id: string;
-  title: string;
-  thumbnailUrl?: string;
-  normalizedProductId?: string;
-}
-
 export default function FavoritesPage() {
-  const { favoriteActresses, favoriteProducts } = useFavorites();
-  const { locale } = useParams();
-  const [actresses, setActresses] = useState<Actress[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { favorites, isLoaded, clearFavorites, getFavoritesByType } = useFavorites();
+  const [activeTab, setActiveTab] = useState<'all' | 'product' | 'actress'>('all');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  useEffect(() => {
-    async function loadFavorites() {
-      setLoading(true);
+  const filteredFavorites = activeTab === 'all'
+    ? favorites
+    : getFavoritesByType(activeTab);
 
-      // Load favorite actresses
-      if (favoriteActresses.size > 0) {
-        const actressIds = Array.from(favoriteActresses);
-        const actressPromises = actressIds.map(async (id) => {
-          try {
-            const res = await fetch(`/api/actresses/${id}`);
-            if (res.ok) {
-              return await res.json();
-            }
-          } catch (error) {
-            console.error(`Error loading actress ${id}:`, error);
-          }
-          return null;
-        });
-        const loadedActresses = (await Promise.all(actressPromises)).filter(Boolean);
-        setActresses(loadedActresses);
-      } else {
-        setActresses([]);
-      }
+  const productCount = getFavoritesByType('product').length;
+  const actressCount = getFavoritesByType('actress').length;
 
-      // Load favorite products
-      if (favoriteProducts.size > 0) {
-        const productIds = Array.from(favoriteProducts);
-        const productPromises = productIds.map(async (id) => {
-          try {
-            const res = await fetch(`/api/products/${id}`);
-            if (res.ok) {
-              return await res.json();
-            }
-          } catch (error) {
-            console.error(`Error loading product ${id}:`, error);
-          }
-          return null;
-        });
-        const loadedProducts = (await Promise.all(productPromises)).filter(Boolean);
-        setProducts(loadedProducts);
-      } else {
-        setProducts([]);
-      }
-
-      setLoading(false);
-    }
-
-    loadFavorites();
-  }, [favoriteActresses, favoriteProducts]);
-
-  if (loading) {
+  if (!isLoaded) {
     return (
-      <div className="bg-gray-900 min-h-screen">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-center items-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
-          </div>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center text-gray-400">読み込み中...</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-900 min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-white mb-8">お気に入り</h1>
-
-      {/* Favorite Actresses */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold text-white mb-4">お気に入りの女優</h2>
-        {actresses.length === 0 ? (
-          <p className="text-gray-400">お気に入りの女優はまだありません</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {actresses.map((actress) => (
-              <div key={actress.id} className="relative group">
-                <Link href={`/${locale}/actress/${actress.id}`} className="block">
-                  <div className="aspect-[3/4] relative bg-gray-800 rounded-lg overflow-hidden">
-                    {actress.thumbnailUrl ? (
-                      <Image
-                        src={actress.thumbnailUrl}
-                        alt={actress.name}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-750">
-                        <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        <span className="text-xs">画像なし</span>
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="mt-2 text-sm font-medium text-white line-clamp-2">{actress.name}</h3>
-                </Link>
-                <div className="absolute top-2 right-2 bg-white rounded-full shadow-md">
-                  <FavoriteButton type="actress" id={actress.id} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Favorite Products */}
-      <section>
-        <h2 className="text-2xl font-semibold text-white mb-4">お気に入りの作品</h2>
-        {products.length === 0 ? (
-          <p className="text-gray-400">お気に入りの作品はまだありません</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {products.map((product) => (
-              <div key={product.id} className="relative group">
-                <Link href={`/${locale}/products/${product.normalizedProductId || product.id}`} className="block">
-                  <div className="aspect-[3/4] relative bg-gray-800 rounded-lg overflow-hidden">
-                    {product.thumbnailUrl ? (
-                      <Image
-                        src={product.thumbnailUrl}
-                        alt={product.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-750">
-                        <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span className="text-xs">画像なし</span>
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="mt-2 text-sm font-medium text-white line-clamp-2">{product.title}</h3>
-                  {product.normalizedProductId && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      {product.normalizedProductId}
-                    </p>
-                  )}
-                </Link>
-                <div className="absolute top-2 right-2 bg-white rounded-full shadow-md">
-                  <FavoriteButton type="product" id={product.id} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+          <Heart className="h-8 w-8 text-rose-600 fill-current" />
+          お気に入り
+        </h1>
+        <p className="text-gray-400">
+          {favorites.length}件のお気に入りアイテム
+        </p>
       </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            activeTab === 'all'
+              ? 'bg-rose-600 text-white'
+              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          }`}
+        >
+          すべて ({favorites.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('product')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+            activeTab === 'product'
+              ? 'bg-rose-600 text-white'
+              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          }`}
+        >
+          <Film className="h-4 w-4" />
+          作品 ({productCount})
+        </button>
+        <button
+          onClick={() => setActiveTab('actress')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+            activeTab === 'actress'
+              ? 'bg-rose-600 text-white'
+              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          }`}
+        >
+          <User className="h-4 w-4" />
+          女優 ({actressCount})
+        </button>
+
+        {/* Clear all button */}
+        {favorites.length > 0 && (
+          <button
+            onClick={() => setShowClearConfirm(true)}
+            className="ml-auto px-4 py-2 rounded-lg font-medium bg-gray-800 text-gray-300 hover:bg-red-900 hover:text-white transition-colors flex items-center gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            すべて削除
+          </button>
+        )}
+      </div>
+
+      {/* Clear confirmation dialog */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-white mb-4">
+              お気に入りをすべて削除しますか?
+            </h3>
+            <p className="text-gray-400 mb-6">
+              この操作は取り消せません。
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={() => {
+                  clearFavorites();
+                  setShowClearConfirm(false);
+                }}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                削除する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Favorites grid */}
+      {filteredFavorites.length === 0 ? (
+        <div className="text-center py-16">
+          <Heart className="h-16 w-16 text-gray-700 mx-auto mb-4" />
+          <p className="text-gray-400 text-lg">
+            {activeTab === 'all'
+              ? 'お気に入りはまだありません'
+              : activeTab === 'product'
+              ? 'お気に入りの作品はまだありません'
+              : 'お気に入りの女優はまだありません'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {filteredFavorites.map((item) => {
+            const href = item.type === 'product'
+              ? `/ja/products/${item.id}`
+              : `/ja/actress/${item.id}`;
+
+            return (
+              <div
+                key={`${item.type}-${item.id}`}
+                className="bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-600 transition-all group relative"
+              >
+                <Link href={href}>
+                  {/* Thumbnail */}
+                  <div className="aspect-[3/4] relative bg-gray-700">
+                    {(item.thumbnail || item.image) ? (
+                      <Image
+                        src={item.thumbnail || item.image || ''}
+                        alt={item.title || item.name || ''}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        {item.type === 'product' ? (
+                          <Film className="h-12 w-12 text-gray-600" />
+                        ) : (
+                          <User className="h-12 w-12 text-gray-600" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Title/Name */}
+                  <div className="p-3">
+                    <h3 className="text-white text-sm font-medium line-clamp-2 mb-1">
+                      {item.title || item.name}
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      {new Date(item.addedAt).toLocaleDateString('ja-JP')}
+                    </p>
+                  </div>
+                </Link>
+
+                {/* Favorite button overlay */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <FavoriteButton
+                    type={item.type}
+                    id={item.id}
+                    title={item.title}
+                    name={item.name}
+                    thumbnail={item.thumbnail}
+                    image={item.image}
+                    size="sm"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -10,8 +10,8 @@ if (!process.env.DATABASE_URL) {
 }
 
 import { createHash } from 'crypto';
-import { getDb } from '../lib/db/index';
-import { performers, performerAliases, products, productPerformers, rawHtmlData } from '../lib/db/schema';
+import { getDb } from '../../lib/db/index';
+import { performers, performerAliases, products, productPerformers, rawHtmlData } from '../../lib/db/schema';
 import { eq } from 'drizzle-orm';
 import iconv from 'iconv-lite';
 

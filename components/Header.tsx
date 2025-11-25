@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import SearchBar from './SearchBar';
 import LanguageSwitcher from './LanguageSwitcher';
+import NotificationSubscriber from './NotificationSubscriber';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -30,6 +31,7 @@ export default function Header() {
 
           {/* デスクトップナビゲーション */}
           <nav className="hidden md:flex items-center space-x-4 flex-shrink-0">
+            <NotificationSubscriber />
             <Link
               href="/favorites"
               className="hover:text-rose-300 transition-colors font-medium flex items-center gap-1"
@@ -90,6 +92,9 @@ export default function Header() {
         {/* モバイルメニュー */}
         {isMobileMenuOpen && (
           <nav className="md:hidden py-4 space-y-4">
+            <div className="py-2">
+              <NotificationSubscriber />
+            </div>
             <Link
               href="/favorites"
               className="block py-2 hover:text-rose-300 transition-colors"
