@@ -28,12 +28,13 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
     description: '熟女・マニアック系が充実。独占レンタルも多い',
     siteUrl: 'https://www.sokmil.com/',
   },
+  // DTI is hidden per DMM affiliate terms but kept for internal use
   dti: {
     id: 'dti',
-    label: 'カリビアンコム',
+    label: 'DTI',
     accentClass: 'from-red-600 to-rose-500',
     textClass: 'text-rose-300',
-    description: '月額ストリーミング型。見放題派のヘビー視聴者向け',
+    description: 'DTI affiliated sites (hidden from public)',
     siteUrl: 'https://www.dti.ne.jp/',
   },
 };

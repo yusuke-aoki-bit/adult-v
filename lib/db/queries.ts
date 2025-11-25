@@ -734,11 +734,13 @@ export async function getActresses(options?: {
           batchGetPerformerThumbnails(db, performerIds),
         ]);
 
-        const actresses = results.map(r => mapPerformerToActressTypeSync(
-          r.performer,
-          productCounts.get(r.performer.id) || 0,
-          thumbnails.get(r.performer.id)
-        ));
+        const actresses = results
+          .map(r => mapPerformerToActressTypeSync(
+            r.performer,
+            productCounts.get(r.performer.id) || 0,
+            thumbnails.get(r.performer.id)
+          ))
+          .filter(actress => actress.metrics && actress.metrics.releaseCount > 0); // DTI除外により作品数が0になった女優を非表示
 
         return actresses;
       } catch (sortError) {
@@ -780,11 +782,13 @@ export async function getActresses(options?: {
           batchGetPerformerThumbnails(db, performerIds),
         ]);
 
-        const actresses = results.map(r => mapPerformerToActressTypeSync(
-          r.performer,
-          productCounts.get(r.performer.id) || 0,
-          thumbnails.get(r.performer.id)
-        ));
+        const actresses = results
+          .map(r => mapPerformerToActressTypeSync(
+            r.performer,
+            productCounts.get(r.performer.id) || 0,
+            thumbnails.get(r.performer.id)
+          ))
+          .filter(actress => actress.metrics && actress.metrics.releaseCount > 0); // DTI除外により作品数が0になった女優を非表示
 
         return actresses;
       } catch (sortError) {
@@ -820,11 +824,13 @@ export async function getActresses(options?: {
           batchGetPerformerThumbnails(db, performerIds),
         ]);
 
-        const actresses = results.map(performer => mapPerformerToActressTypeSync(
-          performer,
-          productCounts.get(performer.id) || 0,
-          thumbnails.get(performer.id)
-        ));
+        const actresses = results
+          .map(performer => mapPerformerToActressTypeSync(
+            performer,
+            productCounts.get(performer.id) || 0,
+            thumbnails.get(performer.id)
+          ))
+          .filter(actress => actress.metrics && actress.metrics.releaseCount > 0); // DTI除外により作品数が0になった女優を非表示
 
         return actresses;
       } catch (sortError) {
