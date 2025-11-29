@@ -42,7 +42,12 @@
     "filterSettings": "フィルター設定",
     "newReleases": "新作リリースした女優",
     "popularActresses": "人気女優",
-    "popularTags": "人気タグ"
+    "popularTags": "人気タグ",
+    "heroTitle": "複数サイトの作品を一括検索",
+    "heroDescription": "お気に入りの女優の作品を、DUGA・MGS・Sokmilなど複数のサイトから横断的に探せます",
+    "multiAspActresses": "複数サイトで活躍中",
+    "multiAspDescription": "複数のサイトで作品が配信されている女優です。サイトを比較してお得に購入できます。",
+    "recommended": "おすすめ"
   },
   "header": {
     "title": "ADULT VIEWER LAB",

@@ -3,7 +3,7 @@ import type { ProviderId } from '@/types/product';
 /**
  * Valid provider IDs
  */
-export const VALID_PROVIDER_IDS: readonly ProviderId[] = ['dmm', 'duga', 'sokmil', 'dti'] as const;
+export const VALID_PROVIDER_IDS: readonly ProviderId[] = ['duga', 'sokmil', 'dti', 'mgs', 'b10f', 'japanska', 'fc2'] as const;
 
 /**
  * Check if a string is a valid ProviderId
@@ -17,18 +17,31 @@ export function isValidProviderId(value: string): value is ProviderId {
  * Used for database migration compatibility
  */
 export function mapLegacyProvider(provider: string): ProviderId {
+  // Normalize to lowercase for case-insensitive matching
+  const normalizedProvider = provider.toLowerCase();
+
   // Map 'apex' to 'duga' for backwards compatibility
-  if (provider === 'apex') {
+  if (normalizedProvider === 'apex') {
     return 'duga';
   }
 
-  // Map 'MGS' to 'dmm' (MGS products use DMM/Moshimo affiliate)
-  if (provider.toUpperCase() === 'MGS') {
-    return 'dmm';
-  }
+  // Map specific ASP names to provider IDs
+  const aspMapping: Record<string, ProviderId> = {
+    'duga': 'duga',
+    'apex': 'duga',
+    'dti': 'dti',
+    'mgs': 'mgs',
+    'b10f': 'b10f',
+    'sokmil': 'sokmil',
+    'ソクミル': 'sokmil',
+    'japanska': 'japanska',
+    'fc2': 'fc2',
+  };
 
-  // Normalize to lowercase for case-insensitive matching
-  const normalizedProvider = provider.toLowerCase();
+  const mapped = aspMapping[normalizedProvider];
+  if (mapped) {
+    return mapped;
+  }
 
   // If valid provider, return it
   if (isValidProviderId(normalizedProvider)) {

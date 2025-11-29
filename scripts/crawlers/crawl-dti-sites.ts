@@ -17,10 +17,12 @@ if (!process.env.DATABASE_URL) {
 
 import { createHash } from 'crypto';
 import { getDb } from '../../lib/db/index';
-import { products, performers, productPerformers, tags, productTags, productSources, rawHtmlData, productImages } from '../../lib/db/schema';
+import { products, performers, productPerformers, tags, productTags, productSources, rawHtmlData, productImages, productVideos } from '../../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import iconv from 'iconv-lite';
 import { generateDTILink } from '../../lib/affiliate';
+import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../../lib/performer-validation';
+import { validateProductData } from '../../lib/crawler-utils';
 
 /**
  * Detect encoding from HTML content or response headers
@@ -147,6 +149,167 @@ const CRAWL_CONFIGS: CrawlConfig[] = [
     endId: '9999', // Go up to maximum
     maxConcurrent: 3,
   },
+  {
+    siteName: '天然むすめ',
+    siteId: '2471',
+    baseUrl: 'https://www.10musume.com',
+    urlPattern: 'https://www.10musume.com/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001', // Start from Jan 1, 2024
+    endId: '010115_001', // Go back to Jan 1, 2015 (10 years of data)
+    reverseMode: true, // 過去に向かって遡る
+    maxConcurrent: 3,
+  },
+  {
+    siteName: 'パコパコママ',
+    siteId: '2472',
+    baseUrl: 'https://www.pacopacomama.com',
+    urlPattern: 'https://www.pacopacomama.com/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001', // Start from Jan 1, 2024
+    endId: '010115_001', // Go back to Jan 1, 2015 (10 years of data)
+    reverseMode: true, // 過去に向かって遡る
+    maxConcurrent: 3,
+  },
+  {
+    siteName: '人妻斬り',
+    siteId: '2473',
+    baseUrl: 'https://www.hitozuma-giri.com',
+    urlPattern: 'https://www.hitozuma-giri.com/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001', // Start from Jan 1, 2024
+    endId: '010115_001', // Go back to Jan 1, 2015 (10 years of data)
+    reverseMode: true, // 過去に向かって遡る
+    maxConcurrent: 3,
+  },
+  {
+    siteName: 'エッチな0930',
+    siteId: '2474',
+    baseUrl: 'https://www.av-e-body.com',
+    urlPattern: 'https://www.av-e-body.com/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001', // Start from Jan 1, 2024
+    endId: '010115_001', // Go back to Jan 1, 2015 (10 years of data)
+    reverseMode: true, // 過去に向かって遡る
+    maxConcurrent: 3,
+  },
+  {
+    siteName: 'エッチな4610',
+    siteId: '2475',
+    baseUrl: 'https://www.av-4610.com',
+    urlPattern: 'https://www.av-4610.com/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001', // Start from Jan 1, 2024
+    endId: '010115_001', // Go back to Jan 1, 2015 (10 years of data)
+    reverseMode: true, // 過去に向かって遡る
+    maxConcurrent: 3,
+  },
+  {
+    siteName: 'Hey動画',
+    siteId: '3001',
+    baseUrl: 'https://www.heyzo.com',
+    urlPattern: 'https://www.heyzo.com/moviepages/{id}/index.html',
+    idFormat: 'NNNN',
+    startId: '0001',
+    endId: '9999',
+    maxConcurrent: 3,
+  },
+  {
+    siteName: '金髪天國',
+    siteId: '2476',
+    baseUrl: 'https://www.kin8tengoku.com',
+    urlPattern: 'https://www.kin8tengoku.com/moviepages/{id}/index.html',
+    idFormat: 'NNNN',
+    startId: '0001',
+    endId: '9999',
+    maxConcurrent: 3,
+  },
+  {
+    siteName: '女体のしんぴ',
+    siteId: '2690',
+    baseUrl: 'https://www.nyoshin.com',
+    urlPattern: 'https://www.nyoshin.com/moviepages/n{id}/index.html',
+    idFormat: 'NNNN',
+    startId: '0001',
+    endId: '9999',
+    maxConcurrent: 3,
+  },
+  {
+    siteName: 'NOZOX',
+    siteId: '3002',
+    baseUrl: 'https://www.nozox.com',
+    urlPattern: 'https://www.nozox.com/moviepages/{id}/index.html',
+    idFormat: 'NNNN',
+    startId: '0001',
+    endId: '9999',
+    maxConcurrent: 3,
+  },
+  {
+    siteName: 'エッチな0930WORLD',
+    siteId: '3003',
+    baseUrl: 'https://www.av-e-body.com',
+    urlPattern: 'https://www.av-e-body.com/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001',
+    endId: '010115_001',
+    reverseMode: true,
+    maxConcurrent: 3,
+  },
+  {
+    siteName: 'エッチな0230',
+    siteId: '3004',
+    baseUrl: 'https://www.av-0230.com',
+    urlPattern: 'https://www.av-0230.com/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001',
+    endId: '010115_001',
+    reverseMode: true,
+    maxConcurrent: 3,
+  },
+  {
+    siteName: 'うんこたれ',
+    siteId: '3005',
+    baseUrl: 'https://www.unkotare.com',
+    urlPattern: 'https://www.unkotare.com/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001',
+    endId: '010115_001',
+    reverseMode: true,
+    maxConcurrent: 3,
+  },
+  {
+    siteName: '3D-EROS.NET',
+    siteId: '3006',
+    baseUrl: 'https://www.3d-eros.net',
+    urlPattern: 'https://www.3d-eros.net/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001',
+    endId: '010115_001',
+    reverseMode: true,
+    maxConcurrent: 3,
+  },
+  {
+    siteName: 'Pikkur',
+    siteId: '3007',
+    baseUrl: 'https://www.pikkur.com',
+    urlPattern: 'https://www.pikkur.com/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001',
+    endId: '010115_001',
+    reverseMode: true,
+    maxConcurrent: 3,
+  },
+  {
+    siteName: 'Javholic',
+    siteId: '3008',
+    baseUrl: 'https://www.javholic.com',
+    urlPattern: 'https://www.javholic.com/moviepages/{id}/index.html',
+    idFormat: 'MMDDYY_NNN',
+    startId: '010124_001',
+    endId: '010115_001',
+    reverseMode: true,
+    maxConcurrent: 3,
+  },
 ];
 
 /**
@@ -226,6 +389,43 @@ function generateNextId(currentId: string, format: string, reverse: boolean = fa
 }
 
 /**
+ * Fetch gallery.zip for sample images (generic function for all DTI sites)
+ */
+async function fetchGalleryZip(galleryZipUrl: string, productId: string): Promise<string[]> {
+  const sampleImages: string[] = [];
+
+  try {
+    console.log(`    🔍 Fetching gallery.zip: ${galleryZipUrl}`);
+    const zipResponse = await fetch(galleryZipUrl);
+
+    if (zipResponse.ok) {
+      const zipBuffer = Buffer.from(await zipResponse.arrayBuffer());
+      const AdmZip = (await import('adm-zip')).default;
+      const zip = new AdmZip(zipBuffer);
+      const zipEntries = zip.getEntries();
+
+      // Extract base URL from galleryZipUrl by removing '/gallery.zip'
+      const baseImageUrl = galleryZipUrl.replace(/\/gallery\.zip$/, '');
+
+      for (const entry of zipEntries) {
+        if (!entry.isDirectory && entry.entryName.match(/\.(jpg|jpeg|png)$/i)) {
+          // Construct full URL for each image
+          const imageUrl = `${baseImageUrl}/${entry.entryName}`;
+          sampleImages.push(imageUrl);
+        }
+      }
+      console.log(`    ✓ Extracted ${sampleImages.length} sample images from gallery.zip`);
+    } else {
+      console.log(`    ⚠️  Gallery.zip not available (${zipResponse.status})`);
+    }
+  } catch (error) {
+    console.log(`    ⚠️  Could not fetch gallery.zip: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+
+  return sampleImages;
+}
+
+/**
  * Fetch actress data from 一本道 JSON API
  */
 async function fetch1pondoJsonData(productId: string): Promise<{
@@ -267,15 +467,9 @@ async function fetch1pondoJsonData(productId: string): Promise<{
     // Extract thumbnail URL
     const imageUrl = jsonData.ThumbHigh || jsonData.ThumbUltra || jsonData.ThumbMed || undefined;
 
-    // Extract sample images from SampleFiles array
-    const sampleImages: string[] = [];
-    if (jsonData.SampleFiles && Array.isArray(jsonData.SampleFiles)) {
-      for (const file of jsonData.SampleFiles) {
-        if (file.url) {
-          sampleImages.push(file.url);
-        }
-      }
-    }
+    // Fetch gallery.zip for sample images
+    const galleryZipUrl = `https://www.1pondo.tv/assets/sample/${productId}/gallery.zip`;
+    const sampleImages = await fetchGalleryZip(galleryZipUrl, productId);
 
     console.log(`    ✓ JSON API data: ${actors.length} actress(es), title: ${title?.substring(0, 30)}...`);
 
@@ -303,13 +497,14 @@ async function parseHtmlContent(html: string, siteName: string, productId?: stri
   releaseDate?: string;
   imageUrl?: string;
   sampleImages?: string[];
+  sampleVideoUrl?: string;
   price?: number;
 } | null> {
   try {
-    // For 一本道, fetch data from JSON API first
+    // For 一本道, fetch data from JSON API first (required)
     if (siteName === '一本道' && productId) {
       const jsonData = await fetch1pondoJsonData(productId);
-      if (jsonData && jsonData.actors && jsonData.actors.length > 0) {
+      if (jsonData && jsonData.title) {
         // JSON API succeeded, use it as primary source
         console.log(`    ✓ Using JSON API data for 一本道 product ${productId}`);
 
@@ -325,12 +520,52 @@ async function parseHtmlContent(html: string, siteName: string, productId?: stri
           ...jsonData,
           price: price || jsonData.price,
         };
+      } else {
+        // JSON API failed for 一本道 - skip this product to avoid invalid data
+        console.log(`    ⚠️  一本道 JSON API failed for ${productId}, skipping to avoid invalid data`);
+        return null;
       }
     }
 
     // Basic HTML parsing with regex (simplified)
     const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
     const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']/i);
+
+    // Site name suffixes to remove from title
+    const siteSuffixes = [
+      /\s*\|\s*美を追求する高画質アダルト動画サイト$/,
+      /\s*\|\s*高画質無修正動画サイト$/,
+      /\s*\|\s*カリビアンコムプレミアム$/,
+      /\s*\|\s*カリビアンコム$/,
+      /\s*\|\s*HEYZO$/,
+      /\s*\|\s*一本道$/,
+    ];
+
+    // Invalid titles (site name only, no actual product title)
+    const invalidTitlePatterns = [
+      /^一本道$/,
+      /^カリビアンコム$/,
+      /^カリビアンコムプレミアム$/,
+      /^HEYZO$/,
+    ];
+
+    // Extract and clean title
+    let rawTitle = titleMatch ? titleMatch[1].trim() : undefined;
+
+    // Remove site suffixes to get the actual product title
+    if (rawTitle) {
+      for (const suffix of siteSuffixes) {
+        rawTitle = rawTitle.replace(suffix, '').trim();
+      }
+    }
+
+    // Check if title is valid (not just site name)
+    const isInvalidTitle = rawTitle && invalidTitlePatterns.some(pattern => pattern.test(rawTitle));
+
+    if (isInvalidTitle || !rawTitle || rawTitle.length < 3) {
+      console.log(`    ⚠️  Invalid title detected (site name only or too short): "${rawTitle?.substring(0, 50)}..."`);
+      return null; // Skip this product - need proper data from JSON API or different source
+    }
 
     // Extract price (DTI sites use USD)
     // Pattern 1: var ec_price = parseFloat('50.00');
@@ -360,29 +595,34 @@ async function parseHtmlContent(html: string, siteName: string, productId?: stri
     }
 
     // Try to extract actor names from multiple patterns
-    let actors: string[] = [];
+    let rawActors: string[] = [];
 
     // Pattern 1: JavaScript variable ec_item_brand (カリビアンコム系)
     const brandMatch = html.match(/var\s+ec_item_brand\s*=\s*['"]([^'"]+)['"]/);
     if (brandMatch && brandMatch[1]) {
-      actors = [brandMatch[1]];
+      rawActors = [brandMatch[1]];
     }
 
     // Pattern 2: Title format "女優名 【ふりがな】 タイトル" (HEYZO系)
-    if (actors.length === 0 && titleMatch) {
+    if (rawActors.length === 0 && titleMatch) {
       const titleActorMatch = titleMatch[1].match(/^([^\s【]+)\s*【[^】]+】/);
       if (titleActorMatch) {
-        actors = [titleActorMatch[1]];
+        rawActors = [titleActorMatch[1]];
       }
     }
 
     // Pattern 3: HTML content with 出演者 label
-    if (actors.length === 0) {
+    if (rawActors.length === 0) {
       const actorMatches = html.match(/出演者?[:：]?\s*([^<\n]+)/i);
       if (actorMatches) {
-        actors = actorMatches[1].split(/[、,]/).map(a => a.trim()).filter(a => a);
+        rawActors = actorMatches[1].split(/[、,]/).map(a => a.trim()).filter(a => a);
       }
     }
+
+    // Apply performer validation (filter out invalid names)
+    const actors = rawActors
+      .map(name => normalizePerformerName(name))
+      .filter((name): name is string => name !== null && isValidPerformerForProduct(name, rawTitle));
 
     // Try to extract release date
     const dateMatch = html.match(/配信日[:：]?\s*(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/);
@@ -436,6 +676,116 @@ async function parseHtmlContent(html: string, siteName: string, productId?: stri
       }
     }
 
+    // Try fetching gallery.zip for sites that support it (if productId is available)
+    if (productId) {
+      let galleryZipUrl: string | null = null;
+
+      // Determine gallery.zip URL based on site name
+      switch (siteName) {
+        case '天然むすめ':
+          galleryZipUrl = `https://www.10musume.com/assets/sample/${productId}/gallery.zip`;
+          break;
+        case 'パコパコママ':
+          galleryZipUrl = `https://www.pacopacomama.com/assets/sample/${productId}/gallery.zip`;
+          break;
+        case 'カリビアンコムプレミアム':
+          galleryZipUrl = `https://www.caribbeancompr.com/moviepages/${productId}/gallery.zip`;
+          break;
+        case 'HEYZO':
+          galleryZipUrl = `https://www.heyzo.com/moviepages/${productId}/gallery.zip`;
+          break;
+        case '金髪天國':
+          galleryZipUrl = `https://www.kin8tengoku.com/moviepages/${productId}/gallery.zip`;
+          break;
+        case '女体のしんぴ':
+          galleryZipUrl = `https://www.nyoshin.com/moviepages/n${productId}/gallery.zip`;
+          break;
+        case '人妻斬り':
+          galleryZipUrl = `https://www.hitozuma-giri.com/moviepages/${productId}/gallery.zip`;
+          break;
+        case 'エッチな0930':
+          galleryZipUrl = `https://www.av-e-body.com/moviepages/${productId}/gallery.zip`;
+          break;
+        case 'エッチな4610':
+          galleryZipUrl = `https://www.av-4610.com/moviepages/${productId}/gallery.zip`;
+          break;
+        case 'エッチな0230':
+          galleryZipUrl = `https://www.av-0230.com/moviepages/${productId}/gallery.zip`;
+          break;
+        case 'うんこたれ':
+          galleryZipUrl = `https://www.unkotare.com/moviepages/${productId}/gallery.zip`;
+          break;
+      }
+
+      if (galleryZipUrl) {
+        const galleryImages = await fetchGalleryZip(galleryZipUrl, productId);
+        // Append gallery images to sampleImages (avoid duplicates)
+        for (const img of galleryImages) {
+          if (!sampleImages.includes(img)) {
+            sampleImages.push(img);
+          }
+        }
+      }
+    }
+
+    // Extract sample video URL
+    let sampleVideoUrl: string | undefined;
+
+    // Pattern 1: Video source tag
+    const videoSrcMatch = html.match(/<source[^>]*src=["']([^"']+\.mp4)["']/i);
+    if (videoSrcMatch) {
+      sampleVideoUrl = videoSrcMatch[1];
+    }
+
+    // Pattern 2: Sample movie player URLs (DTI sites)
+    if (!sampleVideoUrl) {
+      const sampleMovieMatch = html.match(/sample[_-]?movie[^"']*\.mp4|[^"']*sample[^"']*\.mp4/i);
+      if (sampleMovieMatch) {
+        const fullMatch = html.match(/["']([^"']*sample[^"']*\.mp4)["']/i);
+        if (fullMatch) {
+          sampleVideoUrl = fullMatch[1];
+        }
+      }
+    }
+
+    // Pattern 3: JavaScript variable for sample movie URL
+    if (!sampleVideoUrl) {
+      const jsSampleMatch = html.match(/(?:sample_?url|movie_?url|video_?url)\s*[=:]\s*["']([^"']+\.mp4)["']/i);
+      if (jsSampleMatch) {
+        sampleVideoUrl = jsSampleMatch[1];
+      }
+    }
+
+    // Pattern 4: data-video-url attribute
+    if (!sampleVideoUrl) {
+      const dataVideoMatch = html.match(/data-video-url=["']([^"']+\.mp4)["']/i);
+      if (dataVideoMatch) {
+        sampleVideoUrl = dataVideoMatch[1];
+      }
+    }
+
+    // Pattern 5: 1pondo/Caribbeancom specific sample URL pattern
+    if (!sampleVideoUrl && productId) {
+      // Try known sample video URL patterns for DTI sites
+      const samplePatterns = [
+        `https://smovie.1pondo.tv/sample/movies/${productId}/1080p.mp4`,
+        `https://www.caribbeancom.com/moviepages/${productId}/sample/sample.mp4`,
+        `https://www.caribbeancompr.com/moviepages/${productId}/sample/sample.mp4`,
+        `https://www.heyzo.com/moviepages/${productId}/sample/sample.mp4`,
+      ];
+
+      // Check which pattern matches the site
+      if (siteName === '一本道') {
+        sampleVideoUrl = `https://smovie.1pondo.tv/sample/movies/${productId}/1080p.mp4`;
+      } else if (siteName === 'カリビアンコム') {
+        sampleVideoUrl = `https://www.caribbeancom.com/moviepages/${productId}/sample/sample.mp4`;
+      } else if (siteName === 'カリビアンコムプレミアム') {
+        sampleVideoUrl = `https://www.caribbeancompr.com/moviepages/${productId}/sample/sample.mp4`;
+      } else if (siteName === 'HEYZO') {
+        sampleVideoUrl = `https://www.heyzo.com/moviepages/${productId}/sample/sample.mp4`;
+      }
+    }
+
     return {
       title: titleMatch ? titleMatch[1].replace(/\s*-.*$/, '').trim() : undefined,
       description: descMatch ? descMatch[1].trim() : undefined,
@@ -443,6 +793,7 @@ async function parseHtmlContent(html: string, siteName: string, productId?: stri
       releaseDate,
       imageUrl,
       sampleImages: sampleImages.length > 0 ? sampleImages : undefined,
+      sampleVideoUrl,
       price,
     };
   } catch (error) {
@@ -526,6 +877,47 @@ async function saveProductImages(
     }
   } catch (error) {
     console.error(`    ❌ Error saving product images:`, error);
+  }
+}
+
+/**
+ * Save sample video to product_videos table
+ */
+async function saveProductVideo(
+  productId: number,
+  sampleVideoUrl?: string,
+): Promise<void> {
+  if (!sampleVideoUrl) {
+    return;
+  }
+
+  const db = getDb();
+
+  try {
+    // 既存チェック
+    const existing = await db
+      .select()
+      .from(productVideos)
+      .where(
+        and(
+          eq(productVideos.productId, productId),
+          eq(productVideos.videoUrl, sampleVideoUrl),
+        ),
+      )
+      .limit(1);
+
+    if (existing.length === 0) {
+      await db.insert(productVideos).values({
+        productId,
+        videoUrl: sampleVideoUrl,
+        videoType: 'sample',
+        aspName: 'DTI',
+        displayOrder: 0,
+      });
+      console.log(`    🎬 Saved sample video to product_videos`);
+    }
+  } catch (error) {
+    console.error(`    ❌ Error saving product video:`, error);
   }
 }
 
@@ -669,6 +1061,24 @@ async function crawlSite(config: CrawlConfig & { limit?: number}) {
 
       console.log(`  ✓ Found: ${currentId} - ${productData.title?.substring(0, 50)}...`);
 
+      // 共通バリデーションを実行
+      const validation = validateProductData({
+        title: productData.title,
+        description: productData.description,
+        aspName: 'DTI',
+        originalId: currentId,
+      });
+
+      if (!validation.isValid) {
+        console.log(`  ⚠️ バリデーションスキップ: ${validation.reason}`);
+        // Generate next ID
+        const nextId = generateNextId(currentId, config.idFormat, config.reverseMode);
+        if (!nextId) break;
+        currentId = nextId;
+        await new Promise(resolve => setTimeout(resolve, 500));
+        continue;
+      }
+
       try {
         const normalizedProductId = `${config.siteName}-${currentId}`;
 
@@ -685,7 +1095,7 @@ async function crawlSite(config: CrawlConfig & { limit?: number}) {
           productId = existingProduct[0].id;
           skippedCount++;
         } else {
-          // Insert product
+          // Insert into products
           const [insertedProduct] = await db
             .insert(products)
             .values({
@@ -693,6 +1103,7 @@ async function crawlSite(config: CrawlConfig & { limit?: number}) {
               title: productData.title,
               description: productData.description || '',
               releaseDate: productData.releaseDate,
+              defaultThumbnailUrl: productData.imageUrl,
             })
             .returning({ id: products.id });
 
@@ -701,7 +1112,7 @@ async function crawlSite(config: CrawlConfig & { limit?: number}) {
           // Generate affiliate URL using clear-tv.com format
           const affiliateUrl = generateDTILink(url);
 
-          // Insert product source
+          // Insert into product_sources
           await db.insert(productSources).values({
             productId,
             aspName: 'DTI',
@@ -711,17 +1122,11 @@ async function crawlSite(config: CrawlConfig & { limit?: number}) {
             dataSource: 'CRAWL',
           });
 
-          // Save images to product_images table (productCache table removed)
+          // Save images to product_images table
           await saveProductImages(productId, productData.imageUrl, productData.sampleImages, config.siteName);
 
-          // Update products.defaultThumbnailUrl
-          if (productData.imageUrl) {
-            await db
-              .update(products)
-              .set({ defaultThumbnailUrl: productData.imageUrl })
-              .where(eq(products.id, productId));
-            console.log(`    ✓ Updated products.defaultThumbnailUrl`);
-          }
+          // Save sample video to product_videos table
+          await saveProductVideo(productId, productData.sampleVideoUrl);
 
           // Insert actors
           if (productData.actors && productData.actors.length > 0) {
@@ -880,6 +1285,25 @@ function findConfigBySite(siteName: string): CrawlConfig | null {
     'caribbeancompr': 'カリビアンコムプレミアム',
     '1pondo': '一本道',
     'heyzo': 'HEYZO',
+    '10musume': '天然むすめ',
+    'pacopacomama': 'パコパコママ',
+    'hitozumagiri': '人妻斬り',
+    'av-e-body': 'エッチな0930',
+    '0930': 'エッチな0930',
+    'av-4610': 'エッチな4610',
+    '4610': 'エッチな4610',
+    'heydouga': 'Hey動画',
+    'kin8tengoku': '金髪天國',
+    'kin8': '金髪天國',
+    'nyoshin': '女体のしんぴ',
+    'nozox': 'NOZOX',
+    '0930world': 'エッチな0930WORLD',
+    'av-0230': 'エッチな0230',
+    '0230': 'エッチな0230',
+    'unkotare': 'うんこたれ',
+    '3d-eros': '3D-EROS.NET',
+    'pikkur': 'Pikkur',
+    'javholic': 'Javholic',
   };
 
   const targetSiteName = aliases[normalized] || siteName;

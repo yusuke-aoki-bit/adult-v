@@ -26,47 +26,56 @@ export default function ActressCard({ actress, compact = false }: Props) {
   };
 
   if (compact) {
-    // コンパクト表示: 名前と基本情報のみ
+    // コンパクト表示: 名前と基本情報のみ（モバイル最適化）
     return (
-      <div className="bg-gray-900 text-white rounded-lg overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/20 transition-all">
-        <div className="relative aspect-4/5">
+      <div className="bg-gray-900 text-white rounded-lg overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/20 transition-all active:ring-rose-500/50">
+        <div className="relative aspect-[3/4]">
           <Image
             src={imgSrc}
             alt={actress.name}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+            sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 16vw"
             className="object-cover opacity-90"
             loading="lazy"
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             onError={handleImageError}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent" />
-          <div className="absolute top-2 right-2 bg-white rounded-full shadow-md">
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent" />
+          {/* お気に入りボタン - モバイルでは小さく */}
+          <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-white rounded-full shadow-md scale-90 sm:scale-100">
             <FavoriteButton type="actress" id={actress.id} />
           </div>
-          <div className="absolute bottom-2 left-2 right-2">
-            <h3 className="text-lg font-semibold truncate">{actress.name}</h3>
+          <div className="absolute bottom-1.5 left-1.5 right-1.5 sm:bottom-2 sm:left-2 sm:right-2">
+            <h3 className="text-sm sm:text-base font-semibold truncate leading-tight">{actress.name}</h3>
+            {/* キャッチコピーはデスクトップのみ */}
             {actress.catchcopy && (
-              <p className="text-xs text-gray-300 truncate">{actress.catchcopy}</p>
+              <p className="hidden sm:block text-xs text-gray-300 truncate">{actress.catchcopy}</p>
             )}
           </div>
         </div>
-        <div className="p-3 space-y-2">
+        <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">出演数</span>
+            <span className="text-gray-400 hidden sm:inline">出演数</span>
             <span className="font-semibold">{actress.metrics?.releaseCount || 0}本</span>
           </div>
-          {actress.tags && actress.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {actress.tags.slice(0, 2).map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs bg-white/10 text-gray-200 px-2 py-0.5 rounded"
-                >
-                  {tag}
-                </span>
-              ))}
+          {actress.services && actress.services.length > 0 && (
+            <div className="flex flex-wrap gap-0.5 sm:gap-1">
+              {actress.services.slice(0, 3).map((service) => {
+                const meta = providerMeta[service];
+                if (!meta) return null;
+                return (
+                  <span
+                    key={service}
+                    className={`text-[9px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-0.5 rounded bg-gradient-to-r ${meta.accentClass}`}
+                  >
+                    {meta.label}
+                  </span>
+                );
+              })}
+              {actress.services.length > 3 && (
+                <span className="text-[9px] sm:text-[10px] text-gray-400">+{actress.services.length - 3}</span>
+              )}
             </div>
           )}
         </div>

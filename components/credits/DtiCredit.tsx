@@ -1,0 +1,27 @@
+/**
+ * DTI (一本道、カリビアンコム等) クレジット表記コンポーネント
+ */
+
+interface DtiCreditProps {
+  className?: string;
+}
+
+export function DtiCredit({ className = '' }: DtiCreditProps) {
+  return (
+    <a
+      href="https://clear-tv.com/Click190/1006200-6-239360"
+      target="_blank"
+      rel="noopener"
+      className={`inline-block ${className}`}
+      aria-label="カリビアンコム"
+    >
+      <img
+        src="https://pixelarchivenow.com/image/carib/3day_900_250.jpg"
+        alt="カリビアンコム"
+        loading="lazy"
+        className="block max-w-full h-auto"
+        style={{ maxHeight: '50px' }}
+      />
+    </a>
+  );
+}

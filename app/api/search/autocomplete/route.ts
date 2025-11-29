@@ -15,6 +15,26 @@ interface AutocompleteResult {
   count?: number;
 }
 
+/**
+ * 無効な演者データをフィルタリングするヘルパー関数
+ * クローリング時のパースエラーにより生成された無効なデータを除外
+ */
+function isValidPerformer(performer: { name: string }): boolean {
+  const name = performer.name;
+
+  // 1文字だけの名前は無効
+  if (name.length <= 1) return false;
+
+  // 矢印記号を含む名前は無効
+  if (name.includes('→')) return false;
+
+  // 特定の無効な名前
+  const invalidNames = ['デ', 'ラ', 'ゆ', 'な', '他'];
+  if (invalidNames.includes(name)) return false;
+
+  return true;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -72,16 +92,18 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(sql`product_count`))
       .limit(limit);
 
-    actressMatches.forEach((match) => {
-      results.push({
-        type: 'actress',
-        id: match.id,
-        name: match.name,
-        image: match.image || undefined,
-        count: Number(match.productCount || 0),
-        category: '女優',
+    actressMatches
+      .filter(isValidPerformer)
+      .forEach((match) => {
+        results.push({
+          type: 'actress',
+          id: match.id,
+          name: match.name,
+          image: match.image || undefined,
+          count: Number(match.productCount || 0),
+          category: '女優',
+        });
       });
-    });
 
     // 3. タグ検索
     const tagMatches = await db

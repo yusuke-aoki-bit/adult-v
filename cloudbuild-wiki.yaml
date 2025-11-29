@@ -1,0 +1,60 @@
+# Wiki Performers Crawler (av-wiki.net, seesaawiki.jp)
+# Cloud Build + Cloud Run Job設定
+#
+# デプロイ:
+# gcloud builds submit --config=cloudbuild-wiki.yaml
+#
+# 手動実行:
+# gcloud run jobs execute wiki-crawler --region=asia-northeast1
+
+steps:
+  # 1. Dockerイメージをビルド
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/crawler-images/wiki-crawler:latest'
+      - '-f'
+      - 'Dockerfile.crawler'
+      - '--build-arg'
+      - 'CRAWLER_SCRIPT=scripts/crawlers/crawl-wiki-performers.ts'
+      - '.'
+
+  # 2. イメージをArtifact Registryにプッシュ
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/crawler-images/wiki-crawler:latest'
+
+  # 3. Cloud Run Jobを作成/更新
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'jobs'
+      - 'deploy'
+      - 'wiki-crawler'
+      - '--image'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/crawler-images/wiki-crawler:latest'
+      - '--region'
+      - 'asia-northeast1'
+      - '--task-timeout'
+      - '3600s'
+      - '--max-retries'
+      - '1'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--set-env-vars'
+      - 'DATABASE_URL=$$DATABASE_URL'
+      - '--set-secrets'
+      - 'DATABASE_URL=DATABASE_URL:latest'
+
+images:
+  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/crawler-images/wiki-crawler:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1800s'

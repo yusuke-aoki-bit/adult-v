@@ -6,14 +6,14 @@ export const categories: CategoryInfo[] = [
     name: 'すべて',
     description: '全女優・全ジャンルの作品を表示',
     icon: '🎯',
-    exampleServices: ['dmm', 'duga', 'sokmil', 'dti'],
+    exampleServices: ['mgs', 'duga', 'sokmil', 'dti'],
   },
   {
     id: 'premium',
     name: '王道・人気女優',
     description: '大型専属女優のハイエンド作品を追跡',
     icon: '👑',
-    exampleServices: ['dmm', 'duga'],
+    exampleServices: ['mgs', 'duga'],
   },
   {
     id: 'mature',
@@ -34,21 +34,21 @@ export const categories: CategoryInfo[] = [
     name: 'VR・4K',
     description: '没入感重視のVR/4K配信まとめ',
     icon: '🕶️',
-    exampleServices: ['dmm', 'dti'],
+    exampleServices: ['b10f', 'dti'],
   },
   {
     id: 'cosplay',
     name: 'コスプレ・企画',
     description: '衣装・企画のバリエーション重視',
     icon: '🎭',
-    exampleServices: ['dmm', 'duga'],
+    exampleServices: ['mgs', 'duga'],
   },
   {
     id: 'indies',
     name: '素人・インディーズ',
     description: '新人発掘やドキュメント系で回遊',
     icon: '📹',
-    exampleServices: ['dti', 'sokmil'],
+    exampleServices: ['fc2', 'mgs'],
   },
 ];
 

@@ -1,4 +1,10 @@
-import { DMMAffiliateLinkParams } from '@/types/product';
+/**
+ * DMMアフィリエイトリンクパラメータ（レガシー）
+ */
+interface DMMAffiliateLinkParams {
+  productId: string;
+  service: string;
+}
 
 /**
  * DMMアフィリエイトリンクを生成する

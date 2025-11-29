@@ -119,7 +119,7 @@ export default async function PerformerGenrePage({ params }: PageProps) {
                   actressName: performer.name,
                   tags: [tag.name],
                   category: 'all' as const,
-                  provider: 'dmm' as const,
+                  provider: 'duga' as const,
                 }}
               />
             ))}

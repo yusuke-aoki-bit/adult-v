@@ -291,12 +291,13 @@ export const productVideos = pgTable(
     id: serial('id').primaryKey(),
     productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
     videoUrl: text('video_url').notNull(),
-    videoType: varchar('video_type', { length: 50 }).notNull(), // 'streaming', 'download', 'preview', 'trailer' など
+    videoType: varchar('video_type', { length: 50 }).notNull(), // 'streaming', 'download', 'preview', 'trailer', 'sample' など
     quality: varchar('quality', { length: 50 }), // '1080p', '720p', '480p', '4K' など
     duration: integer('duration'), // 再生時間（秒）
     fileSize: bigint('file_size', { mode: 'number' }), // ファイルサイズ（バイト）
     format: varchar('format', { length: 50 }), // 'mp4', 'wmv', 'm3u8' など
     aspName: varchar('asp_name', { length: 50 }), // 動画の取得元ASP
+    displayOrder: integer('display_order').default(0), // 表示順序（複数動画の並び順）
     requiresAuth: boolean('requires_auth').default(false), // 認証が必要かどうか
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
@@ -305,77 +306,9 @@ export const productVideos = pgTable(
     typeIdx: index('idx_product_videos_type').on(table.videoType),
     qualityIdx: index('idx_product_videos_quality').on(table.quality),
     aspIdx: index('idx_product_videos_asp').on(table.aspName),
+    orderIdx: index('idx_product_videos_order').on(table.displayOrder),
   }),
 );
-
-/**
- * 無修正商品テーブル - DTI系商品用
- * DMM affiliate terms compliance: DTI sites (uncensored) should not be promoted
- */
-export const uncensoredProducts = pgTable(
-  'uncensored_products',
-  {
-    id: serial('id').primaryKey(),
-    originalProductId: integer('original_product_id').notNull(), // 元のproducts.id
-    normalizedProductId: varchar('normalized_product_id', { length: 100 }).notNull(),
-    title: varchar('title', { length: 500 }).notNull(),
-    releaseDate: date('release_date'),
-    description: text('description'),
-    duration: integer('duration'),
-    defaultThumbnailUrl: text('default_thumbnail_url'),
-    archivedAt: timestamp('archived_at').defaultNow().notNull(),
-    archivedReason: varchar('archived_reason', { length: 200 }).default('DMM affiliate terms - uncensored content exclusion'),
-    createdAt: timestamp('created_at').notNull(),
-    updatedAt: timestamp('updated_at').notNull(),
-  },
-  (table) => ({
-    originalIdIdx: index('idx_uncensored_products_original_id').on(table.originalProductId),
-    normalizedIdIdx: index('idx_uncensored_products_normalized_id').on(table.normalizedProductId),
-    archivedAtIdx: index('idx_uncensored_products_archived_at').on(table.archivedAt),
-  }),
-);
-
-/**
- * 無修正商品ソーステーブル
- */
-export const uncensoredProductSources = pgTable(
-  'uncensored_product_sources',
-  {
-    id: serial('id').primaryKey(),
-    uncensoredProductId: integer('uncensored_product_id').notNull().references(() => uncensoredProducts.id, { onDelete: 'cascade' }),
-    originalSourceId: integer('original_source_id').notNull(), // 元のproduct_sources.id
-    aspName: varchar('asp_name', { length: 50 }).notNull(),
-    originalProductId: varchar('original_product_id', { length: 100 }).notNull(),
-    affiliateUrl: text('affiliate_url'),
-    price: integer('price'),
-    dataSource: varchar('data_source', { length: 10 }),
-    lastUpdated: timestamp('last_updated'),
-    archivedAt: timestamp('archived_at').defaultNow().notNull(),
-  },
-  (table) => ({
-    uncensoredProductIdx: index('idx_uncensored_sources_product').on(table.uncensoredProductId),
-    aspIdx: index('idx_uncensored_sources_asp').on(table.aspName),
-  }),
-);
-
-/**
- * 無修正商品-出演者 中間テーブル
- * 無修正商品と女優の関連を維持（女優マスタは共通）
- */
-export const uncensoredProductPerformers = pgTable(
-  'uncensored_product_performers',
-  {
-    uncensoredProductId: integer('uncensored_product_id').notNull().references(() => uncensoredProducts.id, { onDelete: 'cascade' }),
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
-    archivedAt: timestamp('archived_at').defaultNow().notNull(),
-  },
-  (table) => ({
-    pk: primaryKey({ columns: [table.uncensoredProductId, table.performerId] }),
-    uncensoredProductIdx: index('idx_upp_uncensored_product').on(table.uncensoredProductId),
-    performerIdx: index('idx_upp_performer').on(table.performerId),
-  }),
-);
-
 // 型エクスポート
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
@@ -397,9 +330,3 @@ export type RawCsvData = typeof rawCsvData.$inferSelect;
 export type NewRawCsvData = typeof rawCsvData.$inferInsert;
 export type RawHtmlData = typeof rawHtmlData.$inferSelect;
 export type NewRawHtmlData = typeof rawHtmlData.$inferInsert;
-export type UncensoredProduct = typeof uncensoredProducts.$inferSelect;
-export type NewUncensoredProduct = typeof uncensoredProducts.$inferInsert;
-export type UncensoredProductSource = typeof uncensoredProductSources.$inferSelect;
-export type NewUncensoredProductSource = typeof uncensoredProductSources.$inferInsert;
-export type UncensoredProductPerformer = typeof uncensoredProductPerformers.$inferSelect;
-export type NewUncensoredProductPerformer = typeof uncensoredProductPerformers.$inferInsert;

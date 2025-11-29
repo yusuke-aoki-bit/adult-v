@@ -5,7 +5,7 @@
 
 import * as cheerio from 'cheerio';
 import { getDb } from '../../lib/db';
-import { performers } from '../../lib/db/schema';
+import { performers, performerAliases } from '../../lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 
 interface NakinyActress {
@@ -51,6 +51,10 @@ async function fetchNakinyActresses(page: number = 1): Promise<NakinyActress[]> 
     });
 
     console.log(`  Found ${actresses.length} actresses on page ${page}`);
+
+    // Rate limiting: 2000ms between requests
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     return actresses;
   } catch (error) {
     console.error(`Error fetching page ${page}:`, error);
@@ -84,6 +88,9 @@ async function fetchActressAliases(profileUrl: string): Promise<string[]> {
       const names = text.split(/[,/;]/).map(n => n.trim()).filter(n => n);
       aliases.push(...names);
     });
+
+    // Rate limiting: 2000ms between requests
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     return aliases;
   } catch (error) {
@@ -124,24 +131,31 @@ async function normalizePerformerNames() {
       if (existingPerformers.length > 0) {
         console.log(`  ✓ Found match for "${actress.name}" (${existingPerformers.length} records)`);
 
-        // プロフィールURLから別名を取得
+        // プロフィールURLから別名を取得してDBに保存
         if (actress.profileUrl) {
           const aliases = await fetchActressAliases(actress.profileUrl);
           if (aliases.length > 0) {
             console.log(`    Aliases: ${aliases.join(', ')}`);
-            // TODO: aliasesをperformersテーブルに保存（カラムが必要な場合は追加）
+            // 別名をperformer_aliasesテーブルに保存
+            for (const alias of aliases) {
+              try {
+                await db.insert(performerAliases).values({
+                  performerId: existingPerformers[0].id,
+                  aliasName: alias,
+                  source: 'nakiny',
+                  isPrimary: false,
+                }).onConflictDoNothing();
+              } catch (error) {
+                // 重複エラーは無視
+              }
+            }
+            console.log(`    ✓ Saved ${aliases.length} alias(es) to DB`);
           }
-
-          // レート制限のため少し待つ
-          await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
         updatedCount++;
       }
     }
-
-    // レート制限のため少し待つ
-    await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
   console.log('\n========================================');

@@ -38,11 +38,11 @@ export function validatePagination(searchParams: URLSearchParams): ValidationRes
   }
 
   // Validate ranges
-  if (limit < 1 || limit > 100) {
+  if (limit < 30 || limit > 1000) {
     return {
       valid: false,
       error: NextResponse.json(
-        { error: 'Limit must be between 1 and 100' },
+        { error: 'Limit must be between 30 and 1000' },
         { status: 400 }
       ),
     };

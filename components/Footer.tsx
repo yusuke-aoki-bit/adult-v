@@ -1,4 +1,11 @@
 import Link from 'next/link';
+import { DugaCredit } from './credits/DugaCredit';
+import { SokmilCredit } from './credits/SokmilCredit';
+import { MgsCredit } from './credits/MgsCredit';
+import { DtiCredit } from './credits/DtiCredit';
+import { B10fCredit } from './credits/B10fCredit';
+import { Fc2Credit } from './credits/Fc2Credit';
+import { JapanskaCredit } from './credits/JapanskaCredit';
 
 export default function Footer({ locale = 'ja' }: { locale?: string }) {
   return (
@@ -49,13 +56,33 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
         {/* アフィリエイト開示 */}
         <div className="border-t border-gray-800 mt-8 pt-6 text-xs text-gray-500">
           <p className="leading-relaxed">
-            当サイトはDMM、DUGA、SOKMIL、DTIのアフィリエイトプログラムに参加しています。
+            当サイトはDUGA、MGS、ソクミル、DTI、B10F.jp、FC2、Japanskaなどのアフィリエイトプログラムに参加しています。
             商品リンクから購入された場合、紹介料が発生することがあります。
           </p>
         </div>
 
-        {/* コピーライト */}
-        <div className="mt-4 text-center text-sm text-gray-500">
+        {/* パートナーバナー表示 */}
+        <div className="border-t border-gray-800 mt-6 pt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 items-center justify-items-center">
+            <DugaCredit />
+            <SokmilCredit variant="88x31" />
+            <MgsCredit />
+            <DtiCredit />
+            <B10fCredit />
+            <Fc2Credit />
+            <JapanskaCredit />
+          </div>
+        </div>
+
+        {/* 管理ページ・コピーライト */}
+        <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-gray-500">
+          <a
+            href="/admin/stats"
+            className="text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            管理ページ
+          </a>
+          <span className="hidden md:inline">|</span>
           <p>&copy; {new Date().getFullYear()} Adult Viewer Lab. All rights reserved.</p>
         </div>
       </div>

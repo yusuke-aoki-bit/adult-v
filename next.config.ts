@@ -58,6 +58,34 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'static.mgstage.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'ads.b10f.jp',
+      },
+      {
+        protocol: 'https',
+        hostname: 'b10f.jp',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.sokmil.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.sokmil.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.japanska-xxx.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img01.japanska-xxx.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.japanska-xxx.com',
+      },
     ],
     // SVG画像を許可
     dangerouslyAllowSVG: true,

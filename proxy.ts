@@ -61,6 +61,11 @@ export default function proxy(request: NextRequest) {
   const ageVerified = request.cookies.get('age-verified')?.value === 'true';
   const isAgeVerificationPage = request.nextUrl.pathname === '/age-verification';
 
+  // /admin ルートはロケールプレフィックスなしでアクセス可能（国際化をスキップ）
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    return NextResponse.next();
+  }
+
   // SEOファイル（sitemap.xml, robots.txt）は検索エンジンのクローラーがアクセスできるよう常にアクセス可能
   const isSEOFile = request.nextUrl.pathname === '/sitemap.xml' ||
                     request.nextUrl.pathname === '/robots.txt';

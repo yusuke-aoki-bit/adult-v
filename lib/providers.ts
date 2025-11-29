@@ -4,14 +4,6 @@ import type { ProviderId, ProviderMeta } from '@/types/product';
  * プロバイダーメタデータ（クライアントサイドでも使用可能）
  */
 export const providerMeta: Record<ProviderId, ProviderMeta> = {
-  dmm: {
-    id: 'dmm',
-    label: 'DMM',
-    accentClass: 'from-pink-600 to-orange-500',
-    textClass: 'text-pink-300',
-    description: '王道ラインナップとVR/4Kに強い国内最大級プラットフォーム',
-    siteUrl: 'https://www.dmm.co.jp/digital/videoa/',
-  },
   duga: {
     id: 'duga',
     label: 'DUGA',
@@ -28,14 +20,45 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
     description: '熟女・マニアック系が充実。独占レンタルも多い',
     siteUrl: 'https://www.sokmil.com/',
   },
-  // DTI is hidden per DMM affiliate terms but kept for internal use
   dti: {
     id: 'dti',
     label: 'DTI',
     accentClass: 'from-red-600 to-rose-500',
     textClass: 'text-rose-300',
-    description: 'DTI affiliated sites (hidden from public)',
+    description: '一本道・カリビアンコム等の無修正サイト',
     siteUrl: 'https://www.dti.ne.jp/',
+  },
+  mgs: {
+    id: 'mgs',
+    label: 'MGS動画',
+    accentClass: 'from-blue-500 to-cyan-500',
+    textClass: 'text-blue-300',
+    description: 'シロウトTV等の素人系に強いプラットフォーム',
+    siteUrl: 'https://www.mgstage.com/',
+  },
+  b10f: {
+    id: 'b10f',
+    label: 'b10f.jp',
+    accentClass: 'from-orange-500 to-amber-500',
+    textClass: 'text-orange-300',
+    description: 'VR・高画質作品が豊富なプラットフォーム',
+    siteUrl: 'https://b10f.jp/',
+  },
+  japanska: {
+    id: 'japanska',
+    label: 'Japanska',
+    accentClass: 'from-pink-500 to-rose-500',
+    textClass: 'text-pink-300',
+    description: '海外向け日本作品配信サイト',
+    siteUrl: 'https://www.japanska-xxx.com/',
+  },
+  fc2: {
+    id: 'fc2',
+    label: 'FC2',
+    accentClass: 'from-indigo-500 to-violet-500',
+    textClass: 'text-indigo-300',
+    description: '素人投稿動画プラットフォーム',
+    siteUrl: 'https://adult.contents.fc2.com/',
   },
 };
 

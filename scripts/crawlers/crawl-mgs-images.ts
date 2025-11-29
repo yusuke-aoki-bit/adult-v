@@ -55,27 +55,58 @@ function generateImageUrls(productId: string): string[] {
   const number = match[2];
 
   // シリーズ名のマッピング（MGSのディレクトリ構造に合わせる）
-  // SOD Create series use prefixed series names (e.g., STARS-492 -> 107stars-492)
-  const seriesMapping: Record<string, { directory: string; seriesPrefix?: string }> = {
+  // NOTE: 一部のシリーズはDBにプレフィックスなしで保存されているが、画像URLにはプレフィックスが必要
+  const seriesMapping: Record<string, { directory: string; urlPrefix?: string }> = {
+    // Prestige Premium
     '300mium': { directory: 'prestigepremium' },
     '300maan': { directory: 'prestigepremium' },
     '300ntk': { directory: 'prestigepremium' },
+    // Shirouto
     'siro': { directory: 'shirouto' },
+    // Luxu TV
     '259luxu': { directory: 'luxutv' },
+    // Prestige
     'gni': { directory: 'prestige' },
-    '200gana': { directory: 'nanpatv' },
-    'mfcs': { directory: 'doc' },
     'abp': { directory: 'prestige' },
     'abw': { directory: 'prestige' },
     'abf': { directory: 'prestige' },
-    // SOD Create series with prefixes
-    'stars': { directory: 'sodcreate', seriesPrefix: '107stars' },
-    'cawd': { directory: 'sodcreate', seriesPrefix: '406cawd' },
+    // Nanpa TV
+    '200gana': { directory: 'nanpatv' },
+    // Doc
+    'mfcs': { directory: 'doc' },
+    'ddh': { directory: 'doc' },
+    // Momoco
+    '812mmc': { directory: 'momoco' },
+    // SOD Create series - DB stores without prefix, but URL needs prefix
+    'stars': { directory: 'sodcreate', urlPrefix: '107' },
+    'sdhs': { directory: 'sodcreate', urlPrefix: '107' },
+    'sdde': { directory: 'sodcreate', urlPrefix: '107' },
+    'sdmu': { directory: 'sodcreate', urlPrefix: '107' },
+    'hunbl': { directory: 'sodcreate', urlPrefix: '107' },
+    'hunta': { directory: 'sodcreate', urlPrefix: '107' },
+    'hunt': { directory: 'sodcreate', urlPrefix: '107' },
+    'sdmm': { directory: 'sodcreate', urlPrefix: '107' },
+    'sdth': { directory: 'sodcreate', urlPrefix: '107' },
+    'cawd': { directory: 'sodcreate', urlPrefix: '406' },
+    'mmus': { directory: 'sodcreate', urlPrefix: '406' },
+    // SOD Create series - DB already has prefix
+    '107stars': { directory: 'sodcreate' },
+    '107sdhs': { directory: 'sodcreate' },
+    '107sdde': { directory: 'sodcreate' },
+    '107sdmu': { directory: 'sodcreate' },
+    '107hunbl': { directory: 'sodcreate' },
+    '107hunta': { directory: 'sodcreate' },
+    '107hunt': { directory: 'sodcreate' },
+    '107sdmm': { directory: 'sodcreate' },
+    '107sdth': { directory: 'sodcreate' },
+    '406cawd': { directory: 'sodcreate' },
+    '406mmus': { directory: 'sodcreate' },
   };
 
   const mapping = seriesMapping[series] || { directory: 'prestige' };
   const directory = mapping.directory;
-  const actualSeries = mapping.seriesPrefix || series;
+  // Add URL prefix if needed (e.g., "stars" -> "107stars")
+  const actualSeries = mapping.urlPrefix ? `${mapping.urlPrefix}${series}` : series;
 
   // 基本URLパターン
   const baseUrl = `https://image.mgstage.com/images/${directory}/${actualSeries}/${number}`;

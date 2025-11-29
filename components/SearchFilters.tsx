@@ -21,10 +21,11 @@ interface SearchFiltersProps {
 const PROVIDERS = [
   { value: 'DUGA', label: 'DUGA' },
   { value: 'MGS', label: 'MGS' },
-  { value: 'DMM', label: 'DMM' },
+  { value: 'ソクミル', label: 'ソクミル' },
   { value: '一本道', label: '一本道' },
   { value: 'カリビアンコム', label: 'カリビアンコム' },
   { value: 'HEYZO', label: 'HEYZO' },
+  { value: 'B10F.jp', label: 'B10F.jp' },
 ];
 
 const SORT_OPTIONS = [

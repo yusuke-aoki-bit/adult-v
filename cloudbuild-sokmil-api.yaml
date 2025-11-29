@@ -1,0 +1,5 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.sokmil-api', '-t', 'gcr.io/adult-v/sokmil-api-crawler:latest', '.']
+images:
+  - 'gcr.io/adult-v/sokmil-api-crawler:latest'

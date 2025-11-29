@@ -42,7 +42,12 @@
     "filterSettings": "Filter Settings",
     "newReleases": "Actresses with New Releases",
     "popularActresses": "Popular Actresses",
-    "popularTags": "Popular Tags"
+    "popularTags": "Popular Tags",
+    "heroTitle": "Search Across Multiple Sites",
+    "heroDescription": "Find your favorite actress's videos across DUGA, MGS, Sokmil and more platforms",
+    "multiAspActresses": "Multi-Platform Performers",
+    "multiAspDescription": "Actresses with videos on multiple platforms. Compare prices and find the best deals.",
+    "recommended": "Featured"
   },
   "header": {
     "title": "ADULT VIEWER LAB",

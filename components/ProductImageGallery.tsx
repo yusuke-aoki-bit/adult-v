@@ -1,9 +1,35 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import { normalizeImageUrl } from '@/lib/image-utils';
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
+
+// 有効な画像URLかどうかをチェック（プロトコル相対URL対応）
+function isValidImageUrl(url: string): boolean {
+  if (!url) return false;
+  // HTMLタグが含まれている場合は無効
+  if (url.includes('<') || url.includes('>')) return false;
+  // 基本的なURL形式をチェック（プロトコル相対URLも許可）
+  try {
+    const urlToCheck = url.startsWith('//') ? `https:${url}` : url;
+    const parsed = new URL(urlToCheck);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+// URLを正規化（プロトコル相対URL → https://）
+function normalizeUrl(url: string): string {
+  if (!url) return PLACEHOLDER_IMAGE;
+  if (url.startsWith('//')) {
+    return `https:${url}`;
+  }
+  return url;
+}
 
 interface ProductImageGalleryProps {
   mainImage: string | null;
@@ -12,64 +38,226 @@ interface ProductImageGalleryProps {
 }
 
 export default function ProductImageGallery({ mainImage, sampleImages, productTitle }: ProductImageGalleryProps) {
-  const [selectedImage, setSelectedImage] = useState(mainImage || PLACEHOLDER_IMAGE);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  // メイン画像とサンプル画像を結合 (null値を除外)
-  const allImages = [mainImage, ...(sampleImages || [])].filter((img): img is string => Boolean(img));
+  // メイン画像とサンプル画像を結合し、重複を除外、無効なURLをフィルタリング、正規化
+  const allImagesWithDuplicates = [mainImage, ...(sampleImages || [])]
+    .filter((img): img is string => Boolean(img) && isValidImageUrl(img))
+    .map((img) => normalizeUrl(img)); // プロトコル相対URLを絶対URLに変換
+  // 重複する画像URLを除外（Set を使用）
+  const allImages = Array.from(new Set(allImagesWithDuplicates));
   const hasMultipleImages = allImages.length > 1;
+
+  const selectedImage = allImages[selectedIndex] || PLACEHOLDER_IMAGE;
 
   const handleImageError = () => {
     setImageError(true);
-    setSelectedImage(PLACEHOLDER_IMAGE);
   };
 
+  const goToPrevious = useCallback(() => {
+    setSelectedIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+  }, [allImages.length]);
+
+  const goToNext = useCallback(() => {
+    setSelectedIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+  }, [allImages.length]);
+
+  // キーボードナビゲーション
+  useEffect(() => {
+    if (!lightboxOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setLightboxOpen(false);
+      } else if (e.key === 'ArrowLeft') {
+        goToPrevious();
+      } else if (e.key === 'ArrowRight') {
+        goToNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, goToPrevious, goToNext]);
+
+  // ライトボックスが開いているときはスクロールを無効化
+  useEffect(() => {
+    if (lightboxOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [lightboxOpen]);
+
   return (
-    <div className="space-y-4">
-      {/* メイン画像 */}
-      <div className="relative aspect-[3/4] w-full bg-gray-800 rounded-lg overflow-hidden">
-        <Image
-          src={imageError ? PLACEHOLDER_IMAGE : selectedImage}
-          alt={productTitle}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 50vw"
-          priority
-          onError={handleImageError}
-        />
+    <>
+      <div className="space-y-4">
+        {/* メイン画像 */}
+        <div
+          className="relative aspect-[3/4] w-full bg-gray-800 rounded-lg overflow-hidden cursor-pointer group"
+          onClick={() => setLightboxOpen(true)}
+        >
+          <Image
+            src={imageError ? PLACEHOLDER_IMAGE : selectedImage}
+            alt={productTitle}
+            fill
+            className="object-cover transition-transform group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
+            onError={handleImageError}
+          />
+          {/* 拡大アイコン */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+            <ZoomIn className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+          {/* ナビゲーションボタン（複数画像の場合） */}
+          {hasMultipleImages && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+                aria-label="前の画像"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); goToNext(); }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+                aria-label="次の画像"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </>
+          )}
+          {/* 画像カウンター */}
+          {hasMultipleImages && (
+            <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 rounded text-white text-sm">
+              {selectedIndex + 1} / {allImages.length}
+            </div>
+          )}
+        </div>
+
+        {/* サムネイル一覧（複数画像がある場合のみ） */}
+        {hasMultipleImages && (
+          <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-5 gap-2">
+            {allImages.map((imgUrl, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedIndex(index)}
+                className={`relative aspect-[3/4] rounded overflow-hidden border-2 transition-all ${
+                  selectedIndex === index
+                    ? 'border-rose-600 ring-2 ring-rose-600/50'
+                    : 'border-gray-700 hover:border-gray-500'
+                }`}
+              >
+                <Image
+                  src={imgUrl}
+                  alt={`${productTitle} - サンプル画像 ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 20vw, (max-width: 1024px) 16vw, 10vw"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 画像枚数表示 */}
+        {hasMultipleImages && (
+          <p className="text-sm text-gray-400 text-center">
+            サンプル画像: {allImages.length}枚（クリックで拡大）
+          </p>
+        )}
       </div>
 
-      {/* サムネイル一覧（複数画像がある場合のみ） */}
-      {hasMultipleImages && (
-        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-4 gap-2">
-          {allImages.map((imgUrl, index) => (
-            <button
-              key={index}
-              onClick={() => setSelectedImage(imgUrl)}
-              className={`relative aspect-[3/4] rounded overflow-hidden border-2 transition-all ${
-                selectedImage === imgUrl
-                  ? 'border-rose-600 ring-2 ring-rose-600/50'
-                  : 'border-gray-700 hover:border-gray-500'
-              }`}
-            >
-              <Image
-                src={imgUrl}
-                alt={`${productTitle} - サンプル画像 ${index + 1}`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 25vw, (max-width: 1024px) 16vw, 12vw"
-              />
-            </button>
-          ))}
+      {/* ライトボックス */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* 閉じるボタン */}
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 p-2 text-white hover:text-gray-300 transition-colors z-10"
+            aria-label="閉じる"
+          >
+            <X className="w-8 h-8" />
+          </button>
+
+          {/* 画像カウンター */}
+          {hasMultipleImages && (
+            <div className="absolute top-4 left-4 px-3 py-1 bg-black/60 rounded text-white text-lg">
+              {selectedIndex + 1} / {allImages.length}
+            </div>
+          )}
+
+          {/* メイン画像 */}
+          <div
+            className="relative w-full h-full max-w-5xl max-h-[90vh] mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={imageError ? PLACEHOLDER_IMAGE : selectedImage}
+              alt={productTitle}
+              fill
+              className="object-contain"
+              sizes="100vw"
+              priority
+            />
+          </div>
+
+          {/* ナビゲーションボタン（複数画像の場合） */}
+          {hasMultipleImages && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
+                aria-label="前の画像"
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); goToNext(); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
+                aria-label="次の画像"
+              >
+                <ChevronRight className="w-8 h-8" />
+              </button>
+            </>
+          )}
+
+          {/* サムネイル一覧 */}
+          {hasMultipleImages && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/60 rounded-lg max-w-full overflow-x-auto">
+              {allImages.map((imgUrl, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => { e.stopPropagation(); setSelectedIndex(index); }}
+                  className={`relative w-16 h-20 flex-shrink-0 rounded overflow-hidden border-2 transition-all ${
+                    selectedIndex === index
+                      ? 'border-rose-600'
+                      : 'border-transparent hover:border-gray-500'
+                  }`}
+                >
+                  <Image
+                    src={imgUrl}
+                    alt={`${productTitle} - サムネイル ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
-
-      {/* 画像枚数表示 */}
-      {hasMultipleImages && (
-        <p className="text-sm text-gray-400 text-center">
-          サンプル画像: {allImages.length}枚
-        </p>
-      )}
-    </div>
+    </>
   );
 }

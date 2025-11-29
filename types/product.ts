@@ -1,5 +1,5 @@
 // 取り扱いプロバイダ
-export type ProviderId = 'dmm' | 'duga' | 'sokmil' | 'dti';
+export type ProviderId = 'duga' | 'sokmil' | 'dti' | 'mgs' | 'b10f' | 'japanska' | 'fc2';
 
 // 商品カテゴリ（ジャンル）の定義
 export type ProductCategory =
@@ -106,13 +106,6 @@ export interface RankingEntry {
   title: string;
   metric: string;
   delta?: string;
-}
-
-// DMM アフィリエイトリンク生成用の型
-export interface DMMAffiliateLinkParams {
-  productId: string;
-  affiliateId: string;
-  service: string;
 }
 
 // ソートオプション

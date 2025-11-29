@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { JsonLD } from '@/components/JsonLD';
 import ProductImageGallery from '@/components/ProductImageGallery';
-import ProductVideoPlayer from '@/components/ProductVideoPlayer';
+// 利用規約確認中のため一時非表示
+// import ProductVideoPlayer from '@/components/ProductVideoPlayer';
 import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
 import RelatedProducts from '@/components/RelatedProducts';
 import ProductDetailInfo from '@/components/ProductDetailInfo';
@@ -133,6 +134,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* パンくずリスト */}
           <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
+          {/* サンプル動画セクション - 利用規約確認中のため一時非表示 */}
+          {/* TODO: 利用規約確認後に再表示
+          {product.sampleVideos && product.sampleVideos.length > 0 && (
+            <div className="bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+              <ProductVideoPlayer
+                sampleVideos={product.sampleVideos}
+                productTitle={product.title}
+              />
+            </div>
+          )}
+          */}
+
           <div className="bg-gray-800 rounded-lg shadow-md overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
               {/* Product Image Gallery */}
@@ -158,7 +171,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <p className="text-gray-300">{product.providerLabel}</p>
                   <p className="text-sm text-gray-400 mt-2">
                     作品ID: {product.normalizedProductId || product.id}
-                    {product.originalProductId && ` / メーカー品番: ${product.originalProductId}`}
+                    {sources.length > 0 && sources[0].originalProductId &&
+                      ` / メーカー品番: ${sources[0].originalProductId}`}
                   </p>
                 </div>
 
@@ -247,17 +261,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </div>
             </div>
           </div>
-
-          {/* サンプル動画セクション */}
-          {product.sampleVideos && product.sampleVideos.length > 0 && (
-            <div className="mt-8 bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-white mb-4">サンプル動画</h2>
-              <ProductVideoPlayer
-                sampleVideos={product.sampleVideos}
-                productTitle={product.title}
-              />
-            </div>
-          )}
 
           {/* E-E-A-T強化: 詳細情報セクション */}
           {sources.length > 0 && (

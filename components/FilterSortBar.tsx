@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import type { ProviderId } from '@/types/product';
 import type { SortOption } from '@/lib/db/queries';
 import { providerMeta } from '@/lib/providers';
 
@@ -10,12 +9,14 @@ interface FilterSortBarProps {
   defaultSort?: SortOption;
   showProviderFilter?: boolean;
   showPriceFilter?: boolean;
+  providerCounts?: Record<string, number>;
 }
 
 export default function FilterSortBar({
   defaultSort = 'releaseDateDesc',
   showProviderFilter = true,
   showPriceFilter = true,
+  providerCounts = {},
 }: FilterSortBarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -122,11 +123,14 @@ export default function FilterSortBar({
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             >
               <option value="all">すべて</option>
-              {Object.values(providerMeta).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
+              {Object.values(providerMeta).map((p) => {
+                const count = providerCounts[p.id];
+                return (
+                  <option key={p.id} value={p.id}>
+                    {p.label}{count !== undefined ? ` (${count.toLocaleString()})` : ''}
+                  </option>
+                );
+              })}
             </select>
           </div>
         )}

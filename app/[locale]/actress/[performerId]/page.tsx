@@ -4,7 +4,7 @@ import ProductCard from '@/components/ProductCard';
 import Pagination from '@/components/Pagination';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountBySite } from '@/lib/db/queries';
+import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp } from '@/lib/db/queries';
 import {
   generateBaseMetadata,
   generatePersonSchema,
@@ -15,6 +15,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import { getTranslations } from 'next-intl/server';
+import { ProviderId, providerMeta } from '@/lib/providers';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,8 +89,24 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const aliases = await getPerformerAliases(parseInt(actress.id));
   const nonPrimaryAliases = aliases.filter(alias => !alias.isPrimary);
 
-  // Get product count by site
-  const productCountBySite = await getActressProductCountBySite(actress.id);
+  // Get product count by ASP
+  const productCountByAsp = await getActressProductCountByAsp(actress.id);
+
+  // ASP名をProviderId型に変換するマッピング
+  const aspToProviderId: Record<string, ProviderId> = {
+    'DUGA': 'duga',
+    'duga': 'duga',
+    'Sokmil': 'sokmil',
+    'sokmil': 'sokmil',
+    'MGS': 'mgs',
+    'mgs': 'mgs',
+    'b10f': 'b10f',
+    'B10F': 'b10f',
+    'FC2': 'fc2',
+    'fc2': 'fc2',
+    'Japanska': 'japanska',
+    'japanska': 'japanska',
+  };
 
   // Get products
   const allWorks = await getProducts({
@@ -159,6 +176,23 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                         </span>
                       ))}
                     </span>
+                  </div>
+                )}
+                {/* ASP別作品数バッジ */}
+                {productCountByAsp.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {productCountByAsp.map((asp) => {
+                      const providerId = aspToProviderId[asp.aspName];
+                      const meta = providerId ? providerMeta[providerId] : null;
+                      return (
+                        <span
+                          key={asp.aspName}
+                          className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
+                        >
+                          {meta?.label || asp.aspName}: {asp.count}本
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -11,8 +11,10 @@
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
 import { getDb } from '../../lib/db';
-import { rawHtmlData, productSources, products, performers, productPerformers, tags, productTags, productImages } from '../../lib/db/schema';
+import { rawHtmlData, productSources, products, performers, productPerformers, tags, productTags, productImages, productVideos } from '../../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../../lib/performer-validation';
+import { validateProductData } from '../../lib/crawler-utils';
 
 const AFFILIATE_CODE = '6CS5PGEBQDUYPZLHYEM33TBZFJ'; // MGSアフィリエイトコード
 const SOURCE_NAME = 'MGS';
@@ -25,6 +27,7 @@ interface MgsProduct {
   performerNames?: string[]; // 出演者名のリスト
   thumbnailUrl?: string; // サムネイル画像URL
   sampleImages?: string[]; // サンプル画像URL配列
+  sampleVideoUrl?: string; // サンプル動画URL
   price?: number; // 価格
 }
 
@@ -73,30 +76,35 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     const releaseDateText = $('th:contains("配信開始日")').next('td').text().trim();
     const releaseDate = releaseDateText ? releaseDateText.replace(/\//g, '-') : undefined;
 
-    // 出演者を抽出
-    const performerNames: string[] = [];
+    // 出演者を抽出（バリデーション付き）
+    const rawPerformerNames: string[] = [];
     $('th:contains("出演")').next('td').find('a').each((_, elem) => {
       const name = $(elem).text().trim();
       if (name) {
-        performerNames.push(name);
+        rawPerformerNames.push(name);
       }
     });
 
     // 出演者がリンクでない場合もある
-    if (performerNames.length === 0) {
+    if (rawPerformerNames.length === 0) {
       const performerText = $('th:contains("出演")').next('td').text().trim();
       if (performerText) {
         // カンマや改行で区切られている場合
         performerText.split(/[、,\n]/).forEach((name) => {
           const trimmed = name.trim();
           if (trimmed) {
-            performerNames.push(trimmed);
+            rawPerformerNames.push(trimmed);
           }
         });
       }
     }
 
-    console.log(`  Found ${performerNames.length} performer(s): ${performerNames.join(', ')}`);
+    // バリデーションを適用して有効な名前のみフィルタリング
+    const performerNames = rawPerformerNames
+      .map(name => normalizePerformerName(name))
+      .filter((name): name is string => name !== null && isValidPerformerForProduct(name, title));
+
+    console.log(`  Found ${performerNames.length} valid performer(s): ${performerNames.join(', ')} (raw: ${rawPerformerNames.length})`);
 
     // サムネイル画像を抽出
     let thumbnailUrl: string | undefined;
@@ -152,6 +160,48 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
 
     console.log(`  Found ${sampleImages.length} sample image(s)`);
 
+    // サンプル動画URLを抽出
+    let sampleVideoUrl: string | undefined;
+
+    // パターン1: video source タグから
+    const videoSrc = $('video source').attr('src');
+    if (videoSrc) {
+      sampleVideoUrl = videoSrc.startsWith('http') ? videoSrc : `https://www.mgstage.com${videoSrc}`;
+    }
+
+    // パターン2: data-video-url 属性
+    if (!sampleVideoUrl) {
+      const dataVideoUrl = $('[data-video-url]').attr('data-video-url');
+      if (dataVideoUrl) {
+        sampleVideoUrl = dataVideoUrl.startsWith('http') ? dataVideoUrl : `https://www.mgstage.com${dataVideoUrl}`;
+      }
+    }
+
+    // パターン3: sample_movie リンク
+    if (!sampleVideoUrl) {
+      const sampleMovieLink = $('a[href*="sample_movie"]').attr('href');
+      if (sampleMovieLink) {
+        sampleVideoUrl = sampleMovieLink.startsWith('http') ? sampleMovieLink : `https://www.mgstage.com${sampleMovieLink}`;
+      }
+    }
+
+    // パターン4: JavaScriptから sample_url を抽出
+    if (!sampleVideoUrl) {
+      const scriptContent = $('script:contains("sample_url")').html();
+      if (scriptContent) {
+        const sampleUrlMatch = scriptContent.match(/sample_url['":\s]+['"]([^'"]+)['"]/);
+        if (sampleUrlMatch) {
+          sampleVideoUrl = sampleUrlMatch[1].startsWith('http')
+            ? sampleUrlMatch[1]
+            : `https://www.mgstage.com${sampleUrlMatch[1]}`;
+        }
+      }
+    }
+
+    if (sampleVideoUrl) {
+      console.log(`  Found sample video: ${sampleVideoUrl}`);
+    }
+
     // 価格を抽出
     let price: number | undefined;
     const priceText = $('th:contains("価格")').next('td').text().trim();
@@ -168,6 +218,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       performerNames,
       thumbnailUrl,
       sampleImages: sampleImages.length > 0 ? sampleImages : undefined,
+      sampleVideoUrl,
       price,
     };
   } catch (error) {
@@ -236,6 +287,18 @@ async function saveRawHtmlData(
  * アフィリエイトリンクをデータベースに保存
  */
 async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
+  // 商品データの検証
+  const validation = validateProductData({
+    title: mgsProduct.title,
+    aspName: 'MGS',
+    originalId: mgsProduct.productId,
+  });
+
+  if (!validation.isValid) {
+    console.log(`  ⚠️ スキップ: ${validation.reason}`);
+    return;
+  }
+
   const db = getDb();
 
   try {
@@ -508,6 +571,48 @@ async function saveProductImages(
 }
 
 /**
+ * サンプル動画を product_videos テーブルに保存
+ */
+async function saveProductVideo(
+  productId: number,
+  sampleVideoUrl?: string,
+): Promise<void> {
+  if (!sampleVideoUrl) {
+    return;
+  }
+
+  const db = getDb();
+
+  try {
+    // 既存チェック
+    const existing = await db
+      .select()
+      .from(productVideos)
+      .where(
+        and(
+          eq(productVideos.productId, productId),
+          eq(productVideos.videoUrl, sampleVideoUrl),
+        ),
+      )
+      .limit(1);
+
+    if (existing.length === 0) {
+      await db.insert(productVideos).values({
+        productId,
+        videoUrl: sampleVideoUrl,
+        videoType: 'sample',
+        displayOrder: 0,
+        aspName: SOURCE_NAME,
+      });
+      console.log(`  🎬 Saved sample video to product_videos`);
+    }
+  } catch (error) {
+    console.error('Error saving product video:', error);
+    throw error;
+  }
+}
+
+/**
  * メイン処理
  */
 async function main() {
@@ -571,6 +676,9 @@ async function main() {
 
         // product_imagesにサムネイルとサンプル画像を保存
         await saveProductImages(productId, mgsProduct.thumbnailUrl, mgsProduct.sampleImages);
+
+        // product_videosにサンプル動画を保存
+        await saveProductVideo(productId, mgsProduct.sampleVideoUrl);
 
         // products.defaultThumbnailUrlを更新
         if (mgsProduct.thumbnailUrl) {

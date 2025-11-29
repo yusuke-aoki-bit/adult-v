@@ -49,3 +49,6 @@ build-output.txt
 build.err
 build.log
 nul
+
+# docs folder (local documentation/reference files)
+/docs/

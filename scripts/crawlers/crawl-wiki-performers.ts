@@ -12,7 +12,7 @@ if (!process.env.DATABASE_URL) {
 import { createHash } from 'crypto';
 import { getDb } from '../../lib/db/index';
 import { performers, performerAliases, products, productPerformers, rawHtmlData } from '../../lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import iconv from 'iconv-lite';
 
 interface PerformerData {
@@ -85,6 +85,10 @@ async function fetchHtml(url: string): Promise<string | null> {
     console.log(`    🔤 Detected encoding: ${encoding} for ${url}`);
 
     const html = iconv.decode(buffer, encoding);
+
+    // Rate limiting: 3000ms between requests
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
     return html;
   } catch (error) {
     console.error(`  ✗ Error fetching ${url}:`, error);
@@ -353,13 +357,13 @@ async function getOrCreatePerformer(db: any, name: string): Promise<number> {
 /**
  * Get or create product from wiki data
  */
-async function getOrCreateProduct(db: any, productData: ProductData): Promise<string> {
+async function getOrCreateProduct(db: any, productData: ProductData): Promise<number | null> {
   const normalizedId = productData.productId.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
-  // Check if product exists
+  // Check if product exists by normalizedProductId
   const existing = await db.select()
     .from(products)
-    .where(eq(products.id, productData.productId))
+    .where(eq(products.normalizedProductId, normalizedId))
     .limit(1);
 
   if (existing.length > 0) {
@@ -372,7 +376,7 @@ async function getOrCreateProduct(db: any, productData: ProductData): Promise<st
       if (Object.keys(updateData).length > 0) {
         await db.update(products)
           .set(updateData)
-          .where(eq(products.id, productData.productId));
+          .where(eq(products.id, existing[0].id));
         console.log(`  📝 Updated product: ${productData.productId}`);
       }
     }
@@ -416,8 +420,10 @@ async function linkPerformerToProduct(
   // Check if link already exists
   const existingLink = await db.select()
     .from(productPerformers)
-    .where(eq(productPerformers.productId, productId))
-    .where(eq(productPerformers.performerId, performerId))
+    .where(and(
+      eq(productPerformers.productId, productId),
+      eq(productPerformers.performerId, performerId)
+    ))
     .limit(1);
 
   if (existingLink.length > 0) {
@@ -511,9 +517,6 @@ async function crawlAvWikiSitemap(db: any, limit: number = 100): Promise<void> {
       if (processed % 10 === 0) {
         console.log(`Progress: ${processed}/${posts.length} articles processed`);
       }
-
-      // Rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     console.log(`\n✅ av-wiki.net crawl complete: ${processed} articles processed`);
@@ -574,9 +577,6 @@ async function crawlSeesaawiki(db: any, limit: number = 100): Promise<void> {
       if (processed % 10 === 0) {
         console.log(`Progress: ${processed}/${uniqueLinks.length} articles processed`);
       }
-
-      // Rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1500));
     }
 
     console.log(`\n✅ seesaawiki.jp crawl complete: ${processed} articles processed`);

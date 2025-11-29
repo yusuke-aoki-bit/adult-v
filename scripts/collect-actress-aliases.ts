@@ -1,5 +1,5 @@
 import { getDb } from '../lib/db';
-import { performers, performerAliases, performerImages } from '../lib/db/schema';
+import { performers, performerAliases, performerImages, products, productPerformers } from '../lib/db/schema';
 import { sql, eq } from 'drizzle-orm';
 import { fetchActressWikiData } from '../lib/wiki-client';
 
@@ -28,6 +28,7 @@ async function collectActressAliases() {
   let failCount = 0;
   let aliasesAdded = 0;
   let imagesAdded = 0;
+  let productsLinked = 0;
 
   for (const actress of actressesToProcess.rows as any[]) {
     console.log(`\n[${successCount + failCount + 1}/${actressesToProcess.rows.length}] Processing: ${actress.name}`);
@@ -99,6 +100,38 @@ async function collectActressAliases() {
         }
       }
 
+      // 品番から商品を検索して紐付け
+      let linkedProducts = 0;
+      if (wikiData.products.length > 0) {
+        for (const productCode of wikiData.products) {
+          try {
+            // 品番を正規化（大文字小文字無視、ハイフン統一）
+            const normalizedCode = productCode.toLowerCase().replace(/[^a-z0-9]/g, '-');
+
+            // 商品を検索
+            const product = await db.query.products.findFirst({
+              where: eq(products.normalizedProductId, normalizedCode),
+            });
+
+            if (product) {
+              // 紐付けを追加（重複無視）
+              await db.insert(productPerformers).values({
+                productId: product.id,
+                performerId: actress.id,
+              }).onConflictDoNothing();
+
+              linkedProducts++;
+              productsLinked++;
+            }
+          } catch (error) {
+            // 重複やその他エラーは無視
+          }
+        }
+        if (linkedProducts > 0) {
+          console.log(`  ✓ Linked ${linkedProducts} product(s) from ${wikiData.products.length} wiki entries`);
+        }
+      }
+
       console.log(`  ✓ Added ${addedAliases} alias(es), ${wikiData.products.length} product(s) found`);
       successCount++;
 
@@ -120,6 +153,7 @@ async function collectActressAliases() {
   console.log(`Failed: ${failCount}`);
   console.log(`Aliases added: ${aliasesAdded}`);
   console.log(`Profile images added: ${imagesAdded}`);
+  console.log(`Products linked: ${productsLinked}`);
 
   process.exit(0);
 }

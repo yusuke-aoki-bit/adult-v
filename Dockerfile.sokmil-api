@@ -1,0 +1,19 @@
+# SOKMIL API Crawler Dockerfile for Cloud Run Jobs
+FROM node:20-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy necessary files
+COPY lib ./lib
+COPY scripts/crawlers/crawl-sokmil-api.ts ./scripts/crawlers/
+COPY tsconfig.json ./tsconfig.json
+
+# Set environment
+ENV NODE_ENV=production
+
+# Entry point for passing args to the script
+ENTRYPOINT ["npx", "tsx", "scripts/crawlers/crawl-sokmil-api.ts"]
