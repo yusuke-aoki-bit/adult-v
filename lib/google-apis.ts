@@ -18,8 +18,118 @@
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || '';
 const GOOGLE_CUSTOM_SEARCH_ENGINE_ID = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID || '';
 const GOOGLE_CLOUD_PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID || '';
-// サービスアカウントキーはファイルパスで指定
-const GOOGLE_SERVICE_ACCOUNT_KEY_FILE = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE || '';
+// サービスアカウントキー（JSON文字列として環境変数に設定）
+const GOOGLE_SERVICE_ACCOUNT_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || '';
+
+// サービスアカウントの認証情報をパース
+interface ServiceAccountCredentials {
+  type: string;
+  project_id: string;
+  private_key_id: string;
+  private_key: string;
+  client_email: string;
+  client_id: string;
+  auth_uri: string;
+  token_uri: string;
+}
+
+let serviceAccountCredentials: ServiceAccountCredentials | null = null;
+let cachedAccessToken: { token: string; expiresAt: number } | null = null;
+
+function getServiceAccountCredentials(): ServiceAccountCredentials | null {
+  if (serviceAccountCredentials) return serviceAccountCredentials;
+
+  if (!GOOGLE_SERVICE_ACCOUNT_KEY) {
+    return null;
+  }
+
+  try {
+    serviceAccountCredentials = JSON.parse(GOOGLE_SERVICE_ACCOUNT_KEY);
+    return serviceAccountCredentials;
+  } catch (error) {
+    console.error('[Google APIs] Failed to parse service account key:', error);
+    return null;
+  }
+}
+
+/**
+ * サービスアカウントでアクセストークンを取得
+ * JWT Bearer Grant を使用
+ */
+async function getAccessToken(): Promise<string | null> {
+  // キャッシュされたトークンがまだ有効かチェック
+  if (cachedAccessToken && cachedAccessToken.expiresAt > Date.now() + 60000) {
+    return cachedAccessToken.token;
+  }
+
+  const credentials = getServiceAccountCredentials();
+  if (!credentials) {
+    return null;
+  }
+
+  try {
+    // JWTを作成
+    const now = Math.floor(Date.now() / 1000);
+    const header = {
+      alg: 'RS256',
+      typ: 'JWT',
+    };
+    const payload = {
+      iss: credentials.client_email,
+      scope: 'https://www.googleapis.com/auth/indexing https://www.googleapis.com/auth/analytics.readonly',
+      aud: credentials.token_uri,
+      exp: now + 3600,
+      iat: now,
+    };
+
+    // Base64URL エンコード
+    const base64UrlEncode = (obj: object) => {
+      const json = JSON.stringify(obj);
+      const base64 = Buffer.from(json).toString('base64');
+      return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    };
+
+    const headerEncoded = base64UrlEncode(header);
+    const payloadEncoded = base64UrlEncode(payload);
+    const signatureInput = `${headerEncoded}.${payloadEncoded}`;
+
+    // 署名を作成
+    const crypto = await import('crypto');
+    const sign = crypto.createSign('RSA-SHA256');
+    sign.update(signatureInput);
+    const signature = sign.sign(credentials.private_key, 'base64');
+    const signatureEncoded = signature.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    const jwt = `${signatureInput}.${signatureEncoded}`;
+
+    // トークンをリクエスト
+    const response = await fetch(credentials.token_uri, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        assertion: jwt,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('[Google APIs] Token request failed:', error);
+      return null;
+    }
+
+    const data = await response.json();
+    cachedAccessToken = {
+      token: data.access_token,
+      expiresAt: Date.now() + (data.expires_in * 1000),
+    };
+
+    return data.access_token;
+  } catch (error) {
+    console.error('[Google APIs] Failed to get access token:', error);
+    return null;
+  }
+}
 
 // =============================================================================
 // Custom Search API - 女優読み仮名取得
@@ -533,7 +643,7 @@ export async function translateProduct(
 
 /**
  * URLをGoogleにインデックス登録リクエスト
- * 注意: サービスアカウント認証が必要
+ * サービスアカウント認証を使用
  * @param url インデックス登録するURL
  * @param type 'URL_UPDATED' | 'URL_DELETED'
  * @returns 成功したかどうか
@@ -542,11 +652,41 @@ export async function requestIndexing(
   url: string,
   type: 'URL_UPDATED' | 'URL_DELETED' = 'URL_UPDATED'
 ): Promise<boolean> {
-  // Indexing APIはサービスアカウント認証が必要
-  // 簡易的なAPI Key認証では使用不可
-  console.log(`[Indexing API] ${type}: ${url}`);
-  console.warn('[Indexing API] サービスアカウント認証が必要です');
-  return false;
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    console.warn('[Indexing API] サービスアカウント認証が必要です');
+    return false;
+  }
+
+  try {
+    const response = await fetch(
+      'https://indexing.googleapis.com/v3/urlNotifications:publish',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          url,
+          type,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[Indexing API] Error:', error);
+      return false;
+    }
+
+    const data = await response.json();
+    console.log(`[Indexing API] Success: ${url}`, data);
+    return true;
+  } catch (error) {
+    console.error('[Indexing API] Request failed:', error);
+    return false;
+  }
 }
 
 // =============================================================================
@@ -562,7 +702,7 @@ export interface AnalyticsReport {
 
 /**
  * Google Analytics 4のレポートを取得
- * 注意: サービスアカウント認証が必要
+ * サービスアカウント認証を使用
  * @param propertyId GA4プロパティID
  * @param dimensions ディメンション (pagePath等)
  * @param metrics メトリクス (screenPageViews等)
@@ -577,8 +717,47 @@ export async function getAnalyticsReport(
   startDate: string,
   endDate: string
 ): Promise<AnalyticsReport | null> {
-  console.warn('[Analytics API] サービスアカウント認証が必要です');
-  return null;
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    console.warn('[Analytics API] サービスアカウント認証が必要です');
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          dateRanges: [{ startDate, endDate }],
+          dimensions: dimensions.map((name) => ({ name })),
+          metrics: metrics.map((name) => ({ name })),
+          limit: 100,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[Analytics API] Error:', error);
+      return null;
+    }
+
+    const data = await response.json();
+    return {
+      rows: (data.rows || []).map((row: any) => ({
+        dimensions: (row.dimensionValues || []).map((d: any) => d.value),
+        metrics: (row.metricValues || []).map((m: any) => parseFloat(m.value)),
+      })),
+    };
+  } catch (error) {
+    console.error('[Analytics API] Request failed:', error);
+    return null;
+  }
 }
 
 // =============================================================================
@@ -703,13 +882,14 @@ export function checkGoogleApiConfig(): {
   analytics: boolean;
   youtube: boolean;
 } {
+  const hasServiceAccount = !!getServiceAccountCredentials();
   return {
     customSearch: !!(GOOGLE_API_KEY && GOOGLE_CUSTOM_SEARCH_ENGINE_ID),
     naturalLanguage: !!GOOGLE_API_KEY,
     vision: !!GOOGLE_API_KEY,
     translation: !!GOOGLE_API_KEY,
-    indexing: !!GOOGLE_SERVICE_ACCOUNT_KEY_FILE,
-    analytics: !!GOOGLE_SERVICE_ACCOUNT_KEY_FILE,
+    indexing: hasServiceAccount,
+    analytics: hasServiceAccount,
     youtube: !!GOOGLE_API_KEY,
   };
 }
