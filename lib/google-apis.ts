@@ -477,10 +477,19 @@ export async function detectFaces(imageUrl: string): Promise<FaceAnnotation[]> {
     );
 
     if (!response.ok) {
+      const error = await response.text();
+      console.error('[Vision API] HTTP error:', response.status, error);
       return [];
     }
 
     const data = await response.json();
+
+    // Vision API returns errors inside responses array
+    if (data.responses?.[0]?.error) {
+      console.error('[Vision API] Response error:', data.responses[0].error);
+      return [];
+    }
+
     const faces = data.responses?.[0]?.faceAnnotations || [];
     return faces.map((f: any) => ({
       confidence: f.detectionConfidence,
@@ -530,10 +539,19 @@ export async function labelImage(imageUrl: string): Promise<LabelAnnotation[]> {
     );
 
     if (!response.ok) {
+      const error = await response.text();
+      console.error('[Vision API] HTTP error:', response.status, error);
       return [];
     }
 
     const data = await response.json();
+
+    // Vision API returns errors inside responses array
+    if (data.responses?.[0]?.error) {
+      console.error('[Vision API] Response error:', data.responses[0].error);
+      return [];
+    }
+
     const labels = data.responses?.[0]?.labelAnnotations || [];
     return labels.map((l: any) => ({
       description: l.description,

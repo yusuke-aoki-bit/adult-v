@@ -234,8 +234,24 @@ async function enhanceWithYouTube(
     stats.totalProcessed++;
 
     try {
-      // 品番で検索
-      const videos = await searchYouTubeVideos(product.normalized_product_id, 3);
+      // 1. まず品番で検索
+      let videos = await searchYouTubeVideos(product.normalized_product_id, 3);
+
+      // 2. 見つからない場合はタイトルからキーワード抽出して検索
+      if (videos.length === 0 && product.title) {
+        // タイトルから出演者名っぽいキーワードを抽出（2-8文字の日本語）
+        const nameMatch = product.title.match(/[\u4E00-\u9FAF\u3040-\u309F\u30A0-\u30FF]{2,8}/g);
+        if (nameMatch && nameMatch.length > 0) {
+          // 最初の名前らしき文字列で検索（AV/動画などのワードを除く）
+          const keywords = nameMatch.filter(w =>
+            !['無料', '動画', '女優', '作品', '収録', '出演'].includes(w)
+          );
+          if (keywords.length > 0) {
+            const searchQuery = `${keywords[0]} AV`;
+            videos = await searchYouTubeVideos(searchQuery, 3);
+          }
+        }
+      }
 
       if (videos.length > 0) {
         // 最初の動画を紐付け
