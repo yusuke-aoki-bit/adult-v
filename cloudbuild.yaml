@@ -26,7 +26,7 @@ steps:
       - '--timeout'
       - '300'
       - '--set-env-vars'
-      - 'DATABASE_URL=postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres,CRON_SECRET=dev-cron-secret-key'
+      - 'DATABASE_URL=postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres,CRON_SECRET=dev-cron-secret-key,DUGA_APP_ID=WzsUOEt2124UD65BqsHU,DUGA_AGENT_ID=1000'
 
 images:
   - 'gcr.io/$PROJECT_ID/adult-v:latest'
