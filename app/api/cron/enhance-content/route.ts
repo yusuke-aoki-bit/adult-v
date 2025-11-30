@@ -44,11 +44,11 @@ async function enhanceWithVisionAPI(
 
   // 画像タグがまだ設定されていない商品を取得
   const productsResult = await db.execute(sql`
-    SELECT p.id, p.title, p.image_url, p.normalized_product_id
+    SELECT p.id, p.title, p.default_thumbnail_url as image_url, p.normalized_product_id
     FROM products p
     LEFT JOIN product_image_metadata pim ON p.id = pim.product_id
-    WHERE p.image_url IS NOT NULL
-      AND p.image_url != ''
+    WHERE p.default_thumbnail_url IS NOT NULL
+      AND p.default_thumbnail_url != ''
       AND pim.product_id IS NULL
     ORDER BY p.id DESC
     LIMIT ${limit}
