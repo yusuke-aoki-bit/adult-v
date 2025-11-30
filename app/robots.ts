@@ -13,8 +13,6 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/_next/',
           '/private/',
-          '/*.json$',
-          '/*?*debug=',
         ],
       },
       // Specific rules for well-behaved bots

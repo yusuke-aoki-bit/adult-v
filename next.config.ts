@@ -86,6 +86,15 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'www.japanska-xxx.com',
       },
+      // FC2
+      {
+        protocol: 'https',
+        hostname: '*.contents.fc2.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.fc2.com',
+      },
     ],
     // SVG画像を許可
     dangerouslyAllowSVG: true,

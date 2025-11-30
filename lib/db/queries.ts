@@ -235,6 +235,7 @@ export interface GetProductsOptions {
   offset?: number;
   category?: string;
   provider?: string;
+  providers?: string[]; // 複数プロバイダー/ASPでフィルタ（いずれかを含む）
   actressId?: string;
   isFeatured?: boolean;
   isNew?: boolean;
@@ -244,6 +245,8 @@ export interface GetProductsOptions {
   maxPrice?: number;
   tags?: string[]; // 対象タグIDの配列（いずれかを含む）
   excludeTags?: string[]; // 除外タグIDの配列（いずれも含まない）
+  hasVideo?: boolean; // サンプル動画ありのみ
+  hasImage?: boolean; // サンプル画像ありのみ
 }
 
 export async function getProducts(options?: GetProductsOptions): Promise<ProductType[]> {
@@ -251,7 +254,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     const db = getDb();
     const conditions = [];
 
-    // プロバイダー（ASP）でフィルタ
+    // プロバイダー（ASP）でフィルタ（単一）
     if (options?.provider) {
       // Map frontend provider names to ASP names
       const aspMapping: Record<string, string[]> = {
@@ -280,6 +283,18 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
           )`
         );
       }
+    }
+
+    // 複数プロバイダー（ASP）でフィルタ（いずれかを含む）
+    if (options?.providers && options.providers.length > 0) {
+      const aspNames = options.providers;
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productSources} ps
+          WHERE ps.product_id = ${products.id}
+          AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
+        )`
+      );
     }
 
     // 価格フィルタ（productSourcesの価格を使用）
@@ -353,6 +368,26 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       // Full Text Searchを使用（plainto_tsqueryで自動的にトークン化）
       conditions.push(
         sql`${products}.search_vector @@ plainto_tsquery('simple', ${options.query})`
+      );
+    }
+
+    // サンプル動画ありフィルタ
+    if (options?.hasVideo) {
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productVideos} pv
+          WHERE pv.product_id = ${products.id}
+        )`
+      );
+    }
+
+    // サンプル画像ありフィルタ
+    if (options?.hasImage) {
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productImages} pi
+          WHERE pi.product_id = ${products.id}
+        )`
       );
     }
 
@@ -602,6 +637,8 @@ export async function getActresses(options?: {
   excludeInitials?: boolean; // 'etc'フィルタ用: 50音・アルファベット以外
   includeAsps?: string[]; // ASPでフィルタ（いずれかを含む）
   excludeAsps?: string[]; // ASPで除外（いずれも含まない）
+  hasVideo?: boolean; // サンプル動画のある作品を持つ女優のみ
+  hasImage?: boolean; // サンプル画像のある作品を持つ女優のみ
 }): Promise<ActressType[]> {
   try {
     const db = getDb();
@@ -722,6 +759,50 @@ export async function getActresses(options?: {
       }
     }
 
+    // hasVideoフィルタ（サンプル動画のある作品を持つ女優のみ）
+    if (options?.hasVideo) {
+      try {
+        const performerIds = await db
+          .selectDistinct({ performerId: productPerformers.performerId })
+          .from(productVideos)
+          .innerJoin(productPerformers, eq(productVideos.productId, productPerformers.productId));
+
+        if (performerIds.length > 0) {
+          const performerIdValues = performerIds.map(p => p.performerId);
+          conditions.push(
+            inArray(performers.id, performerIdValues)
+          );
+        } else {
+          return [];
+        }
+      } catch (hasVideoError) {
+        console.error('[GET ACTRESSES] Error in hasVideo processing:', hasVideoError);
+        throw hasVideoError;
+      }
+    }
+
+    // hasImageフィルタ（サンプル画像のある作品を持つ女優のみ）
+    if (options?.hasImage) {
+      try {
+        const performerIds = await db
+          .selectDistinct({ performerId: productPerformers.performerId })
+          .from(productImages)
+          .innerJoin(productPerformers, eq(productImages.productId, productPerformers.productId));
+
+        if (performerIds.length > 0) {
+          const performerIdValues = performerIds.map(p => p.performerId);
+          conditions.push(
+            inArray(performers.id, performerIdValues)
+          );
+        } else {
+          return [];
+        }
+      } catch (hasImageError) {
+        console.error('[GET ACTRESSES] Error in hasImage processing:', hasImageError);
+        throw hasImageError;
+      }
+    }
+
     // 検索クエリ（名前を検索）
     // performer_aliases テーブルも検索対象に含める
     if (options?.query) {
@@ -743,12 +824,9 @@ export async function getActresses(options?: {
 
         // pg_trgmを使用した類似性検索（similarity > 0.2 の結果を返す）
         // 主名前、カナ名、または別名のいずれかに一致
-        // 頭文字検索の場合、nameKanaがあればnameKanaで、なければnameで検索
+        // 頭文字検索の場合、nameKanaでのみ検索（ひらがな頭文字→漢字名はマッチしないため）
         const nameConditions = isInitialSearch
-          ? or(
-              sql`(${performers.nameKana} IS NOT NULL AND ${performers.nameKana} ILIKE ${searchPattern})`,
-              sql`(${performers.nameKana} IS NULL AND ${performers.name} ILIKE ${searchPattern})`
-            )!
+          ? sql`${performers.nameKana} IS NOT NULL AND ${performers.nameKana} ILIKE ${searchPattern}`
           : or(
               sql`similarity(${performers.name}, ${options.query}) > 0.2`,
               sql`similarity(${performers.nameKana}, ${options.query}) > 0.2`,
@@ -1095,6 +1173,8 @@ export async function getActressesCount(options?: {
   excludeInitials?: boolean; // 'etc'フィルタ用: 50音・アルファベット以外
   includeAsps?: string[];
   excludeAsps?: string[];
+  hasVideo?: boolean; // サンプル動画のある作品を持つ女優のみ
+  hasImage?: boolean; // サンプル画像のある作品を持つ女優のみ
 }): Promise<number> {
   try {
     const db = getDb();
@@ -1189,6 +1269,40 @@ export async function getActressesCount(options?: {
       }
     }
 
+    // hasVideoフィルタ（サンプル動画のある作品を持つ女優のみ）
+    if (options?.hasVideo) {
+      const performerIds = await db
+        .selectDistinct({ performerId: productPerformers.performerId })
+        .from(productVideos)
+        .innerJoin(productPerformers, eq(productVideos.productId, productPerformers.productId));
+
+      if (performerIds.length > 0) {
+        const performerIdValues = performerIds.map(p => p.performerId);
+        conditions.push(
+          inArray(performers.id, performerIdValues)
+        );
+      } else {
+        return 0;
+      }
+    }
+
+    // hasImageフィルタ（サンプル画像のある作品を持つ女優のみ）
+    if (options?.hasImage) {
+      const performerIds = await db
+        .selectDistinct({ performerId: productPerformers.performerId })
+        .from(productImages)
+        .innerJoin(productPerformers, eq(productImages.productId, productPerformers.productId));
+
+      if (performerIds.length > 0) {
+        const performerIdValues = performerIds.map(p => p.performerId);
+        conditions.push(
+          inArray(performers.id, performerIdValues)
+        );
+      } else {
+        return 0;
+      }
+    }
+
     // 検索クエリ（名前を検索）
     // performer_aliases テーブルも検索対象に含める
     if (options?.query) {
@@ -1209,12 +1323,9 @@ export async function getActressesCount(options?: {
 
       // pg_trgmを使用した類似性検索（similarity > 0.2 の結果を返す）
       // 主名前、カナ名、または別名のいずれかに一致
-      // 頭文字検索の場合、nameKanaがあればnameKanaで、なければnameで検索
+      // 頭文字検索の場合、nameKanaでのみ検索（ひらがな頭文字→漢字名はマッチしないため）
       const nameConditions = isInitialSearch
-        ? or(
-            sql`(${performers.nameKana} IS NOT NULL AND ${performers.nameKana} ILIKE ${searchPattern})`,
-            sql`(${performers.nameKana} IS NULL AND ${performers.name} ILIKE ${searchPattern})`
-          )!
+        ? sql`${performers.nameKana} IS NOT NULL AND ${performers.nameKana} ILIKE ${searchPattern}`
         : or(
             sql`similarity(${performers.name}, ${options.query}) > 0.2`,
             sql`similarity(${performers.nameKana}, ${options.query}) > 0.2`,
@@ -1569,9 +1680,11 @@ const ACTRESS_PLACEHOLDER = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+
 
 /**
  * データベースの出演者(performer)をActress型に変換（同期版）
+ * 画像優先順位: 1. profileImageUrl（女優プロフィール画像） 2. thumbnailUrl（商品画像） 3. プレースホルダー
  */
 function mapPerformerToActressTypeSync(performer: DbPerformer, releaseCount: number, thumbnailUrl?: string, services?: string[]): ActressType {
-  const imageUrl = thumbnailUrl || ACTRESS_PLACEHOLDER;
+  // 画像の優先順位: profileImageUrl > thumbnailUrl（商品画像） > プレースホルダー
+  const imageUrl = performer.profileImageUrl || thumbnailUrl || ACTRESS_PLACEHOLDER;
   // ASP名をProviderId型に変換
   const aspToProviderId: Record<string, ProviderId> = {
     'DUGA': 'duga',

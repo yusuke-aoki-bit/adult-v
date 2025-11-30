@@ -35,6 +35,8 @@ export async function GET(request: Request) {
     const actressId = searchParams.get('actressId') || undefined;
     const isFeatured = searchParams.get('isFeatured') === 'true' ? true : undefined;
     const isNew = searchParams.get('isNew') === 'true' ? true : undefined;
+    const hasVideo = searchParams.get('hasVideo') === 'true' ? true : undefined;
+    const hasImage = searchParams.get('hasImage') === 'true' ? true : undefined;
     const query = validateSearchQuery(searchParams.get('query'));
 
     // Validate sort option
@@ -54,6 +56,8 @@ export async function GET(request: Request) {
       actressId,
       isFeatured,
       isNew,
+      hasVideo,
+      hasImage,
       query,
       sortBy: sortBy || undefined,
       minPrice,

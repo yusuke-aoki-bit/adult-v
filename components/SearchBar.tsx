@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
 export default function SearchBar() {
@@ -11,29 +11,30 @@ export default function SearchBar() {
   const params = useParams();
   const locale = (params.locale as string) || 'ja';
 
-  const handleActressSearch = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (actressQuery.trim()) {
-      router.push(`/${locale}/?q=${encodeURIComponent(actressQuery.trim())}`);
-      setActressQuery('');
-    }
-  };
+  // デバウンス用のタイマー
+  const actressDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const productDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleProductSearch = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const query = productQuery.trim();
-    if (!query) return;
+  // 女優名検索（デバウンス付き）
+  const executeActressSearch = useCallback((query: string) => {
+    if (query.trim().length >= 2) {
+      router.push(`/${locale}/?q=${encodeURIComponent(query.trim())}`);
+    }
+  }, [router, locale]);
+
+  // 作品検索（デバウンス付き）
+  const executeProductSearch = useCallback(async (query: string) => {
+    if (query.trim().length < 2) return;
 
     setIsSearching(true);
 
     try {
       // まず商品ID/メーカー品番で検索
-      const response = await fetch(`/api/products/search-by-id?productId=${encodeURIComponent(query)}`);
+      const response = await fetch(`/api/products/search-by-id?productId=${encodeURIComponent(query.trim())}`);
 
       if (response.ok) {
         const data = await response.json();
         if (data.product) {
-          // 商品が見つかった場合、その商品ページに遷移
           router.push(`/${locale}/products/${data.product.id}`);
           setProductQuery('');
           setIsSearching(false);
@@ -42,26 +43,57 @@ export default function SearchBar() {
       }
 
       // 商品IDで見つからない場合は、作品名で検索
-      router.push(`/${locale}/search?q=${encodeURIComponent(query)}&type=products`);
-      setProductQuery('');
+      router.push(`/${locale}/search?q=${encodeURIComponent(query.trim())}&type=products`);
     } catch (error) {
       console.error('Search error:', error);
-      // エラーの場合でも作品名検索にフォールバック
-      router.push(`/${locale}/search?q=${encodeURIComponent(query)}&type=products`);
-      setProductQuery('');
+      router.push(`/${locale}/search?q=${encodeURIComponent(query.trim())}&type=products`);
     } finally {
       setIsSearching(false);
     }
+  }, [router, locale]);
+
+  // 女優名入力時のハンドラ（デバウンス300ms）
+  const handleActressChange = (value: string) => {
+    setActressQuery(value);
+
+    if (actressDebounceRef.current) {
+      clearTimeout(actressDebounceRef.current);
+    }
+
+    actressDebounceRef.current = setTimeout(() => {
+      executeActressSearch(value);
+    }, 500);
   };
+
+  // 作品検索入力時のハンドラ（デバウンス500ms）
+  const handleProductChange = (value: string) => {
+    setProductQuery(value);
+
+    if (productDebounceRef.current) {
+      clearTimeout(productDebounceRef.current);
+    }
+
+    productDebounceRef.current = setTimeout(() => {
+      executeProductSearch(value);
+    }, 700);
+  };
+
+  // クリーンアップ
+  useEffect(() => {
+    return () => {
+      if (actressDebounceRef.current) clearTimeout(actressDebounceRef.current);
+      if (productDebounceRef.current) clearTimeout(productDebounceRef.current);
+    };
+  }, []);
 
   return (
     <div className="flex flex-col sm:flex-row gap-2">
       {/* 女優名検索 */}
-      <form onSubmit={handleActressSearch} className="relative flex-1">
+      <div className="relative flex-1">
         <input
           type="text"
           value={actressQuery}
-          onChange={(e) => setActressQuery(e.target.value)}
+          onChange={(e) => handleActressChange(e.target.value)}
           placeholder="女優名で検索..."
           className="w-full px-4 py-2 pl-10 pr-4 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm"
         />
@@ -78,14 +110,14 @@ export default function SearchBar() {
             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
           />
         </svg>
-      </form>
+      </div>
 
       {/* 作品検索（作品名・作品ID・メーカー品番） */}
-      <form onSubmit={handleProductSearch} className="relative flex-1">
+      <div className="relative flex-1">
         <input
           type="text"
           value={productQuery}
-          onChange={(e) => setProductQuery(e.target.value)}
+          onChange={(e) => handleProductChange(e.target.value)}
           placeholder="作品名・作品ID・メーカー品番で検索..."
           disabled={isSearching}
           className="w-full px-4 py-2 pl-10 pr-4 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm disabled:opacity-50"
@@ -108,7 +140,7 @@ export default function SearchBar() {
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
           </div>
         )}
-      </form>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Play, Film } from 'lucide-react';
+import { Play, Film, AlertCircle } from 'lucide-react';
 
 interface VideoInfo {
   url: string;
@@ -20,13 +20,19 @@ export default function ProductVideoPlayer({ sampleVideos, productTitle }: Produ
     sampleVideos && sampleVideos.length > 0 ? sampleVideos[0] : null
   );
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   if (!sampleVideos || sampleVideos.length === 0) {
     return null; // 動画がない場合は何も表示しない
   }
 
   const handlePlayClick = () => {
+    setHasError(false);
     setIsPlaying(true);
+  };
+
+  const handleVideoError = () => {
+    setHasError(true);
   };
 
   const formatDuration = (seconds?: number) => {
@@ -62,16 +68,33 @@ export default function ProductVideoPlayer({ sampleVideos, productTitle }: Produ
             )}
           </button>
         )}
-        {isPlaying && selectedVideo && (
+        {isPlaying && selectedVideo && !hasError && (
           <video
             src={selectedVideo.url}
             controls
             autoPlay
             className="w-full h-full"
             controlsList="nodownload"
+            onError={handleVideoError}
           >
             お使いのブラウザは動画タグをサポートしていません。
           </video>
+        )}
+        {hasError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95">
+            <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+            <p className="text-white text-lg mb-2">動画を読み込めませんでした</p>
+            <p className="text-gray-400 text-sm mb-4">動画ファイルが利用できない可能性があります</p>
+            <button
+              onClick={() => {
+                setHasError(false);
+                setIsPlaying(false);
+              }}
+              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              閉じる
+            </button>
+          </div>
         )}
       </div>
 
@@ -84,6 +107,7 @@ export default function ProductVideoPlayer({ sampleVideos, productTitle }: Produ
               onClick={() => {
                 setSelectedVideo(video);
                 setIsPlaying(false);
+                setHasError(false);
               }}
               className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all p-4 ${
                 selectedVideo === video

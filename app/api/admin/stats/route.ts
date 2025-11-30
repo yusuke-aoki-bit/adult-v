@@ -98,6 +98,64 @@ export async function GET() {
       LIMIT 10
     `);
 
+    // 7. 収集率統計（推定総数との比較）
+    const collectionRates = await db.execute(sql`
+      SELECT asp_name, COUNT(DISTINCT product_id) as count
+      FROM product_sources
+      GROUP BY asp_name
+      ORDER BY count DESC
+    `);
+
+    // 8. 最新リリース日（プロバイダー別）
+    const latestReleases = await db.execute(sql`
+      SELECT ps.asp_name, MAX(p.release_date) as latest_release
+      FROM product_sources ps
+      JOIN products p ON ps.product_id = p.id
+      GROUP BY ps.asp_name
+      ORDER BY latest_release DESC NULLS LAST
+    `);
+
+    // 9. 日別収集数（過去14日）
+    const dailyCollection = await db.execute(sql`
+      SELECT DATE(p.created_at) as date, ps.asp_name, COUNT(*) as count
+      FROM product_sources ps
+      JOIN products p ON ps.product_id = p.id
+      WHERE p.created_at > NOW() - INTERVAL '14 days'
+      GROUP BY DATE(p.created_at), ps.asp_name
+      ORDER BY date DESC, count DESC
+    `);
+
+    // 10. 生データテーブル件数
+    const rawDataCounts = await db.execute(sql`
+      SELECT 'raw_html_data' as table_name, COUNT(*) as count FROM raw_html_data
+      UNION ALL
+      SELECT 'raw_csv_data', COUNT(*) FROM raw_csv_data
+      UNION ALL
+      SELECT 'duga_raw_responses', COUNT(*) FROM duga_raw_responses
+      UNION ALL
+      SELECT 'sokmil_raw_responses', COUNT(*) FROM sokmil_raw_responses
+    `);
+
+    // 推定総数（手動設定）
+    const estimates: Record<string, number> = {
+      'DUGA': 500000,
+      'DTI': 50000,
+      'b10f': 30000,
+      'MGS': 100000,
+      'Japanska': 40000,
+      'FC2': 1000000,
+      'ソクミル': 200000,
+    };
+
+    const collectionRatesWithEstimates = (collectionRates.rows as { asp_name: string; count: string }[]).map(row => ({
+      asp_name: row.asp_name,
+      collected: parseInt(row.count),
+      estimated: estimates[row.asp_name] || null,
+      rate: estimates[row.asp_name]
+        ? ((parseInt(row.count) / estimates[row.asp_name]) * 100).toFixed(2)
+        : null,
+    }));
+
     return NextResponse.json({
       aspSummary: aspSummary.rows,
       videoStats: videoStats.rows,
@@ -105,6 +163,10 @@ export async function GET() {
       totalStats: totalStats.rows[0],
       topPerformers: topPerformers.rows,
       noImagePerformers: noImagePerformers.rows,
+      collectionRates: collectionRatesWithEstimates,
+      latestReleases: latestReleases.rows,
+      dailyCollection: dailyCollection.rows,
+      rawDataCounts: rawDataCounts.rows,
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {

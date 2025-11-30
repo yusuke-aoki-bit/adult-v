@@ -1,5 +1,8 @@
 import type { ProviderId, ProviderMeta } from '@/types/product';
 
+// 型の再エクスポート
+export type { ProviderId, ProviderMeta };
+
 /**
  * プロバイダーメタデータ（クライアントサイドでも使用可能）
  */

@@ -159,7 +159,7 @@ export function generateBaseMetadata(
   const pageDescription = description || defaultDescription;
   const pageUrl = path ? `${siteUrl}${path}` : siteUrl;
   // デフォルトOGP画像のパスを設定（publicフォルダ内）
-  const pageImage = image || `${siteUrl}/images/og-default.png`;
+  const pageImage = image || `${siteUrl}/og-image.jpg`;
   const pageKeywords = keywords || localeKeywords[locale as keyof typeof localeKeywords] || defaultKeywords;
   const ogLocale = localeMap[locale] || 'ja_JP';
 

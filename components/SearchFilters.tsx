@@ -10,7 +10,7 @@ export interface SearchFilterOptions {
   dateTo?: string;
   sortBy?: 'relevance' | 'date_desc' | 'date_asc' | 'views_desc';
   hasVideo?: boolean;
-  hasSamples?: boolean;
+  hasImage?: boolean;
 }
 
 interface SearchFiltersProps {
@@ -174,14 +174,14 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }: S
                 onChange={(e) => handleFilterChange('hasVideo', e.target.checked || undefined)}
                 className="w-4 h-4 text-rose-600 bg-gray-700 border-gray-600 rounded focus:ring-rose-500"
               />
-              <span>動画あり</span>
+              <span>サンプル動画あり</span>
             </label>
 
             <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
               <input
                 type="checkbox"
-                checked={filters.hasSamples || false}
-                onChange={(e) => handleFilterChange('hasSamples', e.target.checked || undefined)}
+                checked={filters.hasImage || false}
+                onChange={(e) => handleFilterChange('hasImage', e.target.checked || undefined)}
                 className="w-4 h-4 text-rose-600 bg-gray-700 border-gray-600 rounded focus:ring-rose-500"
               />
               <span>サンプル画像あり</span>

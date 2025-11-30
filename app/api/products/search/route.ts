@@ -21,6 +21,8 @@ export async function GET(request: Request) {
     const sortBy = searchParams.get('sortBy'); // ソート順
     const tags = searchParams.get('tags'); // タグフィルター (カンマ区切り)
     const excludeTags = searchParams.get('excludeTags'); // 除外タグ (カンマ区切り)
+    const hasVideo = searchParams.get('hasVideo') === 'true' ? true : undefined; // サンプル動画あり
+    const hasImage = searchParams.get('hasImage') === 'true' ? true : undefined; // サンプル画像あり
 
     const limit = limitParam ? parseInt(limitParam, 10) : 50;
     const offset = offsetParam ? parseInt(offsetParam, 10) : 0;
@@ -56,6 +58,8 @@ export async function GET(request: Request) {
       sortBy: sortBy as any || 'releaseDateDesc',
       tags: tagIds,
       excludeTags: excludeTagIds,
+      hasVideo,
+      hasImage,
     });
 
     return NextResponse.json({
@@ -69,6 +73,8 @@ export async function GET(request: Request) {
         sortBy,
         tags: tagIds,
         excludeTags: excludeTagIds,
+        hasVideo,
+        hasImage,
       }
     });
   } catch (error) {

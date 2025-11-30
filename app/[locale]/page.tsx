@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import ActressCard from '@/components/ActressCard';
 import SortDropdown from '@/components/SortDropdown';
 import Pagination from '@/components/Pagination';
 import InitialSearchMenu from '@/components/InitialSearchMenu';
+import ActressListFilter from '@/components/ActressListFilter';
 import { getActresses, getActressesCount, getTags, getActressesWithNewReleases, getPopularTags, getUncategorizedProductsCount, getMultiAspActresses, getAspStats } from '@/lib/db/queries';
 import { generateBaseMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
@@ -48,7 +48,6 @@ export default async function Home({ params, searchParams }: PageProps) {
   const t = await getTranslations({ locale, namespace: 'homepage' });
   const tCommon = await getTranslations({ locale, namespace: 'common' });
   const tFilter = await getTranslations({ locale, namespace: 'filter' });
-  const tSort = await getTranslations({ locale, namespace: 'sort' });
 
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
@@ -80,9 +79,12 @@ export default async function Home({ params, searchParams }: PageProps) {
     ? searchParamsData.excludeAsp
     : [];
 
+  // hasVideo/hasImageフィルターを取得
+  const hasVideo = searchParamsData.hasVideo === 'true';
+  const hasImage = searchParamsData.hasImage === 'true';
+
   // タグ一覧を取得
   const genreTags = await getTags('genre');
-  const siteTags = await getTags('site');
 
   // 利用可能なASP一覧（フィルター用）
   const availableAsps = [
@@ -115,6 +117,8 @@ export default async function Home({ params, searchParams }: PageProps) {
     excludeInitials: isEtcFilter, // データベース側で'etc'フィルタリング
     includeAsps,
     excludeAsps,
+    hasVideo: hasVideo || undefined,
+    hasImage: hasImage || undefined,
   });
 
   // 総数を効率的に取得
@@ -125,6 +129,8 @@ export default async function Home({ params, searchParams }: PageProps) {
     excludeInitials: isEtcFilter,
     includeAsps,
     excludeAsps,
+    hasVideo: hasVideo || undefined,
+    hasImage: hasImage || undefined,
   });
 
   // ASP統計は常に取得（フィルター表示用）
@@ -403,139 +409,43 @@ export default async function Home({ params, searchParams }: PageProps) {
             </div>
           </div>
 
-          {/* タグフィルター */}
-          <form method="get" action={`/${locale}`}>
-            <details className="mb-6 sm:mb-8 bg-gray-800 rounded-lg border border-gray-700">
-              <summary className="px-3 sm:px-4 py-3 cursor-pointer font-semibold text-white hover:bg-gray-750 flex items-center gap-2">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                {t('filterSettings')}
-              </summary>
-              <div className="px-3 sm:px-4 pb-4 space-y-4 sm:space-y-6">
-                {query && <input type="hidden" name="q" value={query} />}
-              {/* ジャンルタグ */}
-              {genreTags.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-white mb-2 sm:mb-3">{tFilter('genre')}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                    {/* 対象フィルタ */}
-                    <div>
-                      <p className="text-xs text-gray-300 mb-2">{tFilter('include')}</p>
-                      <div className="space-y-0.5 max-h-40 sm:max-h-48 overflow-y-auto border border-gray-600 rounded p-2 bg-gray-750">
-                        {genreTags.slice(0, 20).map((tag) => (
-                          <label key={`include-genre-${tag.id}`} className="flex items-center gap-2 sm:gap-3 hover:bg-gray-700 active:bg-gray-600 p-2 sm:p-1.5 rounded cursor-pointer min-h-[44px] sm:min-h-0">
-                            <input
-                              type="checkbox"
-                              name="include"
-                              value={tag.id}
-                              defaultChecked={includeTags.includes(String(tag.id))}
-                              className="w-5 h-5 sm:w-4 sm:h-4 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
-                            />
-                            <span className="text-sm text-gray-200">{tag.name} <span className="text-gray-400">({tag.count})</span></span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    {/* 除外フィルタ */}
-                    <div>
-                      <p className="text-xs text-gray-300 mb-2">{tFilter('exclude')}</p>
-                      <div className="space-y-0.5 max-h-40 sm:max-h-48 overflow-y-auto border border-gray-600 rounded p-2 bg-gray-750">
-                        {genreTags.slice(0, 20).map((tag) => (
-                          <label key={`exclude-genre-${tag.id}`} className="flex items-center gap-2 sm:gap-3 hover:bg-gray-700 active:bg-gray-600 p-2 sm:p-1.5 rounded cursor-pointer min-h-[44px] sm:min-h-0">
-                            <input
-                              type="checkbox"
-                              name="exclude"
-                              value={tag.id}
-                              defaultChecked={excludeTags.includes(String(tag.id))}
-                              className="w-5 h-5 sm:w-4 sm:h-4 rounded border-gray-500 text-red-600 focus:ring-red-500"
-                            />
-                            <span className="text-sm text-gray-200">{tag.name} <span className="text-gray-400">({tag.count})</span></span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+          {/* タグフィルター - 即時適用 */}
+          <ActressListFilter
+            genreTags={genreTags}
+            availableAsps={availableAsps}
+            aspProductCounts={aspProductCounts}
+            translations={{
+              filterSettings: t('filterSettings'),
+              sampleContent: 'サンプルコンテンツ',
+              sampleVideo: 'サンプル動画あり',
+              sampleImage: 'サンプル画像あり',
+              genre: tFilter('genre'),
+              site: tFilter('site'),
+              include: tFilter('include'),
+              exclude: tFilter('exclude'),
+              clear: tCommon('clear'),
+            }}
+          />
 
-              {/* 配信サイト（ASP）フィルター */}
-              <div>
-                <h3 className="text-sm font-semibold text-white mb-2 sm:mb-3">{tFilter('site')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                  {/* 対象フィルタ */}
-                  <div>
-                    <p className="text-xs text-gray-300 mb-2">{tFilter('include')}</p>
-                    <div className="flex flex-wrap gap-2 sm:space-y-0.5 sm:block border border-gray-600 rounded p-2 bg-gray-750">
-                      {availableAsps.map((asp) => {
-                        const providerId = aspToProviderId[asp.id];
-                        const meta = providerId ? providerMeta[providerId] : null;
-                        const count = aspProductCounts[asp.id];
-                        return (
-                          <label key={`include-asp-${asp.id}`} className="flex items-center gap-2 hover:bg-gray-700 active:bg-gray-600 p-2 sm:p-1.5 rounded cursor-pointer min-h-[44px] sm:min-h-0">
-                            <input
-                              type="checkbox"
-                              name="includeAsp"
-                              value={asp.id}
-                              defaultChecked={includeAsps.includes(asp.id)}
-                              className="w-5 h-5 sm:w-4 sm:h-4 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
-                            />
-                            <span className={`text-sm font-medium px-2 py-0.5 rounded ${meta?.accentClass || 'bg-gray-600'} text-white`}>
-                              {meta?.label || asp.name}
-                              {count !== undefined && <span className="ml-1 text-xs opacity-80">({count.toLocaleString()})</span>}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  {/* 除外フィルタ */}
-                  <div>
-                    <p className="text-xs text-gray-300 mb-2">{tFilter('exclude')}</p>
-                    <div className="flex flex-wrap gap-2 sm:space-y-0.5 sm:block border border-gray-600 rounded p-2 bg-gray-750">
-                      {availableAsps.map((asp) => {
-                        const providerId = aspToProviderId[asp.id];
-                        const meta = providerId ? providerMeta[providerId] : null;
-                        const count = aspProductCounts[asp.id];
-                        return (
-                          <label key={`exclude-asp-${asp.id}`} className="flex items-center gap-2 hover:bg-gray-700 active:bg-gray-600 p-2 sm:p-1.5 rounded cursor-pointer min-h-[44px] sm:min-h-0">
-                            <input
-                              type="checkbox"
-                              name="excludeAsp"
-                              value={asp.id}
-                              defaultChecked={excludeAsps.includes(asp.id)}
-                              className="w-5 h-5 sm:w-4 sm:h-4 rounded border-gray-500 text-red-600 focus:ring-red-500"
-                            />
-                            <span className={`text-sm font-medium px-2 py-0.5 rounded ${meta?.accentClass || 'bg-gray-600'} text-white`}>
-                              {meta?.label || asp.name}
-                              {count !== undefined && <span className="ml-1 text-xs opacity-80">({count.toLocaleString()})</span>}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-                {/* フィルター適用ボタン */}
-                <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                  <button
-                    type="submit"
-                    className="flex-1 sm:flex-none px-6 py-3 sm:py-2 bg-rose-600 text-white rounded-lg sm:rounded-md font-medium hover:bg-rose-700 active:bg-rose-800 transition-colors"
-                  >
-                    {tCommon('apply')}
-                  </button>
-                  <a
-                    href={query ? `/${locale}?q=${query}` : `/${locale}`}
-                    className="flex-1 sm:flex-none text-center px-6 py-3 sm:py-2 border border-gray-600 text-gray-200 rounded-lg sm:rounded-md font-medium hover:bg-gray-700 active:bg-gray-600 transition-colors"
-                  >
-                    {tCommon('clear')}
-                  </a>
-                </div>
-              </div>
-            </details>
-          </form>
+          {/* ページネーション（上部） */}
+          <Pagination
+            total={totalCount}
+            page={page}
+            perPage={ITEMS_PER_PAGE}
+            basePath={`/${locale}`}
+            position="top"
+            queryParams={{
+              ...(query ? { q: query } : {}),
+              ...(initialFilter ? { initial: initialFilter } : {}),
+              ...(sortBy !== 'nameAsc' ? { sort: sortBy } : {}),
+              ...(includeTags.length > 0 ? { include: includeTags.join(',') } : {}),
+              ...(excludeTags.length > 0 ? { exclude: excludeTags.join(',') } : {}),
+              ...(includeAsps.length > 0 ? { includeAsp: includeAsps.join(',') } : {}),
+              ...(excludeAsps.length > 0 ? { excludeAsp: excludeAsps.join(',') } : {}),
+              ...(hasVideo ? { hasVideo: 'true' } : {}),
+              ...(hasImage ? { hasImage: 'true' } : {}),
+            }}
+          />
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
             {actresses.map((actress) => (
@@ -545,12 +455,13 @@ export default async function Home({ params, searchParams }: PageProps) {
             ))}
           </div>
 
-          {/* ページネーション */}
+          {/* ページネーション（下部） */}
           <Pagination
             total={totalCount}
             page={page}
             perPage={ITEMS_PER_PAGE}
             basePath={`/${locale}`}
+            position="bottom"
             queryParams={{
               ...(query ? { q: query } : {}),
               ...(initialFilter ? { initial: initialFilter } : {}),
@@ -559,6 +470,8 @@ export default async function Home({ params, searchParams }: PageProps) {
               ...(excludeTags.length > 0 ? { exclude: excludeTags.join(',') } : {}),
               ...(includeAsps.length > 0 ? { includeAsp: includeAsps.join(',') } : {}),
               ...(excludeAsps.length > 0 ? { excludeAsp: excludeAsps.join(',') } : {}),
+              ...(hasVideo ? { hasVideo: 'true' } : {}),
+              ...(hasImage ? { hasImage: 'true' } : {}),
             }}
           />
         </div>

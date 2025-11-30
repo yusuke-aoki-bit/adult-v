@@ -82,17 +82,29 @@ export default async function UncategorizedPage({ params, searchParams }: PagePr
             </div>
           ) : (
             <>
+              {/* ページネーション（上部） */}
+              <Pagination
+                total={totalCount}
+                page={page}
+                perPage={ITEMS_PER_PAGE}
+                basePath={`/${locale}/uncategorized`}
+                position="top"
+                queryParams={{}}
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
 
+              {/* ページネーション（下部） */}
               <Pagination
                 total={totalCount}
                 page={page}
                 perPage={ITEMS_PER_PAGE}
                 basePath={`/${locale}/uncategorized`}
+                position="bottom"
                 queryParams={{}}
               />
             </>

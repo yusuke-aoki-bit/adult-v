@@ -12,10 +12,10 @@ import {
   generateItemListSchema,
 } from '@/lib/seo';
 import { Metadata } from 'next';
-import Link from 'next/link';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import { getTranslations } from 'next-intl/server';
 import { ProviderId, providerMeta } from '@/lib/providers';
+import ActressProductFilter from '@/components/ActressProductFilter';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +26,9 @@ interface PageProps {
     sort?: string;
     include?: string | string[];
     exclude?: string | string[];
+    hasVideo?: string;
+    hasImage?: string;
+    asp?: string | string[];
   }>;
 }
 
@@ -69,6 +72,10 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const page = parseInt(resolvedSearchParams.page || '1', 10);
   const sortBy = (resolvedSearchParams.sort || 'releaseDateDesc') as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'titleAsc';
 
+  // hasVideo/hasImageフィルター
+  const hasVideo = resolvedSearchParams.hasVideo === 'true';
+  const hasImage = resolvedSearchParams.hasImage === 'true';
+
   // Get include and exclude tags
   const includeTags = typeof resolvedSearchParams.include === 'string'
     ? resolvedSearchParams.include.split(',').filter(Boolean)
@@ -81,9 +88,15 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     ? resolvedSearchParams.exclude
     : [];
 
+  // Get ASP filter
+  const includeAsps = typeof resolvedSearchParams.asp === 'string'
+    ? resolvedSearchParams.asp.split(',').filter(Boolean)
+    : Array.isArray(resolvedSearchParams.asp)
+    ? resolvedSearchParams.asp
+    : [];
+
   // Get tags for the actress
   const genreTags = await getTagsForActress(actress.id, 'genre');
-  const siteTags = await getTagsForActress(actress.id, 'site');
 
   // Get aliases for the actress
   const aliases = await getPerformerAliases(parseInt(actress.id));
@@ -93,11 +106,13 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const productCountByAsp = await getActressProductCountByAsp(actress.id);
 
   // ASP名をProviderId型に変換するマッピング
-  const aspToProviderId: Record<string, ProviderId> = {
+  const aspToProviderId: Record<string, ProviderId | undefined> = {
     'DUGA': 'duga',
     'duga': 'duga',
     'Sokmil': 'sokmil',
     'sokmil': 'sokmil',
+    'DTI': 'dti',
+    'dti': 'dti',
     'MGS': 'mgs',
     'mgs': 'mgs',
     'b10f': 'b10f',
@@ -114,6 +129,9 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     sortBy,
     tags: includeTags.length > 0 ? includeTags : undefined,
     excludeTags: excludeTags.length > 0 ? excludeTags : undefined,
+    hasVideo: hasVideo || undefined,
+    hasImage: hasImage || undefined,
+    providers: includeAsps.length > 0 ? includeAsps : undefined,
     limit: 1000,
   });
 
@@ -126,7 +144,6 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const personSchema = generatePersonSchema(actress.name, '', actress.heroImage || actress.thumbnail, basePath);
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: tNav('home'), url: `/${locale}` },
-    { name: tNav('actresses'), url: `/${locale}/actresses` },
     { name: actress.name, url: basePath },
   ]);
   const worksSchema = works.length > 0 ? generateItemListSchema(
@@ -146,7 +163,6 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           <Breadcrumb
             items={[
               { label: tNav('home'), href: `/${locale}` },
-              { label: tNav('actresses'), href: `/${locale}` },
               { label: actress.name },
             ]}
             className="mb-6"
@@ -200,129 +216,38 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
             <ProductSortDropdown sortBy={sortBy} basePath={basePath} />
           </div>
 
-          {/* Tag Filters */}
-          <form method="get" action={basePath}>
-            <input type="hidden" name="sort" value={sortBy} />
-            <details className="mb-8 bg-gray-800 rounded-lg border border-gray-700" open={includeTags.length > 0 || excludeTags.length > 0}>
-              <summary className="px-4 py-3 cursor-pointer font-semibold text-white hover:bg-gray-750">
-                {tf('genre')}
-              </summary>
-              <div className="px-4 pb-4 space-y-6">
-                {/* Genre Tags */}
-                {genreTags.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-white mb-3">{tf('genre')}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs text-gray-300 mb-2">{tf('include')}</p>
-                        <div className="space-y-1 max-h-48 overflow-y-auto border border-gray-600 rounded p-2 bg-gray-750">
-                          {genreTags.slice(0, 20).map((tag) => (
-                            <label key={`include-genre-${tag.id}`} className="flex items-center gap-2 hover:bg-gray-700 p-1 rounded cursor-pointer">
-                              <input
-                                type="checkbox"
-                                name="include"
-                                value={tag.id}
-                                defaultChecked={includeTags.includes(String(tag.id))}
-                                className="rounded border-gray-500 text-rose-600 focus:ring-rose-500"
-                              />
-                              <span className="text-sm text-gray-200">{tag.name} ({tag.count})</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-300 mb-2">{tf('exclude')}</p>
-                        <div className="space-y-1 max-h-48 overflow-y-auto border border-gray-600 rounded p-2 bg-gray-750">
-                          {genreTags.slice(0, 20).map((tag) => (
-                            <label key={`exclude-genre-${tag.id}`} className="flex items-center gap-2 hover:bg-gray-700 p-1 rounded cursor-pointer">
-                              <input
-                                type="checkbox"
-                                name="exclude"
-                                value={tag.id}
-                                defaultChecked={excludeTags.includes(String(tag.id))}
-                                className="rounded border-gray-500 text-red-600 focus:ring-red-500"
-                              />
-                              <span className="text-sm text-gray-200">{tag.name} ({tag.count})</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Site Tags */}
-                {siteTags.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-white mb-3">{tf('site')}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs text-gray-300 mb-2">{tf('include')}</p>
-                        <div className="space-y-1 border border-gray-600 rounded p-2 bg-gray-750">
-                          {siteTags.map((tag) => (
-                            <label key={`include-site-${tag.id}`} className="flex items-center gap-2 hover:bg-gray-700 p-1 rounded cursor-pointer">
-                              <input
-                                type="checkbox"
-                                name="include"
-                                value={tag.id}
-                                defaultChecked={includeTags.includes(String(tag.id))}
-                                className="rounded border-gray-500 text-rose-600 focus:ring-rose-500"
-                              />
-                              <span className="text-sm text-gray-200">{tag.name} ({tag.count})</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-300 mb-2">{tf('exclude')}</p>
-                        <div className="space-y-1 border border-gray-600 rounded p-2 bg-gray-750">
-                          {siteTags.map((tag) => (
-                            <label key={`exclude-site-${tag.id}`} className="flex items-center gap-2 hover:bg-gray-700 p-1 rounded cursor-pointer">
-                              <input
-                                type="checkbox"
-                                name="exclude"
-                                value={tag.id}
-                                defaultChecked={excludeTags.includes(String(tag.id))}
-                                className="rounded border-gray-500 text-red-600 focus:ring-red-500"
-                              />
-                              <span className="text-sm text-gray-200">{tag.name} ({tag.count})</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Filter Buttons */}
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-rose-600 text-white rounded-md hover:bg-rose-700 transition-colors"
-                  >
-                    {tc('apply')}
-                  </button>
-                  <Link
-                    href={basePath}
-                    className="px-4 py-2 border border-gray-600 text-gray-200 rounded-md hover:bg-gray-700 transition-colors"
-                  >
-                    {tc('clear')}
-                  </Link>
-                </div>
-              </div>
-            </details>
-          </form>
+          {/* Tag Filters - 即時適用 */}
+          <ActressProductFilter
+            genreTags={genreTags}
+            productCountByAsp={productCountByAsp}
+            translations={{
+              filterSettings: tc('filterSettings'),
+              sampleContent: 'サンプルコンテンツ',
+              sampleVideo: 'サンプル動画あり',
+              sampleImage: 'サンプル画像あり',
+              genre: tf('genre'),
+              include: tf('include'),
+              exclude: tf('exclude'),
+              site: tf('site'),
+              clear: tc('clear'),
+            }}
+          />
 
           {/* Product List */}
           {total > 0 ? (
             <>
+              {/* ページネーション（上部） */}
+              {total > PER_PAGE && (
+                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="top" />
+              )}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {works.map((work) => (
                   <ProductCard key={work.id} product={work} />
                 ))}
               </div>
+              {/* ページネーション（下部） */}
               {total > PER_PAGE && (
-                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} />
+                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="bottom" />
               )}
             </>
           ) : (

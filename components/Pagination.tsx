@@ -9,6 +9,7 @@ interface PaginationProps {
   perPage: number;
   basePath: string;
   queryParams?: Record<string, string>;
+  position?: 'top' | 'bottom';
 }
 
 export default function Pagination({
@@ -17,6 +18,7 @@ export default function Pagination({
   perPage,
   basePath,
   queryParams = {},
+  position = 'bottom',
 }: PaginationProps) {
   const searchParams = useSearchParams();
   const totalPages = Math.ceil(total / perPage);
@@ -68,7 +70,7 @@ export default function Pagination({
   };
 
   return (
-    <nav className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+    <nav className={`flex flex-col sm:flex-row items-center justify-center gap-3 ${position === 'top' ? 'mb-6' : 'mt-8'}`}>
       {/* モバイル: 前へ/次へ + ページ情報のみ */}
       <div className="flex items-center gap-2">
         {/* 最初 - デスクトップのみ */}

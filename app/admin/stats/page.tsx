@@ -44,6 +44,29 @@ interface TopPerformer {
   product_count: string;
 }
 
+interface CollectionRate {
+  asp_name: string;
+  collected: number;
+  estimated: number | null;
+  rate: string | null;
+}
+
+interface LatestRelease {
+  asp_name: string;
+  latest_release: string | null;
+}
+
+interface DailyCollection {
+  date: string;
+  asp_name: string;
+  count: string;
+}
+
+interface RawDataCount {
+  table_name: string;
+  count: string;
+}
+
 interface StatsData {
   aspSummary: ASPSummary[];
   videoStats: VideoStats[];
@@ -51,6 +74,10 @@ interface StatsData {
   totalStats: TotalStats;
   topPerformers: TopPerformer[];
   noImagePerformers: { id: string; name: string; product_count: string }[];
+  collectionRates: CollectionRate[];
+  latestReleases: LatestRelease[];
+  dailyCollection: DailyCollection[];
+  rawDataCounts: RawDataCount[];
   generatedAt: string;
 }
 
@@ -128,7 +155,7 @@ export default function AdminStatsPage() {
     );
   }
 
-  const { aspSummary, videoStats, performerStats, totalStats, topPerformers, noImagePerformers, generatedAt } = data;
+  const { aspSummary, videoStats, performerStats, totalStats, topPerformers, noImagePerformers, collectionRates, latestReleases, dailyCollection, rawDataCounts, generatedAt } = data;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
@@ -333,9 +360,99 @@ export default function AdminStatsPage() {
           </div>
         </div>
 
+        {/* Collection Rate Section */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Collection Rate (vs Estimated Total)</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-400 border-b border-gray-700">
+                  <th className="pb-3 pr-4">Provider</th>
+                  <th className="pb-3 pr-4 text-right">Collected</th>
+                  <th className="pb-3 pr-4 text-right">Estimated</th>
+                  <th className="pb-3 pr-4">Rate</th>
+                  <th className="pb-3">Latest Release</th>
+                </tr>
+              </thead>
+              <tbody>
+                {collectionRates.map((rate) => {
+                  const latest = latestReleases.find(l => l.asp_name === rate.asp_name);
+                  const rateNum = rate.rate ? parseFloat(rate.rate) : 0;
+                  return (
+                    <tr key={rate.asp_name} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                      <td className="py-3 pr-4 font-medium">{rate.asp_name}</td>
+                      <td className="py-3 pr-4 text-right font-mono">{formatNumber(rate.collected)}</td>
+                      <td className="py-3 pr-4 text-right font-mono text-gray-400">
+                        {rate.estimated ? formatNumber(rate.estimated) : '-'}
+                      </td>
+                      <td className="py-3 pr-4">
+                        {rate.rate && <ProgressBar value={rateNum} />}
+                      </td>
+                      <td className="py-3 text-sm text-gray-400">
+                        {latest?.latest_release
+                          ? new Date(latest.latest_release).toLocaleDateString('ja-JP')
+                          : '-'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Daily Collection Activity */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Recent Collection Activity (14 days)</h2>
+            <div className="max-h-80 overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-gray-800">
+                  <tr className="text-left text-gray-400 border-b border-gray-700">
+                    <th className="pb-3">Date</th>
+                    <th className="pb-3">Provider</th>
+                    <th className="pb-3 text-right">Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dailyCollection.slice(0, 30).map((d, i) => (
+                    <tr key={`${d.date}-${d.asp_name}-${i}`} className="border-b border-gray-700/50">
+                      <td className="py-2 text-gray-400">{d.date}</td>
+                      <td className="py-2">{d.asp_name}</td>
+                      <td className="py-2 text-right font-mono">{formatNumber(d.count)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Raw Data Counts */}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Raw Data Storage</h2>
+            <div className="space-y-3">
+              {rawDataCounts.map((r) => (
+                <div key={r.table_name} className="flex justify-between items-center">
+                  <span className="text-gray-400">{r.table_name}</span>
+                  <span className="font-mono">{formatNumber(r.count)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 pt-4 border-t border-gray-700">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Total Raw Records</span>
+                <span className="font-mono font-bold text-blue-400">
+                  {formatNumber(rawDataCounts.reduce((sum, r) => sum + parseInt(r.count), 0))}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Legend */}
         <div className="mt-8 text-xs text-gray-500">
           <p>Status Icons: ✅ 95%+ | 🟢 70-95% | 🟡 50-70% | 🔴 &lt;50% | ❌ 0%</p>
+          <p className="mt-1">Collection Rate estimates are approximate based on known site catalog sizes.</p>
         </div>
       </div>
     </div>

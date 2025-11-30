@@ -1,17 +1,42 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState, Suspense, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Filter, Video, ImageIcon } from 'lucide-react';
 import type { Product } from '@/types/product';
 
 function SearchResults() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const query = searchParams.get('q');
+  const hasVideoParam = searchParams.get('hasVideo') === 'true';
+  const hasImageParam = searchParams.get('hasImage') === 'true';
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasVideo, setHasVideo] = useState(hasVideoParam);
+  const [hasImage, setHasImage] = useState(hasImageParam);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // URLパラメータを更新する関数
+  const updateFilters = useCallback((newHasVideo: boolean, newHasImage: boolean) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newHasVideo) {
+      params.set('hasVideo', 'true');
+    } else {
+      params.delete('hasVideo');
+    }
+    if (newHasImage) {
+      params.set('hasImage', 'true');
+    } else {
+      params.delete('hasImage');
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }, [searchParams, router, pathname]);
 
   useEffect(() => {
     if (!query) {
@@ -23,7 +48,10 @@ function SearchResults() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(`/api/products/search?q=${encodeURIComponent(query)}&limit=50`);
+        let url = `/api/products/search?q=${encodeURIComponent(query)}&limit=50`;
+        if (hasVideo) url += '&hasVideo=true';
+        if (hasImage) url += '&hasImage=true';
+        const response = await fetch(url);
 
         if (!response.ok) {
           throw new Error('Failed to fetch products');
@@ -40,7 +68,7 @@ function SearchResults() {
     };
 
     fetchProducts();
-  }, [query]);
+  }, [query, hasVideo, hasImage]);
 
   if (!query) {
     return (
@@ -72,6 +100,8 @@ function SearchResults() {
     );
   }
 
+  const activeFilterCount = (hasVideo ? 1 : 0) + (hasImage ? 1 : 0);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
@@ -81,6 +111,79 @@ function SearchResults() {
         <p className="text-gray-300">
           {products.length > 0 ? `${products.length}件の商品が見つかりました` : '検索結果がありません'}
         </p>
+      </div>
+
+      {/* フィルターセクション */}
+      <div className="bg-gray-800 rounded-lg p-4 mb-6">
+        <button
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+          className="flex items-center gap-2 text-white hover:text-rose-500 transition-colors w-full justify-between"
+        >
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            <span className="font-medium">
+              フィルター
+              {activeFilterCount > 0 && (
+                <span className="ml-2 bg-rose-600 text-white text-xs px-2 py-0.5 rounded-full">
+                  {activeFilterCount}
+                </span>
+              )}
+            </span>
+          </div>
+          <svg
+            className={`w-5 h-5 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {isFilterOpen && (
+          <div className="mt-4 pt-4 border-t border-gray-700 space-y-3">
+            <label className="flex items-center gap-3 text-gray-300 cursor-pointer hover:bg-gray-700 p-2 rounded transition-colors">
+              <input
+                type="checkbox"
+                checked={hasVideo}
+                onChange={(e) => {
+                  setHasVideo(e.target.checked);
+                  updateFilters(e.target.checked, hasImage);
+                }}
+                className="w-5 h-5 text-rose-600 bg-gray-700 border-gray-600 rounded focus:ring-rose-500"
+              />
+              <Video className="w-5 h-5 text-rose-500" />
+              <span>サンプル動画あり</span>
+            </label>
+
+            <label className="flex items-center gap-3 text-gray-300 cursor-pointer hover:bg-gray-700 p-2 rounded transition-colors">
+              <input
+                type="checkbox"
+                checked={hasImage}
+                onChange={(e) => {
+                  setHasImage(e.target.checked);
+                  updateFilters(hasVideo, e.target.checked);
+                }}
+                className="w-5 h-5 text-rose-600 bg-gray-700 border-gray-600 rounded focus:ring-rose-500"
+              />
+              <ImageIcon className="w-5 h-5 text-blue-500" />
+              <span>サンプル画像あり</span>
+            </label>
+
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => {
+                  setHasVideo(false);
+                  setHasImage(false);
+                  updateFilters(false, false);
+                }}
+                className="text-sm text-gray-400 hover:text-white flex items-center gap-1 mt-2"
+              >
+                フィルターをクリア
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {products.length === 0 ? (
