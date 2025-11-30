@@ -224,7 +224,170 @@ async function searchSeesaaWiki(productCode: string): Promise<string[]> {
 }
 
 /**
+ * nakiny (素人系AV女優データベース) で品番検索
+ */
+async function searchNakiny(productCode: string): Promise<string[]> {
+  try {
+    const searchUrl = `https://nakiny.com/?s=${encodeURIComponent(productCode)}`;
+
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+      },
+    });
+
+    if (!response.ok) return [];
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    const performers: string[] = [];
+    const productCodeNorm = productCode.toUpperCase().replace(/-/g, '');
+
+    // 検索結果から作品を探す
+    $('article, .post, .entry').each((_, article) => {
+      const articleText = $(article).text().toUpperCase().replace(/-/g, '');
+      if (articleText.includes(productCodeNorm)) {
+        // 出演者リンクを探す
+        $(article).find('a[href*="/tag/"], a[href*="/actress/"], a[href*="/category/"]').each((_, el) => {
+          const name = $(el).text().trim();
+          if (name &&
+              name.length > 1 &&
+              name.length < 30 &&
+              /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(name) &&
+              !name.includes('素人') &&
+              !name.includes('ナンパ') &&
+              !name.includes('企画')) {
+            performers.push(name);
+          }
+        });
+      }
+    });
+
+    return [...new Set(performers)];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * AVソムリエ で品番検索
+ */
+async function searchAVSommelier(productCode: string): Promise<string[]> {
+  try {
+    const searchUrl = `https://avsommelier.net/?s=${encodeURIComponent(productCode)}`;
+
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+      },
+    });
+
+    if (!response.ok) return [];
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    const performers: string[] = [];
+    const productCodeNorm = productCode.toUpperCase().replace(/-/g, '');
+
+    // 検索結果の各記事をチェック
+    $('article, .entry, .post').each((_, article) => {
+      const title = $(article).find('h2, .entry-title').text().toUpperCase().replace(/-/g, '');
+      if (title.includes(productCodeNorm)) {
+        // 出演者情報を探す
+        $(article).find('a[rel="tag"], .tag-links a, a[href*="/tag/"]').each((_, el) => {
+          const name = $(el).text().trim();
+          if (name &&
+              name.length > 1 &&
+              name.length < 30 &&
+              /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(name) &&
+              !name.includes('AV') &&
+              !name.includes('動画')) {
+            performers.push(name);
+          }
+        });
+      }
+    });
+
+    // メタデータからも抽出
+    $('th:contains("出演"), th:contains("女優"), td:contains("出演者")').next('td').each((_, el) => {
+      const text = $(el).text().trim();
+      const names = text.split(/[,、/／]/).map(n => n.trim()).filter(n =>
+        n.length > 1 &&
+        n.length < 30 &&
+        /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(n)
+      );
+      performers.push(...names);
+    });
+
+    return [...new Set(performers)];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 素人系AV女優まとめ で品番検索
+ */
+async function searchShiroutoMatome(productCode: string): Promise<string[]> {
+  try {
+    // Google Custom Search的なアプローチで複数サイトを検索
+    const searchUrl = `https://shiroutomatome.com/?s=${encodeURIComponent(productCode)}`;
+
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+      },
+    });
+
+    if (!response.ok) return [];
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    const performers: string[] = [];
+    const productCodeNorm = productCode.toUpperCase().replace(/-/g, '');
+
+    // 記事タイトルから出演者名を抽出（「【出演者名】品番」形式が多い）
+    $('h2 a, .entry-title a, article a').each((_, el) => {
+      const title = $(el).text();
+      const titleNorm = title.toUpperCase().replace(/-/g, '');
+
+      if (titleNorm.includes(productCodeNorm)) {
+        // 【】内の名前を抽出
+        const bracketMatch = title.match(/【([^】]+)】/);
+        if (bracketMatch) {
+          const names = bracketMatch[1].split(/[,、]/).map(n => n.trim());
+          for (const name of names) {
+            if (name.length > 1 &&
+                name.length < 30 &&
+                /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(name)) {
+              performers.push(name);
+            }
+          }
+        }
+
+        // タイトル先頭の名前パターン（「名前 品番」形式）
+        const nameMatch = title.match(/^([\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]{2,10})\s/);
+        if (nameMatch) {
+          performers.push(nameMatch[1]);
+        }
+      }
+    });
+
+    return [...new Set(performers)];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * 複数ソースから出演者情報を取得
+ * 検索順序: みんなのAV → AV-Wiki → Seesaa Wiki → nakiny → AVソムリエ → 素人系まとめ
  */
 async function fetchPerformersFromWiki(productCode: string): Promise<{ performers: string[]; source: string } | null> {
   const variants = [productCode];
@@ -239,10 +402,10 @@ async function fetchPerformersFromWiki(productCode: string): Promise<{ performer
   }
 
   for (const variant of variants) {
-    // みんなのAV を最優先
+    // みんなのAV を最優先（信頼性高）
     let performers = await searchMinnaNoAV(variant);
     if (performers.length > 0) {
-      return { performers, source: 'msin' };
+      return { performers, source: 'minnano-av' };
     }
 
     await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
@@ -259,6 +422,30 @@ async function fetchPerformersFromWiki(productCode: string): Promise<{ performer
     performers = await searchSeesaaWiki(variant);
     if (performers.length > 0) {
       return { performers, source: 'seesaawiki' };
+    }
+
+    await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+
+    // nakiny（素人系に強い）
+    performers = await searchNakiny(variant);
+    if (performers.length > 0) {
+      return { performers, source: 'nakiny' };
+    }
+
+    await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+
+    // AVソムリエ
+    performers = await searchAVSommelier(variant);
+    if (performers.length > 0) {
+      return { performers, source: 'av-sommelier' };
+    }
+
+    await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+
+    // 素人系AV女優まとめ
+    performers = await searchShiroutoMatome(variant);
+    if (performers.length > 0) {
+      return { performers, source: 'shirouto-matome' };
     }
 
     await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
