@@ -641,21 +641,28 @@ export async function translateProduct(
 // Indexing API - SEO即時インデックス
 // =============================================================================
 
+export interface IndexingResult {
+  success: boolean;
+  error?: string;
+  errorCode?: number;
+  requiresOwnershipVerification?: boolean;
+}
+
 /**
  * URLをGoogleにインデックス登録リクエスト
  * サービスアカウント認証を使用
  * @param url インデックス登録するURL
  * @param type 'URL_UPDATED' | 'URL_DELETED'
- * @returns 成功したかどうか
+ * @returns インデックス登録結果
  */
 export async function requestIndexing(
   url: string,
   type: 'URL_UPDATED' | 'URL_DELETED' = 'URL_UPDATED'
-): Promise<boolean> {
+): Promise<IndexingResult> {
   const accessToken = await getAccessToken();
   if (!accessToken) {
     console.warn('[Indexing API] サービスアカウント認証が必要です');
-    return false;
+    return { success: false, error: 'Service account not configured' };
   }
 
   try {
@@ -677,15 +684,36 @@ export async function requestIndexing(
     if (!response.ok) {
       const error = await response.json();
       console.error('[Indexing API] Error:', error);
-      return false;
+
+      const errorMessage = error?.error?.message || 'Unknown error';
+      const errorCode = error?.error?.code || response.status;
+
+      // URL所有権確認エラーの検出
+      const requiresOwnershipVerification =
+        errorCode === 403 &&
+        errorMessage.includes('Failed to verify the URL ownership');
+
+      if (requiresOwnershipVerification) {
+        console.warn('[Indexing API] URL所有権確認が必要です。Google Search Consoleでサービスアカウントを所有者として追加してください。');
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+        errorCode,
+        requiresOwnershipVerification,
+      };
     }
 
     const data = await response.json();
     console.log(`[Indexing API] Success: ${url}`, data);
-    return true;
+    return { success: true };
   } catch (error) {
     console.error('[Indexing API] Request failed:', error);
-    return false;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Request failed',
+    };
   }
 }
 

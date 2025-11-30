@@ -30,18 +30,23 @@ interface Stats {
   skipped: number;
 }
 
-const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://adult-v.pages.dev';
+const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://adult-v.com';
 
 /**
  * URLのインデックス登録リクエスト
  * 新規商品や更新商品のURLをGoogleにインデックス登録リクエスト
  */
+interface IndexingStats extends Stats {
+  ownershipVerificationRequired?: boolean;
+}
+
 async function requestIndexingForProducts(
   db: ReturnType<typeof getDb>,
   limit: number
-): Promise<{ stats: Stats; results: any[] }> {
-  const stats: Stats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
+): Promise<{ stats: IndexingStats; results: any[]; warning?: string }> {
+  const stats: IndexingStats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
   const results: any[] = [];
+  let ownershipVerificationRequired = false;
 
   // インデックス登録未リクエストの商品を取得
   const productsResult = await db.execute(sql`
@@ -66,9 +71,9 @@ async function requestIndexingForProducts(
     const productUrl = `${SITE_BASE_URL}/products/${product.normalized_product_id}`;
 
     try {
-      const success = await requestIndexing(productUrl, 'URL_UPDATED');
+      const result = await requestIndexing(productUrl, 'URL_UPDATED');
 
-      if (success) {
+      if (result.success) {
         // インデックス状態を更新
         await db.execute(sql`
           INSERT INTO seo_indexing_status (
@@ -95,8 +100,9 @@ async function requestIndexingForProducts(
           url: productUrl,
           status: 'requested',
         });
-      } else {
-        // サービスアカウント未設定の場合はpendingのまま
+      } else if (result.requiresOwnershipVerification) {
+        // URL所有権確認が必要
+        ownershipVerificationRequired = true;
         await db.execute(sql`
           INSERT INTO seo_indexing_status (
             url,
@@ -107,16 +113,38 @@ async function requestIndexingForProducts(
           VALUES (
             ${productUrl},
             ${product.id},
-            'pending',
-            'Service account not configured'
+            'ownership_required',
+            ${result.error || 'URL ownership verification required'}
           )
           ON CONFLICT (url)
           DO UPDATE SET
-            status = 'pending',
-            error_message = 'Service account not configured'
+            status = 'ownership_required',
+            error_message = EXCLUDED.error_message
         `);
 
         stats.skipped++;
+      } else {
+        // その他のエラー
+        await db.execute(sql`
+          INSERT INTO seo_indexing_status (
+            url,
+            product_id,
+            status,
+            error_message
+          )
+          VALUES (
+            ${productUrl},
+            ${product.id},
+            'error',
+            ${result.error || 'Unknown error'}
+          )
+          ON CONFLICT (url)
+          DO UPDATE SET
+            status = 'error',
+            error_message = EXCLUDED.error_message
+        `);
+
+        stats.errors++;
       }
 
       // レート制限
@@ -147,7 +175,13 @@ async function requestIndexingForProducts(
     }
   }
 
-  return { stats, results };
+  stats.ownershipVerificationRequired = ownershipVerificationRequired;
+
+  const warning = ownershipVerificationRequired
+    ? 'Search Console ownership verification required. Add the service account email as an owner in Google Search Console for this domain.'
+    : undefined;
+
+  return { stats, results, warning };
 }
 
 /**
@@ -346,7 +380,7 @@ export async function GET(request: NextRequest) {
     const apiConfig = checkGoogleApiConfig();
     console.log(`[seo-enhance] API Config:`, apiConfig);
 
-    let result: { stats: Stats; results: any };
+    let result: { stats: Stats; results: any; warning?: string };
 
     switch (type) {
       case 'indexing':
@@ -381,6 +415,7 @@ export async function GET(request: NextRequest) {
         analytics: apiConfig.analytics,
       },
       stats: result.stats,
+      ...(result.warning && { warning: result.warning }),
       results: Array.isArray(result.results)
         ? result.results.slice(0, 10)
         : result.results,
