@@ -12,6 +12,11 @@ import { verifyCronRequest, unauthorizedResponse } from '@/lib/cron-auth';
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
+import {
+  customSearch,
+  extractPerformerNames,
+  checkGoogleApiConfig,
+} from '@/lib/google-apis';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分タイムアウト
@@ -330,6 +335,108 @@ async function searchAVSommelier(productCode: string): Promise<string[]> {
 }
 
 /**
+ * Google Custom Search API で品番検索（Cloudflare ブロック回避）
+ * Wikipedia、みんなのAV等の信頼できるサイトを検索
+ */
+async function searchGoogleCustomSearch(productCode: string): Promise<string[]> {
+  const apiConfig = checkGoogleApiConfig();
+  if (!apiConfig.customSearch) {
+    console.log('[normalize-performers] Google Custom Search API not configured');
+    return [];
+  }
+
+  try {
+    // 品番 + "出演" で検索して出演者情報を含むページを探す
+    const query = `${productCode} AV 出演者`;
+    const result = await customSearch(query, {
+      num: 5,
+      language: 'lang_ja',
+    });
+
+    if (!result || !result.items || result.items.length === 0) {
+      return [];
+    }
+
+    const performers: string[] = [];
+
+    for (const item of result.items) {
+      const text = `${item.title} ${item.snippet}`;
+
+      // 検索結果のスニペットから人名らしい文字列を抽出
+      // パターン1: 「出演：名前」「出演者：名前」形式
+      const castMatch = text.match(/出演[者]?[：:]\s*([^\s,、]+(?:[,、\s]+[^\s,、]+)*)/);
+      if (castMatch) {
+        const names = castMatch[1].split(/[,、\s]+/).filter(n =>
+          n.length >= 2 &&
+          n.length <= 20 &&
+          /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+$/.test(n) &&
+          !n.includes('女優') &&
+          !n.includes('出演')
+        );
+        performers.push(...names);
+      }
+
+      // パターン2: Wikipedia形式「名前（よみがな）」
+      const wikiMatch = text.match(/([\u4E00-\u9FAF]{2,8})\s*[（(][ぁ-ゖー]+[）)]/g);
+      if (wikiMatch) {
+        for (const match of wikiMatch) {
+          const name = match.match(/([\u4E00-\u9FAF]{2,8})/);
+          if (name) performers.push(name[1]);
+        }
+      }
+
+      // パターン3: 【名前】形式（まとめサイトによくある）
+      const bracketMatch = text.match(/【([^\】]{2,15})】/g);
+      if (bracketMatch) {
+        for (const match of bracketMatch) {
+          const name = match.replace(/[【】]/g, '');
+          if (
+            name.length >= 2 &&
+            name.length <= 15 &&
+            /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+$/.test(name) &&
+            !name.includes('無料') &&
+            !name.includes('動画') &&
+            !name.includes('AV')
+          ) {
+            performers.push(name);
+          }
+        }
+      }
+    }
+
+    return [...new Set(performers)];
+  } catch (error) {
+    console.error('[normalize-performers] Google Custom Search error:', error);
+    return [];
+  }
+}
+
+/**
+ * Natural Language API でタイトルから出演者名を抽出
+ */
+async function extractPerformersFromTitle(title: string): Promise<string[]> {
+  const apiConfig = checkGoogleApiConfig();
+  if (!apiConfig.naturalLanguage) {
+    return [];
+  }
+
+  try {
+    // タイトルから人名エンティティを抽出
+    const names = await extractPerformerNames(title);
+
+    // 日本語名のみをフィルタ
+    return names.filter(name =>
+      name.length >= 2 &&
+      name.length <= 20 &&
+      /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\s]+$/.test(name)
+    );
+  } catch (error) {
+    console.error('[normalize-performers] NLP extraction error:', error);
+    return [];
+  }
+}
+
+/**
  * 素人系AV女優まとめ で品番検索
  */
 async function searchShiroutoMatome(productCode: string): Promise<string[]> {
@@ -471,12 +578,16 @@ async function saveToLookupTable(
 
 /**
  * 複数ソースから出演者情報を取得
- * 検索順序: ルックアップDB → みんなのAV → AV-Wiki → Seesaa Wiki → nakiny → AVソムリエ → 素人系まとめ
+ * 検索順序:
+ *   1. ルックアップDB（超高速）
+ *   2. Google Custom Search API（Cloudflareブロック回避）
+ *   3. みんなのAV → AV-Wiki → Seesaa Wiki → nakiny → AVソムリエ → 素人系まとめ
  * Web検索で見つかった場合は自動的にルックアップDBに保存（次回以降の高速化）
  */
 async function fetchPerformersFromWiki(
   productCode: string,
-  db?: ReturnType<typeof getDb>
+  db?: ReturnType<typeof getDb>,
+  title?: string
 ): Promise<{ performers: string[]; source: string } | null> {
   const variants = [productCode];
 
@@ -489,7 +600,7 @@ async function fetchPerformersFromWiki(
     }
   }
 
-  // まずルックアップテーブルを検索（超高速）
+  // 1. まずルックアップテーブルを検索（超高速）
   if (db) {
     for (const variant of variants) {
       const lookupResult = await fetchFromLookupTable(db, variant);
@@ -499,7 +610,28 @@ async function fetchPerformersFromWiki(
     }
   }
 
-  // ルックアップになければ従来のWeb検索
+  // 2. Google Custom Search API で検索（Cloudflareブロック回避）
+  for (const variant of variants) {
+    const googlePerformers = await searchGoogleCustomSearch(variant);
+    if (googlePerformers.length > 0) {
+      if (db) {
+        await saveToLookupTable(db, variant, googlePerformers, 'google-search');
+      }
+      return { performers: googlePerformers, source: 'google-search' };
+    }
+  }
+
+  // 3. タイトルからNLPで人名抽出を試行
+  if (title) {
+    const nlpPerformers = await extractPerformersFromTitle(title);
+    if (nlpPerformers.length > 0) {
+      console.log(`[normalize-performers] NLP extracted: ${nlpPerformers.join(', ')}`);
+      // NLP抽出は精度が不確定なのでルックアップには保存しない
+      return { performers: nlpPerformers, source: 'nlp-title' };
+    }
+  }
+
+  // 4. 従来のWeb検索（フォールバック）
   for (const variant of variants) {
     // みんなのAV を最優先（信頼性高）
     let performers = await searchMinnaNoAV(variant);
@@ -681,10 +813,10 @@ export async function GET(request: NextRequest) {
 
       console.log(`[normalize-performers] Processing: ${product.normalized_product_id} variants=${variants.join(',')}`);
 
-      // ルックアップDB + Wiki検索
+      // ルックアップDB + Google API + Wiki検索
       let result: { performers: string[]; source: string } | null = null;
       for (const variant of variants) {
-        result = await fetchPerformersFromWiki(variant, db);
+        result = await fetchPerformersFromWiki(variant, db, product.title);
         if (result) break;
       }
 
