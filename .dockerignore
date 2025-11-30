@@ -60,6 +60,13 @@ logs
 .DS_Store
 Thumbs.db
 
+# Windows reserved names
+nul
+NUL
+CON
+PRN
+AUX
+
 # Misc
 .dockerignore
 Dockerfile

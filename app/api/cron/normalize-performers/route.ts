@@ -318,7 +318,7 @@ export async function GET(request: NextRequest) {
   try {
     // クエリパラメータ
     const url = new URL(request.url);
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 500);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const aspFilter = url.searchParams.get('asp') || null;
 
