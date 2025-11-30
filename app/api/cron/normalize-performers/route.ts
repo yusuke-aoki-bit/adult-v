@@ -430,8 +430,49 @@ async function fetchFromLookupTable(
 }
 
 /**
+ * 検索結果をルックアップテーブルに保存（次回以降の高速化）
+ */
+async function saveToLookupTable(
+  db: ReturnType<typeof getDb>,
+  productCode: string,
+  performers: string[],
+  source: string
+): Promise<void> {
+  try {
+    const normalized = productCode.toUpperCase().replace(/[-_\s]/g, '');
+
+    await db.execute(sql`
+      INSERT INTO product_performer_lookup (
+        product_code,
+        product_code_normalized,
+        performer_names,
+        source,
+        crawled_at
+      )
+      VALUES (
+        ${productCode},
+        ${normalized},
+        ${performers},
+        ${source},
+        NOW()
+      )
+      ON CONFLICT (product_code_normalized, source)
+      DO UPDATE SET
+        performer_names = EXCLUDED.performer_names,
+        crawled_at = NOW()
+    `);
+
+    console.log(`[normalize-performers] Saved to lookup: ${productCode} (${source})`);
+  } catch (error) {
+    // ルックアップ保存エラーは無視（メイン処理に影響させない）
+    console.error(`[normalize-performers] Lookup save error for ${productCode}:`, error);
+  }
+}
+
+/**
  * 複数ソースから出演者情報を取得
  * 検索順序: ルックアップDB → みんなのAV → AV-Wiki → Seesaa Wiki → nakiny → AVソムリエ → 素人系まとめ
+ * Web検索で見つかった場合は自動的にルックアップDBに保存（次回以降の高速化）
  */
 async function fetchPerformersFromWiki(
   productCode: string,
@@ -463,6 +504,10 @@ async function fetchPerformersFromWiki(
     // みんなのAV を最優先（信頼性高）
     let performers = await searchMinnaNoAV(variant);
     if (performers.length > 0) {
+      // ルックアップDBに保存（次回以降の高速化）
+      if (db) {
+        await saveToLookupTable(db, variant, performers, 'minnano-av');
+      }
       return { performers, source: 'minnano-av' };
     }
 
@@ -471,6 +516,9 @@ async function fetchPerformersFromWiki(
     // AV-Wiki
     performers = await searchAVWiki(variant);
     if (performers.length > 0) {
+      if (db) {
+        await saveToLookupTable(db, variant, performers, 'av-wiki');
+      }
       return { performers, source: 'av-wiki' };
     }
 
@@ -479,6 +527,9 @@ async function fetchPerformersFromWiki(
     // Seesaa Wiki
     performers = await searchSeesaaWiki(variant);
     if (performers.length > 0) {
+      if (db) {
+        await saveToLookupTable(db, variant, performers, 'seesaawiki');
+      }
       return { performers, source: 'seesaawiki' };
     }
 
@@ -487,6 +538,9 @@ async function fetchPerformersFromWiki(
     // nakiny（素人系に強い）
     performers = await searchNakiny(variant);
     if (performers.length > 0) {
+      if (db) {
+        await saveToLookupTable(db, variant, performers, 'nakiny');
+      }
       return { performers, source: 'nakiny' };
     }
 
@@ -495,6 +549,9 @@ async function fetchPerformersFromWiki(
     // AVソムリエ
     performers = await searchAVSommelier(variant);
     if (performers.length > 0) {
+      if (db) {
+        await saveToLookupTable(db, variant, performers, 'av-sommelier');
+      }
       return { performers, source: 'av-sommelier' };
     }
 
@@ -503,6 +560,9 @@ async function fetchPerformersFromWiki(
     // 素人系AV女優まとめ
     performers = await searchShiroutoMatome(variant);
     if (performers.length > 0) {
+      if (db) {
+        await saveToLookupTable(db, variant, performers, 'shirouto-matome');
+      }
       return { performers, source: 'shirouto-matome' };
     }
 
