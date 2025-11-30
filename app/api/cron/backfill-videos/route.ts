@@ -146,23 +146,23 @@ export async function GET(request: NextRequest) {
     let query;
     if (aspFilter) {
       query = sql`
-        SELECT DISTINCT p.id, p.normalized_product_id, ps.asp_name, ps.original_product_id
+        SELECT p.id, p.normalized_product_id, ps.asp_name, ps.original_product_id
         FROM products p
         JOIN product_sources ps ON p.id = ps.product_id
         LEFT JOIN product_videos pv ON p.id = pv.product_id
         WHERE pv.id IS NULL
           AND ps.asp_name = ${aspFilter}
-        ORDER BY p.created_at DESC
+        ORDER BY p.id DESC
         LIMIT ${limit}
       `;
     } else {
       query = sql`
-        SELECT DISTINCT p.id, p.normalized_product_id, ps.asp_name, ps.original_product_id
+        SELECT p.id, p.normalized_product_id, ps.asp_name, ps.original_product_id
         FROM products p
         JOIN product_sources ps ON p.id = ps.product_id
         LEFT JOIN product_videos pv ON p.id = pv.product_id
         WHERE pv.id IS NULL
-        ORDER BY p.created_at DESC
+        ORDER BY p.id DESC
         LIMIT ${limit}
       `;
     }

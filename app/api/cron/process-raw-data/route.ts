@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         FROM raw_html_data
         WHERE processed_at IS NULL
           AND source = ${source}
-        ORDER BY created_at DESC
+        ORDER BY crawled_at DESC
         LIMIT ${limit}
       `;
     } else {
@@ -70,13 +70,13 @@ export async function GET(request: NextRequest) {
         SELECT id, source, product_id, html_content, url
         FROM raw_html_data
         WHERE processed_at IS NULL
-        ORDER BY created_at DESC
+        ORDER BY crawled_at DESC
         LIMIT ${limit}
       `;
     }
 
     const rawDataResult = await db.execute(query);
-    const rawDataRows = rawDataResult.rows as RawHtmlRow[];
+    const rawDataRows = rawDataResult.rows as unknown as RawHtmlRow[];
 
     for (const row of rawDataRows) {
       try {
