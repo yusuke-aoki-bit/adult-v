@@ -386,10 +386,57 @@ async function searchShiroutoMatome(productCode: string): Promise<string[]> {
 }
 
 /**
- * 複数ソースから出演者情報を取得
- * 検索順序: みんなのAV → AV-Wiki → Seesaa Wiki → nakiny → AVソムリエ → 素人系まとめ
+ * ルックアップテーブルから出演者情報を取得（超高速）
  */
-async function fetchPerformersFromWiki(productCode: string): Promise<{ performers: string[]; source: string } | null> {
+async function fetchFromLookupTable(
+  db: ReturnType<typeof getDb>,
+  productCode: string
+): Promise<{ performers: string[]; source: string } | null> {
+  try {
+    const normalized = productCode.toUpperCase().replace(/[-_\s]/g, '');
+
+    const result = await db.execute(sql`
+      SELECT performer_names, source
+      FROM product_performer_lookup
+      WHERE product_code_normalized = ${normalized}
+      ORDER BY
+        CASE source
+          WHEN 'minnano-av' THEN 1
+          WHEN 'av-wiki' THEN 2
+          WHEN 'seesaawiki' THEN 3
+          WHEN 'nakiny' THEN 4
+          WHEN 'av-sommelier' THEN 5
+          WHEN 'shirouto-matome' THEN 6
+          ELSE 7
+        END
+      LIMIT 1
+    `);
+
+    if (result.rows.length > 0) {
+      const row = result.rows[0] as { performer_names: string[]; source: string };
+      if (row.performer_names && row.performer_names.length > 0) {
+        return {
+          performers: row.performer_names,
+          source: `lookup:${row.source}`,
+        };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`[normalize-performers] Lookup error for ${productCode}:`, error);
+    return null;
+  }
+}
+
+/**
+ * 複数ソースから出演者情報を取得
+ * 検索順序: ルックアップDB → みんなのAV → AV-Wiki → Seesaa Wiki → nakiny → AVソムリエ → 素人系まとめ
+ */
+async function fetchPerformersFromWiki(
+  productCode: string,
+  db?: ReturnType<typeof getDb>
+): Promise<{ performers: string[]; source: string } | null> {
   const variants = [productCode];
 
   if (productCode.includes('-')) {
@@ -401,6 +448,17 @@ async function fetchPerformersFromWiki(productCode: string): Promise<{ performer
     }
   }
 
+  // まずルックアップテーブルを検索（超高速）
+  if (db) {
+    for (const variant of variants) {
+      const lookupResult = await fetchFromLookupTable(db, variant);
+      if (lookupResult) {
+        return lookupResult;
+      }
+    }
+  }
+
+  // ルックアップになければ従来のWeb検索
   for (const variant of variants) {
     // みんなのAV を最優先（信頼性高）
     let performers = await searchMinnaNoAV(variant);
@@ -563,10 +621,10 @@ export async function GET(request: NextRequest) {
 
       console.log(`[normalize-performers] Processing: ${product.normalized_product_id} variants=${variants.join(',')}`);
 
-      // Wiki検索
+      // ルックアップDB + Wiki検索
       let result: { performers: string[]; source: string } | null = null;
       for (const variant of variants) {
-        result = await fetchPerformersFromWiki(variant);
+        result = await fetchPerformersFromWiki(variant, db);
         if (result) break;
       }
 
