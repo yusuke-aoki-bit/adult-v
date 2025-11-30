@@ -73,6 +73,10 @@ async function enhanceWithVisionAPI(
 
       if (faces.length > 0 || labels.length > 0) {
         // メタデータを保存
+        // PostgreSQL配列形式に変換: ARRAY['label1', 'label2']
+        const labelArray = labels.map(l => l.description);
+        const labelsLiteral = `{${labelArray.map(l => `"${l.replace(/"/g, '\\"')}"`).join(',')}}`;
+
         await db.execute(sql`
           INSERT INTO product_image_metadata (
             product_id,
@@ -83,7 +87,7 @@ async function enhanceWithVisionAPI(
           VALUES (
             ${product.id},
             ${faces.length},
-            ${labels.map(l => l.description)},
+            ${labelsLiteral}::text[],
             NOW()
           )
           ON CONFLICT (product_id)
