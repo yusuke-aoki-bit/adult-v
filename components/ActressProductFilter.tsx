@@ -30,6 +30,9 @@ interface ActressProductFilterProps {
   };
 }
 
+// Available ASPs for exclude filter (same list as top page)
+const allAvailableAsps = ['DUGA', 'DTI', 'Sokmil', 'MGS', 'b10f', 'FC2', 'Japanska'];
+
 // ASP名をProviderId型に変換するマッピング
 const aspToProviderId: Record<string, ProviderId | undefined> = {
   'DUGA': 'duga',
@@ -63,6 +66,7 @@ export default function ActressProductFilter({
   const includeTags = searchParams.get('include')?.split(',').filter(Boolean) || [];
   const excludeTags = searchParams.get('exclude')?.split(',').filter(Boolean) || [];
   const includeAsps = searchParams.get('asp')?.split(',').filter(Boolean) || [];
+  const excludeAsps = searchParams.get('excludeAsp')?.split(',').filter(Boolean) || [];
 
   // フィルター更新関数
   const updateFilter = (key: string, value: string | null, isArray = false, currentArray: string[] = []) => {
@@ -116,6 +120,10 @@ export default function ActressProductFilter({
     updateFilter('asp', aspName, true, includeAsps);
   };
 
+  const handleExcludeAspChange = (aspName: string) => {
+    updateFilter('excludeAsp', aspName, true, excludeAsps);
+  };
+
   // クリアボタン
   const handleClear = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -124,107 +132,120 @@ export default function ActressProductFilter({
     params.delete('include');
     params.delete('exclude');
     params.delete('asp');
+    params.delete('excludeAsp');
     params.delete('page');
 
     const queryString = params.toString();
     router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
   };
 
-  const hasActiveFilters = hasVideo || hasImage || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0;
+  const hasActiveFilters = hasVideo || hasImage || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0;
+  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0);
 
   return (
     <details
-      className="mb-8 bg-gray-800 rounded-lg border border-gray-700"
+      className="mb-4 sm:mb-8 bg-gray-800 rounded-lg border border-gray-700"
       open={hasActiveFilters}
     >
-      <summary className="px-4 py-3 cursor-pointer font-semibold text-white hover:bg-gray-750 flex justify-between items-center">
-        <span>{t.filterSettings}</span>
+      <summary className="px-4 py-4 sm:py-3 cursor-pointer font-semibold text-white hover:bg-gray-750 active:bg-gray-700 flex items-center justify-between min-h-[56px] sm:min-h-0 select-none">
+        <div className="flex items-center gap-3 sm:gap-2">
+          <svg className="w-6 h-6 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          <span className="text-base sm:text-sm">{t.filterSettings}</span>
+        </div>
         {hasActiveFilters && (
-          <span className="text-xs bg-rose-600 text-white px-2 py-0.5 rounded-full">
-            {includeTags.length + excludeTags.length + includeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0)}
+          <span className="text-xs bg-rose-600 text-white px-2.5 py-1 sm:px-2 sm:py-0.5 rounded-full font-medium">
+            {activeFilterCount}
           </span>
         )}
       </summary>
-      <div className="px-4 pb-4 space-y-6">
+      <div className="px-4 pb-4 space-y-5 sm:space-y-6">
         {/* サンプル動画・画像フィルター */}
         <div>
-          <h3 className="text-sm font-semibold text-white mb-3">{t.sampleContent}</h3>
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 hover:bg-gray-700 p-2 rounded cursor-pointer">
+          <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.sampleContent}</h3>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
+              hasVideo ? 'bg-rose-600/30 border-rose-500/50 hover:bg-rose-600/40' : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+            }`}>
               <input
                 type="checkbox"
                 checked={hasVideo}
                 onChange={handleVideoChange}
-                className="rounded border-gray-500 text-rose-600 focus:ring-rose-500"
+                className="w-5 h-5 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
               />
-              <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 sm:w-5 sm:h-5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-sm text-gray-200">{t.sampleVideo}</span>
+              <span className="text-base sm:text-sm text-gray-200">{t.sampleVideo}</span>
             </label>
-            <label className="flex items-center gap-2 hover:bg-gray-700 p-2 rounded cursor-pointer">
+            <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
+              hasImage ? 'bg-blue-600/30 border-blue-500/50 hover:bg-blue-600/40' : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+            }`}>
               <input
                 type="checkbox"
                 checked={hasImage}
                 onChange={handleImageChange}
-                className="rounded border-gray-500 text-rose-600 focus:ring-rose-500"
+                className="w-5 h-5 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
               />
-              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 sm:w-5 sm:h-5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span className="text-sm text-gray-200">{t.sampleImage}</span>
+              <span className="text-base sm:text-sm text-gray-200">{t.sampleImage}</span>
             </label>
           </div>
         </div>
 
-        {/* Genre Tags */}
+        {/* ジャンルタグ */}
         {genreTags.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-white mb-3">{t.genre}</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.genre}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* 対象フィルタ */}
               <div>
-                <p className="text-xs text-gray-300 mb-2">{t.include}</p>
-                <div className="space-y-1 max-h-48 overflow-y-auto border border-gray-600 rounded p-2 bg-gray-750">
-                  {genreTags.slice(0, 20).map((tag) => (
+                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.include}</p>
+                <div className="space-y-1 max-h-[280px] sm:max-h-72 overflow-y-auto border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750 -webkit-overflow-scrolling-touch">
+                  {genreTags.map((tag) => (
                     <label
                       key={`include-genre-${tag.id}`}
-                      className={`flex items-center gap-2 p-1 rounded cursor-pointer transition-colors ${
+                      className={`flex items-center gap-3 p-3 sm:p-1.5 rounded-lg sm:rounded cursor-pointer min-h-[48px] sm:min-h-0 transition-colors ${
                         includeTags.includes(String(tag.id))
                           ? 'bg-rose-600/30 hover:bg-rose-600/40'
-                          : 'hover:bg-gray-700'
+                          : 'hover:bg-gray-700 active:bg-gray-600'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={includeTags.includes(String(tag.id))}
                         onChange={() => handleIncludeTagChange(String(tag.id))}
-                        className="rounded border-gray-500 text-rose-600 focus:ring-rose-500"
+                        className="w-5 h-5 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
                       />
-                      <span className="text-sm text-gray-200">{tag.name} ({tag.count})</span>
+                      <span className="text-base sm:text-sm text-gray-200">{tag.name} <span className="text-gray-400">({tag.count})</span></span>
                     </label>
                   ))}
                 </div>
               </div>
+              {/* 除外フィルタ */}
               <div>
-                <p className="text-xs text-gray-300 mb-2">{t.exclude}</p>
-                <div className="space-y-1 max-h-48 overflow-y-auto border border-gray-600 rounded p-2 bg-gray-750">
-                  {genreTags.slice(0, 20).map((tag) => (
+                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.exclude}</p>
+                <div className="space-y-1 max-h-[280px] sm:max-h-72 overflow-y-auto border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750 -webkit-overflow-scrolling-touch">
+                  {genreTags.map((tag) => (
                     <label
                       key={`exclude-genre-${tag.id}`}
-                      className={`flex items-center gap-2 p-1 rounded cursor-pointer transition-colors ${
+                      className={`flex items-center gap-3 p-3 sm:p-1.5 rounded-lg sm:rounded cursor-pointer min-h-[48px] sm:min-h-0 transition-colors ${
                         excludeTags.includes(String(tag.id))
                           ? 'bg-red-600/30 hover:bg-red-600/40'
-                          : 'hover:bg-gray-700'
+                          : 'hover:bg-gray-700 active:bg-gray-600'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={excludeTags.includes(String(tag.id))}
                         onChange={() => handleExcludeTagChange(String(tag.id))}
-                        className="rounded border-gray-500 text-red-600 focus:ring-red-500"
+                        className="w-5 h-5 rounded border-gray-500 text-red-600 focus:ring-red-500"
                       />
-                      <span className="text-sm text-gray-200">{tag.name} ({tag.count})</span>
+                      <span className="text-base sm:text-sm text-gray-200">{tag.name} <span className="text-gray-400">({tag.count})</span></span>
                     </label>
                   ))}
                 </div>
@@ -236,43 +257,81 @@ export default function ActressProductFilter({
         {/* 配信サイト（ASP）フィルター */}
         {productCountByAsp.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-white mb-3">{t.site}</h3>
-            <div className="flex flex-wrap gap-2 border border-gray-600 rounded p-3 bg-gray-750">
-              {productCountByAsp.map((asp) => {
-                const providerId = aspToProviderId[asp.aspName];
-                const meta = providerId ? providerMeta[providerId] : null;
-                const isSelected = includeAsps.includes(asp.aspName);
-                return (
-                  <label
-                    key={`asp-${asp.aspName}`}
-                    className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                      isSelected ? 'bg-gray-600 ring-2 ring-rose-500' : 'hover:bg-gray-700'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleAspChange(asp.aspName)}
-                      className="rounded border-gray-500 text-rose-600 focus:ring-rose-500"
-                    />
-                    <span className={`text-sm font-medium px-2 py-0.5 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
-                      {meta?.label || asp.aspName}
-                      <span className="ml-1 text-xs opacity-80">({asp.count})</span>
-                    </span>
-                  </label>
-                );
-              })}
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.site}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* 対象フィルタ */}
+              <div>
+                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.include}</p>
+                <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
+                  {productCountByAsp.map((asp) => {
+                    const providerId = aspToProviderId[asp.aspName];
+                    const meta = providerId ? providerMeta[providerId] : null;
+                    const isSelected = includeAsps.includes(asp.aspName);
+                    return (
+                      <label
+                        key={`include-asp-${asp.aspName}`}
+                        className={`flex items-center gap-3 p-3 sm:p-1.5 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors ${
+                          isSelected ? 'bg-rose-600/30 ring-2 ring-rose-500' : 'hover:bg-gray-700 active:bg-gray-600'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleAspChange(asp.aspName)}
+                          className="w-5 h-5 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
+                        />
+                        <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
+                          {meta?.label || asp.aspName}
+                          <span className="ml-1.5 sm:ml-1 text-sm sm:text-xs opacity-80">({asp.count.toLocaleString()})</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* 除外フィルタ */}
+              <div>
+                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.exclude}</p>
+                <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
+                  {allAvailableAsps.map((aspName) => {
+                    const providerId = aspToProviderId[aspName];
+                    const meta = providerId ? providerMeta[providerId] : null;
+                    const aspData = productCountByAsp.find(a => a.aspName === aspName);
+                    const count = aspData?.count || 0;
+                    const isSelected = excludeAsps.includes(aspName);
+                    return (
+                      <label
+                        key={`exclude-asp-${aspName}`}
+                        className={`flex items-center gap-3 p-3 sm:p-1.5 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors ${
+                          isSelected ? 'bg-red-600/30 ring-2 ring-red-500' : 'hover:bg-gray-700 active:bg-gray-600'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleExcludeAspChange(aspName)}
+                          className="w-5 h-5 rounded border-gray-500 text-red-600 focus:ring-red-500"
+                        />
+                        <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
+                          {meta?.label || aspName}
+                          {count > 0 && <span className="ml-1.5 sm:ml-1 text-sm sm:text-xs opacity-80">({count.toLocaleString()})</span>}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* クリアボタンのみ */}
         {hasActiveFilters && (
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <button
               type="button"
               onClick={handleClear}
-              className="px-4 py-2 border border-gray-600 text-gray-200 rounded-md hover:bg-gray-700 transition-colors"
+              className="flex-1 sm:flex-none text-center px-6 py-3.5 sm:py-2 border border-gray-600 text-gray-200 rounded-lg sm:rounded-md font-medium hover:bg-gray-700 active:bg-gray-600 transition-colors min-h-[52px] sm:min-h-0"
             >
               {t.clear}
             </button>

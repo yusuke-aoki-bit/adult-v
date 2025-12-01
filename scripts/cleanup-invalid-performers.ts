@@ -1,27 +1,57 @@
 import { getDb } from '../lib/db';
 import { sql } from 'drizzle-orm';
-import { isValidPerformerName } from '../lib/performer-validation';
+import {
+  isValidPerformerName,
+  normalizePerformerName,
+  parsePerformerNames,
+} from '../lib/performer-validation';
 
 const db = getDb();
+
+interface PerformerRow {
+  id: number;
+  name: string;
+  image_url: string | null;
+  product_count?: number;
+}
 
 async function cleanupInvalidPerformers() {
   console.log('=== 無効な演者データのクリーンアップ ===\n');
 
-  // 1. 無効なデータを確認
+  const shouldExecute = process.argv.includes('--execute');
+  const forceDelete = process.argv.includes('--force');
+  const splitOnly = process.argv.includes('--split-only');
+
+  // 1. 無効なデータを確認（performer-validation.tsのルールを使用）
   console.log('【1】無効な演者データを確認中...');
-  const invalidPerformers = await db.execute(sql`
-    SELECT id, name, image_url
-    FROM performers
-    WHERE
-      LENGTH(name) <= 2
-      OR name LIKE '%→%'
-      OR name IN ('デ', 'ラ', 'ゆ', 'な', '他')
-    ORDER BY LENGTH(name), name
-    LIMIT 100
+  const allPerformers = await db.execute(sql`
+    SELECT p.id, p.name, p.image_url, COUNT(pp.product_id) as product_count
+    FROM performers p
+    LEFT JOIN product_performers pp ON p.id = pp.performer_id
+    GROUP BY p.id, p.name, p.image_url
+    ORDER BY p.id
   `);
 
-  console.log(`見つかった無効データ: ${invalidPerformers.rows.length}件`);
-  console.table(invalidPerformers.rows.slice(0, 20));
+  const performers = allPerformers.rows as unknown as PerformerRow[];
+  const invalidPerformers: PerformerRow[] = [];
+  const multiNamePerformers: { performer: PerformerRow; splitNames: string[] }[] = [];
+
+  // isValidPerformerName()でバリデーション
+  for (const performer of performers) {
+    if (!isValidPerformerName(performer.name)) {
+      invalidPerformers.push(performer);
+      continue;
+    }
+
+    // スペース区切りの複数名前チェック
+    const splitNames = parsePerformerNames(performer.name, /[、,\/・\n\t\s　]+/);
+    if (splitNames.length > 1) {
+      multiNamePerformers.push({ performer, splitNames });
+    }
+  }
+
+  console.log(`見つかった無効データ: ${invalidPerformers.length}件`);
+  console.table(invalidPerformers.slice(0, 20));
 
   // 2. 商品との紐づけを確認
   console.log('\n【2】商品との紐づけを確認中...');
@@ -61,9 +91,6 @@ async function cleanupInvalidPerformers() {
   console.table(toDelete.rows.slice(0, 30));
 
   // 4. 実際に削除（--executeオプションがある場合のみ）
-  const shouldExecute = process.argv.includes('--execute');
-  const forceDelete = process.argv.includes('--force');
-
   if (shouldExecute) {
     console.log('\n【4】削除を実行中...');
 

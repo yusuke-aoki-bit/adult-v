@@ -307,35 +307,6 @@ export default async function Home({ params, searchParams }: PageProps) {
         </details>
       )}
 
-      {/* タグ */}
-      {popularGenreTags.length > 0 && (
-        <details className="border-b border-gray-800">
-          <summary className="py-2 md:py-3 cursor-pointer hover:bg-gray-800/30 transition-colors">
-            <div className="container mx-auto px-4">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base md:text-lg font-bold text-white">
-                  タグ
-                </h2>
-                <span className="text-gray-400 text-sm ml-auto">({popularGenreTags.length})</span>
-              </div>
-            </div>
-          </summary>
-          <div className="container mx-auto px-4 pb-8">
-            <div className="flex flex-wrap gap-2">
-              {popularGenreTags.map((tag) => (
-                <Link
-                  key={tag.id}
-                  href={`/${locale}?include=${tag.id}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-full text-sm font-medium transition-colors border border-gray-700 hover:border-rose-600"
-                >
-                  <span>{tag.name}</span>
-                  <span className="text-xs text-gray-400">({tag.count})</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </details>
-      )}
 
       {/* 未整理作品へのリンク */}
       {uncategorizedCount > 0 && (

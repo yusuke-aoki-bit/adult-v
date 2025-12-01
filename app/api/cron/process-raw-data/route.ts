@@ -93,10 +93,55 @@ export async function GET(request: NextRequest) {
         let price: number | null = null;
 
         // ソースに応じてパース
-        if (row.source.includes('1pondo') || row.source.includes('caribbeancom')) {
-          // DTI sites parsing
+        if (row.source.includes('HEYZO') || row.source.includes('heyzo') || row.source.includes('Hey動画')) {
+          // HEYZO parsing - 出演者情報あり
           title = $('h1').first().text().trim() || $('title').text().trim();
           description = $('meta[name="description"]').attr('content') || '';
+
+          // 出演者抽出: <tr class="table-actor"> <td>出演</td> <td> <a href="..."><span>名前</span></a>
+          $('tr.table-actor td a span, .table-actor a span').each((_, elem) => {
+            const name = $(elem).text().trim();
+            if (name && name.length > 1 && name.length < 30) {
+              performerNames.push(name);
+            }
+          });
+
+          // フォールバック: 出演テーブル行から直接抽出
+          if (performerNames.length === 0) {
+            $('td:contains("出演")').next('td').find('a').each((_, elem) => {
+              const name = $(elem).text().trim();
+              if (name && name.length > 1 && name.length < 30) {
+                performerNames.push(name);
+              }
+            });
+          }
+
+          // サンプル動画URL生成
+          if (row.product_id.match(/^\d+$/)) {
+            sampleVideoUrl = `https://sample.heyzo.com/contents/3000/${row.product_id.padStart(4, '0')}/heyzo_hd_${row.product_id.padStart(4, '0')}_sample.mp4`;
+          }
+        } else if (row.source.includes('1pondo') || row.source.includes('caribbeancom') || row.source.includes('カリビアンコム')) {
+          // DTI sites parsing (1pondo, caribbeancom等)
+          title = $('h1').first().text().trim() || $('title').text().trim();
+          description = $('meta[name="description"]').attr('content') || '';
+
+          // 出演者抽出: class="table-actor" パターン
+          $('tr.table-actor td a span, .table-actor a span').each((_, elem) => {
+            const name = $(elem).text().trim();
+            if (name && name.length > 1 && name.length < 30) {
+              performerNames.push(name);
+            }
+          });
+
+          // フォールバック
+          if (performerNames.length === 0) {
+            $('td:contains("出演")').next('td').find('a').each((_, elem) => {
+              const name = $(elem).text().trim();
+              if (name && name.length > 1 && name.length < 30) {
+                performerNames.push(name);
+              }
+            });
+          }
 
           // サンプル動画URL生成
           if (row.product_id.match(/^\d{6}_\d{3}$/)) {

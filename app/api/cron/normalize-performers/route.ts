@@ -17,6 +17,11 @@ import {
   extractPerformerNames,
   checkGoogleApiConfig,
 } from '@/lib/google-apis';
+import {
+  isValidPerformerName,
+  normalizePerformerName,
+  parsePerformerNames,
+} from '@/lib/performer-validation';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分タイムアウト
@@ -706,6 +711,7 @@ async function fetchPerformersFromWiki(
 
 /**
  * 出演者をDBに登録・紐付け
+ * バリデーション済みの名前のみを登録
  */
 async function linkPerformerToProduct(
   db: ReturnType<typeof getDb>,
@@ -713,9 +719,16 @@ async function linkPerformerToProduct(
   performerName: string
 ): Promise<boolean> {
   try {
+    // バリデーションと正規化
+    const normalized = normalizePerformerName(performerName);
+    if (!normalized) {
+      console.log(`[normalize-performers] Skipped invalid name: "${performerName}"`);
+      return false;
+    }
+
     const performerResult = await db.execute(sql`
       INSERT INTO performers (name)
-      VALUES (${performerName})
+      VALUES (${normalized})
       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
       RETURNING id
     `);
@@ -828,11 +841,24 @@ export async function GET(request: NextRequest) {
       console.log(`[normalize-performers] Hit (${result.source}): ${product.normalized_product_id} -> ${result.performers.join(', ')}`);
       stats.wikiHits++;
 
-      // 出演者を紐付け
-      for (const performerName of result.performers) {
-        const success = await linkPerformerToProduct(db, product.id, performerName);
-        if (success) {
-          stats.performersAdded++;
+      // 出演者を紐付け（スペース区切りの複数名前も分割処理）
+      for (const rawPerformerName of result.performers) {
+        // スペース区切りも含めて分割（「横山夢 皆野みらい」→ [「横山夢」, 「皆野みらい」]）
+        const splitNames = parsePerformerNames(rawPerformerName, /[、,\/・\n\t\s　]+/);
+
+        if (splitNames.length === 0) {
+          // parsePerformerNamesで全て除外された場合、元の名前でも試行
+          const success = await linkPerformerToProduct(db, product.id, rawPerformerName);
+          if (success) {
+            stats.performersAdded++;
+          }
+        } else {
+          for (const performerName of splitNames) {
+            const success = await linkPerformerToProduct(db, product.id, performerName);
+            if (success) {
+              stats.performersAdded++;
+            }
+          }
         }
       }
 
