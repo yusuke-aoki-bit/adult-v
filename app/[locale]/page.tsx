@@ -83,19 +83,23 @@ export default async function Home({ params, searchParams }: PageProps) {
   const hasVideo = searchParamsData.hasVideo === 'true';
   const hasImage = searchParamsData.hasImage === 'true';
 
-  // タグ一覧を取得
-  const genreTags = await getTags('genre');
+  // タグ一覧を取得（全カテゴリ、siteカテゴリは除外）
+  const allTags = await getTags();
+  const genreTags = allTags.filter(tag => tag.category !== 'site');
 
-  // 利用可能なASP一覧（フィルター用）
-  const availableAsps = [
-    { id: 'DUGA', name: 'DUGA' },
-    { id: 'DTI', name: 'DTI' },
-    { id: 'Sokmil', name: 'Sokmil' },
-    { id: 'MGS', name: 'MGS' },
-    { id: 'b10f', name: 'b10f' },
-    { id: 'FC2', name: 'FC2' },
-    { id: 'Japanska', name: 'Japanska' },
-  ];
+  // ASP統計は常に取得（フィルター表示用）- 早い段階で取得してavailableAspsに使用
+  let aspStats: Array<{ aspName: string; productCount: number; actressCount: number }> = [];
+  try {
+    aspStats = await getAspStats();
+  } catch (error) {
+    console.error('Failed to fetch ASP stats:', error);
+  }
+
+  // 利用可能なASP一覧（aspStatsから動的に生成、画面上部と一致させる）
+  const availableAsps = aspStats.map(stat => ({
+    id: stat.aspName,
+    name: stat.aspName,
+  }));
 
   const offset = (page - 1) * ITEMS_PER_PAGE;
 
@@ -132,14 +136,6 @@ export default async function Home({ params, searchParams }: PageProps) {
     hasVideo: hasVideo || undefined,
     hasImage: hasImage || undefined,
   });
-
-  // ASP統計は常に取得（フィルター表示用）
-  let aspStats: Array<{ aspName: string; productCount: number; actressCount: number }> = [];
-  try {
-    aspStats = await getAspStats();
-  } catch (error) {
-    console.error('Failed to fetch ASP stats:', error);
-  }
 
   // 新作リリース女優を取得（フィルターがない場合のみ）
   let newReleaseActresses: ActressType[] = [];
