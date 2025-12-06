@@ -20,6 +20,7 @@ import { getDb } from '../../lib/db';
 import { products, productSources, performers, productPerformers, productVideos, rawHtmlData } from '../../lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
+import { saveRawHtml as saveRawHtmlToGcs, calculateHash } from '../../lib/gcs-crawler-helper';
 
 // Stealthプラグインを適用
 puppeteer.use(StealthPlugin());
@@ -178,18 +179,44 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
 
     const html = await page.content();
 
-    // 生HTMLを保存
-    const hash = createHash('sha256').update(html).digest('hex');
-    await db.insert(rawHtmlData).values({
-      source: 'FC2-video',
-      productId: videoId,
-      url,
-      htmlContent: html,
-      hash,
-    }).onConflictDoUpdate({
-      target: [rawHtmlData.source, rawHtmlData.productId],
-      set: { htmlContent: html, hash, crawledAt: new Date() },
-    });
+    // 生HTMLを保存（GCS優先、hash比較で重複回避）
+    const hash = calculateHash(html);
+
+    // 既存データをチェック
+    const existingRaw = await db
+      .select({ id: rawHtmlData.id, hash: rawHtmlData.hash })
+      .from(rawHtmlData)
+      .where(
+        and(
+          eq(rawHtmlData.source, 'FC2-video'),
+          eq(rawHtmlData.productId, videoId)
+        )
+      )
+      .limit(1);
+
+    if (existingRaw.length > 0 && existingRaw[0].hash === hash) {
+      console.log(`    ⏭️ 変更なし: ${videoId} (hash match)`);
+    } else {
+      const { gcsUrl, htmlContent } = await saveRawHtmlToGcs('fc2-video', videoId, html);
+
+      if (existingRaw.length > 0) {
+        await db
+          .update(rawHtmlData)
+          .set({ htmlContent, gcsUrl, hash, crawledAt: new Date(), processedAt: null })
+          .where(eq(rawHtmlData.id, existingRaw[0].id));
+        console.log(`    🔄 更新完了${gcsUrl ? ' (GCS)' : ' (DB)'}`);
+      } else {
+        await db.insert(rawHtmlData).values({
+          source: 'FC2-video',
+          productId: videoId,
+          url,
+          htmlContent,
+          gcsUrl,
+          hash,
+        });
+        console.log(`    💾 保存完了${gcsUrl ? ' (GCS)' : ' (DB)'}`);
+      }
+    }
 
     // 情報を抽出
     const info = await page.evaluate(() => {
@@ -265,18 +292,44 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
 
     const html = await page.content();
 
-    // 生HTMLを保存
-    const hash = createHash('sha256').update(html).digest('hex');
-    await db.insert(rawHtmlData).values({
-      source: 'FC2-contents',
-      productId: articleId,
-      url,
-      htmlContent: html,
-      hash,
-    }).onConflictDoUpdate({
-      target: [rawHtmlData.source, rawHtmlData.productId],
-      set: { htmlContent: html, hash, crawledAt: new Date() },
-    });
+    // 生HTMLを保存（GCS優先、hash比較で重複回避）
+    const hash = calculateHash(html);
+
+    // 既存データをチェック
+    const existingRaw = await db
+      .select({ id: rawHtmlData.id, hash: rawHtmlData.hash })
+      .from(rawHtmlData)
+      .where(
+        and(
+          eq(rawHtmlData.source, 'FC2-contents'),
+          eq(rawHtmlData.productId, articleId)
+        )
+      )
+      .limit(1);
+
+    if (existingRaw.length > 0 && existingRaw[0].hash === hash) {
+      console.log(`    ⏭️ 変更なし: ${articleId} (hash match)`);
+    } else {
+      const { gcsUrl, htmlContent } = await saveRawHtmlToGcs('fc2-contents', articleId, html);
+
+      if (existingRaw.length > 0) {
+        await db
+          .update(rawHtmlData)
+          .set({ htmlContent, gcsUrl, hash, crawledAt: new Date(), processedAt: null })
+          .where(eq(rawHtmlData.id, existingRaw[0].id));
+        console.log(`    🔄 更新完了${gcsUrl ? ' (GCS)' : ' (DB)'}`);
+      } else {
+        await db.insert(rawHtmlData).values({
+          source: 'FC2-contents',
+          productId: articleId,
+          url,
+          htmlContent,
+          gcsUrl,
+          hash,
+        });
+        console.log(`    💾 保存完了${gcsUrl ? ' (GCS)' : ' (DB)'}`);
+      }
+    }
 
     // 情報を抽出
     const info = await page.evaluate(() => {
@@ -565,12 +618,13 @@ async function main() {
   console.log(`保存件数: ${totalSaved}`);
 
   // 最終統計
-  const stats = await db.execute(sql`
+  const statsResult = await db.execute(sql`
     SELECT COUNT(*) as count
     FROM product_sources
     WHERE asp_name = 'FC2'
   `);
-  console.log(`\nFC2総商品数: ${(stats.rows[0] as any).count}`);
+  const countRow = statsResult.rows[0] as { count: string | number } | undefined;
+  console.log(`\nFC2総商品数: ${countRow?.count ?? 0}`);
 
   process.exit(0);
 }

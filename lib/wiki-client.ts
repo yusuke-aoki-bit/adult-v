@@ -146,7 +146,6 @@ export async function fetchSeesaaWikiData(actressName: string): Promise<ActressW
 
     // リンクから品番抽出
     $('#main_body a').each((_, link) => {
-      const href = $(link).attr('href') || '';
       const text = $(link).text();
 
       // 品番形式のテキスト

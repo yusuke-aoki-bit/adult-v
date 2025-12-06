@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import ProductCard from '@/components/ProductCard';
+import ActressHeroImage from '@/components/ActressHeroImage';
+import ActressAiReview from '@/components/ActressAiReview';
 import Pagination from '@/components/Pagination';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -14,8 +15,9 @@ import {
 import { Metadata } from 'next';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import { getTranslations } from 'next-intl/server';
-import { ProviderId, providerMeta } from '@/lib/providers';
+import { providerMeta } from '@/lib/providers';
 import ActressProductFilter from '@/components/ActressProductFilter';
+import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +30,7 @@ interface PageProps {
     exclude?: string | string[];
     hasVideo?: string;
     hasImage?: string;
+    performerType?: string;
     asp?: string | string[];
   }>;
 }
@@ -41,10 +44,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     if (!actress) return {};
 
     const t = await getTranslations('actress');
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+
+    // SEO最適化: 「作品」「サンプル動画」キーワードを含むタイトル
+    const title = `${actress.name} - 出演作品${actress.metrics.releaseCount}本 | 無料サンプル動画・配信サイト横断検索`;
 
     return generateBaseMetadata(
-      `${actress.name}の出演作品一覧 - ${actress.metrics.releaseCount}作品 | Adult Viewer Lab`,
+      title,
       t('metaDescription', { name: actress.name, count: actress.metrics.releaseCount }),
       actress.heroImage || actress.thumbnail,
       `/${locale}/actress/${actress.id}`,
@@ -75,6 +80,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // hasVideo/hasImageフィルター
   const hasVideo = resolvedSearchParams.hasVideo === 'true';
   const hasImage = resolvedSearchParams.hasImage === 'true';
+  const performerType = resolvedSearchParams.performerType as 'solo' | 'multi' | undefined;
 
   // Get include and exclude tags
   const includeTags = typeof resolvedSearchParams.include === 'string'
@@ -105,24 +111,6 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // Get product count by ASP
   const productCountByAsp = await getActressProductCountByAsp(actress.id);
 
-  // ASP名をProviderId型に変換するマッピング
-  const aspToProviderId: Record<string, ProviderId | undefined> = {
-    'DUGA': 'duga',
-    'duga': 'duga',
-    'Sokmil': 'sokmil',
-    'sokmil': 'sokmil',
-    'DTI': 'dti',
-    'dti': 'dti',
-    'MGS': 'mgs',
-    'mgs': 'mgs',
-    'b10f': 'b10f',
-    'B10F': 'b10f',
-    'FC2': 'fc2',
-    'fc2': 'fc2',
-    'Japanska': 'japanska',
-    'japanska': 'japanska',
-  };
-
   // Get products
   const allWorks = await getProducts({
     actressId: actress.id,
@@ -131,6 +119,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     excludeTags: excludeTags.length > 0 ? excludeTags : undefined,
     hasVideo: hasVideo || undefined,
     hasImage: hasImage || undefined,
+    performerType: performerType || undefined,
     providers: includeAsps.length > 0 ? includeAsps : undefined,
     limit: 1000,
   });
@@ -171,12 +160,11 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* Header */}
           <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
             <div className="flex items-center gap-4 flex-1">
-              <Image
-                src={actress.heroImage}
+              <ActressHeroImage
+                src={actress.heroImage || actress.thumbnail}
                 alt={actress.name}
-                width={64}
-                height={64}
-                className="w-16 h-16 rounded-full object-cover"
+                size={64}
+                className="w-16 h-16"
               />
               <div className="flex-1">
                 <h1 className="text-2xl font-bold text-white">{actress.name}</h1>
@@ -198,7 +186,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 {productCountByAsp.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {productCountByAsp.map((asp) => {
-                      const providerId = aspToProviderId[asp.aspName];
+                      const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                       const meta = providerId ? providerMeta[providerId] : null;
                       return (
                         <span
@@ -215,6 +203,17 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
             </div>
             <ProductSortDropdown sortBy={sortBy} basePath={basePath} />
           </div>
+
+          {/* AIレビュー表示 */}
+          {actress.aiReview && (
+            <div className="mb-8">
+              <ActressAiReview
+                review={actress.aiReview}
+                updatedAt={actress.aiReviewUpdatedAt}
+                actressName={actress.name}
+              />
+            </div>
+          )}
 
           {/* Tag Filters - 即時適用 */}
           <ActressProductFilter

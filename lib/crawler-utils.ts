@@ -12,6 +12,9 @@ const TOP_PAGE_PATTERNS = {
     /^MGS動画\(成人認証\)/,              // MGS認証ページ
     /^アダルト動画.*ソクミル/,            // ソクミルトップ
     /^無修正動画.*カリビアンコム/,        // カリビアンコムトップ
+    // MGS トップページパターン
+    /^エロ動画・アダルトビデオ\s*-MGS動画/,   // MGSトップページタイトル
+    /^MGS動画＜プレステージ\s*グループ＞$/,   // MGSトップページ（リダイレクト後）
   ],
   descriptions: [
     /アダルト動画・エロ動画ソクミル/,
@@ -19,6 +22,9 @@ const TOP_PAGE_PATTERNS = {
     /全作品無料のサンプル動画付き/,
     /18歳未満.*閲覧.*禁止/,
     /年齢確認.*18歳以上/,
+    // MGS トップページ説明文
+    /プレステージグループのMGS動画は、10年以上の運営実績/,
+    /独占作品をはじめ、人気AV女優、素人、アニメ、VR作品など/,
   ],
 };
 
@@ -130,7 +136,7 @@ export async function navigateWithRedirectCheck(
       wasRedirected: redirectInfo.isRedirected,
       redirectType: redirectInfo.redirectType,
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       finalUrl: url,
@@ -180,6 +186,37 @@ export function isTopPageHtml(html: string, aspName: string): boolean {
     'Japanska': [
       /Japanska.*トップ/,
       /無修正動画一覧/,
+      /幅広いジャンル.*30日/,  // Japanskaホームページ
+    ],
+    // b10f
+    'b10f': [
+      /b10f.*トップ/i,
+      /b10f\.jp.*ホーム/i,
+    ],
+    // DTI系サイト
+    '一本道': [
+      /一本道.*トップ/,
+      /1pondo\.tv.*ホーム/i,
+    ],
+    'カリビアンコム': [
+      /カリビアンコム.*トップ/,
+      /caribbeancom\.com.*ホーム/i,
+    ],
+    'カリビアンコムプレミアム': [
+      /カリビアンコムプレミアム.*トップ/,
+      /caribbeancompr\.com.*ホーム/i,
+    ],
+    'HEYZO': [
+      /HEYZO.*トップ/i,
+      /heyzo\.com.*ホーム/i,
+    ],
+    '天然むすめ': [
+      /天然むすめ.*トップ/,
+      /10musume\.com.*ホーム/i,
+    ],
+    'DTI': [
+      /DTI.*トップ/i,
+      /アフィリエイトサービス/,
     ],
   };
 
@@ -214,4 +251,44 @@ export function sanitizeProductData(data: {
   title = title.replace(/^[【\[\(（『「]|[】\]\)）』」]$/g, '').trim();
 
   return { title, description };
+}
+
+/**
+ * Google Search APIを使って女優名を取得（フォールバック用）
+ * クローラーで女優名が取得できなかった場合に使用
+ *
+ * @param productCode 商品コード (例: "SIRO-5000")
+ * @param existingPerformers 既に取得済みの女優名（重複防止用）
+ * @returns 新しく見つかった女優名の配列
+ */
+export async function fetchPerformersFromGoogleSearch(
+  productCode: string,
+  existingPerformers: string[] = []
+): Promise<string[]> {
+  try {
+    // 動的インポートでGoogle APIを読み込み
+    const { searchPerformerByProductCode } = await import('./google-apis');
+    const { isValidPerformerName, normalizePerformerName } = await import('./performer-validation');
+
+    const performers = await searchPerformerByProductCode(productCode);
+
+    // バリデーションと重複チェック
+    const validPerformers: string[] = [];
+    const existingSet = new Set(existingPerformers.map(n => n.toLowerCase()));
+
+    for (const name of performers) {
+      const normalized = normalizePerformerName(name);
+      if (normalized &&
+          isValidPerformerName(normalized) &&
+          !existingSet.has(normalized.toLowerCase()) &&
+          !validPerformers.includes(normalized)) {
+        validPerformers.push(normalized);
+      }
+    }
+
+    return validPerformers;
+  } catch (error) {
+    console.warn(`[Google Search] 女優名取得失敗 (${productCode}):`, error);
+    return [];
+  }
 }

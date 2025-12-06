@@ -321,12 +321,17 @@ async function main() {
 
   console.log(`Found ${actressesToProcess.rows.length} actresses to process\n`);
 
+  interface ActressRow {
+    id: number;
+    name: string;
+  }
+
   let successCount = 0;
   let failCount = 0;
   let totalAliases = 0;
   let totalProducts = 0;
 
-  for (const actress of actressesToProcess.rows as any[]) {
+  for (const actress of actressesToProcess.rows as ActressRow[]) {
     console.log(`\n[${successCount + failCount + 1}/${actressesToProcess.rows.length}] Processing: ${actress.name}`);
 
     const data = await fetchActressPage(actress.name);

@@ -95,6 +95,72 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.fc2.com',
       },
+      // DTIサイト
+      {
+        protocol: 'https',
+        hostname: 'www.nyoshin.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.unkotare.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.caribbeancom.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.10musume.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.pacopacomama.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.hitozuma-giri.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.av-e-body.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.av-4610.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.av-0230.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.kin8tengoku.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.nozox.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.3d-eros.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.pikkur.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.javholic.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'smovie.1pondo.tv',
+      },
+      // MGS画像サーバー
+      {
+        protocol: 'https',
+        hostname: 'image.mgstage.com',
+      },
     ],
     // SVG画像を許可
     dangerouslyAllowSVG: true,

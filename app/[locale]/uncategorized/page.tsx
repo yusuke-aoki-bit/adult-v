@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import ProductCard from '@/components/ProductCard';
 import Pagination from '@/components/Pagination';
-import { getUncategorizedProducts, getUncategorizedProductsCount } from '@/lib/db/queries';
+import ProductListFilter from '@/components/ProductListFilter';
+import { getUncategorizedProducts, getUncategorizedProductsCount, getUncategorizedStats } from '@/lib/db/queries';
 import { generateBaseMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
 
@@ -27,24 +28,52 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 const ITEMS_PER_PAGE = 50;
 
 export default async function UncategorizedPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
-  const tCommon = await getTranslations({ locale, namespace: 'common' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
+  const pattern = typeof searchParamsData.pattern === 'string' ? searchParamsData.pattern : '';
+  const initial = typeof searchParamsData.initial === 'string' ? searchParamsData.initial : '';
+  const includeAsp = typeof searchParamsData.includeAsp === 'string'
+    ? searchParamsData.includeAsp.split(',').filter(Boolean)
+    : [];
+  const excludeAsp = typeof searchParamsData.excludeAsp === 'string'
+    ? searchParamsData.excludeAsp.split(',').filter(Boolean)
+    : [];
+  const hasVideo = searchParamsData.hasVideo === 'true';
+  const hasImage = searchParamsData.hasImage === 'true';
   const offset = (page - 1) * ITEMS_PER_PAGE;
 
-  const [products, totalCount] = await Promise.all([
-    getUncategorizedProducts({ limit: ITEMS_PER_PAGE, offset }),
-    getUncategorizedProductsCount(),
+  const filterOptions = {
+    pattern,
+    initial,
+    includeAsp,
+    excludeAsp,
+    hasVideo,
+    hasImage,
+  };
+
+  const [products, totalCount, stats] = await Promise.all([
+    getUncategorizedProducts({ limit: ITEMS_PER_PAGE, offset, ...filterOptions }),
+    getUncategorizedProductsCount(filterOptions),
+    getUncategorizedStats(),
   ]);
+
+  // ページネーション用のクエリパラメータ
+  const queryParams: Record<string, string> = {};
+  if (pattern) queryParams.pattern = pattern;
+  if (initial) queryParams.initial = initial;
+  if (includeAsp.length > 0) queryParams.includeAsp = includeAsp.join(',');
+  if (excludeAsp.length > 0) queryParams.excludeAsp = excludeAsp.join(',');
+  if (hasVideo) queryParams.hasVideo = 'true';
+  if (hasImage) queryParams.hasImage = 'true';
 
   return (
     <div className="bg-gray-900 min-h-screen">
@@ -76,6 +105,18 @@ export default async function UncategorizedPage({ params, searchParams }: PagePr
             </p>
           </div>
 
+          {/* フィルター */}
+          <ProductListFilter
+            patternStats={stats.patternStats}
+            aspStats={stats.aspStats}
+            showInitialFilter={true}
+            showPatternFilter={true}
+            showGenreFilter={false}
+            showAspFilter={true}
+            showSampleFilter={true}
+            accentColor="yellow"
+          />
+
           {products.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-gray-400 text-lg">未整理の作品はありません</p>
@@ -89,7 +130,7 @@ export default async function UncategorizedPage({ params, searchParams }: PagePr
                 perPage={ITEMS_PER_PAGE}
                 basePath={`/${locale}/uncategorized`}
                 position="top"
-                queryParams={{}}
+                queryParams={queryParams}
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
@@ -105,7 +146,7 @@ export default async function UncategorizedPage({ params, searchParams }: PagePr
                 perPage={ITEMS_PER_PAGE}
                 basePath={`/${locale}/uncategorized`}
                 position="bottom"
-                queryParams={{}}
+                queryParams={queryParams}
               />
             </>
           )}

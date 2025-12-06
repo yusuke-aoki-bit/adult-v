@@ -182,11 +182,11 @@ export async function GET(request: NextRequest) {
         }
 
         // 出演者情報
-        if (item.performers && item.performers.length > 0) {
-          for (const performerName of item.performers) {
+        if (item.actors && item.actors.length > 0) {
+          for (const actor of item.actors) {
             const performerResult = await db.execute(sql`
               INSERT INTO performers (name)
-              VALUES (${performerName})
+              VALUES (${actor.name})
               ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
               RETURNING id
             `);

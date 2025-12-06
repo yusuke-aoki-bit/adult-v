@@ -1,7 +1,8 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { providerMeta, ProviderId } from '@/lib/providers';
+import { providerMeta } from '@/lib/providers';
+import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 
 interface Tag {
   id: number;
@@ -33,24 +34,6 @@ interface ActressProductFilterProps {
 // Available ASPs for exclude filter (same list as top page)
 const allAvailableAsps = ['DUGA', 'DTI', 'Sokmil', 'MGS', 'b10f', 'FC2', 'Japanska'];
 
-// ASP名をProviderId型に変換するマッピング
-const aspToProviderId: Record<string, ProviderId | undefined> = {
-  'DUGA': 'duga',
-  'duga': 'duga',
-  'Sokmil': 'sokmil',
-  'sokmil': 'sokmil',
-  'DTI': 'dti',
-  'dti': 'dti',
-  'MGS': 'mgs',
-  'mgs': 'mgs',
-  'b10f': 'b10f',
-  'B10F': 'b10f',
-  'FC2': 'fc2',
-  'fc2': 'fc2',
-  'Japanska': 'japanska',
-  'japanska': 'japanska',
-};
-
 export default function ActressProductFilter({
   genreTags,
   productCountByAsp,
@@ -63,6 +46,7 @@ export default function ActressProductFilter({
   // 現在のフィルター状態を取得
   const hasVideo = searchParams.get('hasVideo') === 'true';
   const hasImage = searchParams.get('hasImage') === 'true';
+  const performerType = searchParams.get('performerType') as 'solo' | 'multi' | null;
   const includeTags = searchParams.get('include')?.split(',').filter(Boolean) || [];
   const excludeTags = searchParams.get('exclude')?.split(',').filter(Boolean) || [];
   const includeAsps = searchParams.get('asp')?.split(',').filter(Boolean) || [];
@@ -108,6 +92,10 @@ export default function ActressProductFilter({
     updateFilter('hasImage', hasImage ? null : 'true');
   };
 
+  const handlePerformerTypeChange = (type: 'solo' | 'multi' | null) => {
+    updateFilter('performerType', performerType === type ? null : type);
+  };
+
   const handleIncludeTagChange = (tagId: string) => {
     updateFilter('include', tagId, true, includeTags);
   };
@@ -129,6 +117,7 @@ export default function ActressProductFilter({
     const params = new URLSearchParams(searchParams.toString());
     params.delete('hasVideo');
     params.delete('hasImage');
+    params.delete('performerType');
     params.delete('include');
     params.delete('exclude');
     params.delete('asp');
@@ -139,8 +128,8 @@ export default function ActressProductFilter({
     router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
   };
 
-  const hasActiveFilters = hasVideo || hasImage || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0;
-  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0);
+  const hasActiveFilters = hasVideo || hasImage || performerType !== null || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0;
+  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0) + (performerType ? 1 : 0);
 
   return (
     <details
@@ -194,6 +183,41 @@ export default function ActressProductFilter({
               </svg>
               <span className="text-base sm:text-sm text-gray-200">{t.sampleImage}</span>
             </label>
+          </div>
+        </div>
+
+        {/* 出演形態フィルター */}
+        <div>
+          <h3 className="text-base sm:text-sm font-semibold text-white mb-3">出演形態</h3>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <button
+              type="button"
+              onClick={() => handlePerformerTypeChange('solo')}
+              className={`flex items-center justify-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
+                performerType === 'solo'
+                  ? 'bg-rose-600/30 border-rose-500/50 hover:opacity-80'
+                  : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+              }`}
+            >
+              <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${performerType === 'solo' ? 'text-rose-500' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span className="text-base sm:text-sm text-gray-200">単体出演</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePerformerTypeChange('multi')}
+              className={`flex items-center justify-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
+                performerType === 'multi'
+                  ? 'bg-purple-600/30 border-purple-500/50 hover:opacity-80'
+                  : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+              }`}
+            >
+              <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${performerType === 'multi' ? 'text-purple-500' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span className="text-base sm:text-sm text-gray-200">共演あり</span>
+            </button>
           </div>
         </div>
 
@@ -264,7 +288,7 @@ export default function ActressProductFilter({
                 <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.include}</p>
                 <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
                   {productCountByAsp.map((asp) => {
-                    const providerId = aspToProviderId[asp.aspName];
+                    const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                     const meta = providerId ? providerMeta[providerId] : null;
                     const isSelected = includeAsps.includes(asp.aspName);
                     return (
@@ -294,7 +318,7 @@ export default function ActressProductFilter({
                 <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.exclude}</p>
                 <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
                   {allAvailableAsps.map((aspName) => {
-                    const providerId = aspToProviderId[aspName];
+                    const providerId = ASP_TO_PROVIDER_ID[aspName];
                     const meta = providerId ? providerMeta[providerId] : null;
                     const aspData = productCountByAsp.find(a => a.aspName === aspName);
                     const count = aspData?.count || 0;

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useState, useCallback, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
-import { normalizeImageUrl } from '@/lib/image-utils';
+import { isDtiUncensoredSite } from '@/lib/image-utils';
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
 
@@ -42,9 +42,12 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
   const [imageError, setImageError] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  // 無修正サイトかどうかをチェック（ブラーを適用するため）
+  const isUncensored = isDtiUncensoredSite(mainImage || '');
+
   // メイン画像とサンプル画像を結合し、重複を除外、無効なURLをフィルタリング、正規化
   const allImagesWithDuplicates = [mainImage, ...(sampleImages || [])]
-    .filter((img): img is string => Boolean(img) && isValidImageUrl(img))
+    .filter((img): img is string => typeof img === 'string' && Boolean(img) && isValidImageUrl(img))
     .map((img) => normalizeUrl(img)); // プロトコル相対URLを絶対URLに変換
   // 重複する画像URLを除外（Set を使用）
   const allImages = Array.from(new Set(allImagesWithDuplicates));
@@ -106,7 +109,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
             src={imageError ? PLACEHOLDER_IMAGE : selectedImage}
             alt={productTitle}
             fill
-            className="object-cover transition-transform group-hover:scale-105"
+            className={`object-cover transition-transform group-hover:scale-105 ${isUncensored ? 'blur-[3px]' : ''}`}
             sizes="(max-width: 768px) 100vw, 50vw"
             priority
             onError={handleImageError}
@@ -145,21 +148,21 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
         {/* サムネイル一覧（複数画像がある場合のみ） */}
         {hasMultipleImages && (
           <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-5 gap-2">
-            {allImages.map((imgUrl, index) => (
+            {allImages.map((imgUrl, idx) => (
               <button
-                key={index}
-                onClick={() => setSelectedIndex(index)}
+                key={imgUrl}
+                onClick={() => setSelectedIndex(idx)}
                 className={`relative aspect-[3/4] rounded overflow-hidden border-2 transition-all ${
-                  selectedIndex === index
+                  selectedIndex === idx
                     ? 'border-rose-600 ring-2 ring-rose-600/50'
                     : 'border-gray-700 hover:border-gray-500'
                 }`}
               >
                 <Image
                   src={imgUrl}
-                  alt={`${productTitle} - サンプル画像 ${index + 1}`}
+                  alt={`${productTitle} - サンプル画像 ${idx + 1}`}
                   fill
-                  className="object-cover"
+                  className={`object-cover ${isUncensored ? 'blur-[3px]' : ''}`}
                   sizes="(max-width: 768px) 20vw, (max-width: 1024px) 16vw, 10vw"
                 />
               </button>
@@ -206,7 +209,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
               src={imageError ? PLACEHOLDER_IMAGE : selectedImage}
               alt={productTitle}
               fill
-              className="object-contain"
+              className={`object-contain ${isUncensored ? 'blur-[3px]' : ''}`}
               sizes="100vw"
               priority
             />
@@ -235,21 +238,21 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
           {/* サムネイル一覧 */}
           {hasMultipleImages && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/60 rounded-lg max-w-full overflow-x-auto">
-              {allImages.map((imgUrl, index) => (
+              {allImages.map((imgUrl, idx) => (
                 <button
-                  key={index}
-                  onClick={(e) => { e.stopPropagation(); setSelectedIndex(index); }}
-                  className={`relative w-16 h-20 flex-shrink-0 rounded overflow-hidden border-2 transition-all ${
-                    selectedIndex === index
+                  key={imgUrl}
+                  onClick={(e) => { e.stopPropagation(); setSelectedIndex(idx); }}
+                  className={`relative w-16 h-20 shrink-0 rounded overflow-hidden border-2 transition-all ${
+                    selectedIndex === idx
                       ? 'border-rose-600'
                       : 'border-transparent hover:border-gray-500'
                   }`}
                 >
                   <Image
                     src={imgUrl}
-                    alt={`${productTitle} - サムネイル ${index + 1}`}
+                    alt={`${productTitle} - サムネイル ${idx + 1}`}
                     fill
-                    className="object-cover"
+                    className={`object-cover ${isUncensored ? 'blur-[3px]' : ''}`}
                     sizes="64px"
                   />
                 </button>

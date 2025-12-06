@@ -19,7 +19,7 @@ function escapeXml(unsafe: string): string {
     .replace(/'/g, '&apos;');
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const db = getDb();
 

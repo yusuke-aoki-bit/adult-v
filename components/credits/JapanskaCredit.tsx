@@ -15,6 +15,7 @@ export function JapanskaCredit({ className = '' }: JapanskaCreditProps) {
       className={`inline-block ${className}`}
       aria-label="JAPANSKA-ヤパンスカ"
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="https://wimg2.golden-gateway.com/ad/10035_01.jpg"
         alt="無修正アダルト動画 JAPANSKA-ヤパンスカ"

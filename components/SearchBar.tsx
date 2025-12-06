@@ -94,7 +94,7 @@ export default function SearchBar() {
           type="text"
           value={actressQuery}
           onChange={(e) => handleActressChange(e.target.value)}
-          placeholder="女優名で検索..."
+          placeholder="女優名・AIレビューで検索..."
           className="w-full px-4 py-2 pl-10 pr-4 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm"
         />
         <svg
@@ -118,7 +118,7 @@ export default function SearchBar() {
           type="text"
           value={productQuery}
           onChange={(e) => handleProductChange(e.target.value)}
-          placeholder="作品名・作品ID・メーカー品番で検索..."
+          placeholder="作品名・作品ID・AI説明文で検索..."
           disabled={isSearching}
           className="w-full px-4 py-2 pl-10 pr-4 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm disabled:opacity-50"
         />

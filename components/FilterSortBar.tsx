@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import type { SortOption } from '@/lib/db/queries';
 import { providerMeta } from '@/lib/providers';
@@ -22,28 +22,20 @@ export default function FilterSortBar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [sortBy, setSortBy] = useState<SortOption>(
-    (searchParams.get('sort') as SortOption) || defaultSort
-  );
-  const [selectedProviders, setSelectedProviders] = useState<Set<string>>(() => {
+  // URLパラメータから直接計算（stateを使わない）
+  const sortBy = useMemo<SortOption>(() => {
+    return (searchParams.get('sort') as SortOption) || defaultSort;
+  }, [searchParams, defaultSort]);
+
+  const selectedProviders = useMemo<Set<string>>(() => {
     const providerParam = searchParams.get('provider');
     return providerParam ? new Set(providerParam.split(',')) : new Set<string>();
-  });
-  const [selectedPriceRanges, setSelectedPriceRanges] = useState<Set<string>>(() => {
+  }, [searchParams]);
+
+  const selectedPriceRanges = useMemo<Set<string>>(() => {
     const priceParam = searchParams.get('priceRange');
     return priceParam ? new Set(priceParam.split(',')) : new Set<string>();
-  });
-
-  // URLパラメータの変更を監視
-  useEffect(() => {
-    const providerParam = searchParams.get('provider');
-    const priceParam = searchParams.get('priceRange');
-    const sortParam = searchParams.get('sort') as SortOption;
-
-    setSelectedProviders(providerParam ? new Set(providerParam.split(',')) : new Set<string>());
-    setSelectedPriceRanges(priceParam ? new Set(priceParam.split(',')) : new Set<string>());
-    setSortBy(sortParam || defaultSort);
-  }, [searchParams, defaultSort]);
+  }, [searchParams]);
 
   // フィルター適用（即時実行）
   const applyFilters = (
@@ -88,7 +80,6 @@ export default function FilterSortBar({
     } else {
       newProviders.add(providerId);
     }
-    setSelectedProviders(newProviders);
     applyFilters(sortBy, newProviders, selectedPriceRanges);
   };
 
@@ -100,21 +91,16 @@ export default function FilterSortBar({
     } else {
       newRanges.add(range);
     }
-    setSelectedPriceRanges(newRanges);
     applyFilters(sortBy, selectedProviders, newRanges);
   };
 
   // ソート変更
   const handleSortChange = (newSort: SortOption) => {
-    setSortBy(newSort);
     applyFilters(newSort, selectedProviders, selectedPriceRanges);
   };
 
   // 全クリア
   const clearAllFilters = () => {
-    setSelectedProviders(new Set());
-    setSelectedPriceRanges(new Set());
-    setSortBy(defaultSort);
     router.push(pathname);
   };
 

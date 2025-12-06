@@ -1,13 +1,9 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { locales, type Locale } from '@/i18n';
+import { locales } from '@/i18n';
 
-interface HreflangTagsProps {
-  currentLocale: Locale;
-}
-
-export default function HreflangTags({ currentLocale }: HreflangTagsProps) {
+export default function HreflangTags() {
   const pathname = usePathname();
 
   // パスから現在のロケールプレフィックスを削除

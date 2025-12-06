@@ -86,11 +86,11 @@ export async function GET(request: NextRequest) {
         let title = '';
         let description = '';
         let releaseDate: string | null = null;
-        let duration: number | null = null;
-        let thumbnailUrl: string | null = null;
+        const duration: number | null = null;
+        const thumbnailUrl: string | null = null;
         let sampleVideoUrl: string | null = null;
-        let performerNames: string[] = [];
-        let price: number | null = null;
+        const performerNames: string[] = [];
+        const price: number | null = null;
 
         // ソースに応じてパース
         if (row.source.includes('HEYZO') || row.source.includes('heyzo') || row.source.includes('Hey動画')) {

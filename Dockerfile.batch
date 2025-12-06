@@ -1,0 +1,16 @@
+# Cloud Run Jobs用バッチ処理Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy only necessary files for batch processing
+COPY lib/ ./lib/
+COPY scripts/batch-reparse-performers.ts ./scripts/
+COPY tsconfig.json ./
+
+# Default command
+CMD ["npx", "tsx", "scripts/batch-reparse-performers.ts"]

@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await db.execute(query);
-    const products = result.rows as ProductToBackfill[];
+    const products = result.rows as unknown as ProductToBackfill[];
 
     console.log(`[backfill-images] Found ${products.length} products without thumbnails`);
 

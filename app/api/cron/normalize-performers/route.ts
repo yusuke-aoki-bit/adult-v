@@ -18,7 +18,6 @@ import {
   checkGoogleApiConfig,
 } from '@/lib/google-apis';
 import {
-  isValidPerformerName,
   normalizePerformerName,
   parsePerformerNames,
 } from '@/lib/performer-validation';

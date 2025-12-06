@@ -2,8 +2,12 @@ import { getDb } from '../../lib/db';
 import { sql } from 'drizzle-orm';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import { parsePerformerNames, isValidPerformerForProduct } from '../../lib/performer-validation';
 import { validateProductData } from '../../lib/crawler-utils';
+import { generateProductDescription, extractProductTags, GeneratedDescription, translateProduct } from '../../lib/google-apis';
+import { saveCsvToGcs } from '../../lib/google-apis';
+import { getFirstRow, IdRow } from '../../lib/crawler';
 
 /**
  * b10f.jp CSV クローラー
@@ -13,17 +17,26 @@ import { validateProductData } from '../../lib/crawler-utils';
  * - 生CSVデータをb10f_raw_csvテーブルに保存
  * - パースしたデータを正規化テーブル（products, product_sources等）に保存
  * - product_raw_data_linksでリレーション作成（リカバリー用）
+ * - AI機能: Gemini APIによる説明文生成・タグ抽出（--no-aiオプションで無効化可能）
  *
  * 使い方:
- * npx tsx scripts/crawlers/crawl-b10f-csv.ts [--limit 100] [--offset 0]
+ * npx tsx scripts/crawlers/crawl-b10f-csv.ts [--limit 100] [--offset 0] [--no-ai]
  */
 
 interface CrawlStats {
   totalFetched: number;
   newProducts: number;
   updatedProducts: number;
+  skippedUnchanged: number;
   errors: number;
   rawDataSaved: number;
+}
+
+/**
+ * CSVデータのハッシュを計算
+ */
+function calculateHash(content: string): string {
+  return crypto.createHash('sha256').update(content).digest('hex');
 }
 
 interface B10fProduct {
@@ -112,15 +125,163 @@ function parseCsv(csv: string): B10fProduct[] {
   return products;
 }
 
+interface AIContent {
+  aiDescription?: GeneratedDescription;
+  aiTags?: {
+    genres: string[];
+    attributes: string[];
+    plays: string[];
+    situations: string[];
+  };
+}
+
+/**
+ * AI機能を使って説明文とタグを生成
+ */
+async function generateAIContent(
+  item: B10fProduct,
+  enableAI: boolean = true,
+): Promise<AIContent> {
+  if (!enableAI) {
+    return {};
+  }
+
+  console.log('    🤖 AI機能を実行中...');
+
+  // パフォーマー名をパース
+  const performerNames = item.performers
+    ? parsePerformerNames(item.performers).filter(name => isValidPerformerForProduct(name, item.title))
+    : [];
+
+  // AI説明文生成
+  let aiDescription: GeneratedDescription | undefined;
+  try {
+    const result = await generateProductDescription({
+      title: item.title,
+      originalDescription: item.description,
+      performers: performerNames,
+      genres: item.category ? [item.category] : undefined,
+    });
+
+    if (result) {
+      aiDescription = result;
+      console.log(`      ✅ AI説明文生成完了`);
+      console.log(`         キャッチコピー: ${result.catchphrase}`);
+    }
+  } catch (error) {
+    console.error('      ❌ AI説明文生成エラー:', error);
+  }
+
+  // AIタグ抽出
+  let aiTags: AIContent['aiTags'];
+  try {
+    const tags = await extractProductTags(item.title, item.description);
+    if (tags.genres.length > 0 || tags.attributes.length > 0 || tags.plays.length > 0 || tags.situations.length > 0) {
+      aiTags = tags;
+      console.log(`      ✅ AIタグ抽出完了`);
+      console.log(`         ジャンル: ${tags.genres.join(', ') || 'なし'}`);
+      console.log(`         属性: ${tags.attributes.join(', ') || 'なし'}`);
+    }
+  } catch (error) {
+    console.error('      ❌ AIタグ抽出エラー:', error);
+  }
+
+  return { aiDescription, aiTags };
+}
+
+/**
+ * AI生成データをDBに保存
+ */
+async function saveAIContent(
+  db: ReturnType<typeof getDb>,
+  productId: number,
+  aiContent: AIContent,
+): Promise<void> {
+  const { aiDescription, aiTags } = aiContent;
+
+  if (!aiDescription && !aiTags) {
+    return;
+  }
+
+  try {
+    if (aiDescription) {
+      await db.execute(sql`
+        UPDATE products SET
+          ai_description = ${JSON.stringify(aiDescription)},
+          ai_catchphrase = ${aiDescription.catchphrase},
+          ai_short_description = ${aiDescription.shortDescription}
+        WHERE id = ${productId}
+      `);
+    }
+
+    if (aiTags) {
+      await db.execute(sql`
+        UPDATE products SET
+          ai_tags = ${JSON.stringify(aiTags)}
+        WHERE id = ${productId}
+      `);
+    }
+
+    console.log(`    💾 AI生成データを保存しました`);
+  } catch (error) {
+    // カラムがない場合はスキップ（マイグレーション前）
+    console.warn('    ⚠️ AI生成データの保存をスキップ（カラム未作成の可能性）');
+  }
+}
+
+/**
+ * 翻訳機能を使ってタイトルと説明を多言語翻訳
+ */
+async function translateAndSave(
+  db: ReturnType<typeof getDb>,
+  productId: number,
+  title: string,
+  description?: string,
+): Promise<void> {
+  console.log('    🌐 翻訳処理を実行中...');
+
+  try {
+    const translation = await translateProduct(title, description);
+    if (!translation) {
+      console.log('      ⚠️ 翻訳結果が取得できませんでした');
+      return;
+    }
+
+    await db.execute(sql`
+      UPDATE products
+      SET
+        title_en = ${translation.en?.title || null},
+        title_zh = ${translation.zh?.title || null},
+        title_ko = ${translation.ko?.title || null},
+        description_en = ${translation.en?.description || null},
+        description_zh = ${translation.zh?.description || null},
+        description_ko = ${translation.ko?.description || null},
+        updated_at = NOW()
+      WHERE id = ${productId}
+    `);
+
+    console.log(`    ✅ 翻訳完了`);
+    if (translation.en?.title) {
+      console.log(`       EN: ${translation.en.title.slice(0, 50)}...`);
+    }
+  } catch (error) {
+    console.error('    ❌ 翻訳エラー:', error);
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const limitArg = args.find(arg => arg.startsWith('--limit='));
   const offsetArg = args.find(arg => arg.startsWith('--offset='));
+  const enableAI = !args.includes('--no-ai');
+  const forceReprocess = args.includes('--force');
 
   const limit = limitArg ? parseInt(limitArg.split('=')[1]) : undefined;
   const offset = offsetArg ? parseInt(offsetArg.split('=')[1]) : 0;
 
-  console.log('=== b10f.jp CSVクローラー（生データ保存対応） ===\n');
+  console.log('=== b10f.jp CSVクローラー（生データ保存対応） ===');
+  console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
+  console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}\n`);
   if (limit) {
     console.log(`処理範囲: offset=${offset}, limit=${limit}\n`);
   } else {
@@ -133,6 +294,7 @@ async function main() {
     totalFetched: 0,
     newProducts: 0,
     updatedProducts: 0,
+    skippedUnchanged: 0,
     errors: 0,
     rawDataSaved: 0,
   };
@@ -141,16 +303,52 @@ async function main() {
     // 1. CSVダウンロード
     const csvData = await downloadCsv();
 
-    // 2. 生CSVデータを保存
+    // 2. ハッシュ計算して重複チェック
+    const csvHash = calculateHash(csvData);
     console.log('💾 生CSVデータ保存中...\n');
-    const rawCsvResult = await db.execute(sql`
-      INSERT INTO b10f_raw_csv (csv_data, fetched_at)
-      VALUES (${csvData}, NOW())
-      RETURNING id
+
+    // 最新のCSVと比較
+    const latestCsvResult = await db.execute(sql`
+      SELECT id, hash, processed_at FROM b10f_raw_csv
+      ORDER BY fetched_at DESC
+      LIMIT 1
     `);
-    const rawCsvId = (rawCsvResult.rows[0] as any).id;
-    stats.rawDataSaved++;
-    console.log(`✅ 生CSVデータ保存完了 (raw_csv_id: ${rawCsvId})\n`);
+    const latestCsv = getFirstRow<{ id: number; hash: string | null; processed_at: Date | null }>(latestCsvResult);
+
+    let rawCsvId: number;
+    let shouldSkipAll = false;
+
+    // ハッシュが同じで処理済みならスキップ
+    if (latestCsv && latestCsv.hash === csvHash && latestCsv.processed_at && !forceReprocess) {
+      console.log(`⏭️ CSVデータに変更なし＆処理済み - スキップ (raw_csv_id: ${latestCsv.id})\n`);
+      rawCsvId = latestCsv.id;
+      shouldSkipAll = true;
+    } else if (latestCsv && latestCsv.hash === csvHash) {
+      // ハッシュ同じだが未処理
+      console.log(`✅ CSVデータに変更なし - 既存データを使用 (raw_csv_id: ${latestCsv.id})\n`);
+      rawCsvId = latestCsv.id;
+    } else {
+      // 新規または変更あり - GCS保存を試みる
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const gcsUrl = await saveCsvToGcs('b10f', `b10f-${timestamp}`, csvData);
+
+      const rawCsvResult = await db.execute(sql`
+        INSERT INTO b10f_raw_csv (csv_data, gcs_url, hash, fetched_at)
+        VALUES (${gcsUrl ? null : csvData}, ${gcsUrl}, ${csvHash}, NOW())
+        RETURNING id
+      `);
+      const rawCsvRow = getFirstRow<IdRow>(rawCsvResult);
+      rawCsvId = rawCsvRow!.id;
+      stats.rawDataSaved++;
+      console.log(`✅ 生CSVデータ保存完了 (raw_csv_id: ${rawCsvId})${gcsUrl ? ' (GCS)' : ' (DB)'}\n`);
+    }
+
+    if (shouldSkipAll) {
+      console.log('\n=== クロール完了（変更なしでスキップ） ===\n');
+      console.log('統計情報:');
+      console.table(stats);
+      process.exit(0);
+    }
 
     // 3. CSVパース
     console.log('📋 CSVパース中...\n');
@@ -221,7 +419,8 @@ async function main() {
           RETURNING id
         `);
 
-        const productId = (productResult.rows[0] as any).id;
+        const productRow = getFirstRow<IdRow>(productResult);
+        const productId = productRow!.id;
         const isNew = productResult.rowCount === 1;
 
         if (isNew) {
@@ -344,31 +543,40 @@ async function main() {
         }
 
         // 10.5 サンプル動画URL生成（b10fのパターン）
-        // b10f.jp のサンプル動画は /images/{id}/{id}.mp4 or /images/{id}/s.mp4 形式
+        // b10f.jp のサンプル動画は https://ads.b10f.jp/flv/{productCode}.mp4 形式
+        // imageUrl例: https://ads.b10f.jp/images/142-zmar-147_a/1s.jpg → productCode: 142-zmar-147
+        // imageUrl例: https://ads.b10f.jp/images/1-dmow-096/1s.jpg → productCode: 1-dmow-096
         if (item.imageUrl) {
-          const baseImageUrl = item.imageUrl.replace(/\/1s\.jpg$/, '');
-          // サンプル動画URLパターン（複数試行）
-          const sampleVideoUrl = `${baseImageUrl}/s.mp4`;
+          // imageUrlからproductCodeを抽出（_a, _b などのサフィックスを除去）
+          // パターン: /images/{productCode}[_suffix]/1s.jpg
+          const productCodeMatch = item.imageUrl.match(/\/images\/([^\/]+?)(?:_[a-z])?\/\d+s?\.jpg/i);
+          const productCode = productCodeMatch ? productCodeMatch[1] : null;
 
-          await db.execute(sql`
-            INSERT INTO product_videos (
-              product_id,
-              asp_name,
-              video_url,
-              video_type,
-              display_order
-            )
-            VALUES (
-              ${productId},
-              'b10f',
-              ${sampleVideoUrl},
-              'sample',
-              0
-            )
-            ON CONFLICT DO NOTHING
-          `);
+          if (productCode) {
+            const sampleVideoUrl = `https://ads.b10f.jp/flv/${productCode}.mp4`;
 
-          console.log(`  🎬 サンプル動画URL保存完了`);
+            await db.execute(sql`
+              INSERT INTO product_videos (
+                product_id,
+                asp_name,
+                video_url,
+                video_type,
+                display_order
+              )
+              VALUES (
+                ${productId},
+                'b10f',
+                ${sampleVideoUrl},
+                'sample',
+                0
+              )
+              ON CONFLICT DO NOTHING
+            `);
+
+            console.log(`  🎬 サンプル動画URL保存完了: ${sampleVideoUrl}`);
+          } else {
+            console.log(`  ⚠️ サンプル動画URL生成スキップ（productCode抽出失敗）`);
+          }
         }
 
         // 11. カテゴリ保存
@@ -382,7 +590,8 @@ async function main() {
             RETURNING id
           `);
 
-          const categoryId = (categoryResult.rows[0] as any).id;
+          const categoryRow = getFirstRow<IdRow>(categoryResult);
+          const categoryId = categoryRow!.id;
 
           await db.execute(sql`
             INSERT INTO product_categories (product_id, category_id)
@@ -410,7 +619,8 @@ async function main() {
                 RETURNING id
               `);
 
-              const performerId = (performerResult.rows[0] as any).id;
+              const performerRow = getFirstRow<IdRow>(performerResult);
+              const performerId = performerRow!.id;
 
               await db.execute(sql`
                 INSERT INTO product_performers (product_id, performer_id)
@@ -425,14 +635,34 @@ async function main() {
           }
         }
 
+        // 13. AI機能: 説明文生成とタグ抽出
+        if (enableAI) {
+          const aiContent = await generateAIContent(item, enableAI);
+          await saveAIContent(db, productId, aiContent);
+        }
+
+        // 14. 翻訳機能: タイトルと説明を多言語翻訳
+        if (enableAI) {
+          await translateAndSave(db, productId, item.title, item.description);
+        }
+
         console.log();
 
-      } catch (error: any) {
-        console.error(`  ❌ エラー: ${error.message}\n`);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`  ❌ エラー: ${errorMessage}\n`);
         stats.errors++;
         continue;
       }
     }
+
+    // 処理完了後にCSVを処理済みとしてマーク
+    await db.execute(sql`
+      UPDATE b10f_raw_csv
+      SET processed_at = NOW()
+      WHERE id = ${rawCsvId}
+    `);
+    console.log(`✅ CSVデータを処理済みとしてマーク (raw_csv_id: ${rawCsvId})`);
 
     console.log('\n=== クロール完了 ===\n');
     console.log('統計情報:');
@@ -450,7 +680,7 @@ async function main() {
     console.log('\nデータベース状態:');
     console.table(finalCounts.rows);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ クローラーエラー:', error);
     process.exit(1);
   }

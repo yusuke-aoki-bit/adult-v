@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { isSubscriptionProvider } from '@/lib/providers';
 
 interface PriceOption {
   asp: string;
@@ -12,6 +13,58 @@ interface PriceOption {
 
 interface PriceComparisonProps {
   productId: string;
+}
+
+/**
+ * MGS商品IDを正規化（ハイフンがない場合は適切な位置に挿入）
+ * 例: 259LUXU1010 → 259LUXU-1010, CAWD157 → CAWD-157
+ */
+function normalizeMgsProductId(productId: string): string {
+  if (productId.includes('-')) {
+    return productId;
+  }
+
+  // パターン: 数字プレフィックス + 英字 + 数字（例: 259LUXU1010）
+  const prefixMatch = productId.match(/^(\d+)([A-Z]+)(\d+)$/i);
+  if (prefixMatch) {
+    return `${prefixMatch[1]}${prefixMatch[2]}-${prefixMatch[3]}`;
+  }
+
+  // パターン: 英字 + 数字（例: CAWD157）
+  const simpleMatch = productId.match(/^([A-Z]+)(\d+)$/i);
+  if (simpleMatch) {
+    return `${simpleMatch[1]}-${simpleMatch[2]}`;
+  }
+
+  return productId;
+}
+
+/**
+ * MGSウィジェットコードからMGS商品ページURLを生成
+ * nakiny.com形式: agef=1で年齢確認スキップ、aff=でアフィリエイト追跡
+ */
+function extractMgsAffiliateUrl(widgetCode: string): string | null {
+  const productIdMatch = widgetCode.match(/[?&]p=([^&"']+)/);
+  const affCodeMatch = widgetCode.match(/[?&]c=([^&"']+)/);
+
+  if (productIdMatch) {
+    const rawProductId = productIdMatch[1];
+    const productId = normalizeMgsProductId(rawProductId);
+    const affCode = affCodeMatch ? affCodeMatch[1] : '';
+    const affParam = affCode ? `&aff=${affCode}` : '';
+    return `https://www.mgstage.com/product/product_detail/${productId}/?agef=1${affParam}`;
+  }
+  return null;
+}
+
+/**
+ * アフィリエイトURLを正規化（MGSウィジェットの場合はURLに変換）
+ */
+function normalizeAffiliateUrl(url: string): string {
+  if (url.includes('mgs_Widget_affiliate')) {
+    return extractMgsAffiliateUrl(url) || url;
+  }
+  return url;
 }
 
 /**
@@ -58,18 +111,19 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
     return null;
   }
 
-  // 最安値を計算
-  const lowestPrice = Math.min(...prices.filter(p => p.inStock).map(p => p.price));
+  // 最安値を計算（月額会員限定の価格0は除外）
+  const pricedOptions = prices.filter(p => p.inStock && p.price > 0);
+  const lowestPrice = pricedOptions.length > 0 ? Math.min(...pricedOptions.map(p => p.price)) : 0;
 
   return (
     <div className="bg-white rounded-xl p-6 shadow-lg">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">価格比較</h3>
       <div className="space-y-3">
-        {prices.map((option, index) => (
+        {prices.map((option) => (
           <div
-            key={index}
+            key={`${option.asp}-${option.affiliateUrl}`}
             className={`flex items-center justify-between p-4 rounded-lg border-2 ${
-              option.inStock && option.price === lowestPrice
+              option.inStock && option.price > 0 && option.price === lowestPrice
                 ? 'border-green-500 bg-green-50'
                 : 'border-gray-200 bg-gray-50'
             }`}
@@ -77,9 +131,15 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
             <div className="flex items-center gap-3">
               <div>
                 <p className="font-semibold text-gray-900">{option.aspLabel}</p>
-                <p className="text-2xl font-bold text-gray-900">¥{option.price.toLocaleString()}</p>
+                {option.price > 0 ? (
+                  <p className="text-2xl font-bold text-gray-900">¥{option.price.toLocaleString()}</p>
+                ) : isSubscriptionProvider(option.asp) ? (
+                  <p className="text-lg font-bold text-rose-600">月額会員限定</p>
+                ) : (
+                  <p className="text-2xl font-bold text-gray-900">¥{option.price.toLocaleString()}</p>
+                )}
               </div>
-              {option.inStock && option.price === lowestPrice && (
+              {option.inStock && option.price > 0 && option.price === lowestPrice && (
                 <span className="px-3 py-1 bg-rose-600 text-white text-xs font-semibold rounded-full">
                   最安値
                 </span>
@@ -91,7 +151,7 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
               )}
             </div>
             <a
-              href={option.affiliateUrl}
+              href={normalizeAffiliateUrl(option.affiliateUrl)}
               target="_blank"
               rel="noopener noreferrer sponsored"
               className={`inline-flex items-center gap-2 px-6 py-2 rounded-lg font-semibold text-white ${

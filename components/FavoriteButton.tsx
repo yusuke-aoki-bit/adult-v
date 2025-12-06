@@ -5,7 +5,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 
 interface FavoriteButtonProps {
   type: 'product' | 'actress';
-  id: number;
+  id: number | string;
   title?: string;
   name?: string;
   thumbnail?: string;

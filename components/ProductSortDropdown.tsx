@@ -20,7 +20,7 @@ export default function ProductSortDropdown({ sortBy, basePath }: ProductSortDro
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="product-sort" className="text-sm font-medium text-gray-700">
+      <label htmlFor="product-sort" className="text-sm font-medium text-gray-300">
         並び順:
       </label>
       <select
@@ -28,7 +28,7 @@ export default function ProductSortDropdown({ sortBy, basePath }: ProductSortDro
         name="sort"
         value={sortBy}
         onChange={(e) => handleSortChange(e.target.value)}
-        className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-rose-500 focus:border-green-500"
+        className="px-3 py-2 border border-gray-600 rounded-md text-sm text-white bg-gray-700 focus:ring-rose-500 focus:border-rose-500"
       >
         <option value="releaseDateDesc">新しい順</option>
         <option value="releaseDateAsc">古い順</option>

@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import { JsonLD } from '@/components/JsonLD';
 import ProductImageGallery from '@/components/ProductImageGallery';
 import ProductVideoPlayer from '@/components/ProductVideoPlayer';
@@ -8,7 +7,9 @@ import RelatedProducts from '@/components/RelatedProducts';
 import ProductDetailInfo from '@/components/ProductDetailInfo';
 import FavoriteButton from '@/components/FavoriteButton';
 import ViewTracker from '@/components/ViewTracker';
+import AffiliateButton from '@/components/AffiliateButton';
 import { getProductById, searchProductByProductId, getProductSources } from '@/lib/db/queries';
+import { isSubscriptionSite } from '@/lib/image-utils';
 import { getRelatedProducts } from '@/lib/db/recommendations';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription } from '@/lib/seo';
 import { Metadata } from 'next';
@@ -228,7 +229,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.price && (
                   <div>
                     <h2 className="text-sm font-semibold text-white mb-2">価格</h2>
-                    <p className="text-2xl font-bold text-white">¥{product.price.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-white">
+                      {isSubscriptionSite(product.provider) && <span className="text-base text-gray-400 mr-1">月額</span>}
+                      ¥{product.price.toLocaleString()}
+                    </p>
                   </div>
                 )}
 
@@ -256,16 +260,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 )}
 
                 {product.affiliateUrl && (
-                  <div className="pt-4">
-                    <a
-                      href={product.affiliateUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full bg-rose-600 text-white text-center py-3 px-6 rounded-lg font-semibold hover:bg-rose-700 transition-colors"
-                    >
-                      {product.providerLabel}で購入
-                    </a>
-                  </div>
+                  <AffiliateButton
+                    affiliateUrl={product.affiliateUrl}
+                    providerLabel={product.providerLabel}
+                    aspName={sources[0]?.aspName}
+                  />
                 )}
               </div>
             </div>

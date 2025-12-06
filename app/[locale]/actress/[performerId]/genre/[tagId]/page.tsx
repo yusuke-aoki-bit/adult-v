@@ -17,7 +17,7 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { locale, performerId, tagId } = await params;
+  const { performerId, tagId } = await params;
   const db = getDb();
 
   const [performer] = await db
@@ -103,15 +103,15 @@ export default async function PerformerGenrePage({ params }: PageProps) {
         </div>
         {matchingProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {matchingProducts.map((product: any) => (
+            {matchingProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 product={{
-                  id: product.id,
-                  normalizedProductId: product.normalizedProductId || product.id,
+                  id: String(product.id),
+                  normalizedProductId: product.normalizedProductId || String(product.id),
                   title: product.title,
-                  releaseDate: product.releaseDate || null,
-                  imageUrl: product.imageUrl || null,
+                  releaseDate: product.releaseDate || undefined,
+                  imageUrl: product.imageUrl || '',
                   description: product.description || '',
                   price: 0,
                   affiliateUrl: '',

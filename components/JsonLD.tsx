@@ -3,8 +3,7 @@
  */
 
 interface JsonLDProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 export function JsonLD({ data }: JsonLDProps) {

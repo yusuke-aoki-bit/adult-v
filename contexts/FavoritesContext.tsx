@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useSyncExternalStore, ReactNode, useCallback, useMemo } from 'react';
 
 interface FavoritesContextType {
   favoriteActresses: Set<number>;
@@ -13,77 +13,87 @@ interface FavoritesContextType {
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
+// Custom hook to sync with localStorage using useSyncExternalStore
+function useLocalStorageValue(key: string): string {
+  const subscribe = useCallback((callback: () => void) => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === key || e.key === null) {
+        callback();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('local-storage-update', callback);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('local-storage-update', callback);
+    };
+  }, [key]);
+
+  const getSnapshot = useCallback(() => {
+    return localStorage.getItem(key) || '[]';
+  }, [key]);
+
+  const getServerSnapshot = useCallback(() => '[]', []);
+
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
 export function FavoritesProvider({ children }: { children: ReactNode }) {
-  const [favoriteActresses, setFavoriteActresses] = useState<Set<number>>(new Set());
-  const [favoriteProducts, setFavoriteProducts] = useState<Set<string>>(new Set());
-  const [isLoaded, setIsLoaded] = useState(false);
+  const actressesRaw = useLocalStorageValue('favoriteActresses');
+  const productsRaw = useLocalStorageValue('favoriteProducts');
 
-  // Load favorites from localStorage on mount
-  useEffect(() => {
-    const savedActresses = localStorage.getItem('favoriteActresses');
-    const savedProducts = localStorage.getItem('favoriteProducts');
-
-    if (savedActresses) {
-      setFavoriteActresses(new Set(JSON.parse(savedActresses)));
+  const favoriteActresses = useMemo(() => {
+    try {
+      return new Set<number>(JSON.parse(actressesRaw));
+    } catch {
+      return new Set<number>();
     }
-    if (savedProducts) {
-      setFavoriteProducts(new Set(JSON.parse(savedProducts)));
+  }, [actressesRaw]);
+
+  const favoriteProducts = useMemo(() => {
+    try {
+      return new Set<string>(JSON.parse(productsRaw));
+    } catch {
+      return new Set<string>();
     }
-    setIsLoaded(true);
-  }, []);
+  }, [productsRaw]);
 
-  // Save actresses to localStorage whenever they change
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('favoriteActresses', JSON.stringify(Array.from(favoriteActresses)));
+  const toggleActressFavorite = useCallback((actressId: number) => {
+    const current = new Set(favoriteActresses);
+    if (current.has(actressId)) {
+      current.delete(actressId);
+    } else {
+      current.add(actressId);
     }
-  }, [favoriteActresses, isLoaded]);
+    localStorage.setItem('favoriteActresses', JSON.stringify(Array.from(current)));
+    window.dispatchEvent(new Event('local-storage-update'));
+  }, [favoriteActresses]);
 
-  // Save products to localStorage whenever they change
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('favoriteProducts', JSON.stringify(Array.from(favoriteProducts)));
+  const toggleProductFavorite = useCallback((productId: string) => {
+    const current = new Set(favoriteProducts);
+    if (current.has(productId)) {
+      current.delete(productId);
+    } else {
+      current.add(productId);
     }
-  }, [favoriteProducts, isLoaded]);
+    localStorage.setItem('favoriteProducts', JSON.stringify(Array.from(current)));
+    window.dispatchEvent(new Event('local-storage-update'));
+  }, [favoriteProducts]);
 
-  const toggleActressFavorite = (actressId: number) => {
-    setFavoriteActresses(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(actressId)) {
-        newSet.delete(actressId);
-      } else {
-        newSet.add(actressId);
-      }
-      return newSet;
-    });
-  };
+  const isActressFavorite = useCallback((actressId: number) => favoriteActresses.has(actressId), [favoriteActresses]);
+  const isProductFavorite = useCallback((productId: string) => favoriteProducts.has(productId), [favoriteProducts]);
 
-  const toggleProductFavorite = (productId: string) => {
-    setFavoriteProducts(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(productId)) {
-        newSet.delete(productId);
-      } else {
-        newSet.add(productId);
-      }
-      return newSet;
-    });
-  };
-
-  const isActressFavorite = (actressId: number) => favoriteActresses.has(actressId);
-  const isProductFavorite = (productId: string) => favoriteProducts.has(productId);
+  const value = useMemo(() => ({
+    favoriteActresses,
+    favoriteProducts,
+    toggleActressFavorite,
+    toggleProductFavorite,
+    isActressFavorite,
+    isProductFavorite,
+  }), [favoriteActresses, favoriteProducts, toggleActressFavorite, toggleProductFavorite, isActressFavorite, isProductFavorite]);
 
   return (
-    <FavoritesContext.Provider
-      value={{
-        favoriteActresses,
-        favoriteProducts,
-        toggleActressFavorite,
-        toggleProductFavorite,
-        isActressFavorite,
-        isProductFavorite,
-      }}
-    >
+    <FavoritesContext.Provider value={value}>
       {children}
     </FavoritesContext.Provider>
   );

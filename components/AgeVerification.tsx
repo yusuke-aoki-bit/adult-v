@@ -17,16 +17,18 @@ interface AgeVerificationProps {
 
 export default function AgeVerification({ locale, children }: AgeVerificationProps) {
   const t = useTranslations('ageVerification');
-  const [isVerified, setIsVerified] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   const minAge = AGE_REQUIREMENTS[locale as keyof typeof AGE_REQUIREMENTS] || 18;
 
+  // クライアントマウント後にlocalStorageから状態を読み込む
   useEffect(() => {
-    // クライアントサイドでのみローカルストレージをチェック
-    const verified = localStorage.getItem(AGE_VERIFICATION_KEY) === 'true';
-    setIsVerified(verified);
-    setIsLoading(false);
+    const storedValue = localStorage.getItem(AGE_VERIFICATION_KEY) === 'true';
+    if (storedValue) {
+      setIsVerified(true);
+    }
+    setIsClient(true);
   }, []);
 
   const handleConfirm = () => {
@@ -39,8 +41,8 @@ export default function AgeVerification({ locale, children }: AgeVerificationPro
     window.location.href = 'https://www.google.com';
   };
 
-  // ローディング中は何も表示しない（ちらつき防止）
-  if (isLoading) {
+  // クライアントマウント前は何も表示しない（ちらつき防止）
+  if (!isClient) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="animate-pulse text-gray-400">Loading...</div>

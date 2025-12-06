@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Admin - Adult V',
@@ -12,21 +13,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <a href="/" className="text-white font-bold text-lg">
+              <Link href="/" className="text-white font-bold text-lg">
                 Adult V Admin
-              </a>
+              </Link>
               <div className="flex gap-4">
-                <a
+                <Link
                   href="/admin/stats"
                   className="text-gray-300 hover:text-white text-sm"
                 >
                   Collection Stats
-                </a>
+                </Link>
               </div>
             </div>
-            <a href="/" className="text-gray-400 hover:text-white text-sm">
+            <Link href="/" className="text-gray-400 hover:text-white text-sm">
               Back to Site
-            </a>
+            </Link>
           </div>
         </div>
       </nav>

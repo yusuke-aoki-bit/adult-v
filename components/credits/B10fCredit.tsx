@@ -15,6 +15,7 @@ export function B10fCredit({ className = '' }: B10fCreditProps) {
       className={`inline-block ${className}`}
       aria-label="B10F.jp"
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="https://ads.b10f.jp/images/btn_member.png"
         alt="B10F.jp"

@@ -87,8 +87,14 @@ export default function PerformanceMonitor() {
 }
 
 // Extend Window interface for gtag
+type GtagCommand = 'config' | 'event' | 'js' | 'set' | 'get' | 'consent';
+
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
+    gtag?: (
+      command: GtagCommand,
+      targetOrEventName: string | Date,
+      params?: Record<string, unknown>
+    ) => void;
   }
 }

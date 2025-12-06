@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 export interface FavoriteItem {
   type: 'product' | 'actress';
-  id: number;
+  id: number | string;
   title?: string;
   name?: string;
   thumbnail?: string;
@@ -62,13 +62,13 @@ export function useFavorites() {
     });
   };
 
-  const removeFavorite = (type: 'product' | 'actress', id: number) => {
+  const removeFavorite = (type: 'product' | 'actress', id: number | string) => {
     setFavorites((prev) =>
       prev.filter((f) => !(f.type === type && f.id === id))
     );
   };
 
-  const isFavorite = (type: 'product' | 'actress', id: number) => {
+  const isFavorite = (type: 'product' | 'actress', id: number | string) => {
     return favorites.some((f) => f.type === type && f.id === id);
   };
 

@@ -5,7 +5,7 @@
 
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import type { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
+import type { Browser, Page, LaunchOptions } from 'puppeteer';
 
 // Stealth プラグインを有効化
 puppeteer.use(StealthPlugin());
@@ -31,7 +31,7 @@ const DEFAULT_VIEWPORT = { width: 1920, height: 1080 };
  * Stealthブラウザインスタンスを作成
  */
 export async function createStealthBrowser(options: BrowserOptions = {}): Promise<Browser> {
-  const launchOptions: PuppeteerLaunchOptions = {
+  const launchOptions: LaunchOptions = {
     headless: options.headless !== false ? 'shell' : false,
     args: [
       '--no-sandbox',

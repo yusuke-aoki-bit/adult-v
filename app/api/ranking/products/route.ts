@@ -1,21 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { products, productSources } from '@/lib/db/schema';
-import { sql, desc } from 'drizzle-orm';
+import { productSources } from '@/lib/db/schema';
+import { sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Cache for 1 hour
 
-interface RankingParams {
-  period?: 'daily' | 'weekly' | 'monthly' | 'all';
-  limit?: number;
+// 許可されたperiod値のホワイトリスト
+const VALID_PERIODS = ['daily', 'weekly', 'monthly', 'all'] as const;
+type Period = typeof VALID_PERIODS[number];
+
+// 制限値の範囲
+const MIN_LIMIT = 1;
+const MAX_LIMIT = 100;
+const DEFAULT_LIMIT = 20;
+
+function isValidPeriod(value: string | null): value is Period {
+  return value !== null && VALID_PERIODS.includes(value as Period);
+}
+
+function sanitizeLimit(value: string | null): number {
+  const parsed = parseInt(value || String(DEFAULT_LIMIT), 10);
+  if (isNaN(parsed) || parsed < MIN_LIMIT) return DEFAULT_LIMIT;
+  return Math.min(parsed, MAX_LIMIT);
 }
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const period = (searchParams.get('period') || 'weekly') as RankingParams['period'];
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
+    const periodParam = searchParams.get('period');
+    const period: Period = isValidPeriod(periodParam) ? periodParam : 'weekly';
+    const limit = sanitizeLimit(searchParams.get('limit'));
 
     const db = getDb();
 
@@ -58,9 +73,19 @@ export async function GET(request: NextRequest) {
       LIMIT ${limit}
     `);
 
+    // 型定義
+    interface RankingRow {
+      id: number;
+      title: string;
+      thumbnail: string | null;
+      release_date: string | null;
+      view_count: string | number;
+      rank: string | number;
+    }
+
     return NextResponse.json({
       period,
-      ranking: ranking.rows.map((row: any) => ({
+      ranking: (ranking.rows as RankingRow[]).map((row) => ({
         rank: Number(row.rank),
         productId: row.id,
         title: row.title,

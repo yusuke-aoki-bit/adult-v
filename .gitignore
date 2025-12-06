@@ -53,3 +53,10 @@ nul
 # docs folder (local documentation/reference files)
 /docs/
 adult-v-*.json
+
+# IDE/editor settings
+.claude/
+.vscode/
+
+# Temporary files
+tmp/

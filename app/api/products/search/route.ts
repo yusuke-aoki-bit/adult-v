@@ -1,7 +1,35 @@
 import { NextResponse } from 'next/server';
-import { getProducts } from '@/lib/db/queries';
+import { getProducts, type SortOption } from '@/lib/db/queries';
 
 export const dynamic = 'force-dynamic';
+
+// 許可されたソートオプション
+const VALID_SORT_OPTIONS: SortOption[] = [
+  'releaseDateDesc',
+  'releaseDateAsc',
+  'priceAsc',
+  'priceDesc',
+  'nameAsc',
+  'nameDesc',
+  'viewsDesc',
+];
+
+function isValidSortOption(value: string | null): value is SortOption {
+  return value !== null && VALID_SORT_OPTIONS.includes(value as SortOption);
+}
+
+// 数値パラメータのサニタイズ
+function sanitizeNumber(
+  value: string | null,
+  defaultValue: number,
+  min: number,
+  max: number
+): number {
+  if (!value) return defaultValue;
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed)) return defaultValue;
+  return Math.max(min, Math.min(parsed, max));
+}
 
 /**
  * 商品を検索するAPIエンドポイント
@@ -13,21 +41,27 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
-    const limitParam = searchParams.get('limit');
-    const offsetParam = searchParams.get('offset');
-    const site = searchParams.get('site'); // サイトフィルター (DMM, DUGA, etc.)
-    const minPriceParam = searchParams.get('minPrice');
-    const maxPriceParam = searchParams.get('maxPrice');
-    const sortBy = searchParams.get('sortBy'); // ソート順
-    const tags = searchParams.get('tags'); // タグフィルター (カンマ区切り)
-    const excludeTags = searchParams.get('excludeTags'); // 除外タグ (カンマ区切り)
-    const hasVideo = searchParams.get('hasVideo') === 'true' ? true : undefined; // サンプル動画あり
-    const hasImage = searchParams.get('hasImage') === 'true' ? true : undefined; // サンプル画像あり
+    const site = searchParams.get('site');
+    const sortByParam = searchParams.get('sortBy');
+    const tags = searchParams.get('tags');
+    const excludeTags = searchParams.get('excludeTags');
+    const hasVideo = searchParams.get('hasVideo') === 'true' ? true : undefined;
+    const hasImage = searchParams.get('hasImage') === 'true' ? true : undefined;
 
-    const limit = limitParam ? parseInt(limitParam, 10) : 50;
-    const offset = offsetParam ? parseInt(offsetParam, 10) : 0;
-    const minPrice = minPriceParam ? parseInt(minPriceParam, 10) : undefined;
-    const maxPrice = maxPriceParam ? parseInt(maxPriceParam, 10) : undefined;
+    // 数値パラメータのバリデーション
+    const limit = sanitizeNumber(searchParams.get('limit'), 50, 1, 100);
+    const offset = sanitizeNumber(searchParams.get('offset'), 0, 0, 10000);
+    const minPrice = searchParams.get('minPrice')
+      ? sanitizeNumber(searchParams.get('minPrice'), 0, 0, 1000000)
+      : undefined;
+    const maxPrice = searchParams.get('maxPrice')
+      ? sanitizeNumber(searchParams.get('maxPrice'), 1000000, 0, 1000000)
+      : undefined;
+
+    // ソートオプションのバリデーション
+    const sortBy: SortOption = isValidSortOption(sortByParam)
+      ? sortByParam
+      : 'releaseDateDesc';
 
     if (!query) {
       return NextResponse.json(
@@ -36,16 +70,21 @@ export async function GET(request: Request) {
       );
     }
 
-    if (isNaN(limit) || limit < 1 || limit > 100) {
+    // クエリの長さ制限
+    if (query.length > 200) {
       return NextResponse.json(
-        { error: 'Limit must be between 1 and 100' },
+        { error: 'Search query is too long (max 200 characters)' },
         { status: 400 }
       );
     }
 
-    // タグIDの配列に変換
-    const tagIds = tags ? tags.split(',').filter(Boolean) : undefined;
-    const excludeTagIds = excludeTags ? excludeTags.split(',').filter(Boolean) : undefined;
+    // タグIDの配列に変換（数値のみ許可）
+    const tagIds = tags
+      ? tags.split(',').filter((id) => /^\d+$/.test(id))
+      : undefined;
+    const excludeTagIds = excludeTags
+      ? excludeTags.split(',').filter((id) => /^\d+$/.test(id))
+      : undefined;
 
     // getProducts関数を使用して高度な検索を実行
     const products = await getProducts({
@@ -55,7 +94,7 @@ export async function GET(request: Request) {
       provider: site || undefined,
       minPrice,
       maxPrice,
-      sortBy: sortBy as any || 'releaseDateDesc',
+      sortBy,
       tags: tagIds,
       excludeTags: excludeTagIds,
       hasVideo,

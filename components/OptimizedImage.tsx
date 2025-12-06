@@ -107,10 +107,12 @@ export default function OptimizedImage({
   };
 
   if (fill) {
+    // eslint-disable-next-line jsx-a11y/alt-text
     return <Image {...imageProps} fill />;
   }
 
   return (
+    // eslint-disable-next-line jsx-a11y/alt-text
     <Image
       {...imageProps}
       width={width || 500}

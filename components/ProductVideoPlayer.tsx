@@ -15,7 +15,7 @@ interface ProductVideoPlayerProps {
   productTitle: string;
 }
 
-export default function ProductVideoPlayer({ sampleVideos, productTitle }: ProductVideoPlayerProps) {
+export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerProps) {
   const [selectedVideo, setSelectedVideo] = useState<VideoInfo | null>(
     sampleVideos && sampleVideos.length > 0 ? sampleVideos[0] : null
   );
@@ -84,16 +84,31 @@ export default function ProductVideoPlayer({ sampleVideos, productTitle }: Produ
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95">
             <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
             <p className="text-white text-lg mb-2">動画を読み込めませんでした</p>
-            <p className="text-gray-400 text-sm mb-4">動画ファイルが利用できない可能性があります</p>
-            <button
-              onClick={() => {
-                setHasError(false);
-                setIsPlaying(false);
-              }}
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              閉じる
-            </button>
+            <p className="text-gray-400 text-sm mb-4 text-center px-4">
+              配信元サイトのセキュリティ制限により、<br />
+              直接再生できない場合があります
+            </p>
+            <div className="flex gap-3">
+              {selectedVideo && (
+                <a
+                  href={selectedVideo.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-colors"
+                >
+                  配信元で再生
+                </a>
+              )}
+              <button
+                onClick={() => {
+                  setHasError(false);
+                  setIsPlaying(false);
+                }}
+                className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                閉じる
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -101,9 +116,9 @@ export default function ProductVideoPlayer({ sampleVideos, productTitle }: Produ
       {/* 動画一覧（複数動画がある場合のみ） */}
       {sampleVideos.length > 1 && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {sampleVideos.map((video, index) => (
+          {sampleVideos.map((video, idx) => (
             <button
-              key={index}
+              key={video.url}
               onClick={() => {
                 setSelectedVideo(video);
                 setIsPlaying(false);
@@ -118,7 +133,7 @@ export default function ProductVideoPlayer({ sampleVideos, productTitle }: Produ
               <div className="flex flex-col items-center justify-center h-full">
                 <Film className="w-8 h-8 text-gray-400 mb-2" />
                 <p className="text-sm text-gray-300">
-                  {getVideoTypeLabel(video.type)} {index + 1}
+                  {getVideoTypeLabel(video.type)} {idx + 1}
                 </p>
                 {video.quality && (
                   <p className="text-xs text-gray-400 mt-1">{video.quality}</p>

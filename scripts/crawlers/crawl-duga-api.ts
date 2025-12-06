@@ -2,38 +2,65 @@ import { getDugaClient } from '../../lib/providers/duga-client';
 import { getDb } from '../../lib/db';
 import { sql } from 'drizzle-orm';
 import { validateProductData } from '../../lib/crawler-utils';
+import { scrapeDugaProductPage, DugaPageData } from '../../lib/providers/duga-page-scraper';
+import { generateProductDescription, extractProductTags, GeneratedDescription, translateProduct } from '../../lib/google-apis';
+import { saveSaleInfo } from '../../lib/sale-helper';
+import {
+  getFirstRow,
+  IdRow,
+  upsertDugaRawDataWithGcs,
+  linkProductToRawData,
+  markRawDataAsProcessed,
+  crawlerLog,
+} from '../../lib/crawler';
 
 /**
- * DUGA API クローラー（生データ保存対応）
+ * DUGA API クローラー（GCS対応 + 重複防止）
  *
  * 機能:
  * - DUGA APIから商品データを取得
- * - 生レスポンスをduga_raw_responsesテーブルに保存
- * - パースしたデータを正規化テーブル（products, product_sources等）に保存
- * - product_raw_data_linksでリレーション作成（リカバリー用）
+ * - 生レスポンスをGCS優先で保存（フォールバック: DB）
+ * - 重複クロール防止: hash比較
+ * - 重複分析防止: processedAtチェック
+ * - 商品ページからレビュー情報をスクレイピング
  *
  * 使い方:
- * npx tsx scripts/crawlers/crawl-duga-api.ts [--limit 100] [--offset 0]
+ * npx tsx scripts/crawlers/crawl-duga-api.ts [--limit 100] [--offset 0] [--skip-reviews] [--no-ai] [--force]
  */
 
 interface CrawlStats {
   totalFetched: number;
   newProducts: number;
   updatedProducts: number;
+  skippedUnchanged: number;
+  skippedInvalid: number;
   errors: number;
   rawDataSaved: number;
+  reviewsFetched: number;
+  reviewsSaved: number;
+  aiGenerated: number;
+  salesSaved: number;
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const limitArg = args.find(arg => arg.startsWith('--limit='));
   const offsetArg = args.find(arg => arg.startsWith('--offset='));
+  const skipReviews = args.includes('--skip-reviews');
+  const enableAI = !args.includes('--no-ai');
+  const forceReprocess = args.includes('--force');
 
   const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 100;
   const offset = offsetArg ? parseInt(offsetArg.split('=')[1]) : 0;
 
-  console.log('=== DUGA APIクローラー（生データ保存対応） ===\n');
-  console.log(`取得範囲: offset=${offset}, limit=${limit}\n`);
+  console.log('========================================');
+  console.log('=== DUGA APIクローラー (GCS対応) ===');
+  console.log('========================================');
+  console.log(`取得範囲: offset=${offset}, limit=${limit}`);
+  console.log(`レビュー取得: ${skipReviews ? '無効' : '有効'}`);
+  console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
+  console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}`);
+  console.log('========================================\n');
 
   const dugaClient = getDugaClient();
   const db = getDb();
@@ -42,8 +69,14 @@ async function main() {
     totalFetched: 0,
     newProducts: 0,
     updatedProducts: 0,
+    skippedUnchanged: 0,
+    skippedInvalid: 0,
     errors: 0,
     rawDataSaved: 0,
+    reviewsFetched: 0,
+    reviewsSaved: 0,
+    aiGenerated: 0,
+    salesSaved: 0,
   };
 
   try {
@@ -68,26 +101,32 @@ async function main() {
         });
 
         if (!validation.isValid) {
-          console.log(`  ⚠️ スキップ: ${validation.reason}`);
+          console.log(`  ⚠️ スキップ(無効): ${validation.reason}`);
+          stats.skippedInvalid++;
           continue;
         }
 
-        // 1. 生JSONレスポンスを保存
-        const rawResponseResult = await db.execute(sql`
-          INSERT INTO duga_raw_responses (product_id, api_version, raw_json, fetched_at)
-          VALUES (${item.productId}, '1.2', ${JSON.stringify(item)}::jsonb, NOW())
-          ON CONFLICT (product_id)
-          DO UPDATE SET
-            raw_json = EXCLUDED.raw_json,
-            fetched_at = EXCLUDED.fetched_at,
-            updated_at = NOW()
-          RETURNING id
-        `);
+        // 1. 生データの保存（GCS優先 + 重複チェック）
+        const rawData = item as unknown as Record<string, unknown>;
+        const upsertResult = await upsertDugaRawDataWithGcs(item.productId, rawData);
 
-        const rawDataId = (rawResponseResult.rows[0] as any).id;
-        stats.rawDataSaved++;
+        // 重複チェック: 変更なし＆処理済みならスキップ
+        if (upsertResult.shouldSkip && !forceReprocess) {
+          console.log(`  ⏭️ スキップ(処理済み): ${item.productId}`);
+          stats.skippedUnchanged++;
+          continue;
+        }
 
-        console.log(`  ✓ 生データ保存完了 (raw_id: ${rawDataId})`);
+        const rawDataId = upsertResult.id;
+        const gcsUrl = upsertResult.gcsUrl;
+
+        if (upsertResult.isNew) {
+          stats.rawDataSaved++;
+          console.log(`  ✓ 生データ保存 (raw_id: ${rawDataId})${gcsUrl ? ' [GCS]' : ' [DB]'}`);
+        } else if (!upsertResult.shouldSkip) {
+          stats.rawDataSaved++;
+          console.log(`  🔄 生データ更新 (raw_id: ${rawDataId})${gcsUrl ? ' [GCS]' : ' [DB]'}`);
+        }
 
         // 2. 正規化されたデータを保存
         // normalized_product_id生成: DUGA-{productId}
@@ -124,7 +163,8 @@ async function main() {
           RETURNING id
         `);
 
-        const productId = (productResult.rows[0] as any).id;
+        const productRow = getFirstRow<IdRow>(productResult);
+        const productId = productRow!.id;
         const isNew = productResult.rowCount === 1;
 
         if (isNew) {
@@ -164,22 +204,14 @@ async function main() {
 
         console.log(`  ✓ product_sources 保存完了`);
 
-        // 4. product_raw_data_linksにリレーション作成
-        await db.execute(sql`
-          INSERT INTO product_raw_data_links (
-            product_id,
-            source_type,
-            raw_data_id
-          )
-          VALUES (
-            ${productId},
-            'duga',
-            ${rawDataId}
-          )
-          ON CONFLICT (product_id, source_type, raw_data_id)
-          DO NOTHING
-        `);
-
+        // 4. 商品と生データをリンク
+        await linkProductToRawData(
+          productId,
+          'duga',
+          rawDataId,
+          'duga_raw_responses',
+          gcsUrl || `hash:${rawDataId}`
+        );
         console.log(`  ✓ リカバリーリンク作成完了`);
 
         // 5. サンプル画像を保存
@@ -287,7 +319,8 @@ async function main() {
               RETURNING id
             `);
 
-            const categoryId = (categoryResult.rows[0] as any).id;
+            const categoryRow = getFirstRow<IdRow>(categoryResult);
+            const categoryId = categoryRow!.id;
 
             // product_categoriesにリレーション作成
             await db.execute(sql`
@@ -313,7 +346,8 @@ async function main() {
               RETURNING id
             `);
 
-            const performerId = (performerResult.rows[0] as any).id;
+            const performerRow = getFirstRow<IdRow>(performerResult);
+            const performerId = performerRow!.id;
 
             // product_performersにリレーション作成
             await db.execute(sql`
@@ -326,13 +360,222 @@ async function main() {
           console.log(`  ✓ 出演者保存完了`);
         }
 
+        // 8.5. セール情報保存
+        if (item.saleInfo) {
+          try {
+            const saved = await saveSaleInfo('DUGA', item.productId, {
+              regularPrice: item.saleInfo.regularPrice,
+              salePrice: item.saleInfo.salePrice,
+              discountPercent: item.saleInfo.discountPercent,
+              saleType: item.saleInfo.saleType,
+              saleName: item.saleInfo.saleName,
+            });
+            if (saved) {
+              stats.salesSaved++;
+              console.log(`  💰 セール情報保存: ¥${item.saleInfo.regularPrice.toLocaleString()} → ¥${item.saleInfo.salePrice.toLocaleString()} (${item.saleInfo.discountPercent}% OFF)`);
+            }
+          } catch (saleError: unknown) {
+            console.log(`  ⚠️ セール情報保存失敗: ${saleError instanceof Error ? saleError.message : saleError}`);
+          }
+        }
+
+        // 9. レビュー情報取得（ページスクレイピング）
+        if (!skipReviews) {
+          try {
+            console.log(`  📝 レビュー情報取得中...`);
+            const pageData = await scrapeDugaProductPage(item.productId);
+
+            // 集計評価を保存
+            if (pageData.aggregateRating) {
+              stats.reviewsFetched += pageData.aggregateRating.reviewCount;
+
+              await db.execute(sql`
+                INSERT INTO product_rating_summary (
+                  product_id,
+                  asp_name,
+                  average_rating,
+                  max_rating,
+                  total_reviews,
+                  rating_distribution,
+                  last_updated
+                )
+                VALUES (
+                  ${productId},
+                  'DUGA',
+                  ${pageData.aggregateRating.averageRating},
+                  ${pageData.aggregateRating.bestRating},
+                  ${pageData.aggregateRating.reviewCount},
+                  ${JSON.stringify({ worstRating: pageData.aggregateRating.worstRating })}::jsonb,
+                  NOW()
+                )
+                ON CONFLICT (product_id, asp_name)
+                DO UPDATE SET
+                  average_rating = EXCLUDED.average_rating,
+                  total_reviews = EXCLUDED.total_reviews,
+                  rating_distribution = EXCLUDED.rating_distribution,
+                  last_updated = NOW()
+              `);
+
+              console.log(`  ✓ 評価サマリー保存完了 (${pageData.aggregateRating.averageRating}点, ${pageData.aggregateRating.reviewCount}件)`);
+            }
+
+            // 個別レビューを保存
+            if (pageData.reviews.length > 0) {
+              console.log(`  📝 個別レビュー保存中 (${pageData.reviews.length}件)...`);
+
+              for (const review of pageData.reviews) {
+                await db.execute(sql`
+                  INSERT INTO product_reviews (
+                    product_id,
+                    asp_name,
+                    reviewer_name,
+                    rating,
+                    max_rating,
+                    title,
+                    content,
+                    review_date,
+                    helpful,
+                    source_review_id,
+                    created_at,
+                    updated_at
+                  )
+                  VALUES (
+                    ${productId},
+                    'DUGA',
+                    ${review.reviewerName || null},
+                    ${review.rating},
+                    5,
+                    ${review.title || null},
+                    ${review.content || null},
+                    ${review.date ? new Date(review.date) : null},
+                    ${review.helpfulYes},
+                    ${review.reviewId || null},
+                    NOW(),
+                    NOW()
+                  )
+                  ON CONFLICT (product_id, asp_name, source_review_id)
+                  DO UPDATE SET
+                    reviewer_name = EXCLUDED.reviewer_name,
+                    rating = EXCLUDED.rating,
+                    title = EXCLUDED.title,
+                    content = EXCLUDED.content,
+                    helpful = EXCLUDED.helpful,
+                    updated_at = NOW()
+                `);
+                stats.reviewsSaved++;
+              }
+
+              console.log(`  ✓ 個別レビュー保存完了`);
+            } else {
+              console.log(`  ℹ️  レビューなし`);
+            }
+
+            // ページスクレイピング後は追加で待機
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+          } catch (reviewError: unknown) {
+            console.log(`  ⚠️ レビュー取得失敗: ${reviewError instanceof Error ? reviewError.message : reviewError}`);
+          }
+        }
+
+        // 10. AI機能: 説明文生成とタグ抽出
+        if (enableAI) {
+          try {
+            console.log(`  🤖 AI機能を実行中...`);
+
+            // 商品情報を収集
+            const performerNames = item.performers?.map(p => p.name) || [];
+            const categoryNames = item.categories?.map(c => c.name) || [];
+
+            // AI説明文生成
+            const aiResult = await generateProductDescription({
+              title: item.title,
+              originalDescription: item.description,
+              performers: performerNames.length > 0 ? performerNames : undefined,
+              genres: categoryNames.length > 0 ? categoryNames : undefined,
+            });
+
+            if (aiResult) {
+              console.log(`    ✅ AI説明文生成完了`);
+              console.log(`       キャッチコピー: ${aiResult.catchphrase}`);
+
+              // DBに保存
+              try {
+                await db.execute(sql`
+                  UPDATE products
+                  SET
+                    ai_description = ${JSON.stringify(aiResult)}::jsonb,
+                    ai_catchphrase = ${aiResult.catchphrase},
+                    ai_short_description = ${aiResult.shortDescription},
+                    updated_at = NOW()
+                  WHERE id = ${productId}
+                `);
+                console.log(`    💾 AI生成データを保存しました`);
+                stats.aiGenerated++;
+              } catch (saveError) {
+                console.log(`    ⚠️ AI生成データの保存をスキップ（カラム未作成の可能性）`);
+              }
+            }
+
+            // AIタグ抽出
+            const aiTags = await extractProductTags(item.title, item.description);
+            if (aiTags.genres.length > 0 || aiTags.attributes.length > 0) {
+              console.log(`    ✅ AIタグ抽出完了`);
+              console.log(`       ジャンル: ${aiTags.genres.join(', ') || 'なし'}`);
+
+              try {
+                await db.execute(sql`
+                  UPDATE products
+                  SET ai_tags = ${JSON.stringify(aiTags)}::jsonb
+                  WHERE id = ${productId}
+                `);
+              } catch (saveError) {
+                // スキップ
+              }
+            }
+
+            // 翻訳機能: タイトルと説明を多言語翻訳
+            console.log(`  🌐 翻訳処理を実行中...`);
+            const translation = await translateProduct(item.title, item.description);
+            if (translation) {
+              try {
+                await db.execute(sql`
+                  UPDATE products
+                  SET
+                    title_en = ${translation.en?.title || null},
+                    title_zh = ${translation.zh?.title || null},
+                    title_ko = ${translation.ko?.title || null},
+                    description_en = ${translation.en?.description || null},
+                    description_zh = ${translation.zh?.description || null},
+                    description_ko = ${translation.ko?.description || null},
+                    updated_at = NOW()
+                  WHERE id = ${productId}
+                `);
+                console.log(`    ✅ 翻訳完了`);
+                if (translation.en?.title) {
+                  console.log(`       EN: ${translation.en.title.slice(0, 50)}...`);
+                }
+              } catch (saveError) {
+                // カラム未作成の場合はスキップ
+              }
+            }
+
+          } catch (aiError: unknown) {
+            console.log(`    ⚠️ AI機能エラー: ${aiError instanceof Error ? aiError.message : aiError}`);
+          }
+        }
+
+        // 生データを処理済みとしてマーク
+        await markRawDataAsProcessed('duga', rawDataId);
+
         console.log();
 
         // レート制限対策: 1秒待機
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-      } catch (error: any) {
-        console.error(`  ❌ エラー: ${error.message}\n`);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`  ❌ エラー: ${errorMessage}\n`);
         stats.errors++;
         continue;
       }
@@ -348,13 +591,15 @@ async function main() {
         (SELECT COUNT(*) FROM duga_raw_responses) as raw_data_count,
         (SELECT COUNT(*) FROM products WHERE normalized_product_id LIKE 'duga-%') as product_count,
         (SELECT COUNT(*) FROM product_sources WHERE asp_name = 'DUGA') as source_count,
-        (SELECT COUNT(*) FROM product_raw_data_links WHERE source_type = 'duga') as link_count
+        (SELECT COUNT(*) FROM product_raw_data_links WHERE source_type = 'duga') as link_count,
+        (SELECT COUNT(*) FROM product_reviews WHERE asp_name = 'DUGA') as reviews_count,
+        (SELECT COUNT(*) FROM product_rating_summary WHERE asp_name = 'DUGA') as rating_summary_count
     `);
 
     console.log('\nデータベース状態:');
     console.table(finalCounts.rows);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ クローラーエラー:', error);
     process.exit(1);
   }

@@ -11,7 +11,7 @@ import { verifyCronRequest, unauthorizedResponse } from '@/lib/cron-auth';
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
-import iconv from 'iconv-lite';
+import { detectEncoding, decodeHtml, generateNextId } from '@/lib/providers/dti-base';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分タイムアウト
@@ -99,87 +99,6 @@ const AFFILIATE_ID = '39614';
 function generateAffiliateUrl(originalUrl: string): string {
   const encodedUrl = encodeURIComponent(originalUrl);
   return `https://click.dtiserv2.com/Direct/${AFFILIATE_ID}/${encodedUrl}`;
-}
-
-function detectEncoding(buffer: Buffer, contentType?: string, url?: string): string {
-  if (contentType) {
-    const charsetMatch = contentType.match(/charset=([^\s;]+)/i);
-    if (charsetMatch) return charsetMatch[1].toLowerCase();
-  }
-  if (url && (url.includes('caribbeancom') || url.includes('1pondo') || url.includes('heyzo'))) {
-    return 'euc-jp';
-  }
-  const head = buffer.slice(0, 4096).toString('latin1');
-  const charsetMatch1 = head.match(/<meta\s+charset=["']?([^"'\s>]+)/i);
-  if (charsetMatch1) return charsetMatch1[1].toLowerCase();
-  const charsetMatch2 = head.match(/content=["'][^"']*charset=([^"'\s;]+)/i);
-  if (charsetMatch2) return charsetMatch2[1].toLowerCase();
-  return 'utf-8';
-}
-
-function decodeHtml(buffer: Buffer, contentType?: string, url?: string): string {
-  const encoding = detectEncoding(buffer, contentType, url);
-  const normalizedEncoding = encoding
-    .replace('shift_jis', 'Shift_JIS')
-    .replace('euc-jp', 'EUC-JP');
-  try {
-    if (normalizedEncoding.toLowerCase() === 'utf-8') return buffer.toString('utf-8');
-    return iconv.decode(buffer, normalizedEncoding);
-  } catch {
-    return buffer.toString('utf-8');
-  }
-}
-
-function generateNextId(currentId: string, format: string, reverse: boolean): string | null {
-  if (format === 'NNNN') {
-    const num = parseInt(currentId);
-    if (reverse) {
-      if (num <= 1) return null;
-      return String(num - 1).padStart(4, '0');
-    } else {
-      if (num >= 9999) return null;
-      return String(num + 1).padStart(4, '0');
-    }
-  }
-
-  if (format === 'MMDDYY_NNN') {
-    const [datePart, seqPart] = currentId.split('_');
-    const maxSeq = 10;
-    const seq = parseInt(seqPart);
-
-    if (reverse) {
-      if (seq < maxSeq) {
-        return `${datePart}_${String(seq + 1).padStart(3, '0')}`;
-      }
-      const mm = parseInt(datePart.substring(0, 2));
-      const dd = parseInt(datePart.substring(2, 4));
-      const yy = parseInt(datePart.substring(4, 6));
-      const date = new Date(2000 + yy, mm - 1, dd);
-      date.setDate(date.getDate() - 1);
-      if (date.getFullYear() < 2000) return null;
-      const prevMM = String(date.getMonth() + 1).padStart(2, '0');
-      const prevDD = String(date.getDate()).padStart(2, '0');
-      const prevYY = String(date.getFullYear() % 100).padStart(2, '0');
-      return `${prevMM}${prevDD}${prevYY}_001`;
-    } else {
-      if (seq < maxSeq) {
-        return `${datePart}_${String(seq + 1).padStart(3, '0')}`;
-      }
-      const mm = parseInt(datePart.substring(0, 2));
-      const dd = parseInt(datePart.substring(2, 4));
-      const yy = parseInt(datePart.substring(4, 6));
-      const date = new Date(2000 + yy, mm - 1, dd);
-      date.setDate(date.getDate() + 1);
-      const now = new Date();
-      if (date > now) return null;
-      const nextMM = String(date.getMonth() + 1).padStart(2, '0');
-      const nextDD = String(date.getDate()).padStart(2, '0');
-      const nextYY = String(date.getFullYear() % 100).padStart(2, '0');
-      return `${nextMM}${nextDD}${nextYY}_001`;
-    }
-  }
-
-  return null;
 }
 
 async function fetch1pondoJson(productId: string): Promise<{
@@ -363,7 +282,7 @@ export async function GET(request: NextRequest) {
           ON CONFLICT (source, product_id) DO UPDATE SET
             html_content = EXCLUDED.html_content,
             hash = EXCLUDED.hash,
-            fetched_at = NOW()
+            crawled_at = NOW()
         `);
         stats.rawDataSaved++;
 

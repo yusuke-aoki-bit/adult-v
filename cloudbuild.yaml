@@ -1,35 +1,5 @@
 steps:
-  # Build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/adult-v:$BUILD_ID', '-t', 'gcr.io/$PROJECT_ID/adult-v:latest', '.']
-
-  # Push the container image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/adult-v:latest']
-
-  # Deploy container image to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-      - 'run'
-      - 'deploy'
-      - 'adult-v'
-      - '--image'
-      - 'gcr.io/$PROJECT_ID/adult-v:latest'
-      - '--region'
-      - 'asia-northeast1'
-      - '--platform'
-      - 'managed'
-      - '--allow-unauthenticated'
-      - '--memory'
-      - '1Gi'
-      - '--timeout'
-      - '300'
-      - '--set-env-vars'
-      - 'DATABASE_URL=postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres,CRON_SECRET=dev-cron-secret-key,DUGA_APP_ID=WzsUOEt2124UD65BqsHU,DUGA_AGENT_ID=1000'
-
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/$PROJECT_ID/adult-v-batch", "-f", "Dockerfile.batch", "."]
 images:
-  - 'gcr.io/$PROJECT_ID/adult-v:latest'
-
-options:
-  logging: CLOUD_LOGGING_ONLY
+  - "gcr.io/$PROJECT_ID/adult-v-batch"

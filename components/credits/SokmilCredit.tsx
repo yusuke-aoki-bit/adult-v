@@ -26,6 +26,7 @@ export function SokmilCredit({ variant = '88x31', className = '' }: SokmilCredit
       className={`inline-block ${className}`}
       aria-label="WEB SERVICE BY SOKMIL"
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={imageUrl}
         alt="WEB SERVICE BY SOKMIL"

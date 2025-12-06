@@ -123,6 +123,14 @@ export interface DugaProduct {
   adult?: 0 | 1;
   /** マルチデバイス対応 */
   multiDevice?: boolean;
+  /** セール情報 */
+  saleInfo?: {
+    regularPrice: number;
+    salePrice: number;
+    discountPercent?: number;
+    saleType?: string;
+    saleName?: string;
+  };
 }
 
 /**
@@ -265,35 +273,155 @@ export class DugaApiClient {
    * @returns 正規化された作品データ
    */
   private normalizeProduct(data: any): DugaProduct {
+    // APIレスポンスは items[].item の形式なので、item を取り出す
+    const item = data.item || data;
+
+    // サンプル画像を抽出 (thumbnail配列から)
+    const sampleImages: string[] = [];
+    if (item.thumbnail && Array.isArray(item.thumbnail)) {
+      for (const thumb of item.thumbnail) {
+        if (thumb.image) {
+          sampleImages.push(thumb.image);
+        }
+      }
+    }
+
+    // サンプル動画を抽出 (samplemovie配列から)
+    const sampleVideos: string[] = [];
+    if (item.samplemovie && Array.isArray(item.samplemovie)) {
+      for (const sample of item.samplemovie) {
+        // midium.movie または他の解像度のmovieを取得
+        if (sample.midium?.movie) {
+          sampleVideos.push(sample.midium.movie);
+        } else if (sample.large?.movie) {
+          sampleVideos.push(sample.large.movie);
+        } else if (sample.small?.movie) {
+          sampleVideos.push(sample.small.movie);
+        }
+      }
+    }
+
+    // ジャケット画像を抽出 (jacketimage配列から最大サイズを取得)
+    let packageUrl: string | undefined;
+    if (item.jacketimage && Array.isArray(item.jacketimage)) {
+      const largeJacket = item.jacketimage.find((j: any) => j.large);
+      const midiumJacket = item.jacketimage.find((j: any) => j.midium);
+      const smallJacket = item.jacketimage.find((j: any) => j.small);
+      packageUrl = largeJacket?.large || midiumJacket?.midium || smallJacket?.small;
+    }
+
+    // サムネイル画像を抽出 (posterimage配列から)
+    let thumbnailUrl: string | undefined;
+    if (item.posterimage && Array.isArray(item.posterimage)) {
+      const largePoster = item.posterimage.find((p: any) => p.large);
+      const midiumPoster = item.posterimage.find((p: any) => p.midium);
+      const smallPoster = item.posterimage.find((p: any) => p.small);
+      thumbnailUrl = largePoster?.large || midiumPoster?.midium || smallPoster?.small;
+    }
+
+    // 出演者情報を抽出 (performer配列から)
+    const performers: Array<{ id: string; name: string }> = [];
+    if (item.performer && Array.isArray(item.performer)) {
+      for (const p of item.performer) {
+        if (p.data) {
+          performers.push({
+            id: p.data.id || '',
+            name: p.data.name || '',
+          });
+        }
+      }
+    }
+
+    // カテゴリ情報を抽出 (category配列から)
+    const categories: Array<{ id: string; name: string }> = [];
+    if (item.category && Array.isArray(item.category)) {
+      for (const c of item.category) {
+        if (c.data) {
+          categories.push({
+            id: c.data.id || '',
+            name: c.data.name || '',
+          });
+        }
+      }
+    }
+
+    // レーベル情報を抽出
+    let label: string | undefined;
+    let labelId: string | undefined;
+    if (item.label && Array.isArray(item.label) && item.label.length > 0) {
+      label = item.label[0].name;
+      labelId = item.label[0].id;
+    }
+
+    // シリーズ情報を抽出
+    let series: string | undefined;
+    let seriesId: string | undefined;
+    if (item.series && Array.isArray(item.series) && item.series.length > 0) {
+      series = item.series[0].name;
+      seriesId = item.series[0].id?.toString();
+    }
+
+    // 価格を抽出 (saletype配列から通常版の価格を取得)
+    let price: number | undefined;
+    let saleInfo: DugaProduct['saleInfo'];
+    if (item.saletype && Array.isArray(item.saletype)) {
+      const normalType = item.saletype.find((s: any) => s.data?.type === '通常版');
+      const hdType = item.saletype.find((s: any) => s.data?.type === 'HD版');
+      const targetType = normalType || hdType || item.saletype[0];
+      if (targetType?.data?.price) {
+        price = parseInt(targetType.data.price, 10);
+      }
+
+      // セール情報を抽出 (定価とセール価格が異なる場合)
+      // DUGAのAPIではsaleprice, listprice, discountrateなどのフィールドがある場合がある
+      if (targetType?.data) {
+        const listPrice = targetType.data.listprice ? parseInt(targetType.data.listprice, 10) : undefined;
+        const salePrice = targetType.data.saleprice ? parseInt(targetType.data.saleprice, 10) : price;
+        const discountRate = targetType.data.discountrate ? parseInt(targetType.data.discountrate, 10) : undefined;
+
+        if (listPrice && salePrice && listPrice > salePrice) {
+          saleInfo = {
+            regularPrice: listPrice,
+            salePrice: salePrice,
+            discountPercent: discountRate || Math.round((1 - salePrice / listPrice) * 100),
+            saleType: 'sale',
+          };
+          price = salePrice; // 現在の価格はセール価格
+        }
+      }
+    }
+
+    // 日付をYYYY-MM-DD形式に変換
+    const formatDate = (dateStr: string | undefined): string | undefined => {
+      if (!dateStr) return undefined;
+      // YYYY/MM/DD → YYYY-MM-DD
+      return dateStr.replace(/\//g, '-');
+    };
+
     return {
-      productId: data.product_id || data.productId || '',
-      title: data.title || '',
-      titleKana: data.title_kana || data.titleKana,
-      description: data.description || data.desc,
-      thumbnailUrl: data.thumbnail_url || data.thumbnailUrl || data.thumb,
-      packageUrl: data.package_url || data.packageUrl || data.package,
-      sampleImages: data.sample_images || data.sampleImages || data.images || [],
-      sampleVideos: data.sample_videos || data.sampleVideos || data.videos || [],
-      affiliateUrl: data.affiliate_url || data.affiliateUrl || data.url || '',
-      price: data.price ? parseInt(data.price, 10) : undefined,
-      releaseDate: data.release_date || data.releaseDate,
-      openDate: data.open_date || data.openDate,
-      duration: data.duration ? parseInt(data.duration, 10) : undefined,
-      label: data.label || data.label_name,
-      labelId: data.label_id || data.labelId,
-      series: data.series || data.series_name,
-      seriesId: data.series_id || data.seriesId,
-      performers: (data.performers || data.actresses || []).map((p: any) => ({
-        id: p.id || p.performer_id,
-        name: p.name || p.performer_name,
-      })),
-      categories: (data.categories || data.tags || []).map((c: any) => ({
-        id: c.id || c.category_id,
-        name: c.name || c.category_name,
-      })),
-      salesType: data.sales_type || data.salesType,
-      adult: data.adult,
-      multiDevice: data.multi_device || data.multiDevice || false,
+      productId: item.productid || item.product_id || '',
+      title: item.title || '',
+      titleKana: item.title_kana || item.titleKana,
+      description: item.caption || item.description,
+      thumbnailUrl,
+      packageUrl,
+      sampleImages,
+      sampleVideos,
+      affiliateUrl: item.affiliateurl || item.affiliate_url || '',
+      price,
+      releaseDate: formatDate(item.releasedate || item.release_date),
+      openDate: formatDate(item.opendate || item.open_date),
+      duration: item.volume ? parseInt(item.volume, 10) : undefined,
+      label,
+      labelId,
+      series,
+      seriesId,
+      performers,
+      categories,
+      salesType: item.sales_type || item.salesType,
+      adult: item.adult,
+      multiDevice: item.multi_device || item.multiDevice || false,
+      saleInfo,
     };
   }
 

@@ -76,12 +76,12 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
 
         {/* 管理ページ・コピーライト */}
         <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-gray-500">
-          <a
+          <Link
             href="/admin/stats"
             className="text-gray-500 hover:text-gray-300 transition-colors"
           >
             管理ページ
-          </a>
+          </Link>
           <span className="hidden md:inline">|</span>
           <p>&copy; {new Date().getFullYear()} Adult Viewer Lab. All rights reserved.</p>
         </div>

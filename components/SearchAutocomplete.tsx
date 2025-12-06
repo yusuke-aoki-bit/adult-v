@@ -39,26 +39,42 @@ export default function SearchAutocomplete({
   // Fetch autocomplete results
   useEffect(() => {
     if (debouncedQuery.length < 2) {
-      setResults([]);
-      setIsOpen(false);
+      // Reset state when query is too short - this is intentional cleanup
+      const resetState = () => {
+        setResults([]);
+        setIsOpen(false);
+      };
+      resetState();
       return;
     }
 
+    let cancelled = false;
     setIsLoading(true);
+
     fetch(`/api/search/autocomplete?q=${encodeURIComponent(debouncedQuery)}`)
       .then((res) => res.json())
       .then((data) => {
-        setResults(data.results || []);
-        setIsOpen(true);
-        setSelectedIndex(-1);
+        if (!cancelled) {
+          setResults(data.results || []);
+          setIsOpen(true);
+          setSelectedIndex(-1);
+        }
       })
       .catch((error) => {
         console.error('Autocomplete error:', error);
-        setResults([]);
+        if (!cancelled) {
+          setResults([]);
+        }
       })
       .finally(() => {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [debouncedQuery]);
 
   // Close dropdown when clicking outside

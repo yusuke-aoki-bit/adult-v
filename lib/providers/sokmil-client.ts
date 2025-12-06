@@ -547,8 +547,8 @@ export class SokmilApiClient {
    * @returns 商品リスト
    */
   async getNewReleases(
-    page: number = 1,
-    perPage: number = 20
+    _page: number = 1,
+    _perPage: number = 20
   ): Promise<SokmilApiResponse<SokmilProduct>> {
     // SOKMIL APIは最小限のパラメータのみ使用（sort, offset, hitsは500エラーの原因）
     return this.searchItems({});

@@ -9,11 +9,13 @@ RUN npm ci
 
 # Copy only necessary files
 COPY lib ./lib
-COPY scripts ./scripts
 COPY tsconfig.json ./tsconfig.json
 
-# Build TypeScript
-RUN npm run build || true
+# Copy only necessary script files individually to avoid problematic files
+RUN mkdir -p scripts/crawlers
+COPY scripts/run-crawler.ts ./scripts/
+COPY scripts/normalize-performers.ts ./scripts/
+COPY scripts/crawlers/ ./scripts/crawlers/
 
 # Set environment
 ENV NODE_ENV=production

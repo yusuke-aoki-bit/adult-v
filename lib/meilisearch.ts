@@ -69,7 +69,7 @@ export async function initializeProductsIndex() {
     // インデックスが存在するか確認
     await index.getRawInfo();
     console.log(`Index "${PRODUCTS_INDEX}" already exists`);
-  } catch (error) {
+  } catch {
     // インデックスが存在しない場合は作成
     console.log(`Creating index "${PRODUCTS_INDEX}"...`);
     await client.createIndex(PRODUCTS_INDEX, { primaryKey: 'id' });

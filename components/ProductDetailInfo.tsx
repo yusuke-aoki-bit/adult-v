@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { isSubscriptionProvider } from '@/lib/providers';
 
 interface ProductSource {
   aspName: string;
@@ -26,8 +26,6 @@ export default function ProductDetailInfo({
   performerCount,
   tagCount,
 }: ProductDetailInfoProps) {
-  const t = useTranslations('productDetail');
-
   return (
     <div className="bg-gray-800 rounded-lg p-6 space-y-4">
       <h2 className="text-xl font-bold text-white border-b border-gray-700 pb-2">
@@ -65,9 +63,9 @@ export default function ProductDetailInfo({
             配信サイト ({sources.length}サイト)
           </h3>
           <div className="space-y-2">
-            {sources.map((source, index) => (
+            {sources.map((source) => (
               <div
-                key={index}
+                key={`${source.aspName}-${source.originalProductId}`}
                 className="flex items-center justify-between bg-gray-700/50 rounded p-3 text-xs"
               >
                 <div className="flex items-center gap-3">
@@ -78,11 +76,15 @@ export default function ProductDetailInfo({
                     品番: {source.originalProductId}
                   </span>
                 </div>
-                {source.price !== null && (
+                {source.price !== null && source.price > 0 ? (
                   <span className="text-green-400 font-semibold">
                     ¥{source.price.toLocaleString()}
                   </span>
-                )}
+                ) : isSubscriptionProvider(source.aspName) ? (
+                  <span className="text-rose-400 font-semibold">
+                    月額会員限定
+                  </span>
+                ) : null}
               </div>
             ))}
           </div>

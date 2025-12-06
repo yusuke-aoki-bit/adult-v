@@ -36,6 +36,11 @@ export const products = pgTable(
     descriptionEn: text('description_en'),
     descriptionZh: text('description_zh'),
     descriptionKo: text('description_ko'),
+    // AI生成コンテンツ
+    aiDescription: jsonb('ai_description'), // AI生成の説明文詳細（キャッチコピー、短い説明、詳細説明など）
+    aiCatchphrase: varchar('ai_catchphrase', { length: 500 }), // AIが生成したキャッチコピー
+    aiShortDescription: text('ai_short_description'), // AIが生成した短い説明文
+    aiTags: jsonb('ai_tags'), // AI抽出タグ（genres, attributes, plays, situations）
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -62,6 +67,8 @@ export const productSources = pgTable(
     originalProductId: varchar('original_product_id', { length: 100 }).notNull(),
     affiliateUrl: text('affiliate_url').notNull(),
     price: integer('price'),
+    currency: varchar('currency', { length: 3 }).default('JPY'), // 'JPY' or 'USD'
+    isSubscription: boolean('is_subscription').default(false), // 月額制かどうか
     dataSource: varchar('data_source', { length: 10 }).notNull(), // 'API' or 'CSV'
     lastUpdated: timestamp('last_updated').defaultNow(),
   },
@@ -71,6 +78,35 @@ export const productSources = pgTable(
     aspIdx: index('idx_sources_asp').on(table.aspName),
     originalProductIdIdx: index('idx_sources_original_product_id').on(table.originalProductId),
     aspOriginalIdIdx: index('idx_sources_asp_original_id').on(table.aspName, table.originalProductId),
+  }),
+);
+
+/**
+ * セール情報テーブル
+ * 各ASPのセール・割引情報を保持
+ */
+export const productSales = pgTable(
+  'product_sales',
+  {
+    id: serial('id').primaryKey(),
+    productSourceId: integer('product_source_id').notNull().references(() => productSources.id, { onDelete: 'cascade' }),
+    regularPrice: integer('regular_price').notNull(), // 通常価格
+    salePrice: integer('sale_price').notNull(), // セール価格
+    discountPercent: integer('discount_percent'), // 割引率
+    saleType: varchar('sale_type', { length: 50 }), // 'timesale', 'campaign', 'clearance' など
+    saleName: varchar('sale_name', { length: 200 }), // セール名（例：「週末限定50%OFF」）
+    startAt: timestamp('start_at'), // セール開始日時
+    endAt: timestamp('end_at'), // セール終了日時
+    isActive: boolean('is_active').default(true).notNull(),
+    fetchedAt: timestamp('fetched_at').defaultNow().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productSourceIdx: index('idx_sales_product_source').on(table.productSourceId),
+    activeIdx: index('idx_sales_active').on(table.isActive),
+    endAtIdx: index('idx_sales_end_at').on(table.endAt),
+    discountIdx: index('idx_sales_discount').on(table.discountPercent),
   }),
 );
 
@@ -92,6 +128,9 @@ export const performers = pgTable(
     bioEn: text('bio_en'),
     bioZh: text('bio_zh'),
     bioKo: text('bio_ko'),
+    // AIレビュー
+    aiReview: text('ai_review'), // Gemini AIによる演者レビュー
+    aiReviewUpdatedAt: timestamp('ai_review_updated_at'), // レビュー更新日時
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
@@ -194,7 +233,8 @@ export const rawCsvData = pgTable(
     id: serial('id').primaryKey(),
     source: varchar('source', { length: 50 }).notNull(), // 'DUGA' など
     productId: varchar('product_id', { length: 100 }).notNull(), // 商品ID（CSVの商品ID列）
-    rawData: jsonb('raw_data').notNull(), // CSV行の全データをJSONBで保存
+    rawData: jsonb('raw_data'), // CSV行の全データをJSONBで保存（GCS移行後はnull可）
+    gcsUrl: text('gcs_url'), // GCSに保存した場合のURL (gs://bucket/path)
     downloadedAt: timestamp('downloaded_at').defaultNow().notNull(),
     processedAt: timestamp('processed_at'), // 処理完了日時
     hash: varchar('hash', { length: 64 }).notNull(), // データのハッシュ値（重複検出用）
@@ -218,7 +258,8 @@ export const rawHtmlData = pgTable(
     source: varchar('source', { length: 50 }).notNull(), // 'カリビアンコムプレミアム', '一本道', 'HEYZO' など
     productId: varchar('product_id', { length: 100 }).notNull(), // 商品ID（URL内のID部分）
     url: text('url').notNull(),
-    htmlContent: text('html_content').notNull(), // HTML全体を保存
+    htmlContent: text('html_content'), // HTML全体を保存（GCS移行後はnull可）
+    gcsUrl: text('gcs_url'), // GCSに保存した場合のURL (gs://bucket/path)
     crawledAt: timestamp('crawled_at').defaultNow().notNull(),
     processedAt: timestamp('processed_at'), // 処理完了日時
     hash: varchar('hash', { length: 64 }).notNull(), // コンテンツのハッシュ値（重複・更新検出用）
@@ -229,6 +270,108 @@ export const rawHtmlData = pgTable(
     sourceIdx: index('idx_raw_html_source').on(table.source),
     crawledIdx: index('idx_raw_html_crawled').on(table.crawledAt),
     urlIdx: index('idx_raw_html_url').on(table.url),
+  }),
+);
+
+/**
+ * DUGA API生レスポンス保存テーブル
+ * リカバリー用にAPIレスポンス全体を保存
+ */
+export const dugaRawResponses = pgTable(
+  'duga_raw_responses',
+  {
+    id: serial('id').primaryKey(),
+    productId: text('product_id').notNull(),
+    apiVersion: text('api_version').notNull().default('1.2'),
+    rawJson: jsonb('raw_json').notNull(),
+    hash: varchar('hash', { length: 64 }), // 重複・更新検出用
+    fetchedAt: timestamp('fetched_at').defaultNow().notNull(),
+    processedAt: timestamp('processed_at'), // 処理完了日時
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productIdIdx: index('idx_duga_raw_product_id').on(table.productId),
+    hashIdx: index('idx_duga_raw_hash').on(table.hash),
+    fetchedIdx: index('idx_duga_raw_fetched_at').on(table.fetchedAt),
+    productIdUnique: uniqueIndex('idx_duga_raw_product_unique').on(table.productId),
+  }),
+);
+
+/**
+ * ソクミルAPI生レスポンス保存テーブル
+ */
+export const sokmilRawResponses = pgTable(
+  'sokmil_raw_responses',
+  {
+    id: serial('id').primaryKey(),
+    itemId: text('item_id').notNull(),
+    apiType: text('api_type').notNull(), // 'item', 'maker', 'label', 'series', 'genre', 'director', 'actor'
+    rawJson: jsonb('raw_json').notNull(),
+    hash: varchar('hash', { length: 64 }),
+    fetchedAt: timestamp('fetched_at').defaultNow().notNull(),
+    processedAt: timestamp('processed_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    itemIdIdx: index('idx_sokmil_raw_item_id').on(table.itemId),
+    apiTypeIdx: index('idx_sokmil_raw_api_type').on(table.apiType),
+    hashIdx: index('idx_sokmil_raw_hash').on(table.hash),
+    fetchedIdx: index('idx_sokmil_raw_fetched_at').on(table.fetchedAt),
+    itemTypeUnique: uniqueIndex('idx_sokmil_raw_item_type_unique').on(table.itemId, table.apiType),
+  }),
+);
+
+/**
+ * MGSスクレイピング生データ保存テーブル
+ */
+export const mgsRawPages = pgTable(
+  'mgs_raw_pages',
+  {
+    id: serial('id').primaryKey(),
+    productUrl: text('product_url').notNull().unique(),
+    productId: text('product_id'),
+    rawHtml: text('raw_html').notNull(),
+    rawJson: jsonb('raw_json'),
+    hash: varchar('hash', { length: 64 }),
+    statusCode: integer('status_code').notNull().default(200),
+    fetchedAt: timestamp('fetched_at').defaultNow().notNull(),
+    processedAt: timestamp('processed_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productUrlIdx: index('idx_mgs_raw_product_url').on(table.productUrl),
+    productIdIdx: index('idx_mgs_raw_product_id').on(table.productId),
+    hashIdx: index('idx_mgs_raw_hash').on(table.hash),
+    fetchedIdx: index('idx_mgs_raw_fetched_at').on(table.fetchedAt),
+  }),
+);
+
+/**
+ * 商品と生データのリレーション管理テーブル
+ * どの商品がどの生データから作成されたかを追跡
+ */
+export const productRawDataLinks = pgTable(
+  'product_raw_data_links',
+  {
+    id: serial('id').primaryKey(),
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    sourceType: text('source_type').notNull(), // 'duga', 'sokmil', 'mgs', 'fc2', 'dti', 'b10f'
+    rawDataId: integer('raw_data_id').notNull(), // 対応する生データテーブルのID
+    rawDataTable: text('raw_data_table').notNull(), // 'duga_raw_responses', 'raw_html_data' など
+    contentHash: varchar('content_hash', { length: 64 }), // 処理時点のハッシュ（再処理判定用）
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productIdx: index('idx_product_raw_links_product').on(table.productId),
+    sourceIdx: index('idx_product_raw_links_source').on(table.sourceType, table.rawDataId),
+    productSourceUnique: uniqueIndex('idx_product_raw_links_unique').on(
+      table.productId,
+      table.sourceType,
+      table.rawDataId
+    ),
   }),
 );
 
@@ -309,6 +452,96 @@ export const productVideos = pgTable(
     orderIdx: index('idx_product_videos_order').on(table.displayOrder),
   }),
 );
+/**
+ * Wikiクロールデータテーブル
+ * 各Wikiサイトから収集した商品ID-出演者データを保存
+ */
+export const wikiCrawlData = pgTable(
+  'wiki_crawl_data',
+  {
+    id: serial('id').primaryKey(),
+    source: varchar('source', { length: 50 }).notNull(), // 'av-wiki', 'seesaa-wiki', 'shiroutoname', 'nakiny', 'fc2-blog' など
+    productCode: varchar('product_code', { length: 100 }).notNull(), // 品番（300MIUM-1000など）
+    performerName: varchar('performer_name', { length: 200 }).notNull(), // クロールで取得した出演者名
+    sourceUrl: text('source_url'), // 情報取得元のURL
+    rawData: jsonb('raw_data'), // 追加情報（タイトル、タグ等）をJSONで保存
+    gcsUrl: text('gcs_url'), // GCSに保存した場合のURL (gs://bucket/path)
+    crawledAt: timestamp('crawled_at').defaultNow().notNull(),
+    processedAt: timestamp('processed_at'), // performers/product_performersへの反映完了日時
+  },
+  (table) => ({
+    sourceProductPerformerUnique: uniqueIndex('idx_wiki_crawl_source_product_performer').on(
+      table.source,
+      table.productCode,
+      table.performerName,
+    ),
+    sourceIdx: index('idx_wiki_crawl_source').on(table.source),
+    productCodeIdx: index('idx_wiki_crawl_product_code').on(table.productCode),
+    performerNameIdx: index('idx_wiki_crawl_performer_name').on(table.performerName),
+    processedIdx: index('idx_wiki_crawl_processed').on(table.processedAt),
+  }),
+);
+
+/**
+ * 商品レビューテーブル
+ * 各ASPから収集したレビュー情報を保存
+ */
+export const productReviews = pgTable(
+  'product_reviews',
+  {
+    id: serial('id').primaryKey(),
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    aspName: varchar('asp_name', { length: 50 }).notNull(), // レビュー取得元ASP
+    reviewerName: varchar('reviewer_name', { length: 100 }), // レビュワー名（匿名の場合null）
+    rating: decimal('rating', { precision: 3, scale: 1 }), // 評価（5段階など、ASPにより異なる）
+    maxRating: decimal('max_rating', { precision: 3, scale: 1 }).default('5'), // 最大評価値
+    title: text('title'), // レビュータイトル
+    content: text('content'), // レビュー本文
+    reviewDate: timestamp('review_date'), // レビュー投稿日
+    helpful: integer('helpful').default(0), // 参考になった数
+    sourceReviewId: varchar('source_review_id', { length: 100 }), // ASP側のレビューID
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productIdx: index('idx_product_reviews_product').on(table.productId),
+    aspIdx: index('idx_product_reviews_asp').on(table.aspName),
+    ratingIdx: index('idx_product_reviews_rating').on(table.rating),
+    dateIdx: index('idx_product_reviews_date').on(table.reviewDate),
+    sourceReviewUnique: uniqueIndex('idx_product_reviews_source').on(
+      table.productId,
+      table.aspName,
+      table.sourceReviewId,
+    ),
+  }),
+);
+
+/**
+ * 商品評価サマリーテーブル
+ * 各ASPからの評価の集計データ
+ */
+export const productRatingSummary = pgTable(
+  'product_rating_summary',
+  {
+    id: serial('id').primaryKey(),
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    aspName: varchar('asp_name', { length: 50 }).notNull(), // ASP名
+    averageRating: decimal('average_rating', { precision: 3, scale: 2 }), // 平均評価
+    maxRating: decimal('max_rating', { precision: 3, scale: 1 }).default('5'), // 最大評価値
+    totalReviews: integer('total_reviews').default(0), // レビュー総数
+    ratingDistribution: jsonb('rating_distribution'), // 評価分布 {1: 10, 2: 20, 3: 50, 4: 30, 5: 40}
+    lastUpdated: timestamp('last_updated').defaultNow().notNull(),
+  },
+  (table) => ({
+    productAspUnique: uniqueIndex('idx_rating_summary_product_asp').on(
+      table.productId,
+      table.aspName,
+    ),
+    productIdx: index('idx_rating_summary_product').on(table.productId),
+    avgRatingIdx: index('idx_rating_summary_avg').on(table.averageRating),
+  }),
+);
+
 // 型エクスポート
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
@@ -330,3 +563,17 @@ export type RawCsvData = typeof rawCsvData.$inferSelect;
 export type NewRawCsvData = typeof rawCsvData.$inferInsert;
 export type RawHtmlData = typeof rawHtmlData.$inferSelect;
 export type NewRawHtmlData = typeof rawHtmlData.$inferInsert;
+export type WikiCrawlData = typeof wikiCrawlData.$inferSelect;
+export type NewWikiCrawlData = typeof wikiCrawlData.$inferInsert;
+export type ProductReview = typeof productReviews.$inferSelect;
+export type NewProductReview = typeof productReviews.$inferInsert;
+export type ProductRatingSummary = typeof productRatingSummary.$inferSelect;
+export type NewProductRatingSummary = typeof productRatingSummary.$inferInsert;
+export type DugaRawResponse = typeof dugaRawResponses.$inferSelect;
+export type NewDugaRawResponse = typeof dugaRawResponses.$inferInsert;
+export type SokmilRawResponse = typeof sokmilRawResponses.$inferSelect;
+export type NewSokmilRawResponse = typeof sokmilRawResponses.$inferInsert;
+export type MgsRawPage = typeof mgsRawPages.$inferSelect;
+export type NewMgsRawPage = typeof mgsRawPages.$inferInsert;
+export type ProductRawDataLink = typeof productRawDataLinks.$inferSelect;
+export type NewProductRawDataLink = typeof productRawDataLinks.$inferInsert;

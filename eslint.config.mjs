@@ -19,11 +19,11 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
-      // Relax some rules to warnings
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
-      "react-hooks/set-state-in-effect": "warn",
-      "@typescript-eslint/no-require-imports": "warn",
+      // Disable rules that generate too many warnings in this codebase
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ]);

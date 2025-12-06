@@ -1,7 +1,13 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { providerMeta, ProviderId } from '@/lib/providers';
+import { useTransition } from 'react';
+import { providerMeta } from '@/lib/providers';
+import {
+  HIRAGANA_GROUPS,
+  ALPHABET,
+  ASP_TO_PROVIDER_ID,
+} from '@/lib/constants/filters';
 
 interface Tag {
   id: number;
@@ -20,6 +26,7 @@ interface ActressListFilterProps {
   aspProductCounts: Record<string, number>;
   translations: {
     filterSettings: string;
+    initialSearch: string;
     sampleContent: string;
     sampleVideo: string;
     sampleImage: string;
@@ -31,24 +38,6 @@ interface ActressListFilterProps {
   };
 }
 
-// ASP名をProviderId型に変換するマッピング
-const aspToProviderId: Record<string, ProviderId | undefined> = {
-  'DUGA': 'duga',
-  'duga': 'duga',
-  'Sokmil': 'sokmil',
-  'sokmil': 'sokmil',
-  'DTI': 'dti',
-  'dti': 'dti',
-  'MGS': 'mgs',
-  'mgs': 'mgs',
-  'b10f': 'b10f',
-  'B10F': 'b10f',
-  'FC2': 'fc2',
-  'fc2': 'fc2',
-  'Japanska': 'japanska',
-  'japanska': 'japanska',
-};
-
 export default function ActressListFilter({
   genreTags,
   availableAsps,
@@ -58,6 +47,7 @@ export default function ActressListFilter({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   // 現在のフィルター状態を取得
   const hasVideo = searchParams.get('hasVideo') === 'true';
@@ -66,6 +56,22 @@ export default function ActressListFilter({
   const excludeTags = searchParams.get('exclude')?.split(',').filter(Boolean) || [];
   const includeAsps = searchParams.get('includeAsp')?.split(',').filter(Boolean) || [];
   const excludeAsps = searchParams.get('excludeAsp')?.split(',').filter(Boolean) || [];
+  const initialFilter = searchParams.get('initial');
+
+  // 頭文字フィルター変更ハンドラー
+  const handleInitialChange = (initial: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('page');
+    if (initial === null) {
+      params.delete('initial');
+    } else {
+      params.set('initial', initial);
+    }
+    const queryString = params.toString();
+    startTransition(() => {
+      router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
+    });
+  };
 
   // フィルター更新関数
   const updateFilter = (key: string, value: string | null, isArray = false, currentArray: string[] = []) => {
@@ -95,7 +101,9 @@ export default function ActressListFilter({
     }
 
     const queryString = params.toString();
-    router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
+    startTransition(() => {
+      router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
+    });
   };
 
   // チェックボックス変更ハンドラー
@@ -133,14 +141,17 @@ export default function ActressListFilter({
     params.delete('exclude');
     params.delete('includeAsp');
     params.delete('excludeAsp');
+    params.delete('initial');
     params.delete('page');
 
     const queryString = params.toString();
-    router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
+    startTransition(() => {
+      router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
+    });
   };
 
-  const hasActiveFilters = hasVideo || hasImage || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0;
-  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0);
+  const hasActiveFilters = hasVideo || hasImage || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0 || !!initialFilter;
+  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0) + (initialFilter ? 1 : 0);
 
   return (
     <details
@@ -160,7 +171,94 @@ export default function ActressListFilter({
           </span>
         )}
       </summary>
-      <div className="px-4 pb-4 space-y-5 sm:space-y-6">
+      <div className={`px-4 pb-4 space-y-5 sm:space-y-6 ${isPending ? 'opacity-60 pointer-events-none' : ''}`}>
+        {/* ローディングインジケーター */}
+        {isPending && (
+          <div className="flex items-center justify-center py-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-rose-500 mr-2" />
+            <span className="text-sm text-gray-400">読み込み中...</span>
+          </div>
+        )}
+
+        {/* 頭文字検索 */}
+        <div>
+          <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.initialSearch}</h3>
+          <div className="flex flex-wrap gap-1.5 sm:gap-1">
+            {/* ひらがなグループ */}
+            {Object.entries(HIRAGANA_GROUPS).map(([group, chars]) => (
+              <div key={group} className="relative group">
+                <button
+                  type="button"
+                  onClick={() => handleInitialChange(chars[0])}
+                  className={`px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium transition-colors ${
+                    chars.some(c => initialFilter === c)
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  }`}
+                >
+                  {group}
+                </button>
+                {/* ドロップダウン */}
+                <div className="absolute top-full left-0 pt-1 z-20 hidden group-hover:block">
+                  <div className="bg-gray-800 border border-gray-600 rounded shadow-lg p-1.5 flex gap-1">
+                    {chars.map((char) => (
+                      <button
+                        key={char}
+                        type="button"
+                        onClick={() => handleInitialChange(char)}
+                        className={`px-2 py-1 rounded text-sm font-medium transition-colors whitespace-nowrap ${
+                          initialFilter === char
+                            ? 'bg-rose-600 text-white'
+                            : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                        }`}
+                      >
+                        {char}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {/* アルファベット */}
+            {ALPHABET.map((char) => (
+              <button
+                key={char}
+                type="button"
+                onClick={() => handleInitialChange(char)}
+                className={`px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium transition-colors ${
+                  initialFilter === char
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                }`}
+              >
+                {char}
+              </button>
+            ))}
+            {/* その他 */}
+            <button
+              type="button"
+              onClick={() => handleInitialChange('etc')}
+              className={`px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium transition-colors ${
+                initialFilter === 'etc'
+                  ? 'bg-rose-600 text-white'
+                  : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+              }`}
+            >
+              他
+            </button>
+            {/* クリア */}
+            {initialFilter && (
+              <button
+                type="button"
+                onClick={() => handleInitialChange(null)}
+                className="px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium bg-gray-600 text-gray-200 hover:bg-gray-500 transition-colors"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* サンプルコンテンツフィルター */}
         <div>
           <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.sampleContent}</h3>
@@ -264,7 +362,7 @@ export default function ActressListFilter({
                 <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.include}</p>
                 <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
                   {availableAsps.map((asp) => {
-                    const providerId = aspToProviderId[asp.id];
+                    const providerId = ASP_TO_PROVIDER_ID[asp.id];
                     const meta = providerId ? providerMeta[providerId] : null;
                     const count = aspProductCounts[asp.id];
                     const isSelected = includeAsps.includes(asp.id);
@@ -295,7 +393,7 @@ export default function ActressListFilter({
                 <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.exclude}</p>
                 <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
                   {availableAsps.map((asp) => {
-                    const providerId = aspToProviderId[asp.id];
+                    const providerId = ASP_TO_PROVIDER_ID[asp.id];
                     const meta = providerId ? providerMeta[providerId] : null;
                     const count = aspProductCounts[asp.id];
                     const isSelected = excludeAsps.includes(asp.id);

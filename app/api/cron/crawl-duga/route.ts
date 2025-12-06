@@ -156,37 +156,40 @@ export async function GET(request: NextRequest) {
         `);
 
         // サンプル動画URL（DUGAはAPIレスポンスに含まれる場合）
-        if (item.sampleVideoUrl) {
-          const videoResult = await db.execute(sql`
-            INSERT INTO product_videos (
-              product_id,
-              asp_name,
-              video_url,
-              video_type,
-              display_order
-            )
-            VALUES (
-              ${productId},
-              'DUGA',
-              ${item.sampleVideoUrl},
-              'sample',
-              0
-            )
-            ON CONFLICT DO NOTHING
-            RETURNING id
-          `);
+        if (item.sampleVideos && item.sampleVideos.length > 0) {
+          for (let i = 0; i < item.sampleVideos.length; i++) {
+            const videoUrl = item.sampleVideos[i];
+            const videoResult = await db.execute(sql`
+              INSERT INTO product_videos (
+                product_id,
+                asp_name,
+                video_url,
+                video_type,
+                display_order
+              )
+              VALUES (
+                ${productId},
+                'DUGA',
+                ${videoUrl},
+                'sample',
+                ${i}
+              )
+              ON CONFLICT DO NOTHING
+              RETURNING id
+            `);
 
-          if (videoResult.rowCount && videoResult.rowCount > 0) {
-            stats.videosAdded++;
+            if (videoResult.rowCount && videoResult.rowCount > 0) {
+              stats.videosAdded++;
+            }
           }
         }
 
         // 出演者情報
         if (item.performers && item.performers.length > 0) {
-          for (const performerName of item.performers) {
+          for (const performer of item.performers) {
             const performerResult = await db.execute(sql`
               INSERT INTO performers (name)
-              VALUES (${performerName})
+              VALUES (${performer.name})
               ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
               RETURNING id
             `);

@@ -2,9 +2,7 @@
  * Redisキャッシュユーティリティ
  */
 
-// Redis接続設定（環境変数から取得）
-const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
-const REDIS_PORT = parseInt(process.env.REDIS_PORT || '6379');
+// キャッシュTTL設定
 const CACHE_TTL = 60 * 5; // 5分
 
 // キャッシュキーのプレフィックス
@@ -131,7 +129,7 @@ export async function deleteCache(key: string): Promise<void> {
 /**
  * パターンに一致するキャッシュを削除
  */
-export async function deleteCachePattern(pattern: string): Promise<void> {
+export async function deleteCachePattern(_pattern: string): Promise<void> {
   try {
     // インメモリキャッシュの場合は全削除
     memoryCache.clear();

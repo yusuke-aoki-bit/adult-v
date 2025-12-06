@@ -19,7 +19,7 @@ export default function SortDropdown({ sortBy }: SortDropdownProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="sort" className="text-sm font-medium text-gray-700">
+      <label htmlFor="sort" className="text-sm font-medium text-gray-300">
         並び順:
       </label>
       <select
@@ -27,7 +27,7 @@ export default function SortDropdown({ sortBy }: SortDropdownProps) {
         name="sort"
         value={sortBy}
         onChange={(e) => handleSortChange(e.target.value)}
-        className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-rose-500 focus:border-green-500"
+        className="px-3 py-2 border border-gray-600 rounded-md text-sm text-white bg-gray-700 focus:ring-rose-500 focus:border-rose-500"
       >
         <option value="nameAsc">名前順（あ→ん）</option>
         <option value="nameDesc">名前順（ん→あ）</option>

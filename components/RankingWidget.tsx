@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Trophy, TrendingUp } from 'lucide-react';
@@ -35,11 +35,7 @@ export default function RankingWidget({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'monthly'>(period);
 
-  useEffect(() => {
-    fetchRanking();
-  }, [type, selectedPeriod, limit]);
-
-  const fetchRanking = async () => {
+  const fetchRanking = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -47,13 +43,19 @@ export default function RankingWidget({
       );
       const data = await response.json();
       setRanking(data.ranking || []);
-    } catch (error) {
-      console.error('Failed to fetch ranking:', error);
+    } catch (error: unknown) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[RankingWidget] Failed to fetch ranking:', error);
+      }
       setRanking([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [type, selectedPeriod, limit]);
+
+  useEffect(() => {
+    fetchRanking();
+  }, [fetchRanking]);
 
   const getRankBadgeColor = (rank: number) => {
     switch (rank) {

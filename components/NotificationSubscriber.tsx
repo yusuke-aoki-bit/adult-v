@@ -1,31 +1,42 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { Bell, BellOff } from 'lucide-react';
+
+// Check if notifications are supported (client-side only)
+function useNotificationSupport() {
+  const subscribe = () => () => {}; // No external changes to watch
+  const getSnapshot = () =>
+    typeof window !== 'undefined' &&
+    'Notification' in window &&
+    'serviceWorker' in navigator &&
+    'PushManager' in window;
+  const getServerSnapshot = () => false;
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
 
 export default function NotificationSubscriber() {
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [isSupported, setIsSupported] = useState(false);
+  const isSupported = useNotificationSupport();
 
-  useEffect(() => {
-    // Check if notifications are supported
-    if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
-      setIsSupported(true);
-
-      // Check current subscription status
-      checkSubscriptionStatus();
-    }
-  }, []);
-
-  const checkSubscriptionStatus = async () => {
+  const checkSubscriptionStatus = useCallback(async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
       setIsSubscribed(!!subscription);
-    } catch (error) {
-      console.error('Failed to check subscription:', error);
+    } catch (error: unknown) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[NotificationSubscriber] Subscription check failed:', error);
+      }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Check current subscription status when supported
+    if (isSupported) {
+      checkSubscriptionStatus();
+    }
+  }, [isSupported, checkSubscriptionStatus]);
 
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Actress } from '@/types/product';
 import { providerMeta } from '@/lib/providers';
-import { normalizeImageUrl } from '@/lib/image-utils';
+import { normalizeImageUrl, isUncensoredThumbnail } from '@/lib/image-utils';
 import FavoriteButton from './FavoriteButton';
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+IMAGE';
@@ -15,8 +15,16 @@ interface Props {
 }
 
 export default function ActressCard({ actress, compact = false }: Props) {
-  const [imgSrc, setImgSrc] = useState(normalizeImageUrl(actress.thumbnail || actress.heroImage) || PLACEHOLDER_IMAGE);
-  const [hasError, setHasError] = useState(false);
+  // 通常表示ではheroImage優先、コンパクト表示ではthumbnail優先
+  const rawImageUrl = compact
+    ? (actress.thumbnail || actress.heroImage)
+    : (actress.heroImage || actress.thumbnail);
+  const initialSrc = normalizeImageUrl(rawImageUrl);
+  const [imgSrc, setImgSrc] = useState(initialSrc || PLACEHOLDER_IMAGE);
+  const [hasError, setHasError] = useState(!initialSrc);
+
+  // 無修正サイトのサムネイルかどうか判定（ブラー適用用）
+  const shouldBlur = isUncensoredThumbnail(rawImageUrl);
 
   const handleImageError = () => {
     if (!hasError) {
@@ -35,11 +43,12 @@ export default function ActressCard({ actress, compact = false }: Props) {
             alt={actress.name}
             fill
             sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 16vw"
-            className="object-cover opacity-90"
+            className={`object-cover opacity-90 ${shouldBlur ? 'blur-md' : ''}`}
             loading="lazy"
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             onError={handleImageError}
+            unoptimized
           />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent" />
           {/* お気に入りボタン - モバイルでは小さく */}
@@ -48,8 +57,18 @@ export default function ActressCard({ actress, compact = false }: Props) {
           </div>
           <div className="absolute bottom-1.5 left-1.5 right-1.5 sm:bottom-2 sm:left-2 sm:right-2">
             <h3 className="text-sm sm:text-base font-semibold truncate leading-tight">{actress.name}</h3>
-            {/* キャッチコピーはデスクトップのみ */}
-            {actress.catchcopy && (
+            {/* 別名表示（デスクトップのみ） */}
+            {actress.aliases && actress.aliases.length > 0 && (
+              <p className="hidden sm:block text-[10px] text-gray-400 truncate">
+                ({actress.aliases.slice(0, 2).join(', ')}{actress.aliases.length > 2 ? ' ...' : ''})
+              </p>
+            )}
+            {/* AIレビューキーワード or キャッチコピー（デスクトップのみ） */}
+            {actress.aiReview?.keywords && actress.aiReview.keywords.length > 0 ? (
+              <p className="hidden sm:block text-[10px] text-purple-300 truncate">
+                {actress.aiReview.keywords.slice(0, 2).map(k => `#${k}`).join(' ')}
+              </p>
+            ) : !actress.aliases?.length && actress.catchcopy && (
               <p className="hidden sm:block text-xs text-gray-300 truncate">{actress.catchcopy}</p>
             )}
           </div>
@@ -83,21 +102,21 @@ export default function ActressCard({ actress, compact = false }: Props) {
     );
   }
 
-  // 通常表示
-  const heroSrc = normalizeImageUrl(actress.heroImage) || imgSrc;
+  // 通常表示 - imgSrcを使用（エラー時にフォールバックが効く）
   return (
     <div className="bg-gray-900 text-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-white/10">
       <div className="relative aspect-4/5">
         <Image
-          src={heroSrc}
+          src={imgSrc}
           alt={actress.name}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover opacity-90"
+          className={`object-cover opacity-90 ${shouldBlur ? 'blur-md' : ''}`}
           loading="lazy"
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
           onError={handleImageError}
+          unoptimized
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent" />
         <div className="absolute top-4 right-4 bg-white rounded-full shadow-md">
@@ -108,11 +127,28 @@ export default function ActressCard({ actress, compact = false }: Props) {
             {actress.catchcopy}
           </p>
           <h3 className="text-3xl font-semibold">{actress.name}</h3>
+          {/* 別名表示 */}
+          {actress.aliases && actress.aliases.length > 0 && (
+            <p className="text-sm text-gray-400 mt-1">
+              ({actress.aliases.slice(0, 3).join(', ')}{actress.aliases.length > 3 ? ' ...' : ''})
+            </p>
+          )}
         </div>
       </div>
 
       <div className="p-6 space-y-4">
-        {actress.description && (
+        {/* AIレビューを優先表示、なければdescription */}
+        {actress.aiReview?.overview ? (
+          <div className="space-y-1">
+            <div className="flex items-center gap-1 text-xs text-purple-400">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+              </svg>
+              AI生成
+            </div>
+            <p className="text-sm text-gray-300 line-clamp-3">{actress.aiReview.overview}</p>
+          </div>
+        ) : actress.description && (
           <p className="text-sm text-gray-300 line-clamp-3">{actress.description}</p>
         )}
 

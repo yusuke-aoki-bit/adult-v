@@ -1,5 +1,22 @@
 // 取り扱いプロバイダ
-export type ProviderId = 'duga' | 'sokmil' | 'dti' | 'mgs' | 'b10f' | 'japanska' | 'fc2';
+// DTI系サービスは個別に分離: caribbeancom, caribbeancompr, 1pondo, heyzo, 10musume, pacopacomama, etc.
+export type ProviderId =
+  | 'duga'
+  | 'sokmil'
+  | 'dti'  // レガシー用（後方互換性）
+  | 'mgs'
+  | 'b10f'
+  | 'japanska'
+  | 'fc2'
+  // DTI個別サービス
+  | 'caribbeancom'      // カリビアンコム
+  | 'caribbeancompr'    // カリビアンコムプレミアム
+  | '1pondo'            // 一本道
+  | 'heyzo'             // HEYZO
+  | '10musume'          // 天然むすめ
+  | 'pacopacomama'      // パコパコママ
+  | 'muramura'          // ムラムラってくる素人
+  | 'tokyohot';         // Tokyo-Hot
 
 // 商品カテゴリ（ジャンル）の定義
 export type ProductCategory =
@@ -57,6 +74,15 @@ export interface CategoryInfo {
   exampleServices: ProviderId[];
 }
 
+// AIレビュー情報
+export interface ActressAiReview {
+  overview: string;           // 演者の総合的な紹介
+  style: string;              // 演技スタイル・特徴
+  appeal: string;             // 魅力ポイント
+  recommendation: string;     // おすすめコメント
+  keywords: string[];         // 検索キーワード
+}
+
 // 女優情報
 export interface Actress {
   id: string;
@@ -74,6 +100,9 @@ export interface Actress {
   };
   highlightWorks: string[];
   tags: string[];
+  aliases?: string[]; // 別名リスト
+  aiReview?: ActressAiReview; // AI生成レビュー
+  aiReviewUpdatedAt?: string; // AI生成レビュー更新日時
 }
 
 // キャンペーン情報

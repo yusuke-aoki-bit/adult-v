@@ -42,7 +42,7 @@ async function fetchVideoFromMgs(productId: string): Promise<string | null> {
     const $ = cheerio.load(html);
 
     // video sourceタグから取得
-    let videoUrl = $('video source').attr('src');
+    const videoUrl = $('video source').attr('src');
     if (videoUrl) {
       return videoUrl.startsWith('http') ? videoUrl : `https://www.mgstage.com${videoUrl}`;
     }
@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await db.execute(query);
-    const products = result.rows as ProductToBackfill[];
+    const products = result.rows as unknown as ProductToBackfill[];
 
     console.log(`[backfill-videos] Found ${products.length} products without videos`);
 

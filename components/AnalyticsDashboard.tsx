@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, Eye, Heart, Users } from 'lucide-react';
 
 interface AnalyticsData {
@@ -25,22 +25,24 @@ export default function AnalyticsDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, [period]);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/analytics?period=${period}`);
       const analyticsData = await response.json();
       setData(analyticsData);
-    } catch (error) {
-      console.error('Failed to fetch analytics:', error);
+    } catch (error: unknown) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[AnalyticsDashboard] Failed to fetch analytics:', error);
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [period]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   if (isLoading) {
     return (

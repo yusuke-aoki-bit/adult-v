@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
       results.push({
         type: 'product_id',
         id: match.id,
-        name: match.originalProductId || match.normalizedProductId || match.id,
+        name: match.originalProductId || match.normalizedProductId || String(match.id),
         image: match.thumbnail || undefined,
         category: '品番',
       });
@@ -82,13 +82,13 @@ export async function GET(request: NextRequest) {
       .select({
         id: performers.id,
         name: performers.name,
-        image: performers.imageUrl,
+        image: performers.profileImageUrl,
         productCount: sql<number>`COUNT(DISTINCT pp.product_id)`.as('product_count'),
       })
       .from(performers)
       .leftJoin(sql`product_performers pp`, sql`${performers.id} = pp.performer_id`)
       .where(ilike(performers.name, `%${query}%`))
-      .groupBy(performers.id, performers.name, performers.imageUrl)
+      .groupBy(performers.id, performers.name, performers.profileImageUrl)
       .orderBy(desc(sql`product_count`))
       .limit(limit);
 
