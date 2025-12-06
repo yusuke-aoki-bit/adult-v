@@ -211,6 +211,9 @@ async function main() {
   }
 }
 
-main();
+// Only run main if this file is executed directly
+if (require.main === module) {
+  main();
+}
 
 export { HeyzoCrawler, HEYZO_CONFIG };
