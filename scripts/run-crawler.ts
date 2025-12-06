@@ -114,6 +114,7 @@ async function main() {
         break;
 
       case 'caribbeancompr':
+      case 'caribpr':
         {
           const fullCrawl = await shouldDoFullCrawl('カリビアンコムプレミアム');
           const limit = fullCrawl ? '99999' : '100'; // Full: all content, Incremental: 100 latest

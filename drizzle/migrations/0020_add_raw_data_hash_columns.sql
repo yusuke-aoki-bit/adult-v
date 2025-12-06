@@ -24,6 +24,13 @@ ALTER TABLE mgs_raw_pages
 
 CREATE INDEX IF NOT EXISTS idx_mgs_raw_hash ON mgs_raw_pages(hash);
 
+-- B10F生データにhash/processedAtカラム追加
+ALTER TABLE b10f_raw_csv
+  ADD COLUMN IF NOT EXISTS hash VARCHAR(64),
+  ADD COLUMN IF NOT EXISTS processed_at TIMESTAMP;
+
+CREATE INDEX IF NOT EXISTS idx_b10f_raw_hash ON b10f_raw_csv(hash);
+
 -- product_raw_data_linksテーブルにraw_data_table/content_hashカラム追加
 ALTER TABLE product_raw_data_links
   ADD COLUMN IF NOT EXISTS raw_data_table TEXT,
