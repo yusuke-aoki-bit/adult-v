@@ -38,8 +38,8 @@ async function isFirstCrawl(source: string): Promise<boolean> {
   try {
     const result = await db.execute(sql`
       SELECT COUNT(*) as count
-      FROM products
-      WHERE id LIKE ${source + '%'}
+      FROM product_sources
+      WHERE asp_name = ${source}
       LIMIT 1
     `);
     const count = Number(result.rows[0]?.count || 0);
