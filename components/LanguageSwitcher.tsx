@@ -1,18 +1,13 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { locales, type Locale, defaultLocale } from '@/i18n';
+import { Suspense } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { locales, localeNames, type Locale, defaultLocale } from '@/i18n';
 
-const languageNames: Record<Locale, string> = {
-  ja: '日本語',
-  en: 'English',
-  zh: '中文',
-  ko: '한국어',
-};
-
-export default function LanguageSwitcher() {
+function LanguageSwitcherContent() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Detect current locale from pathname
   let locale: Locale = defaultLocale;
@@ -42,14 +37,18 @@ export default function LanguageSwitcher() {
       }
     }
 
+    // クエリパラメータを保持
+    const queryString = searchParams.toString();
+    const queryPart = queryString ? `?${queryString}` : '';
+
     // If we're on a non-localized page, navigate to localized version
     if (!currentLocale) {
-      router.push(`/${newLocale}${pathname}`);
+      router.push(`/${newLocale}${pathname}${queryPart}`);
       return;
     }
 
-    // Navigate to the new locale with the same path
-    router.push(`/${newLocale}${pathWithoutLocale}`);
+    // Navigate to the new locale with the same path and query params
+    router.push(`/${newLocale}${pathWithoutLocale}${queryPart}`);
   };
 
   return (
@@ -62,7 +61,7 @@ export default function LanguageSwitcher() {
       >
         {locales.map((loc) => (
           <option key={loc} value={loc}>
-            {languageNames[loc]}
+            {localeNames[loc]}
           </option>
         ))}
       </select>
@@ -72,5 +71,22 @@ export default function LanguageSwitcher() {
         </svg>
       </div>
     </div>
+  );
+}
+
+export default function LanguageSwitcher() {
+  return (
+    <Suspense fallback={
+      <div className="relative">
+        <select
+          disabled
+          className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 text-sm font-medium text-gray-400 cursor-wait"
+        >
+          <option>...</option>
+        </select>
+      </div>
+    }>
+      <LanguageSwitcherContent />
+    </Suspense>
   );
 }

@@ -37,13 +37,16 @@
   },
   "homepage": {
     "title": "女优列表 - 成人流媒体中心",
-    "description": "探索 {count}+ 位来自DMM、DUGA、MGS和DTI平台的JAV女优。按人气、新作品和类型浏览。从知名明星到新兴人才，找到您喜爱的表演者。",
+    "description": "探索 {count}+ 位来自DUGA、MGS和DTI平台的JAV女优。按人气、新作品和类型浏览。从知名明星到新兴人才，找到您喜爱的表演者。",
     "actressCount": "收录 {count} 位女优",
     "initialSearch": "按首字母搜索",
     "filterSettings": "筛选设置",
     "newReleases": "新作发布女优",
     "popularActresses": "人气女优",
-    "popularTags": "热门标签"
+    "popularTags": "热门标签",
+    "saleProducts": "特价促销中",
+    "viewAllSales": "查看所有促销商品",
+    "saleUntil": "截止至{date}"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -63,7 +66,7 @@
     "search": "搜索"
   },
   "footer": {
-    "description": "跨平台成人流媒体中心，涵盖 DMM / DUGA / SOKMIL / DTI，为重度用户提供基于女优的评论、排行榜和活动更新。",
+    "description": "跨平台成人流媒体中心，涵盖 DUGA / SOKMIL / DTI，为重度用户提供基于女优的评论、排行榜和活动更新。",
     "links": "链接",
     "legal": "法律信息",
     "privacy": "隐私政策",
@@ -72,13 +75,42 @@
     "copyright": "© {year} Adult Viewer Lab. 版权所有。",
     "affiliateNotice": "本站包含成人内容的联盟链接。"
   },
+  "uncategorized": {
+    "title": "未分类作品",
+    "metaDescription": "演员信息未分类的作品列表。",
+    "badge": "未分类",
+    "shortDescription": "演员信息未分类的作品",
+    "description": "演员信息未分类的作品。共有{count}件作品。",
+    "notice": "这些作品尚未关联演员信息。",
+    "noProducts": "没有未分类的作品",
+    "itemCount": "{count}件"
+  },
+  "products": {
+    "title": "全部作品",
+    "metaDescription": "搜索DUGA、MGS、DTI等所有流媒体网站的作品。",
+    "description": "共有{count}件作品",
+    "noProducts": "未找到作品"
+  },
   "filter": {
     "genre": "类型",
     "site": "流媒体网站",
     "include": "包含（任一）",
     "exclude": "排除（不含）",
     "reset": "重置筛选",
-    "noFiltersApplied": "未应用筛选"
+    "noFiltersApplied": "未应用筛选",
+    "filterSettings": "筛选设置",
+    "initialSearch": "首字母搜索",
+    "sampleContent": "样片内容",
+    "sampleVideo": "有样片视频",
+    "sampleImage": "有样片图片",
+    "clear": "清除",
+    "loading": "加载中...",
+    "other": "其他",
+    "performerType": "出演形式",
+    "solo": "单人出演",
+    "multi": "多人出演",
+    "saleFilter": "促销",
+    "onSaleOnly": "仅限促销商品"
   },
   "sort": {
     "nameAsc": "名称（升序）",
@@ -96,6 +128,8 @@
     "profile": "个人资料",
     "filmography": "作品集",
     "totalProducts": "共 {count} 部作品",
+    "metaTitle": "{name} - {count}部作品 | 免费样片・多平台搜索",
+    "metaDescription": "{name}的{count}部作品跨平台搜索。支持DUGA・MGS・DTI・加勒比・一本道・HEYZO等多站点作品信息、价格比较、分类筛选。提供免费预览视频。",
     "aliases": "别名",
     "height": "身高",
     "measurements": "三围",
@@ -162,7 +196,15 @@
   "categories": {
     "title": "分类",
     "browseByGenre": "按类型浏览",
-    "allCategories": "所有分类"
+    "allCategories": "所有分类",
+    "pageTitle": "类型・分类列表",
+    "pageDescription": "从{count}种类型中浏览超过{totalProducts}部作品。按热门排序，点击感兴趣的类型探索。",
+    "noCategories": "未找到分类",
+    "productCount": "{count}部作品",
+    "genreBadge": "类型",
+    "genreDescription": "{tagName}类型共{count}部作品。按最新发布排序。",
+    "noProducts": "未找到相关作品",
+    "backToCategories": "返回分类列表"
   },
   "featured": {
     "title": "精选",
@@ -202,6 +244,20 @@
   "affiliate": {
     "disclosure": "联盟披露",
     "disclaimerShort": "本站使用联盟广告。",
-    "disclaimerFull": "本站是亚马逊联盟计划的参与者，该计划旨在通过广告和链接到 Amazon.com 为网站提供赚取广告费的方式。我们还参与 DMM、DUGA、SOKMIL 和 DTI 的联盟计划。"
+    "disclaimerFull": "本站是亚马逊联盟计划的参与者，该计划旨在通过广告和链接到 Amazon.com 为网站提供赚取广告费的方式。我们还参与 DUGA、SOKMIL 和 DTI 的联盟计划。"
+  },
+  "productCard": {
+    "enlargeImage": "放大图片",
+    "performerInfo": "演员信息",
+    "releaseDateTbd": "发售日期待定",
+    "productId": "作品ID",
+    "manufacturerId": "厂商编号",
+    "reviews": "条评价",
+    "minutes": "分钟",
+    "subscriptionOnly": "仅限月费会员",
+    "viewDetails": "查看详情",
+    "close": "关闭",
+    "clickToCloseEsc": "点击关闭 / ESC键",
+    "comingSoon": "即将上市"
   }
 }

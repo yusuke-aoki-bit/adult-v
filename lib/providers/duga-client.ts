@@ -207,7 +207,7 @@ export class DugaApiClient {
       agentid: this.agentId,
       bannerid: this.bannerId,
       format: params.format || 'json',
-      timestamp: Date.now().toString(),
+      // timestampは不要（APIでinvalid timestampエラーになる）
       ...(params.keyword && { keyword: params.keyword }),
       ...(params.hits && { hits: params.hits.toString() }),
       ...(params.offset && { offset: params.offset.toString() }),
@@ -256,13 +256,14 @@ export class DugaApiClient {
    * @returns 正規化されたレスポンス
    */
   private normalizeResponse(data: any): DugaApiResponse {
-    // APIのレスポンス構造に応じて調整が必要
-    // 以下は想定される構造の例
+    // APIのレスポンス構造: { hits: "2", count: 185871, items: [{item: {...}}, ...] }
+    // hitsはstring型で返ってくるため、parseIntで数値に変換
+    const items = data.items || data.products || [];
     return {
-      hits: data.hits || 0,
-      count: data.count || 0,
-      offset: data.offset || 0,
-      items: (data.items || data.products || []).map((item: any) => this.normalizeProduct(item)),
+      hits: typeof data.hits === 'string' ? parseInt(data.hits, 10) : (data.hits || 0),
+      count: typeof data.count === 'string' ? parseInt(data.count, 10) : (data.count || 0),
+      offset: typeof data.offset === 'string' ? parseInt(data.offset, 10) : (data.offset || 0),
+      items: items.map((item: any) => this.normalizeProduct(item)),
     };
   }
 
@@ -276,12 +277,20 @@ export class DugaApiClient {
     // APIレスポンスは items[].item の形式なので、item を取り出す
     const item = data.item || data;
 
-    // サンプル画像を抽出 (thumbnail配列から)
+    // サンプル画像を抽出 (thumbnail配列から、大サイズ優先)
     const sampleImages: string[] = [];
     if (item.thumbnail && Array.isArray(item.thumbnail)) {
       for (const thumb of item.thumbnail) {
-        if (thumb.image) {
-          sampleImages.push(thumb.image);
+        // large > midium > image (scap) の順で大きいサイズを優先
+        // DUGAの画像パス: /scap/ (小) → /sample/ (大)
+        const imageUrl = thumb.large || thumb.midium || thumb.image;
+        if (imageUrl) {
+          // /scap/ を /sample/ に変換して高解像度版を取得
+          const fullSizeUrl = imageUrl
+            .replace(/\/scap\//, '/sample/')
+            .replace(/\/240x180\.jpg$/, '/640x480.jpg')
+            .replace(/\/noauth\/240x180\.jpg/, '/noauth/640x480.jpg');
+          sampleImages.push(fullSizeUrl);
         }
       }
     }
@@ -403,7 +412,10 @@ export class DugaApiClient {
       title: item.title || '',
       titleKana: item.title_kana || item.titleKana,
       description: item.caption || item.description,
-      thumbnailUrl,
+      // ジャケット画像(packageUrl)を優先して使用（大サイズ）、なければポスター画像(thumbnailUrl)
+      // jacketimage.large: 見開き大サイズ
+      // posterimage.large: 240x180（最大でも小さい）
+      thumbnailUrl: packageUrl || thumbnailUrl,
       packageUrl,
       sampleImages,
       sampleVideos,

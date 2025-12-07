@@ -82,15 +82,58 @@ async function main() {
   try {
     console.log('🔄 DUGA APIから新着作品を取得中...\n');
 
-    // 新着作品を取得
-    const response = await dugaClient.getNewReleases(limit, offset);
+    // ページネーション処理: APIは1回最大100件まで
+    const PAGE_SIZE = 100;
+    let currentOffset = offset;
+    let totalProcessed = 0;
+    let allItems: any[] = [];
 
-    console.log(`✅ API取得完了: ${response.items.length}件\n`);
-    stats.totalFetched = response.items.length;
+    // 最初のリクエストで総数を取得
+    const firstResponse = await dugaClient.getNewReleases(PAGE_SIZE, currentOffset);
+    const totalCount = firstResponse.count;
+    console.log(`📊 API総件数: ${totalCount.toLocaleString()}件`);
+    console.log(`🎯 取得目標: ${limit === 99999 ? '全件' : limit + '件'}\n`);
 
-    for (const [index, item] of response.items.entries()) {
+    // ページネーションループ
+    while (totalProcessed < limit) {
+      const response = totalProcessed === 0
+        ? firstResponse
+        : await dugaClient.getNewReleases(PAGE_SIZE, currentOffset);
+
+      if (response.items.length === 0) {
+        console.log('📭 取得可能な商品がなくなりました');
+        break;
+      }
+
+      allItems = allItems.concat(response.items);
+      totalProcessed += response.items.length;
+      currentOffset += PAGE_SIZE;
+
+      console.log(`✅ ページ取得: ${response.items.length}件 (累計: ${totalProcessed.toLocaleString()}件 / offset: ${currentOffset})`);
+
+      // limitに達したら終了
+      if (totalProcessed >= limit || response.items.length < PAGE_SIZE) {
+        break;
+      }
+
+      // レートリミット対策: 100リクエストごとに短い休憩
+      if (totalProcessed % 10000 === 0) {
+        console.log('⏳ レートリミット対策: 5秒待機...');
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+    }
+
+    // limitを超えた分をカット
+    if (allItems.length > limit) {
+      allItems = allItems.slice(0, limit);
+    }
+
+    console.log(`\n✅ API取得完了: ${allItems.length.toLocaleString()}件\n`);
+    stats.totalFetched = allItems.length;
+
+    for (const [index, item] of allItems.entries()) {
       try {
-        console.log(`[${index + 1}/${response.items.length}] 処理中: ${item.title}`);
+        console.log(`[${index + 1}/${allItems.length}] 処理中: ${item.title}`);
 
         // 商品データの検証
         const validation = validateProductData({
@@ -308,7 +351,7 @@ async function main() {
 
         // 7. カテゴリ・タグ保存（categoriesがある場合）
         if (item.categories && item.categories.length > 0) {
-          console.log(`  🏷️  カテゴリ保存中 (${item.categories.length}件)...`);
+          console.log(`  🏷️  カテゴリ/タグ保存中 (${item.categories.length}件)...`);
 
           for (const category of item.categories) {
             // まずcategoriesテーブルにupsert
@@ -328,9 +371,27 @@ async function main() {
               VALUES (${productId}, ${categoryId})
               ON CONFLICT DO NOTHING
             `);
+
+            // tagsテーブルにも保存（ジャンルタグとして）
+            const tagResult = await db.execute(sql`
+              INSERT INTO tags (name, category)
+              VALUES (${category.name}, 'genre')
+              ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+              RETURNING id
+            `);
+
+            const tagRow = getFirstRow<IdRow>(tagResult);
+            const tagId = tagRow!.id;
+
+            // product_tagsにリレーション作成
+            await db.execute(sql`
+              INSERT INTO product_tags (product_id, tag_id)
+              VALUES (${productId}, ${tagId})
+              ON CONFLICT DO NOTHING
+            `);
           }
 
-          console.log(`  ✓ カテゴリ保存完了`);
+          console.log(`  ✓ カテゴリ/タグ保存完了`);
         }
 
         // 8. 出演者情報保存（performersがある場合）

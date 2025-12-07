@@ -95,8 +95,14 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
 
   // ========== DUGA ==========
   // e.g., https://pic.duga.jp/unsecure/xxx-t.jpg -> https://pic.duga.jp/unsecure/xxx-l.jpg
+  // scap (screen capture thumbnail) -> sample (high-res sample)
+  // e.g., https://pic.duga.jp/unsecure/switch/1014/noauth/scap/0001.jpg -> .../sample/0001.jpg
+  // e.g., https://pic.duga.jp/unsecure/mbm/1360/noauth/240x180.jpg -> 480x360.jpg (2x) or 640x480.jpg
   if (thumbnailUrl.includes('duga.jp')) {
     return thumbnailUrl
+      .replace(/\/scap\//, '/sample/')  // scap -> sample (高解像度サンプル画像)
+      .replace(/\/240x180\.jpg$/, '/640x480.jpg')  // サムネイル → 大きいサイズ
+      .replace(/\/noauth\/240x180\.jpg/, '/noauth/640x480.jpg')  // noauthパス含む場合
       .replace(/-t\./, '-l.')
       .replace(/_t\./, '_l.')
       .replace(/\/t\//, '/l/')
@@ -142,7 +148,8 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
 
   // ========== b10f.jp ==========
   // e.g., https://b10f.jp/xxx/thumb/xxx.jpg -> https://b10f.jp/xxx/large/xxx.jpg
-  // e.g., https://ads.b10f.jp/images/100-tfd-001/1s.jpg -> https://ads.b10f.jp/images/100-tfd-001/1l.jpg
+  // e.g., https://ads.b10f.jp/images/100-tfd-001/1s.jpg -> https://ads.b10f.jp/images/100-tfd-001/1.jpg
+  // 注意: 1l.jpg はプレースホルダー（500バイト程度）なので使用不可。1.jpg が正しいフルサイズ（240KB程度）
   if (thumbnailUrl.includes('b10f.jp') || thumbnailUrl.includes('ads.b10f.jp')) {
     return thumbnailUrl
       .replace(/\/thumb\//, '/large/')
@@ -150,9 +157,7 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
       .replace(/_s\./, '_l.')
       .replace(/-s\./, '-l.')
       .replace(/\/s\//, '/l/')
-      .replace(/\/1s\.jpg$/, '/1l.jpg')   // 1s.jpg -> 1l.jpg
-      .replace(/\/2s\.jpg$/, '/2l.jpg')   // 2s.jpg -> 2l.jpg
-      .replace(/\/(\d+)s\.jpg$/, '/$1l.jpg'); // 汎用パターン Xs.jpg -> Xl.jpg
+      .replace(/\/(\d+)s\.jpg$/, '/$1.jpg'); // 1s.jpg -> 1.jpg (1l.jpgはプレースホルダーなので使わない)
   }
 
   // ========== Japanska ==========
@@ -400,11 +405,12 @@ export function isUncensoredThumbnail(url: string | null | undefined): boolean {
  */
 export function isSubscriptionSite(provider: string): boolean {
   if (!provider) return false;
-  // dti系、japanskaは月額制
+  // 月額制サイト（カリビアンコムプレミアムは単品購入なので除外）
   const subscriptionProviders = [
     'dti', 'japanska',
-    'caribbeancom', 'caribbeancompr', '1pondo', 'heyzo',
+    'caribbeancom', '1pondo', 'heyzo',
     '10musume', 'pacopacomama', 'muramura', 'tokyohot'
+    // 注: caribbeancompr（カリビアンコムプレミアム）は単品購入サイトなので含めない
   ];
   return subscriptionProviders.includes(provider);
 }

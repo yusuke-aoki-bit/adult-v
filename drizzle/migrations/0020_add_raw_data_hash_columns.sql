@@ -24,10 +24,15 @@ ALTER TABLE mgs_raw_pages
 
 CREATE INDEX IF NOT EXISTS idx_mgs_raw_hash ON mgs_raw_pages(hash);
 
--- B10F生データにhash/processedAtカラム追加
+-- B10F生データにhash/processedAt/gcs_urlカラム追加
 ALTER TABLE b10f_raw_csv
   ADD COLUMN IF NOT EXISTS hash VARCHAR(64),
-  ADD COLUMN IF NOT EXISTS processed_at TIMESTAMP;
+  ADD COLUMN IF NOT EXISTS processed_at TIMESTAMP,
+  ADD COLUMN IF NOT EXISTS gcs_url TEXT;
+
+-- gcs_url追加に伴い、csv_dataをNULL許可に変更（GCS保存時はnull）
+ALTER TABLE b10f_raw_csv
+  ALTER COLUMN csv_data DROP NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_b10f_raw_hash ON b10f_raw_csv(hash);
 
@@ -56,5 +61,8 @@ COMMENT ON COLUMN sokmil_raw_responses.hash IS '重複・更新検出用SHA256�
 COMMENT ON COLUMN sokmil_raw_responses.processed_at IS 'productsへの処理完了日時';
 COMMENT ON COLUMN mgs_raw_pages.hash IS '重複・更新検出用SHA256ハッシュ';
 COMMENT ON COLUMN mgs_raw_pages.processed_at IS 'productsへの処理完了日時';
+COMMENT ON COLUMN b10f_raw_csv.hash IS '重複・更新検出用SHA256ハッシュ';
+COMMENT ON COLUMN b10f_raw_csv.processed_at IS 'productsへの処理完了日時';
+COMMENT ON COLUMN b10f_raw_csv.gcs_url IS 'Google Cloud Storage保存URL';
 COMMENT ON COLUMN product_raw_data_links.raw_data_table IS '参照先生データテーブル名';
 COMMENT ON COLUMN product_raw_data_links.content_hash IS '処理時点のコンテンツハッシュ（再処理判定用）';

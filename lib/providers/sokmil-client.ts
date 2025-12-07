@@ -20,38 +20,33 @@
 export interface SokmilBaseParams {
   /** API KEY (必須) */
   api_key: string;
-  /** ページ番号 */
-  page?: number;
-  /** 1ページあたりの取得件数 */
-  per_page?: number;
 }
 
 /**
  * 商品検索APIパラメータ
+ *
+ * 公式ドキュメント準拠:
+ * https://sokmil-ad.com/api/v1/Item
  */
 export interface SokmilItemSearchParams extends SokmilBaseParams {
-  /** 商品ID */
-  item_id?: string;
-  /** 商品名 (部分一致) */
-  item_name?: string;
-  /** メーカーID */
-  maker_id?: string;
-  /** レーベルID */
-  label_id?: string;
-  /** シリーズID */
-  series_id?: string;
-  /** ジャンルID */
-  genre_id?: string;
-  /** 監督ID */
-  director_id?: string;
-  /** 出演者ID */
-  actor_id?: string;
-  /** 発売日開始 (YYYY-MM-DD) */
-  release_date_from?: string;
-  /** 発売日終了 (YYYY-MM-DD) */
-  release_date_to?: string;
-  /** ソート順 (release_date_desc, release_date_asc, price_desc, price_asc) */
-  sort?: 'release_date_desc' | 'release_date_asc' | 'price_desc' | 'price_asc';
+  /** 取得件数 (初期値：20、最大：100) */
+  hits?: number;
+  /** 取得開始位置 (初期値：1、最大：50000) */
+  offset?: number;
+  /** 並び順 (price: 価格高い順, -price: 価格安い順, date: 新着) */
+  sort?: 'price' | '-price' | 'date';
+  /** カテゴリ (av: アダルト動画, idol: グラビア) */
+  category?: 'av' | 'idol';
+  /** キーワード (商品名/ジャンル名/出演者名から検索) */
+  keyword?: string;
+  /** 検索項目 (actor, director, genre, maker, label, series) */
+  article?: 'actor' | 'director' | 'genre' | 'maker' | 'label' | 'series';
+  /** 検索ID (articleと組み合わせて使用) */
+  article_id?: string;
+  /** 配信開始日以降 (ISO8601形式: 2016-04-01T00:00:00) */
+  gte_date?: string;
+  /** 配信開始日以前 (ISO8601形式: 2016-04-01T00:00:00) */
+  lte_date?: string;
 }
 
 /**
@@ -380,7 +375,9 @@ export class SokmilApiClient {
       itemName: data.title || '',
       itemUrl: data.URL || '',
       affiliateUrl: data.affiliateURL || '',
-      thumbnailUrl: data.imageURL?.list || data.imageURL?.small,
+      // 大きい画像(large)を優先して使用
+      // APIレスポンス: imageURL.large > imageURL.list > imageURL.small
+      thumbnailUrl: data.imageURL?.large || data.imageURL?.list || data.imageURL?.small,
       packageImageUrl: data.imageURL?.large,
       sampleImages: data.sampleImageURL?.image || [],
       sampleVideoUrl,
@@ -489,33 +486,36 @@ export class SokmilApiClient {
   }
 
   /**
-   * 商品IDで商品を取得
+   * 商品IDで商品を検索（キーワード検索で代用）
    *
-   * @param itemId 商品ID
+   * @param itemId 商品ID（品番）
    * @returns 商品情報
    */
   async getItemById(itemId: string): Promise<SokmilProduct | null> {
-    const response = await this.searchItems({ item_id: itemId });
-    return response.data.length > 0 ? response.data[0] : null;
+    // Sokmil Item APIにはitem_id検索がないため、keywordで代用
+    const response = await this.searchItems({ keyword: itemId, hits: 10 });
+    // 完全一致を探す
+    const match = response.data.find(item => item.itemId === itemId);
+    return match || (response.data.length > 0 ? response.data[0] : null);
   }
 
   /**
-   * 商品名で商品を検索
+   * キーワードで商品を検索
    *
-   * @param itemName 商品名
-   * @param page ページ番号
-   * @param perPage 1ページあたりの件数
+   * @param keyword キーワード
+   * @param hits 取得件数 (最大100)
+   * @param offset 取得開始位置 (1から開始)
    * @returns 商品リスト
    */
-  async searchByItemName(
-    itemName: string,
-    page: number = 1,
-    perPage: number = 20
+  async searchByKeyword(
+    keyword: string,
+    hits: number = 20,
+    offset: number = 1
   ): Promise<SokmilApiResponse<SokmilProduct>> {
     return this.searchItems({
-      item_name: itemName,
-      page,
-      per_page: perPage,
+      keyword,
+      hits,
+      offset,
     });
   }
 
@@ -523,35 +523,91 @@ export class SokmilApiClient {
    * 出演者IDで商品を検索
    *
    * @param actorId 出演者ID
-   * @param page ページ番号
-   * @param perPage 1ページあたりの件数
+   * @param hits 取得件数 (最大100)
+   * @param offset 取得開始位置 (1から開始)
    * @returns 商品リスト
    */
   async searchByActor(
     actorId: string,
-    page: number = 1,
-    perPage: number = 20
+    hits: number = 20,
+    offset: number = 1
   ): Promise<SokmilApiResponse<SokmilProduct>> {
     return this.searchItems({
-      actor_id: actorId,
-      page,
-      per_page: perPage,
+      article: 'actor',
+      article_id: actorId,
+      hits,
+      offset,
     });
   }
 
   /**
    * 新着商品を取得
    *
-   * @param page ページ番号
-   * @param perPage 1ページあたりの件数
+   * @param hits 取得件数 (最大100)
+   * @param offset 取得開始位置 (1から開始)
    * @returns 商品リスト
    */
   async getNewReleases(
-    _page: number = 1,
-    _perPage: number = 20
+    hits: number = 20,
+    offset: number = 1
   ): Promise<SokmilApiResponse<SokmilProduct>> {
-    // SOKMIL APIは最小限のパラメータのみ使用（sort, offset, hitsは500エラーの原因）
-    return this.searchItems({});
+    return this.searchItems({
+      sort: 'date',
+      hits,
+      offset,
+    });
+  }
+
+  /**
+   * 全商品をページング取得（クローラー用）
+   *
+   * @param options オプション
+   * @returns 商品リストのジェネレーター
+   */
+  async *fetchAllItems(options: {
+    category?: 'av' | 'idol';
+    gte_date?: string;
+    lte_date?: string;
+    hits?: number;
+  } = {}): AsyncGenerator<SokmilProduct[], void, unknown> {
+    const hits = options.hits || 100; // 最大100件
+    let offset = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const response = await this.searchItems({
+        category: options.category,
+        gte_date: options.gte_date,
+        lte_date: options.lte_date,
+        sort: 'date',
+        hits,
+        offset,
+      });
+
+      if (response.data.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      yield response.data;
+
+      // offset最大50000の制限
+      if (offset + hits > 50000) {
+        console.log('[SOKMIL] Reached offset limit (50000)');
+        hasMore = false;
+        break;
+      }
+
+      offset += hits;
+
+      // 総件数を超えた場合
+      if (offset > response.totalCount) {
+        hasMore = false;
+      }
+
+      // API負荷軽減のため少し待機
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
   }
 }
 

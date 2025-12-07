@@ -15,7 +15,7 @@
 // 環境変数
 // =============================================================================
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || '';
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
 const GOOGLE_CUSTOM_SEARCH_ENGINE_ID = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID || '';
 // サービスアカウントキー（JSON文字列として環境変数に設定）
 const GOOGLE_SERVICE_ACCOUNT_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || '';
@@ -1059,12 +1059,14 @@ export interface BatchTranslationResult {
 export interface PerformerTranslation {
   en?: { name: string; profile?: string };
   zh?: { name: string; profile?: string };
+  'zh-TW'?: { name: string; profile?: string };
   ko?: { name: string; profile?: string };
 }
 
 export interface ProductTranslation {
   en?: { title: string; description?: string };
   zh?: { title: string; description?: string };
+  'zh-TW'?: { title: string; description?: string };
   ko?: { title: string; description?: string };
 }
 
@@ -1208,7 +1210,8 @@ export async function translatePerformer(
     return null;
   }
 
-  const languages = ['en', 'zh', 'ko'] as const;
+  // zh = 簡体字 (zh-CN), zh-TW = 繁体字 (zh-TW)
+  const languages = ['en', 'zh', 'zh-TW', 'ko'] as const;
   const result: PerformerTranslation = {};
 
   // 名前とプロフィールをまとめて翻訳（API呼び出し回数削減）
@@ -1242,7 +1245,8 @@ export async function translatePerformersBatch(
     return performers.map(() => null);
   }
 
-  const languages = ['en', 'zh', 'ko'] as const;
+  // zh = 簡体字 (zh-CN), zh-TW = 繁体字 (zh-TW)
+  const languages = ['en', 'zh', 'zh-TW', 'ko'] as const;
   const results: Array<PerformerTranslation | null> = performers.map(() => ({}));
 
   // 全テキストを1つの配列にまとめる
@@ -1299,7 +1303,8 @@ export async function translateProduct(
     return null;
   }
 
-  const languages = ['en', 'zh', 'ko'] as const;
+  // zh = 簡体字 (zh-CN), zh-TW = 繁体字 (zh-TW)
+  const languages = ['en', 'zh', 'zh-TW', 'ko'] as const;
   const result: ProductTranslation = {};
 
   // タイトルと説明をまとめて翻訳（API呼び出し回数削減）
@@ -1333,7 +1338,8 @@ export async function translateProductsBatch(
     return products.map(() => null);
   }
 
-  const languages = ['en', 'zh', 'ko'] as const;
+  // zh = 簡体字 (zh-CN), zh-TW = 繁体字 (zh-TW)
+  const languages = ['en', 'zh', 'zh-TW', 'ko'] as const;
   const results: Array<ProductTranslation | null> = products.map(() => ({}));
 
   // 全テキストを1つの配列にまとめる
@@ -1718,7 +1724,7 @@ ${reviewInfo}
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1823,7 +1829,7 @@ JSON形式のみで回答してください。
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1917,6 +1923,219 @@ export async function batchGenerateDescriptions(
 }
 
 // =============================================================================
+// Gemini API - AI商品レビュー生成（ユーザーレビューベース）
+// =============================================================================
+
+export interface GeneratedProductReview {
+  summary: string;           // レビュー総評（100-200文字）
+  highlights: string[];      // 高評価ポイント（3-5個）
+  concerns: string[];        // 注意点・改善点（0-3個）
+  recommendedFor: string;    // おすすめ視聴者層（50-100文字）
+  overallSentiment: 'positive' | 'mixed' | 'negative';  // 全体的な評価傾向
+  averageRating?: number;    // 推定評価（1-5）
+}
+
+/**
+ * AI商品レビュー生成（Gemini API使用）
+ * ユーザーレビューから商品のAIレビューを生成
+ *
+ * @param params 商品情報とレビュー
+ * @returns 生成されたレビュー
+ */
+export async function generateProductReview(params: {
+  title: string;
+  description?: string;
+  performers?: string[];
+  genres?: string[];
+  reviews: Array<{
+    rating?: number;
+    maxRating?: number;
+    content: string;
+    reviewerName?: string;
+  }>;
+}): Promise<GeneratedProductReview | null> {
+  if (!GEMINI_API_KEY) {
+    console.warn('[Gemini API] API Key が未設定');
+    return null;
+  }
+
+  const { title, description, performers, genres, reviews } = params;
+
+  if (reviews.length === 0) {
+    console.warn('[Gemini API] レビューがありません');
+    return null;
+  }
+
+  // プロンプト構築
+  const productInfo = [
+    `タイトル: ${title}`,
+    description ? `説明: ${description.substring(0, 300)}` : null,
+    performers?.length ? `出演者: ${performers.join('、')}` : null,
+    genres?.length ? `ジャンル: ${genres.slice(0, 10).join('、')}` : null,
+  ].filter(Boolean).join('\n');
+
+  const reviewTexts = reviews.slice(0, 15).map((r, i) => {
+    const ratingStr = r.rating ? `★${r.rating}${r.maxRating ? `/${r.maxRating}` : '/5'}` : '';
+    return `${i + 1}. ${ratingStr} ${r.content.substring(0, 250)}`;
+  }).join('\n');
+
+  const prompt = `
+あなたはアダルトビデオ情報サイトのレビューアナリストです。
+以下の商品情報とユーザーレビューを分析し、商品の総合評価レビューを生成してください。
+
+【商品情報】
+${productInfo}
+
+【ユーザーレビュー（${reviews.length}件）】
+${reviewTexts}
+
+【出力形式】
+以下のJSON形式で回答してください。日本語で記述してください。
+
+{
+  "summary": "100-200文字のレビュー総評。ユーザーの評価傾向を踏まえた客観的な評価",
+  "highlights": ["高評価ポイント1", "高評価ポイント2", "高評価ポイント3"],
+  "concerns": ["注意点や改善点（あれば）"],
+  "recommendedFor": "50-100文字でどんな視聴者におすすめか",
+  "overallSentiment": "positive/mixed/negative のいずれか",
+  "averageRating": 4.2
+}
+
+【注意事項】
+- レビューの内容を客観的に分析してください
+- 個人的な意見ではなく、複数レビューの傾向をまとめてください
+- 過度に扇情的な表現は避けてください
+- JSON形式のみで回答してください
+`;
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            temperature: 0.5,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          },
+          safetySettings: [
+            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+          ],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('[Gemini API] generateProductReview HTTP error:', response.status, error);
+      return null;
+    }
+
+    const data = await response.json();
+
+    // レスポンスからテキスト抽出
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      console.error('[Gemini API] No text in response:', data);
+      return null;
+    }
+
+    // JSONをパース（コードブロックを除去）
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('[Gemini API] No JSON found in response:', text);
+      return null;
+    }
+
+    const result = JSON.parse(jsonMatch[0]) as GeneratedProductReview;
+
+    // バリデーション
+    if (!result.summary || !result.highlights || !result.overallSentiment) {
+      console.error('[Gemini API] Invalid response structure:', result);
+      return null;
+    }
+
+    return result;
+  } catch (error) {
+    console.error('[Gemini API] generateProductReview failed:', error);
+    return null;
+  }
+}
+
+/**
+ * 複数商品のバッチレビュー生成
+ *
+ * @param products 商品のリスト
+ * @param options オプション
+ * @returns 生成結果のマップ
+ */
+export async function batchGenerateProductReviews(
+  products: Array<{
+    id: string | number;
+    title: string;
+    description?: string;
+    performers?: string[];
+    genres?: string[];
+    reviews: Array<{
+      rating?: number;
+      maxRating?: number;
+      content: string;
+    }>;
+  }>,
+  options?: {
+    concurrency?: number;  // 同時処理数（デフォルト: 3）
+    delayMs?: number;      // リクエスト間隔（デフォルト: 500ms）
+  }
+): Promise<Map<string | number, GeneratedProductReview>> {
+  const { concurrency = 3, delayMs = 500 } = options || {};
+  const results = new Map<string | number, GeneratedProductReview>();
+
+  // バッチ処理
+  for (let i = 0; i < products.length; i += concurrency) {
+    const batch = products.slice(i, i + concurrency);
+
+    const promises = batch.map(async (product) => {
+      // レビューがない商品はスキップ
+      if (!product.reviews || product.reviews.length === 0) {
+        return null;
+      }
+
+      const result = await generateProductReview({
+        title: product.title,
+        description: product.description,
+        performers: product.performers,
+        genres: product.genres,
+        reviews: product.reviews,
+      });
+
+      if (result) {
+        results.set(product.id, result);
+      }
+
+      return result;
+    });
+
+    await Promise.all(promises);
+
+    // レート制限対策
+    if (i + concurrency < products.length) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  return results;
+}
+
+// =============================================================================
 // Gemini API - AI演者レビュー生成
 // =============================================================================
 
@@ -1959,11 +2178,10 @@ export async function generatePerformerReview(params: {
     existingReview,
   } = params;
 
-  // プロンプト構築
+  // プロンプト構築（作品数は言及しない）
   const performerInfo = [
     `名前: ${performerName}`,
     aliases?.length ? `別名: ${aliases.join('、')}` : null,
-    productCount ? `出演作品数: ${productCount}本` : null,
     genres?.length ? `関連ジャンル: ${genres.slice(0, 10).join('、')}` : null,
   ].filter(Boolean).join('\n');
 
@@ -2005,12 +2223,14 @@ ${existingInfo}
 - 過度に扇情的な表現は避けてください
 - 既存レビューがある場合は、内容を発展させつつリライトしてください
 - 事実に基づかない誇張は避けてください
+- 出演作品数には言及しないでください（「○本出演」などの表現は禁止）
+- 演者の特徴、演技スタイル、魅力に焦点を当ててください
 - JSON形式のみで回答してください
 `;
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

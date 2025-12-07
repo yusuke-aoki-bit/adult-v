@@ -5,6 +5,7 @@ import { generateBaseMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
 import Breadcrumb from '@/components/Breadcrumb';
 import { JsonLD } from '@/components/JsonLD';
+import { getLocalizedTagName } from '@/lib/localization';
 
 export async function generateMetadata({
   params,
@@ -14,8 +15,8 @@ export async function generateMetadata({
   const { locale } = await params;
 
   return generateBaseMetadata(
-    'ジャンル・カテゴリ一覧 | 人気ジャンルから作品を探す',
-    'アダルト動画をジャンル・カテゴリ別に整理。熟女、素人、企画、フェチ、VRなど人気ジャンルから作品を探せます。複数配信サイトの作品を横断検索。',
+    'アダルト動画ジャンル一覧【200種類以上】熟女・素人・VR等から検索',
+    '【無料サンプル動画あり】200種類以上のジャンルから好みの作品を検索。熟女、素人、企画、フェチ、VR等人気ジャンルを網羅。MGS・DUGA・DTI等複数サイトの作品を一括比較。',
     undefined,
     `/${locale}/categories`,
     undefined,
@@ -32,6 +33,7 @@ interface PageProps {
 export default async function CategoriesPage({ params }: PageProps) {
   const { locale } = await params;
   const tNav = await getTranslations({ locale, namespace: 'nav' });
+  const tCategories = await getTranslations({ locale, namespace: 'categories' });
 
   const categories = await getCategories({ sortBy: 'productCount', limit: 200 });
 
@@ -48,7 +50,7 @@ export default async function CategoriesPage({ params }: PageProps) {
       {
         '@type': 'ListItem',
         position: 2,
-        name: 'カテゴリ',
+        name: tCategories('title'),
         item: `${process.env.NEXT_PUBLIC_SITE_URL}/${locale}/categories`,
       },
     ],
@@ -57,12 +59,12 @@ export default async function CategoriesPage({ params }: PageProps) {
   const itemListSchema = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'ジャンル・カテゴリ一覧',
+    name: tCategories('pageTitle'),
     numberOfItems: categories.length,
     itemListElement: categories.slice(0, 50).map((cat, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      name: cat.name,
+      name: getLocalizedTagName(cat, locale),
       url: `${process.env.NEXT_PUBLIC_SITE_URL}/${locale}/categories/${cat.id}`,
     })),
   };
@@ -80,24 +82,23 @@ export default async function CategoriesPage({ params }: PageProps) {
             <Breadcrumb
               items={[
                 { label: tNav('home'), href: `/${locale}` },
-                { label: 'カテゴリ' },
+                { label: tCategories('title') },
               ]}
               className="mb-6"
             />
 
             <div className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                ジャンル・カテゴリ一覧
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                {tCategories('pageTitle')}
               </h1>
               <p className="text-gray-300">
-                {categories.length}種類のジャンルから{totalProducts.toLocaleString()}件以上の作品を探せます。
-                人気順に並んでいるので、気になるジャンルをクリックしてください。
+                {tCategories('pageDescription', { count: categories.length, totalProducts: totalProducts.toLocaleString() })}
               </p>
             </div>
 
             {categories.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-gray-400 text-lg">カテゴリが見つかりませんでした</p>
+                <p className="text-gray-400 text-lg">{tCategories('noCategories')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -108,10 +109,10 @@ export default async function CategoriesPage({ params }: PageProps) {
                     className="group bg-gray-800 hover:bg-gray-700 rounded-lg p-4 transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
                   >
                     <h2 className="text-white font-semibold text-lg mb-2 group-hover:text-purple-400 transition-colors line-clamp-2">
-                      {category.name}
+                      {getLocalizedTagName(category, locale)}
                     </h2>
                     <p className="text-gray-400 text-sm">
-                      {category.productCount.toLocaleString()}作品
+                      {tCategories('productCount', { count: category.productCount.toLocaleString() })}
                     </p>
                   </Link>
                 ))}

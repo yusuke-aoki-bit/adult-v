@@ -31,16 +31,20 @@ export const products = pgTable(
     defaultThumbnailUrl: text('default_thumbnail_url'), // デフォルトサムネイル画像（互換性のため）
     // 多言語対応カラム
     titleEn: varchar('title_en', { length: 500 }),
-    titleZh: varchar('title_zh', { length: 500 }),
+    titleZh: varchar('title_zh', { length: 500 }), // 簡体字中国語
+    titleZhTw: varchar('title_zh_tw', { length: 500 }), // 繁体字中国語
     titleKo: varchar('title_ko', { length: 500 }),
     descriptionEn: text('description_en'),
-    descriptionZh: text('description_zh'),
+    descriptionZh: text('description_zh'), // 簡体字中国語
+    descriptionZhTw: text('description_zh_tw'), // 繁体字中国語
     descriptionKo: text('description_ko'),
     // AI生成コンテンツ
     aiDescription: jsonb('ai_description'), // AI生成の説明文詳細（キャッチコピー、短い説明、詳細説明など）
     aiCatchphrase: varchar('ai_catchphrase', { length: 500 }), // AIが生成したキャッチコピー
     aiShortDescription: text('ai_short_description'), // AIが生成した短い説明文
     aiTags: jsonb('ai_tags'), // AI抽出タグ（genres, attributes, plays, situations）
+    aiReview: text('ai_review'), // AI生成のレビュー要約（ユーザーレビューベース）
+    aiReviewUpdatedAt: timestamp('ai_review_updated_at'), // AIレビュー更新日時
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -50,6 +54,7 @@ export const products = pgTable(
     releaseDateIdx: index('idx_products_release_date').on(table.releaseDate),
     titleEnIdx: index('idx_products_title_en').on(table.titleEn),
     titleZhIdx: index('idx_products_title_zh').on(table.titleZh),
+    titleZhTwIdx: index('idx_products_title_zh_tw').on(table.titleZhTw),
     titleKoIdx: index('idx_products_title_ko').on(table.titleKo),
   }),
 );
@@ -122,12 +127,28 @@ export const performers = pgTable(
     profileImageUrl: text('profile_image_url'), // デフォルトプロフィール画像（互換性のため）
     // 多言語対応カラム
     nameEn: varchar('name_en', { length: 200 }),
-    nameZh: varchar('name_zh', { length: 200 }),
+    nameZh: varchar('name_zh', { length: 200 }), // 簡体字中国語
+    nameZhTw: varchar('name_zh_tw', { length: 200 }), // 繁体字中国語
     nameKo: varchar('name_ko', { length: 200 }),
     bioJa: text('bio_ja'),
     bioEn: text('bio_en'),
-    bioZh: text('bio_zh'),
+    bioZh: text('bio_zh'), // 簡体字中国語
+    bioZhTw: text('bio_zh_tw'), // 繁体字中国語
     bioKo: text('bio_ko'),
+    // 身体情報
+    height: integer('height'), // 身長 (cm)
+    bust: integer('bust'), // バスト (cm)
+    waist: integer('waist'), // ウエスト (cm)
+    hip: integer('hip'), // ヒップ (cm)
+    cup: varchar('cup', { length: 10 }), // カップサイズ
+    birthday: date('birthday'), // 生年月日
+    bloodType: varchar('blood_type', { length: 10 }), // 血液型
+    birthplace: varchar('birthplace', { length: 100 }), // 出身地
+    hobbies: text('hobbies'), // 趣味・特技
+    twitterId: varchar('twitter_id', { length: 100 }), // Twitter/X
+    instagramId: varchar('instagram_id', { length: 100 }), // Instagram
+    debutYear: integer('debut_year'), // デビュー年
+    isRetired: boolean('is_retired').default(false), // 引退フラグ
     // AIレビュー
     aiReview: text('ai_review'), // Gemini AIによる演者レビュー
     aiReviewUpdatedAt: timestamp('ai_review_updated_at'), // レビュー更新日時
@@ -138,7 +159,11 @@ export const performers = pgTable(
     kanaIdx: index('idx_performers_kana').on(table.nameKana),
     nameEnIdx: index('idx_performers_name_en').on(table.nameEn),
     nameZhIdx: index('idx_performers_name_zh').on(table.nameZh),
+    nameZhTwIdx: index('idx_performers_name_zh_tw').on(table.nameZhTw),
     nameKoIdx: index('idx_performers_name_ko').on(table.nameKo),
+    heightIdx: index('idx_performers_height').on(table.height),
+    cupIdx: index('idx_performers_cup').on(table.cup),
+    birthdayIdx: index('idx_performers_birthday').on(table.birthday),
   }),
 );
 
@@ -160,6 +185,29 @@ export const performerAliases = pgTable(
     performerIdIdx: index('idx_aliases_performer').on(table.performerId),
     aliasNameIdx: index('idx_aliases_name').on(table.aliasName),
     performerAliasUnique: uniqueIndex('idx_aliases_performer_alias').on(table.performerId, table.aliasName),
+  }),
+);
+
+/**
+ * 出演者の外部サイトID
+ * 各サイト（FANZA, MGS, Sokmil等）での女優IDを保存
+ */
+export const performerExternalIds = pgTable(
+  'performer_external_ids',
+  {
+    id: serial('id').primaryKey(),
+    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    provider: varchar('provider', { length: 50 }).notNull(), // 'sokmil', 'fanza', 'mgs', 'b10f', etc.
+    externalId: varchar('external_id', { length: 200 }).notNull(), // そのサイトでの女優ID
+    externalUrl: text('external_url'), // そのサイトでの女優ページURL
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => ({
+    performerIdIdx: index('idx_performer_external_performer').on(table.performerId),
+    providerIdx: index('idx_performer_external_provider').on(table.provider),
+    providerExternalIdx: index('idx_performer_external_lookup').on(table.provider, table.externalId),
+    uniqueProviderPerformer: uniqueIndex('idx_performer_external_unique').on(table.performerId, table.provider),
   }),
 );
 
@@ -190,11 +238,13 @@ export const tags = pgTable(
     category: varchar('category', { length: 50 }), // 'genre', 'series', 'maker' など
     // 多言語対応カラム
     nameEn: varchar('name_en', { length: 100 }),
-    nameZh: varchar('name_zh', { length: 100 }),
+    nameZh: varchar('name_zh', { length: 100 }), // 簡体字中国語
+    nameZhTw: varchar('name_zh_tw', { length: 100 }), // 繁体字中国語
     nameKo: varchar('name_ko', { length: 100 }),
     descriptionJa: text('description_ja'),
     descriptionEn: text('description_en'),
-    descriptionZh: text('description_zh'),
+    descriptionZh: text('description_zh'), // 簡体字中国語
+    descriptionZhTw: text('description_zh_tw'), // 繁体字中国語
     descriptionKo: text('description_ko'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
@@ -203,6 +253,7 @@ export const tags = pgTable(
     categoryIdx: index('idx_tags_category').on(table.category),
     nameEnIdx: index('idx_tags_name_en').on(table.nameEn),
     nameZhIdx: index('idx_tags_name_zh').on(table.nameZh),
+    nameZhTwIdx: index('idx_tags_name_zh_tw').on(table.nameZhTw),
     nameKoIdx: index('idx_tags_name_ko').on(table.nameKo),
   }),
 );

@@ -3,6 +3,26 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
+// Client-side translations (ConditionalLayout is outside NextIntlClientProvider)
+const translations = {
+  ja: {
+    actressPlaceholder: '女優名・プロフィールで検索...',
+    productPlaceholder: '作品名・作品ID・説明文で検索...',
+  },
+  en: {
+    actressPlaceholder: 'Search by actress name or profile...',
+    productPlaceholder: 'Search by title, product ID, or description...',
+  },
+  zh: {
+    actressPlaceholder: '按女优名称或简介搜索...',
+    productPlaceholder: '按标题、产品ID或描述搜索...',
+  },
+  ko: {
+    actressPlaceholder: '여배우 이름 또는 프로필로 검색...',
+    productPlaceholder: '제목, 제품 ID 또는 설명으로 검색...',
+  },
+} as const;
+
 export default function SearchBar() {
   const [actressQuery, setActressQuery] = useState('');
   const [productQuery, setProductQuery] = useState('');
@@ -10,6 +30,7 @@ export default function SearchBar() {
   const router = useRouter();
   const params = useParams();
   const locale = (params.locale as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations.ja;
 
   // デバウンス用のタイマー
   const actressDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -94,7 +115,7 @@ export default function SearchBar() {
           type="text"
           value={actressQuery}
           onChange={(e) => handleActressChange(e.target.value)}
-          placeholder="女優名・AIレビューで検索..."
+          placeholder={t.actressPlaceholder}
           className="w-full px-4 py-2 pl-10 pr-4 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm"
         />
         <svg
@@ -118,7 +139,7 @@ export default function SearchBar() {
           type="text"
           value={productQuery}
           onChange={(e) => handleProductChange(e.target.value)}
-          placeholder="作品名・作品ID・AI説明文で検索..."
+          placeholder={t.productPlaceholder}
           disabled={isSearching}
           className="w-full px-4 py-2 pl-10 pr-4 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm disabled:opacity-50"
         />

@@ -464,43 +464,63 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
 
 /**
  * 一覧ページから商品IDを取得
+ * FC2は複数のエンドポイントを試行
  */
 async function fetchArticleIds(page: number = 1): Promise<string[]> {
-  const url = `https://adult.contents.fc2.com/newrelease.php?page=${page}`;
+  // 複数のエンドポイントを試行
+  const endpoints = [
+    // 検索ページ（新着順）
+    `https://adult.contents.fc2.com/search/?sort=date&page=${page}`,
+    // カテゴリ: video（最も商品が多い）
+    `https://adult.contents.fc2.com/sub_top.php?m=video&page=${page}`,
+    // トップページ（新着リスト）
+    `https://adult.contents.fc2.com/`,
+    // 旧形式（フォールバック）
+    `https://adult.contents.fc2.com/newrelease.php?page=${page}`,
+  ];
 
-  console.log(`📋 一覧ページ取得中: ${url}`);
+  for (const url of endpoints) {
+    console.log(`📋 一覧ページ取得中: ${url}`);
 
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-      },
-    });
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        },
+      });
 
-    if (!response.ok) {
-      console.log(`  ⚠️ 一覧ページ取得失敗 (${response.status})`);
-      return [];
-    }
-
-    const html = await response.text();
-
-    // 商品IDを抽出: /article/{ID}/
-    const articleIds: string[] = [];
-    const matches = html.matchAll(/\/article\/(\d+)\//g);
-    for (const match of matches) {
-      const id = match[1];
-      if (!articleIds.includes(id)) {
-        articleIds.push(id);
+      if (!response.ok) {
+        console.log(`  ⚠️ 取得失敗 (${response.status})、次のエンドポイントを試行`);
+        continue;
       }
-    }
 
-    console.log(`  ✓ ${articleIds.length}件の商品ID取得`);
-    return articleIds;
-  } catch (error) {
-    console.error(`  ❌ 一覧取得エラー: ${error}`);
-    return [];
+      const html = await response.text();
+
+      // 商品IDを抽出: /article/{ID}/ パターン
+      const articleIds: string[] = [];
+      const matches = html.matchAll(/\/article\/(\d+)\/?/g);
+      for (const match of matches) {
+        const id = match[1];
+        if (!articleIds.includes(id) && id.length >= 5) {
+          articleIds.push(id);
+        }
+      }
+
+      if (articleIds.length > 0) {
+        console.log(`  ✓ ${articleIds.length}件の商品ID取得`);
+        return articleIds;
+      }
+
+      console.log(`  ⚠️ 商品IDが見つかりません、次のエンドポイントを試行`);
+    } catch (error) {
+      console.error(`  ❌ エラー: ${error}`);
+    }
   }
+
+  console.log(`  ❌ 全てのエンドポイントで失敗`);
+  return [];
 }
 
 /**

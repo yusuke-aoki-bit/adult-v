@@ -40,13 +40,13 @@ const PER_PAGE = 24;
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   try {
     const { performerId, locale } = await params;
-    const actress = await getActressById(performerId);
+    const actress = await getActressById(performerId, locale);
     if (!actress) return {};
 
     const t = await getTranslations('actress');
 
-    // SEO最適化: 「作品」「サンプル動画」キーワードを含むタイトル
-    const title = `${actress.name} - 出演作品${actress.metrics.releaseCount}本 | 無料サンプル動画・配信サイト横断検索`;
+    // 多言語対応メタタイトル・ディスクリプション
+    const title = t('metaTitle', { name: actress.name, count: actress.metrics.releaseCount });
 
     return generateBaseMetadata(
       title,
@@ -70,8 +70,8 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const tNav = await getTranslations('nav');
 
   const decodedId = decodeURIComponent(performerId);
-  let actress = await getActressById(decodedId);
-  if (!actress) actress = await getActressById(performerId);
+  let actress = await getActressById(decodedId, locale);
+  if (!actress) actress = await getActressById(performerId, locale);
   if (!actress) notFound();
 
   const page = parseInt(resolvedSearchParams.page || '1', 10);
@@ -122,6 +122,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     performerType: performerType || undefined,
     providers: includeAsps.length > 0 ? includeAsps : undefined,
     limit: 1000,
+    locale,
   });
 
   const total = allWorks.length;
@@ -220,15 +221,18 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
             genreTags={genreTags}
             productCountByAsp={productCountByAsp}
             translations={{
-              filterSettings: tc('filterSettings'),
-              sampleContent: 'サンプルコンテンツ',
-              sampleVideo: 'サンプル動画あり',
-              sampleImage: 'サンプル画像あり',
+              filterSettings: tf('filterSettings'),
+              sampleContent: tf('sampleContent'),
+              sampleVideo: tf('sampleVideo'),
+              sampleImage: tf('sampleImage'),
               genre: tf('genre'),
               include: tf('include'),
               exclude: tf('exclude'),
               site: tf('site'),
-              clear: tc('clear'),
+              clear: tf('clear'),
+              performerType: tf('performerType'),
+              solo: tf('solo'),
+              multi: tf('multi'),
             }}
           />
 

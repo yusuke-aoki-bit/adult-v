@@ -92,6 +92,30 @@ function isHomePage(html: string): boolean {
 }
 
 /**
+ * リトライ付きfetch
+ */
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries: number = 3): Promise<Response | null> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: AbortSignal.timeout(30000), // 30秒タイムアウト
+      });
+      return response;
+    } catch (error: any) {
+      const isLastAttempt = attempt === maxRetries;
+      console.log(`    ⚠️ fetch失敗 (${attempt}/${maxRetries}): ${error.message}`);
+      if (isLastAttempt) {
+        return null;
+      }
+      // 指数バックオフ
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+    }
+  }
+  return null;
+}
+
+/**
  * 商品詳細ページをパース
  */
 async function parseDetailPage(movieId: string, forceReprocess: boolean = false): Promise<{ product: JapanskaProduct | null; rawDataId: number | null; shouldSkip: boolean }> {
@@ -100,8 +124,8 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
   try {
     console.log(`  🔍 詳細ページ取得中（Referer付き）: ${url}`);
 
-    // 一覧ページからのRefererを付けてアクセス
-    const response = await fetch(url, {
+    // 一覧ページからのRefererを付けてアクセス（リトライ付き）
+    const response = await fetchWithRetry(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -109,6 +133,11 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
         'Referer': LIST_PAGE_URL,
       },
     });
+
+    if (!response) {
+      console.log(`    ❌ 商品 ${movieId} の取得に失敗 (ネットワークエラー)`);
+      return { product: null, rawDataId: null, shouldSkip: false };
+    }
 
     if (!response.ok) {
       console.log(`    ⚠️ 商品 ${movieId} が見つかりません (${response.status})`);

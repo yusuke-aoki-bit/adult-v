@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { Actress } from '@/types/product';
 import { providerMeta } from '@/lib/providers';
 import { normalizeImageUrl, isUncensoredThumbnail } from '@/lib/image-utils';
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function ActressCard({ actress, compact = false }: Props) {
+  const t = useTranslations('actressCard');
   // 通常表示ではheroImage優先、コンパクト表示ではthumbnail優先
   const rawImageUrl = compact
     ? (actress.thumbnail || actress.heroImage)
@@ -75,8 +77,8 @@ export default function ActressCard({ actress, compact = false }: Props) {
         </div>
         <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400 hidden sm:inline">出演数</span>
-            <span className="font-semibold">{actress.metrics?.releaseCount || 0}本</span>
+            <span className="text-gray-400 hidden sm:inline">{t('releaseCount')}</span>
+            <span className="font-semibold">{actress.metrics?.releaseCount || 0}{t('videos')}</span>
           </div>
           {actress.services && actress.services.length > 0 && (
             <div className="flex flex-wrap gap-0.5 sm:gap-1">
@@ -137,17 +139,9 @@ export default function ActressCard({ actress, compact = false }: Props) {
       </div>
 
       <div className="p-6 space-y-4">
-        {/* AIレビューを優先表示、なければdescription */}
+        {/* レビューを優先表示、なければdescription */}
         {actress.aiReview?.overview ? (
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-xs text-purple-400">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-              </svg>
-              AI生成
-            </div>
-            <p className="text-sm text-gray-300 line-clamp-3">{actress.aiReview.overview}</p>
-          </div>
+          <p className="text-sm text-gray-300 line-clamp-3">{actress.aiReview.overview}</p>
         ) : actress.description && (
           <p className="text-sm text-gray-300 line-clamp-3">{actress.description}</p>
         )}
@@ -167,9 +161,9 @@ export default function ActressCard({ actress, compact = false }: Props) {
 
         {actress.metrics && (
           <div className="grid grid-cols-3 gap-4 text-center">
-            <Stat label="出演数" value={`${actress.metrics.releaseCount || 0}本`} />
-            <Stat label="トレンド" value={actress.metrics.trendingScore || 0} />
-            <Stat label="支持率" value={`${actress.metrics.fanScore || 0}%`} />
+            <Stat label={t('releaseCount')} value={`${actress.metrics.releaseCount || 0}${t('videos')}`} />
+            <Stat label={t('trend')} value={actress.metrics.trendingScore || 0} />
+            <Stat label={t('fanScore')} value={`${actress.metrics.fanScore || 0}%`} />
           </div>
         )}
 

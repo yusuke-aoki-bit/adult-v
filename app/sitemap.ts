@@ -10,8 +10,11 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Revalidate every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const locales = ['ja', 'en', 'zh', 'ko'];
+
   // Static pages with high priority and daily updates
   const staticPages: MetadataRoute.Sitemap = [
+    // Home pages for each locale
     {
       url: `${BASE_URL}/ja`,
       lastModified: new Date(),
@@ -68,6 +71,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
       },
     },
+    // Categories pages for each locale
+    ...locales.map((locale) => ({
+      url: `${BASE_URL}/${locale}/categories`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+      alternates: {
+        languages: {
+          ja: `${BASE_URL}/ja/categories`,
+          en: `${BASE_URL}/en/categories`,
+          zh: `${BASE_URL}/zh/categories`,
+          ko: `${BASE_URL}/ko/categories`,
+        },
+      },
+    })),
+    // Uncategorized pages for each locale
+    ...locales.map((locale) => ({
+      url: `${BASE_URL}/${locale}/uncategorized`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.5,
+      alternates: {
+        languages: {
+          ja: `${BASE_URL}/ja/uncategorized`,
+          en: `${BASE_URL}/en/uncategorized`,
+          zh: `${BASE_URL}/zh/uncategorized`,
+          ko: `${BASE_URL}/ko/uncategorized`,
+        },
+      },
+    })),
   ];
 
   // If DATABASE_URL is not available (during build), return static pages only

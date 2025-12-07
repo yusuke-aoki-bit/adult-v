@@ -54,17 +54,20 @@ export const ASP_TO_PROVIDER_ID: Record<string, ProviderId | undefined> = {
   'duga': 'duga',
   'Sokmil': 'sokmil',
   'sokmil': 'sokmil',
+  'SOKMIL': 'sokmil',
+  'ソクミル': 'sokmil',
   'DTI': 'dti',
   'dti': 'dti',
   'MGS': 'mgs',
   'mgs': 'mgs',
+  'MGS動画': 'mgs',
   'b10f': 'b10f',
   'B10F': 'b10f',
   'FC2': 'fc2',
   'fc2': 'fc2',
   'Japanska': 'japanska',
   'japanska': 'japanska',
-  // DTI個別サービス
+  // DTI個別サービス（英語キー）
   'caribbeancom': 'caribbeancom',
   'caribbeancompr': 'caribbeancompr',
   '1pondo': '1pondo',
@@ -73,6 +76,16 @@ export const ASP_TO_PROVIDER_ID: Record<string, ProviderId | undefined> = {
   'pacopacomama': 'pacopacomama',
   'muramura': 'muramura',
   'tokyohot': 'tokyohot',
+  // DTI個別サービス（日本語キー - DB保存名）
+  'カリビアンコム': 'caribbeancom',
+  'カリビアンコムプレミアム': 'caribbeancompr',
+  '一本道': '1pondo',
+  'HEYZO': 'heyzo',
+  '天然むすめ': '10musume',
+  'パコパコママ': 'pacopacomama',
+  'ムラムラ': 'muramura',
+  '人妻斬り': 'muramura', // hitozumagiriはmuramuraにマップ
+  '金髪天國': 'tokyohot', // kin8tengokuはtokyohotにマップ
 };
 
 /**

@@ -65,6 +65,19 @@ function generateAffiliateUrl(productId: string): string {
   return `https://b10f.jp/p/${productId}.html?atv=${B10F_AFFILIATE_ID}_U${productId}TTXT_12_9`;
 }
 
+/**
+ * 小サイズ画像URL (1s.jpg) を大サイズ画像URL (1.jpg) に変換
+ * b10fの画像サイズ:
+ *   1s.jpg: ~60KB (サムネイル)
+ *   1.jpg: ~240KB (フルサイズ)
+ *   1l.jpg: ~500バイト (プレースホルダー、使用不可)
+ */
+function getLargeImageUrl(imageUrl: string): string {
+  if (!imageUrl) return imageUrl;
+  // /1s.jpg → /1.jpg に変換 (1l.jpgはプレースホルダーなので使わない)
+  return imageUrl.replace(/\/(\d+)s\.jpg$/, '/$1.jpg');
+}
+
 async function downloadCsv(): Promise<string> {
   const url = `https://b10f.jp/csv_home.php?all=1&atype=${B10F_AFFILIATE_ID}&nosep=1`;
 
@@ -388,6 +401,8 @@ async function main() {
         const releaseDateParsed = item.releaseDate ? new Date(item.releaseDate) : null;
         const durationMinutes = item.duration ? parseInt(item.duration) : null;
         const priceYen = item.price ? parseInt(item.price) : null;
+        // 大サイズ画像URL (1s.jpg → 1.jpg)
+        const largeImageUrl = getLargeImageUrl(item.imageUrl);
 
         const productResult = await db.execute(sql`
           INSERT INTO products (
@@ -405,7 +420,7 @@ async function main() {
             ${item.description || null},
             ${releaseDateParsed},
             ${durationMinutes},
-            ${item.imageUrl || null},
+            ${largeImageUrl || null},
             NOW()
           )
           ON CONFLICT (normalized_product_id)
@@ -579,9 +594,9 @@ async function main() {
           }
         }
 
-        // 11. カテゴリ保存
+        // 11. カテゴリ・タグ保存
         if (item.category && item.category !== '全ての作品') {
-          console.log(`  🏷️  カテゴリ保存中: ${item.category}`);
+          console.log(`  🏷️  カテゴリ/タグ保存中: ${item.category}`);
 
           const categoryResult = await db.execute(sql`
             INSERT INTO categories (name)
@@ -599,7 +614,24 @@ async function main() {
             ON CONFLICT DO NOTHING
           `);
 
-          console.log(`  ✓ カテゴリ保存完了`);
+          // tagsテーブルにも保存（ジャンルタグとして）
+          const tagResult = await db.execute(sql`
+            INSERT INTO tags (name, category)
+            VALUES (${item.category}, 'genre')
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+            RETURNING id
+          `);
+
+          const tagRow = getFirstRow<IdRow>(tagResult);
+          const tagId = tagRow!.id;
+
+          await db.execute(sql`
+            INSERT INTO product_tags (product_id, tag_id)
+            VALUES (${productId}, ${tagId})
+            ON CONFLICT DO NOTHING
+          `);
+
+          console.log(`  ✓ カテゴリ/タグ保存完了`);
         }
 
         // 12. 出演者情報保存（バリデーション付き）

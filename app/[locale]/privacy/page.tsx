@@ -44,7 +44,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">4. アフィリエイトプログラムについて</h2>
             <p className="leading-relaxed">
-              当サイトはDMM、DUGA、SOKMIL、DTIのアフィリエイトプログラムに参加しています。
+              当サイトはDUGA、MGS、SOKMIL、DTIのアフィリエイトプログラムに参加しています。
               これらのサービスでは、ユーザーの行動を追跡するためにCookieを使用する場合があります。
               詳細については、各サービスのプライバシーポリシーをご確認ください。
             </p>

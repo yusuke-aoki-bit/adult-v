@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { isSubscriptionProvider } from '@/lib/providers';
+import { useTranslations } from 'next-intl';
 
 interface PriceOption {
   asp: string;
@@ -72,6 +73,7 @@ function normalizeAffiliateUrl(url: string): string {
  * 複数ASPの価格を比較表示
  */
 export default function PriceComparison({ productId }: PriceComparisonProps) {
+  const t = useTranslations('priceComparison');
   const [prices, setPrices] = useState<PriceOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +100,7 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
   if (loading) {
     return (
       <div className="bg-white rounded-xl p-6 shadow-lg">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">価格比較</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('title')}</h3>
         <div className="animate-pulse space-y-3">
           <div className="h-16 bg-gray-200 rounded"></div>
           <div className="h-16 bg-gray-200 rounded"></div>
@@ -117,7 +119,7 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
 
   return (
     <div className="bg-white rounded-xl p-6 shadow-lg">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">価格比較</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('title')}</h3>
       <div className="space-y-3">
         {prices.map((option) => (
           <div
@@ -134,19 +136,19 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
                 {option.price > 0 ? (
                   <p className="text-2xl font-bold text-gray-900">¥{option.price.toLocaleString()}</p>
                 ) : isSubscriptionProvider(option.asp) ? (
-                  <p className="text-lg font-bold text-rose-600">月額会員限定</p>
+                  <p className="text-lg font-bold text-rose-600">{t('subscriptionOnly')}</p>
                 ) : (
                   <p className="text-2xl font-bold text-gray-900">¥{option.price.toLocaleString()}</p>
                 )}
               </div>
               {option.inStock && option.price > 0 && option.price === lowestPrice && (
                 <span className="px-3 py-1 bg-rose-600 text-white text-xs font-semibold rounded-full">
-                  最安値
+                  {t('lowestPrice')}
                 </span>
               )}
               {!option.inStock && (
                 <span className="px-3 py-1 bg-gray-400 text-white text-xs font-semibold rounded-full">
-                  在庫なし
+                  {t('outOfStock')}
                 </span>
               )}
             </div>
@@ -165,7 +167,7 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
                 }
               }}
             >
-              購入する
+              {t('buy')}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-4 w-4"
@@ -180,7 +182,7 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
         ))}
       </div>
       <p className="text-xs text-gray-500 mt-4">
-        ※価格は変動する可能性があります。最新の価格は各サイトでご確認ください。
+        {t('priceDisclaimer')}
       </p>
     </div>
   );

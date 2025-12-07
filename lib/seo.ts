@@ -55,11 +55,10 @@ const localeKeywords = {
     'AV女優',
     '女優ランキング',
     'アダルト配信',
-    'DMM',
     'DUGA',
     'MGS',
     'DTI',
-    'FANZA',
+    'SOKMIL',
     '動画レビュー',
     'アダルトサイト比較',
     '新作AV',
@@ -75,11 +74,10 @@ const localeKeywords = {
     'JAV actresses',
     'actress rankings',
     'adult streaming',
-    'DMM',
     'DUGA',
     'MGS',
     'DTI',
-    'FANZA',
+    'SOKMIL',
     'video reviews',
     'adult site comparison',
     'new releases',
@@ -95,11 +93,10 @@ const localeKeywords = {
     'AV女優',
     '女優排名',
     '成人影音',
-    'DMM',
     'DUGA',
     'MGS',
     'DTI',
-    'FANZA',
+    'SOKMIL',
     '影片评论',
     '成人网站比较',
     '新片发布',
@@ -115,11 +112,10 @@ const localeKeywords = {
     'AV 여배우',
     '여배우 랭킹',
     '성인 스트리밍',
-    'DMM',
     'DUGA',
     'MGS',
     'DTI',
-    'FANZA',
+    'SOKMIL',
     '비디오 리뷰',
     '성인 사이트 비교',
     '신작 출시',
@@ -222,9 +218,9 @@ export function generateBaseMetadata(
 export function generateWebSiteSchema(locale: string = 'ja') {
   const localeDescriptions: Record<string, string> = {
     ja: '複数のプラットフォームを横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。',
-    en: 'Cross-platform adult streaming hub covering DMM, DUGA, MGS, DTI with actress-based reviews, rankings, and campaign updates for heavy users.',
-    zh: '跨平台成人影音中心，涵盖DMM、DUGA、MGS、DTI，提供基于女优的评论、排名和活动更新，专为重度用户打造。',
-    ko: '여러 플랫폼을 아우르는 성인 스트리밍 허브로, DMM, DUGA, MGS, DTI를 다루며 헤비 유저를 위한 여배우 기반 리뷰, 랭킹 및 캠페인 업데이트를 제공합니다.',
+    en: 'Cross-platform adult streaming hub covering DUGA, MGS, DTI with actress-based reviews, rankings, and campaign updates for heavy users.',
+    zh: '跨平台成人影音中心，涵盖DUGA、MGS、DTI，提供基于女优的评论、排名和活动更新，专为重度用户打造。',
+    ko: '여러 플랫폼을 아우르는 성인 스트리밍 허브로, DUGA, MGS, DTI를 다루며 헤비 유저를 위한 여배우 기반 리뷰, 랭킹 및 캠페인 업데이트를 제공합니다.',
   };
 
   return {
@@ -300,8 +296,10 @@ export function generateProductSchema(
     ratingValue: number;
     reviewCount: number;
   },
+  salePrice?: number,
+  currency: string = 'JPY',
 ) {
-  const schema: any = {
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name,
@@ -317,13 +315,21 @@ export function generateProductSchema(
     };
   }
 
-  if (price !== undefined) {
-    schema.offers = {
+  if (price !== undefined || salePrice !== undefined) {
+    const offerPrice = salePrice ?? price;
+    const offer: Record<string, unknown> = {
       '@type': 'Offer',
-      price,
-      priceCurrency: 'JPY',
+      price: offerPrice,
+      priceCurrency: currency,
       availability: 'https://schema.org/InStock',
     };
+
+    // セール価格がある場合、元の価格と割引情報を追加
+    if (salePrice && price && salePrice < price) {
+      offer.priceValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // 30日後
+    }
+
+    schema.offers = offer;
   }
 
   if (aggregateRating) {

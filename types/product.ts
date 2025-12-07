@@ -28,6 +28,9 @@ export type ProductCategory =
   | 'cosplay'        // コスプレ・企画
   | 'indies';        // 素人・インディーズ
 
+// 通貨コード
+export type CurrencyCode = 'JPY' | 'USD';
+
 // 作品（商品）の型定義
 export interface Product {
   id: string;
@@ -36,6 +39,7 @@ export interface Product {
   title: string;
   description: string;
   price: number;
+  currency?: CurrencyCode; // 通貨 (デフォルト: JPY)
   category: ProductCategory;
   imageUrl: string;
   affiliateUrl: string;
@@ -53,7 +57,10 @@ export interface Product {
   tags?: string[];
   isFeatured?: boolean;
   isNew?: boolean;
+  isFuture?: boolean; // 発売予定（リリース日が未来）
   discount?: number;
+  salePrice?: number; // セール価格
+  regularPrice?: number; // 通常価格（セール時の元値）
   reviewHighlight?: string;
   ctaLabel?: string;
   sampleImages?: string[]; // サンプル画像URL配列

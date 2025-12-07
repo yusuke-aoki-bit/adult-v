@@ -26,9 +26,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   try {
     const { id, locale } = await params;
     // Try to get product by normalized ID first, then by database ID
-    let product = await searchProductByProductId(id);
+    let product = await searchProductByProductId(id, locale);
     if (!product && !isNaN(parseInt(id))) {
-      product = await getProductById(id);
+      product = await getProductById(id, locale);
     }
     if (!product) return {};
 
@@ -71,9 +71,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const tCommon = await getTranslations('common');
 
   // Try to get product by normalized ID first, then by database ID
-  let product = await searchProductByProductId(id);
+  let product = await searchProductByProductId(id, locale);
   if (!product && !isNaN(parseInt(id))) {
-    product = await getProductById(id);
+    product = await getProductById(id, locale);
   }
   if (!product) notFound();
 
@@ -85,8 +85,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
     product.description || '',
     product.imageUrl,
     basePath,
-    product.price,
-    product.providerLabel
+    product.regularPrice || product.price,
+    product.providerLabel,
+    undefined, // aggregateRating
+    product.salePrice,
+    product.currency || 'JPY'
   );
 
   const breadcrumbSchema = generateBreadcrumbSchema([

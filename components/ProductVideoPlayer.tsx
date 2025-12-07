@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Play, Film, AlertCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface VideoInfo {
   url: string;
@@ -16,6 +17,7 @@ interface ProductVideoPlayerProps {
 }
 
 export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerProps) {
+  const t = useTranslations('productVideoPlayer');
   const [selectedVideo, setSelectedVideo] = useState<VideoInfo | null>(
     sampleVideos && sampleVideos.length > 0 ? sampleVideos[0] : null
   );
@@ -44,10 +46,10 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
 
   const getVideoTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      preview: 'プレビュー',
-      trailer: '予告編',
-      streaming: 'ストリーミング',
-      download: 'ダウンロード',
+      preview: t('preview'),
+      trailer: t('trailer'),
+      streaming: t('streaming'),
+      download: t('download'),
     };
     return labels[type] || type;
   };
@@ -62,7 +64,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
             className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 hover:bg-black/40 transition-colors group"
           >
             <Play className="w-20 h-20 text-white group-hover:scale-110 transition-transform" fill="white" />
-            <p className="text-white text-lg mt-4">サンプル動画を再生</p>
+            <p className="text-white text-lg mt-4">{t('playSampleVideo')}</p>
             {selectedVideo?.quality && (
               <p className="text-gray-300 text-sm mt-1">{selectedVideo.quality}</p>
             )}
@@ -77,16 +79,15 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
             controlsList="nodownload"
             onError={handleVideoError}
           >
-            お使いのブラウザは動画タグをサポートしていません。
+            {t('browserNotSupported')}
           </video>
         )}
         {hasError && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95">
             <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-            <p className="text-white text-lg mb-2">動画を読み込めませんでした</p>
+            <p className="text-white text-lg mb-2">{t('videoLoadError')}</p>
             <p className="text-gray-400 text-sm mb-4 text-center px-4">
-              配信元サイトのセキュリティ制限により、<br />
-              直接再生できない場合があります
+              {t('securityRestriction')}
             </p>
             <div className="flex gap-3">
               {selectedVideo && (
@@ -96,7 +97,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
                   rel="noopener noreferrer"
                   className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-colors"
                 >
-                  配信元で再生
+                  {t('playAtSource')}
                 </a>
               )}
               <button
@@ -106,7 +107,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
                 }}
                 className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
               >
-                閉じる
+                {t('close')}
               </button>
             </div>
           </div>
@@ -149,7 +150,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
 
       {/* 動画本数表示 */}
       <p className="text-sm text-gray-400 text-center">
-        サンプル動画: {sampleVideos.length}本
+        {t('sampleVideoCount', { count: sampleVideos.length })}
       </p>
     </div>
   );

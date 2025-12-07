@@ -36,14 +36,17 @@
     "filterSettings": "필터 설정"
   },
   "homepage": {
-    "title": "AV여배우 데이터베이스 - DMM・DUGA・MGS・DTI 작품 통합 검색 | Adult Viewer Lab",
-    "description": "DMM, DUGA, MGS, DTI, 카리비안컴, 1폰도, HEYZO 등 주요 동영상 스트리밍 사이트를 통합한 AV여배우・작품 데이터베이스. {count}명 이상의 배우 정보, 출연 작품, 장르별 검색, 가격 비교 가능. 헤비 유저를 위한 상세 리뷰와 랭킹 정보 제공.",
+    "title": "AV여배우 데이터베이스 - DUGA・MGS・DTI 작품 통합 검색 | Adult Viewer Lab",
+    "description": "DUGA, MGS, DTI, 카리비안컴, 1폰도, HEYZO 등 주요 동영상 스트리밍 사이트를 통합한 AV여배우・작품 데이터베이스. {count}명 이상의 배우 정보, 출연 작품, 장르별 검색, 가격 비교 가능. 헤비 유저를 위한 상세 리뷰와 랭킹 정보 제공.",
     "actressCount": "{count}명의 배우 게시 중",
     "initialSearch": "이니셜로 검색",
     "filterSettings": "필터 설정",
     "newReleases": "신작 출시 배우",
     "popularActresses": "인기 배우",
-    "popularTags": "인기 태그"
+    "popularTags": "인기 태그",
+    "saleProducts": "세일 중인 작품",
+    "viewAllSales": "모든 세일 상품 보기",
+    "saleUntil": "~{date}까지"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -63,7 +66,7 @@
     "search": "검색"
   },
   "footer": {
-    "description": "DMM / DUGA / SOKMIL / DTI를 통합하여, 헤비 시청자를 위한 배우・장르별 리뷰, 랭킹, 캠페인 속보를 제공하는 제휴 사이트.",
+    "description": "DUGA / SOKMIL / DTI를 통합하여, 헤비 시청자를 위한 배우・장르별 리뷰, 랭킹, 캠페인 속보를 제공하는 제휴 사이트.",
     "links": "링크",
     "legal": "법적 정보",
     "privacy": "개인정보 보호정책",
@@ -72,13 +75,42 @@
     "copyright": "© {year} Adult Viewer Lab. All rights reserved.",
     "affiliateNotice": "이 사이트는 성인 콘텐츠의 제휴 링크를 포함합니다."
   },
+  "uncategorized": {
+    "title": "미분류 작품",
+    "metaDescription": "출연자 정보가 미분류된 작품 목록입니다.",
+    "badge": "미분류",
+    "shortDescription": "출연자 정보가 미분류된 작품",
+    "description": "출연자 정보가 미분류된 작품입니다. {count}개의 작품이 있습니다.",
+    "notice": "이 작품들은 아직 출연자 정보가 연결되지 않았습니다.",
+    "noProducts": "미분류 작품이 없습니다",
+    "itemCount": "{count}개"
+  },
+  "products": {
+    "title": "전체 작품",
+    "metaDescription": "DUGA, MGS, DTI 등 모든 스트리밍 사이트의 작품을 검색합니다.",
+    "description": "{count}개의 작품",
+    "noProducts": "작품을 찾을 수 없습니다"
+  },
   "filter": {
     "genre": "장르",
     "site": "스트리밍 사이트",
     "include": "포함 (하나 이상)",
     "exclude": "제외 (포함하지 않음)",
     "reset": "필터 초기화",
-    "noFiltersApplied": "필터가 적용되지 않았습니다"
+    "noFiltersApplied": "필터가 적용되지 않았습니다",
+    "filterSettings": "필터 설정",
+    "initialSearch": "이니셜 검색",
+    "sampleContent": "샘플 콘텐츠",
+    "sampleVideo": "샘플 동영상 있음",
+    "sampleImage": "샘플 이미지 있음",
+    "clear": "지우기",
+    "loading": "로딩 중...",
+    "other": "기타",
+    "performerType": "출연 형태",
+    "solo": "단독 출연",
+    "multi": "공동 출연",
+    "saleFilter": "세일",
+    "onSaleOnly": "세일 상품만"
   },
   "sort": {
     "nameAsc": "이름 (오름차순)",
@@ -96,7 +128,8 @@
     "profile": "프로필",
     "filmography": "출연 작품",
     "totalProducts": "전체 {count}작품",
-    "metaDescription": "{name}의 출연 작품 {count}편을 스트리밍 사이트 통합 검색. DMM・DUGA・MGS・DTI・카리비안컴・1폰도・HEYZO 등 여러 사이트의 작품 정보, 가격 비교, 장르별 필터링 가능. 헤비 유저를 위한 상세 리뷰와 랭킹.",
+    "metaTitle": "{name} - {count}편 작품 | 무료 샘플・멀티사이트 검색",
+    "metaDescription": "{name}의 출연 작품 {count}편을 스트리밍 사이트 통합 검색. DUGA・MGS・DTI・카리비안컴・1폰도・HEYZO 등 여러 사이트의 작품 정보, 가격 비교, 장르별 필터링 가능. 헤비 유저를 위한 상세 리뷰와 랭킹.",
     "aliases": "별명",
     "height": "키",
     "measurements": "쓰리사이즈",
@@ -163,7 +196,15 @@
   "categories": {
     "title": "카테고리",
     "browseByGenre": "장르별 찾기",
-    "allCategories": "모든 카테고리"
+    "allCategories": "모든 카테고리",
+    "pageTitle": "장르・카테고리 목록",
+    "pageDescription": "{count}개 장르에서 {totalProducts}개 이상의 작품을 찾아보세요. 인기순으로 정렬되어 있으며, 관심 있는 장르를 클릭하세요.",
+    "noCategories": "카테고리를 찾을 수 없습니다",
+    "productCount": "{count}작품",
+    "genreBadge": "장르",
+    "genreDescription": "{tagName} 장르 {count}개 작품. 최신순으로 정렬됩니다.",
+    "noProducts": "작품을 찾을 수 없습니다",
+    "backToCategories": "카테고리 목록으로 돌아가기"
   },
   "featured": {
     "title": "특집",
@@ -203,6 +244,20 @@
   "affiliate": {
     "disclosure": "제휴 광고 안내",
     "disclaimerShort": "이 사이트는 제휴 광고를 사용합니다.",
-    "disclaimerFull": "이 사이트는 Amazon.co.jp을 홍보하고 링크함으로써 사이트가 소개 수수료를 획득할 수 있는 수단을 제공하는 것을 목적으로 설정된 제휴 프로그램인 Amazon Associates Program의 참가자입니다. 또한 DMM, DUGA, SOKMIL, DTI의 제휴 프로그램에도 참여하고 있습니다."
+    "disclaimerFull": "이 사이트는 Amazon.co.jp을 홍보하고 링크함으로써 사이트가 소개 수수료를 획득할 수 있는 수단을 제공하는 것을 목적으로 설정된 제휴 프로그램인 Amazon Associates Program의 참가자입니다. 또한 DUGA, SOKMIL, DTI의 제휴 프로그램에도 참여하고 있습니다."
+  },
+  "productCard": {
+    "enlargeImage": "이미지 확대",
+    "performerInfo": "출연자 정보",
+    "releaseDateTbd": "발매일 미정",
+    "productId": "작품 ID",
+    "manufacturerId": "메이커 품번",
+    "reviews": "개 리뷰",
+    "minutes": "분",
+    "subscriptionOnly": "월정액 회원 전용",
+    "viewDetails": "자세히 보기",
+    "close": "닫기",
+    "clickToCloseEsc": "클릭하여 닫기 / ESC 키",
+    "comingSoon": "출시 예정"
   }
 }

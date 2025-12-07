@@ -1,0 +1,16 @@
+# Cloud Run Jobs用AIレビュー生成Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy necessary files for AI review generation
+COPY lib/ ./lib/
+COPY scripts/generate-performer-reviews.ts ./scripts/
+COPY tsconfig.json ./
+
+# Default command (limit can be overridden via args)
+CMD ["npx", "tsx", "scripts/generate-performer-reviews.ts", "--limit=500"]

@@ -37,7 +37,7 @@
   },
   "homepage": {
     "title": "Actresses - Adult Streaming Hub",
-    "description": "Discover {count}+ JAV actresses across DMM, DUGA, MGS, and DTI platforms. Browse by popularity, new releases, and genres. Find your favorite performers from established stars to emerging talents.",
+    "description": "Discover {count}+ JAV actresses across DUGA, MGS, and DTI platforms. Browse by popularity, new releases, and genres. Find your favorite performers from established stars to emerging talents.",
     "actressCount": "{count} actresses listed",
     "initialSearch": "Search by Initial",
     "filterSettings": "Filter Settings",
@@ -48,7 +48,10 @@
     "heroDescription": "Find your favorite actress's videos across DUGA, MGS, Sokmil and more platforms",
     "multiAspActresses": "Multi-Platform Performers",
     "multiAspDescription": "Actresses with videos on multiple platforms. Compare prices and find the best deals.",
-    "recommended": "Featured"
+    "recommended": "Featured",
+    "saleProducts": "On Sale Now",
+    "viewAllSales": "View All Sale Items",
+    "saleUntil": "Until {date}"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -65,17 +68,43 @@
     "categories": "Categories",
     "rankings": "Rankings",
     "favorites": "Favorites",
-    "search": "Search"
+    "search": "Search",
+    "reviews": "Reviews"
   },
   "footer": {
-    "description": "Cross-platform adult streaming hub covering DMM / DUGA / SOKMIL / DTI with actress-based reviews, rankings, and campaign updates for heavy users.",
+    "siteName": "ADULT VIEWER LAB",
+    "description": "Cross-platform adult streaming hub covering DUGA / SOKMIL / DTI with actress-based reviews, rankings, and campaign updates for heavy users.",
     "links": "Links",
-    "legal": "Legal",
+    "legal": "Site Policies",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "contact": "Contact",
+    "contactDescription": "For questions or requests, please contact us by email.",
     "copyright": "© {year} Adult Viewer Lab. All rights reserved.",
-    "affiliateNotice": "This site contains affiliate links to adult content."
+    "affiliateNotice": "This site participates in affiliate programs with DUGA, MGS, SOKMIL, DTI, B10F.jp, FC2, and Japanska. We may earn commissions from purchases made through product links.",
+    "admin": "Admin"
+  },
+  "uncategorized": {
+    "title": "Uncategorized Videos",
+    "metaDescription": "List of videos with unassigned performer information.",
+    "badge": "Uncategorized",
+    "shortDescription": "Videos with unassigned performer info",
+    "description": "Videos with unassigned performer information. {count} videos available.",
+    "notice": "These videos have not yet been linked to performer profiles.",
+    "noProducts": "No uncategorized videos",
+    "itemCount": "{count} items"
+  },
+  "products": {
+    "title": "All Videos",
+    "metaDescription": "Search across all distribution sites including DUGA, MGS, DTI and more.",
+    "description": "{count} videos available",
+    "noProducts": "No videos found"
+  },
+  "relatedProducts": {
+    "title": "Related Videos",
+    "samePerformer": "Same Performer",
+    "sameGenre": "Same Genre",
+    "recent": "Recent"
   },
   "filter": {
     "genre": "Genre",
@@ -83,7 +112,20 @@
     "include": "Include (any of these)",
     "exclude": "Exclude (none of these)",
     "reset": "Reset Filters",
-    "noFiltersApplied": "No filters applied"
+    "noFiltersApplied": "No filters applied",
+    "filterSettings": "Filter Settings",
+    "initialSearch": "Initial Search",
+    "sampleContent": "Sample Content",
+    "sampleVideo": "Has Sample Video",
+    "sampleImage": "Has Sample Image",
+    "clear": "Clear",
+    "loading": "Loading...",
+    "other": "Other",
+    "performerType": "Performer Type",
+    "solo": "Solo",
+    "multi": "Multiple",
+    "saleFilter": "Sale",
+    "onSaleOnly": "On Sale Only"
   },
   "sort": {
     "nameAsc": "Name (A-Z)",
@@ -101,6 +143,8 @@
     "profile": "Profile",
     "filmography": "Filmography",
     "totalProducts": "{count} videos total",
+    "metaTitle": "{name} - {count} Videos | Free Samples & Multi-Site Search",
+    "metaDescription": "Watch {count} videos starring {name}. Search across DUGA, MGS, DTI, Caribbeancom, 1pondo, HEYZO. Compare prices, filter by genre. Free sample videos available.",
     "aliases": "Also Known As",
     "height": "Height",
     "measurements": "Measurements",
@@ -167,7 +211,15 @@
   "categories": {
     "title": "Categories",
     "browseByGenre": "Browse by Genre",
-    "allCategories": "All Categories"
+    "allCategories": "All Categories",
+    "pageTitle": "Genres & Categories",
+    "pageDescription": "Browse over {totalProducts} videos across {count} genres. Sorted by popularity - click on a genre to explore.",
+    "noCategories": "No categories found",
+    "productCount": "{count} videos",
+    "genreBadge": "Genre",
+    "genreDescription": "{count} videos in the {tagName} genre. Sorted by newest releases.",
+    "noProducts": "No videos found",
+    "backToCategories": "Back to categories"
   },
   "featured": {
     "title": "Featured",
@@ -221,6 +273,77 @@
   "affiliate": {
     "disclosure": "Affiliate Disclosure",
     "disclaimerShort": "This site uses affiliate advertising.",
-    "disclaimerFull": "This site is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. We also participate in affiliate programs with DMM, DUGA, SOKMIL, and DTI."
+    "disclaimerFull": "This site is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. We also participate in affiliate programs with DUGA, SOKMIL, and DTI."
+  },
+  "productCard": {
+    "enlargeImage": "Enlarge image",
+    "performerInfo": "Performer info",
+    "releaseDateTbd": "Release date TBD",
+    "productId": "Product ID",
+    "manufacturerId": "Manufacturer ID",
+    "reviews": " reviews",
+    "minutes": " min",
+    "subscriptionOnly": "Subscription Only",
+    "viewDetails": "View Details",
+    "close": "Close",
+    "clickToCloseEsc": "Click to close / ESC key",
+    "comingSoon": "Coming Soon"
+  },
+  "productImageGallery": {
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "sampleImageAlt": "Sample image",
+    "thumbnailAlt": "Thumbnail",
+    "sampleImageCount": "Sample images: {count} (click to enlarge)",
+    "close": "Close",
+    "clickToCloseEsc": "Click to close / ESC key"
+  },
+  "productVideoPlayer": {
+    "playSampleVideo": "Play sample video",
+    "browserNotSupported": "Your browser does not support the video tag.",
+    "videoLoadError": "Failed to load video",
+    "securityRestriction": "Due to security restrictions on the source site, direct playback may not be available",
+    "playAtSource": "Play at source",
+    "close": "Close",
+    "preview": "Preview",
+    "trailer": "Trailer",
+    "streaming": "Streaming",
+    "download": "Download",
+    "sampleVideoCount": "Sample videos: {count}"
+  },
+  "priceComparison": {
+    "title": "Price Comparison",
+    "subscriptionOnly": "Subscription Only",
+    "lowestPrice": "Lowest Price",
+    "outOfStock": "Out of Stock",
+    "buy": "Buy Now",
+    "priceDisclaimer": "* Prices may vary. Please check the latest prices on each site."
+  },
+  "pwaInstaller": {
+    "title": "Install App",
+    "description": "Add to home screen for a better experience.",
+    "install": "Install",
+    "later": "Later",
+    "close": "Close"
+  },
+  "rankingWidget": {
+    "popularProducts": "Popular Videos",
+    "popularActresses": "Popular Actresses",
+    "daily": "24 Hours",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "loading": "Loading...",
+    "noData": "No data available yet",
+    "views": "views"
+  },
+  "actressCard": {
+    "releaseCount": "Videos",
+    "trend": "Trend",
+    "fanScore": "Fan Score",
+    "videos": " videos"
+  },
+  "favoriteButton": {
+    "addToFavorites": "Add to Favorites",
+    "removeFromFavorites": "Remove from Favorites"
   }
 }

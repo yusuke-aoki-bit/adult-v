@@ -7,7 +7,13 @@
  *   npx tsx scripts/run-crawler.ts heyzo [--limit 100] [--full]
  *   npx tsx scripts/run-crawler.ts sokmil [--limit 100] [--full]
  *   npx tsx scripts/run-crawler.ts duga-api [--limit 100] [--full]
+ *   npx tsx scripts/run-crawler.ts japanska [--start 34000] [--end 40000] [--full]
+ *   npx tsx scripts/run-crawler.ts fc2-video [--limit 100] [--full]
  *   npx tsx scripts/run-crawler.ts sales [--asp MGS|DUGA|SOKMIL|all] [--limit 100]
+ *   npx tsx scripts/run-crawler.ts avwiki-tokyo
+ *   npx tsx scripts/run-crawler.ts wikipedia-ja
+ *   npx tsx scripts/run-crawler.ts sokmil-actors
+ *   npx tsx scripts/run-crawler.ts dti-fc2blog
  *
  * Options:
  *   --full: Force full crawl (default: incremental after first run)
@@ -29,7 +35,7 @@ const db = drizzle(pool);
 
 const crawlerType = process.argv[2];
 const args = process.argv.slice(3);
-const isFullCrawl = args.includes('--full');
+const isFullCrawl = args.includes('--full') || process.env.FULL_CRAWL === 'true';
 
 /**
  * Check if this is the first crawl for a given source
@@ -77,16 +83,26 @@ async function main() {
     switch (crawlerType) {
       case 'mgs':
         {
-          // MGSは単一URL指定のクローラー。新着一覧からURLを個別に処理
-          // 現在はインクリメンタルクロール未対応のため、引数で指定されたURLを処理
+          // MGS一覧クローラー（新着一覧から自動取得）
+          const fullCrawl = await shouldDoFullCrawl('MGS');
+          const limit = fullCrawl ? '99999' : '100'; // Full: all content, Incremental: 100 latest
+          const command = `npx tsx scripts/crawlers/crawl-mgs-list.ts --limit=${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'mgs-url':
+        {
+          // MGS単一URL指定のクローラー（互換性のため残す）
           const urlArg = args.find(arg => arg.startsWith('https://'));
           if (urlArg) {
             const command = `npx tsx scripts/crawlers/crawl-mgs.ts ${urlArg}`;
             console.log(`Executing: ${command}`);
             execSync(command, { stdio: 'inherit', env: process.env });
           } else {
-            console.log('MGS crawler requires product URL as argument');
-            console.log('Example: npx tsx scripts/run-crawler.ts mgs https://www.mgstage.com/product/product_detail/STARS-865/');
+            console.log('MGS-URL crawler requires product URL as argument');
+            console.log('Example: npx tsx scripts/run-crawler.ts mgs-url https://www.mgstage.com/product/product_detail/STARS-865/');
           }
         }
         break;
@@ -139,7 +155,7 @@ async function main() {
       case 'duga':
         {
           // duga-apiにリダイレクト
-          const fullCrawl = await shouldDoFullCrawl('duga');
+          const fullCrawl = await shouldDoFullCrawl('DUGA');
           const limit = fullCrawl ? '99999' : '100';
           const command = `npx tsx scripts/crawlers/crawl-duga-api.ts --limit=${limit}`;
           console.log(`Executing: ${command}`);
@@ -201,7 +217,7 @@ async function main() {
 
       case 'sokmil':
         {
-          const fullCrawl = await shouldDoFullCrawl('sokmil');
+          const fullCrawl = await shouldDoFullCrawl('ソクミル');
           const limit = fullCrawl ? '99999' : '100';
           const command = `npx tsx scripts/crawlers/crawl-sokmil-api.ts --limit=${limit}`;
           console.log(`Executing: ${command}`);
@@ -211,7 +227,7 @@ async function main() {
 
       case 'duga-api':
         {
-          const fullCrawl = await shouldDoFullCrawl('duga');
+          const fullCrawl = await shouldDoFullCrawl('DUGA');
           const limit = fullCrawl ? '99999' : '100';
           const command = `npx tsx scripts/crawlers/crawl-duga-api.ts --limit=${limit}`;
           console.log(`Executing: ${command}`);
@@ -248,13 +264,248 @@ async function main() {
         }
         break;
 
+      case 'japanska':
+        {
+          const fullCrawl = await shouldDoFullCrawl('Japanska');
+          const limit = fullCrawl ? '500' : '100'; // Full: 500 (連続404で自動終了), Incremental: 100
+          const start = args.find((arg, i) => args[i - 1] === '--start') || '34000';
+          const end = args.find((arg, i) => args[i - 1] === '--end') || '40000';
+          const command = `npx tsx scripts/crawlers/crawl-japanska.ts --start ${start} --end ${end} --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'avwiki-tokyo':
+        {
+          const command = `npx tsx scripts/crawlers/crawl-avwiki-tokyo.ts`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'dti-fc2blog':
+        {
+          const command = `npx tsx scripts/crawlers/crawl-dti-fc2blog.ts`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case '10musume':
+        {
+          const fullCrawl = await shouldDoFullCrawl('天然むすめ');
+          const limit = fullCrawl ? '99999' : '100';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --site 10musume --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'pacopacomama':
+        {
+          const fullCrawl = await shouldDoFullCrawl('パコパコママ');
+          const limit = fullCrawl ? '99999' : '100';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --site pacopacomama --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'hitozumagiri':
+        {
+          const fullCrawl = await shouldDoFullCrawl('人妻斬り');
+          const limit = fullCrawl ? '99999' : '100';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --site hitozumagiri --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'h4610':
+      case '4610':
+        {
+          const fullCrawl = await shouldDoFullCrawl('エッチな4610');
+          const limit = fullCrawl ? '99999' : '100';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --site 4610 --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'h0930':
+      case '0930':
+        {
+          const fullCrawl = await shouldDoFullCrawl('エッチな0930');
+          const limit = fullCrawl ? '99999' : '100';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --site 0930 --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case '3d-eros':
+        {
+          const fullCrawl = await shouldDoFullCrawl('3D-EROS.NET');
+          const limit = fullCrawl ? '99999' : '100';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --site 3d-eros --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'pikkur':
+        {
+          const fullCrawl = await shouldDoFullCrawl('Pikkur');
+          const limit = fullCrawl ? '99999' : '100';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --site pikkur --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'dti-all':
+        {
+          // 全DTIサイトをクロール
+          const limit = args.find((arg, i) => args[i - 1] === '--limit') || '100';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --all --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'dti-high':
+        {
+          // 高優先度DTIサイトをクロール
+          const limit = args.find((arg, i) => args[i - 1] === '--limit') || '500';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --priority high --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'dti-medium':
+        {
+          // 中優先度DTIサイトをクロール
+          const limit = args.find((arg, i) => args[i - 1] === '--limit') || '500';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --priority medium --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'dti-low':
+        {
+          // 低優先度DTIサイトをクロール
+          const limit = args.find((arg, i) => args[i - 1] === '--limit') || '500';
+          const command = `npx tsx scripts/crawlers/dti/index.ts --priority low --limit ${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'fc2-video':
+        {
+          const fullCrawl = await shouldDoFullCrawl('FC2');
+          const limit = fullCrawl ? '99999' : '100';
+          const command = `npx tsx scripts/crawlers/crawl-fc2-video.ts --limit=${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'sokmil-actors':
+        {
+          const command = `npx tsx scripts/crawlers/crawl-sokmil-actors.ts`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'wikipedia-ja':
+        {
+          const command = `npx tsx scripts/crawlers/crawl-wikipedia-ja.ts`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'performer-info':
+        {
+          // 統合女優情報クローラー（Wikipedia + av-wiki.net）
+          const limitArg = args.find(a => a.startsWith('--limit='));
+          const limit = limitArg ? limitArg.split('=')[1] : '500';
+          const command = `npx tsx scripts/crawlers/crawl-performer-info.ts --limit=${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      // ワークフロー統合コマンド
+      case 'workflow':
+      case 'workflow-all':
+        {
+          // 全ステップ実行
+          const workflowArgs = args.join(' ');
+          const command = `npx tsx scripts/run-workflow.ts all ${workflowArgs}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'workflow-link':
+        {
+          // Step 2: 女優紐づけのみ
+          const command = `npx tsx scripts/run-workflow.ts link`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'workflow-aliases':
+        {
+          // Step 3: 別名収集のみ
+          const command = `npx tsx scripts/run-workflow.ts aliases`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'workflow-ai':
+        {
+          // Step 4: AIレビュー生成のみ
+          const limitArg = args.find((arg, i) => args[i - 1] === '--limit') || '100';
+          const command = `npx tsx scripts/run-workflow.ts ai-review --limit ${limitArg}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'workflow-translate':
+        {
+          // Step 5: 翻訳のみ
+          const limitArg = args.find((arg, i) => args[i - 1] === '--limit') || '100';
+          const command = `npx tsx scripts/run-workflow.ts translate --limit ${limitArg}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
       default:
         console.error(`Unknown crawler type: ${crawlerType}`);
-        console.log('Available types:');
-        console.log('  Product crawlers: mgs, sokmil, duga, duga-api, fc2, b10f');
-        console.log('  DTI crawlers: caribbeancom, heyzo, caribbeancompr, 1pondo');
-        console.log('  Wiki crawlers: av-wiki, seesaawiki, seesaawiki-all, seesaawiki-range, wiki');
+        console.log('\nAvailable types:');
+        console.log('  Product crawlers: mgs, sokmil, duga, duga-api, fc2, fc2-video, b10f, japanska');
+        console.log('  DTI crawlers: caribbeancom, heyzo, caribbeancompr, 1pondo, 10musume, pacopacomama, hitozumagiri');
+        console.log('  DTI group: dti-all, dti-high, dti-medium, dti-low, h4610, h0930, 3d-eros, pikkur');
+        console.log('  Wiki crawlers: avwiki-tokyo, wikipedia-ja');
+        console.log('  Actor crawlers: sokmil-actors');
         console.log('  Utility crawlers: sales');
+        console.log('\n  Workflow (統合実行):');
+        console.log('    workflow        - 全ステップ実行 (crawl → link → aliases → ai → translate)');
+        console.log('    workflow-link   - 女優紐づけのみ');
+        console.log('    workflow-aliases - 別名収集のみ');
+        console.log('    workflow-ai     - AIレビュー生成のみ');
+        console.log('    workflow-translate - 翻訳のみ');
         process.exit(1);
     }
 

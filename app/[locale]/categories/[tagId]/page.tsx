@@ -9,6 +9,7 @@ import ProductListFilter from '@/components/ProductListFilter';
 import { getTagById, getProductsByCategory, getProductCountByCategory, getAspStatsByCategory } from '@/lib/db/queries';
 import { generateBaseMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
+import { getLocalizedTagName } from '@/lib/localization';
 
 export async function generateMetadata({
   params,
@@ -20,9 +21,10 @@ export async function generateMetadata({
 
   if (!tag) return {};
 
+  const tagName = getLocalizedTagName(tag, locale);
   return generateBaseMetadata(
-    `${tag.name}の作品一覧 | ${tag.name}ジャンルの動画を検索`,
-    `${tag.name}ジャンルのアダルト動画一覧。複数配信サイト(DMM, MGS, DUGA等)から${tag.name}作品を横断検索。高画質サンプル画像と詳細情報付き。`,
+    `${tagName}の作品一覧 | ${tagName}ジャンルの動画を検索`,
+    `${tagName}ジャンルのアダルト動画一覧。複数配信サイト(MGS, DUGA, DTI等)から${tagName}作品を横断検索。高画質サンプル画像と詳細情報付き。`,
     undefined,
     `/${locale}/categories/${tagId}`,
     undefined,
@@ -51,6 +53,7 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
   const { locale, tagId } = await params;
   const resolvedSearchParams = await searchParams;
   const tNav = await getTranslations({ locale, namespace: 'nav' });
+  const tCategories = await getTranslations({ locale, namespace: 'categories' });
 
   const tag = await getTagById(parseInt(tagId));
   if (!tag) notFound();
@@ -76,10 +79,12 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
   };
 
   const [products, totalCount, aspStats] = await Promise.all([
-    getProductsByCategory(tag.id, { limit: ITEMS_PER_PAGE, offset, ...filterOptions }),
+    getProductsByCategory(tag.id, { limit: ITEMS_PER_PAGE, offset, ...filterOptions, locale }),
     getProductCountByCategory(tag.id, filterOptions),
     getAspStatsByCategory(tag.id),
   ]);
+
+  const tagName = getLocalizedTagName(tag, locale);
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -94,13 +99,13 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
       {
         '@type': 'ListItem',
         position: 2,
-        name: 'カテゴリ',
+        name: tCategories('title'),
         item: `${process.env.NEXT_PUBLIC_SITE_URL}/${locale}/categories`,
       },
       {
         '@type': 'ListItem',
         position: 3,
-        name: tag.name,
+        name: tagName,
         item: `${process.env.NEXT_PUBLIC_SITE_URL}/${locale}/categories/${tag.id}`,
       },
     ],
@@ -109,7 +114,7 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
   const itemListSchema = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `${tag.name}の作品一覧`,
+    name: `${tagName}の作品一覧`,
     numberOfItems: totalCount,
     itemListElement: products.slice(0, 20).map((product, index) => ({
       '@type': 'ListItem',
@@ -141,8 +146,8 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
             <Breadcrumb
               items={[
                 { label: tNav('home'), href: `/${locale}` },
-                { label: 'カテゴリ', href: `/${locale}/categories` },
-                { label: tag.name },
+                { label: tCategories('title'), href: `/${locale}/categories` },
+                { label: tagName },
               ]}
               className="mb-6"
             />
@@ -150,15 +155,14 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
                 <span className="px-3 py-1 bg-purple-600 text-white text-sm font-semibold rounded-full">
-                  ジャンル
+                  {tCategories('genreBadge')}
                 </span>
                 <h1 className="text-3xl md:text-4xl font-bold text-white">
-                  {tag.name}
+                  {tagName}
                 </h1>
               </div>
               <p className="text-gray-300">
-                {tag.name}ジャンルの作品{totalCount.toLocaleString()}件を掲載。
-                新着順に並んでいます。
+                {tCategories('genreDescription', { tagName, count: totalCount.toLocaleString() })}
               </p>
             </div>
 
@@ -176,12 +180,12 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
 
             {products.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-gray-400 text-lg">該当する作品が見つかりませんでした</p>
+                <p className="text-gray-400 text-lg">{tCategories('noProducts')}</p>
                 <Link
                   href={`/${locale}/categories`}
                   className="inline-block mt-4 text-purple-400 hover:text-purple-300"
                 >
-                  カテゴリ一覧に戻る
+                  {tCategories('backToCategories')}
                 </Link>
               </div>
             ) : (

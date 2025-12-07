@@ -15,6 +15,7 @@ COPY tsconfig.json ./tsconfig.json
 RUN mkdir -p scripts/crawlers
 COPY scripts/run-crawler.ts ./scripts/
 COPY scripts/normalize-performers.ts ./scripts/
+COPY scripts/generate-performer-reviews.ts ./scripts/
 COPY scripts/crawlers/ ./scripts/crawlers/
 
 # Set environment

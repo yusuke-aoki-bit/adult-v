@@ -3,6 +3,22 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
+// Client-side translations (outside NextIntlClientProvider)
+const translations = {
+  ja: {
+    etc: 'その他',
+  },
+  en: {
+    etc: 'Others',
+  },
+  zh: {
+    etc: '其他',
+  },
+  ko: {
+    etc: '기타',
+  },
+} as const;
+
 interface InitialSearchMenuProps {
   locale: string;
   initialFilter: string | null;
@@ -33,6 +49,7 @@ export default function InitialSearchMenu({
   excludeTags,
 }: InitialSearchMenuProps) {
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
+  const t = translations[locale as keyof typeof translations] || translations.ja;
 
   const buildUrl = (initial: string) => {
     const params = new URLSearchParams();
@@ -114,7 +131,7 @@ export default function InitialSearchMenu({
             : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
         }`}
       >
-        その他
+        {t.etc}
       </Link>
     </div>
   );

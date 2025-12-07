@@ -1,7 +1,48 @@
 'use client';
 
 import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
+import { useParams } from 'next/navigation';
 import { Bell, BellOff } from 'lucide-react';
+
+// Client-side translations (ConditionalLayout is outside NextIntlClientProvider)
+const translations = {
+  ja: {
+    notificationsOff: '新着通知をオフ',
+    notificationsOn: '新着通知をオン',
+    turnOff: '通知オフ',
+    turnOn: '新着通知',
+    permissionDenied: '通知が許可されていません',
+    subscribeFailed: '通知の登録に失敗しました',
+    unsubscribeFailed: '通知の解除に失敗しました',
+  },
+  en: {
+    notificationsOff: 'Turn off notifications',
+    notificationsOn: 'Turn on notifications',
+    turnOff: 'Notify Off',
+    turnOn: 'Notify',
+    permissionDenied: 'Notification permission denied',
+    subscribeFailed: 'Failed to subscribe to notifications',
+    unsubscribeFailed: 'Failed to unsubscribe from notifications',
+  },
+  zh: {
+    notificationsOff: '关闭通知',
+    notificationsOn: '开启通知',
+    turnOff: '关闭通知',
+    turnOn: '新内容通知',
+    permissionDenied: '通知权限被拒绝',
+    subscribeFailed: '订阅通知失败',
+    unsubscribeFailed: '取消订阅通知失败',
+  },
+  ko: {
+    notificationsOff: '알림 끄기',
+    notificationsOn: '알림 켜기',
+    turnOff: '알림 끄기',
+    turnOn: '새 알림',
+    permissionDenied: '알림 권한이 거부되었습니다',
+    subscribeFailed: '알림 구독에 실패했습니다',
+    unsubscribeFailed: '알림 구독 취소에 실패했습니다',
+  },
+} as const;
 
 // Check if notifications are supported (client-side only)
 function useNotificationSupport() {
@@ -18,6 +59,9 @@ function useNotificationSupport() {
 export default function NotificationSubscriber() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const isSupported = useNotificationSupport();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations.ja;
 
   const checkSubscriptionStatus = useCallback(async () => {
     try {
@@ -57,7 +101,7 @@ export default function NotificationSubscriber() {
       const permission = await Notification.requestPermission();
 
       if (permission !== 'granted') {
-        alert('通知が許可されていません');
+        alert(t.permissionDenied);
         return;
       }
 
@@ -94,7 +138,7 @@ export default function NotificationSubscriber() {
       localStorage.setItem('notifications-enabled', 'true');
     } catch (error) {
       console.error('Failed to subscribe:', error);
-      alert('通知の登録に失敗しました');
+      alert(t.subscribeFailed);
     }
   };
 
@@ -120,7 +164,7 @@ export default function NotificationSubscriber() {
       localStorage.removeItem('notifications-enabled');
     } catch (error) {
       console.error('Failed to unsubscribe:', error);
-      alert('通知の解除に失敗しました');
+      alert(t.unsubscribeFailed);
     }
   };
 
@@ -144,17 +188,17 @@ export default function NotificationSubscriber() {
           ? 'bg-rose-600 text-white hover:bg-rose-700'
           : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
       }`}
-      title={isSubscribed ? '新着通知をオフ' : '新着通知をオン'}
+      title={isSubscribed ? t.notificationsOff : t.notificationsOn}
     >
       {isSubscribed ? (
         <>
           <BellOff className="h-5 w-5" />
-          <span className="hidden sm:inline">通知オフ</span>
+          <span className="hidden sm:inline">{t.turnOff}</span>
         </>
       ) : (
         <>
           <Bell className="h-5 w-5" />
-          <span className="hidden sm:inline">新着通知</span>
+          <span className="hidden sm:inline">{t.turnOn}</span>
         </>
       )}
     </button>

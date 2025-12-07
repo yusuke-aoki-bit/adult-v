@@ -43,9 +43,23 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
+// ロケールなしURLをリダイレクトする必要があるパス（SEO対策）
+const pathsRequiringLocale = [
+  '/actress/',
+  '/products/',
+  '/categories',
+  '/reviews',
+  '/favorites',
+  '/product/',
+  '/privacy',
+  '/uncategorized',
+];
+
 export default function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
   // Rate limiting for API routes
-  if (request.nextUrl.pathname.startsWith('/api')) {
+  if (pathname.startsWith('/api')) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
                request.headers.get('x-real-ip') ||
                'unknown';
@@ -58,17 +72,35 @@ export default function proxy(request: NextRequest) {
     }
   }
 
+  // SEO対策: ロケールなしのURLを301リダイレクト
+  // 例: /actress/123 -> /ja/actress/123
+  const hasLocalePrefix = locales.some(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  );
+
+  if (!hasLocalePrefix) {
+    const needsRedirect = pathsRequiringLocale.some(
+      (path) => pathname.startsWith(path) || pathname === path.replace(/\/$/, '')
+    );
+
+    if (needsRedirect) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${defaultLocale}${pathname}`;
+      return NextResponse.redirect(url, { status: 301 });
+    }
+  }
+
   const ageVerified = request.cookies.get('age-verified')?.value === 'true';
-  const isAgeVerificationPage = request.nextUrl.pathname === '/age-verification';
+  const isAgeVerificationPage = pathname === '/age-verification';
 
   // /admin ルートはロケールプレフィックスなしでアクセス可能（国際化をスキップ）
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin')) {
     return NextResponse.next();
   }
 
   // SEOファイル（sitemap.xml, robots.txt）は検索エンジンのクローラーがアクセスできるよう常にアクセス可能
-  const isSEOFile = request.nextUrl.pathname === '/sitemap.xml' ||
-                    request.nextUrl.pathname === '/robots.txt';
+  const isSEOFile = pathname === '/sitemap.xml' ||
+                    pathname === '/robots.txt';
 
   if (isSEOFile) {
     return NextResponse.next();

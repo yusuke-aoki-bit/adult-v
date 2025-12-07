@@ -78,20 +78,23 @@ async function main() {
   try {
     console.log('🔄 SOKMIL APIから新着作品を取得中...\n');
 
-    // 新着作品を取得（ページネーション対応）
-    const pageSize = Math.min(limit, 100);
-    const totalPages = Math.ceil(limit / pageSize);
+    // 新着作品を取得（正しいAPIパラメータ: hits/offset）
+    // Sokmil API仕様: hits(20-100), offset(1-50000), sort(date)
+    const hitsPerRequest = 100;  // 最大100件
     const allProducts: SokmilProduct[] = [];
+    let currentOffset = offset + 1;  // APIのoffsetは1から開始
+    let totalCount = 0;
 
-    for (let page = 1; page <= totalPages; page++) {
-      crawlerLog.info(`ページ ${page}/${totalPages} を取得中...`);
+    // ページネーションループ（limit件に達するまで、または全件取得まで）
+    while (allProducts.length < limit) {
+      crawlerLog.info(`offset=${currentOffset} を取得中... (累計: ${allProducts.length}件)`);
       await rateLimiter.wait();
 
       try {
         const response = await sokmilClient.searchItems({
-          page,
-          per_page: pageSize,
-          sort: 'release_date_desc',
+          hits: hitsPerRequest,
+          offset: currentOffset,
+          sort: 'date',  // 新着順
         });
 
         if (response.status !== 'success') {
@@ -99,18 +102,44 @@ async function main() {
           break;
         }
 
-        allProducts.push(...response.data);
-        crawlerLog.success(`${response.data.length}件取得`);
+        // 最初のリクエストで総件数をログ
+        if (currentOffset === offset + 1 && response.totalCount) {
+          totalCount = response.totalCount;
+          console.log(`📊 API総件数: ${totalCount.toLocaleString()}件`);
+          console.log(`🎯 取得目標: ${limit === 99999 ? '全件' : limit + '件'}\n`);
+        }
 
-        if (response.data.length < pageSize) {
+        allProducts.push(...response.data);
+        crawlerLog.success(`${response.data.length}件取得 (累計: ${allProducts.length.toLocaleString()}件)`);
+
+        if (response.data.length < hitsPerRequest) {
           break; // 最後のページ
         }
+
+        // offset最大50000の制限チェック
+        if (currentOffset + hitsPerRequest > 50000) {
+          console.log('⚠️ offset上限(50000)に達しました');
+          break;
+        }
+
+        currentOffset += hitsPerRequest;
+
+        // レートリミット対策: 5000件ごとに休憩
+        if (allProducts.length % 5000 === 0 && allProducts.length > 0) {
+          console.log('⏳ レートリミット対策: 3秒待機...');
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
       } catch (error) {
-        crawlerLog.error(`ページ${page}の取得に失敗:`, error);
+        crawlerLog.error(`offset=${currentOffset}の取得に失敗:`, error);
         break;
       } finally {
         rateLimiter.done();
       }
+    }
+
+    // limitを超えた分をカット
+    if (allProducts.length > limit) {
+      allProducts.splice(limit);
     }
 
     console.log(`✅ API取得完了: ${allProducts.length}件\n`);
@@ -156,7 +185,8 @@ async function main() {
 
         // 2. 正規化されたデータを保存
         const normalizedProductId = `sokmil-${item.itemId}`;
-        const thumbnailUrl = item.thumbnailUrl || item.packageImageUrl;
+        // packageImageUrl (pe_xxx.jpg) はフルサイズ、thumbnailUrl (pef_xxx_100x142.jpg) は小さい
+        const thumbnailUrl = item.packageImageUrl || item.thumbnailUrl;
 
         const productResult = await db.execute(sql`
           INSERT INTO products (
@@ -196,29 +226,28 @@ async function main() {
           console.log(`  ✓ 商品更新 (product_id: ${productId})`);
         }
 
-        // 3. product_sourcesを保存
+        // 3. product_sourcesを保存（ユニーク制約は(product_id, asp_name)）
         await db.execute(sql`
           INSERT INTO product_sources (
             product_id,
             asp_name,
             original_product_id,
             affiliate_url,
-            thumbnail_url,
-            price
+            price,
+            data_source
           ) VALUES (
             ${productId},
             ${SOURCE_NAME},
             ${item.itemId},
             ${item.affiliateUrl},
-            ${thumbnailUrl || null},
-            ${item.price || null}
+            ${item.price || null},
+            'API'
           )
-          ON CONFLICT (asp_name, original_product_id)
+          ON CONFLICT (product_id, asp_name)
           DO UPDATE SET
             affiliate_url = EXCLUDED.affiliate_url,
-            thumbnail_url = EXCLUDED.thumbnail_url,
             price = EXCLUDED.price,
-            updated_at = NOW()
+            last_updated = NOW()
         `);
 
         // 4. 商品と生データをリンク
@@ -236,9 +265,10 @@ async function main() {
         if (item.sampleImages) imageUrls.push(...item.sampleImages);
 
         for (const imageUrl of imageUrls) {
+          const isThumb = imageUrl === item.thumbnailUrl || imageUrl === item.packageImageUrl;
           await db.execute(sql`
-            INSERT INTO product_images (product_id, image_url, display_order, source)
-            VALUES (${productId}, ${imageUrl}, ${imageUrls.indexOf(imageUrl)}, ${SOURCE_NAME})
+            INSERT INTO product_images (product_id, image_url, image_type, display_order, asp_name)
+            VALUES (${productId}, ${imageUrl}, ${isThumb ? 'thumbnail' : 'sample'}, ${imageUrls.indexOf(imageUrl)}, ${SOURCE_NAME})
             ON CONFLICT (product_id, image_url) DO NOTHING
           `);
         }
@@ -246,7 +276,7 @@ async function main() {
         // 6. 動画を保存
         if (item.sampleVideoUrl) {
           await db.execute(sql`
-            INSERT INTO product_videos (product_id, video_url, video_type, source)
+            INSERT INTO product_videos (product_id, video_url, video_type, asp_name)
             VALUES (${productId}, ${item.sampleVideoUrl}, 'sample', ${SOURCE_NAME})
             ON CONFLICT (product_id, video_url) DO NOTHING
           `);

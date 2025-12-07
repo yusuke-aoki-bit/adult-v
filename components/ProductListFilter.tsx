@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname, useParams } from 'next/navigation';
 import { useTransition } from 'react';
 import { providerMeta } from '@/lib/providers';
 import {
@@ -8,6 +8,90 @@ import {
   ALPHABET,
   ASP_TO_PROVIDER_ID,
 } from '@/lib/constants/filters';
+
+// Client-side translations (ConditionalLayout is outside NextIntlClientProvider)
+const translations = {
+  ja: {
+    filterSettings: 'フィルター設定',
+    loading: '読み込み中...',
+    initialSearch: '頭文字検索',
+    other: '他',
+    productPattern: '品番パターン',
+    sampleContent: 'サンプルコンテンツ',
+    hasVideo: 'サンプル動画あり',
+    hasImage: 'サンプル画像あり',
+    performerType: '出演形態',
+    solo: '単体出演',
+    multi: '複数出演',
+    genre: 'ジャンル',
+    include: '対象',
+    exclude: '除外',
+    distributionSite: '配信サイト',
+    clear: 'クリア',
+    saleFilter: 'セール',
+    onSaleOnly: 'セール中のみ',
+  },
+  en: {
+    filterSettings: 'Filter Settings',
+    loading: 'Loading...',
+    initialSearch: 'Initial Search',
+    other: 'Other',
+    productPattern: 'Product Pattern',
+    sampleContent: 'Sample Content',
+    hasVideo: 'Has Sample Video',
+    hasImage: 'Has Sample Image',
+    performerType: 'Performer Type',
+    solo: 'Solo',
+    multi: 'Multiple',
+    genre: 'Genre',
+    include: 'Include',
+    exclude: 'Exclude',
+    distributionSite: 'Distribution Site',
+    clear: 'Clear',
+    saleFilter: 'Sale',
+    onSaleOnly: 'On Sale Only',
+  },
+  zh: {
+    filterSettings: '筛选设置',
+    loading: '加载中...',
+    initialSearch: '首字母搜索',
+    other: '其他',
+    productPattern: '产品编号模式',
+    sampleContent: '示例内容',
+    hasVideo: '有示例视频',
+    hasImage: '有示例图片',
+    performerType: '出演类型',
+    solo: '单人出演',
+    multi: '多人出演',
+    genre: '类型',
+    include: '包含',
+    exclude: '排除',
+    distributionSite: '分发站点',
+    clear: '清除',
+    saleFilter: '促销',
+    onSaleOnly: '仅限促销商品',
+  },
+  ko: {
+    filterSettings: '필터 설정',
+    loading: '로딩 중...',
+    initialSearch: '첫 글자 검색',
+    other: '기타',
+    productPattern: '제품 패턴',
+    sampleContent: '샘플 콘텐츠',
+    hasVideo: '샘플 동영상 있음',
+    hasImage: '샘플 이미지 있음',
+    performerType: '출연 형태',
+    solo: '단독 출연',
+    multi: '다수 출연',
+    genre: '장르',
+    include: '포함',
+    exclude: '제외',
+    distributionSite: '배포 사이트',
+    clear: '지우기',
+    saleFilter: '세일',
+    onSaleOnly: '세일 상품만',
+  },
+} as const;
 
 interface PatternStat {
   pattern: string;
@@ -36,7 +120,9 @@ interface ProductListFilterProps {
   showAspFilter?: boolean;
   showSampleFilter?: boolean;
   showPerformerTypeFilter?: boolean;
+  showSaleFilter?: boolean;
   accentColor?: 'rose' | 'yellow' | 'blue';
+  defaultOpen?: boolean;
 }
 
 export default function ProductListFilter({
@@ -49,16 +135,22 @@ export default function ProductListFilter({
   showAspFilter = true,
   showSampleFilter = true,
   showPerformerTypeFilter = true,
+  showSaleFilter = true,
   accentColor = 'yellow',
+  defaultOpen,
 }: ProductListFilterProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const params = useParams();
   const [isPending, startTransition] = useTransition();
+  const locale = (params?.locale as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations.ja;
 
   // 現在のフィルター状態を取得
   const hasVideo = searchParams.get('hasVideo') === 'true';
   const hasImage = searchParams.get('hasImage') === 'true';
+  const onSale = searchParams.get('onSale') === 'true';
   const performerType = searchParams.get('performerType') as 'solo' | 'multi' | null;
   const selectedPattern = searchParams.get('pattern') || '';
   const initialFilter = searchParams.get('initial') || '';
@@ -145,6 +237,10 @@ export default function ProductListFilter({
     updateFilter('hasImage', hasImage ? null : 'true');
   };
 
+  const handleSaleChange = () => {
+    updateFilter('onSale', onSale ? null : 'true');
+  };
+
   const handlePerformerTypeChange = (type: 'solo' | 'multi' | null) => {
     updateFilter('performerType', performerType === type ? null : type);
   };
@@ -170,6 +266,7 @@ export default function ProductListFilter({
     const params = new URLSearchParams(searchParams.toString());
     params.delete('hasVideo');
     params.delete('hasImage');
+    params.delete('onSale');
     params.delete('performerType');
     params.delete('pattern');
     params.delete('initial');
@@ -188,6 +285,7 @@ export default function ProductListFilter({
   const hasActiveFilters =
     hasVideo ||
     hasImage ||
+    onSale ||
     performerType !== null ||
     selectedPattern !== '' ||
     initialFilter !== '' ||
@@ -199,6 +297,7 @@ export default function ProductListFilter({
   const activeFilterCount =
     (hasVideo ? 1 : 0) +
     (hasImage ? 1 : 0) +
+    (onSale ? 1 : 0) +
     (performerType ? 1 : 0) +
     (selectedPattern ? 1 : 0) +
     (initialFilter ? 1 : 0) +
@@ -210,14 +309,14 @@ export default function ProductListFilter({
   return (
     <details
       className="mb-4 sm:mb-8 bg-gray-800 rounded-lg border border-gray-700"
-      open={hasActiveFilters}
+      open={defaultOpen ?? hasActiveFilters}
     >
       <summary className="px-4 py-4 sm:py-3 cursor-pointer font-semibold text-white hover:bg-gray-750 active:bg-gray-700 flex items-center justify-between min-h-[56px] sm:min-h-0 select-none">
         <div className="flex items-center gap-3 sm:gap-2">
           <svg className="w-6 h-6 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
           </svg>
-          <span className="text-base sm:text-sm">フィルター設定</span>
+          <span className="text-base sm:text-sm">{t.filterSettings}</span>
         </div>
         {hasActiveFilters && (
           <span className={`text-xs ${accent.bg} text-white px-2.5 py-1 sm:px-2 sm:py-0.5 rounded-full font-medium`}>
@@ -230,14 +329,14 @@ export default function ProductListFilter({
         {isPending && (
           <div className="flex items-center justify-center py-2">
             <div className={`animate-spin rounded-full h-5 w-5 border-b-2 ${accent.border} mr-2`} />
-            <span className="text-sm text-gray-400">読み込み中...</span>
+            <span className="text-sm text-gray-400">{t.loading}</span>
           </div>
         )}
 
         {/* 頭文字検索 */}
         {showInitialFilter && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">頭文字検索</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.initialSearch}</h3>
             <div className="flex flex-wrap gap-1.5 sm:gap-1">
               {/* ひらがなグループ */}
               {Object.entries(HIRAGANA_GROUPS).map(([group, chars]) => (
@@ -299,7 +398,7 @@ export default function ProductListFilter({
                     : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                 }`}
               >
-                他
+                {t.other}
               </button>
               {/* クリア */}
               {initialFilter && (
@@ -318,7 +417,7 @@ export default function ProductListFilter({
         {/* 品番パターンフィルター */}
         {showPatternFilter && patternStats.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">品番パターン</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.productPattern}</h3>
             <div className="flex flex-wrap gap-2">
               {patternStats.map((stat) => {
                 const isSelected = selectedPattern === stat.pattern;
@@ -344,7 +443,7 @@ export default function ProductListFilter({
         {/* サンプルコンテンツフィルター */}
         {showSampleFilter && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">サンプルコンテンツ</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.sampleContent}</h3>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
                 hasVideo ? `${accent.bgLight} ${accent.border} hover:opacity-80` : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
@@ -359,7 +458,7 @@ export default function ProductListFilter({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">サンプル動画あり</span>
+                <span className="text-base sm:text-sm text-gray-200">{t.hasVideo}</span>
               </label>
               <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
                 hasImage ? 'bg-blue-600/30 border-blue-500/50 hover:bg-blue-600/40' : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
@@ -373,7 +472,7 @@ export default function ProductListFilter({
                 <svg className="w-6 h-6 sm:w-5 sm:h-5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">サンプル画像あり</span>
+                <span className="text-base sm:text-sm text-gray-200">{t.hasImage}</span>
               </label>
             </div>
           </div>
@@ -382,7 +481,7 @@ export default function ProductListFilter({
         {/* 出演形態フィルター */}
         {showPerformerTypeFilter && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">出演形態</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.performerType}</h3>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
                 type="button"
@@ -396,7 +495,7 @@ export default function ProductListFilter({
                 <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${performerType === 'solo' ? accent.text : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">単体出演</span>
+                <span className="text-base sm:text-sm text-gray-200">{t.solo}</span>
               </button>
               <button
                 type="button"
@@ -410,8 +509,32 @@ export default function ProductListFilter({
                 <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${performerType === 'multi' ? 'text-purple-500' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">複数出演</span>
+                <span className="text-base sm:text-sm text-gray-200">{t.multi}</span>
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* セールフィルター */}
+        {showSaleFilter && (
+          <div>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.saleFilter}</h3>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
+                onSale ? 'bg-red-600/30 border-red-500/50 hover:opacity-80' : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+              }`}>
+                <input
+                  type="checkbox"
+                  checked={onSale}
+                  onChange={handleSaleChange}
+                  className="w-5 h-5 rounded border-gray-500 text-red-600 focus:ring-red-500"
+                />
+                <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${onSale ? 'text-red-500' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                </svg>
+                <span className="text-base sm:text-sm text-gray-200">{t.onSaleOnly}</span>
+              </label>
             </div>
           </div>
         )}
@@ -419,11 +542,11 @@ export default function ProductListFilter({
         {/* ジャンルタグフィルター */}
         {showGenreFilter && genreTags.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">ジャンル</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.genre}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* 対象フィルタ */}
               <div>
-                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">対象</p>
+                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.include}</p>
                 <div className="space-y-1 max-h-[280px] sm:max-h-72 overflow-y-auto border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750 [-webkit-overflow-scrolling:touch]">
                   {genreTags.map((tag) => (
                     <label
@@ -447,7 +570,7 @@ export default function ProductListFilter({
               </div>
               {/* 除外フィルタ */}
               <div>
-                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">除外</p>
+                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.exclude}</p>
                 <div className="space-y-1 max-h-[280px] sm:max-h-72 overflow-y-auto border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750 [-webkit-overflow-scrolling:touch]">
                   {genreTags.map((tag) => (
                     <label
@@ -476,11 +599,11 @@ export default function ProductListFilter({
         {/* 配信サイト（ASP）フィルター */}
         {showAspFilter && aspStats.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">配信サイト</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.distributionSite}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* 対象フィルタ */}
               <div>
-                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">対象</p>
+                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.include}</p>
                 <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
                   {aspStats.map((asp) => {
                     const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
@@ -510,7 +633,7 @@ export default function ProductListFilter({
               </div>
               {/* 除外フィルタ */}
               <div>
-                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">除外</p>
+                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.exclude}</p>
                 <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
                   {aspStats.map((asp) => {
                     const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
@@ -550,7 +673,7 @@ export default function ProductListFilter({
               onClick={handleClear}
               className="flex-1 sm:flex-none text-center px-6 py-3.5 sm:py-2 border border-gray-600 text-gray-200 rounded-lg sm:rounded-md font-medium hover:bg-gray-700 active:bg-gray-600 transition-colors min-h-[52px] sm:min-h-0"
             >
-              クリア
+              {t.clear}
             </button>
           </div>
         )}

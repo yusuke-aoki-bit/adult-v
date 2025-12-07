@@ -13,7 +13,7 @@ DUGA_APP_ID="WzsUOEt2124UD65BqsHU"
 DUGA_AGENT_ID="48611"
 
 # SOKMIL API Configuration
-SOKMIL_API_KEY="70c75ce3a36c1f503f2515ff094d6f60"
+SOKMIL_API_KEY="52c5a783bce2839f841b887f8ab3d90a"
 
 echo "=========================================="
 echo "Deploying DUGA API Crawler"

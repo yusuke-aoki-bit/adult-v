@@ -41,6 +41,26 @@ export function getSubscriptionDescription(aspName: string): string | null {
 }
 
 /**
+ * 価格をフォーマット（通貨対応）
+ *
+ * USDはセント単位で保存されているため100で割って表示
+ * JPYはそのまま表示
+ *
+ * @param price - 価格（USDはセント単位、JPYは円単位）
+ * @param currency - 通貨コード ('USD' | 'JPY')
+ * @returns フォーマットされた価格文字列
+ */
+export function formatPrice(price: number, currency: string = 'JPY'): string {
+  if (currency === 'USD') {
+    // USDはセント単位で保存されているため100で割る
+    const dollars = price / 100;
+    return `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  // JPYはそのまま表示
+  return `¥${price.toLocaleString()}`;
+}
+
+/**
  * 価格表示用のフォーマット
  * サブスクリプションプロバイダーの場合は「月額」を付加
  *

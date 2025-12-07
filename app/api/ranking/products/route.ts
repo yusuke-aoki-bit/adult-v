@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       period,
-      ranking: (ranking.rows as RankingRow[]).map((row) => ({
+      ranking: (ranking.rows as unknown as RankingRow[]).map((row) => ({
         rank: Number(row.rank),
         productId: row.id,
         title: row.title,

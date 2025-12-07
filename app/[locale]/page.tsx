@@ -4,10 +4,9 @@ import ActressCard from '@/components/ActressCard';
 import SortDropdown from '@/components/SortDropdown';
 import Pagination from '@/components/Pagination';
 import ActressListFilter from '@/components/ActressListFilter';
-import { getActresses, getActressesCount, getTags, getActressesWithNewReleases, getUncategorizedProductsCount, getAspStats, getSaleProducts, SaleProduct } from '@/lib/db/queries';
+import { getActresses, getActressesCount, getTags, getUncategorizedProductsCount, getAspStats, getSaleProducts, SaleProduct } from '@/lib/db/queries';
 import { generateBaseMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
-import type { Actress as ActressType } from '@/types/product';
 import { providerMeta } from '@/lib/providers';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 
@@ -48,6 +47,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   const t = await getTranslations({ locale, namespace: 'homepage' });
   const tCommon = await getTranslations({ locale, namespace: 'common' });
   const tFilter = await getTranslations({ locale, namespace: 'filter' });
+  const tUncategorized = await getTranslations({ locale, namespace: 'uncategorized' });
 
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
@@ -123,6 +123,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     excludeAsps,
     hasVideo: hasVideo || undefined,
     hasImage: hasImage || undefined,
+    locale,
   });
 
   // 総数を効率的に取得
@@ -137,9 +138,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     hasImage: hasImage || undefined,
   });
 
-  // 新作リリース女優を取得（フィルターがない場合のみ）
-  let newReleaseActresses: ActressType[] = [];
-  let popularActresses: ActressType[] = [];
+  // セール情報を取得（フィルターがない場合のみ）
   let saleProducts: SaleProduct[] = [];
   let uncategorizedCount = 0;
 
@@ -148,14 +147,10 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   if (isTopPage) {
     try {
-      const [newReleases, popular, sales, uncatCount] = await Promise.all([
-        getActressesWithNewReleases({ limit: 50, daysAgo: 14 }),
-        getActresses({ sortBy: 'productCountDesc', limit: 50 }),
-        getSaleProducts({ limit: 20, minDiscount: 30 }),
+      const [sales, uncatCount] = await Promise.all([
+        getSaleProducts({ limit: 10, minDiscount: 30 }), // トップページは10件のみ
         getUncategorizedProductsCount(),
       ]);
-      newReleaseActresses = newReleases;
-      popularActresses = popular;
       saleProducts = sales;
       uncategorizedCount = uncatCount;
     } catch (error) {
@@ -172,43 +167,28 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   return (
     <div className="bg-gray-900 min-h-screen">
-      {/* ASP統計バッジ */}
-      {isTopPage && aspStats.length > 0 && (
-        <section className="py-6 border-b border-gray-800">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-wrap justify-center gap-3">
-              {aspStats.slice(0, 7).map((stat) => {
-                const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
-                const meta = providerId ? providerMeta[providerId] : null;
-                return (
-                  <div
-                    key={stat.aspName}
-                    className={`px-4 py-2 rounded-lg bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-sm font-medium`}
-                  >
-                    <span className="font-bold">{meta?.label || stat.aspName}</span>
-                    <span className="ml-2 opacity-90">{stat.productCount.toLocaleString()}作品</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* セール情報セクション */}
       {saleProducts.length > 0 && (
-        <details open className="border-b border-gray-800 bg-gradient-to-r from-red-950/30 to-gray-900">
+        <details className="border-b border-gray-800 bg-gradient-to-r from-red-950/30 to-gray-900">
           <summary className="py-2 md:py-3 cursor-pointer hover:bg-gray-800/30 transition-colors">
             <div className="container mx-auto px-4">
               <div className="flex items-center gap-2">
                 <h2 className="text-base md:text-lg font-bold text-white flex items-center gap-2">
                   <span className="text-red-500">🔥</span>
-                  {t('saleProducts') || 'セール中'}
+                  {t('saleProducts')}
                 </h2>
                 <span className="px-3 py-1 bg-red-600 text-white text-xs font-semibold rounded-full animate-pulse">
                   SALE
                 </span>
-                <span className="text-gray-400 text-sm ml-auto">({saleProducts.length})</span>
+                <Link
+                  href={`/${locale}/products?onSale=true`}
+                  className="text-red-400 hover:text-red-300 text-sm ml-auto flex items-center gap-1"
+                >
+                  {t('viewAllSales')}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
               </div>
             </div>
           </summary>
@@ -278,73 +258,6 @@ export default async function Home({ params, searchParams }: PageProps) {
         </details>
       )}
 
-      {/* 新作リリース女優 */}
-      {newReleaseActresses.length > 0 && (
-        <details className="border-b border-gray-800">
-          <summary className="py-2 md:py-3 cursor-pointer hover:bg-gray-800/30 transition-colors">
-            <div className="container mx-auto px-4">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base md:text-lg font-bold text-white">
-                  {t('newReleases')}
-                </h2>
-                <span className="text-gray-400 text-sm ml-auto">({newReleaseActresses.length})</span>
-              </div>
-            </div>
-          </summary>
-          <div className="container mx-auto px-4 pb-8">
-            <div className="relative -mx-4 px-4">
-              <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800">
-                <div className="flex gap-4 md:gap-6 min-w-max">
-                  {newReleaseActresses.map((actress) => (
-                    <Link
-                      key={actress.id}
-                      href={`/${locale}/actress/${actress.id}`}
-                      className="block shrink-0 w-40 md:w-48"
-                    >
-                      <ActressCard actress={actress} compact />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </details>
-      )}
-
-      {/* 人気女優 */}
-      {popularActresses.length > 0 && (
-        <details className="border-b border-gray-800">
-          <summary className="py-2 md:py-3 cursor-pointer hover:bg-gray-800/30 transition-colors">
-            <div className="container mx-auto px-4">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base md:text-lg font-bold text-white">
-                  {t('popularActresses')}
-                </h2>
-                <span className="text-gray-400 text-sm ml-auto">({popularActresses.length})</span>
-              </div>
-            </div>
-          </summary>
-          <div className="container mx-auto px-4 pb-8">
-            <div className="relative -mx-4 px-4">
-              <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800">
-                <div className="flex gap-4 md:gap-6 min-w-max">
-                  {popularActresses.map((actress) => (
-                    <Link
-                      key={actress.id}
-                      href={`/${locale}/actress/${actress.id}`}
-                      className="block shrink-0 w-40 md:w-48"
-                    >
-                      <ActressCard actress={actress} compact />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </details>
-      )}
-
-
       {/* 未整理作品へのリンク */}
       {uncategorizedCount > 0 && (
         <section className="py-6 border-b border-gray-800">
@@ -355,11 +268,11 @@ export default async function Home({ params, searchParams }: PageProps) {
             >
               <div className="flex items-center gap-3">
                 <span className="px-3 py-1 bg-yellow-600 text-white text-sm font-semibold rounded-full">
-                  未整理
+                  {tUncategorized('badge')}
                 </span>
                 <div>
-                  <span className="text-white font-medium">出演者情報が未整理の作品</span>
-                  <span className="text-gray-400 ml-2">({uncategorizedCount.toLocaleString()}件)</span>
+                  <span className="text-white font-medium">{tUncategorized('shortDescription')}</span>
+                  <span className="text-gray-400 ml-2">({tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() })})</span>
                 </div>
               </div>
               <svg className="w-5 h-5 text-gray-400 group-hover:text-yellow-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -374,19 +287,12 @@ export default async function Home({ params, searchParams }: PageProps) {
       <section id="list" className="py-12 md:py-16 scroll-mt-4">
         <div className="container mx-auto px-4">
           <div className="mb-8">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                  {tCommon('actresses')}
-                </h1>
-                <p className="text-gray-300">
-                  {t('actressCount', { count: totalCount })}
-                </p>
-              </div>
-
-              {/* ソート選択 */}
-              <SortDropdown sortBy={sortBy} />
-            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              {tCommon('actresses')}
+            </h1>
+            <p className="text-gray-300">
+              {t('actressCount', { count: totalCount })}
+            </p>
           </div>
 
           {/* フィルター設定（頭文字検索 + タグフィルター） */}
@@ -395,18 +301,27 @@ export default async function Home({ params, searchParams }: PageProps) {
             availableAsps={availableAsps}
             aspProductCounts={aspProductCounts}
             translations={{
-              filterSettings: t('filterSettings'),
-              initialSearch: t('initialSearch'),
-              sampleContent: 'サンプルコンテンツ',
-              sampleVideo: 'サンプル動画あり',
-              sampleImage: 'サンプル画像あり',
+              filterSettings: tFilter('filterSettings'),
+              initialSearch: tFilter('initialSearch'),
+              sampleContent: tFilter('sampleContent'),
+              sampleVideo: tFilter('sampleVideo'),
+              sampleImage: tFilter('sampleImage'),
               genre: tFilter('genre'),
               site: tFilter('site'),
               include: tFilter('include'),
               exclude: tFilter('exclude'),
-              clear: tCommon('clear'),
+              clear: tFilter('clear'),
+              loading: tFilter('loading'),
+              other: tFilter('other'),
+              saleFilter: tFilter('saleFilter'),
+              onSaleOnly: tFilter('onSaleOnly'),
             }}
           />
+
+          {/* 並び順 */}
+          <div className="flex justify-end mb-4">
+            <SortDropdown sortBy={sortBy} />
+          </div>
 
           {/* ページネーション（上部） */}
           <Pagination

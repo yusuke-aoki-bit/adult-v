@@ -1,9 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
-import { isDtiUncensoredSite } from '@/lib/image-utils';
+import { isDtiUncensoredSite, getFullSizeImageUrl } from '@/lib/image-utils';
+import { useTranslations } from 'next-intl';
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
 
@@ -38,6 +39,7 @@ interface ProductImageGalleryProps {
 }
 
 export default function ProductImageGallery({ mainImage, sampleImages, productTitle }: ProductImageGalleryProps) {
+  const t = useTranslations('productImageGallery');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -54,6 +56,11 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
   const hasMultipleImages = allImages.length > 1;
 
   const selectedImage = allImages[selectedIndex] || PLACEHOLDER_IMAGE;
+
+  // ライトボックス用の高解像度画像URL（scap -> sample等の変換）
+  const fullSizeImage = useMemo(() => {
+    return getFullSizeImageUrl(selectedImage);
+  }, [selectedImage]);
 
   const handleImageError = () => {
     setImageError(true);
@@ -124,14 +131,14 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
               <button
                 onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
                 className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
-                aria-label="前の画像"
+                aria-label={t('previousImage')}
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); goToNext(); }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
-                aria-label="次の画像"
+                aria-label={t('nextImage')}
               >
                 <ChevronRight className="w-6 h-6" />
               </button>
@@ -160,7 +167,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
               >
                 <Image
                   src={imgUrl}
-                  alt={`${productTitle} - サンプル画像 ${idx + 1}`}
+                  alt={`${productTitle} - ${t('sampleImageAlt')} ${idx + 1}`}
                   fill
                   className={`object-cover ${isUncensored ? 'blur-[3px]' : ''}`}
                   sizes="(max-width: 768px) 20vw, (max-width: 1024px) 16vw, 10vw"
@@ -173,7 +180,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
         {/* 画像枚数表示 */}
         {hasMultipleImages && (
           <p className="text-sm text-gray-400 text-center">
-            サンプル画像: {allImages.length}枚（クリックで拡大）
+            {t('sampleImageCount', { count: allImages.length })}
           </p>
         )}
       </div>
@@ -181,14 +188,14 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
       {/* ライトボックス */}
       {lightboxOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center cursor-pointer"
           onClick={() => setLightboxOpen(false)}
         >
           {/* 閉じるボタン */}
           <button
             onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 right-4 p-2 text-white hover:text-gray-300 transition-colors z-10"
-            aria-label="閉じる"
+            className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-10"
+            aria-label={t('close')}
           >
             <X className="w-8 h-8" />
           </button>
@@ -200,13 +207,17 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
             </div>
           )}
 
-          {/* メイン画像 */}
+          {/* クリックで閉じるヒント */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 rounded text-white/70 text-sm pointer-events-none">
+            {t('clickToCloseEsc')}
+          </div>
+
+          {/* メイン画像 - 画像クリックでも閉じる */}
           <div
-            className="relative w-full h-full max-w-5xl max-h-[90vh] mx-4"
-            onClick={(e) => e.stopPropagation()}
+            className="relative w-full h-full max-w-5xl max-h-[85vh] mx-4 pointer-events-none"
           >
             <Image
-              src={imageError ? PLACEHOLDER_IMAGE : selectedImage}
+              src={imageError ? PLACEHOLDER_IMAGE : fullSizeImage}
               alt={productTitle}
               fill
               className={`object-contain ${isUncensored ? 'blur-[3px]' : ''}`}
@@ -221,14 +232,14 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
               <button
                 onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
                 className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
-                aria-label="前の画像"
+                aria-label={t('previousImage')}
               >
                 <ChevronLeft className="w-8 h-8" />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); goToNext(); }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
-                aria-label="次の画像"
+                aria-label={t('nextImage')}
               >
                 <ChevronRight className="w-8 h-8" />
               </button>
@@ -250,7 +261,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
                 >
                   <Image
                     src={imgUrl}
-                    alt={`${productTitle} - サムネイル ${idx + 1}`}
+                    alt={`${productTitle} - ${t('thumbnailAlt')} ${idx + 1}`}
                     fill
                     className={`object-cover ${isUncensored ? 'blur-[3px]' : ''}`}
                     sizes="64px"

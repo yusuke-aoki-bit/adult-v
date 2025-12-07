@@ -6,6 +6,58 @@ import Image from 'next/image';
 import { Search, X } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 
+// Client-side translations
+const translations = {
+  ja: {
+    placeholder: '作品・女優・ジャンル・品番で検索...',
+    searching: '検索中...',
+    videos: '作品',
+    categories: {
+      productId: '品番',
+      actress: '女優',
+      tag: 'タグ',
+      genre: 'ジャンル',
+      product: '作品',
+    },
+  },
+  en: {
+    placeholder: 'Search products, actresses, genres, IDs...',
+    searching: 'Searching...',
+    videos: 'videos',
+    categories: {
+      productId: 'ID',
+      actress: 'Actress',
+      tag: 'Tag',
+      genre: 'Genre',
+      product: 'Product',
+    },
+  },
+  zh: {
+    placeholder: '搜索作品、女优、类型、编号...',
+    searching: '搜索中...',
+    videos: '部作品',
+    categories: {
+      productId: '编号',
+      actress: '女优',
+      tag: '标签',
+      genre: '类型',
+      product: '作品',
+    },
+  },
+  ko: {
+    placeholder: '작품, 여배우, 장르, 제품번호 검색...',
+    searching: '검색 중...',
+    videos: '개 작품',
+    categories: {
+      productId: '제품번호',
+      actress: '여배우',
+      tag: '태그',
+      genre: '장르',
+      product: '작품',
+    },
+  },
+} as const;
+
 interface AutocompleteResult {
   type: 'product' | 'actress' | 'tag' | 'product_id';
   id: string | number;
@@ -23,9 +75,11 @@ interface SearchAutocompleteProps {
 
 export default function SearchAutocomplete({
   locale,
-  placeholder = '作品・女優・ジャンル・品番で検索...',
+  placeholder,
   className = '',
 }: SearchAutocompleteProps) {
+  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const resolvedPlaceholder = placeholder || t.placeholder;
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<AutocompleteResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -189,7 +243,7 @@ export default function SearchAutocomplete({
           onFocus={() => {
             if (results.length > 0) setIsOpen(true);
           }}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           className="block w-full pl-10 pr-10 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
         />
         {query && (
@@ -209,7 +263,7 @@ export default function SearchAutocomplete({
         >
           {isLoading ? (
             <div className="px-4 py-3 text-center text-gray-400">
-              検索中...
+              {t.searching}
             </div>
           ) : (
             results.map((result, index) => (
@@ -248,7 +302,7 @@ export default function SearchAutocomplete({
                   </div>
                   {result.count !== undefined && (
                     <div className="text-xs text-gray-400 mt-1">
-                      {result.count}作品
+                      {result.count}{t.videos}
                     </div>
                   )}
                 </div>

@@ -44,6 +44,7 @@ import {
 export interface DTISiteConfig {
   siteName: string;
   siteId: string;
+  aspName?: string; // ASP name for product_sources (e.g., 'カリビアンコム', 'HEYZO'). Falls back to siteName if not set.
   baseUrl: string;
   urlPattern: string;
   idFormat: 'MMDDYY_NNN' | 'MMDDYY_NNNN' | 'NNNN';
@@ -590,6 +591,69 @@ export function extractReleaseDate(html: string): string | undefined {
 }
 
 /**
+ * DTI系レビュー情報
+ */
+export interface DtiReview {
+  reviewerName: string;
+  rating: number;
+  content: string;
+  reviewDate?: string;
+}
+
+/**
+ * Extract user reviews from DTI HTML (Caribbeancom, 1pondo, etc.)
+ * HTML structure:
+ * <div class="section is-dense">
+ *   <div class="rating">★★★★★</div>
+ *   <div class="review-comment">...</div>
+ *   <div class="review-info">
+ *     <span class="review-info__user">by XXX</span>
+ *     <span class="review-info__date">YYYY-MM-DD HH:MM:SS</span>
+ *   </div>
+ * </div>
+ */
+export function extractReviews(html: string): DtiReview[] {
+  const reviews: DtiReview[] = [];
+
+  // Pattern: section blocks containing reviews
+  // Match each review block: <div class="section is-dense">..rating..review-comment..review-info..</div>
+  const reviewBlockRegex = /<div class="section is-dense">\s*<div class="rating"[^>]*>([\s\S]*?)<\/div>\s*<div class="review-comment">([\s\S]*?)<\/div>\s*<div class="review-info">\s*<span class="review-info__user">([^<]*)<\/span>\s*<span class="review-info__date">([^<]*)<\/span>/g;
+
+  let match;
+  while ((match = reviewBlockRegex.exec(html)) !== null) {
+    const ratingHtml = match[1];
+    const content = match[2].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+    const reviewerRaw = match[3].trim();
+    const dateRaw = match[4].trim();
+
+    // Extract rating from star count
+    const starCount = (ratingHtml.match(/★/g) || []).length;
+    const rating = Math.min(starCount, 5);
+
+    // Extract reviewer name (remove "by " prefix)
+    const reviewerName = reviewerRaw.replace(/^by\s+/i, '').trim();
+
+    // Parse date (format: YYYY-MM-DD HH:MM:SS)
+    let reviewDate: string | undefined;
+    const dateMatch = dateRaw.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})/);
+    if (dateMatch) {
+      reviewDate = dateMatch[1].replace(/\//g, '-');
+    }
+
+    if (reviewerName && content) {
+      reviews.push({
+        reviewerName,
+        rating,
+        content,
+        reviewDate,
+      });
+    }
+  }
+
+  return reviews;
+}
+
+/**
  * Extract sample images from HTML
  * Uses Set for O(1) deduplication instead of O(n) includes() checks
  */
@@ -812,13 +876,14 @@ export async function saveProduct(
 ): Promise<{ productDbId: number; isNew: boolean } | null> {
   const db = getDb();
   const normalizedProductId = `${config.siteName}-${productId}`;
+  const aspName = config.aspName || config.siteName; // Use aspName if set, otherwise fall back to siteName
 
   try {
     // Validate product data
     const validation = validateProductData({
       title: productData.title,
       description: productData.description,
-      aspName: 'DTI',
+      aspName: aspName,
       originalId: productId,
     });
 
@@ -849,7 +914,7 @@ export async function saveProduct(
         .insert(products)
         .values({
           normalizedProductId,
-          title: productData.title,
+          title: productData.title || '',
           description: productData.description || '',
           releaseDate: productData.releaseDate,
           defaultThumbnailUrl: thumbnailUrl,
@@ -864,7 +929,7 @@ export async function saveProduct(
       // Insert into product_sources
       await db.insert(productSources).values({
         productId: productDbId,
-        aspName: 'DTI',
+        aspName: aspName,
         originalProductId: productId,
         affiliateUrl: affiliateUrl,
         price: productData.price || 0,
@@ -874,7 +939,7 @@ export async function saveProduct(
       // Save images
       await saveProductImages(
         productDbId,
-        thumbnailUrl,
+        thumbnailUrl || undefined,
         productData.sampleImages,
         config.siteName
       );
@@ -995,7 +1060,7 @@ async function runAIFeatures(
 
     // AI description generation
     const aiResult = await generateProductDescription({
-      title: productData.title,
+      title: productData.title || '',
       originalDescription: productData.description,
       performers: productData.actors,
     });
@@ -1022,7 +1087,7 @@ async function runAIFeatures(
 
     // AI tag extraction
     const aiTags = await extractProductTags(
-      productData.title,
+      productData.title || '',
       productData.description
     );
     if (aiTags.genres.length > 0 || aiTags.attributes.length > 0) {
@@ -1042,7 +1107,7 @@ async function runAIFeatures(
     // Translation
     console.log(`  🌐 翻訳処理を実行中...`);
     const translation = await translateProduct(
-      productData.title,
+      productData.title || '',
       productData.description
     );
     if (translation) {
@@ -1321,5 +1386,7 @@ export abstract class DTIBaseCrawler {
 // ============================================================
 
 export { calculateHash } from '../gcs-crawler-helper';
-export { saveSaleInfo, SaleInfo } from '../sale-helper';
+export { saveSaleInfo } from '../sale-helper';
+export type { SaleInfo } from '../sale-helper';
 export { upsertRawHtmlDataWithGcs, markRawDataAsProcessed } from '../crawler/dedup-helper';
+export { isValidPerformerName, isValidPerformerForProduct, normalizePerformerName } from '../performer-validation';

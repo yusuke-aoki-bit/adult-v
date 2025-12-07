@@ -36,6 +36,17 @@ export function mapLegacyProvider(provider: string): ProviderId {
     'ソクミル': 'sokmil',
     'japanska': 'japanska',
     'fc2': 'fc2',
+    // DTI系サイト（月額制）
+    'heyzo': 'dti',
+    'caribbeancom': 'dti',  // カリビアンコム（月額制）
+    '1pondo': 'dti',
+    '10musume': 'dti',
+    'pacopacomama': 'dti',
+    'muramura': 'dti',
+    'tokyohot': 'dti',
+    // カリビアンコムプレミアムは単品購入サイト（月額制ではない）
+    'カリビアンコムプレミアム': 'dti',
+    'caribbeancompr': 'dti',
   };
 
   const mapped = aspMapping[normalizedProvider];

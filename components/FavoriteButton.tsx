@@ -2,6 +2,7 @@
 
 import { Heart } from 'lucide-react';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useTranslations } from 'next-intl';
 
 interface FavoriteButtonProps {
   type: 'product' | 'actress';
@@ -24,6 +25,7 @@ export default function FavoriteButton({
   className = '',
   size = 'md',
 }: FavoriteButtonProps) {
+  const t = useTranslations('favoriteButton');
   const { isFavorite, toggleFavorite, isLoaded } = useFavorites();
 
   if (!isLoaded) {
@@ -77,8 +79,8 @@ export default function FavoriteButton({
         justify-center
         ${className}
       `}
-      title={favorite ? 'お気に入りから削除' : 'お気に入りに追加'}
-      aria-label={favorite ? 'お気に入りから削除' : 'お気に入りに追加'}
+      title={favorite ? t('removeFromFavorites') : t('addToFavorites')}
+      aria-label={favorite ? t('removeFromFavorites') : t('addToFavorites')}
     >
       <Heart
         className={`${iconSizes[size]} ${favorite ? 'fill-current' : ''}`}

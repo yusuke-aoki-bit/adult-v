@@ -1,12 +1,38 @@
+'use client';
+
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Campaign } from '@/types/product';
 import { providerMeta } from '@/lib/providers';
+
+// Client-side translations (outside NextIntlClientProvider)
+const translations = {
+  ja: {
+    expiresAt: '終了予定:',
+    viewDetails: '詳細と参加条件を見る',
+  },
+  en: {
+    expiresAt: 'Ends:',
+    viewDetails: 'View Details & Conditions',
+  },
+  zh: {
+    expiresAt: '结束日期:',
+    viewDetails: '查看详情和参与条件',
+  },
+  ko: {
+    expiresAt: '종료 예정:',
+    viewDetails: '상세 및 참여 조건 보기',
+  },
+} as const;
 
 interface Props {
   campaign: Campaign;
 }
 
 export default function CampaignCard({ campaign }: Props) {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations.ja;
   const provider = providerMeta[campaign.provider];
 
   return (
@@ -36,7 +62,7 @@ export default function CampaignCard({ campaign }: Props) {
         </div>
 
         <div className="flex items-center justify-between text-sm text-gray-500">
-          <span>終了予定: {campaign.expiresAt}</span>
+          <span>{t.expiresAt} {campaign.expiresAt}</span>
           <span className="font-medium text-gray-700">{provider.label}</span>
         </div>
 
@@ -45,7 +71,7 @@ export default function CampaignCard({ campaign }: Props) {
           target="_blank"
           className="inline-flex items-center justify-center w-full rounded-xl border border-gray-900 text-gray-900 font-semibold py-3 hover:bg-gray-900 hover:text-white transition-colors"
         >
-          詳細と参加条件を見る
+          {t.viewDetails}
         </Link>
       </div>
     </div>

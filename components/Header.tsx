@@ -1,26 +1,97 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import SearchBar from './SearchBar';
 import LanguageSwitcher from './LanguageSwitcher';
 import NotificationSubscriber from './NotificationSubscriber';
+import { providerMeta } from '@/lib/providers';
+import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
+
+interface AspStat {
+  aspName: string;
+  productCount: number;
+  actressCount: number;
+  estimatedTotal: number | null;
+}
+
+interface SaleStats {
+  totalSales: number;
+}
+
+// Client-side translations (ConditionalLayout is outside NextIntlClientProvider)
+const translations = {
+  ja: {
+    subtitle: 'heavy user guide',
+    categories: 'カテゴリ',
+    reviews: 'レビュー',
+    favorites: 'お気に入り',
+    menu: 'メニュー',
+    sale: 'SALE',
+    saleItems: '件セール中',
+  },
+  en: {
+    subtitle: 'heavy user guide',
+    categories: 'Categories',
+    reviews: 'Reviews',
+    favorites: 'Favorites',
+    menu: 'Menu',
+    sale: 'SALE',
+    saleItems: 'items on sale',
+  },
+  zh: {
+    subtitle: 'heavy user guide',
+    categories: '分类',
+    reviews: '评论',
+    favorites: '收藏',
+    menu: '菜单',
+    sale: 'SALE',
+    saleItems: '件特卖中',
+  },
+  ko: {
+    subtitle: 'heavy user guide',
+    categories: '카테고리',
+    reviews: '리뷰',
+    favorites: '즐겨찾기',
+    menu: '메뉴',
+    sale: 'SALE',
+    saleItems: '개 세일 중',
+  },
+} as const;
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [aspStats, setAspStats] = useState<AspStat[]>([]);
+  const [saleStats, setSaleStats] = useState<SaleStats | null>(null);
+  const params = useParams();
+  const locale = (params?.locale as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations.ja;
+
+  useEffect(() => {
+    fetch('/api/stats/asp')
+      .then(res => res.json())
+      .then(data => setAspStats(data))
+      .catch(() => setAspStats([]));
+
+    fetch('/api/stats/sales')
+      .then(res => res.json())
+      .then(data => setSaleStats(data))
+      .catch(() => setSaleStats(null));
+  }, []);
 
   return (
     <header className="bg-gray-950 text-white border-b border-white/10 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* ロゴ */}
-          <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
+          <Link href={`/${locale}`} className="flex items-center space-x-2 flex-shrink-0">
             <div className="text-2xl font-bold tracking-tight">
               <span className="text-rose-400">ADULT</span>
               <span className="text-white">VIEWER LAB</span>
             </div>
             <span className="text-xs uppercase tracking-widest text-white/70 hidden sm:inline">
-              heavy user guide
+              {t.subtitle}
             </span>
           </Link>
 
@@ -32,7 +103,7 @@ export default function Header() {
           {/* デスクトップナビゲーション */}
           <nav className="hidden md:flex items-center space-x-4 flex-shrink-0">
             <Link
-              href="/categories"
+              href={`/${locale}/categories`}
               className="hover:text-purple-300 transition-colors font-medium flex items-center gap-1"
             >
               <svg
@@ -43,10 +114,10 @@ export default function Header() {
               >
                 <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
-              カテゴリ
+              {t.categories}
             </Link>
             <Link
-              href="/reviews"
+              href={`/${locale}/reviews`}
               className="hover:text-blue-300 transition-colors font-medium flex items-center gap-1"
             >
               <svg
@@ -57,11 +128,11 @@ export default function Header() {
               >
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              レビュー
+              {t.reviews}
             </Link>
             <NotificationSubscriber />
             <Link
-              href="/favorites"
+              href={`/${locale}/favorites`}
               className="hover:text-rose-300 transition-colors font-medium flex items-center gap-1"
             >
               <svg
@@ -76,7 +147,7 @@ export default function Header() {
                   clipRule="evenodd"
                 />
               </svg>
-              お気に入り
+              {t.favorites}
             </Link>
             <LanguageSwitcher />
           </nav>
@@ -85,7 +156,7 @@ export default function Header() {
           <button
             className="md:hidden p-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="メニュー"
+            aria-label={t.menu}
           >
             <svg
               className="w-6 h-6"
@@ -121,33 +192,74 @@ export default function Header() {
         {isMobileMenuOpen && (
           <nav className="md:hidden py-4 space-y-4">
             <Link
-              href="/categories"
+              href={`/${locale}/categories`}
               className="block py-2 hover:text-purple-300 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              カテゴリ
+              {t.categories}
             </Link>
             <Link
-              href="/reviews"
+              href={`/${locale}/reviews`}
               className="block py-2 hover:text-blue-300 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              レビュー
+              {t.reviews}
             </Link>
             <div className="py-2">
               <NotificationSubscriber />
             </div>
             <Link
-              href="/favorites"
+              href={`/${locale}/favorites`}
               className="block py-2 hover:text-rose-300 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              お気に入り
+              {t.favorites}
             </Link>
             <div className="py-2">
               <LanguageSwitcher />
             </div>
           </nav>
+        )}
+
+        {/* セール・ASP統計バッジ */}
+        {(aspStats.length > 0 || (saleStats && saleStats.totalSales > 0)) && (
+          <div className="pb-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700">
+            <div className="flex gap-2 min-w-max">
+              {/* セールバッジ */}
+              {saleStats && saleStats.totalSales > 0 && (
+                <Link
+                  href={`/${locale}/products?onSale=true`}
+                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-500 text-white text-xs font-medium hover:opacity-90 transition-opacity animate-pulse"
+                >
+                  <span className="font-bold">{t.sale}</span>
+                  <span className="ml-1.5 opacity-90">
+                    {saleStats.totalSales.toLocaleString()}{t.saleItems}
+                  </span>
+                </Link>
+              )}
+              {/* ASP統計バッジ */}
+              {aspStats.slice(0, 7).map((stat) => {
+                const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
+                const meta = providerId ? providerMeta[providerId] : null;
+                return (
+                  <Link
+                    key={stat.aspName}
+                    href={`/${locale}/products?includeAsp=${stat.aspName}`}
+                    className={`px-3 py-1.5 rounded-lg bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-xs font-medium hover:opacity-90 transition-opacity`}
+                  >
+                    <span className="font-bold">{meta?.label || stat.aspName}</span>
+                    <span className="ml-1.5 opacity-90">
+                      {stat.productCount.toLocaleString()}
+                      {stat.estimatedTotal && stat.estimatedTotal > stat.productCount && (
+                        <span className="opacity-70">/{stat.estimatedTotal.toLocaleString()}</span>
+                      )}
+                      作品
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         )}
       </div>
     </header>

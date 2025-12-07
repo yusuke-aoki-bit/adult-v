@@ -1,7 +1,43 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useParams } from 'next/navigation';
+
+// Client-side translations (outside NextIntlClientProvider)
+const translations = {
+  ja: {
+    first: '最初',
+    prev: '前へ',
+    next: '次へ',
+    last: '最後',
+    items: '件',
+    page: 'ページ',
+  },
+  en: {
+    first: 'First',
+    prev: 'Prev',
+    next: 'Next',
+    last: 'Last',
+    items: 'items',
+    page: 'page',
+  },
+  zh: {
+    first: '首页',
+    prev: '上一页',
+    next: '下一页',
+    last: '末页',
+    items: '条',
+    page: '页',
+  },
+  ko: {
+    first: '처음',
+    prev: '이전',
+    next: '다음',
+    last: '마지막',
+    items: '건',
+    page: '페이지',
+  },
+} as const;
 
 interface PaginationProps {
   total: number;
@@ -21,6 +57,9 @@ export default function Pagination({
   position = 'bottom',
 }: PaginationProps) {
   const searchParams = useSearchParams();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations.ja;
   const totalPages = Math.ceil(total / perPage);
 
 
@@ -83,7 +122,7 @@ export default function Pagination({
           }`}
           aria-disabled={page === 1}
         >
-          最初
+          {t.first}
         </Link>
 
         {/* 前へ */}
@@ -96,7 +135,7 @@ export default function Pagination({
           }`}
           aria-disabled={page === 1}
         >
-          前へ
+          {t.prev}
         </Link>
 
         {/* ページ番号 */}
@@ -138,7 +177,7 @@ export default function Pagination({
           }`}
           aria-disabled={page >= totalPages}
         >
-          次へ
+          {t.next}
         </Link>
 
         {/* 最後 - デスクトップのみ */}
@@ -151,7 +190,7 @@ export default function Pagination({
           }`}
           aria-disabled={page >= totalPages}
         >
-          最後
+          {t.last}
         </Link>
       </div>
 
@@ -160,10 +199,10 @@ export default function Pagination({
         {total > 0 && (
           <>
             <span className="hidden sm:inline">
-              {(page - 1) * perPage + 1} - {Math.min(page * perPage, total)} / {total.toLocaleString()}件
+              {(page - 1) * perPage + 1} - {Math.min(page * perPage, total)} / {total.toLocaleString()} {t.items}
             </span>
             <span className="sm:hidden">
-              {page} / {totalPages}ページ
+              {page} / {totalPages} {t.page}
             </span>
           </>
         )}

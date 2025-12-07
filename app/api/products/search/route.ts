@@ -9,9 +9,9 @@ const VALID_SORT_OPTIONS: SortOption[] = [
   'releaseDateAsc',
   'priceAsc',
   'priceDesc',
-  'nameAsc',
-  'nameDesc',
-  'viewsDesc',
+  'ratingDesc',
+  'ratingAsc',
+  'titleAsc',
 ];
 
 function isValidSortOption(value: string | null): value is SortOption {

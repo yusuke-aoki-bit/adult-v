@@ -4,12 +4,21 @@
  */
 
 import { db } from '../lib/db/index.js';
-import { performers, productPerformers, products, productTags, tags } from '../lib/db/schema.js';
+import { performers, productPerformers, products, productTags, tags, performerAliases } from '../lib/db/schema.js';
 import { eq, sql, isNull, and, desc, lt } from 'drizzle-orm';
 import { generatePerformerReview, GeneratedPerformerReview } from '../lib/google-apis.js';
 
 const BATCH_SIZE = 10;
 const DELAY_BETWEEN_BATCHES = 2000; // 2秒
+
+interface ProductAiReview {
+  summary: string;
+  highlights: string[];
+  concerns: string[];
+  recommendedFor: string;
+  overallSentiment: 'positive' | 'mixed' | 'negative';
+  averageRating?: number;
+}
 
 interface PerformerWithProducts {
   id: number;
@@ -19,6 +28,7 @@ interface PerformerWithProducts {
   productCount: number;
   productTitles: string[];
   genres: string[];
+  productAiReviews: ProductAiReview[];  // 商品のAIレビュー
 }
 
 async function getPerformersNeedingReview(limit: number = 100): Promise<PerformerWithProducts[]> {
@@ -30,7 +40,6 @@ async function getPerformersNeedingReview(limit: number = 100): Promise<Performe
     .select({
       id: performers.id,
       name: performers.name,
-      aliases: performers.aliases,
       aiReview: performers.aiReview,
     })
     .from(performers)
@@ -44,11 +53,19 @@ async function getPerformersNeedingReview(limit: number = 100): Promise<Performe
   const result: PerformerWithProducts[] = [];
 
   for (const performer of performerList) {
-    // 出演作品を取得
+    // 別名を取得
+    const aliasResults = await db
+      .select({ aliasName: performerAliases.aliasName })
+      .from(performerAliases)
+      .where(eq(performerAliases.performerId, performer.id));
+    const aliases = aliasResults.map(a => a.aliasName);
+
+    // 出演作品を取得（AIレビューも含む）
     const performerProducts = await db
       .select({
         title: products.title,
         productId: products.id,
+        aiReview: products.aiReview,
       })
       .from(productPerformers)
       .innerJoin(products, eq(productPerformers.productId, products.id))
@@ -73,14 +90,30 @@ async function getPerformersNeedingReview(limit: number = 100): Promise<Performe
       genres = tagResults.map(t => t.name);
     }
 
+    // 商品AIレビューを抽出（存在するもののみ）
+    const productAiReviews: ProductAiReview[] = [];
+    for (const p of performerProducts) {
+      if (p.aiReview) {
+        try {
+          const parsed = JSON.parse(p.aiReview) as ProductAiReview;
+          if (parsed.summary) {
+            productAiReviews.push(parsed);
+          }
+        } catch {
+          // JSONパースエラーは無視
+        }
+      }
+    }
+
     result.push({
       id: performer.id,
       name: performer.name,
-      aliases: performer.aliases,
+      aliases: aliases.length > 0 ? aliases : null,
       aiReview: performer.aiReview,
       productCount: performerProducts.length,
       productTitles: performerProducts.map(p => p.title),
       genres,
+      productAiReviews,
     });
   }
 
@@ -135,7 +168,7 @@ async function main() {
     console.log(`\n--- バッチ ${Math.floor(i / BATCH_SIZE) + 1} (${i + 1}〜${Math.min(i + BATCH_SIZE, performersToProcess.length)}/${performersToProcess.length}) ---`);
 
     for (const performer of batch) {
-      console.log(`\n[${performer.id}] ${performer.name} (${performer.productCount}作品)`);
+      console.log(`\n[${performer.id}] ${performer.name} (${performer.productCount}作品, ${performer.productAiReviews.length}件のAIレビュー)`);
 
       if (performer.productCount === 0) {
         console.log('  → 出演作品がないためスキップ');
@@ -143,11 +176,17 @@ async function main() {
       }
 
       try {
+        // 商品AIレビューから説明文を抽出
+        const productDescriptions = performer.productAiReviews
+          .map(r => r.summary)
+          .filter(s => s && s.length > 0);
+
         // Gemini APIでレビュー生成
         const review = await generatePerformerReview({
           performerName: performer.name,
           aliases: performer.aliases || undefined,
           productTitles: performer.productTitles,
+          productDescriptions: productDescriptions.length > 0 ? productDescriptions : undefined,
           genres: performer.genres,
           productCount: performer.productCount,
           existingReview: performer.aiReview || undefined,

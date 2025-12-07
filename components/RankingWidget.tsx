@@ -5,6 +5,50 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Trophy, TrendingUp } from 'lucide-react';
 
+// Client-side translations
+const translations = {
+  ja: {
+    popularProducts: '人気作品ランキング',
+    popularActresses: '人気女優ランキング',
+    daily: '24時間',
+    weekly: '週間',
+    monthly: '月間',
+    loading: '読み込み中...',
+    noData: 'まだデータがありません',
+    views: 'views',
+  },
+  en: {
+    popularProducts: 'Popular Videos',
+    popularActresses: 'Popular Actresses',
+    daily: '24 Hours',
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+    loading: 'Loading...',
+    noData: 'No data available yet',
+    views: 'views',
+  },
+  zh: {
+    popularProducts: '热门作品排行',
+    popularActresses: '热门女优排行',
+    daily: '24小时',
+    weekly: '本周',
+    monthly: '本月',
+    loading: '加载中...',
+    noData: '暂无数据',
+    views: '次观看',
+  },
+  ko: {
+    popularProducts: '인기 작품 랭킹',
+    popularActresses: '인기 여배우 랭킹',
+    daily: '24시간',
+    weekly: '주간',
+    monthly: '월간',
+    loading: '로딩 중...',
+    noData: '아직 데이터가 없습니다',
+    views: '조회',
+  },
+} as const;
+
 interface RankingItem {
   rank: number;
   productId?: number;
@@ -31,6 +75,7 @@ export default function RankingWidget({
   locale,
   title,
 }: RankingWidgetProps) {
+  const t = translations[locale as keyof typeof translations] || translations.ja;
   const [ranking, setRanking] = useState<RankingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'monthly'>(period);
@@ -70,7 +115,7 @@ export default function RankingWidget({
     }
   };
 
-  const defaultTitle = type === 'products' ? '人気作品ランキング' : '人気女優ランキング';
+  const defaultTitle = type === 'products' ? t.popularProducts : t.popularActresses;
 
   return (
     <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
@@ -94,20 +139,20 @@ export default function RankingWidget({
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
-            {p === 'daily' && '24時間'}
-            {p === 'weekly' && '週間'}
-            {p === 'monthly' && '月間'}
+            {p === 'daily' && t.daily}
+            {p === 'weekly' && t.weekly}
+            {p === 'monthly' && t.monthly}
           </button>
         ))}
       </div>
 
       {/* Ranking list */}
       {isLoading ? (
-        <div className="text-center py-8 text-gray-400">読み込み中...</div>
+        <div className="text-center py-8 text-gray-400">{t.loading}</div>
       ) : ranking.length === 0 ? (
         <div className="text-center py-8 text-gray-400">
           <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
-          <p>まだデータがありません</p>
+          <p>{t.noData}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -150,7 +195,7 @@ export default function RankingWidget({
                     {item.title || item.name}
                   </h3>
                   <p className="text-sm text-gray-400">
-                    {item.viewCount.toLocaleString()} views
+                    {item.viewCount.toLocaleString()} {t.views}
                   </p>
                 </div>
               </Link>

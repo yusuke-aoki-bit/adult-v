@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { normalizeImageUrl } from '@/lib/image-utils';
 
 interface RelatedProduct {
@@ -21,8 +21,9 @@ interface RelatedProductsProps {
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/300x420/1f2937/ffffff?text=NO+IMAGE';
 
-export default function RelatedProducts({ products, title = '関連作品' }: RelatedProductsProps) {
+export default function RelatedProducts({ products, title }: RelatedProductsProps) {
   const locale = useLocale();
+  const t = useTranslations('relatedProducts');
 
   if (products.length === 0) {
     return null;
@@ -31,11 +32,11 @@ export default function RelatedProducts({ products, title = '関連作品' }: Re
   const getMatchTypeLabel = (matchType?: string) => {
     switch (matchType) {
       case 'performer':
-        return '同じ出演者';
+        return t('samePerformer');
       case 'tag':
-        return '同じジャンル';
+        return t('sameGenre');
       case 'recent':
-        return '新着';
+        return t('recent');
       default:
         return '';
     }
@@ -43,7 +44,7 @@ export default function RelatedProducts({ products, title = '関連作品' }: Re
 
   return (
     <div className="mt-12">
-      <h2 className="text-2xl font-bold text-white mb-6">{title}</h2>
+      <h2 className="text-2xl font-bold text-white mb-6">{title || t('title')}</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {products.map((product) => (
           <Link

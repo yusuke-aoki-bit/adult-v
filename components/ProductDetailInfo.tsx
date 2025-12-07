@@ -1,11 +1,90 @@
 'use client';
 
+import { useParams } from 'next/navigation';
 import { isSubscriptionProvider } from '@/lib/providers';
+import { formatPrice } from '@/lib/utils/subscription';
+
+// Client-side translations (outside NextIntlClientProvider)
+const translations = {
+  ja: {
+    productDetails: '作品詳細情報',
+    duration: '再生時間:',
+    minutes: '分',
+    releaseDate: '配信開始:',
+    performerCount: '出演者数:',
+    people: '名',
+    tagCount: 'タグ数:',
+    items: '件',
+    distributionSites: '配信サイト',
+    sites: 'サイト',
+    productId: '品番:',
+    subscriptionOnly: '月額会員限定',
+    dataInfo: '複数の配信サイトから価格・在庫情報を収集し、最新の情報を提供しています',
+    lastUpdated: '最終更新:',
+    verifiedData: '検証済みデータ',
+    officialSource: '公式提供元',
+  },
+  en: {
+    productDetails: 'Product Details',
+    duration: 'Duration:',
+    minutes: 'min',
+    releaseDate: 'Release Date:',
+    performerCount: 'Performers:',
+    people: '',
+    tagCount: 'Tags:',
+    items: '',
+    distributionSites: 'Distribution Sites',
+    sites: 'sites',
+    productId: 'Product ID:',
+    subscriptionOnly: 'Subscription Only',
+    dataInfo: 'We collect pricing and availability information from multiple distribution sites to provide the latest data',
+    lastUpdated: 'Last Updated:',
+    verifiedData: 'Verified Data',
+    officialSource: 'Official Source',
+  },
+  zh: {
+    productDetails: '作品详情',
+    duration: '时长:',
+    minutes: '分钟',
+    releaseDate: '发布日期:',
+    performerCount: '演员数:',
+    people: '人',
+    tagCount: '标签数:',
+    items: '个',
+    distributionSites: '分发站点',
+    sites: '个站点',
+    productId: '产品编号:',
+    subscriptionOnly: '仅限会员',
+    dataInfo: '我们从多个分发站点收集价格和库存信息，以提供最新数据',
+    lastUpdated: '最后更新:',
+    verifiedData: '已验证数据',
+    officialSource: '官方来源',
+  },
+  ko: {
+    productDetails: '작품 상세 정보',
+    duration: '재생시간:',
+    minutes: '분',
+    releaseDate: '배포일:',
+    performerCount: '출연자 수:',
+    people: '명',
+    tagCount: '태그 수:',
+    items: '개',
+    distributionSites: '배포 사이트',
+    sites: '개 사이트',
+    productId: '제품번호:',
+    subscriptionOnly: '월간 회원 전용',
+    dataInfo: '여러 배포 사이트에서 가격 및 재고 정보를 수집하여 최신 정보를 제공합니다',
+    lastUpdated: '최종 업데이트:',
+    verifiedData: '검증된 데이터',
+    officialSource: '공식 제공처',
+  },
+} as const;
 
 interface ProductSource {
   aspName: string;
   originalProductId: string;
   price: number | null;
+  currency?: string | null;
   affiliateUrl: string;
 }
 
@@ -26,33 +105,37 @@ export default function ProductDetailInfo({
   performerCount,
   tagCount,
 }: ProductDetailInfoProps) {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations.ja;
+
   return (
     <div className="bg-gray-800 rounded-lg p-6 space-y-4">
       <h2 className="text-xl font-bold text-white border-b border-gray-700 pb-2">
-        作品詳細情報
+        {t.productDetails}
       </h2>
 
       {/* 基本情報 */}
       <div className="grid grid-cols-2 gap-4 text-sm">
         {duration && (
           <div>
-            <span className="text-gray-400">再生時間:</span>
-            <span className="text-white ml-2 font-semibold">{duration}分</span>
+            <span className="text-gray-400">{t.duration}</span>
+            <span className="text-white ml-2 font-semibold">{duration}{t.minutes}</span>
           </div>
         )}
         {releaseDate && (
           <div>
-            <span className="text-gray-400">配信開始:</span>
+            <span className="text-gray-400">{t.releaseDate}</span>
             <span className="text-white ml-2 font-semibold">{releaseDate}</span>
           </div>
         )}
         <div>
-          <span className="text-gray-400">出演者数:</span>
-          <span className="text-white ml-2 font-semibold">{performerCount}名</span>
+          <span className="text-gray-400">{t.performerCount}</span>
+          <span className="text-white ml-2 font-semibold">{performerCount}{t.people}</span>
         </div>
         <div>
-          <span className="text-gray-400">タグ数:</span>
-          <span className="text-white ml-2 font-semibold">{tagCount}件</span>
+          <span className="text-gray-400">{t.tagCount}</span>
+          <span className="text-white ml-2 font-semibold">{tagCount}{t.items}</span>
         </div>
       </div>
 
@@ -60,7 +143,7 @@ export default function ProductDetailInfo({
       {sources.length > 0 && (
         <div className="mt-6 pt-4 border-t border-gray-700">
           <h3 className="text-sm font-semibold text-white mb-3">
-            配信サイト ({sources.length}サイト)
+            {t.distributionSites} ({sources.length} {t.sites})
           </h3>
           <div className="space-y-2">
             {sources.map((source) => (
@@ -73,23 +156,23 @@ export default function ProductDetailInfo({
                     {source.aspName}
                   </span>
                   <span className="text-gray-300">
-                    品番: {source.originalProductId}
+                    {t.productId} {source.originalProductId}
                   </span>
                 </div>
                 {source.price !== null && source.price > 0 ? (
                   <span className="text-green-400 font-semibold">
-                    ¥{source.price.toLocaleString()}
+                    {formatPrice(source.price, source.currency)}
                   </span>
                 ) : isSubscriptionProvider(source.aspName) ? (
                   <span className="text-rose-400 font-semibold">
-                    月額会員限定
+                    {t.subscriptionOnly}
                   </span>
                 ) : null}
               </div>
             ))}
           </div>
           <p className="text-xs text-gray-400 mt-3">
-            複数の配信サイトから価格・在庫情報を収集し、最新の情報を提供しています
+            {t.dataInfo}
           </p>
         </div>
       )}
@@ -97,7 +180,7 @@ export default function ProductDetailInfo({
       {/* 更新日時 */}
       {updatedAt && (
         <div className="text-xs text-gray-400 pt-4 border-t border-gray-700">
-          最終更新: {new Date(updatedAt).toLocaleString('ja-JP')}
+          {t.lastUpdated} {new Date(updatedAt).toLocaleString(locale === 'ja' ? 'ja-JP' : 'en-US')}
         </div>
       )}
 
@@ -111,7 +194,7 @@ export default function ProductDetailInfo({
               clipRule="evenodd"
             />
           </svg>
-          <span className="text-xs text-blue-300 font-medium">検証済みデータ</span>
+          <span className="text-xs text-blue-300 font-medium">{t.verifiedData}</span>
         </div>
         <div className="flex items-center gap-1 px-3 py-1 bg-green-600/20 border border-green-600 rounded-full">
           <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -122,7 +205,7 @@ export default function ProductDetailInfo({
               clipRule="evenodd"
             />
           </svg>
-          <span className="text-xs text-green-300 font-medium">公式提供元</span>
+          <span className="text-xs text-green-300 font-medium">{t.officialSource}</span>
         </div>
       </div>
     </div>

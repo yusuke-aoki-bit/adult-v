@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!performer || !tag) return {};
 
   const title = `${performer.name} × ${tag.name} 作品一覧 | 配信サイト横断検索`;
-  const description = `${performer.name}が出演する${tag.name}ジャンルの作品を一覧で紹介。複数配信サイト(DMM, MGS, DUGA等)の価格比較で最安値を見つけられます。高画質サンプル画像と詳細情報付き。`;
+  const description = `${performer.name}が出演する${tag.name}ジャンルの作品を一覧で紹介。複数配信サイト(MGS, DUGA, DTI等)の価格比較で最安値を見つけられます。高画質サンプル画像と詳細情報付き。`;
 
   return generateBaseMetadata(title, description);
 }

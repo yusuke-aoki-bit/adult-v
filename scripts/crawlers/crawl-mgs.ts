@@ -327,60 +327,81 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     }
 
     // 価格を抽出（通常価格とセール価格）
+    // MGS uses div.price_list with radio buttons containing price info
+    // Pattern: <input type="radio" name="price" value="download_hd,0,...,SIRO-5561,1480">
+    // Also: <span id="download_hd_price">1,480円(税込)</span>
     let price: number | undefined;
     let saleInfo: SaleInfo | undefined;
 
-    const priceTd = $('th:contains("価格")').next('td');
-    const priceHtml = priceTd.html() || '';
+    // Try to extract price from download_hd_price span (primary price)
+    const downloadHdPriceText = $('#download_hd_price').text().trim();
+    if (downloadHdPriceText) {
+      const priceMatch = downloadHdPriceText.match(/(\d+(?:,\d+)*)/);
+      if (priceMatch) {
+        price = parseInt(priceMatch[1].replace(/,/g, ''));
+        console.log(`  💰 Found HD download price: ¥${price.toLocaleString()}`);
+      }
+    }
 
-    // セール価格があるかチェック（取り消し線の価格と新しい価格がある場合）
-    // パターン1: <del>¥1,980</del> → ¥980 (50%OFF)
-    // パターン2: <span class="price_del">¥1,980</span> <span class="price">¥980</span>
-    // パターン3: 通常価格¥1,980 セール価格¥980
-    const delPrice = priceTd.find('del, .price_del, s, strike').text().trim();
+    // Fallback: extract from radio button value
+    if (!price) {
+      const priceInput = $('input[name="price"][id="download_hd_btn"]');
+      const priceValue = priceInput.attr('value');
+      if (priceValue) {
+        // Format: download_hd,0,uuid,PRODUCT-ID,1480
+        const parts = priceValue.split(',');
+        if (parts.length >= 5) {
+          const extractedPrice = parseInt(parts[4]);
+          if (!isNaN(extractedPrice) && extractedPrice > 0) {
+            price = extractedPrice;
+            console.log(`  💰 Extracted price from radio: ¥${price.toLocaleString()}`);
+          }
+        }
+      }
+    }
+
+    // Fallback 2: try streaming price if no download price
+    if (!price) {
+      const streamingPriceText = $('#streaming_price').text().trim();
+      if (streamingPriceText) {
+        const priceMatch = streamingPriceText.match(/(\d+(?:,\d+)*)/);
+        if (priceMatch) {
+          price = parseInt(priceMatch[1].replace(/,/g, ''));
+          console.log(`  💰 Found streaming price: ¥${price.toLocaleString()}`);
+        }
+      }
+    }
+
+    // Check for sale prices (del/strike elements with original price)
+    const priceListDiv = $('div.price_list');
+    const delPrice = priceListDiv.find('del, .price_del, s, strike').text().trim();
     const delPriceMatch = delPrice.match(/(\d+(?:,\d+)*)/);
 
-    // メインの価格テキスト
-    const priceText = priceTd.text().trim();
-    const priceMatch = priceText.match(/(\d+(?:,\d+)*)/g);
-
-    if (delPriceMatch && priceMatch && priceMatch.length >= 1) {
-      // セール価格がある場合
+    if (delPriceMatch && price) {
       const regularPrice = parseInt(delPriceMatch[1].replace(/,/g, ''));
-      // 通常価格以外の最初の価格がセール価格
-      const salePriceStr = priceMatch.find(p => parseInt(p.replace(/,/g, '')) !== regularPrice) || priceMatch[priceMatch.length - 1];
-      const salePrice = parseInt(salePriceStr.replace(/,/g, ''));
-
-      if (salePrice < regularPrice) {
-        price = salePrice;
-
-        // 割引率を抽出 (例: 50%OFF, 30%オフ)
-        const discountMatch = priceText.match(/(\d+)\s*%\s*(OFF|オフ|off)/i);
-        const discountPercent = discountMatch ? parseInt(discountMatch[1]) : undefined;
-
-        // セール終了日時を抽出（あれば）
-        // パターン: 〜12/31まで, セール終了: 2024/01/15, など
-        let endAt: Date | undefined;
-        const endDateMatch = priceText.match(/(?:〜|～|まで|終了[：:])?\s*(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-        if (endDateMatch) {
-          const month = parseInt(endDateMatch[1]);
-          const day = parseInt(endDateMatch[2]);
-          const year = endDateMatch[3] ? parseInt(endDateMatch[3]) : new Date().getFullYear();
-          endAt = new Date(year < 100 ? 2000 + year : year, month - 1, day, 23, 59, 59);
-        }
-
+      if (price < regularPrice) {
+        // This is a sale
+        const discountPercent = Math.round((1 - price / regularPrice) * 100);
         saleInfo = {
           regularPrice,
-          salePrice,
+          salePrice: price,
           discountPercent,
           saleType: 'timesale',
-          endAt,
+          endAt: undefined,
         };
-
-        console.log(`  💰 Sale detected: ¥${regularPrice.toLocaleString()} → ¥${salePrice.toLocaleString()} (${discountPercent || Math.round((1 - salePrice / regularPrice) * 100)}% OFF)`);
+        console.log(`  💰 Sale detected: ¥${regularPrice.toLocaleString()} → ¥${price.toLocaleString()} (${discountPercent}% OFF)`);
       }
-    } else if (priceMatch) {
-      price = parseInt(priceMatch[0].replace(/,/g, ''));
+    }
+
+    // Legacy fallback: old method using th:contains("価格")
+    if (!price) {
+      const priceTd = $('th:contains("価格")').next('td');
+      const priceText = priceTd.text().trim();
+      const priceMatch = priceText.match(/(\d+(?:,\d+)*)/g);
+      if (priceMatch) {
+        price = parseInt(priceMatch[0].replace(/,/g, ''));
+        console.log(`  💰 Found legacy price: ¥${price.toLocaleString()}`);
+      }
     }
 
     // レビュー情報を抽出
@@ -401,39 +422,43 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     }
 
     // 個別レビューを抽出
-    // user_review内のli要素から抽出
-    $('#user_review li').each((_, elem) => {
-      const $review = $(elem);
-
-      // レビュータイトル（h4要素）
-      const reviewTitle = $review.find('h4').text().trim() || undefined;
+    // MGSのHTML構造: <div class="user_date"><p class="name">...</p><p class="review"><span class="star_XX"></span></p></div><p class="text">...</p>
+    // 通常レビュー + アコーディオン内レビューの両方を取得
+    $('#user_review .user_date').each((_, elem) => {
+      const $userDate = $(elem);
 
       // レビュアー名 (例: "カカシさんのレビュー" → "カカシ")
-      const reviewerNameText = $review.find('.name').text().trim();
+      const reviewerNameText = $userDate.find('.name').text().trim();
       const reviewerNameMatch = reviewerNameText.match(/^(.+?)さんのレビュー$/);
       const reviewerName = reviewerNameMatch ? reviewerNameMatch[1] : reviewerNameText.replace(/さんのレビュー$/, '');
 
       // 評価（star_XX_XX または star_XX クラスから）
-      // star_50 = 5.0, star_45_49 = 4.5-4.9 (実質4.5)
-      const starClass = $review.find('.review span[class^="star_"]').attr('class') || '';
+      // star_50 = 5.0, star_40_44 = 4.0-4.4 (実質4.0)
+      const starClass = $userDate.find('p.review span[class^="star_"]').attr('class') || '';
       let rating = 0;
       const starMatch = starClass.match(/star_(\d+)(?:_(\d+))?/);
       if (starMatch) {
-        // star_50 → 5.0, star_45_49 → 4.5
+        // star_50 → 5.0, star_40_44 → 4.0
         rating = parseInt(starMatch[1]) / 10;
       }
 
-      // レビュー内容（.text要素のHTML、<br>を改行に変換）
-      const contentHtml = $review.find('.text').html() || '';
+      // レビュー内容（user_dateの次の兄弟要素p.text）
+      const $textElem = $userDate.nextAll('p.text').first();
+      const contentHtml = $textElem.html() || '';
       const content = contentHtml.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
 
       if (reviewerName && content) {
-        reviews.push({
-          reviewerName,
-          rating,
-          title: reviewTitle,
-          content,
-        });
+        // 重複チェック（同じ投稿者・同じ内容の先頭50文字）
+        const isDuplicate = reviews.some(
+          r => r.reviewerName === reviewerName && r.content.substring(0, 50) === content.substring(0, 50)
+        );
+        if (!isDuplicate) {
+          reviews.push({
+            reviewerName,
+            rating,
+            content,
+          });
+        }
       }
     });
 
@@ -613,11 +638,12 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
         .set({
           affiliateUrl: affiliateWidget,
           originalProductId: mgsProduct.productId,
+          price: mgsProduct.price,
           lastUpdated: new Date(),
         })
         .where(eq(productSources.id, existing[0].id));
 
-      console.log(`Updated affiliate link for product ${productId}`);
+      console.log(`Updated affiliate link for product ${productId}${mgsProduct.price ? ` (¥${mgsProduct.price.toLocaleString()})` : ''}`);
     } else {
       // 新規挿入
       await db.insert(productSources).values({
@@ -625,10 +651,11 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
         aspName: SOURCE_NAME,
         originalProductId: mgsProduct.productId,
         affiliateUrl: affiliateWidget,
+        price: mgsProduct.price,
         dataSource: 'HTML',
       });
 
-      console.log(`Saved affiliate link for product ${productId}`);
+      console.log(`Saved affiliate link for product ${productId}${mgsProduct.price ? ` (¥${mgsProduct.price.toLocaleString()})` : ''}`);
     }
   } catch (error) {
     console.error('Error saving affiliate link:', error);

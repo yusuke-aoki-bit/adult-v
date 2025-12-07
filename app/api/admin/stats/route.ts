@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
+import { getAllASPTotals, mapDBNameToASPName } from '@/lib/asp-totals';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -9,23 +10,33 @@ export async function GET() {
   try {
     const db = getDb();
 
-    // 1. ASP別 総合収集状況
+    // 1. ASP別 総合収集状況（DTIはサブサービスに分割）
     const aspSummary = await db.execute(sql`
+      WITH asp_data AS (
+        SELECT
+          CASE
+            WHEN ps.asp_name = 'DTI' THEN 'DTI: ' || SPLIT_PART(p.normalized_product_id, '-', 1)
+            ELSE ps.asp_name
+          END as asp_name,
+          ps.product_id,
+          p.default_thumbnail_url
+        FROM product_sources ps
+        JOIN products p ON ps.product_id = p.id
+      )
       SELECT
-        ps.asp_name,
-        COUNT(DISTINCT ps.product_id) as total_products,
-        COUNT(DISTINCT CASE WHEN p.default_thumbnail_url IS NOT NULL AND p.default_thumbnail_url != '' AND p.default_thumbnail_url NOT LIKE '%placehold%' THEN ps.product_id END) as with_image,
-        ROUND(COUNT(DISTINCT CASE WHEN p.default_thumbnail_url IS NOT NULL AND p.default_thumbnail_url != '' AND p.default_thumbnail_url NOT LIKE '%placehold%' THEN ps.product_id END)::numeric / NULLIF(COUNT(DISTINCT ps.product_id), 0) * 100, 1) as image_pct,
+        ad.asp_name,
+        COUNT(DISTINCT ad.product_id) as total_products,
+        COUNT(DISTINCT CASE WHEN ad.default_thumbnail_url IS NOT NULL AND ad.default_thumbnail_url != '' AND ad.default_thumbnail_url NOT LIKE '%placehold%' THEN ad.product_id END) as with_image,
+        ROUND(COUNT(DISTINCT CASE WHEN ad.default_thumbnail_url IS NOT NULL AND ad.default_thumbnail_url != '' AND ad.default_thumbnail_url NOT LIKE '%placehold%' THEN ad.product_id END)::numeric / NULLIF(COUNT(DISTINCT ad.product_id), 0) * 100, 1) as image_pct,
         COUNT(DISTINCT pv.product_id) as with_video,
-        ROUND(COUNT(DISTINCT pv.product_id)::numeric / NULLIF(COUNT(DISTINCT ps.product_id), 0) * 100, 1) as video_pct,
+        ROUND(COUNT(DISTINCT pv.product_id)::numeric / NULLIF(COUNT(DISTINCT ad.product_id), 0) * 100, 1) as video_pct,
         COUNT(DISTINCT pp.product_id) as with_performer,
-        ROUND(COUNT(DISTINCT pp.product_id)::numeric / NULLIF(COUNT(DISTINCT ps.product_id), 0) * 100, 1) as performer_pct
-      FROM product_sources ps
-      JOIN products p ON ps.product_id = p.id
-      LEFT JOIN product_videos pv ON ps.product_id = pv.product_id
-      LEFT JOIN product_performers pp ON ps.product_id = pp.product_id
-      GROUP BY ps.asp_name
-      ORDER BY COUNT(DISTINCT ps.product_id) DESC
+        ROUND(COUNT(DISTINCT pp.product_id)::numeric / NULLIF(COUNT(DISTINCT ad.product_id), 0) * 100, 1) as performer_pct
+      FROM asp_data ad
+      LEFT JOIN product_videos pv ON ad.product_id = pv.product_id
+      LEFT JOIN product_performers pp ON ad.product_id = pp.product_id
+      GROUP BY ad.asp_name
+      ORDER BY COUNT(DISTINCT ad.product_id) DESC
     `);
 
     // 2. 動画数詳細
@@ -98,30 +109,58 @@ export async function GET() {
       LIMIT 10
     `);
 
-    // 7. 収集率統計（推定総数との比較）
+    // 7. 収集率統計（推定総数との比較）- DTIはサブサービスに分割
     const collectionRates = await db.execute(sql`
+      WITH asp_data AS (
+        SELECT
+          CASE
+            WHEN ps.asp_name = 'DTI' THEN 'DTI: ' || SPLIT_PART(p.normalized_product_id, '-', 1)
+            ELSE ps.asp_name
+          END as asp_name,
+          ps.product_id
+        FROM product_sources ps
+        JOIN products p ON ps.product_id = p.id
+      )
       SELECT asp_name, COUNT(DISTINCT product_id) as count
-      FROM product_sources
+      FROM asp_data
       GROUP BY asp_name
       ORDER BY count DESC
     `);
 
-    // 8. 最新リリース日（プロバイダー別）
+    // 8. 最新リリース日（プロバイダー別）- DTIはサブサービスに分割
     const latestReleases = await db.execute(sql`
-      SELECT ps.asp_name, MAX(p.release_date) as latest_release
-      FROM product_sources ps
-      JOIN products p ON ps.product_id = p.id
-      GROUP BY ps.asp_name
+      WITH asp_data AS (
+        SELECT
+          CASE
+            WHEN ps.asp_name = 'DTI' THEN 'DTI: ' || SPLIT_PART(p.normalized_product_id, '-', 1)
+            ELSE ps.asp_name
+          END as asp_name,
+          p.release_date
+        FROM product_sources ps
+        JOIN products p ON ps.product_id = p.id
+      )
+      SELECT asp_name, MAX(release_date) as latest_release
+      FROM asp_data
+      GROUP BY asp_name
       ORDER BY latest_release DESC NULLS LAST
     `);
 
-    // 9. 日別収集数（過去14日）
+    // 9. 日別収集数（過去14日）- DTIはサブサービスに分割
     const dailyCollection = await db.execute(sql`
-      SELECT DATE(p.created_at) as date, ps.asp_name, COUNT(*) as count
-      FROM product_sources ps
-      JOIN products p ON ps.product_id = p.id
-      WHERE p.created_at > NOW() - INTERVAL '14 days'
-      GROUP BY DATE(p.created_at), ps.asp_name
+      WITH asp_data AS (
+        SELECT
+          CASE
+            WHEN ps.asp_name = 'DTI' THEN 'DTI: ' || SPLIT_PART(p.normalized_product_id, '-', 1)
+            ELSE ps.asp_name
+          END as asp_name,
+          p.created_at
+        FROM product_sources ps
+        JOIN products p ON ps.product_id = p.id
+        WHERE p.created_at > NOW() - INTERVAL '14 days'
+      )
+      SELECT DATE(created_at) as date, asp_name, COUNT(*) as count
+      FROM asp_data
+      GROUP BY DATE(created_at), asp_name
       ORDER BY date DESC, count DESC
     `);
 
@@ -136,25 +175,37 @@ export async function GET() {
       SELECT 'sokmil_raw_responses', COUNT(*) FROM sokmil_raw_responses
     `);
 
-    // 推定総数（手動設定）
-    const estimates: Record<string, number> = {
-      'DUGA': 500000,
-      'DTI': 50000,
-      'b10f': 30000,
-      'MGS': 100000,
-      'Japanska': 40000,
-      'FC2': 1000000,
-      'ソクミル': 200000,
-    };
+    // ASP総数を動的に取得（キャッシュあり、1時間有効）
+    const aspTotals = await getAllASPTotals();
 
-    const collectionRatesWithEstimates = (collectionRates.rows as { asp_name: string; count: string }[]).map(row => ({
-      asp_name: row.asp_name,
-      collected: parseInt(row.count),
-      estimated: estimates[row.asp_name] || null,
-      rate: estimates[row.asp_name]
-        ? ((parseInt(row.count) / estimates[row.asp_name]) * 100).toFixed(2)
-        : null,
-    }));
+    // ASP名から推定総数へのマップを構築
+    const estimates: Record<string, number> = {};
+    for (const total of aspTotals) {
+      if (total.apiTotal !== null) {
+        estimates[total.asp] = total.apiTotal;
+        // DTI: プレフィックス付きでも登録
+        estimates[`DTI: ${total.asp}`] = total.apiTotal;
+      }
+    }
+
+    const collectionRatesWithEstimates = (collectionRates.rows as { asp_name: string; count: string }[]).map(row => {
+      const aspName = mapDBNameToASPName(row.asp_name);
+      const estimated = estimates[row.asp_name] || estimates[aspName] || null;
+      const collected = parseInt(row.count);
+
+      // 対応するASPTotalからソース情報を取得
+      const totalInfo = aspTotals.find(t =>
+        t.asp === aspName || t.asp === row.asp_name || `DTI: ${t.asp}` === row.asp_name
+      );
+
+      return {
+        asp_name: row.asp_name,
+        collected,
+        estimated,
+        rate: estimated ? ((collected / estimated) * 100).toFixed(2) : null,
+        source: totalInfo?.source || null,
+      };
+    });
 
     return NextResponse.json({
       aspSummary: aspSummary.rows,

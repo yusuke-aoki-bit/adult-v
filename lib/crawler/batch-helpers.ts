@@ -32,6 +32,7 @@ export function normalizeAndValidatePerformers(
 ): string[] {
   return names
     .map((name) => normalizePerformerName(name))
+    .filter((name): name is string => name !== null)
     .filter((name) => isValidPerformerName(name))
     .filter((name) => !productTitle || isValidPerformerForProduct(name, productTitle));
 }

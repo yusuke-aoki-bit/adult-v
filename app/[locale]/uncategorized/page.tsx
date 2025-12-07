@@ -1,8 +1,9 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import ProductCard from '@/components/ProductCard';
 import Pagination from '@/components/Pagination';
 import ProductListFilter from '@/components/ProductListFilter';
+import ProductSortDropdown from '@/components/ProductSortDropdown';
+import Breadcrumb from '@/components/Breadcrumb';
 import { getUncategorizedProducts, getUncategorizedProductsCount, getUncategorizedStats } from '@/lib/db/queries';
 import { generateBaseMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
@@ -13,10 +14,11 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'uncategorized' });
 
   return generateBaseMetadata(
-    '未整理作品',
-    '出演者情報が未整理の作品一覧です。',
+    t('title'),
+    t('metaDescription'),
     undefined,
     `/${locale}/uncategorized`,
     undefined,
@@ -36,6 +38,7 @@ const ITEMS_PER_PAGE = 50;
 export default async function UncategorizedPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const tNav = await getTranslations({ locale, namespace: 'nav' });
+  const t = await getTranslations({ locale, namespace: 'uncategorized' });
 
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
@@ -49,6 +52,7 @@ export default async function UncategorizedPage({ params, searchParams }: PagePr
     : [];
   const hasVideo = searchParamsData.hasVideo === 'true';
   const hasImage = searchParamsData.hasImage === 'true';
+  const sortBy = typeof searchParamsData.sort === 'string' ? searchParamsData.sort : 'releaseDateDesc';
   const offset = (page - 1) * ITEMS_PER_PAGE;
 
   const filterOptions = {
@@ -58,10 +62,11 @@ export default async function UncategorizedPage({ params, searchParams }: PagePr
     excludeAsp,
     hasVideo,
     hasImage,
+    sortBy,
   };
 
   const [products, totalCount, stats] = await Promise.all([
-    getUncategorizedProducts({ limit: ITEMS_PER_PAGE, offset, ...filterOptions }),
+    getUncategorizedProducts({ limit: ITEMS_PER_PAGE, offset, ...filterOptions, locale }),
     getUncategorizedProductsCount(filterOptions),
     getUncategorizedStats(),
   ]);
@@ -74,34 +79,26 @@ export default async function UncategorizedPage({ params, searchParams }: PagePr
   if (excludeAsp.length > 0) queryParams.excludeAsp = excludeAsp.join(',');
   if (hasVideo) queryParams.hasVideo = 'true';
   if (hasImage) queryParams.hasImage = 'true';
+  if (sortBy !== 'releaseDateDesc') queryParams.sort = sortBy;
 
   return (
     <div className="bg-gray-900 min-h-screen">
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4">
-          {/* パンくずリスト */}
-          <nav className="mb-6 text-sm text-gray-400">
-            <Link href={`/${locale}`} className="hover:text-white">
-              {tNav('home')}
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="text-white">未整理作品</span>
-          </nav>
+          <Breadcrumb
+            items={[
+              { label: tNav('home'), href: `/${locale}` },
+              { label: t('title') },
+            ]}
+            className="mb-6"
+          />
 
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-3 py-1 bg-yellow-600 text-white text-sm font-semibold rounded-full">
-                未整理
-              </span>
-              <h1 className="text-3xl md:text-4xl font-bold text-white">
-                未整理作品
-              </h1>
-            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              {t('title')}
+            </h1>
             <p className="text-gray-300">
-              出演者情報が未整理の作品です。{totalCount.toLocaleString()}件の作品があります。
-            </p>
-            <p className="text-gray-400 text-sm mt-2">
-              これらの作品は出演者情報がまだ紐付けられていません。
+              {t('description', { count: totalCount.toLocaleString() })}
             </p>
           </div>
 
@@ -117,9 +114,17 @@ export default async function UncategorizedPage({ params, searchParams }: PagePr
             accentColor="yellow"
           />
 
+          {/* 並び順 */}
+          <div className="flex justify-end mb-4">
+            <ProductSortDropdown
+              sortBy={sortBy}
+              basePath={`/${locale}/uncategorized`}
+            />
+          </div>
+
           {products.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-gray-400 text-lg">未整理の作品はありません</p>
+              <p className="text-gray-400 text-lg">{t('noProducts')}</p>
             </div>
           ) : (
             <>
