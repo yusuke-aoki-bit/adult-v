@@ -221,10 +221,9 @@ export default function Header() {
           </nav>
         )}
 
-        {/* セール・ASP統計バッジ */}
-        {(aspStats.length > 0 || (saleStats && saleStats.totalSales > 0)) && (
-          <div className="pb-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700">
-            <div className="flex gap-2 min-w-max">
+        {/* セール・ASP統計バッジ - 高さを常に確保してCLS防止 */}
+        <div className="pb-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 min-h-[36px]">
+          <div className="flex gap-2 min-w-max">
               {/* セールバッジ */}
               {saleStats && saleStats.totalSales > 0 && (
                 <Link
@@ -258,9 +257,8 @@ export default function Header() {
                   </Link>
                 );
               })}
-            </div>
           </div>
-        )}
+        </div>
       </div>
     </header>
   );

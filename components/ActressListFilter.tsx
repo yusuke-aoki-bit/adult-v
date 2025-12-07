@@ -165,7 +165,7 @@ export default function ActressListFilter({
 
   return (
     <details
-      className="mb-4 sm:mb-8 bg-gray-800 rounded-lg border border-gray-700"
+      className="mb-4 sm:mb-8 bg-gray-800 rounded-lg border border-gray-700 transition-all"
       open={hasActiveFilters}
     >
       <summary className="px-4 py-4 sm:py-3 cursor-pointer font-semibold text-white hover:bg-gray-750 active:bg-gray-700 flex items-center justify-between min-h-[56px] sm:min-h-0 select-none">
