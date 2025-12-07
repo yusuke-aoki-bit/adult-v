@@ -41,11 +41,27 @@ export default function AgeVerification({ locale, children }: AgeVerificationPro
     window.location.href = 'https://www.google.com';
   };
 
-  // クライアントマウント前は何も表示しない（ちらつき防止）
+  // クライアントマウント前はスケルトンを表示（CLS防止）
+  // 実際のモーダルと同じサイズのプレースホルダーを表示
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-pulse text-gray-400">Loading...</div>
+      <div className="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center p-4">
+        <div className="bg-gray-800 rounded-lg shadow-2xl max-w-md w-full p-8 border border-gray-700">
+          {/* スケルトンローダー - モーダルと同じレイアウト */}
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-gray-700 rounded-full animate-pulse" />
+          </div>
+          <div className="h-8 bg-gray-700 rounded w-3/4 mx-auto mb-4 animate-pulse" />
+          <div className="space-y-3 mb-8">
+            <div className="h-4 bg-gray-700 rounded w-full animate-pulse" />
+            <div className="h-6 bg-gray-700 rounded w-2/3 mx-auto animate-pulse" />
+            <div className="h-4 bg-gray-700 rounded w-4/5 mx-auto animate-pulse" />
+          </div>
+          <div className="space-y-3">
+            <div className="h-12 bg-gray-700 rounded-lg animate-pulse" />
+            <div className="h-12 bg-gray-700 rounded-lg animate-pulse" />
+          </div>
+        </div>
       </div>
     );
   }

@@ -19,6 +19,8 @@ export function B10fCredit({ className = '' }: B10fCreditProps) {
       <img
         src="https://ads.b10f.jp/images/btn_member.png"
         alt="B10F.jp"
+        width={180}
+        height={50}
         loading="lazy"
         className="block h-auto"
       />

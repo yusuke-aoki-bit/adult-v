@@ -213,6 +213,8 @@ export default async function Home({ params, searchParams }: PageProps) {
                             <img
                               src={product.thumbnailUrl}
                               alt={product.title}
+                              width={208}
+                              height={277}
                               className="w-full h-full object-cover"
                               loading="lazy"
                             />
@@ -344,9 +346,9 @@ export default async function Home({ params, searchParams }: PageProps) {
           />
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-            {actresses.map((actress) => (
+            {actresses.map((actress, index) => (
               <Link key={actress.id} href={`/${locale}/actress/${actress.id}`} className="block">
-                <ActressCard actress={actress} compact />
+                <ActressCard actress={actress} compact priority={index < 6} />
               </Link>
             ))}
           </div>

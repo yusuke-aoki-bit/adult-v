@@ -13,9 +13,10 @@ const PLACEHOLDER_IMAGE = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+IM
 interface Props {
   actress: Actress;
   compact?: boolean;
+  priority?: boolean;
 }
 
-export default function ActressCard({ actress, compact = false }: Props) {
+export default function ActressCard({ actress, compact = false, priority = false }: Props) {
   const t = useTranslations('actressCard');
   // 通常表示ではheroImage優先、コンパクト表示ではthumbnail優先
   const rawImageUrl = compact
@@ -46,7 +47,8 @@ export default function ActressCard({ actress, compact = false }: Props) {
             fill
             sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 16vw"
             className={`object-cover opacity-90 ${shouldBlur ? 'blur-md' : ''}`}
-            loading="lazy"
+            loading={priority ? undefined : "lazy"}
+            priority={priority}
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             onError={handleImageError}

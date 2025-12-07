@@ -19,6 +19,8 @@ export function DtiCredit({ className = '' }: DtiCreditProps) {
       <img
         src="https://pixelarchivenow.com/image/carib/3day_900_250.jpg"
         alt="カリビアンコム"
+        width={900}
+        height={250}
         loading="lazy"
         className="block max-w-full h-auto"
         style={{ maxHeight: '50px' }}
