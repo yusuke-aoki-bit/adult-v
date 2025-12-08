@@ -161,8 +161,9 @@ export function generateBaseMetadata(
 
   // pathからlocale部分を除去してbasePathを取得
   // 例: /ja/actress/123 → /actress/123
-  const localePattern = /^\/(ja|en|zh|ko)\//;
-  const basePath = path ? path.replace(localePattern, '/') : '';
+  // 例: /en → '' (ルートページ)
+  const localePattern = /^\/(ja|en|zh|ko)(\/|$)/;
+  const basePath = path ? path.replace(localePattern, '/').replace(/^\/$/, '') : '';
 
   return {
     title: pageTitle,

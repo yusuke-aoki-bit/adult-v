@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
         hostname: 'pic.duga.jp',
       },
       {
+        protocol: 'https',
+        hostname: 'img.duga.jp',
+      },
+      {
         protocol: 'http',
         hostname: 'duga.jp',
       },
