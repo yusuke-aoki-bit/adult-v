@@ -222,41 +222,51 @@ export default function Header() {
         )}
 
         {/* セール・ASP統計バッジ - 高さを常に確保してCLS防止 */}
-        <div className="pb-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 min-h-[36px]">
-          <div className="flex gap-2 min-w-max">
-              {/* セールバッジ */}
-              {saleStats && saleStats.totalSales > 0 && (
+        <div className="pb-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 h-[36px]">
+          <div className="flex gap-2 min-w-max h-full items-center">
+              {/* セールバッジ - スケルトン対応 */}
+              {saleStats === null ? (
+                <div className="px-3 py-1.5 rounded-lg bg-gray-700 text-transparent text-xs font-medium h-[28px] w-[120px] animate-pulse" />
+              ) : saleStats.totalSales > 0 ? (
                 <Link
                   href={`/${locale}/products?onSale=true`}
-                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-500 text-white text-xs font-medium hover:opacity-90 transition-opacity animate-pulse"
+                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-500 text-white text-xs font-medium hover:opacity-90 transition-opacity animate-pulse h-[28px] flex items-center"
                 >
                   <span className="font-bold">{t.sale}</span>
                   <span className="ml-1.5 opacity-90">
                     {saleStats.totalSales.toLocaleString()}{t.saleItems}
                   </span>
                 </Link>
+              ) : null}
+              {/* ASP統計バッジ - スケルトン対応 */}
+              {aspStats.length === 0 ? (
+                <>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="px-3 py-1.5 rounded-lg bg-gray-700 text-transparent text-xs font-medium h-[28px] w-[100px] animate-pulse" />
+                  ))}
+                </>
+              ) : (
+                aspStats.slice(0, 7).map((stat) => {
+                  const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
+                  const meta = providerId ? providerMeta[providerId] : null;
+                  return (
+                    <Link
+                      key={stat.aspName}
+                      href={`/${locale}/products?includeAsp=${stat.aspName}`}
+                      className={`px-3 py-1.5 rounded-lg bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-xs font-medium hover:opacity-90 transition-opacity h-[28px] flex items-center`}
+                    >
+                      <span className="font-bold">{meta?.label || stat.aspName}</span>
+                      <span className="ml-1.5 opacity-90">
+                        {stat.productCount.toLocaleString()}
+                        {stat.estimatedTotal && stat.estimatedTotal > stat.productCount && (
+                          <span className="opacity-70">/{stat.estimatedTotal.toLocaleString()}</span>
+                        )}
+                        作品
+                      </span>
+                    </Link>
+                  );
+                })
               )}
-              {/* ASP統計バッジ */}
-              {aspStats.slice(0, 7).map((stat) => {
-                const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
-                const meta = providerId ? providerMeta[providerId] : null;
-                return (
-                  <Link
-                    key={stat.aspName}
-                    href={`/${locale}/products?includeAsp=${stat.aspName}`}
-                    className={`px-3 py-1.5 rounded-lg bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-xs font-medium hover:opacity-90 transition-opacity`}
-                  >
-                    <span className="font-bold">{meta?.label || stat.aspName}</span>
-                    <span className="ml-1.5 opacity-90">
-                      {stat.productCount.toLocaleString()}
-                      {stat.estimatedTotal && stat.estimatedTotal > stat.productCount && (
-                        <span className="opacity-70">/{stat.estimatedTotal.toLocaleString()}</span>
-                      )}
-                      作品
-                    </span>
-                  </Link>
-                );
-              })}
           </div>
         </div>
       </div>
