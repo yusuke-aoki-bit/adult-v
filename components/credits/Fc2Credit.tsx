@@ -22,8 +22,8 @@ export function Fc2Credit({ className = '' }: Fc2CreditProps) {
         width="320"
         height="50"
         loading="lazy"
-        className="block h-auto"
-        style={{ maxHeight: '50px' }}
+        className="block w-[320px] h-[50px] max-w-full"
+        style={{ aspectRatio: '320/50' }}
       />
     </a>
   );

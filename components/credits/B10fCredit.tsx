@@ -22,7 +22,8 @@ export function B10fCredit({ className = '' }: B10fCreditProps) {
         width={180}
         height={50}
         loading="lazy"
-        className="block h-auto"
+        className="block w-[180px] h-[50px]"
+        style={{ aspectRatio: '180/50' }}
       />
     </a>
   );
