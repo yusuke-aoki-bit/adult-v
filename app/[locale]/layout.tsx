@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { locales } from '@/i18n';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import AgeVerification from '@/components/AgeVerification';
@@ -45,11 +46,15 @@ export default async function LocaleLayout({
   // Fetch messages for the locale
   const messages = await getMessages();
 
+  // サーバーサイドで年齢確認クッキーを読み取り（CLS防止）
+  const cookieStore = await cookies();
+  const ageVerified = cookieStore.get('age_verified')?.value === 'true';
+
   return (
     <NextIntlClientProvider messages={messages}>
       <FavoritesProvider>
         <PerformanceMonitor />
-        <AgeVerification locale={locale}>
+        <AgeVerification locale={locale} initialVerified={ageVerified}>
           {children}
         </AgeVerification>
       </FavoritesProvider>

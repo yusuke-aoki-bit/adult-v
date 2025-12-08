@@ -68,7 +68,7 @@ const translations = {
 export default function Footer({ locale = 'ja' }: { locale?: string }) {
   const t = translations[locale as keyof typeof translations] || translations.ja;
   return (
-    <footer className="bg-gray-900 text-gray-300 mt-auto">
+    <footer className="bg-gray-900 text-gray-300 mt-auto min-h-[400px]">
       <div className="container mx-auto px-4 py-8">
         {/* サイト情報 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 
-const AGE_VERIFICATION_KEY = 'age_verified';
+const AGE_VERIFICATION_COOKIE = 'age_verified';
 const AGE_REQUIREMENTS = {
   ja: 18, // 日本: 18歳以上
   en: 18, // 英語圏(主にアメリカ): 18歳以上
@@ -13,27 +13,31 @@ const AGE_REQUIREMENTS = {
 interface AgeVerificationProps {
   locale: string;
   children: React.ReactNode;
+  initialVerified?: boolean; // サーバーサイドからの初期値
 }
 
-export default function AgeVerification({ locale, children }: AgeVerificationProps) {
+export default function AgeVerification({ locale, children, initialVerified = false }: AgeVerificationProps) {
   const t = useTranslations('ageVerification');
-  const [isVerified, setIsVerified] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  // 初期値をサーバーサイドから受け取ることでCLS防止
+  const [isVerified, setIsVerified] = useState(initialVerified);
+  const [showModal, setShowModal] = useState(!initialVerified);
 
   const minAge = AGE_REQUIREMENTS[locale as keyof typeof AGE_REQUIREMENTS] || 18;
 
-  // クライアントマウント後にlocalStorageから状態を読み込む
+  // クライアント側でクッキーを再確認（サーバーとクライアントの同期）
   useEffect(() => {
-    const storedValue = localStorage.getItem(AGE_VERIFICATION_KEY) === 'true';
-    if (storedValue) {
+    const cookieVerified = document.cookie.includes(`${AGE_VERIFICATION_COOKIE}=true`);
+    if (cookieVerified && !isVerified) {
       setIsVerified(true);
+      setShowModal(false);
     }
-    setIsClient(true);
-  }, []);
+  }, [isVerified]);
 
   const handleConfirm = () => {
-    localStorage.setItem(AGE_VERIFICATION_KEY, 'true');
+    // クッキーに保存（1年間有効）
+    document.cookie = `${AGE_VERIFICATION_COOKIE}=true; path=/; max-age=31536000; SameSite=Lax`;
     setIsVerified(true);
+    setShowModal(false);
   };
 
   const handleDeny = () => {
@@ -41,33 +45,13 @@ export default function AgeVerification({ locale, children }: AgeVerificationPro
     window.location.href = 'https://www.google.com';
   };
 
-  // クライアントマウント前はスケルトンを表示（CLS防止）
-  // 実際のモーダルと同じサイズのプレースホルダーを表示
-  if (!isClient) {
-    return (
-      <div className="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center p-4">
-        <div className="bg-gray-800 rounded-lg shadow-2xl max-w-md w-full p-8 border border-gray-700">
-          {/* スケルトンローダー - モーダルと同じレイアウト */}
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-gray-700 rounded-full animate-pulse" />
-          </div>
-          <div className="h-8 bg-gray-700 rounded w-3/4 mx-auto mb-4 animate-pulse" />
-          <div className="space-y-3 mb-8">
-            <div className="h-4 bg-gray-700 rounded w-full animate-pulse" />
-            <div className="h-6 bg-gray-700 rounded w-2/3 mx-auto animate-pulse" />
-            <div className="h-4 bg-gray-700 rounded w-4/5 mx-auto animate-pulse" />
-          </div>
-          <div className="space-y-3">
-            <div className="h-12 bg-gray-700 rounded-lg animate-pulse" />
-            <div className="h-12 bg-gray-700 rounded-lg animate-pulse" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // 年齢認証済みの場合は子要素を表示
   if (isVerified) {
+    return <>{children}</>;
+  }
+
+  // モーダルを表示しない場合（サーバーサイドで認証済みと判定された場合）
+  if (!showModal) {
     return <>{children}</>;
   }
 
