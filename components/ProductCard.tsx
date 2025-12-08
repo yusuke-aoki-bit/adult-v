@@ -9,6 +9,7 @@ import { Product } from '@/types/product';
 import { normalizeImageUrl, getFullSizeImageUrl, isDtiUncensoredSite, isSubscriptionSite } from '@/lib/image-utils';
 import { generateAltText } from '@/lib/seo-utils';
 import { formatPrice } from '@/lib/utils/subscription';
+import { providerMeta, type ProviderId } from '@/lib/providers';
 import FavoriteButton from './FavoriteButton';
 
 interface ProductCardProps {
@@ -30,6 +31,19 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   // 女優ページかどうかを判定
   const isActressPage = pathname.includes('/actress/');
+
+  // ASPフィルタURLを生成
+  const getAspFilterUrl = useCallback((provider: string) => {
+    // 女優ページの場合は現在のページ+ASPフィルタ
+    if (isActressPage) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('includeAsp', provider);
+      params.delete('page');
+      return `${pathname}?${params.toString()}`;
+    }
+    // それ以外は作品一覧ページへ
+    return `/${locale}/products?includeAsp=${provider}`;
+  }, [isActressPage, pathname, searchParams, locale]);
 
   // タグリンクのURLを生成（既存のフィルターにタグを追加）
   const getTagFilterUrl = useCallback((tag: string) => {
@@ -250,7 +264,15 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* 価格表示: セール中の場合は通常価格を取り消し線、セール価格を強調表示 */}
           {product.salePrice && product.regularPrice ? (
             <div>
-              <p className="text-xs text-gray-400">{product.providerLabel}</p>
+              <Link
+                href={getAspFilterUrl(product.provider)}
+                onClick={(e) => e.stopPropagation()}
+                className={`text-xs font-medium hover:underline underline-offset-2 transition-colors ${
+                  providerMeta[product.provider as ProviderId]?.textClass || 'text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                {product.providerLabel}
+              </Link>
               <div className="flex items-baseline gap-2">
                 <p className="text-2xl font-semibold text-red-500">
                   {formatPrice(product.salePrice, product.currency)}
@@ -267,14 +289,30 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
           ) : product.price > 0 ? (
             <div>
-              <p className="text-xs text-gray-400">{product.providerLabel}</p>
+              <Link
+                href={getAspFilterUrl(product.provider)}
+                onClick={(e) => e.stopPropagation()}
+                className={`text-xs font-medium hover:underline underline-offset-2 transition-colors ${
+                  providerMeta[product.provider as ProviderId]?.textClass || 'text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                {product.providerLabel}
+              </Link>
               <p className="text-2xl font-semibold text-white">
                 {formatPrice(product.price, product.currency)}
               </p>
             </div>
           ) : isSubscriptionSite(product.provider) ? (
             <div>
-              <p className="text-xs text-gray-400">{product.providerLabel}</p>
+              <Link
+                href={getAspFilterUrl(product.provider)}
+                onClick={(e) => e.stopPropagation()}
+                className={`text-xs font-medium hover:underline underline-offset-2 transition-colors ${
+                  providerMeta[product.provider as ProviderId]?.textClass || 'text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                {product.providerLabel}
+              </Link>
               <p className="text-lg font-semibold text-rose-500">
                 {t('subscriptionOnly')}
               </p>

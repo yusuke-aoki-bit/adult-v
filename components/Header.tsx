@@ -101,14 +101,14 @@ export default function Header() {
           </div>
 
           {/* デスクトップナビゲーション */}
-          <nav className="hidden md:flex items-center space-x-4 flex-shrink-0">
+          <nav className="hidden md:flex items-center space-x-3 flex-shrink-0">
             <Link
               href={`/${locale}/products`}
-              className="hover:text-purple-300 transition-colors font-medium flex items-center gap-1"
+              className="hover:text-purple-300 transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
+                className="h-4 w-4"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -118,11 +118,11 @@ export default function Header() {
             </Link>
             <Link
               href={`/${locale}`}
-              className="hover:text-pink-300 transition-colors font-medium flex items-center gap-1"
+              className="hover:text-pink-300 transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
+                className="h-4 w-4"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -133,11 +133,11 @@ export default function Header() {
             <NotificationSubscriber />
             <Link
               href={`/${locale}/favorites`}
-              className="hover:text-rose-300 transition-colors font-medium flex items-center gap-1"
+              className="hover:text-rose-300 transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
+                className="h-4 w-4"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -220,53 +220,47 @@ export default function Header() {
             </div>
           </nav>
         )}
+      </div>
 
-        {/* セール・ASP統計バッジ - 高さを常に確保してCLS防止 */}
-        <div className="pb-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 h-[36px]">
-          <div className="flex gap-2 min-w-max h-full items-center">
-              {/* セールバッジ - スケルトン対応 */}
-              {saleStats === null ? (
-                <div className="px-3 py-1.5 rounded-lg bg-gray-700 text-transparent text-xs font-medium h-[28px] w-[130px] animate-pulse" />
-              ) : saleStats.totalSales > 0 ? (
-                <Link
-                  href={`/${locale}/products?onSale=true`}
-                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-500 text-white text-xs font-medium hover:opacity-90 transition-opacity animate-pulse h-[28px] flex items-center"
-                >
-                  <span className="font-bold">{t.sale}</span>
-                  <span className="ml-1.5 opacity-90">
-                    {saleStats.totalSales.toLocaleString()}{t.saleItems}
-                  </span>
-                </Link>
-              ) : null}
-              {/* ASP統計バッジ - スケルトン対応（7つ表示、実際のバッジサイズに近い幅） */}
-              {aspStats.length === 0 ? (
-                <>
-                  {[130, 110, 100, 110, 90, 100, 95].map((width, i) => (
-                    <div key={i} className="px-3 py-1.5 rounded-lg bg-gray-700 text-transparent text-xs font-medium h-[28px] animate-pulse" style={{ width: `${width}px` }} />
-                  ))}
-                </>
-              ) : (
-                aspStats.slice(0, 7).map((stat) => {
-                  const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
-                  const meta = providerId ? providerMeta[providerId] : null;
-                  return (
-                    <Link
-                      key={stat.aspName}
-                      href={`/${locale}/products?includeAsp=${stat.aspName}`}
-                      className={`px-3 py-1.5 rounded-lg bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-xs font-medium hover:opacity-90 transition-opacity h-[28px] flex items-center`}
-                    >
-                      <span className="font-bold">{meta?.label || stat.aspName}</span>
-                      <span className="ml-1.5 opacity-90">
-                        {stat.productCount.toLocaleString()}
-                        {stat.estimatedTotal && stat.estimatedTotal > stat.productCount && (
-                          <span className="opacity-70">/{stat.estimatedTotal.toLocaleString()}</span>
-                        )}
-                        作品
-                      </span>
-                    </Link>
-                  );
-                })
-              )}
+      {/* ASP統計バー - ヘッダー下部に統合 */}
+      <div className="bg-gray-900/80 border-t border-white/5">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-2 py-1.5 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700">
+            {/* セールバッジ */}
+            {saleStats === null ? (
+              <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
+            ) : saleStats.totalSales > 0 ? (
+              <Link
+                href={`/${locale}/products?onSale=true`}
+                className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0"
+              >
+                <span className="font-bold">{t.sale}</span>
+                <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
+              </Link>
+            ) : null}
+            {/* ASP統計バッジ */}
+            {aspStats.length === 0 ? (
+              <>
+                {[80, 70, 65, 70, 60, 65, 60].map((width, i) => (
+                  <div key={i} className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
+                ))}
+              </>
+            ) : (
+              aspStats.slice(0, 7).map((stat) => {
+                const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
+                const meta = providerId ? providerMeta[providerId] : null;
+                return (
+                  <Link
+                    key={stat.aspName}
+                    href={`/${locale}/products?includeAsp=${stat.aspName}`}
+                    className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
+                  >
+                    <span className="font-bold">{meta?.label || stat.aspName}</span>
+                    <span className="ml-1 opacity-80">{stat.productCount.toLocaleString()}</span>
+                  </Link>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
