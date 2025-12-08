@@ -301,7 +301,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               </div>
               {/* ページネーション（下部） */}
               {total > perPage && (
-                <Pagination total={total} page={page} perPage={perPage} basePath={basePath} position="bottom" />
+                <Pagination total={total} page={page} perPage={perPage} basePath={basePath} position="bottom" showPerPageSelector />
               )}
             </>
           ) : (

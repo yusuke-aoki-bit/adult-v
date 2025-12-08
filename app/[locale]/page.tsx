@@ -403,6 +403,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             perPage={itemsPerPage}
             basePath={`/${locale}`}
             position="bottom"
+            showPerPageSelector
             queryParams={{
               ...(query ? { q: query } : {}),
               ...(initialFilter ? { initial: initialFilter } : {}),
