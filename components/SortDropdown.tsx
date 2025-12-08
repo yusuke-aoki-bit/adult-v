@@ -57,7 +57,7 @@ export default function SortDropdown({ sortBy }: SortDropdownProps) {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 h-[40px]">
       <label htmlFor="sort" className="text-sm font-medium text-gray-300">
         {t.sortLabel}
       </label>

@@ -209,7 +209,7 @@ export default async function Home({ params, searchParams }: PageProps) {
       {/* セール情報セクション */}
       {saleProducts.length > 0 && (
         <details className="border-b border-gray-800 bg-gradient-to-r from-red-950/30 to-gray-900">
-          <summary className="py-2 md:py-3 cursor-pointer hover:bg-gray-800/30 transition-colors">
+          <summary className="h-[44px] md:h-[52px] cursor-pointer hover:bg-gray-800/30 transition-colors flex items-center">
             <div className="container mx-auto px-4">
               <div className="flex items-center gap-2">
                 <h2 className="text-base md:text-lg font-bold text-white flex items-center gap-2">
@@ -327,7 +327,7 @@ export default async function Home({ params, searchParams }: PageProps) {
       {/* 女優一覧 */}
       <section id="list" className="py-12 md:py-16 scroll-mt-4">
         <div className="container mx-auto px-4">
-          <div className="mb-8">
+          <div className="mb-8 min-h-[72px] md:min-h-[80px]">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               {tCommon('actresses')}
             </h1>
