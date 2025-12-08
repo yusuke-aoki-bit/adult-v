@@ -78,13 +78,13 @@ export default function ActressCard({ actress, compact = false, priority = false
             )}
           </div>
         </div>
-        <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+        <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2 min-h-[52px] sm:min-h-[60px]">
           <div className="flex items-center justify-between text-xs">
             <span className="text-gray-400 hidden sm:inline">{t('releaseCount')}</span>
             <span className="font-semibold">{actress.metrics?.releaseCount || 0}{t('videos')}</span>
           </div>
           {actress.services && actress.services.length > 0 && (
-            <div className="flex flex-wrap gap-0.5 sm:gap-1">
+            <div className="flex flex-wrap gap-0.5 sm:gap-1 min-h-[18px]">
               {actress.services.slice(0, 3).map((service) => {
                 const meta = providerMeta[service];
                 if (!meta) return null;

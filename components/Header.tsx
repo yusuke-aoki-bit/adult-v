@@ -226,7 +226,7 @@ export default function Header() {
           <div className="flex gap-2 min-w-max h-full items-center">
               {/* セールバッジ - スケルトン対応 */}
               {saleStats === null ? (
-                <div className="px-3 py-1.5 rounded-lg bg-gray-700 text-transparent text-xs font-medium h-[28px] w-[120px] animate-pulse" />
+                <div className="px-3 py-1.5 rounded-lg bg-gray-700 text-transparent text-xs font-medium h-[28px] w-[130px] animate-pulse" />
               ) : saleStats.totalSales > 0 ? (
                 <Link
                   href={`/${locale}/products?onSale=true`}
@@ -238,11 +238,11 @@ export default function Header() {
                   </span>
                 </Link>
               ) : null}
-              {/* ASP統計バッジ - スケルトン対応 */}
+              {/* ASP統計バッジ - スケルトン対応（7つ表示、実際のバッジサイズに近い幅） */}
               {aspStats.length === 0 ? (
                 <>
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="px-3 py-1.5 rounded-lg bg-gray-700 text-transparent text-xs font-medium h-[28px] w-[100px] animate-pulse" />
+                  {[130, 110, 100, 110, 90, 100, 95].map((width, i) => (
+                    <div key={i} className="px-3 py-1.5 rounded-lg bg-gray-700 text-transparent text-xs font-medium h-[28px] animate-pulse" style={{ width: `${width}px` }} />
                   ))}
                 </>
               ) : (
