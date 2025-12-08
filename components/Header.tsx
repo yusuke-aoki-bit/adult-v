@@ -24,8 +24,8 @@ interface SaleStats {
 const translations = {
   ja: {
     subtitle: 'heavy user guide',
-    categories: 'カテゴリ',
-    reviews: 'レビュー',
+    products: '作品一覧',
+    actresses: '女優一覧',
     favorites: 'お気に入り',
     menu: 'メニュー',
     sale: 'SALE',
@@ -33,8 +33,8 @@ const translations = {
   },
   en: {
     subtitle: 'heavy user guide',
-    categories: 'Categories',
-    reviews: 'Reviews',
+    products: 'Products',
+    actresses: 'Actresses',
     favorites: 'Favorites',
     menu: 'Menu',
     sale: 'SALE',
@@ -42,8 +42,8 @@ const translations = {
   },
   zh: {
     subtitle: 'heavy user guide',
-    categories: '分类',
-    reviews: '评论',
+    products: '作品列表',
+    actresses: '女优列表',
     favorites: '收藏',
     menu: '菜单',
     sale: 'SALE',
@@ -51,8 +51,8 @@ const translations = {
   },
   ko: {
     subtitle: 'heavy user guide',
-    categories: '카테고리',
-    reviews: '리뷰',
+    products: '작품 목록',
+    actresses: '배우 목록',
     favorites: '즐겨찾기',
     menu: '메뉴',
     sale: 'SALE',
@@ -103,7 +103,7 @@ export default function Header() {
           {/* デスクトップナビゲーション */}
           <nav className="hidden md:flex items-center space-x-4 flex-shrink-0">
             <Link
-              href={`/${locale}/categories`}
+              href={`/${locale}/products`}
               className="hover:text-purple-300 transition-colors font-medium flex items-center gap-1"
             >
               <svg
@@ -114,11 +114,11 @@ export default function Header() {
               >
                 <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
-              {t.categories}
+              {t.products}
             </Link>
             <Link
-              href={`/${locale}/reviews`}
-              className="hover:text-blue-300 transition-colors font-medium flex items-center gap-1"
+              href={`/${locale}`}
+              className="hover:text-pink-300 transition-colors font-medium flex items-center gap-1"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -126,9 +126,9 @@ export default function Header() {
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
-              {t.reviews}
+              {t.actresses}
             </Link>
             <NotificationSubscriber />
             <Link
@@ -192,18 +192,18 @@ export default function Header() {
         {isMobileMenuOpen && (
           <nav className="md:hidden py-4 space-y-4">
             <Link
-              href={`/${locale}/categories`}
+              href={`/${locale}/products`}
               className="block py-2 hover:text-purple-300 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              {t.categories}
+              {t.products}
             </Link>
             <Link
-              href={`/${locale}/reviews`}
-              className="block py-2 hover:text-blue-300 transition-colors"
+              href={`/${locale}`}
+              className="block py-2 hover:text-pink-300 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              {t.reviews}
+              {t.actresses}
             </Link>
             <div className="py-2">
               <NotificationSubscriber />

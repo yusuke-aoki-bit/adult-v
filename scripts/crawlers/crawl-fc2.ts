@@ -6,9 +6,11 @@
  * - 商品詳細ページからメタデータを取得
  * - アフィリエイトURL: https://adult.contents.fc2.com/article/{商品ID}/?aid={アフィリエイトID}
  * - AI機能: Gemini APIによる説明文生成・タグ抽出（--no-aiオプションで無効化可能）
+ * - ID範囲スキャンモード: 連続する商品IDをスキャンして全商品を取得
  *
  * 使い方:
  * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fc2.ts [--limit 100] [--start 1] [--no-ai]
+ * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fc2.ts --scan --from=1000000 --to=2000000 [--no-ai]
  */
 
 if (!process.env.DATABASE_URL) {
@@ -88,6 +90,48 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     }
 
     const html = await response.text();
+
+    // NOT FOUND / 削除済み / トップページへのリダイレクト検出
+    const notFoundPatterns = [
+      /この商品は.*(?:削除|存在しません|見つかりません)/i,
+      /指定された商品.*(?:削除|存在しません)/i,
+      /お探しのページは.*見つかりません/i,
+      /お探しの商品.*見つかりませんでした/i,  // FC2特有のエラーページ
+      /404\s*(?:not\s*found|error)/i,
+      /ページが見つかりません/i,
+      /商品が見つかりません/i,
+      /article.*not.*found/i,
+      /この記事は.*削除/i,
+      /コンテンツは.*存在しません/i,
+      /販売終了/i,
+      /公開終了/i,
+      /この動画は削除されました/i,
+      /この作品は配信終了しました/i,
+    ];
+
+    for (const pattern of notFoundPatterns) {
+      if (pattern.test(html)) {
+        console.log(`    ⚠️ NOT FOUND / 削除済み: ${articleId}`);
+        return { product: null, rawDataId: null, shouldSkip: false };
+      }
+    }
+
+    // トップページへのリダイレクト検出
+    if (isTopPageHtml(html, 'FC2')) {
+      console.log(`    ⚠️ トップページへリダイレクト: ${articleId}`);
+      return { product: null, rawDataId: null, shouldSkip: false };
+    }
+
+    // FC2特有: 商品詳細ページの基本的な構造があるか確認
+    // articleIdがHTMLに含まれていない場合はリダイレクトの可能性
+    if (!html.includes(articleId) && !html.includes(`article/${articleId}`)) {
+      // og:urlも確認
+      const ogUrlMatch = html.match(/<meta[^>]*property="og:url"[^>]*content="([^"]+)"/i);
+      if (ogUrlMatch && !ogUrlMatch[1].includes(articleId)) {
+        console.log(`    ⚠️ 別ページへリダイレクト: ${articleId} → ${ogUrlMatch[1]}`);
+        return { product: null, rawDataId: null, shouldSkip: false };
+      }
+    }
 
     // 生HTMLを保存（GCS優先 + 重複チェック）
     const upsertResult = await upsertRawHtmlDataWithGcs('FC2', articleId, url, html);
@@ -672,6 +716,94 @@ async function translateAndSave(
 }
 
 /**
+ * ID範囲スキャンモード: 連続する商品IDをスキャン
+ */
+async function runIdScanMode(
+  fromId: number,
+  toId: number,
+  enableAI: boolean,
+  forceReprocess: boolean,
+): Promise<void> {
+  console.log('=== FC2 ID範囲スキャンモード ===');
+  console.log(`範囲: ${fromId} - ${toId}`);
+  console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
+  console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}\n`);
+
+  let totalFound = 0;
+  let totalSaved = 0;
+  let totalSkipped = 0;
+  let consecutiveErrors = 0;
+  const MAX_CONSECUTIVE_ERRORS = 100; // 100連続で見つからなければスキップ
+
+  // IDを逆順（新しい方から）でスキャン
+  const direction = fromId < toId ? 1 : -1;
+  const startId = direction === 1 ? fromId : toId;
+  const endId = direction === 1 ? toId : fromId;
+
+  console.log(`📊 スキャン開始 (${Math.abs(toId - fromId) + 1}件のIDをチェック)\n`);
+
+  for (let articleId = startId; articleId <= endId; articleId++) {
+    const idStr = articleId.toString();
+
+    // 進捗表示（1000件ごと）
+    if ((articleId - startId) % 1000 === 0 && articleId !== startId) {
+      console.log(`\n📈 進捗: ${articleId - startId}/${endId - startId} IDs checked, ${totalFound} found, ${totalSaved} saved\n`);
+    }
+
+    // 連続エラーチェック
+    if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+      console.log(`\n⚠️ ${MAX_CONSECUTIVE_ERRORS}連続で商品が見つかりません。次のID範囲にスキップします。`);
+      consecutiveErrors = 0;
+      // 1000単位でジャンプ
+      articleId = Math.ceil(articleId / 1000) * 1000 + 999;
+      continue;
+    }
+
+    const { product, rawDataId, shouldSkip } = await parseDetailPage(idStr, forceReprocess);
+
+    if (shouldSkip) {
+      totalSkipped++;
+      consecutiveErrors = 0; // スキップは既存データなのでエラーではない
+      continue;
+    }
+
+    if (product) {
+      consecutiveErrors = 0; // 成功したらリセット
+      console.log(`  ✓ [${totalFound + 1}] ID: ${idStr} - ${product.title.substring(0, 40)}...`);
+
+      const savedId = await saveProduct(product);
+      if (savedId) {
+        // AI機能
+        if (enableAI) {
+          const { aiDescription, aiTags } = await generateAIContent(product, enableAI);
+          await saveAIContent(savedId, aiDescription, aiTags);
+          await translateAndSave(savedId, product.title, product.description, enableAI);
+        }
+
+        // 処理済みマーク
+        if (rawDataId) {
+          await markRawDataAsProcessed('fc2', rawDataId);
+        }
+
+        totalSaved++;
+      }
+      totalFound++;
+    } else {
+      consecutiveErrors++;
+    }
+
+    // レート制限（短めの間隔）
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  console.log('\n=== スキャン完了 ===');
+  console.log(`チェック範囲: ${fromId} - ${toId}`);
+  console.log(`発見件数: ${totalFound}`);
+  console.log(`保存件数: ${totalSaved}`);
+  console.log(`スキップ件数(処理済み): ${totalSkipped}`);
+}
+
+/**
  * メイン処理
  */
 async function main() {
@@ -684,6 +816,11 @@ async function main() {
   let singleId: string | null = null;
   const enableAI = !args.includes('--no-ai');
   const forceReprocess = args.includes('--force');
+  const scanMode = args.includes('--scan');
+
+  // ID範囲スキャン用のオプション
+  let fromId = 1000000; // FC2商品IDはだいたい100万台から
+  let toId = 5000000;   // 現在は500万台まで存在
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--start' && args[i + 1]) {
@@ -698,6 +835,25 @@ async function main() {
     if (args[i] === '--id' && args[i + 1]) {
       singleId = args[i + 1];
     }
+    if (args[i].startsWith('--from=')) {
+      fromId = parseInt(args[i].split('=')[1]);
+    }
+    if (args[i].startsWith('--to=')) {
+      toId = parseInt(args[i].split('=')[1]);
+    }
+  }
+
+  // スキャンモード
+  if (scanMode) {
+    await runIdScanMode(fromId, toId, enableAI, forceReprocess);
+    const stats = await db.execute(sql`
+      SELECT COUNT(*) as count
+      FROM product_sources
+      WHERE asp_name = 'FC2'
+    `);
+    console.log(`\nFC2総商品数: ${stats.rows[0].count}`);
+    process.exit(0);
+    return;
   }
 
   console.log('=== FC2コンテンツマーケット クローラー ===');

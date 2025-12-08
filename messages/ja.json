@@ -51,7 +51,9 @@
     "recommended": "おすすめ",
     "saleProducts": "セール中の作品",
     "viewAllSales": "すべてのセール商品を見る",
-    "saleUntil": "〜{date}まで"
+    "saleUntil": "〜{date}まで",
+    "viewProductList": "全作品一覧",
+    "viewProductListDesc": "全ての配信サイトの作品を横断検索"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -62,14 +64,14 @@
   "nav": {
     "home": "ホーム",
     "actresses": "女優",
+    "actressList": "女優一覧",
     "products": "作品",
     "new": "新着",
     "featured": "特集",
-    "categories": "カテゴリー",
+    "productList": "作品一覧",
     "rankings": "ランキング",
     "favorites": "お気に入り",
-    "search": "検索",
-    "reviews": "レビュー"
+    "search": "検索"
   },
   "footer": {
     "siteName": "ADULT VIEWER LAB",
@@ -98,13 +100,20 @@
     "title": "全作品一覧",
     "metaDescription": "DUGA、MGS、DTI系サイトなど、全ての配信サイトの作品を横断検索できます。",
     "description": "{count}件の作品を掲載中",
-    "noProducts": "作品が見つかりませんでした"
+    "noProducts": "作品が見つかりませんでした",
+    "viewActressListDesc": "女優から作品を探す"
   },
   "relatedProducts": {
     "title": "関連作品",
     "samePerformer": "同じ出演者",
     "sameGenre": "同じジャンル",
     "recent": "新着"
+  },
+  "relatedActresses": {
+    "title": "{name}との共演者",
+    "description": "この女優と共演したことのある女優",
+    "costarCount": "回共演",
+    "productCount": "作品"
   },
   "filter": {
     "genre": "ジャンル",
@@ -125,7 +134,9 @@
     "solo": "単体出演",
     "multi": "共演あり",
     "saleFilter": "セール",
-    "onSaleOnly": "セール中のみ"
+    "onSaleOnly": "セール中のみ",
+    "reviewFilter": "レビュー",
+    "hasReviewOnly": "レビューありのみ"
   },
   "sort": {
     "nameAsc": "名前（昇順）",
@@ -145,6 +156,8 @@
     "totalProducts": "全{count}作品",
     "metaTitle": "{name} - 出演作品{count}本 | 無料サンプル動画・配信サイト横断検索",
     "metaDescription": "{name}の出演作品{count}本を配信サイト横断で検索。DUGA・MGS・DTI・カリビアンコム・一本道・HEYZOなど複数サイトの作品情報、価格比較、ジャンル別フィルタリングが可能。ヘビーユーザー向けの詳細レビューとランキング。",
+    "metaTitleWithGenre": "{name}の{genre}作品一覧 | 無料サンプル動画・配信サイト横断検索",
+    "metaDescriptionWithGenre": "{name}の{genre}ジャンル出演作品を配信サイト横断で検索。DUGA・MGS・DTI・カリビアンコム・一本道・HEYZOなど複数サイトの作品情報を掲載。",
     "aliases": "別名",
     "height": "身長",
     "measurements": "スリーサイズ",
@@ -154,7 +167,16 @@
     "noProducts": "作品がありません",
     "loadMore": "もっと見る",
     "adultContentNotice": "※このページは成人向けコンテンツを含みます",
-    "latestReleases": "最新作品"
+    "latestReleases": "最新作品",
+    "listTitle": "女優一覧",
+    "listDescription": "AV女優プロフィール・出演作品検索",
+    "peopleCount": "名",
+    "worksCount": "作品",
+    "searchPlaceholder": "女優名で検索...",
+    "search": "検索",
+    "clear": "クリア",
+    "noResults": "該当する女優が見つかりません",
+    "tryDifferentSearch": "別のキーワードで検索してみてください"
   },
   "product": {
     "details": "作品詳細",
@@ -207,19 +229,6 @@
     "topActresses": "人気女優ランキング",
     "topProducts": "人気作品ランキング",
     "newReleases": "新着ランキング"
-  },
-  "categories": {
-    "title": "カテゴリー",
-    "browseByGenre": "ジャンルから探す",
-    "allCategories": "すべてのカテゴリー",
-    "pageTitle": "ジャンル・カテゴリ一覧",
-    "pageDescription": "{count}種類のジャンルから{totalProducts}件以上の作品を探せます。人気順に並んでいるので、気になるジャンルをクリックしてください。",
-    "noCategories": "カテゴリが見つかりませんでした",
-    "productCount": "{count}作品",
-    "genreBadge": "ジャンル",
-    "genreDescription": "{tagName}ジャンルの作品{count}件を掲載。新着順に並んでいます。",
-    "noProducts": "該当する作品が見つかりませんでした",
-    "backToCategories": "カテゴリ一覧に戻る"
   },
   "featured": {
     "title": "特集",

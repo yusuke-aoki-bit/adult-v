@@ -159,6 +159,11 @@ export function generateBaseMetadata(
   const pageKeywords = keywords || localeKeywords[locale as keyof typeof localeKeywords] || defaultKeywords;
   const ogLocale = localeMap[locale] || 'ja_JP';
 
+  // pathからlocale部分を除去してbasePathを取得
+  // 例: /ja/actress/123 → /actress/123
+  const localePattern = /^\/(ja|en|zh|ko)\//;
+  const basePath = path ? path.replace(localePattern, '/') : '';
+
   return {
     title: pageTitle,
     description: pageDescription,
@@ -166,11 +171,11 @@ export function generateBaseMetadata(
     alternates: {
       canonical: pageUrl,
       languages: {
-        'ja': `${siteUrl}/ja${path || ''}`,
-        'en': `${siteUrl}/en${path || ''}`,
-        'zh': `${siteUrl}/zh${path || ''}`,
-        'ko': `${siteUrl}/ko${path || ''}`,
-        'x-default': `${siteUrl}/ja${path || ''}`,
+        'ja': `${siteUrl}/ja${basePath}`,
+        'en': `${siteUrl}/en${basePath}`,
+        'zh': `${siteUrl}/zh${basePath}`,
+        'ko': `${siteUrl}/ko${basePath}`,
+        'x-default': `${siteUrl}/ja${basePath}`,
       },
     },
     openGraph: {
@@ -240,7 +245,7 @@ export function generateWebSiteSchema(locale: string = 'ja') {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${siteUrl}/${locale}/search?q={search_term_string}`,
+        urlTemplate: `${siteUrl}/${locale}/products?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },

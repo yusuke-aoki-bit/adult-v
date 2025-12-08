@@ -39,6 +39,8 @@ interface ActressListFilterProps {
     other: string;
     saleFilter?: string;
     onSaleOnly?: string;
+    reviewFilter?: string;
+    hasReviewOnly?: string;
   };
 }
 
@@ -57,6 +59,7 @@ export default function ActressListFilter({
   const hasVideo = searchParams.get('hasVideo') === 'true';
   const hasImage = searchParams.get('hasImage') === 'true';
   const onSale = searchParams.get('onSale') === 'true';
+  const hasReview = searchParams.get('hasReview') === 'true';
   const includeTags = searchParams.get('include')?.split(',').filter(Boolean) || [];
   const excludeTags = searchParams.get('exclude')?.split(',').filter(Boolean) || [];
   const includeAsps = searchParams.get('includeAsp')?.split(',').filter(Boolean) || [];
@@ -124,6 +127,10 @@ export default function ActressListFilter({
     updateFilter('onSale', onSale ? null : 'true');
   };
 
+  const handleReviewChange = () => {
+    updateFilter('hasReview', hasReview ? null : 'true');
+  };
+
   const handleIncludeTagChange = (tagId: string) => {
     updateFilter('include', tagId, true, includeTags);
   };
@@ -147,6 +154,7 @@ export default function ActressListFilter({
     params.delete('hasVideo');
     params.delete('hasImage');
     params.delete('onSale');
+    params.delete('hasReview');
     params.delete('include');
     params.delete('exclude');
     params.delete('includeAsp');
@@ -160,8 +168,8 @@ export default function ActressListFilter({
     });
   };
 
-  const hasActiveFilters = hasVideo || hasImage || onSale || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0 || !!initialFilter;
-  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0) + (onSale ? 1 : 0) + (initialFilter ? 1 : 0);
+  const hasActiveFilters = hasVideo || hasImage || onSale || hasReview || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0 || !!initialFilter;
+  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0) + (onSale ? 1 : 0) + (hasReview ? 1 : 0) + (initialFilter ? 1 : 0);
 
   return (
     <details
@@ -324,6 +332,29 @@ export default function ActressListFilter({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
                 </svg>
                 <span className="text-base sm:text-sm text-gray-200">{t.onSaleOnly}</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* レビューフィルター */}
+        {t.reviewFilter && (
+          <div>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.reviewFilter}</h3>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
+                hasReview ? 'bg-purple-600/30 border-purple-500/50 hover:opacity-80' : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+              }`}>
+                <input
+                  type="checkbox"
+                  checked={hasReview}
+                  onChange={handleReviewChange}
+                  className="w-5 h-5 rounded border-gray-500 text-purple-600 focus:ring-purple-500"
+                />
+                <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${hasReview ? 'text-purple-500' : 'text-gray-400'} shrink-0`} fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                </svg>
+                <span className="text-base sm:text-sm text-gray-200">{t.hasReviewOnly}</span>
               </label>
             </div>
           </div>

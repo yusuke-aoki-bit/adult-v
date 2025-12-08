@@ -161,7 +161,7 @@ export default function ProductDetailInfo({
                 </div>
                 {source.price !== null && source.price > 0 ? (
                   <span className="text-green-400 font-semibold">
-                    {formatPrice(source.price, source.currency)}
+                    {formatPrice(source.price, source.currency ?? undefined)}
                   </span>
                 ) : isSubscriptionProvider(source.aspName) ? (
                   <span className="text-rose-400 font-semibold">

@@ -1,9 +1,30 @@
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-  title: '利用規約 | ADULT VIEWER LAB',
-  description: 'ADULT VIEWER LABの利用規約ページです。',
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+
+  const baseMetadata: Metadata = {
+    title: '利用規約 | ADULT VIEWER LAB',
+    description: 'ADULT VIEWER LABの利用規約ページです。',
+  };
+
+  // 日本語以外のロケールはnoindex（法的文書は日本語のみ正式版）
+  if (locale !== 'ja') {
+    return {
+      ...baseMetadata,
+      robots: {
+        index: false,
+        follow: true,
+      },
+    };
+  }
+
+  return baseMetadata;
+}
 
 export default function TermsPage() {
   return (
@@ -61,7 +82,28 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">6. 禁止事項</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">6. 著作権侵害の申告（DMCA）</h2>
+            <p className="leading-relaxed mb-3">
+              当サイトは著作権を尊重しており、デジタルミレニアム著作権法（DMCA）に基づく
+              著作権侵害の申告に対応いたします。
+              著作権侵害があると思われるコンテンツを発見された場合は、
+              以下の情報を含めて当サイトまでご連絡ください:
+            </p>
+            <ul className="list-disc list-inside space-y-2 pl-4 mb-3">
+              <li>著作権者または代理人の署名（電子署名可）</li>
+              <li>侵害されたと主張する著作物の特定</li>
+              <li>侵害コンテンツの場所（URL）</li>
+              <li>連絡先情報（住所、電話番号、メールアドレス）</li>
+              <li>善意に基づき、当該使用が著作権者により許可されていないと信じる旨の声明</li>
+              <li>偽証罪の制裁のもと、申告内容が正確であることの声明</li>
+            </ul>
+            <p className="leading-relaxed">
+              DMCA申告先: <a href="mailto:adult.vvvv@gmail.com" className="text-rose-400 hover:text-rose-300 transition-colors">adult.vvvv@gmail.com</a>
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">7. 禁止事項</h2>
             <p className="leading-relaxed mb-3">
               ユーザーは、以下の行為を行ってはなりません:
             </p>
@@ -78,7 +120,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">7. 免責事項</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">8. 免責事項</h2>
             <p className="leading-relaxed">
               当サイトは、提供する情報の正確性、完全性、有用性について保証するものではありません。
               当サイトの利用により生じた損害について、当サイトは一切の責任を負いません。
@@ -88,7 +130,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">8. サービスの変更・中断・終了</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">9. サービスの変更・中断・終了</h2>
             <p className="leading-relaxed">
               当サイトは、ユーザーへの事前の通知なく、
               サービスの内容を変更、中断、または終了することができるものとします。
@@ -97,7 +139,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">9. 利用規約の変更</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">10. 利用規約の変更</h2>
             <p className="leading-relaxed">
               当サイトは、必要に応じて本規約を変更することができるものとします。
               変更後の規約は、本ページに掲載した時点で効力を生じるものとします。
@@ -105,7 +147,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">10. 準拠法・裁判管轄</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">11. 準拠法・裁判管轄</h2>
             <p className="leading-relaxed">
               本規約の解釈にあたっては、日本法を準拠法とします。
               当サイトに関して紛争が生じた場合には、
@@ -114,7 +156,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">11. お問い合わせ</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">12. お問い合わせ</h2>
             <p className="leading-relaxed">
               本規約に関するお問い合わせは、以下のメールアドレスまでお願いいたします。
             </p>
@@ -130,7 +172,7 @@ export default function TermsPage() {
 
           <div className="pt-6 border-t border-gray-700">
             <p className="text-sm text-gray-400">
-              最終更新日: {new Date().toLocaleDateString('ja-JP')}
+              最終更新日: 2024年12月9日
             </p>
           </div>
         </div>

@@ -51,7 +51,9 @@
     "recommended": "Featured",
     "saleProducts": "On Sale Now",
     "viewAllSales": "View All Sale Items",
-    "saleUntil": "Until {date}"
+    "saleUntil": "Until {date}",
+    "viewProductList": "All Products",
+    "viewProductListDesc": "Search across all streaming platforms"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -62,14 +64,14 @@
   "nav": {
     "home": "Home",
     "actresses": "Actresses",
+    "actressList": "Actress List",
     "products": "Videos",
     "new": "New",
     "featured": "Featured",
-    "categories": "Categories",
+    "productList": "Products",
     "rankings": "Rankings",
     "favorites": "Favorites",
-    "search": "Search",
-    "reviews": "Reviews"
+    "search": "Search"
   },
   "footer": {
     "siteName": "ADULT VIEWER LAB",
@@ -98,13 +100,20 @@
     "title": "All Videos",
     "metaDescription": "Search across all distribution sites including DUGA, MGS, DTI and more.",
     "description": "{count} videos available",
-    "noProducts": "No videos found"
+    "noProducts": "No videos found",
+    "viewActressListDesc": "Browse videos by actress"
   },
   "relatedProducts": {
     "title": "Related Videos",
     "samePerformer": "Same Performer",
     "sameGenre": "Same Genre",
     "recent": "Recent"
+  },
+  "relatedActresses": {
+    "title": "Co-stars of {name}",
+    "description": "Actresses who have appeared with this performer",
+    "costarCount": " co-appearances",
+    "productCount": " videos"
   },
   "filter": {
     "genre": "Genre",
@@ -125,7 +134,9 @@
     "solo": "Solo",
     "multi": "Multiple",
     "saleFilter": "Sale",
-    "onSaleOnly": "On Sale Only"
+    "onSaleOnly": "On Sale Only",
+    "reviewFilter": "Review",
+    "hasReviewOnly": "With Review Only"
   },
   "sort": {
     "nameAsc": "Name (A-Z)",
@@ -145,6 +156,8 @@
     "totalProducts": "{count} videos total",
     "metaTitle": "{name} - {count} Videos | Free Samples & Multi-Site Search",
     "metaDescription": "Watch {count} videos starring {name}. Search across DUGA, MGS, DTI, Caribbeancom, 1pondo, HEYZO. Compare prices, filter by genre. Free sample videos available.",
+    "metaTitleWithGenre": "{name} {genre} Videos | Free Samples & Multi-Site Search",
+    "metaDescriptionWithGenre": "Watch {name}'s {genre} videos. Search across DUGA, MGS, DTI, Caribbeancom, 1pondo, HEYZO for multi-site video information.",
     "aliases": "Also Known As",
     "height": "Height",
     "measurements": "Measurements",
@@ -154,7 +167,16 @@
     "noProducts": "No videos available",
     "loadMore": "Load More",
     "adultContentNotice": "※This page contains adult content",
-    "latestReleases": "Latest Releases"
+    "latestReleases": "Latest Releases",
+    "listTitle": "Actress List",
+    "listDescription": "AV Actress Profiles & Video Search",
+    "peopleCount": " actresses",
+    "worksCount": " videos",
+    "searchPlaceholder": "Search by actress name...",
+    "search": "Search",
+    "clear": "Clear",
+    "noResults": "No matching actress found",
+    "tryDifferentSearch": "Try searching with different keywords"
   },
   "product": {
     "details": "Video Details",
@@ -207,19 +229,6 @@
     "topActresses": "Top Actresses",
     "topProducts": "Top Videos",
     "newReleases": "New Releases"
-  },
-  "categories": {
-    "title": "Categories",
-    "browseByGenre": "Browse by Genre",
-    "allCategories": "All Categories",
-    "pageTitle": "Genres & Categories",
-    "pageDescription": "Browse over {totalProducts} videos across {count} genres. Sorted by popularity - click on a genre to explore.",
-    "noCategories": "No categories found",
-    "productCount": "{count} videos",
-    "genreBadge": "Genre",
-    "genreDescription": "{count} videos in the {tagName} genre. Sorted by newest releases.",
-    "noProducts": "No videos found",
-    "backToCategories": "Back to categories"
   },
   "featured": {
     "title": "Featured",

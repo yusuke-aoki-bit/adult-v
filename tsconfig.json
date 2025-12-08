@@ -31,5 +31,5 @@
     "**/*.mts",
     "**/*.json"
   ],
-  "exclude": ["node_modules", "scripts/**/*"]
+  "exclude": ["node_modules", "scripts/**/*", ".next/dev/types/validator.ts"]
 }

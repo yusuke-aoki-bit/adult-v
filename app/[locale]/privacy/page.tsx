@@ -1,9 +1,30 @@
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-  title: 'プライバシーポリシー | ADULT VIEWER LAB',
-  description: 'ADULT VIEWER LABのプライバシーポリシーページです。',
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+
+  const baseMetadata: Metadata = {
+    title: 'プライバシーポリシー | ADULT VIEWER LAB',
+    description: 'ADULT VIEWER LABのプライバシーポリシーページです。',
+  };
+
+  // 日本語以外のロケールはnoindex（法的文書は日本語のみ正式版）
+  if (locale !== 'ja') {
+    return {
+      ...baseMetadata,
+      robots: {
+        index: false,
+        follow: true,
+      },
+    };
+  }
+
+  return baseMetadata;
+}
 
 export default function PrivacyPage() {
   return (
@@ -85,7 +106,7 @@ export default function PrivacyPage() {
 
           <div className="pt-6 border-t border-gray-700">
             <p className="text-sm text-gray-400">
-              最終更新日: {new Date().toLocaleDateString('ja-JP')}
+              最終更新日: 2024年12月9日
             </p>
           </div>
         </div>

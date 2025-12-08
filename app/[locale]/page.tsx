@@ -12,17 +12,34 @@ import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const searchParamsData = await searchParams;
   const t = await getTranslations({ locale, namespace: 'homepage' });
 
   // Use approximate count to avoid slow DB query in metadata generation
   // Actual count is displayed on the page itself
   const approximateCount = '38,000';
 
-  return generateBaseMetadata(
+  // 検索クエリやフィルターがある場合はnoindex
+  const hasQuery = !!searchParamsData.q;
+  const hasFilters = !!(
+    searchParamsData.initial ||
+    searchParamsData.include ||
+    searchParamsData.exclude ||
+    searchParamsData.includeAsp ||
+    searchParamsData.excludeAsp ||
+    searchParamsData.hasVideo ||
+    searchParamsData.hasImage ||
+    searchParamsData.hasReview
+  );
+  const hasPageParam = !!searchParamsData.page && searchParamsData.page !== '1';
+
+  const metadata = generateBaseMetadata(
     t('title'),
     t('description', { count: approximateCount }),
     undefined,
@@ -30,6 +47,19 @@ export async function generateMetadata({
     undefined,
     locale,
   );
+
+  // 検索・フィルター・2ページ目以降はnoindex（重複コンテンツ防止）
+  if (hasQuery || hasFilters || hasPageParam) {
+    return {
+      ...metadata,
+      robots: {
+        index: false,
+        follow: true,
+      },
+    };
+  }
+
+  return metadata;
 }
 
 // 動的生成（DBから毎回取得）
@@ -40,7 +70,8 @@ interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-const ITEMS_PER_PAGE = 50;
+const DEFAULT_ITEMS_PER_PAGE = 48;
+const ALLOWED_PER_PAGE = [12, 24, 48, 96];
 
 export default async function Home({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -51,6 +82,11 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
+
+  // 表示件数（URLパラメータから取得、許可リストでバリデーション）
+  const requestedLimit = Number(searchParamsData.limit) || DEFAULT_ITEMS_PER_PAGE;
+  const itemsPerPage = ALLOWED_PER_PAGE.includes(requestedLimit) ? requestedLimit : DEFAULT_ITEMS_PER_PAGE;
+
   const query = typeof searchParamsData.q === 'string' ? searchParamsData.q : undefined;
   const sortBy = (typeof searchParamsData.sort === 'string' ? searchParamsData.sort : 'recent') as 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
   const initialFilter = typeof searchParamsData.initial === 'string' ? searchParamsData.initial : undefined;
@@ -79,9 +115,10 @@ export default async function Home({ params, searchParams }: PageProps) {
     ? searchParamsData.excludeAsp
     : [];
 
-  // hasVideo/hasImageフィルターを取得
+  // hasVideo/hasImage/hasReviewフィルターを取得
   const hasVideo = searchParamsData.hasVideo === 'true';
   const hasImage = searchParamsData.hasImage === 'true';
+  const hasReview = searchParamsData.hasReview === 'true';
 
   // タグ一覧を取得（全カテゴリ、siteカテゴリは除外）
   const allTags = await getTags();
@@ -101,7 +138,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     name: stat.aspName,
   }));
 
-  const offset = (page - 1) * ITEMS_PER_PAGE;
+  const offset = (page - 1) * itemsPerPage;
 
   // "etc"の場合は特別処理（50音・アルファベット以外）
   const isEtcFilter = initialFilter === 'etc';
@@ -112,7 +149,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   }
 
   const actresses = await getActresses({
-    limit: ITEMS_PER_PAGE,
+    limit: itemsPerPage,
     offset,
     query: searchQuery,
     includeTags,
@@ -123,6 +160,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     excludeAsps,
     hasVideo: hasVideo || undefined,
     hasImage: hasImage || undefined,
+    hasReview: hasReview || undefined,
     locale,
   });
 
@@ -136,6 +174,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     excludeAsps,
     hasVideo: hasVideo || undefined,
     hasImage: hasImage || undefined,
+    hasReview: hasReview || undefined,
   });
 
   // セール情報を取得（フィルターがない場合のみ）
@@ -143,7 +182,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   let uncategorizedCount = 0;
 
   // TOPページのみ表示（検索、フィルター、ソート変更時は非表示）
-  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && includeAsps.length === 0 && excludeAsps.length === 0 && !hasVideo && !hasImage && sortBy === 'recent' && page === 1;
+  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && includeAsps.length === 0 && excludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && sortBy === 'recent' && page === 1;
 
   if (isTopPage) {
     try {
@@ -265,8 +304,8 @@ export default async function Home({ params, searchParams }: PageProps) {
         <section className="py-6 border-b border-gray-800">
           <div className="container mx-auto px-4">
             <Link
-              href={`/${locale}/uncategorized`}
-              className="flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-750 rounded-lg border border-gray-700 hover:border-yellow-600 transition-colors group"
+              href={`/${locale}/products?uncategorized=true`}
+              className="flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 hover:border-yellow-600 transition-colors group"
             >
               <div className="flex items-center gap-3">
                 <span className="px-3 py-1 bg-yellow-600 text-white text-sm font-semibold rounded-full">
@@ -317,6 +356,8 @@ export default async function Home({ params, searchParams }: PageProps) {
               other: tFilter('other'),
               saleFilter: tFilter('saleFilter'),
               onSaleOnly: tFilter('onSaleOnly'),
+              reviewFilter: tFilter('reviewFilter'),
+              hasReviewOnly: tFilter('hasReviewOnly'),
             }}
           />
 
@@ -329,9 +370,10 @@ export default async function Home({ params, searchParams }: PageProps) {
           <Pagination
             total={totalCount}
             page={page}
-            perPage={ITEMS_PER_PAGE}
+            perPage={itemsPerPage}
             basePath={`/${locale}`}
             position="top"
+            showPerPageSelector
             queryParams={{
               ...(query ? { q: query } : {}),
               ...(initialFilter ? { initial: initialFilter } : {}),
@@ -342,6 +384,7 @@ export default async function Home({ params, searchParams }: PageProps) {
               ...(excludeAsps.length > 0 ? { excludeAsp: excludeAsps.join(',') } : {}),
               ...(hasVideo ? { hasVideo: 'true' } : {}),
               ...(hasImage ? { hasImage: 'true' } : {}),
+              ...(hasReview ? { hasReview: 'true' } : {}),
             }}
           />
 
@@ -357,7 +400,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           <Pagination
             total={totalCount}
             page={page}
-            perPage={ITEMS_PER_PAGE}
+            perPage={itemsPerPage}
             basePath={`/${locale}`}
             position="bottom"
             queryParams={{
@@ -370,8 +413,28 @@ export default async function Home({ params, searchParams }: PageProps) {
               ...(excludeAsps.length > 0 ? { excludeAsp: excludeAsps.join(',') } : {}),
               ...(hasVideo ? { hasVideo: 'true' } : {}),
               ...(hasImage ? { hasImage: 'true' } : {}),
+              ...(hasReview ? { hasReview: 'true' } : {}),
             }}
           />
+
+          {/* 商品一覧へのリンク */}
+          <div className="mt-12 pt-8 border-t border-gray-800">
+            <Link
+              href={`/${locale}/products`}
+              className="flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 hover:border-rose-600 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🎬</span>
+                <div>
+                  <span className="text-white font-medium">{t('viewProductList')}</span>
+                  <p className="text-gray-400 text-sm mt-0.5">{t('viewProductListDesc')}</p>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-gray-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </section>
     </div>

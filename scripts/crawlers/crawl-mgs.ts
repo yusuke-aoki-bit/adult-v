@@ -892,7 +892,7 @@ async function saveProductVideo(
         videoType: 'sample',
         displayOrder: 0,
         aspName: SOURCE_NAME,
-      });
+      }).onConflictDoNothing();
       console.log(`  🎬 Saved sample video to product_videos`);
     }
   } catch (error) {

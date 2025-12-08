@@ -337,7 +337,7 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
 
   // ========== 汎用パターン（最後のフォールバック） ==========
   // 一般的なサムネイルパターンを試す
-  let result = thumbnailUrl
+  const result = thumbnailUrl
     .replace(/\/thumb\//, '/large/')
     .replace(/\/small\//, '/large/')
     .replace(/\/thumbnail\//, '/original/')

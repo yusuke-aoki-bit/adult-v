@@ -1,54 +1,64 @@
 /**
- * Google Cloud Translation API ユーティリティ
+ * Lingva Translate API ユーティリティ
  *
- * 使用方法:
- * 1. Google Cloud Consoleで Translation APIを有効化
- * 2. サービスアカウントキーを作成してダウンロード
- * 3. 環境変数 GOOGLE_APPLICATION_CREDENTIALS にキーファイルのパスを設定
- *    または GOOGLE_CLOUD_PROJECT_ID と GOOGLE_CLOUD_PRIVATE_KEY を設定
+ * Lingva TranslateはGoogle Translateのオープンソースプロキシ
+ * APIキー不要で、コンテンツポリシーでブロックされない
+ *
+ * 公式インスタンス: https://lingva.ml
+ * API: https://lingva.ml/api/v1/{source}/{target}/{text}
  */
 
-import { v2 } from '@google-cloud/translate';
+// Lingvaインスタンス（フォールバック用に複数用意）
+const LINGVA_INSTANCES = [
+  'https://lingva.ml',
+  'https://lingva.lunar.icu',
+  'https://translate.plausibility.cloud',
+];
 
-// Translation APIクライアントのシングルトンインスタンス
-let translateClient: v2.Translate | null = null;
+// 言語コードマッピング（Lingvaは小文字を使用）
+const LINGVA_LANG_MAP: Record<string, string> = {
+  ja: 'ja',
+  en: 'en',
+  zh: 'zh', // 簡体字中国語
+  ko: 'ko',
+};
 
 /**
- * Translation APIクライアントを取得
+ * 単一のLingvaインスタンスで翻訳を試行
  */
-function getTranslateClient(): v2.Translate {
-  if (!translateClient) {
-    // 環境変数から認証情報を取得
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
-    const privateKey = process.env.GOOGLE_CLOUD_PRIVATE_KEY;
+async function tryTranslateWithInstance(
+  instance: string,
+  text: string,
+  sourceLang: string,
+  targetLang: string
+): Promise<string | null> {
+  const source = LINGVA_LANG_MAP[sourceLang] || sourceLang;
+  const target = LINGVA_LANG_MAP[targetLang] || targetLang;
+  const url = `${instance}/api/v1/${source}/${target}/${encodeURIComponent(text)}`;
 
-    if (projectId && privateKey) {
-      // 環境変数から直接認証
-      translateClient = new v2.Translate({
-        projectId,
-        credentials: {
-          private_key: privateKey.replace(/\\n/g, '\n'),
-          client_email: process.env.GOOGLE_CLOUD_CLIENT_EMAIL || '',
-        },
-      });
-    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      // キーファイルから認証
-      translateClient = new v2.Translate();
-    } else {
-      throw new Error(
-        'Google Cloud Translation API credentials not found. ' +
-          'Set GOOGLE_APPLICATION_CREDENTIALS or GOOGLE_CLOUD_PROJECT_ID/GOOGLE_CLOUD_PRIVATE_KEY environment variables.'
-      );
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return null;
     }
-  }
 
-  return translateClient;
+    const data = await response.json();
+    return data.translation || null;
+  } catch {
+    return null;
+  }
 }
 
 /**
  * テキストを翻訳する
  * @param text 翻訳するテキスト
- * @param targetLang 翻訳先の言語コード ('en', 'zh-CN', 'ko')
+ * @param targetLang 翻訳先の言語コード ('en', 'zh', 'ko')
  * @param sourceLang 翻訳元の言語コード (デフォルト: 'ja')
  * @returns 翻訳されたテキスト
  */
@@ -61,26 +71,21 @@ export async function translateText(
     return '';
   }
 
-  try {
-    const client = getTranslateClient();
-
-    // zh を zh-CN に変換 (簡体字中国語)
-    const targetLanguage = targetLang === 'zh' ? 'zh-CN' : targetLang;
-
-    const [translation] = await client.translate(text, {
-      from: sourceLang,
-      to: targetLanguage,
-    });
-
-    return translation;
-  } catch (error) {
-    console.error(`Translation error (${sourceLang} -> ${targetLang}):`, error);
-    throw error;
+  // 各インスタンスを順番に試す
+  for (const instance of LINGVA_INSTANCES) {
+    const result = await tryTranslateWithInstance(instance, text, sourceLang, targetLang);
+    if (result) {
+      return result;
+    }
+    console.warn(`[Lingva] Instance ${instance} failed, trying next...`);
   }
+
+  throw new Error('All Lingva instances failed');
 }
 
 /**
- * 複数のテキストを一度に翻訳する(API呼び出し回数を削減)
+ * 複数のテキストを一度に翻訳する
+ * Lingvaはバッチ翻訳をサポートしていないため、順次翻訳する
  * @param texts 翻訳するテキストの配列
  * @param targetLang 翻訳先の言語コード
  * @param sourceLang 翻訳元の言語コード (デフォルト: 'ja')
@@ -95,23 +100,22 @@ export async function translateBatch(
     return [];
   }
 
-  try {
-    const client = getTranslateClient();
-
-    // zh を zh-CN に変換
-    const targetLanguage = targetLang === 'zh' ? 'zh-CN' : targetLang;
-
-    const [translations] = await client.translate(texts, {
-      from: sourceLang,
-      to: targetLanguage,
-    });
-
-    // translationsは文字列または文字列配列
-    return Array.isArray(translations) ? translations : [translations];
-  } catch (error) {
-    console.error(`Batch translation error (${sourceLang} -> ${targetLang}):`, error);
-    throw error;
+  const results: string[] = [];
+  for (const text of texts) {
+    if (!text || text.trim() === '') {
+      results.push('');
+    } else {
+      try {
+        const translated = await translateText(text, targetLang, sourceLang);
+        results.push(translated);
+        // レート制限を避けるため少し待機
+        await delay(100);
+      } catch {
+        results.push('');
+      }
+    }
   }
+  return results;
 }
 
 /**
@@ -142,7 +146,7 @@ export async function translateToAll(
 
     return { en, zh, ko };
   } catch (error) {
-    console.error('Translation to all languages failed:', error);
+    console.error('[Lingva] Translation to all languages failed:', error);
     throw error;
   }
 }
@@ -168,3 +172,4 @@ export function chunk<T>(array: T[], size: number): T[][] {
   }
   return chunks;
 }
+

@@ -267,6 +267,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     affiliateUrl={product.affiliateUrl}
                     providerLabel={product.providerLabel}
                     aspName={sources[0]?.aspName}
+                    price={product.regularPrice || product.price}
+                    salePrice={product.salePrice}
+                    discount={product.discount}
                   />
                 )}
               </div>

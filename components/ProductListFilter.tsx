@@ -30,6 +30,10 @@ const translations = {
     clear: 'クリア',
     saleFilter: 'セール',
     onSaleOnly: 'セール中のみ',
+    uncategorizedFilter: '未整理作品',
+    uncategorizedOnly: '出演者なしの作品のみ',
+    reviewFilter: 'レビュー',
+    hasReviewOnly: 'レビューありのみ',
   },
   en: {
     filterSettings: 'Filter Settings',
@@ -50,6 +54,10 @@ const translations = {
     clear: 'Clear',
     saleFilter: 'Sale',
     onSaleOnly: 'On Sale Only',
+    uncategorizedFilter: 'Uncategorized',
+    uncategorizedOnly: 'Without performer only',
+    reviewFilter: 'Review',
+    hasReviewOnly: 'With Review Only',
   },
   zh: {
     filterSettings: '筛选设置',
@@ -70,6 +78,10 @@ const translations = {
     clear: '清除',
     saleFilter: '促销',
     onSaleOnly: '仅限促销商品',
+    uncategorizedFilter: '未整理作品',
+    uncategorizedOnly: '仅无演员作品',
+    reviewFilter: '评论',
+    hasReviewOnly: '仅有评论',
   },
   ko: {
     filterSettings: '필터 설정',
@@ -90,6 +102,10 @@ const translations = {
     clear: '지우기',
     saleFilter: '세일',
     onSaleOnly: '세일 상품만',
+    uncategorizedFilter: '미정리 작품',
+    uncategorizedOnly: '출연자 없는 작품만',
+    reviewFilter: '리뷰',
+    hasReviewOnly: '리뷰가 있는 것만',
   },
 } as const;
 
@@ -121,6 +137,8 @@ interface ProductListFilterProps {
   showSampleFilter?: boolean;
   showPerformerTypeFilter?: boolean;
   showSaleFilter?: boolean;
+  showUncategorizedFilter?: boolean;
+  showReviewFilter?: boolean;
   accentColor?: 'rose' | 'yellow' | 'blue';
   defaultOpen?: boolean;
 }
@@ -136,6 +154,8 @@ export default function ProductListFilter({
   showSampleFilter = true,
   showPerformerTypeFilter = true,
   showSaleFilter = true,
+  showUncategorizedFilter = false,
+  showReviewFilter = false,
   accentColor = 'yellow',
   defaultOpen,
 }: ProductListFilterProps) {
@@ -151,6 +171,8 @@ export default function ProductListFilter({
   const hasVideo = searchParams.get('hasVideo') === 'true';
   const hasImage = searchParams.get('hasImage') === 'true';
   const onSale = searchParams.get('onSale') === 'true';
+  const uncategorized = searchParams.get('uncategorized') === 'true';
+  const hasReview = searchParams.get('hasReview') === 'true';
   const performerType = searchParams.get('performerType') as 'solo' | 'multi' | null;
   const selectedPattern = searchParams.get('pattern') || '';
   const initialFilter = searchParams.get('initial') || '';
@@ -241,6 +263,14 @@ export default function ProductListFilter({
     updateFilter('onSale', onSale ? null : 'true');
   };
 
+  const handleUncategorizedChange = () => {
+    updateFilter('uncategorized', uncategorized ? null : 'true');
+  };
+
+  const handleReviewChange = () => {
+    updateFilter('hasReview', hasReview ? null : 'true');
+  };
+
   const handlePerformerTypeChange = (type: 'solo' | 'multi' | null) => {
     updateFilter('performerType', performerType === type ? null : type);
   };
@@ -267,6 +297,8 @@ export default function ProductListFilter({
     params.delete('hasVideo');
     params.delete('hasImage');
     params.delete('onSale');
+    params.delete('uncategorized');
+    params.delete('hasReview');
     params.delete('performerType');
     params.delete('pattern');
     params.delete('initial');
@@ -286,6 +318,8 @@ export default function ProductListFilter({
     hasVideo ||
     hasImage ||
     onSale ||
+    uncategorized ||
+    hasReview ||
     performerType !== null ||
     selectedPattern !== '' ||
     initialFilter !== '' ||
@@ -298,6 +332,8 @@ export default function ProductListFilter({
     (hasVideo ? 1 : 0) +
     (hasImage ? 1 : 0) +
     (onSale ? 1 : 0) +
+    (uncategorized ? 1 : 0) +
+    (hasReview ? 1 : 0) +
     (performerType ? 1 : 0) +
     (selectedPattern ? 1 : 0) +
     (initialFilter ? 1 : 0) +
@@ -534,6 +570,52 @@ export default function ProductListFilter({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
                 </svg>
                 <span className="text-base sm:text-sm text-gray-200">{t.onSaleOnly}</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* 未整理作品フィルター */}
+        {showUncategorizedFilter && (
+          <div>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.uncategorizedFilter}</h3>
+            <div className="space-y-2">
+              <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[48px] sm:min-h-0 transition-colors ${
+                uncategorized ? `${accent.bgLight} hover:opacity-80` : 'hover:bg-gray-700 active:bg-gray-600'
+              }`}>
+                <input
+                  type="checkbox"
+                  checked={uncategorized}
+                  onChange={handleUncategorizedChange}
+                  className="w-5 h-5 rounded border-gray-500 text-orange-600 focus:ring-orange-500"
+                />
+                <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${uncategorized ? 'text-orange-500' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-base sm:text-sm text-gray-200">{t.uncategorizedOnly}</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* レビューフィルター */}
+        {showReviewFilter && (
+          <div>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.reviewFilter}</h3>
+            <div className="space-y-2">
+              <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[48px] sm:min-h-0 transition-colors ${
+                hasReview ? `${accent.bgLight} hover:opacity-80` : 'hover:bg-gray-700 active:bg-gray-600'
+              }`}>
+                <input
+                  type="checkbox"
+                  checked={hasReview}
+                  onChange={handleReviewChange}
+                  className="w-5 h-5 rounded border-gray-500 text-purple-600 focus:ring-purple-500"
+                />
+                <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${hasReview ? 'text-purple-500' : 'text-gray-400'} shrink-0`} fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                </svg>
+                <span className="text-base sm:text-sm text-gray-200">{t.hasReviewOnly}</span>
               </label>
             </div>
           </div>

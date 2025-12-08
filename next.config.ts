@@ -186,6 +186,94 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // リダイレクト設定
+  async redirects() {
+    return [
+      // ============================
+      // レガシーURL（locale なし）から ja へのリダイレクト
+      // ============================
+      // /categories → /ja/products
+      {
+        source: '/categories',
+        destination: '/ja/products',
+        permanent: true,
+      },
+      // /categories?category=xxx → /ja/products
+      {
+        source: '/categories',
+        has: [{ type: 'query', key: 'category' }],
+        destination: '/ja/products',
+        permanent: true,
+      },
+      // /actress/:id → /ja/actress/:id
+      {
+        source: '/actress/:id',
+        destination: '/ja/actress/:id',
+        permanent: true,
+      },
+      // /product/:id → /ja/products/:id（product → products に修正）
+      {
+        source: '/product/:id',
+        destination: '/ja/products/:id',
+        permanent: true,
+      },
+      // /products/:id (locale なし) → /ja/products/:id
+      {
+        source: '/products/:id',
+        destination: '/ja/products/:id',
+        permanent: true,
+      },
+      // ============================
+      // locale ありのリダイレクト
+      // ============================
+      // カテゴリページから一覧ページへの301リダイレクト
+      {
+        source: '/:locale/categories/:tagId',
+        destination: '/:locale/products?include=:tagId',
+        permanent: true,
+      },
+      {
+        source: '/:locale/categories',
+        destination: '/:locale/products',
+        permanent: true,
+      },
+      // 未整理作品ページから一覧ページへの301リダイレクト
+      {
+        source: '/:locale/uncategorized',
+        destination: '/:locale/products?uncategorized=true',
+        permanent: true,
+      },
+      // レビューページからホームへの301リダイレクト
+      {
+        source: '/:locale/reviews',
+        destination: '/:locale?hasReview=true',
+        permanent: true,
+      },
+      // 女優一覧ページからホームへの301リダイレクト
+      {
+        source: '/:locale/actress',
+        destination: '/:locale',
+        permanent: true,
+      },
+      // 女優×ジャンルページから女優詳細ページへの301リダイレクト
+      {
+        source: '/:locale/actress/:performerId/genre/:tagId',
+        destination: '/:locale/actress/:performerId?include=:tagId',
+        permanent: true,
+      },
+      // 検索ページから各一覧ページへの301リダイレクト
+      {
+        source: '/:locale/search',
+        destination: '/:locale/products',
+        permanent: true,
+      },
+      {
+        source: '/:locale/products/search',
+        destination: '/:locale/products',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

@@ -856,7 +856,7 @@ export async function saveProductVideo(
         videoType: 'sample',
         aspName: 'DTI',
         displayOrder: 0,
-      });
+      }).onConflictDoNothing();
       console.log(`    🎬 Saved sample video to product_videos`);
     }
   } catch (error) {

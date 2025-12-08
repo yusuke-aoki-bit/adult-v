@@ -54,10 +54,11 @@
   "nav": {
     "home": "首頁",
     "actresses": "女優",
+    "actressList": "女優列表",
     "products": "作品",
     "new": "最新",
     "featured": "精選",
-    "categories": "分類",
+    "productList": "作品列表",
     "rankings": "排行榜",
     "favorites": "收藏",
     "search": "搜尋"
@@ -128,7 +129,16 @@
     "noProducts": "暫無作品",
     "loadMore": "載入更多",
     "adultContentNotice": "※此頁面包含成人內容",
-    "latestReleases": "最新作品"
+    "latestReleases": "最新作品",
+    "listTitle": "女優列表",
+    "listDescription": "AV女優資料・作品搜尋",
+    "peopleCount": "位",
+    "worksCount": "部作品",
+    "searchPlaceholder": "按女優名搜尋...",
+    "search": "搜尋",
+    "clear": "清除",
+    "noResults": "未找到匹配的女優",
+    "tryDifferentSearch": "請嘗試使用其他關鍵字搜尋"
   },
   "product": {
     "details": "作品詳情",
@@ -181,19 +191,6 @@
     "topActresses": "人氣女優排行",
     "topProducts": "熱門作品排行",
     "newReleases": "新作排行"
-  },
-  "categories": {
-    "title": "分類",
-    "browseByGenre": "按類型瀏覽",
-    "allCategories": "所有分類",
-    "pageTitle": "類型・分類列表",
-    "pageDescription": "從{count}種類型中瀏覽超過{totalProducts}部作品。按熱門排序，點擊感興趣的類型探索。",
-    "noCategories": "未找到分類",
-    "productCount": "{count}部作品",
-    "genreBadge": "類型",
-    "genreDescription": "{tagName}類型共{count}部作品。按最新發布排序。",
-    "noProducts": "未找到相關作品",
-    "backToCategories": "返回分類列表"
   },
   "featured": {
     "title": "精選",

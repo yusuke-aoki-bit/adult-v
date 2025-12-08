@@ -398,6 +398,7 @@ export interface GetProductsOptions {
   hasImage?: boolean; // サンプル画像ありのみ
   performerType?: 'solo' | 'multi'; // 出演形態: solo=単体出演, multi=複数出演
   onSale?: boolean; // セール中のみ
+  uncategorized?: boolean; // 未整理作品のみ（出演者なし）
   locale?: string; // ロケール（'ja' | 'en' | 'zh' | 'ko'）
 }
 
@@ -585,6 +586,16 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
           WHERE ps.product_id = ${products.id}
           AND psl.is_active = true
           AND (psl.end_at IS NULL OR psl.end_at > NOW())
+        )`
+      );
+    }
+
+    // 未整理作品フィルタ（出演者なし）
+    if (options?.uncategorized) {
+      conditions.push(
+        sql`NOT EXISTS (
+          SELECT 1 FROM ${productPerformers} pp
+          WHERE pp.product_id = ${products.id}
         )`
       );
     }
@@ -777,6 +788,16 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
       );
     }
 
+    // 未整理作品フィルタ（出演者なし）
+    if (options?.uncategorized) {
+      conditions.push(
+        sql`NOT EXISTS (
+          SELECT 1 FROM ${productPerformers} pp
+          WHERE pp.product_id = ${products.id}
+        )`
+      );
+    }
+
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const result = await db
@@ -827,6 +848,7 @@ export async function getActresses(options?: {
   excludeAsps?: string[]; // ASPで除外（いずれも含まない）
   hasVideo?: boolean; // サンプル動画のある作品を持つ女優のみ
   hasImage?: boolean; // サンプル画像のある作品を持つ女優のみ
+  hasReview?: boolean; // AIレビューのある女優のみ
   locale?: string; // ロケール（'ja' | 'en' | 'zh' | 'ko'）
 }): Promise<ActressType[]> {
   try {
@@ -999,6 +1021,11 @@ export async function getActresses(options?: {
         console.error('[GET ACTRESSES] Error in hasImage processing:', hasImageError);
         throw hasImageError;
       }
+    }
+
+    // hasReviewフィルタ（AIレビューのある女優のみ）
+    if (options?.hasReview) {
+      conditions.push(sql`${performers.aiReview} IS NOT NULL`);
     }
 
     // 検索クエリ（名前・別名・AIレビューを検索）
@@ -1445,6 +1472,7 @@ export async function getActressesCount(options?: {
   excludeAsps?: string[];
   hasVideo?: boolean; // サンプル動画のある作品を持つ女優のみ
   hasImage?: boolean; // サンプル画像のある作品を持つ女優のみ
+  hasReview?: boolean; // AIレビューのある女優のみ
 }): Promise<number> {
   try {
     const db = getDb();
@@ -1580,6 +1608,11 @@ export async function getActressesCount(options?: {
       } else {
         return 0;
       }
+    }
+
+    // hasReviewフィルタ（AIレビューのある女優のみ）
+    if (options?.hasReview) {
+      conditions.push(sql`${performers.aiReview} IS NOT NULL`);
     }
 
     // 検索クエリ（名前を検索）
@@ -3009,6 +3042,8 @@ export async function getProductsByCategory(
             aiCatchphrase: baseProduct.ai_catchphrase || null,
             aiShortDescription: baseProduct.ai_short_description || null,
             aiTags: baseProduct.ai_tags || null,
+            aiReview: baseProduct.ai_review || null,
+            aiReviewUpdatedAt: baseProduct.ai_review_updated_at || null,
             createdAt: baseProduct.created_at,
             updatedAt: baseProduct.updated_at,
           },

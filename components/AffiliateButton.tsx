@@ -4,6 +4,9 @@ interface AffiliateButtonProps {
   affiliateUrl: string;
   providerLabel: string;
   aspName?: string;
+  price?: number;
+  salePrice?: number;
+  discount?: number;
 }
 
 /**
@@ -57,6 +60,9 @@ function extractMgsProductUrl(widgetCode: string): string | null {
 export default function AffiliateButton({
   affiliateUrl,
   providerLabel,
+  price,
+  salePrice,
+  discount,
 }: AffiliateButtonProps) {
   const isMgsWidget = affiliateUrl.includes('mgs_Widget_affiliate');
 
@@ -77,15 +83,41 @@ export default function AffiliateButton({
     return null;
   }
 
+  const hasSale = salePrice && price && salePrice < price;
+
   return (
-    <div className="pt-4">
+    <div className="pt-4 space-y-3">
+      {/* セール価格の強調表示 */}
+      {hasSale && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-red-600 font-bold text-lg">🔥 セール中</span>
+            {discount && (
+              <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded">
+                {discount}%OFF
+              </span>
+            )}
+          </div>
+          <div className="flex items-baseline justify-center gap-2">
+            <span className="text-2xl font-bold text-red-600">¥{salePrice.toLocaleString()}</span>
+            <span className="text-sm text-gray-500 line-through">¥{price.toLocaleString()}</span>
+          </div>
+        </div>
+      )}
       <a
         href={finalUrl}
         target="_blank"
         rel="noopener noreferrer sponsored"
-        className="block w-full bg-rose-600 text-white text-center py-3 px-6 rounded-lg font-semibold hover:bg-rose-700 transition-colors"
+        className={`flex items-center justify-center gap-2 w-full text-white text-center py-4 px-6 rounded-lg font-semibold transition-colors ${
+          hasSale
+            ? 'bg-red-600 hover:bg-red-700 animate-pulse'
+            : 'bg-rose-600 hover:bg-rose-700'
+        }`}
       >
-        {providerLabel}で購入
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+        {providerLabel}で{hasSale ? '今すぐ' : ''}購入
       </a>
     </div>
   );

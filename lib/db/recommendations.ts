@@ -320,3 +320,54 @@ export async function getRecommendationsFromFavorites(
 
   return recommendations.slice(0, limit);
 }
+
+/**
+ * Get related performers based on shared tags/genres
+ * Returns performers who share the most common tags with the given performer
+ */
+export async function getRelatedPerformers(performerId: number, limit: number = 6) {
+  try {
+    const db = getDb();
+
+    // 同じ作品に出演している共演者を取得
+    const coPerformers = await db.execute(sql`
+      WITH performer_products AS (
+        SELECT DISTINCT product_id
+        FROM product_performers
+        WHERE performer_id = ${performerId}
+      ),
+      co_performers AS (
+        SELECT
+          pp.performer_id,
+          COUNT(DISTINCT pp.product_id) as shared_count
+        FROM product_performers pp
+        INNER JOIN performer_products prods ON pp.product_id = prods.product_id
+        WHERE pp.performer_id != ${performerId}
+        GROUP BY pp.performer_id
+      )
+      SELECT
+        p.id,
+        p.name,
+        p.thumbnail_url as "thumbnailUrl",
+        p.hero_image_url as "heroImageUrl",
+        cp.shared_count as "sharedCount",
+        (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount"
+      FROM performers p
+      INNER JOIN co_performers cp ON p.id = cp.performer_id
+      ORDER BY cp.shared_count DESC, p.name ASC
+      LIMIT ${limit}
+    `);
+
+    return coPerformers.rows as Array<{
+      id: number;
+      name: string;
+      thumbnailUrl: string | null;
+      heroImageUrl: string | null;
+      sharedCount: number;
+      productCount: number;
+    }>;
+  } catch {
+    // クエリエラー時は空配列を返す（共演者データがない場合など）
+    return [];
+  }
+}

@@ -46,7 +46,9 @@
     "popularTags": "인기 태그",
     "saleProducts": "세일 중인 작품",
     "viewAllSales": "모든 세일 상품 보기",
-    "saleUntil": "~{date}까지"
+    "saleUntil": "~{date}까지",
+    "viewProductList": "전체 작품 목록",
+    "viewProductListDesc": "모든 스트리밍 사이트의 작품을 통합 검색"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -57,10 +59,11 @@
   "nav": {
     "home": "홈",
     "actresses": "배우",
+    "actressList": "배우 목록",
     "products": "작품",
     "new": "신작",
     "featured": "특집",
-    "categories": "카테고리",
+    "productList": "작품 목록",
     "rankings": "랭킹",
     "favorites": "즐겨찾기",
     "search": "검색"
@@ -89,7 +92,20 @@
     "title": "전체 작품",
     "metaDescription": "DUGA, MGS, DTI 등 모든 스트리밍 사이트의 작품을 검색합니다.",
     "description": "{count}개의 작품",
-    "noProducts": "작품을 찾을 수 없습니다"
+    "noProducts": "작품을 찾을 수 없습니다",
+    "viewActressListDesc": "배우별로 작품 찾기"
+  },
+  "relatedProducts": {
+    "title": "관련 작품",
+    "samePerformer": "같은 배우",
+    "sameGenre": "같은 장르",
+    "recent": "최신"
+  },
+  "relatedActresses": {
+    "title": "{name}의 공연자",
+    "description": "이 배우와 함께 출연한 여배우",
+    "costarCount": "회 공연",
+    "productCount": "작품"
   },
   "filter": {
     "genre": "장르",
@@ -110,7 +126,9 @@
     "solo": "단독 출연",
     "multi": "공동 출연",
     "saleFilter": "세일",
-    "onSaleOnly": "세일 상품만"
+    "onSaleOnly": "세일 상품만",
+    "reviewFilter": "리뷰",
+    "hasReviewOnly": "리뷰가 있는 것만"
   },
   "sort": {
     "nameAsc": "이름 (오름차순)",
@@ -130,6 +148,8 @@
     "totalProducts": "전체 {count}작품",
     "metaTitle": "{name} - {count}편 작품 | 무료 샘플・멀티사이트 검색",
     "metaDescription": "{name}의 출연 작품 {count}편을 스트리밍 사이트 통합 검색. DUGA・MGS・DTI・카리비안컴・1폰도・HEYZO 등 여러 사이트의 작품 정보, 가격 비교, 장르별 필터링 가능. 헤비 유저를 위한 상세 리뷰와 랭킹.",
+    "metaTitleWithGenre": "{name}의 {genre} 작품 목록 | 무료 샘플・멀티사이트 검색",
+    "metaDescriptionWithGenre": "{name}의 {genre} 장르 출연 작품을 스트리밍 사이트 통합 검색. DUGA・MGS・DTI・카리비안컴・1폰도・HEYZO 등 여러 사이트의 작품 정보 제공.",
     "aliases": "별명",
     "height": "키",
     "measurements": "쓰리사이즈",
@@ -139,7 +159,16 @@
     "noProducts": "작품이 없습니다",
     "loadMore": "더보기",
     "adultContentNotice": "※이 페이지는 성인 콘텐츠를 포함합니다",
-    "latestReleases": "최신 작품"
+    "latestReleases": "최신 작품",
+    "listTitle": "배우 목록",
+    "listDescription": "AV 배우 프로필 및 작품 검색",
+    "peopleCount": "명",
+    "worksCount": "작품",
+    "searchPlaceholder": "배우명으로 검색...",
+    "search": "검색",
+    "clear": "지우기",
+    "noResults": "해당 배우를 찾을 수 없습니다",
+    "tryDifferentSearch": "다른 키워드로 검색해 보세요"
   },
   "product": {
     "details": "작품 상세",
@@ -192,19 +221,6 @@
     "topActresses": "인기 배우 랭킹",
     "topProducts": "인기 작품 랭킹",
     "newReleases": "신작 랭킹"
-  },
-  "categories": {
-    "title": "카테고리",
-    "browseByGenre": "장르별 찾기",
-    "allCategories": "모든 카테고리",
-    "pageTitle": "장르・카테고리 목록",
-    "pageDescription": "{count}개 장르에서 {totalProducts}개 이상의 작품을 찾아보세요. 인기순으로 정렬되어 있으며, 관심 있는 장르를 클릭하세요.",
-    "noCategories": "카테고리를 찾을 수 없습니다",
-    "productCount": "{count}작품",
-    "genreBadge": "장르",
-    "genreDescription": "{tagName} 장르 {count}개 작품. 최신순으로 정렬됩니다.",
-    "noProducts": "작품을 찾을 수 없습니다",
-    "backToCategories": "카테고리 목록으로 돌아가기"
   },
   "featured": {
     "title": "특집",

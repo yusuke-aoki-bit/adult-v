@@ -71,36 +71,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
       },
     },
-    // Categories pages for each locale
+    // Products pages for each locale
     ...locales.map((locale) => ({
-      url: `${BASE_URL}/${locale}/categories`,
+      url: `${BASE_URL}/${locale}/products`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.9,
       alternates: {
         languages: {
-          ja: `${BASE_URL}/ja/categories`,
-          en: `${BASE_URL}/en/categories`,
-          zh: `${BASE_URL}/zh/categories`,
-          ko: `${BASE_URL}/ko/categories`,
+          ja: `${BASE_URL}/ja/products`,
+          en: `${BASE_URL}/en/products`,
+          zh: `${BASE_URL}/zh/products`,
+          ko: `${BASE_URL}/ko/products`,
         },
       },
     })),
-    // Uncategorized pages for each locale
-    ...locales.map((locale) => ({
-      url: `${BASE_URL}/${locale}/uncategorized`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.5,
-      alternates: {
-        languages: {
-          ja: `${BASE_URL}/ja/uncategorized`,
-          en: `${BASE_URL}/en/uncategorized`,
-          zh: `${BASE_URL}/zh/uncategorized`,
-          ko: `${BASE_URL}/ko/uncategorized`,
-        },
-      },
-    })),
+    // Privacy policy page (Japanese only - legal content)
+    {
+      url: `${BASE_URL}/ja/privacy`,
+      lastModified: new Date('2024-12-09'),
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
+    },
+    // Terms of service page (Japanese only - legal content)
+    {
+      url: `${BASE_URL}/ja/terms`,
+      lastModified: new Date('2024-12-09'),
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
+    },
   ];
 
   // If DATABASE_URL is not available (during build), return static pages only

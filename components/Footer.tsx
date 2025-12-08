@@ -20,6 +20,7 @@ const translations = {
     contact: 'お問い合わせ',
     contactDescription: 'ご質問・ご要望はメールにてお問い合わせください。',
     affiliateNotice: '当サイトはDUGA、MGS、ソクミル、DTI、B10F.jp、FC2、Japanskaなどのアフィリエイトプログラムに参加しています。商品リンクから購入された場合、紹介料が発生することがあります。',
+    disclaimer2257: '18 U.S.C. § 2257 免責: 当サイトはコンテンツの制作者ではありません。すべてのコンテンツは第三者のプラットフォームから提供されており、各プラットフォームが記録保持の責任を負います。',
     admin: '管理ページ',
     copyright: '© {year} Adult Viewer Lab. All rights reserved.',
   },
@@ -32,6 +33,7 @@ const translations = {
     contact: 'Contact',
     contactDescription: 'For questions or requests, please contact us by email.',
     affiliateNotice: 'This site participates in affiliate programs with DUGA, MGS, SOKMIL, DTI, B10F.jp, FC2, and Japanska. We may earn commissions from purchases made through product links.',
+    disclaimer2257: '18 U.S.C. § 2257 Exemption: This site is not the producer of any content. All content is provided by third-party platforms, which are responsible for record-keeping compliance.',
     admin: 'Admin',
     copyright: '© {year} Adult Viewer Lab. All rights reserved.',
   },
@@ -44,6 +46,7 @@ const translations = {
     contact: '联系我们',
     contactDescription: '如有问题或需求，请通过电子邮件联系我们。',
     affiliateNotice: '本站参与DUGA、MGS、SOKMIL、DTI、B10F.jp、FC2和Japanska的联盟计划。通过产品链接购买可能会产生佣金。',
+    disclaimer2257: '18 U.S.C. § 2257 免责声明：本站不是任何内容的制作者。所有内容均由第三方平台提供，各平台负责记录保存合规。',
     admin: '管理页面',
     copyright: '© {year} Adult Viewer Lab. 保留所有权利。',
   },
@@ -56,6 +59,7 @@ const translations = {
     contact: '문의',
     contactDescription: '질문이나 요청 사항은 이메일로 문의해 주세요.',
     affiliateNotice: '이 사이트는 DUGA, MGS, SOKMIL, DTI, B10F.jp, FC2, Japanska와의 제휴 프로그램에 참여하고 있습니다. 상품 링크를 통한 구매 시 수수료가 발생할 수 있습니다.',
+    disclaimer2257: '18 U.S.C. § 2257 면책: 이 사이트는 콘텐츠 제작자가 아닙니다. 모든 콘텐츠는 제3자 플랫폼에서 제공되며, 각 플랫폼이 기록 보관 규정 준수를 담당합니다.',
     admin: '관리 페이지',
     copyright: '© {year} Adult Viewer Lab. All rights reserved.',
   },
@@ -107,10 +111,13 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
           </div>
         </div>
 
-        {/* アフィリエイト開示 */}
-        <div className="border-t border-gray-800 mt-8 pt-6 text-xs text-gray-500">
+        {/* アフィリエイト開示 & 2257免責 */}
+        <div className="border-t border-gray-800 mt-8 pt-6 text-xs text-gray-500 space-y-3">
           <p className="leading-relaxed">
             {t.affiliateNotice}
+          </p>
+          <p className="leading-relaxed">
+            {t.disclaimer2257}
           </p>
         </div>
 

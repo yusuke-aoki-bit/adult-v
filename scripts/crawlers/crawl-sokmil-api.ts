@@ -41,15 +41,38 @@ interface CrawlStats {
   tagsLinked: number;
 }
 
+/**
+ * 年月範囲を生成（配信開始日ベースで全件取得用）
+ */
+function generateDateRanges(startYear: number, endYear: number): Array<{ start: string; end: string }> {
+  const ranges: Array<{ start: string; end: string }> = [];
+
+  for (let year = endYear; year >= startYear; year--) {
+    for (let month = 12; month >= 1; month--) {
+      const start = `${year}-${month.toString().padStart(2, '0')}-01T00:00:00`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const end = `${year}-${month.toString().padStart(2, '0')}-${lastDay}T23:59:59`;
+      ranges.push({ start, end });
+    }
+  }
+
+  return ranges;
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const limitArg = args.find(arg => arg.startsWith('--limit='));
   const offsetArg = args.find(arg => arg.startsWith('--offset='));
   const enableAI = !args.includes('--no-ai');
   const forceReprocess = args.includes('--force');
+  const fullScan = args.includes('--full-scan');
+  const yearArg = args.find(arg => arg.startsWith('--year='));
+  const monthArg = args.find(arg => arg.startsWith('--month='));
 
   const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 100;
   const offset = offsetArg ? parseInt(offsetArg.split('=')[1]) : 0;
+  const targetYear = yearArg ? parseInt(yearArg.split('=')[1]) : null;
+  const targetMonth = monthArg ? parseInt(monthArg.split('=')[1]) : null;
 
   console.log('========================================');
   console.log('=== SOKMIL APIクローラー (GCS対応) ===');
@@ -57,6 +80,9 @@ async function main() {
   console.log(`取得範囲: offset=${offset}, limit=${limit}`);
   console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
   console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}`);
+  console.log(`フルスキャン: ${fullScan ? '有効' : '無効'}`);
+  if (targetYear) console.log(`指定年: ${targetYear}`);
+  if (targetMonth) console.log(`指定月: ${targetMonth}`);
   console.log('========================================\n');
 
   const sokmilClient = getSokmilClient();
@@ -76,64 +102,177 @@ async function main() {
   };
 
   try {
-    console.log('🔄 SOKMIL APIから新着作品を取得中...\n');
-
-    // 新着作品を取得（正しいAPIパラメータ: hits/offset）
-    // Sokmil API仕様: hits(20-100), offset(1-50000), sort(date)
-    const hitsPerRequest = 100;  // 最大100件
     const allProducts: SokmilProduct[] = [];
-    let currentOffset = offset + 1;  // APIのoffsetは1から開始
-    let totalCount = 0;
 
-    // ページネーションループ（limit件に達するまで、または全件取得まで）
-    while (allProducts.length < limit) {
-      crawlerLog.info(`offset=${currentOffset} を取得中... (累計: ${allProducts.length}件)`);
-      await rateLimiter.wait();
+    if (fullScan || targetYear) {
+      // フルスキャンモード: 日付範囲で全件取得（50000件制限を回避）
+      console.log('🔄 SOKMIL APIからフルスキャンで作品を取得中...\n');
 
-      try {
-        const response = await sokmilClient.searchItems({
-          hits: hitsPerRequest,
-          offset: currentOffset,
-          sort: 'date',  // 新着順
-        });
+      const currentYear = new Date().getFullYear();
+      let dateRanges: Array<{ start: string; end: string }>;
 
-        if (response.status !== 'success') {
-          crawlerLog.error(`API エラー: ${response.error}`);
+      if (targetYear && targetMonth) {
+        // 特定の年月のみ
+        const lastDay = new Date(targetYear, targetMonth, 0).getDate();
+        dateRanges = [{
+          start: `${targetYear}-${targetMonth.toString().padStart(2, '0')}-01T00:00:00`,
+          end: `${targetYear}-${targetMonth.toString().padStart(2, '0')}-${lastDay}T23:59:59`,
+        }];
+      } else if (targetYear) {
+        // 特定の年のみ
+        dateRanges = generateDateRanges(targetYear, targetYear);
+      } else {
+        // 2000年から現在まで全期間
+        dateRanges = generateDateRanges(2000, currentYear);
+      }
+
+      console.log(`📅 取得期間: ${dateRanges.length}ヶ月分\n`);
+
+      for (const range of dateRanges) {
+        if (allProducts.length >= limit) break;
+
+        console.log(`\n📆 期間: ${range.start.split('T')[0]} - ${range.end.split('T')[0]}`);
+
+        const hitsPerRequest = 100;
+        let currentOffset = 1;
+        let periodItems: SokmilProduct[] = [];
+
+        // 最初のリクエストで期間内の総数を取得
+        await rateLimiter.wait();
+        try {
+          const firstResponse = await sokmilClient.searchItems({
+            hits: hitsPerRequest,
+            offset: currentOffset,
+            sort: 'date',
+            gte_date: range.start,
+            lte_date: range.end,
+          });
+          rateLimiter.done();
+
+          if (firstResponse.status !== 'success') {
+            crawlerLog.error(`API エラー: ${firstResponse.error}`);
+            continue;
+          }
+
+          if (firstResponse.totalCount === 0 || firstResponse.data.length === 0) {
+            console.log(`  ⏭️ この期間には作品がありません`);
+            continue;
+          }
+
+          console.log(`  📊 期間内件数: ${firstResponse.totalCount.toLocaleString()}件`);
+
+          // ページネーションループ
+          let response = firstResponse;
+          while (true) {
+            if (response.data.length === 0) break;
+
+            periodItems.push(...response.data);
+            currentOffset += hitsPerRequest;
+
+            console.log(`  ✅ 取得: ${response.data.length}件 (期間累計: ${periodItems.length}件)`);
+
+            // この期間の全件取得完了
+            if (response.data.length < hitsPerRequest || periodItems.length >= firstResponse.totalCount) {
+              break;
+            }
+
+            // offset上限チェック（期間ごとなので通常は問題ない）
+            if (currentOffset > 50000) {
+              console.log(`  ⚠️ offset上限(50000)に達しました`);
+              break;
+            }
+
+            // 全体のlimitに達したら終了
+            if (allProducts.length + periodItems.length >= limit) {
+              break;
+            }
+
+            await rateLimiter.wait();
+            try {
+              response = await sokmilClient.searchItems({
+                hits: hitsPerRequest,
+                offset: currentOffset,
+                sort: 'date',
+                gte_date: range.start,
+                lte_date: range.end,
+              });
+            } finally {
+              rateLimiter.done();
+            }
+          }
+
+          allProducts.push(...periodItems);
+          console.log(`  📦 期間合計: ${periodItems.length}件 (全体累計: ${allProducts.length.toLocaleString()}件)`);
+
+        } catch (error) {
+          crawlerLog.error(`期間 ${range.start} の取得に失敗:`, error);
+          rateLimiter.done();
+        }
+
+        // レートリミット対策: 期間ごとに少し待機
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+
+    } else {
+      // 通常モード: 新着順で取得
+      console.log('🔄 SOKMIL APIから新着作品を取得中...\n');
+
+      // 新着作品を取得（正しいAPIパラメータ: hits/offset）
+      // Sokmil API仕様: hits(20-100), offset(1-50000), sort(date)
+      const hitsPerRequest = 100;  // 最大100件
+      let currentOffset = offset + 1;  // APIのoffsetは1から開始
+      let totalCount = 0;
+
+      // ページネーションループ（limit件に達するまで、または全件取得まで）
+      while (allProducts.length < limit) {
+        crawlerLog.info(`offset=${currentOffset} を取得中... (累計: ${allProducts.length}件)`);
+        await rateLimiter.wait();
+
+        try {
+          const response = await sokmilClient.searchItems({
+            hits: hitsPerRequest,
+            offset: currentOffset,
+            sort: 'date',  // 新着順
+          });
+
+          if (response.status !== 'success') {
+            crawlerLog.error(`API エラー: ${response.error}`);
+            break;
+          }
+
+          // 最初のリクエストで総件数をログ
+          if (currentOffset === offset + 1 && response.totalCount) {
+            totalCount = response.totalCount;
+            console.log(`📊 API総件数: ${totalCount.toLocaleString()}件`);
+            console.log(`🎯 取得目標: ${limit === 99999 ? '全件' : limit + '件'}\n`);
+          }
+
+          allProducts.push(...response.data);
+          crawlerLog.success(`${response.data.length}件取得 (累計: ${allProducts.length.toLocaleString()}件)`);
+
+          if (response.data.length < hitsPerRequest) {
+            break; // 最後のページ
+          }
+
+          // offset最大50000の制限チェック
+          if (currentOffset + hitsPerRequest > 50000) {
+            console.log('⚠️ offset上限(50000)に達しました');
+            break;
+          }
+
+          currentOffset += hitsPerRequest;
+
+          // レートリミット対策: 5000件ごとに休憩
+          if (allProducts.length % 5000 === 0 && allProducts.length > 0) {
+            console.log('⏳ レートリミット対策: 3秒待機...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          }
+        } catch (error) {
+          crawlerLog.error(`offset=${currentOffset}の取得に失敗:`, error);
           break;
+        } finally {
+          rateLimiter.done();
         }
-
-        // 最初のリクエストで総件数をログ
-        if (currentOffset === offset + 1 && response.totalCount) {
-          totalCount = response.totalCount;
-          console.log(`📊 API総件数: ${totalCount.toLocaleString()}件`);
-          console.log(`🎯 取得目標: ${limit === 99999 ? '全件' : limit + '件'}\n`);
-        }
-
-        allProducts.push(...response.data);
-        crawlerLog.success(`${response.data.length}件取得 (累計: ${allProducts.length.toLocaleString()}件)`);
-
-        if (response.data.length < hitsPerRequest) {
-          break; // 最後のページ
-        }
-
-        // offset最大50000の制限チェック
-        if (currentOffset + hitsPerRequest > 50000) {
-          console.log('⚠️ offset上限(50000)に達しました');
-          break;
-        }
-
-        currentOffset += hitsPerRequest;
-
-        // レートリミット対策: 5000件ごとに休憩
-        if (allProducts.length % 5000 === 0 && allProducts.length > 0) {
-          console.log('⏳ レートリミット対策: 3秒待機...');
-          await new Promise(resolve => setTimeout(resolve, 3000));
-        }
-      } catch (error) {
-        crawlerLog.error(`offset=${currentOffset}の取得に失敗:`, error);
-        break;
-      } finally {
-        rateLimiter.done();
       }
     }
 
@@ -142,7 +281,7 @@ async function main() {
       allProducts.splice(limit);
     }
 
-    console.log(`✅ API取得完了: ${allProducts.length}件\n`);
+    console.log(`\n✅ API取得完了: ${allProducts.length}件\n`);
     stats.totalFetched = allProducts.length;
 
     for (const [index, item] of allProducts.entries()) {

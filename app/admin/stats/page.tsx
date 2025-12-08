@@ -1,5 +1,14 @@
 import { Suspense } from 'react';
+import { Metadata } from 'next';
 import AdminStatsContent from './AdminStatsContent';
+
+export const metadata: Metadata = {
+  title: '管理ページ | Adult Viewer Lab',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export const dynamic = 'force-dynamic';
 

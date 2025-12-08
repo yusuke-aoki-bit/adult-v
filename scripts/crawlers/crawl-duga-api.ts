@@ -42,6 +42,24 @@ interface CrawlStats {
   salesSaved: number;
 }
 
+/**
+ * 年月範囲を生成（発売日ベースで全件取得用）
+ */
+function generateDateRanges(startYear: number, endYear: number): Array<{ start: string; end: string }> {
+  const ranges: Array<{ start: string; end: string }> = [];
+
+  for (let year = endYear; year >= startYear; year--) {
+    for (let month = 12; month >= 1; month--) {
+      const start = `${year}${month.toString().padStart(2, '0')}01`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const end = `${year}${month.toString().padStart(2, '0')}${lastDay}`;
+      ranges.push({ start, end });
+    }
+  }
+
+  return ranges;
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const limitArg = args.find(arg => arg.startsWith('--limit='));
@@ -49,9 +67,14 @@ async function main() {
   const skipReviews = args.includes('--skip-reviews');
   const enableAI = !args.includes('--no-ai');
   const forceReprocess = args.includes('--force');
+  const fullScan = args.includes('--full-scan');
+  const yearArg = args.find(arg => arg.startsWith('--year='));
+  const monthArg = args.find(arg => arg.startsWith('--month='));
 
   const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 100;
   const offset = offsetArg ? parseInt(offsetArg.split('=')[1]) : 0;
+  const targetYear = yearArg ? parseInt(yearArg.split('=')[1]) : null;
+  const targetMonth = monthArg ? parseInt(monthArg.split('=')[1]) : null;
 
   console.log('========================================');
   console.log('=== DUGA APIクローラー (GCS対応) ===');
@@ -60,6 +83,9 @@ async function main() {
   console.log(`レビュー取得: ${skipReviews ? '無効' : '有効'}`);
   console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
   console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}`);
+  console.log(`フルスキャン: ${fullScan ? '有効' : '無効'}`);
+  if (targetYear) console.log(`指定年: ${targetYear}`);
+  if (targetMonth) console.log(`指定月: ${targetMonth}`);
   console.log('========================================\n');
 
   const dugaClient = getDugaClient();
@@ -80,46 +106,140 @@ async function main() {
   };
 
   try {
-    console.log('🔄 DUGA APIから新着作品を取得中...\n');
-
-    // ページネーション処理: APIは1回最大100件まで
-    const PAGE_SIZE = 100;
-    let currentOffset = offset;
-    let totalProcessed = 0;
     let allItems: any[] = [];
 
-    // 最初のリクエストで総数を取得
-    const firstResponse = await dugaClient.getNewReleases(PAGE_SIZE, currentOffset);
-    const totalCount = firstResponse.count;
-    console.log(`📊 API総件数: ${totalCount.toLocaleString()}件`);
-    console.log(`🎯 取得目標: ${limit === 99999 ? '全件' : limit + '件'}\n`);
+    if (fullScan || targetYear) {
+      // フルスキャンモード: 発売日範囲で全件取得
+      console.log('🔄 DUGA APIからフルスキャンで作品を取得中...\n');
 
-    // ページネーションループ
-    while (totalProcessed < limit) {
-      const response = totalProcessed === 0
-        ? firstResponse
-        : await dugaClient.getNewReleases(PAGE_SIZE, currentOffset);
+      const currentYear = new Date().getFullYear();
+      let dateRanges: Array<{ start: string; end: string }>;
 
-      if (response.items.length === 0) {
-        console.log('📭 取得可能な商品がなくなりました');
-        break;
+      if (targetYear && targetMonth) {
+        // 特定の年月のみ
+        const lastDay = new Date(targetYear, targetMonth, 0).getDate();
+        dateRanges = [{
+          start: `${targetYear}${targetMonth.toString().padStart(2, '0')}01`,
+          end: `${targetYear}${targetMonth.toString().padStart(2, '0')}${lastDay}`,
+        }];
+      } else if (targetYear) {
+        // 特定の年のみ
+        dateRanges = generateDateRanges(targetYear, targetYear);
+      } else {
+        // 2000年から現在まで全期間
+        dateRanges = generateDateRanges(2000, currentYear);
       }
 
-      allItems = allItems.concat(response.items);
-      totalProcessed += response.items.length;
-      currentOffset += PAGE_SIZE;
+      console.log(`📅 取得期間: ${dateRanges.length}ヶ月分\n`);
 
-      console.log(`✅ ページ取得: ${response.items.length}件 (累計: ${totalProcessed.toLocaleString()}件 / offset: ${currentOffset})`);
+      for (const range of dateRanges) {
+        if (allItems.length >= limit) break;
 
-      // limitに達したら終了
-      if (totalProcessed >= limit || response.items.length < PAGE_SIZE) {
-        break;
+        console.log(`\n📆 期間: ${range.start} - ${range.end}`);
+
+        const PAGE_SIZE = 100;
+        let currentOffset = 0;
+        let periodItems: any[] = [];
+
+        // 最初のリクエストで期間内の総数を取得
+        const firstResponse = await dugaClient.searchProducts({
+          releasestt: range.start,
+          releaseend: range.end,
+          hits: PAGE_SIZE,
+          offset: currentOffset,
+          adult: 1,
+          sort: 'release',
+        });
+
+        if (firstResponse.count === 0) {
+          console.log(`  ⏭️ この期間には作品がありません`);
+          continue;
+        }
+
+        console.log(`  📊 期間内件数: ${firstResponse.count.toLocaleString()}件`);
+
+        // ページネーションループ
+        let response = firstResponse;
+        while (true) {
+          if (response.items.length === 0) break;
+
+          periodItems = periodItems.concat(response.items);
+          currentOffset += PAGE_SIZE;
+
+          console.log(`  ✅ 取得: ${response.items.length}件 (期間累計: ${periodItems.length}件)`);
+
+          // この期間の全件取得完了
+          if (response.items.length < PAGE_SIZE || periodItems.length >= firstResponse.count) {
+            break;
+          }
+
+          // 全体のlimitに達したら終了
+          if (allItems.length + periodItems.length >= limit) {
+            break;
+          }
+
+          // レートリミット対策
+          await new Promise(resolve => setTimeout(resolve, 1100));
+
+          response = await dugaClient.searchProducts({
+            releasestt: range.start,
+            releaseend: range.end,
+            hits: PAGE_SIZE,
+            offset: currentOffset,
+            adult: 1,
+            sort: 'release',
+          });
+        }
+
+        allItems = allItems.concat(periodItems);
+        console.log(`  📦 期間合計: ${periodItems.length}件 (全体累計: ${allItems.length.toLocaleString()}件)`);
+
+        // レートリミット対策: 期間ごとに少し待機
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
-      // レートリミット対策: 100リクエストごとに短い休憩
-      if (totalProcessed % 10000 === 0) {
-        console.log('⏳ レートリミット対策: 5秒待機...');
-        await new Promise(resolve => setTimeout(resolve, 5000));
+    } else {
+      // 通常モード: 新着順で取得
+      console.log('🔄 DUGA APIから新着作品を取得中...\n');
+
+      // ページネーション処理: APIは1回最大100件まで
+      const PAGE_SIZE = 100;
+      let currentOffset = offset;
+      let totalProcessed = 0;
+
+      // 最初のリクエストで総数を取得
+      const firstResponse = await dugaClient.getNewReleases(PAGE_SIZE, currentOffset);
+      const totalCount = firstResponse.count;
+      console.log(`📊 API総件数: ${totalCount.toLocaleString()}件`);
+      console.log(`🎯 取得目標: ${limit === 99999 ? '全件' : limit + '件'}\n`);
+
+      // ページネーションループ
+      while (totalProcessed < limit) {
+        const response = totalProcessed === 0
+          ? firstResponse
+          : await dugaClient.getNewReleases(PAGE_SIZE, currentOffset);
+
+        if (response.items.length === 0) {
+          console.log('📭 取得可能な商品がなくなりました');
+          break;
+        }
+
+        allItems = allItems.concat(response.items);
+        totalProcessed += response.items.length;
+        currentOffset += PAGE_SIZE;
+
+        console.log(`✅ ページ取得: ${response.items.length}件 (累計: ${totalProcessed.toLocaleString()}件 / offset: ${currentOffset})`);
+
+        // limitに達したら終了
+        if (totalProcessed >= limit || response.items.length < PAGE_SIZE) {
+          break;
+        }
+
+        // レートリミット対策: 100リクエストごとに短い休憩
+        if (totalProcessed % 10000 === 0) {
+          console.log('⏳ レートリミット対策: 5秒待機...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
       }
     }
 

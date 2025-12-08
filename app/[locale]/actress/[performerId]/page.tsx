@@ -5,7 +5,9 @@ import ActressAiReview from '@/components/ActressAiReview';
 import Pagination from '@/components/Pagination';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp } from '@/lib/db/queries';
+import RelatedActresses from '@/components/RelatedActresses';
+import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById } from '@/lib/db/queries';
+import { getRelatedPerformers } from '@/lib/db/recommendations';
 import {
   generateBaseMetadata,
   generatePersonSchema,
@@ -32,20 +34,54 @@ interface PageProps {
     hasImage?: string;
     performerType?: string;
     asp?: string | string[];
+    limit?: string;
   }>;
 }
 
-const PER_PAGE = 24;
+const DEFAULT_PER_PAGE = 24;
+const ALLOWED_PER_PAGE = [12, 24, 48, 96];
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   try {
     const { performerId, locale } = await params;
+    const resolvedSearchParams = await searchParams;
     const actress = await getActressById(performerId, locale);
     if (!actress) return {};
 
     const t = await getTranslations('actress');
 
-    // 多言語対応メタタイトル・ディスクリプション
+    // includeパラメータがある場合、ジャンル名を取得
+    const includeParam = resolvedSearchParams.include;
+    const firstTagId = typeof includeParam === 'string'
+      ? includeParam.split(',')[0]
+      : Array.isArray(includeParam)
+      ? includeParam[0]
+      : null;
+
+    if (firstTagId) {
+      const tagIdNum = parseInt(firstTagId, 10);
+      if (!isNaN(tagIdNum)) {
+        const tag = await getTagById(tagIdNum);
+        if (tag) {
+          // ロケールに応じたタグ名を取得
+          const tagName = locale === 'en' ? (tag.nameEn || tag.name)
+            : locale === 'zh' ? (tag.nameZh || tag.name)
+            : locale === 'ko' ? (tag.nameKo || tag.name)
+            : tag.name;
+
+          return generateBaseMetadata(
+            t('metaTitleWithGenre', { name: actress.name, genre: tagName }),
+            t('metaDescriptionWithGenre', { name: actress.name, genre: tagName }),
+            actress.heroImage || actress.thumbnail,
+            `/${locale}/actress/${actress.id}`,
+            undefined,
+            locale,
+          );
+        }
+      }
+    }
+
+    // 通常のメタデータ
     const title = t('metaTitle', { name: actress.name, count: actress.metrics.releaseCount });
 
     return generateBaseMetadata(
@@ -76,6 +112,10 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
   const page = parseInt(resolvedSearchParams.page || '1', 10);
   const sortBy = (resolvedSearchParams.sort || 'releaseDateDesc') as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'titleAsc';
+
+  // 表示件数（URLパラメータから取得、許可リストでバリデーション）
+  const requestedLimit = parseInt(resolvedSearchParams.limit || String(DEFAULT_PER_PAGE), 10);
+  const perPage = ALLOWED_PER_PAGE.includes(requestedLimit) ? requestedLimit : DEFAULT_PER_PAGE;
 
   // hasVideo/hasImageフィルター
   const hasVideo = resolvedSearchParams.hasVideo === 'true';
@@ -111,6 +151,9 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // Get product count by ASP
   const productCountByAsp = await getActressProductCountByAsp(actress.id);
 
+  // Get related performers (co-stars)
+  const relatedPerformers = await getRelatedPerformers(parseInt(actress.id), 6);
+
   // Get products
   const allWorks = await getProducts({
     actressId: actress.id,
@@ -126,7 +169,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   });
 
   const total = allWorks.length;
-  const works = allWorks.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const works = allWorks.slice((page - 1) * perPage, page * perPage);
 
   const basePath = `/${locale}/actress/${actress.id}`;
 
@@ -240,8 +283,8 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {total > 0 ? (
             <>
               {/* ページネーション（上部） */}
-              {total > PER_PAGE && (
-                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="top" />
+              {total > perPage && (
+                <Pagination total={total} page={page} perPage={perPage} basePath={basePath} position="top" showPerPageSelector />
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {works.map((work) => (
@@ -249,12 +292,20 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 ))}
               </div>
               {/* ページネーション（下部） */}
-              {total > PER_PAGE && (
-                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="bottom" />
+              {total > perPage && (
+                <Pagination total={total} page={page} perPage={perPage} basePath={basePath} position="bottom" />
               )}
             </>
           ) : (
             <p className="text-center text-gray-400 py-12">{t('noProducts')}</p>
+          )}
+
+          {/* 関連女優（共演者）セクション */}
+          {relatedPerformers.length > 0 && (
+            <RelatedActresses
+              actresses={relatedPerformers}
+              currentActressName={actress.name}
+            />
           )}
         </div>
       </div>
