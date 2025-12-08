@@ -20,6 +20,7 @@ import { getTranslations } from 'next-intl/server';
 import { providerMeta } from '@/lib/providers';
 import ActressProductFilter from '@/components/ActressProductFilter';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
+import ActressFavoriteButton from '@/components/ActressFavoriteButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -211,7 +212,14 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 className="w-16 h-16"
               />
               <div className="flex-1">
-                <h1 className="text-2xl font-bold text-white">{actress.name}</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold text-white">{actress.name}</h1>
+                  <ActressFavoriteButton
+                    id={actress.id}
+                    name={actress.name}
+                    thumbnail={actress.heroImage || actress.thumbnail}
+                  />
+                </div>
                 <p className="text-gray-300">{t('totalProducts', { count: total })}</p>
                 {nonPrimaryAliases.length > 0 && (
                   <div className="mt-2">
