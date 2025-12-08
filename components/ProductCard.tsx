@@ -31,17 +31,29 @@ export default function ProductCard({ product }: ProductCardProps) {
   // 女優ページかどうかを判定
   const isActressPage = pathname.includes('/actress/');
 
-  // タグリンクのURLを生成（女優ページなら同一ページ内フィルタ、それ以外は作品一覧）
+  // タグリンクのURLを生成（既存のフィルターにタグを追加）
   const getTagFilterUrl = useCallback((tag: string) => {
-    if (isActressPage) {
-      // 女優ページの場合、現在のパスにincludeパラメータを追加
-      const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams.toString());
+    const existingInclude = params.get('include');
+
+    if (existingInclude) {
+      // 既存のタグがある場合、重複チェックしてから追加
+      const existingTags = existingInclude.split(',').map(t => t.trim());
+      if (!existingTags.includes(tag)) {
+        params.set('include', [...existingTags, tag].join(','));
+      }
+      // すでに含まれている場合は何も変更しない
+    } else {
       params.set('include', tag);
-      params.delete('page'); // ページをリセット
+    }
+
+    params.delete('page'); // ページをリセット
+
+    if (isActressPage) {
       return `${pathname}?${params.toString()}`;
     }
-    // 作品一覧ページへ遷移
-    return `/${locale}/products?include=${encodeURIComponent(tag)}`;
+    // 作品一覧ページへ遷移（既存のフィルターも引き継ぐ）
+    return `/${locale}/products?${params.toString()}`;
   }, [isActressPage, pathname, searchParams, locale]);
 
   const handleImageError = () => {
