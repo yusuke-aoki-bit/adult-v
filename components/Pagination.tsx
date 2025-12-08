@@ -164,9 +164,9 @@ export default function Pagination({
   };
 
   return (
-    <nav className={`flex flex-col items-center gap-3 ${position === 'top' ? 'mb-6' : 'mt-8'}`}>
+    <nav className={`flex flex-col items-center gap-3 min-h-[88px] sm:min-h-[76px] ${position === 'top' ? 'mb-6' : 'mt-8'}`}>
       {/* メインナビゲーション */}
-      <div className="flex flex-wrap items-center justify-center gap-2">
+      <div className="flex flex-wrap items-center justify-center gap-2 min-h-[40px]">
         {/* 最初 - デスクトップのみ */}
         <Link
           href={getUrl(1)}

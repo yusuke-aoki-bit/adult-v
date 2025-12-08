@@ -58,6 +58,15 @@ export default function RootLayout({
   return (
     <html lang={defaultLocale}>
       <head>
+        {/* LCP改善: 画像配信ドメインへのpreconnect */}
+        <link rel="preconnect" href="https://pics.dmm.co.jp" />
+        <link rel="preconnect" href="https://img.duga.jp" />
+        <link rel="preconnect" href="https://image.mgstage.com" />
+        <link rel="preconnect" href="https://storage.googleapis.com" />
+        <link rel="dns-prefetch" href="https://pics.dmm.co.jp" />
+        <link rel="dns-prefetch" href="https://img.duga.jp" />
+        <link rel="dns-prefetch" href="https://image.mgstage.com" />
+        <link rel="dns-prefetch" href="https://storage.googleapis.com" />
         <JsonLD data={websiteSchema} />
       </head>
       <body
