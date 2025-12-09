@@ -119,7 +119,7 @@ export default function Header() {
       {/* 成人向けコンテンツ注意文 */}
       <div className="bg-gray-800/80 border-b border-white/5">
         <div className="container mx-auto px-3 sm:px-4 py-1">
-          <p className="text-[10px] sm:text-xs text-gray-400 text-center leading-tight">
+          <p className="text-[10px] sm:text-xs text-gray-300 text-center leading-tight">
             {t.adultNotice}
           </p>
         </div>
@@ -267,7 +267,7 @@ export default function Header() {
       {/* ASP統計バー - ヘッダー下部に統合 */}
       <div className="bg-gray-900/80 border-t border-white/5">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 py-1.5 flex-wrap">
+          <div className="flex items-center gap-2 py-1.5 flex-wrap min-h-[36px]">
             {/* セールバッジ */}
             {saleStats === null ? (
               <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />

@@ -292,7 +292,7 @@ export default function Pagination({
       {/* ページ情報 + コントロール */}
       <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
         {/* ページ情報 */}
-        <div className="text-gray-500">
+        <div className="text-gray-400">
           {total > 0 && (
             <>
               <span className="hidden sm:inline">

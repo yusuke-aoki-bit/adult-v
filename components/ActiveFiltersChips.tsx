@@ -159,8 +159,8 @@ export default function ActiveFiltersChips() {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 py-2 px-3 mb-2 bg-gray-800/50 rounded-lg border-l-4 border-rose-500">
-      <span className="text-xs text-gray-400 font-medium">{t.activeFilters}:</span>
+    <div className="flex flex-wrap items-center gap-2 py-2 px-3 mb-2 bg-gray-800/50 rounded-lg border-l-4 border-rose-500 transition-all">
+      <span className="text-xs text-gray-300 font-medium">{t.activeFilters}:</span>
       {activeFilters.map(filter => (
         <button
           key={filter.key}

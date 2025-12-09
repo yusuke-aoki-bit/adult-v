@@ -68,12 +68,12 @@ const translations = {
 export default function Footer({ locale = 'ja' }: { locale?: string }) {
   const t = translations[locale as keyof typeof translations] || translations.ja;
   return (
-    <footer className="bg-gray-900 text-gray-300 mt-auto min-h-[400px]">
+    <footer className="bg-gray-900 text-gray-300 mt-auto">
       <div className="container mx-auto px-4 py-8">
         {/* サイト情報 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-white font-bold text-lg mb-2">{t.siteName}</h3>
+            <h2 className="text-white font-bold text-lg mb-2">{t.siteName}</h2>
             <p className="text-sm text-gray-400">
               {t.description}
             </p>
@@ -81,7 +81,7 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
 
           {/* 法的ページリンク */}
           <div>
-            <h4 className="text-white font-semibold mb-3">{t.legal}</h4>
+            <h3 className="text-white font-semibold mb-3">{t.legal}</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href={`/${locale}/privacy`} className="text-gray-400 hover:text-white transition-colors">
@@ -98,7 +98,7 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
 
           {/* お問い合わせ */}
           <div>
-            <h4 className="text-white font-semibold mb-3">{t.contact}</h4>
+            <h3 className="text-white font-semibold mb-3">{t.contact}</h3>
             <p className="text-sm text-gray-400">
               {t.contactDescription}
             </p>
@@ -112,7 +112,7 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
         </div>
 
         {/* アフィリエイト開示 & 2257免責 */}
-        <div className="border-t border-gray-800 mt-8 pt-6 text-xs text-gray-500 space-y-3">
+        <div className="border-t border-gray-800 mt-8 pt-6 text-xs text-gray-400 space-y-3">
           <p className="leading-relaxed">
             {t.affiliateNotice}
           </p>
@@ -149,10 +149,10 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
         </div>
 
         {/* 管理ページ・コピーライト */}
-        <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-gray-500">
+        <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-gray-400">
           <Link
             href="/admin/stats"
-            className="text-gray-500 hover:text-gray-300 transition-colors"
+            className="text-gray-400 hover:text-gray-300 transition-colors"
           >
             {t.admin}
           </Link>
