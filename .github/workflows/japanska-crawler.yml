@@ -42,7 +42,6 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
         run: |
           npx tsx scripts/crawlers/crawl-japanska.ts \
             --pages ${{ github.event.inputs.pages || '5' }} \
