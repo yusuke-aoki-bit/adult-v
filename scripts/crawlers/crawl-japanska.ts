@@ -27,8 +27,58 @@ import {
   upsertRawHtmlDataWithGcs,
   markRawDataAsProcessed,
 } from '../../lib/crawler/dedup-helper';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import type { Browser, Page } from 'puppeteer';
+
+// Stealth pluginを使用してbot検知を回避
+puppeteer.use(StealthPlugin());
 
 const db = getDb();
+
+// グローバルブラウザインスタンス
+let browser: Browser | null = null;
+
+/**
+ * ブラウザを初期化
+ */
+async function initBrowser(): Promise<Browser> {
+  if (browser) return browser;
+
+  console.log('🌐 Puppeteerブラウザを起動中...');
+
+  // 環境変数からChromiumのパスを取得（Dockerコンテナ用）
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+  if (executablePath) {
+    console.log(`  Chromium path: ${executablePath}`);
+  }
+
+  browser = await puppeteer.launch({
+    headless: true,
+    executablePath,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--disable-gpu',
+      '--window-size=1920,1080',
+    ],
+  });
+  console.log('✅ ブラウザ起動完了');
+  return browser;
+}
+
+/**
+ * ブラウザを終了
+ */
+async function closeBrowser(): Promise<void> {
+  if (browser) {
+    await browser.close();
+    browser = null;
+    console.log('🌐 ブラウザを終了しました');
+  }
+}
 
 // アフィリエイトID設定
 const AFFILIATE_ID = '9512-1-001';
@@ -92,27 +142,62 @@ function isHomePage(html: string): boolean {
 }
 
 /**
- * リトライ付きfetch
+ * Puppeteerでページを取得（bot検知回避）
  */
-async function fetchWithRetry(url: string, options: RequestInit, maxRetries: number = 3): Promise<Response | null> {
+async function fetchPageWithPuppeteer(url: string, referer?: string, maxRetries: number = 3): Promise<{ html: string | null; status: number }> {
+  const browserInstance = await initBrowser();
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    let page: Page | null = null;
     try {
-      const response = await fetch(url, {
-        ...options,
-        signal: AbortSignal.timeout(30000), // 30秒タイムアウト
+      page = await browserInstance.newPage();
+
+      // ユーザーエージェントとヘッダー設定
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+      if (referer) {
+        await page.setExtraHTTPHeaders({
+          'Referer': referer,
+          'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+        });
+      }
+
+      // ビューポート設定
+      await page.setViewport({ width: 1920, height: 1080 });
+
+      // ページ遷移
+      const response = await page.goto(url, {
+        waitUntil: 'domcontentloaded',
+        timeout: 30000,
       });
-      return response;
+
+      if (!response) {
+        throw new Error('No response received');
+      }
+
+      const status = response.status();
+      if (status >= 400) {
+        return { html: null, status };
+      }
+
+      // ページコンテンツ取得
+      const html = await page.content();
+      return { html, status };
     } catch (error: any) {
       const isLastAttempt = attempt === maxRetries;
-      console.log(`    ⚠️ fetch失敗 (${attempt}/${maxRetries}): ${error.message}`);
+      console.log(`    ⚠️ Puppeteer fetch失敗 (${attempt}/${maxRetries}): ${error.message}`);
       if (isLastAttempt) {
-        return null;
+        return { html: null, status: 0 };
       }
       // 指数バックオフ
       await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+    } finally {
+      if (page) {
+        await page.close();
+      }
     }
   }
-  return null;
+  return { html: null, status: 0 };
 }
 
 /**
@@ -122,29 +207,19 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
   const url = `https://www.japanska-xxx.com/movie/detail_${movieId}.html`;
 
   try {
-    console.log(`  🔍 詳細ページ取得中（Referer付き）: ${url}`);
+    console.log(`  🔍 詳細ページ取得中（Puppeteer）: ${url}`);
 
-    // 一覧ページからのRefererを付けてアクセス（リトライ付き）
-    const response = await fetchWithRetry(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-        'Referer': LIST_PAGE_URL,
-      },
-    });
+    // Puppeteerでページを取得（Stealth pluginでbot検知回避）
+    const { html, status } = await fetchPageWithPuppeteer(url, LIST_PAGE_URL);
 
-    if (!response) {
-      console.log(`    ❌ 商品 ${movieId} の取得に失敗 (ネットワークエラー)`);
+    if (!html) {
+      if (status >= 400) {
+        console.log(`    ⚠️ 商品 ${movieId} が見つかりません (${status})`);
+      } else {
+        console.log(`    ❌ 商品 ${movieId} の取得に失敗 (ネットワークエラー)`);
+      }
       return { product: null, rawDataId: null, shouldSkip: false };
     }
-
-    if (!response.ok) {
-      console.log(`    ⚠️ 商品 ${movieId} が見つかりません (${response.status})`);
-      return { product: null, rawDataId: null, shouldSkip: false };
-    }
-
-    const html = await response.text();
 
     // 取得したHTMLがホームページの場合はスキップ
     if (isHomePage(html)) {
@@ -813,10 +888,14 @@ async function main() {
   `);
   console.log(`\nJapanska総商品数: ${stats.rows[0].count}`);
 
+  // ブラウザを終了
+  await closeBrowser();
+
   process.exit(0);
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
   console.error('Fatal error:', error);
+  await closeBrowser();
   process.exit(1);
 });

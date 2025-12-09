@@ -425,17 +425,19 @@ export default function ProductCard({ product }: ProductCardProps) {
           <div className="flex gap-2">
             <Link
               href={`/${locale}/products/${product.id}`}
-              className="inline-flex items-center justify-center gap-2 flex-1 rounded-xl bg-gray-900 text-white px-4 py-2 text-sm font-semibold hover:bg-gray-800 active:scale-95 transition-transform"
+              className="inline-flex items-center justify-center rounded-xl bg-gray-900 text-white px-3 py-2 hover:bg-gray-800 active:scale-95 transition-transform"
+              title={t('viewDetails')}
+              aria-label={t('viewDetails')}
             >
-              {t('viewDetails')}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
             </Link>
             {product.affiliateUrl && (
@@ -572,11 +574,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* 詳細ページへのリンク */}
           <Link
             href={`/${locale}/products/${product.id}`}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-rose-600 hover:bg-rose-700 rounded-lg text-white font-semibold transition-colors pointer-events-auto flex items-center gap-2"
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-rose-600 hover:bg-rose-700 rounded-lg text-white font-semibold transition-colors pointer-events-auto flex items-center gap-2 whitespace-nowrap"
             onClick={(e) => e.stopPropagation()}
           >
             {t('viewDetails')}
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
