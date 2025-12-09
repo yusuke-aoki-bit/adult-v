@@ -111,7 +111,7 @@ export default function AgeVerification({ locale, children, initialVerified = fa
         </div>
 
         {/* フッター注意書き */}
-        <p className="text-xs text-gray-500 text-center mt-6">
+        <p className="text-xs text-gray-400 text-center mt-6">
           {t('legalNotice', { defaultValue: 'このサイトにアクセスすることで、利用規約とプライバシーポリシーに同意したものとみなされます。' })}
         </p>
       </div>
