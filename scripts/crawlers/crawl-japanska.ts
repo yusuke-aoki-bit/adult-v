@@ -87,27 +87,49 @@ async function initializeSession(browserInstance: Browser): Promise<void> {
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     await page.setViewport({ width: 1920, height: 1080 });
 
-    // ホームページにアクセスしてCookieを取得
-    await page.goto('https://www.japanska-xxx.com/', {
-      waitUntil: 'domcontentloaded',
-      timeout: 30000,
+    // リクエストインターセプトで不要なリソースをブロック（高速化）
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+      const resourceType = request.resourceType();
+      if (['image', 'stylesheet', 'font', 'media'].includes(resourceType)) {
+        request.abort();
+      } else {
+        request.continue();
+      }
     });
+
+    // ホームページにアクセスしてCookieを取得（タイムアウト延長）
+    try {
+      await page.goto('https://www.japanska-xxx.com/', {
+        waitUntil: 'networkidle2',
+        timeout: 60000,
+      });
+    } catch (e) {
+      // タイムアウトしても続行（部分的にロードされている可能性）
+      console.log('  ⚠️ ホームページ読み込みタイムアウト、続行します...');
+    }
 
     // 少し待機
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     // カテゴリページにも一度アクセス（より自然なブラウジング）
-    await page.goto(LIST_PAGE_URL, {
-      waitUntil: 'domcontentloaded',
-      timeout: 30000,
-    });
+    try {
+      await page.goto(LIST_PAGE_URL, {
+        waitUntil: 'networkidle2',
+        timeout: 60000,
+      });
+    } catch (e) {
+      console.log('  ⚠️ リストページ読み込みタイムアウト、続行します...');
+    }
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     sessionInitialized = true;
     console.log('✅ セッション初期化完了');
   } catch (error) {
     console.error('⚠️ セッション初期化エラー:', error);
+    // エラーがあっても続行を試みる
+    sessionInitialized = true;
   } finally {
     await page.close();
   }
@@ -209,11 +231,33 @@ async function fetchPageWithPuppeteer(url: string, referer?: string, maxRetries:
       // ビューポート設定
       await page.setViewport({ width: 1920, height: 1080 });
 
-      // ページ遷移
-      const response = await page.goto(url, {
-        waitUntil: 'domcontentloaded',
-        timeout: 30000,
+      // リクエストインターセプトで不要なリソースをブロック（高速化）
+      await page.setRequestInterception(true);
+      page.on('request', (request) => {
+        const resourceType = request.resourceType();
+        if (['image', 'stylesheet', 'font', 'media'].includes(resourceType)) {
+          request.abort();
+        } else {
+          request.continue();
+        }
       });
+
+      // ページ遷移（タイムアウト延長）
+      let response;
+      try {
+        response = await page.goto(url, {
+          waitUntil: 'networkidle2',
+          timeout: 60000,
+        });
+      } catch (timeoutError: any) {
+        // タイムアウトしても、部分的に読み込まれている可能性がある
+        console.log(`    ⚠️ ページ読み込みタイムアウト、部分コンテンツを試行...`);
+        const html = await page.content();
+        if (html && html.length > 1000) {
+          return { html, status: 200 };
+        }
+        throw timeoutError;
+      }
 
       if (!response) {
         throw new Error('No response received');
@@ -233,8 +277,8 @@ async function fetchPageWithPuppeteer(url: string, referer?: string, maxRetries:
       if (isLastAttempt) {
         return { html: null, status: 0 };
       }
-      // 指数バックオフ
-      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+      // 指数バックオフ（長めに待機）
+      await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, attempt)));
     } finally {
       if (page) {
         await page.close();
