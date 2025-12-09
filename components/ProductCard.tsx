@@ -459,8 +459,9 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* フルサイズ画像モーダル */}
       {showModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 cursor-pointer"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 cursor-pointer select-none"
           onClick={handleModalZoneClick}
+          style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
         >
           {/* 閉じるボタン */}
           <button

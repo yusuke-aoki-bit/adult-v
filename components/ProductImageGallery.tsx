@@ -247,6 +247,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
         <div
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center cursor-pointer select-none"
           onClick={() => setLightboxOpen(false)}
+          style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
         >
           {/* 閉じるボタン */}
           <button
