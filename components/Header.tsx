@@ -283,7 +283,7 @@ export default function Header() {
             {/* ASP統計バッジ */}
             {aspStats.length === 0 ? (
               <>
-                {[80, 70, 65, 70, 60, 65, 60].map((width, i) => (
+                {[80, 90, 70, 65, 70, 60, 65, 60].map((width, i) => (
                   <div key={i} className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
                 ))}
               </>
