@@ -303,10 +303,11 @@
   },
   "imageLightbox": {
     "close": "Close",
-    "clickToCloseEsc": "Click to close / ESC key",
+    "clickToCloseEsc": "← Prev | Center to close | Next →",
     "previousImage": "Previous image",
     "nextImage": "Next image",
-    "thumbnailAlt": "Thumbnail"
+    "thumbnailAlt": "Thumbnail",
+    "viewDetails": "View Details"
   },
   "productImageGallery": {
     "previousImage": "Previous image",

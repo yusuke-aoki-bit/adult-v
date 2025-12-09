@@ -281,9 +281,10 @@
   },
   "imageLightbox": {
     "close": "关闭",
-    "clickToCloseEsc": "点击关闭 / ESC键",
+    "clickToCloseEsc": "← 上一张 | 中央关闭 | 下一张 →",
     "previousImage": "上一张图片",
     "nextImage": "下一张图片",
-    "thumbnailAlt": "缩略图"
+    "thumbnailAlt": "缩略图",
+    "viewDetails": "查看详情"
   }
 }

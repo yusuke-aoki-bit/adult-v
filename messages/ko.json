@@ -281,9 +281,10 @@
   },
   "imageLightbox": {
     "close": "닫기",
-    "clickToCloseEsc": "클릭하여 닫기 / ESC 키",
+    "clickToCloseEsc": "← 이전 | 중앙 클릭하여 닫기 | 다음 →",
     "previousImage": "이전 이미지",
     "nextImage": "다음 이미지",
-    "thumbnailAlt": "썸네일"
+    "thumbnailAlt": "썸네일",
+    "viewDetails": "상세보기"
   }
 }
