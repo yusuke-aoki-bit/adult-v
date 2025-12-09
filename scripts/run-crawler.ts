@@ -441,6 +441,52 @@ async function main() {
         }
         break;
 
+      case 'minnano-av':
+        {
+          // minnano-av.com 女優情報クローラー
+          const fullCrawl = await shouldDoFullCrawl('minnano-av');
+          const limit = fullCrawl ? '500' : '50';
+          const fetchDetail = fullCrawl ? '--detail' : '';
+          const command = `npx tsx scripts/crawlers/crawl-minnano-av-performers.ts --limit=${limit} ${fetchDetail}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'gravurefit':
+        {
+          // gravurefit.com 女優情報クローラー
+          const fullCrawl = await shouldDoFullCrawl('gravurefit');
+          const limit = fullCrawl ? '500' : '50';
+          const command = `npx tsx scripts/crawlers/crawl-gravurefit-performers.ts --limit=${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'seesaawiki-performers':
+        {
+          // seesaawiki.jp/av_neme 出演者クローラー
+          const fullCrawl = await shouldDoFullCrawl('seesaawiki-performers');
+          const limit = fullCrawl ? '500' : '100';
+          const command = `npx tsx scripts/crawlers/crawl-seesaawiki-performers.ts --limit=${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      // バックフィルコマンド
+      case 'backfill-mgs-sample-images':
+        {
+          // MGSサンプル画像バックフィル（サムネイル→フルサイズ）
+          const limitArg = args.find(a => a.startsWith('--limit='));
+          const limit = limitArg ? limitArg.split('=')[1] : '500';
+          const command = `npx tsx scripts/backfill/backfill-mgs-sample-images.ts --limit=${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
       // ワークフロー統合コマンド
       case 'workflow':
       case 'workflow-all':
@@ -497,8 +543,8 @@ async function main() {
         console.log('  Product crawlers: mgs, sokmil, duga, duga-api, fc2, fc2-video, b10f, japanska');
         console.log('  DTI crawlers: caribbeancom, heyzo, caribbeancompr, 1pondo, 10musume, pacopacomama, hitozumagiri');
         console.log('  DTI group: dti-all, dti-high, dti-medium, dti-low, h4610, h0930, 3d-eros, pikkur');
-        console.log('  Wiki crawlers: avwiki-tokyo, wikipedia-ja');
-        console.log('  Actor crawlers: sokmil-actors');
+        console.log('  Wiki crawlers: avwiki-tokyo, wikipedia-ja, seesaawiki-performers');
+        console.log('  Actor crawlers: sokmil-actors, minnano-av, gravurefit, performer-info');
         console.log('  Utility crawlers: sales');
         console.log('\n  Workflow (統合実行):');
         console.log('    workflow        - 全ステップ実行 (crawl → link → aliases → ai → translate)');

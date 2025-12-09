@@ -22,7 +22,7 @@ export function DtiCredit({ className = '' }: DtiCreditProps) {
         width={900}
         height={250}
         loading="lazy"
-        className="block w-[180px] h-[50px] max-w-full object-contain"
+        className="block w-auto h-[50px] max-w-[180px] object-contain"
         style={{ aspectRatio: '900/250' }}
       />
     </a>

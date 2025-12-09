@@ -264,8 +264,14 @@ export function normalizePerformerName(name: string | null | undefined): string 
   // 全角スペースを半角に
   normalized = normalized.replace(/　/g, ' ');
 
-  // 連続する空白を1つに
-  normalized = normalized.replace(/\s+/g, ' ');
+  // 日本語名の場合、スペースを削除（「波 多 野 結 衣」→「波多野結衣」）
+  // 日本語文字（ひらがな、カタカナ、漢字）のみで構成されている場合
+  if (/^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\s]+$/.test(normalized)) {
+    normalized = normalized.replace(/\s+/g, '');
+  } else {
+    // 英語名など（スペースを保持するが、連続する空白は1つに）
+    normalized = normalized.replace(/\s+/g, ' ');
+  }
 
   // 前後の記号を削除
   normalized = normalized.replace(/^[・●○◎◇◆□■△▲▽▼※☆★♪♫【】「」『』（）()［］\[\]]+/, '');

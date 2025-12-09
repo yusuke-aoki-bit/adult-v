@@ -121,16 +121,30 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
           </p>
         </div>
 
-        {/* パートナーバナー表示 */}
+        {/* パートナーバナー表示 - グリッドレイアウトで固定サイズ (180x50) */}
         <div className="border-t border-gray-800 mt-6 pt-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 items-center justify-items-center">
-            <DugaCredit />
-            <SokmilCredit variant="88x31" />
-            <MgsCredit />
-            <DtiCredit />
-            <B10fCredit />
-            <Fc2Credit />
-            <JapanskaCredit />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 justify-items-center">
+            <div className="w-[180px] h-[50px] flex items-center justify-center">
+              <DugaCredit />
+            </div>
+            <div className="w-[180px] h-[50px] flex items-center justify-center">
+              <SokmilCredit variant="88x31" />
+            </div>
+            <div className="w-[180px] h-[50px] flex items-center justify-center">
+              <MgsCredit />
+            </div>
+            <div className="w-[180px] h-[50px] flex items-center justify-center">
+              <DtiCredit />
+            </div>
+            <div className="w-[180px] h-[50px] flex items-center justify-center">
+              <B10fCredit />
+            </div>
+            <div className="w-[180px] h-[50px] flex items-center justify-center">
+              <Fc2Credit />
+            </div>
+            <div className="w-[180px] h-[50px] flex items-center justify-center">
+              <JapanskaCredit />
+            </div>
           </div>
         </div>
 

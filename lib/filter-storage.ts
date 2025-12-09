@@ -14,6 +14,11 @@ export interface FilterSettings {
 // ストレージキー
 const HOME_FILTER_KEY = 'filter-settings-home'; // トップページ（女優一覧）
 const ACTRESS_FILTER_KEY = 'filter-settings-actress'; // 女優詳細ページ
+const PER_PAGE_KEY = 'list-per-page'; // 一覧ページの表示件数
+
+// 許可される表示件数
+const ALLOWED_PER_PAGE = [12, 24, 48, 96] as const;
+const DEFAULT_PER_PAGE = 50;
 
 export function getFilterSettings(page: 'home' | 'actress'): FilterSettings | null {
   if (typeof window === 'undefined') {
@@ -75,5 +80,50 @@ export function clearFilterSettings(page: 'home' | 'actress'): void {
     localStorage.removeItem(key);
   } catch (error) {
     console.error('Error clearing filter settings:', error);
+  }
+}
+
+/**
+ * 表示件数をlocalStorageから取得
+ */
+export function getPerPage(): number | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const stored = localStorage.getItem(PER_PAGE_KEY);
+    if (!stored) {
+      return null;
+    }
+
+    const value = parseInt(stored, 10);
+    if (isNaN(value) || !ALLOWED_PER_PAGE.includes(value as typeof ALLOWED_PER_PAGE[number])) {
+      return null;
+    }
+
+    return value;
+  } catch (error) {
+    console.error('Error reading per page setting:', error);
+    return null;
+  }
+}
+
+/**
+ * 表示件数をlocalStorageに保存
+ */
+export function savePerPage(perPage: number): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (!ALLOWED_PER_PAGE.includes(perPage as typeof ALLOWED_PER_PAGE[number])) {
+    return;
+  }
+
+  try {
+    localStorage.setItem(PER_PAGE_KEY, perPage.toString());
+  } catch (error) {
+    console.error('Error saving per page setting:', error);
   }
 }

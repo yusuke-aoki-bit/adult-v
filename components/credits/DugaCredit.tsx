@@ -25,7 +25,7 @@ export function DugaCredit({ className = '' }: DugaCreditProps) {
         width="88"
         height="31"
         loading="lazy"
-        className="block w-[88px] h-[31px]"
+        className="block w-auto h-[50px] max-w-[180px] object-contain"
         style={{ aspectRatio: '88/31' }}
       />
     </a>

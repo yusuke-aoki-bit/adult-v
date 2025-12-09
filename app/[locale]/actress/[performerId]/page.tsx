@@ -51,6 +51,17 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
     const t = await getTranslations('actress');
 
+    // フィルター・ページネーションがある場合はnoindex
+    const hasFilters = !!(
+      resolvedSearchParams.include ||
+      resolvedSearchParams.exclude ||
+      resolvedSearchParams.hasVideo === 'true' ||
+      resolvedSearchParams.hasImage === 'true' ||
+      resolvedSearchParams.performerType ||
+      resolvedSearchParams.asp
+    );
+    const hasPageParam = !!resolvedSearchParams.page && resolvedSearchParams.page !== '1';
+
     // includeパラメータがある場合、ジャンル名を取得
     const includeParam = resolvedSearchParams.include;
     const firstTagId = typeof includeParam === 'string'
@@ -70,7 +81,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
             : locale === 'ko' ? (tag.nameKo || tag.name)
             : tag.name;
 
-          return generateBaseMetadata(
+          const metadata = generateBaseMetadata(
             t('metaTitleWithGenre', { name: actress.name, genre: tagName }),
             t('metaDescriptionWithGenre', { name: actress.name, genre: tagName }),
             actress.heroImage || actress.thumbnail,
@@ -78,6 +89,15 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
             undefined,
             locale,
           );
+
+          // フィルター/ページネーション時はnoindex
+          if (hasFilters || hasPageParam) {
+            return {
+              ...metadata,
+              robots: { index: false, follow: true },
+            };
+          }
+          return metadata;
         }
       }
     }
@@ -85,7 +105,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     // 通常のメタデータ
     const title = t('metaTitle', { name: actress.name, count: actress.metrics.releaseCount });
 
-    return generateBaseMetadata(
+    const metadata = generateBaseMetadata(
       title,
       t('metaDescription', { name: actress.name, count: actress.metrics.releaseCount }),
       actress.heroImage || actress.thumbnail,
@@ -93,6 +113,16 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       undefined,
       locale,
     );
+
+    // フィルター/ページネーション時はnoindex（重複コンテンツ防止）
+    if (hasFilters || hasPageParam) {
+      return {
+        ...metadata,
+        robots: { index: false, follow: true },
+      };
+    }
+
+    return metadata;
   } catch {
     return {};
   }
@@ -203,8 +233,8 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           />
 
           {/* Header */}
-          <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
-            <div className="flex items-center gap-4 flex-1">
+          <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4 mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 sm:gap-4 flex-1">
               <ActressHeroImage
                 src={actress.heroImage || actress.thumbnail}
                 alt={actress.name}
@@ -236,14 +266,14 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 )}
                 {/* ASP別作品数バッジ */}
                 {productCountByAsp.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2">
                     {productCountByAsp.map((asp) => {
                       const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                       const meta = providerId ? providerMeta[providerId] : null;
                       return (
                         <span
                           key={asp.aspName}
-                          className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
+                          className={`text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full whitespace-nowrap bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
                         >
                           {meta?.label || asp.aspName}: {asp.count}本
                         </span>

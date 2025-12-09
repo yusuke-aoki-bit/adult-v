@@ -68,10 +68,11 @@ export default function FavoriteButton({
         rounded-full
         transition-all
         duration-200
+        active:scale-110
         ${
           favorite
-            ? 'bg-rose-600 text-white hover:bg-rose-700'
-            : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:text-white'
+            ? 'bg-rose-600 text-white hover:bg-rose-700 hover:scale-105'
+            : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:text-white hover:scale-105'
         }
         backdrop-blur-sm
         flex

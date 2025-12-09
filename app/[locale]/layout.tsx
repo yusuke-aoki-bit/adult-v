@@ -2,10 +2,16 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { Suspense } from 'react';
 import { locales } from '@/i18n';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
+import { ToastProvider } from '@/components/Toast';
 import AgeVerification from '@/components/AgeVerification';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
+import ScrollToTop from '@/components/ScrollToTop';
+import NavigationProgress from '@/components/NavigationProgress';
+import { JsonLD } from '@/components/JsonLD';
+import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 
 // ロケール別のデフォルトメタデータ（PageSpeed対策）
@@ -50,13 +56,25 @@ export default async function LocaleLayout({
   const cookieStore = await cookies();
   const ageVerified = cookieStore.get('age_verified')?.value === 'true';
 
+  // SEO構造化データ
+  const webSiteSchema = generateWebSiteSchema(locale);
+  const organizationSchema = generateOrganizationSchema(locale);
+
   return (
     <NextIntlClientProvider messages={messages}>
       <FavoritesProvider>
-        <PerformanceMonitor />
-        <AgeVerification locale={locale} initialVerified={ageVerified}>
-          {children}
-        </AgeVerification>
+        <ToastProvider>
+          <Suspense fallback={null}>
+            <NavigationProgress />
+          </Suspense>
+          <JsonLD data={webSiteSchema} />
+          <JsonLD data={organizationSchema} />
+          <PerformanceMonitor />
+          <AgeVerification locale={locale} initialVerified={ageVerified}>
+            {children}
+          </AgeVerification>
+          <ScrollToTop />
+        </ToastProvider>
       </FavoritesProvider>
     </NextIntlClientProvider>
   );

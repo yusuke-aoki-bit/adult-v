@@ -147,7 +147,7 @@
     "filmography": "출연 작품",
     "totalProducts": "전체 {count}작품",
     "metaTitle": "{name} - {count}편 작품 | 무료 샘플・멀티사이트 검색",
-    "metaDescription": "{name}의 출연 작품 {count}편을 스트리밍 사이트 통합 검색. DUGA・MGS・DTI・카리비안컴・1폰도・HEYZO 등 여러 사이트의 작품 정보, 가격 비교, 장르별 필터링 가능. 헤비 유저를 위한 상세 리뷰와 랭킹.",
+    "metaDescription": "【{name}】전 작품 {count}편 완전 수록. DUGA・MGS・Sokmil・카리비안컴・1폰도・HEYZO 통합 검색. 무료 샘플・가격 비교・장르별 검색 가능.",
     "metaTitleWithGenre": "{name}의 {genre} 작품 목록 | 무료 샘플・멀티사이트 검색",
     "metaDescriptionWithGenre": "{name}의 {genre} 장르 출연 작품을 스트리밍 사이트 통합 검색. DUGA・MGS・DTI・카리비안컴・1폰도・HEYZO 등 여러 사이트의 작품 정보 제공.",
     "aliases": "별명",
@@ -273,7 +273,17 @@
     "subscriptionOnly": "월정액 회원 전용",
     "viewDetails": "자세히 보기",
     "close": "닫기",
+    "clickToCloseEsc": "← 이전 | 중앙 클릭하여 닫기 | 다음 →",
+    "comingSoon": "출시 예정",
+    "previousImage": "이전 이미지",
+    "nextImage": "다음 이미지",
+    "thumbnailAlt": "썸네일"
+  },
+  "imageLightbox": {
+    "close": "닫기",
     "clickToCloseEsc": "클릭하여 닫기 / ESC 키",
-    "comingSoon": "출시 예정"
+    "previousImage": "이전 이미지",
+    "nextImage": "다음 이미지",
+    "thumbnailAlt": "썸네일"
   }
 }

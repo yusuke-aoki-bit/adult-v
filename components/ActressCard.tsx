@@ -39,7 +39,7 @@ export default function ActressCard({ actress, compact = false, priority = false
   if (compact) {
     // コンパクト表示: 名前と基本情報のみ（モバイル最適化）
     return (
-      <div className="bg-gray-900 text-white rounded-lg overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/20 transition-all active:ring-rose-500/50">
+      <div className="bg-gray-900 text-white rounded-lg overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/20 hover:shadow-xl hover:scale-[1.02] transition-all duration-200 active:ring-rose-500/50 active:scale-[0.98]">
         <div className="relative aspect-[3/4]">
           <Image
             src={imgSrc}

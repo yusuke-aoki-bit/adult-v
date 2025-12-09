@@ -111,7 +111,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const db = getDb();
 
-    // Recent products (1000 items) - SEO priority for content pages
+    // Recent products (5000 items) - SEO priority for content pages
     const recentProducts = await db
       .select({
         id: products.id,
@@ -119,7 +119,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })
       .from(products)
       .orderBy(desc(products.releaseDate))
-      .limit(1000);
+      .limit(5000);
 
   const productPages: MetadataRoute.Sitemap = recentProducts.map((product) => ({
     url: `${BASE_URL}/ja/products/${product.id}`,
@@ -136,7 +136,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   }));
 
-  // Top performers (500 items) - Prioritize performers with most products
+  // Top performers (1000 items) - Prioritize performers with most products
   const topPerformers = await db
     .select({
       id: performers.id,
@@ -149,7 +149,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     )
     .groupBy(performers.id)
     .orderBy(desc(sql`product_count`))
-    .limit(500);
+    .limit(1000);
 
   const performerPages: MetadataRoute.Sitemap = topPerformers.map((performer) => ({
     url: `${BASE_URL}/ja/actress/${performer.id}`,

@@ -5,7 +5,7 @@ import { usePathname, useParams } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
 import FilterPersistence from './FilterPersistence';
-import AdultContentNotice from './AdultContentNotice';
+import PerPagePersistence from './PerPagePersistence';
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -23,9 +23,9 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     <>
       <Suspense fallback={null}>
         <FilterPersistence />
+        <PerPagePersistence />
       </Suspense>
       <Header />
-      <AdultContentNotice />
       <main className="flex-1">{children}</main>
       <Footer locale={locale} />
     </>

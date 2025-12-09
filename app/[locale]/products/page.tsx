@@ -5,8 +5,10 @@ import Pagination from '@/components/Pagination';
 import ProductListFilter from '@/components/ProductListFilter';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import Breadcrumb from '@/components/Breadcrumb';
+import ActiveFiltersChips from '@/components/ActiveFiltersChips';
+import { JsonLD } from '@/components/JsonLD';
 import { getProducts, getProductsCount, getAspStats, getPopularTags } from '@/lib/db/queries';
-import { generateBaseMetadata, generateItemListSchema } from '@/lib/seo';
+import { generateBaseMetadata, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 
 export async function generateMetadata({
@@ -33,6 +35,7 @@ export async function generateMetadata({
     searchParamsData.performerType ||
     searchParamsData.uncategorized
   );
+  const hasPageParam = !!searchParamsData.page && searchParamsData.page !== '1';
 
   const metadata = generateBaseMetadata(
     t('title'),
@@ -43,8 +46,8 @@ export async function generateMetadata({
     locale,
   );
 
-  // 検索/フィルター結果はnoindex
-  if (hasQuery || hasFilters) {
+  // 検索/フィルター結果・2ページ目以降はnoindex（重複コンテンツ防止）
+  if (hasQuery || hasFilters || hasPageParam) {
     return {
       ...metadata,
       robots: {
@@ -165,31 +168,38 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     t('title')
   );
 
+  // BreadcrumbSchemaを生成
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: tNav('home'), url: `/${locale}` },
+    { name: t('title'), url: `/${locale}/products` },
+  ]);
+
   return (
     <div className="bg-gray-900 min-h-screen">
-      {/* ItemList構造化データ */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
-      />
-      <section className="py-12 md:py-16">
-        <div className="container mx-auto px-4">
+      {/* 構造化データ */}
+      <JsonLD data={itemListSchema} />
+      <JsonLD data={breadcrumbSchema} />
+      <section className="py-3 sm:py-4 md:py-6">
+        <div className="container mx-auto px-3 sm:px-4">
           <Breadcrumb
             items={[
               { label: tNav('home'), href: `/${locale}` },
               { label: t('title') },
             ]}
-            className="mb-6"
+            className="mb-2 sm:mb-3"
           />
 
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+          <div className="mb-2 sm:mb-3">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-0.5">
               {query ? `「${query}」の検索結果` : t('title')}
             </h1>
-            <p className="text-gray-300">
+            <p className="text-sm sm:text-base text-gray-300">
               {t('description', { count: totalCount.toLocaleString() })}
             </p>
           </div>
+
+          {/* アクティブフィルターチップ */}
+          <ActiveFiltersChips />
 
           {/* フィルター - defaultOpen=false で閉じた状態で表示 */}
           <ProductListFilter
@@ -207,7 +217,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           />
 
           {/* 並び順 */}
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-2 sm:mb-4">
             <ProductSortDropdown
               sortBy={sortBy}
               basePath={`/${locale}/products`}
@@ -251,7 +261,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           )}
 
           {/* 女優一覧へのリンク */}
-          <div className="mt-12 pt-8 border-t border-gray-800">
+          <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-800">
             <Link
               href={`/${locale}`}
               className="flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 hover:border-rose-600 transition-colors group"

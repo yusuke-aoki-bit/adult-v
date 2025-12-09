@@ -1,13 +1,23 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 
 interface ViewTrackerProps {
   productId?: number;
   performerId?: number;
+  // 最近見た作品履歴用のプロパティ
+  productData?: {
+    id: string;
+    title: string;
+    imageUrl: string | null;
+    aspName: string;
+  };
 }
 
-export default function ViewTracker({ productId, performerId }: ViewTrackerProps) {
+export default function ViewTracker({ productId, performerId, productData }: ViewTrackerProps) {
+  const { addItem } = useRecentlyViewed();
+
   useEffect(() => {
     // Track view on mount
     const trackView = async () => {
@@ -29,7 +39,12 @@ export default function ViewTracker({ productId, performerId }: ViewTrackerProps
     };
 
     trackView();
-  }, [productId, performerId]);
+
+    // 最近見た作品に追加
+    if (productData) {
+      addItem(productData);
+    }
+  }, [productId, performerId, productData, addItem]);
 
   // This component doesn't render anything
   return null;

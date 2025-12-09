@@ -123,6 +123,131 @@ async function searchAVWiki(productCode: string): Promise<string[]> {
 }
 
 /**
+ * タイトルから出演者名候補を抽出
+ * G-AREA, JAPANSKA などの特殊形式に対応
+ * 例: "G-AREA いくこ" → ["いくこ"]
+ * 例: "【初撮り】美人OL まりな 25歳" → ["まりな"]
+ */
+function extractPerformerFromTitle(title: string): string[] {
+  const candidates: string[] = [];
+
+  // G-AREA形式: "G-AREA いくこ" or "GAREA いくこ"
+  const gareaMatch = title.match(/G[-]?AREA\s+([^\s【】（）\(\)]+)/i);
+  if (gareaMatch) {
+    candidates.push(gareaMatch[1]);
+  }
+
+  // 一般的なパターン: スタジオ名 + 名前
+  // "【初撮り】美人OL まりな 25歳" → "まりな"
+  // ひらがな・カタカナの名前を抽出（2-6文字）
+  const nameMatches = title.match(/[\u3040-\u309F\u30A0-\u30FF]{2,6}(?=\s|$|【|\d|歳)/g);
+  if (nameMatches) {
+    for (const name of nameMatches) {
+      // 一般的な単語を除外
+      if (!['はじめて', 'すべて', 'ひとり', 'ふたり', 'みんな', 'おとな', 'こども'].includes(name)) {
+        candidates.push(name);
+      }
+    }
+  }
+
+  return [...new Set(candidates)];
+}
+
+/**
+ * タイトルからWiki検索（品番がない商品向け）
+ * 検索結果が多すぎる場合は特定不可として無視
+ */
+async function searchWikiByTitle(title: string): Promise<WikiPerformerResult | null> {
+  const candidates = extractPerformerFromTitle(title);
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  console.log(`    タイトルから抽出した候補: ${candidates.join(', ')}`);
+
+  for (const candidate of candidates) {
+    // みんなのAVで出演者名で検索
+    const performers = await searchMinnaNoAVByActress(candidate);
+
+    if (performers.length === 0) {
+      // 検索結果なし、次の候補へ
+      await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+      continue;
+    }
+
+    if (performers.length === 1) {
+      // 1件のみ → 確実に特定できる
+      console.log(`    → 1件のみヒット: ${performers[0]}`);
+      return { productId: candidate, performers, source: 'msin' };
+    }
+
+    if (performers.length <= 5) {
+      // 2-5件 → 候補として返す（不確実だが許容範囲）
+      console.log(`    → ${performers.length}件ヒット（候補多め）: ${performers.slice(0, 3).join(', ')}...`);
+      return { productId: candidate, performers: performers.slice(0, 1), source: 'msin' }; // 最初の1件のみ
+    }
+
+    // 6件以上 → 同一人物の特定不可
+    console.log(`    → ${performers.length}件ヒット（特定不可）: ${performers.slice(0, 3).join(', ')}...`);
+
+    await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+  }
+
+  return null;
+}
+
+/**
+ * みんなのAVで女優名検索
+ * 検索結果のリンクはactressXXXXXX.html?女優名の形式
+ */
+async function searchMinnaNoAVByActress(actressName: string): Promise<string[]> {
+  try {
+    // 女優検索
+    const searchUrl = `https://www.minnano-av.com/search_result.php?search_word=${encodeURIComponent(actressName)}&search_scope=actress`;
+
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+      },
+    });
+
+    if (!response.ok) return [];
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // 検索結果から女優名を抽出
+    // リンク形式: actressXXXXXX.html?女優名
+    const performers: string[] = [];
+
+    $('a').each((_, el) => {
+      const href = $(el).attr('href') || '';
+      const text = $(el).text().trim();
+
+      // 女優ページへのリンク（actressXXXXXX.html形式）
+      // ナビゲーションリンク（actress_list.phpなど）を除外
+      if (href.match(/^actress\d+\.html/) && text) {
+        // 基本的なフィルタリングのみ（検索サイトがすでにフィルタリング済み）
+        if (text.length >= 2 &&
+            text.length < 30 &&
+            /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(text) &&
+            !text.includes('評価') &&
+            !text.includes('女優') &&
+            !text.includes('一覧')) {
+          performers.push(text);
+        }
+      }
+    });
+
+    return [...new Set(performers)];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Seesaa Wiki で品番検索
  */
 async function searchSeesaaWiki(productCode: string): Promise<string[]> {
@@ -402,8 +527,14 @@ async function main() {
       }
 
       if (!result || result.performers.length === 0) {
-        console.log(`  → Wiki該当なし`);
-        continue;
+        // 品番検索失敗時はタイトルから検索
+        console.log(`  → 品番検索該当なし、タイトル検索を試行...`);
+        result = await searchWikiByTitle(product.title);
+
+        if (!result || result.performers.length === 0) {
+          console.log(`  → Wiki該当なし`);
+          continue;
+        }
       }
 
       console.log(`  → ${result.source}でヒット: ${result.performers.join(', ')}`);

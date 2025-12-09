@@ -356,9 +356,29 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
 }
 
 /**
+ * 無効な商品タイトルパターン（保存をスキップ）
+ */
+const INVALID_TITLE_PATTERNS = [
+  /^お探しの商品が見つかりませんでした$/,
+  /^お探しの商品.*見つかりませんでした$/,
+  /^ページが見つかりません$/,
+  /^商品が見つかりません$/,
+  /^404\s*(not\s*found|error)?$/i,
+  /^FC2-\d+$/, // タイトルが取得できずフォールバックIDのみの場合
+];
+
+/**
  * 商品をデータベースに保存
  */
 async function saveProduct(product: FC2Product): Promise<number | null> {
+  // 無効なタイトルパターンをチェック
+  for (const pattern of INVALID_TITLE_PATTERNS) {
+    if (pattern.test(product.title)) {
+      console.log(`    ⚠️ 無効な商品をスキップ: "${product.title}"`);
+      return null;
+    }
+  }
+
   // 商品データの検証
   const validation = validateProductData({
     title: product.title,

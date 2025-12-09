@@ -154,8 +154,8 @@
     "profile": "プロフィール",
     "filmography": "出演作品",
     "totalProducts": "全{count}作品",
-    "metaTitle": "{name} - 出演作品{count}本 | 無料サンプル動画・配信サイト横断検索",
-    "metaDescription": "{name}の出演作品{count}本を配信サイト横断で検索。DUGA・MGS・DTI・カリビアンコム・一本道・HEYZOなど複数サイトの作品情報、価格比較、ジャンル別フィルタリングが可能。ヘビーユーザー向けの詳細レビューとランキング。",
+    "metaTitle": "{name}の作品一覧 全{count}本 | 無料サンプル動画・DUGA・MGS横断検索",
+    "metaDescription": "【{name}】出演作品{count}本を完全網羅。DUGA・MGS・ソクミル・カリビアンコム・一本道・HEYZOなど複数サイトを横断検索。無料サンプル動画・価格比較・ジャンル別検索が可能。",
     "metaTitleWithGenre": "{name}の{genre}作品一覧 | 無料サンプル動画・配信サイト横断検索",
     "metaDescriptionWithGenre": "{name}の{genre}ジャンル出演作品を配信サイト横断で検索。DUGA・MGS・DTI・カリビアンコム・一本道・HEYZOなど複数サイトの作品情報を掲載。",
     "aliases": "別名",
@@ -281,8 +281,18 @@
     "subscriptionOnly": "月額会員限定",
     "viewDetails": "詳細を見る",
     "close": "閉じる",
+    "clickToCloseEsc": "← 前 | 中央で閉じる | 次 →",
+    "comingSoon": "発売予定",
+    "previousImage": "前の画像",
+    "nextImage": "次の画像",
+    "thumbnailAlt": "サムネイル"
+  },
+  "imageLightbox": {
+    "close": "閉じる",
     "clickToCloseEsc": "クリックで閉じる / ESCキー",
-    "comingSoon": "発売予定"
+    "previousImage": "前の画像",
+    "nextImage": "次の画像",
+    "thumbnailAlt": "サムネイル"
   },
   "productImageGallery": {
     "previousImage": "前の画像",

@@ -22,7 +22,7 @@ export function JapanskaCredit({ className = '' }: JapanskaCreditProps) {
         width="468"
         height="60"
         loading="lazy"
-        className="block w-[468px] h-[60px] max-w-full"
+        className="block w-auto h-[50px] max-w-[180px] object-contain"
         style={{ aspectRatio: '468/60' }}
       />
     </a>

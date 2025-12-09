@@ -154,8 +154,8 @@
     "profile": "Profile",
     "filmography": "Filmography",
     "totalProducts": "{count} videos total",
-    "metaTitle": "{name} - {count} Videos | Free Samples & Multi-Site Search",
-    "metaDescription": "Watch {count} videos starring {name}. Search across DUGA, MGS, DTI, Caribbeancom, 1pondo, HEYZO. Compare prices, filter by genre. Free sample videos available.",
+    "metaTitle": "{name} Videos - All {count} Titles | Free Samples・DUGA・MGS Search",
+    "metaDescription": "【{name}】Complete filmography with {count} videos. Search across DUGA, MGS, Sokmil, Caribbeancom, 1pondo, HEYZO. Free samples, price comparison & genre filters.",
     "metaTitleWithGenre": "{name} {genre} Videos | Free Samples & Multi-Site Search",
     "metaDescriptionWithGenre": "Watch {name}'s {genre} videos. Search across DUGA, MGS, DTI, Caribbeancom, 1pondo, HEYZO for multi-site video information.",
     "aliases": "Also Known As",
@@ -295,8 +295,18 @@
     "subscriptionOnly": "Subscription Only",
     "viewDetails": "View Details",
     "close": "Close",
+    "clickToCloseEsc": "← Prev | Center to close | Next →",
+    "comingSoon": "Coming Soon",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "thumbnailAlt": "Thumbnail"
+  },
+  "imageLightbox": {
+    "close": "Close",
     "clickToCloseEsc": "Click to close / ESC key",
-    "comingSoon": "Coming Soon"
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "thumbnailAlt": "Thumbnail"
   },
   "productImageGallery": {
     "previousImage": "Previous image",

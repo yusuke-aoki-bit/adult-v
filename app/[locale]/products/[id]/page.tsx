@@ -11,7 +11,7 @@ import AffiliateButton from '@/components/AffiliateButton';
 import { getProductById, searchProductByProductId, getProductSources } from '@/lib/db/queries';
 import { isSubscriptionSite } from '@/lib/image-utils';
 import { getRelatedProducts } from '@/lib/db/recommendations';
-import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription } from '@/lib/seo';
+import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
@@ -89,13 +89,26 @@ export default async function ProductDetailPage({ params }: PageProps) {
     product.providerLabel,
     undefined, // aggregateRating
     product.salePrice,
-    product.currency || 'JPY'
+    product.currency || 'JPY',
+    product.normalizedProductId || undefined, // SKU（品番）
   );
 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: tNav('home'), url: `/${locale}` },
     { name: product.title, url: basePath },
   ]);
+
+  // VideoObject Schema（サンプル動画がある場合）
+  const videoSchema = product.sampleVideos && product.sampleVideos.length > 0
+    ? generateVideoObjectSchema(
+        product.title,
+        product.description || `${product.title}のサンプル動画`,
+        product.imageUrl,
+        product.sampleVideos[0].url,
+        product.duration,
+        product.releaseDate,
+      )
+    : null;
 
   // パンくずリスト用のアイテム作成
   const breadcrumbItems: BreadcrumbItem[] = [
@@ -131,6 +144,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     <>
       <JsonLD data={productSchema} />
       <JsonLD data={breadcrumbSchema} />
+      {videoSchema && <JsonLD data={videoSchema} />}
 
       <div className="bg-gray-900 min-h-screen">
         <div className="container mx-auto px-4 py-8">
@@ -298,7 +312,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
       </div>
 
       {/* View tracking */}
-      <ViewTracker productId={productId} />
+      <ViewTracker
+        productId={productId}
+        productData={{
+          id: product.id,
+          title: product.title,
+          imageUrl: product.imageUrl,
+          aspName: product.provider,
+        }}
+      />
     </>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, TouchEvent } from 'react';
 import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { isDtiUncensoredSite, getFullSizeImageUrl } from '@/lib/image-utils';
 import { useTranslations } from 'next-intl';
@@ -44,6 +44,12 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
   const [imageError, setImageError] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  // スワイプ用の状態
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
   // 無修正サイトかどうかをチェック（ブラーを適用するため）
   const isUncensored = isDtiUncensoredSite(mainImage || '');
 
@@ -73,6 +79,45 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
   const goToNext = useCallback(() => {
     setSelectedIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
   }, [allImages.length]);
+
+  // スワイプハンドラー
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+    setIsTransitioning(false);
+  }, []);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const currentX = e.touches[0].clientX;
+    touchEndX.current = currentX;
+    const diff = currentX - touchStartX.current;
+    setSwipeOffset(diff);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchStartX.current === null || touchEndX.current === null) {
+      setSwipeOffset(0);
+      return;
+    }
+
+    const diff = touchEndX.current - touchStartX.current;
+    const threshold = 50; // スワイプ閾値
+
+    setIsTransitioning(true);
+    setSwipeOffset(0);
+
+    if (diff > threshold && hasMultipleImages) {
+      goToPrevious();
+    } else if (diff < -threshold && hasMultipleImages) {
+      goToNext();
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
+
+    setTimeout(() => setIsTransitioning(false), 300);
+  }, [hasMultipleImages, goToPrevious, goToNext]);
 
   // キーボードナビゲーション
   useEffect(() => {
@@ -109,18 +154,30 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
       <div className="space-y-4">
         {/* メイン画像 */}
         <div
-          className="relative aspect-[3/4] w-full bg-gray-800 rounded-lg overflow-hidden cursor-pointer group"
+          className="relative aspect-[3/4] w-full bg-gray-800 rounded-lg overflow-hidden cursor-pointer group select-none"
           onClick={() => setLightboxOpen(true)}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
-          <Image
-            src={imageError ? PLACEHOLDER_IMAGE : selectedImage}
-            alt={productTitle}
-            fill
-            className={`object-cover transition-transform group-hover:scale-105 ${isUncensored ? 'blur-[3px]' : ''}`}
-            sizes="(max-width: 768px) 100vw, 50vw"
-            priority
-            onError={handleImageError}
-          />
+          <div
+            className="relative w-full h-full"
+            style={{
+              transform: `translateX(${swipeOffset}px)`,
+              transition: isTransitioning ? 'transform 0.3s ease-out' : 'none',
+            }}
+          >
+            <Image
+              src={imageError ? PLACEHOLDER_IMAGE : selectedImage}
+              alt={productTitle}
+              fill
+              className={`object-cover transition-transform group-hover:scale-105 ${isUncensored ? 'blur-[3px]' : ''}`}
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
+              onError={handleImageError}
+              draggable={false}
+            />
+          </div>
           {/* 拡大アイコン */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
             <ZoomIn className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -188,7 +245,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
       {/* ライトボックス */}
       {lightboxOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center cursor-pointer"
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center cursor-pointer select-none"
           onClick={() => setLightboxOpen(false)}
         >
           {/* 閉じるボタン */}
@@ -212,18 +269,31 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
             {t('clickToCloseEsc')}
           </div>
 
-          {/* メイン画像 - 画像クリックでも閉じる */}
+          {/* メイン画像 - スワイプ対応 */}
           <div
-            className="relative w-full h-full max-w-5xl max-h-[85vh] mx-4 pointer-events-none"
+            className="relative w-full h-full max-w-5xl max-h-[85vh] mx-4 overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onClick={(e) => e.stopPropagation()}
           >
-            <Image
-              src={imageError ? PLACEHOLDER_IMAGE : fullSizeImage}
-              alt={productTitle}
-              fill
-              className={`object-contain ${isUncensored ? 'blur-[3px]' : ''}`}
-              sizes="100vw"
-              priority
-            />
+            <div
+              className="relative w-full h-full"
+              style={{
+                transform: `translateX(${swipeOffset}px)`,
+                transition: isTransitioning ? 'transform 0.3s ease-out' : 'none',
+              }}
+            >
+              <Image
+                src={imageError ? PLACEHOLDER_IMAGE : fullSizeImage}
+                alt={productTitle}
+                fill
+                className={`object-contain ${isUncensored ? 'blur-[3px]' : ''}`}
+                sizes="100vw"
+                priority
+                draggable={false}
+              />
+            </div>
           </div>
 
           {/* ナビゲーションボタン（複数画像の場合） */}

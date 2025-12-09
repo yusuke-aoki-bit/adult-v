@@ -4,8 +4,10 @@ import ActressCard from '@/components/ActressCard';
 import SortDropdown from '@/components/SortDropdown';
 import Pagination from '@/components/Pagination';
 import ActressListFilter from '@/components/ActressListFilter';
+import RecentlyViewed from '@/components/RecentlyViewed';
 import { getActresses, getActressesCount, getTags, getUncategorizedProductsCount, getAspStats, getSaleProducts, SaleProduct } from '@/lib/db/queries';
-import { generateBaseMetadata } from '@/lib/seo';
+import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/seo';
+import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
 import { providerMeta } from '@/lib/providers';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
@@ -204,8 +206,13 @@ export default async function Home({ params, searchParams }: PageProps) {
     aspProductCounts[stat.aspName] = stat.productCount;
   });
 
+  // FAQスキーマ（トップページのみ）
+  const faqSchema = isTopPage ? generateFAQSchema(getHomepageFAQs(locale)) : null;
+
   return (
     <div className="bg-gray-900 min-h-screen">
+      {/* FAQスキーマ（トップページのみ） */}
+      {faqSchema && <JsonLD data={faqSchema} />}
       {/* セール情報セクション */}
       {saleProducts.length > 0 && (
         <details className="border-b border-gray-800 bg-gradient-to-r from-red-950/30 to-gray-900">
@@ -299,10 +306,17 @@ export default async function Home({ params, searchParams }: PageProps) {
         </details>
       )}
 
+      {/* 最近見た作品 */}
+      <section className="py-3 sm:py-4 border-b border-gray-800">
+        <div className="container mx-auto px-3 sm:px-4">
+          <RecentlyViewed />
+        </div>
+      </section>
+
       {/* 未整理作品へのリンク */}
       {uncategorizedCount > 0 && (
-        <section className="py-6 border-b border-gray-800">
-          <div className="container mx-auto px-4">
+        <section className="py-3 sm:py-6 border-b border-gray-800">
+          <div className="container mx-auto px-3 sm:px-4">
             <Link
               href={`/${locale}/products?uncategorized=true`}
               className="flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 hover:border-yellow-600 transition-colors group"
@@ -325,13 +339,13 @@ export default async function Home({ params, searchParams }: PageProps) {
       )}
 
       {/* 女優一覧 */}
-      <section id="list" className="py-12 md:py-16 scroll-mt-4">
-        <div className="container mx-auto px-4">
-          <div className="mb-8 min-h-[72px] md:min-h-[80px]">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+      <section id="list" className="py-3 sm:py-4 md:py-6 scroll-mt-4">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="mb-2 sm:mb-3">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-0.5">
               {tCommon('actresses')}
             </h1>
-            <p className="text-gray-300">
+            <p className="text-sm sm:text-base text-gray-300">
               {t('actressCount', { count: totalCount })}
             </p>
           </div>
@@ -362,7 +376,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           />
 
           {/* 並び順 */}
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-2 sm:mb-4">
             <SortDropdown sortBy={sortBy} />
           </div>
 
@@ -419,7 +433,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           />
 
           {/* 商品一覧へのリンク */}
-          <div className="mt-12 pt-8 border-t border-gray-800">
+          <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-800">
             <Link
               href={`/${locale}/products`}
               className="flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 hover:border-rose-600 transition-colors group"

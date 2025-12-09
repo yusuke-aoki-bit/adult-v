@@ -249,38 +249,52 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       return false;
     };
 
-    // パターン1: sample-photo クラスの画像
-    $('.sample-photo img').each((_, elem) => {
-      const imgSrc = $(elem).attr('src') || $(elem).attr('data-src');
-      if (imgSrc) {
-        const fullUrl = imgSrc.startsWith('http') ? imgSrc : `https://www.mgstage.com${imgSrc}`;
-        if (!shouldExcludeImage(fullUrl)) {
+    // パターン1: sample-photo 内のaタグのhrefから拡大画像URLを取得
+    // MGSでは <a href="拡大画像URL"><img src="サムネイルURL"></a> の形式
+    $('.sample-photo a').each((_, elem) => {
+      const href = $(elem).attr('href');
+      if (href && !shouldExcludeImage(href)) {
+        const fullUrl = href.startsWith('http') ? href : `https://www.mgstage.com${href}`;
+        if (!sampleImages.includes(fullUrl)) {
           sampleImages.push(fullUrl);
         }
       }
     });
 
-    // パターン2: サンプル画像リンク (.sample-box, .sample-image, etc.)
-    $('.sample-box img, .sample-image img, .product-sample img').each((_, elem) => {
-      const imgSrc = $(elem).attr('src') || $(elem).attr('data-src');
-      if (imgSrc && !sampleImages.includes(imgSrc)) {
-        const fullUrl = imgSrc.startsWith('http') ? imgSrc : `https://www.mgstage.com${imgSrc}`;
-        if (!sampleImages.includes(fullUrl) && !shouldExcludeImage(fullUrl)) {
+    // パターン2: サンプル画像リンク内のaタグから拡大画像URLを取得
+    $('.sample-box a, .sample-image a, .product-sample a').each((_, elem) => {
+      const href = $(elem).attr('href');
+      if (href && !shouldExcludeImage(href)) {
+        const fullUrl = href.startsWith('http') ? href : `https://www.mgstage.com${href}`;
+        if (!sampleImages.includes(fullUrl)) {
           sampleImages.push(fullUrl);
         }
       }
     });
 
-    // パターン3: サムネイル画像ギャラリー
-    $('a[href*="pics/"] img, a[href*="sample"] img').each((_, elem) => {
-      const imgSrc = $(elem).attr('src') || $(elem).attr('data-src');
-      if (imgSrc) {
-        const fullUrl = imgSrc.startsWith('http') ? imgSrc : `https://www.mgstage.com${imgSrc}`;
+    // パターン3: pics/やsampleを含むリンクのhrefから拡大画像URLを取得
+    $('a[href*="pics/"], a[href*="/sample/"]').each((_, elem) => {
+      const href = $(elem).attr('href');
+      if (href && href.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        const fullUrl = href.startsWith('http') ? href : `https://www.mgstage.com${href}`;
         if (!sampleImages.includes(fullUrl) && fullUrl !== thumbnailUrl && !shouldExcludeImage(fullUrl)) {
           sampleImages.push(fullUrl);
         }
       }
     });
+
+    // パターン4: フォールバック - imgタグのsrcを使用（拡大版がない場合のみ）
+    if (sampleImages.length === 0) {
+      $('.sample-photo img, .sample-box img, .sample-image img, .product-sample img').each((_, elem) => {
+        const imgSrc = $(elem).attr('src') || $(elem).attr('data-src');
+        if (imgSrc && !shouldExcludeImage(imgSrc)) {
+          const fullUrl = imgSrc.startsWith('http') ? imgSrc : `https://www.mgstage.com${imgSrc}`;
+          if (!sampleImages.includes(fullUrl)) {
+            sampleImages.push(fullUrl);
+          }
+        }
+      });
+    }
 
     console.log(`  Found ${sampleImages.length} sample image(s)`);
 

@@ -33,7 +33,7 @@ export function SokmilCredit({ variant = '88x31', className = '' }: SokmilCredit
         width={dimensions.width}
         height={dimensions.height}
         loading="lazy"
-        className={`block ${variant === '88x31' ? 'w-[88px] h-[31px]' : 'w-[135px] h-[18px]'}`}
+        className={`block ${variant === '88x31' ? 'w-auto h-[50px] max-w-[180px] object-contain' : 'w-[135px] h-[18px]'}`}
         style={{ aspectRatio: `${dimensions.width}/${dimensions.height}` }}
       />
     </a>

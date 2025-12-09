@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import SearchBar from './SearchBar';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -30,6 +30,7 @@ const translations = {
     menu: 'メニュー',
     sale: 'SALE',
     saleItems: '件セール中',
+    adultNotice: '※このページは成人向けコンテンツを含みます。表示価格は税込みです。販売サイトにより価格が異なる場合がありますので、購入前に各サイトで最新価格をご確認ください。',
   },
   en: {
     subtitle: 'heavy user guide',
@@ -39,6 +40,7 @@ const translations = {
     menu: 'Menu',
     sale: 'SALE',
     saleItems: 'items on sale',
+    adultNotice: '※This page contains adult content. Prices shown include tax. Prices may vary by retailer, so please check the latest prices on each site before purchasing.',
   },
   zh: {
     subtitle: 'heavy user guide',
@@ -48,6 +50,7 @@ const translations = {
     menu: '菜单',
     sale: 'SALE',
     saleItems: '件特卖中',
+    adultNotice: '※本页面包含成人内容。显示价格含税。价格可能因销售网站而异，请在购买前确认各网站的最新价格。',
   },
   ko: {
     subtitle: 'heavy user guide',
@@ -57,6 +60,7 @@ const translations = {
     menu: '메뉴',
     sale: 'SALE',
     saleItems: '개 세일 중',
+    adultNotice: '※이 페이지는 성인용 콘텐츠를 포함합니다. 표시 가격은 세금 포함입니다. 판매 사이트에 따라 가격이 다를 수 있으니 구매 전 각 사이트에서 최신 가격을 확인하세요.',
   },
 } as const;
 
@@ -64,9 +68,35 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [aspStats, setAspStats] = useState<AspStat[]>([]);
   const [saleStats, setSaleStats] = useState<SaleStats | null>(null);
+  const [isHidden, setIsHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
+
+  // スクロール時にヘッダーを自動非表示/表示
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollY.current;
+
+      // 100px以上スクロールしてから動作開始（ちらつき防止）
+      if (currentScrollY < 100) {
+        setIsHidden(false);
+      } else if (scrollDelta > 10) {
+        // 下スクロール: 非表示
+        setIsHidden(true);
+      } else if (scrollDelta < -10) {
+        // 上スクロール: 表示
+        setIsHidden(false);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     fetch('/api/stats/asp')
@@ -81,7 +111,19 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="bg-gray-950 text-white border-b border-white/10 sticky top-0 z-50">
+    <header
+      className={`bg-gray-950 text-white border-b border-white/10 sticky top-0 z-50 transition-transform duration-300 ${
+        isHidden ? '-translate-y-full' : 'translate-y-0'
+      }`}
+    >
+      {/* 成人向けコンテンツ注意文 */}
+      <div className="bg-gray-800/80 border-b border-white/5">
+        <div className="container mx-auto px-3 sm:px-4 py-1">
+          <p className="text-[10px] sm:text-xs text-gray-400 text-center leading-tight">
+            {t.adultNotice}
+          </p>
+        </div>
+      </div>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* ロゴ */}
@@ -225,14 +267,14 @@ export default function Header() {
       {/* ASP統計バー - ヘッダー下部に統合 */}
       <div className="bg-gray-900/80 border-t border-white/5">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 py-1.5 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700">
+          <div className="flex items-center gap-2 py-1.5 flex-wrap">
             {/* セールバッジ */}
             {saleStats === null ? (
               <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
             ) : saleStats.totalSales > 0 ? (
               <Link
                 href={`/${locale}/products?onSale=true`}
-                className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0"
+                className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0 animate-pulse"
               >
                 <span className="font-bold">{t.sale}</span>
                 <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
@@ -246,7 +288,7 @@ export default function Header() {
                 ))}
               </>
             ) : (
-              aspStats.slice(0, 7).map((stat) => {
+              aspStats.map((stat) => {
                 const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
                 const meta = providerId ? providerMeta[providerId] : null;
                 return (

@@ -43,7 +43,7 @@ export default function Error({
           </button>
           <Link
             href={`/${locale}`}
-            className="px-6 py-3 bg-gray-700 text-gray-200 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+            className="px-6 py-3 bg-gray-700 text-gray-200 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
           >
             {t('goHome')}
           </Link>

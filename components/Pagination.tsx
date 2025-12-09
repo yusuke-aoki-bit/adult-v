@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import { useState, useCallback } from 'react';
+import { savePerPage } from '@/lib/filter-storage';
 
 // Client-side translations (outside NextIntlClientProvider)
 const translations = {
@@ -119,6 +120,8 @@ export default function Pagination({
 
   // 表示件数変更
   const handlePerPageChange = useCallback((newPerPage: number) => {
+    // localStorageに保存
+    savePerPage(newPerPage);
     // 現在のアイテム位置を維持するように新しいページを計算
     const currentFirstItem = (page - 1) * perPage + 1;
     const newPage = Math.max(1, Math.ceil(currentFirstItem / newPerPage));
@@ -133,8 +136,8 @@ export default function Pagination({
   const showJumpButtons = totalPages > 10;
 
   const getVisiblePages = () => {
-    // モバイルでは delta=1、デスクトップでは delta=2
-    const delta = typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 2;
+    // SSR対応: 常に delta=2 を使用し、レスポンシブは CSS で制御
+    const delta = 2;
     const range = [];
     const rangeWithDots = [];
 
@@ -164,15 +167,15 @@ export default function Pagination({
   };
 
   return (
-    <nav className={`flex flex-col items-center gap-3 min-h-[88px] sm:min-h-[76px] ${position === 'top' ? 'mb-6' : 'mt-8'}`}>
+    <nav className={`flex flex-col items-center gap-2 sm:gap-3 ${position === 'top' ? 'mb-4 sm:mb-6' : 'mt-6 sm:mt-8'}`}>
       {/* メインナビゲーション */}
-      <div className="flex flex-wrap items-center justify-center gap-2 min-h-[40px]">
+      <div className="flex flex-nowrap items-center justify-center gap-1 sm:gap-2">
         {/* 最初 - デスクトップのみ */}
         <Link
           href={getUrl(1)}
           className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
             page === 1
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none'
+              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
               : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600'
           }`}
           aria-disabled={page === 1}
@@ -186,7 +189,7 @@ export default function Pagination({
             href={getUrl(Math.max(1, page - 10))}
             className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
               page <= 10
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none'
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
                 : 'bg-blue-900/50 text-blue-400 hover:bg-blue-800/50 border border-blue-700'
             }`}
             aria-disabled={page <= 10}
@@ -199,9 +202,9 @@ export default function Pagination({
         {/* 前へ */}
         <Link
           href={getUrl(page - 1)}
-          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors min-w-[60px] text-center ${
+          className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[44px] sm:min-w-[60px] text-center ${
             page === 1
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none'
+              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
               : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 active:bg-gray-600'
           }`}
           aria-disabled={page === 1}
@@ -211,22 +214,25 @@ export default function Pagination({
 
         {/* ページ番号 */}
         {totalPages > 1 && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             {getVisiblePages().map((pageNum, index) => {
               if (pageNum === '...') {
                 return (
-                  <span key={`dots-${index}`} className="px-2 sm:px-3 py-2 text-gray-400 text-sm">
+                  <span key={`dots-${index}`} className="hidden sm:inline px-2 sm:px-3 py-2 text-gray-400 text-sm">
                     ...
                   </span>
                 );
               }
 
               const isCurrent = pageNum === page;
+              // モバイルでは現在ページ、最初、最後のみ表示
+              const isFirstOrLast = pageNum === 1 || pageNum === totalPages;
+              const showOnMobile = isCurrent || isFirstOrLast;
               return (
                 <Link
                   key={pageNum}
                   href={getUrl(pageNum as number)}
-                  className={`px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                  className={`${showOnMobile ? '' : 'hidden sm:block'} px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors ${
                     isCurrent
                       ? 'bg-rose-600 text-white'
                       : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 active:bg-gray-600'
@@ -243,9 +249,9 @@ export default function Pagination({
         {/* 次へ */}
         <Link
           href={getUrl(page + 1)}
-          className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors min-w-[60px] text-center ${
+          className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[44px] sm:min-w-[60px] text-center ${
             page >= totalPages
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none'
+              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
               : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 active:bg-gray-600'
           }`}
           aria-disabled={page >= totalPages}
@@ -259,7 +265,7 @@ export default function Pagination({
             href={getUrl(Math.min(totalPages, page + 10))}
             className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
               page > totalPages - 10
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none'
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
                 : 'bg-blue-900/50 text-blue-400 hover:bg-blue-800/50 border border-blue-700'
             }`}
             aria-disabled={page > totalPages - 10}
@@ -274,7 +280,7 @@ export default function Pagination({
           href={getUrl(totalPages)}
           className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
             page >= totalPages
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none'
+              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
               : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600'
           }`}
           aria-disabled={page >= totalPages}
@@ -284,7 +290,7 @@ export default function Pagination({
       </div>
 
       {/* ページ情報 + コントロール */}
-      <div className="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
         {/* ページ情報 */}
         <div className="text-gray-500">
           {total > 0 && (
@@ -293,7 +299,7 @@ export default function Pagination({
                 {(page - 1) * perPage + 1} - {Math.min(page * perPage, total)} / {total.toLocaleString()} {t.items}
               </span>
               <span className="sm:hidden">
-                {page} / {totalPages} {t.page}
+                {page} / {totalPages}
               </span>
             </>
           )}
@@ -328,7 +334,7 @@ export default function Pagination({
             <select
               value={perPage}
               onChange={(e) => handlePerPageChange(parseInt(e.target.value))}
-              className="px-3 py-2 border border-gray-600 rounded-md text-sm text-white bg-gray-700 focus:ring-rose-500 focus:border-rose-500"
+              className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-600 rounded-md text-sm sm:text-base text-white bg-gray-700 focus:ring-rose-500 focus:border-rose-500"
               aria-label="表示件数"
             >
               {PER_PAGE_OPTIONS.map((option) => (

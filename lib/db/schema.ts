@@ -593,6 +593,44 @@ export const productRatingSummary = pgTable(
   }),
 );
 
+/**
+ * Wiki/参考サイトから取得した出演者インデックス
+ * 商品ID、作品タイトルから出演者名を検索するためのテーブル
+ */
+export const wikiPerformerIndex = pgTable(
+  'wiki_performer_index',
+  {
+    id: serial('id').primaryKey(),
+    // 検索キー
+    productCode: varchar('product_code', { length: 100 }), // 商品コード
+    productTitle: varchar('product_title', { length: 500 }), // 作品タイトル
+    maker: varchar('maker', { length: 100 }), // メーカー/レーベル
+
+    // 出演者情報
+    performerName: varchar('performer_name', { length: 200 }).notNull(), // 出演者名
+    performerNameRomaji: varchar('performer_name_romaji', { length: 200 }), // ローマ字名
+    performerNameVariants: jsonb('performer_name_variants'), // 名前の変換候補
+
+    // メタデータ
+    source: varchar('source', { length: 50 }).notNull(), // データ取得元
+    sourceUrl: text('source_url'), // 取得元URL
+    confidence: integer('confidence').default(100), // 信頼度
+    verified: boolean('verified').default(false), // 手動検証済みフラグ
+
+    // タイムスタンプ
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productCodeIdx: index('idx_wiki_performer_product_code').on(table.productCode),
+    productTitleIdx: index('idx_wiki_performer_product_title').on(table.productTitle),
+    makerIdx: index('idx_wiki_performer_maker').on(table.maker),
+    performerNameIdx: index('idx_wiki_performer_name').on(table.performerName),
+    sourceIdx: index('idx_wiki_performer_source').on(table.source),
+    makerTitleIdx: index('idx_wiki_performer_maker_title').on(table.maker, table.productTitle),
+  }),
+);
+
 // 型エクスポート
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
@@ -628,3 +666,5 @@ export type MgsRawPage = typeof mgsRawPages.$inferSelect;
 export type NewMgsRawPage = typeof mgsRawPages.$inferInsert;
 export type ProductRawDataLink = typeof productRawDataLinks.$inferSelect;
 export type NewProductRawDataLink = typeof productRawDataLinks.$inferInsert;
+export type WikiPerformerIndex = typeof wikiPerformerIndex.$inferSelect;
+export type NewWikiPerformerIndex = typeof wikiPerformerIndex.$inferInsert;

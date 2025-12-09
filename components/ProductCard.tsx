@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef, TouchEvent, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Product } from '@/types/product';
@@ -11,6 +11,7 @@ import { generateAltText } from '@/lib/seo-utils';
 import { formatPrice } from '@/lib/utils/subscription';
 import { providerMeta, type ProviderId } from '@/lib/providers';
 import FavoriteButton from './FavoriteButton';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -28,6 +29,36 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [hasError, setHasError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalImgError, setModalImgError] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
+
+  // スワイプ用の状態
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // 全画像配列（メイン画像 + サンプル画像）- サムネイルURLを高解像度に変換
+  const allImages = useMemo(() => {
+    const images: string[] = [];
+    if (hasValidImageUrl && product.imageUrl) {
+      const normalized = normalizeImageUrl(product.imageUrl);
+      const fullSize = getFullSizeImageUrl(normalized);
+      images.push(fullSize);
+    }
+    if (product.sampleImages && product.sampleImages.length > 0) {
+      product.sampleImages.forEach(img => {
+        const normalized = normalizeImageUrl(img);
+        const fullSize = getFullSizeImageUrl(normalized);
+        if (!images.includes(fullSize)) {
+          images.push(fullSize);
+        }
+      });
+    }
+    return images;
+  }, [product.imageUrl, product.sampleImages, hasValidImageUrl]);
+
+  const hasMultipleImages = allImages.length > 1;
+  const currentModalImage = allImages[modalImageIndex] || PLACEHOLDER_IMAGE;
 
   // 女優ページかどうかを判定
   const isActressPage = pathname.includes('/actress/');
@@ -80,6 +111,56 @@ export default function ProductCard({ product }: ProductCardProps) {
   // DTI系（無修正）サイトの画像かどうか
   const isUncensored = isDtiUncensoredSite(imgSrc);
 
+  // モーダル内画像ナビゲーション
+  const goToPreviousImage = useCallback(() => {
+    setModalImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+    setModalImgError(false);
+  }, [allImages.length]);
+
+  const goToNextImage = useCallback(() => {
+    setModalImageIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+    setModalImgError(false);
+  }, [allImages.length]);
+
+  // スワイプハンドラー
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+    setIsTransitioning(false);
+  }, []);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const currentX = e.touches[0].clientX;
+    touchEndX.current = currentX;
+    const diff = currentX - touchStartX.current;
+    setSwipeOffset(diff);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchStartX.current === null || touchEndX.current === null) {
+      setSwipeOffset(0);
+      return;
+    }
+
+    const diff = touchEndX.current - touchStartX.current;
+    const threshold = 50;
+
+    setIsTransitioning(true);
+    setSwipeOffset(0);
+
+    if (diff > threshold && hasMultipleImages) {
+      goToPreviousImage();
+    } else if (diff < -threshold && hasMultipleImages) {
+      goToNextImage();
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
+
+    setTimeout(() => setIsTransitioning(false), 300);
+  }, [hasMultipleImages, goToPreviousImage, goToNextImage]);
+
   const handleImageClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -91,16 +172,39 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
-    setModalImgError(false); // モーダルを閉じるときにエラー状態をリセット
+    setModalImgError(false);
+    setModalImageIndex(0);
   }, []);
 
-  // ESCキーでモーダルを閉じる & スクロール無効化
+  // モーダル背景クリックゾーンハンドラー（画面左1/3: 前へ、中央1/3: 閉じる、右1/3: 次へ）
+  const handleModalZoneClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // 画面全体の幅で判定
+    const screenWidth = window.innerWidth;
+    const clickX = e.clientX;
+
+    if (hasMultipleImages && clickX < screenWidth / 3) {
+      // 画面左1/3 - 前の画像
+      goToPreviousImage();
+    } else if (hasMultipleImages && clickX > (screenWidth * 2) / 3) {
+      // 画面右1/3 - 次の画像
+      goToNextImage();
+    } else {
+      // 画面中央1/3 - モーダルを閉じる
+      handleCloseModal();
+    }
+  }, [hasMultipleImages, goToPreviousImage, goToNextImage, handleCloseModal]);
+
+  // ESCキーでモーダルを閉じる & 矢印キーでナビゲーション & スクロール無効化
   useEffect(() => {
     if (!showModal) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowModal(false);
+      } else if (e.key === 'ArrowLeft' && hasMultipleImages) {
+        goToPreviousImage();
+      } else if (e.key === 'ArrowRight' && hasMultipleImages) {
+        goToNextImage();
       }
     };
 
@@ -110,7 +214,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [showModal]);
+  }, [showModal, hasMultipleImages, goToPreviousImage, goToNextImage]);
 
   return (
     <div className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300 border border-gray-700">
@@ -321,7 +425,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <div className="flex gap-2">
             <Link
               href={`/${locale}/products/${product.id}`}
-              className="inline-flex items-center justify-center gap-2 flex-1 rounded-xl bg-gray-900 text-white px-4 py-2 text-sm font-semibold hover:bg-gray-800"
+              className="inline-flex items-center justify-center gap-2 flex-1 rounded-xl bg-gray-900 text-white px-4 py-2 text-sm font-semibold hover:bg-gray-800 active:scale-95 transition-transform"
             >
               {t('viewDetails')}
               <svg
@@ -339,8 +443,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                 href={product.affiliateUrl}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
-                className="inline-flex items-center justify-center gap-1 rounded-xl bg-rose-600 text-white px-3 py-2 text-sm font-semibold hover:bg-rose-700"
+                className="inline-flex items-center justify-center gap-1 rounded-xl bg-rose-600 text-white px-3 py-2 text-sm font-semibold hover:bg-rose-700 active:scale-95 transition-transform"
                 title={`${product.providerLabel}で購入`}
+                aria-label={`${product.providerLabel}で購入（外部リンク）`}
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -355,7 +460,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 cursor-pointer"
-          onClick={handleCloseModal}
+          onClick={handleModalZoneClick}
         >
           {/* 閉じるボタン */}
           <button
@@ -364,28 +469,105 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-10"
             aria-label={t('close')}
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-8 h-8" />
           </button>
+
+          {/* 画像カウンター（複数画像の場合） */}
+          {hasMultipleImages && (
+            <div className="absolute top-4 left-4 px-3 py-1 bg-black/60 rounded text-white text-lg z-10">
+              {modalImageIndex + 1} / {allImages.length}
+            </div>
+          )}
+
           {/* クリックで閉じるヒント */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 rounded text-white/70 text-sm pointer-events-none">
             {t('clickToCloseEsc')}
           </div>
-          {/* フルサイズ画像 - 画像クリックでも閉じる */}
-          <div className="relative max-w-[90vw] max-h-[85vh] pointer-events-none">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={modalImgError ? imgSrc : getFullSizeImageUrl(imgSrc)}
-              alt={generateAltText(product)}
-              className={`max-w-full max-h-[85vh] object-contain rounded-lg ${isUncensored ? 'blur-[3px]' : ''}`}
-              onError={() => {
-                if (!modalImgError) {
-                  setModalImgError(true);
-                }
+
+          {/* メイン画像 - スワイプ対応 */}
+          <div
+            className="relative max-w-5xl max-h-[85vh] mx-4 overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div
+              className="relative flex items-center justify-center"
+              style={{
+                transform: `translateX(${swipeOffset}px)`,
+                transition: isTransitioning ? 'transform 0.3s ease-out' : 'none',
               }}
-            />
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={modalImgError ? imgSrc : getFullSizeImageUrl(currentModalImage)}
+                alt={generateAltText(product)}
+                className={`max-w-full max-h-[85vh] object-contain ${isUncensored ? 'blur-[3px]' : ''}`}
+                onError={() => {
+                  if (!modalImgError) {
+                    setModalImgError(true);
+                  }
+                }}
+                draggable={false}
+              />
+            </div>
           </div>
+
+          {/* ナビゲーションボタン（複数画像の場合） */}
+          {hasMultipleImages && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); goToPreviousImage(); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
+                aria-label={t('previousImage')}
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); goToNextImage(); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
+                aria-label={t('nextImage')}
+              >
+                <ChevronRight className="w-8 h-8" />
+              </button>
+            </>
+          )}
+
+          {/* サムネイル一覧（複数画像の場合） */}
+          {hasMultipleImages && (
+            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/60 rounded-lg max-w-[90vw] overflow-x-auto">
+              {allImages.map((imgUrl, idx) => (
+                <button
+                  key={imgUrl}
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setModalImageIndex(idx); setModalImgError(false); }}
+                  className={`relative w-20 h-28 shrink-0 rounded overflow-hidden border-2 transition-all ${
+                    modalImageIndex === idx
+                      ? 'border-rose-600'
+                      : 'border-transparent hover:border-gray-500'
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imgUrl}
+                    alt={`${t('thumbnailAlt')} ${idx + 1}`}
+                    className={`w-full h-full object-cover ${isUncensored ? 'blur-[2px]' : ''}`}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                  {/* フォールバック表示 */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-700 -z-10">
+                    <span className="text-gray-400 text-xs">{idx + 1}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* 詳細ページへのリンク */}
           <Link
             href={`/${locale}/products/${product.id}`}
