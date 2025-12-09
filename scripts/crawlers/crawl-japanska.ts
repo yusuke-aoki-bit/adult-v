@@ -38,6 +38,7 @@ const db = getDb();
 
 // グローバルブラウザインスタンス
 let browser: Browser | null = null;
+let sessionInitialized = false;
 
 /**
  * ブラウザを初期化
@@ -66,7 +67,50 @@ async function initBrowser(): Promise<Browser> {
     ],
   });
   console.log('✅ ブラウザ起動完了');
+
+  // セッションを初期化（ホームページにアクセスしてCookieを取得）
+  if (!sessionInitialized) {
+    await initializeSession(browser);
+  }
+
   return browser;
+}
+
+/**
+ * セッションを初期化（ホームページにアクセスしてCookieを取得）
+ */
+async function initializeSession(browserInstance: Browser): Promise<void> {
+  console.log('🍪 セッション初期化中（ホームページにアクセス）...');
+
+  const page = await browserInstance.newPage();
+  try {
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setViewport({ width: 1920, height: 1080 });
+
+    // ホームページにアクセスしてCookieを取得
+    await page.goto('https://www.japanska-xxx.com/', {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
+
+    // 少し待機
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // カテゴリページにも一度アクセス（より自然なブラウジング）
+    await page.goto(LIST_PAGE_URL, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    sessionInitialized = true;
+    console.log('✅ セッション初期化完了');
+  } catch (error) {
+    console.error('⚠️ セッション初期化エラー:', error);
+  } finally {
+    await page.close();
+  }
 }
 
 /**
@@ -786,53 +830,94 @@ async function translateAndSave(
 }
 
 /**
+ * リストページから商品IDを取得
+ * @param pageNum ページ番号 (0から開始)
+ */
+async function getMovieIdsFromListPage(pageNum: number = 0): Promise<string[]> {
+  // リストページURL: list_0.html (新着順全作品)
+  // ページング: ?page=2, ?page=3 など
+  const url = pageNum === 0
+    ? LIST_PAGE_URL
+    : `${LIST_PAGE_URL}?page=${pageNum + 1}`;
+
+  console.log(`📋 リストページ取得中: ${url}`);
+
+  const { html } = await fetchPageWithPuppeteer(url);
+  if (!html) {
+    console.log('  ❌ リストページの取得に失敗');
+    return [];
+  }
+
+  // 商品リンクを抽出: /movie/detail_XXXXX.html
+  const movieIds: string[] = [];
+  const linkMatches = html.matchAll(/\/movie\/detail_(\d+)\.html/g);
+  for (const match of linkMatches) {
+    const movieId = match[1];
+    if (!movieIds.includes(movieId)) {
+      movieIds.push(movieId);
+    }
+  }
+
+  console.log(`  ✓ ${movieIds.length}件の商品IDを取得`);
+  return movieIds;
+}
+
+/**
  * メイン処理
- * ID範囲でクロール: --start 34000 --end 35000
+ * リストページベースでクロール（サイト構造変更対応）
+ * --pages: 取得するリストページ数 (デフォルト: 5)
+ * --limit: 最大取得件数 (デフォルト: 200)
  */
 async function main() {
   const args = process.argv.slice(2);
 
   // 引数パース
-  let startId = 34000;
-  let endId = 35000;
-  let limit = 100;
+  let pages = 5;  // デフォルト5ページ分
+  let limit = 200;
   const enableAI = !args.includes('--no-ai');
   const forceReprocess = args.includes('--force');
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--start' && args[i + 1]) {
-      startId = parseInt(args[i + 1]);
-    }
-    if (args[i] === '--end' && args[i + 1]) {
-      endId = parseInt(args[i + 1]);
+    if (args[i] === '--pages' && args[i + 1]) {
+      pages = parseInt(args[i + 1]);
     }
     if (args[i] === '--limit' && args[i + 1]) {
       limit = parseInt(args[i + 1]);
     }
   }
 
-  console.log('=== Japanska クローラー ===');
+  console.log('=== Japanska クローラー (リストページベース) ===');
   console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
-  console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}\n`);
-  console.log(`設定: startId=${startId}, endId=${endId}, limit=${limit}\n`);
+  console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}`);
+  console.log(`設定: pages=${pages}, limit=${limit}\n`);
+
+  // 1. リストページから商品IDを収集
+  const allMovieIds: string[] = [];
+  for (let pageNum = 0; pageNum < pages && allMovieIds.length < limit; pageNum++) {
+    const ids = await getMovieIdsFromListPage(pageNum);
+    for (const id of ids) {
+      if (!allMovieIds.includes(id) && allMovieIds.length < limit) {
+        allMovieIds.push(id);
+      }
+    }
+    // ページ間のレート制限
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
+  console.log(`\n📦 合計 ${allMovieIds.length} 件の商品IDを収集\n`);
 
   let totalFound = 0;
   let totalSaved = 0;
   let totalSkipped = 0;
-  let consecutiveNotFound = 0;
-  const MAX_CONSECUTIVE_NOT_FOUND = 50;
 
-  for (let movieId = startId; movieId <= endId && totalFound < limit; movieId++) {
-    // 連続404が多すぎる場合は終了
-    if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) {
-      console.log(`\n${MAX_CONSECUTIVE_NOT_FOUND}件連続でNot Found - 終了`);
-      break;
-    }
+  // 2. 各商品の詳細ページをクロール
+  for (const movieId of allMovieIds) {
+    if (totalFound >= limit) break;
 
-    console.log(`\n[${totalFound + 1}] 商品ID: ${movieId}`);
+    console.log(`\n[${totalFound + 1}/${allMovieIds.length}] 商品ID: ${movieId}`);
 
     // 詳細ページをパース
-    const { product, rawDataId, shouldSkip } = await parseDetailPage(String(movieId), forceReprocess);
+    const { product, rawDataId, shouldSkip } = await parseDetailPage(movieId, forceReprocess);
 
     if (shouldSkip) {
       totalSkipped++;
@@ -840,7 +925,6 @@ async function main() {
     }
 
     if (product) {
-      consecutiveNotFound = 0;
       console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
       console.log(`    出演者: ${product.performers.join(', ') || '不明'}`);
       console.log(`    📷 サンプル画像: ${product.sampleImages.length}件`);
@@ -868,10 +952,7 @@ async function main() {
       }
       totalFound++;
     } else {
-      consecutiveNotFound++;
-      if (consecutiveNotFound % 10 === 0) {
-        console.log(`    (${consecutiveNotFound}件連続Not Found)`);
-      }
+      console.log(`    ⚠️ 詳細ページの取得に失敗`);
     }
   }
 

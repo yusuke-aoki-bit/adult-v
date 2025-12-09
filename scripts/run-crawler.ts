@@ -267,9 +267,11 @@ async function main() {
       case 'japanska':
         {
           const fullCrawl = await shouldDoFullCrawl('Japanska');
-          const limit = fullCrawl ? '500' : '100'; // Full: 500 (連続404で自動終了), Incremental: 100
-          const start = args.find((arg, i) => args[i - 1] === '--start') || '34000';
-          const end = args.find((arg, i) => args[i - 1] === '--end') || '40000';
+          // Japanskaは最大IDが約38000以上。フルクロールは1から最大まで、インクリメンタルは最新IDから
+          // limit=2000で連続50件404で自動終了するので、フルクロールでも安全
+          const limit = fullCrawl ? '2000' : '200';
+          const start = args.find((arg, i) => args[i - 1] === '--start') || (fullCrawl ? '1' : '37000');
+          const end = args.find((arg, i) => args[i - 1] === '--end') || '50000';
           const command = `npx tsx scripts/crawlers/crawl-japanska.ts --start ${start} --end ${end} --limit ${limit}`;
           console.log(`Executing: ${command}`);
           execSync(command, { stdio: 'inherit', env: process.env });

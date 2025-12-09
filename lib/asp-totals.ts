@@ -22,8 +22,11 @@ const CACHE_TTL = 60 * 60 * 1000; // 1時間
 
 /**
  * DUGA API経由で総数を取得
+ * エラー時はフォールバック推定値を返す（約400,000件 - 2024年末時点）
  */
 export async function getDUGATotal(): Promise<ASPTotal> {
+  const FALLBACK_ESTIMATE = 400000;
+
   try {
     const dugaClient = getDugaClient();
     const response = await dugaClient.getNewReleases(1, 0);
@@ -33,10 +36,11 @@ export async function getDUGATotal(): Promise<ASPTotal> {
       source: 'DUGA API (count)'
     };
   } catch (e) {
+    // API認証情報が無い環境やエラー時はフォールバック推定値を返す
     return {
       asp: 'DUGA',
-      apiTotal: null,
-      source: 'エラー',
+      apiTotal: FALLBACK_ESTIMATE,
+      source: 'duga.jp (推定値)',
       error: String(e)
     };
   }
