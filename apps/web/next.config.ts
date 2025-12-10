@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from 'next-intl/plugin';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
@@ -193,8 +198,10 @@ const nextConfig: NextConfig = {
   },
   // ReactのStrict Modeを有効化（開発時のバグ発見に役立つ）
   reactStrictMode: true,
-  // スタンドアロンモード（Docker用）
+  // スタンドアロンモード（Firebase App Hosting用）
   output: 'standalone',
+  // monorepo用: standaloneの出力パスをアプリルートに設定
+  outputFileTracingRoot: __dirname,
   // TypeScript型チェックをスキップ（ビルド時）
   typescript: {
     ignoreBuildErrors: true,
