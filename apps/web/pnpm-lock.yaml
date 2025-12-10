@@ -33,6 +33,12 @@ importers:
       '@google/generative-ai':
         specifier: ^0.21.0
         version: 0.21.0
+      '@tailwindcss/postcss':
+        specifier: ^4.0.0
+        version: 4.1.17
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.4.22(postcss@8.5.6)
       cheerio:
         specifier: ^1.0.0
         version: 1.1.2
@@ -69,6 +75,9 @@ importers:
       pg:
         specifier: ^8.16.3
         version: 8.16.3
+      postcss:
+        specifier: ^8.4.49
+        version: 8.5.6
       puppeteer:
         specifier: ^23.0.0
         version: 23.11.1(typescript@5.9.3)
@@ -87,10 +96,10 @@ importers:
       sharp:
         specifier: ^0.34.0
         version: 0.34.5
-    devDependencies:
-      '@tailwindcss/postcss':
+      tailwindcss:
         specifier: ^4.0.0
         version: 4.1.17
+    devDependencies:
       '@types/node':
         specifier: ^22
         version: 22.19.2
@@ -103,15 +112,6 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.7)
-      autoprefixer:
-        specifier: ^10.4.20
-        version: 10.4.22(postcss@8.5.6)
-      postcss:
-        specifier: ^8.4.49
-        version: 8.5.6
-      tailwindcss:
-        specifier: ^4.0.0
-        version: 4.1.17
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -133,6 +133,12 @@ importers:
       '@google/generative-ai':
         specifier: ^0.21.0
         version: 0.21.0
+      '@tailwindcss/postcss':
+        specifier: ^4.0.0
+        version: 4.1.17
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.4.22(postcss@8.5.6)
       cheerio:
         specifier: ^1.0.0
         version: 1.1.2
@@ -166,6 +172,9 @@ importers:
       pg:
         specifier: ^8.16.3
         version: 8.16.3
+      postcss:
+        specifier: ^8.4.49
+        version: 8.5.6
       puppeteer:
         specifier: ^23.0.0
         version: 23.11.1(typescript@5.9.3)
@@ -184,10 +193,10 @@ importers:
       sharp:
         specifier: ^0.34.0
         version: 0.34.5
-    devDependencies:
-      '@tailwindcss/postcss':
+      tailwindcss:
         specifier: ^4.0.0
         version: 4.1.17
+    devDependencies:
       '@types/node':
         specifier: ^22
         version: 22.19.2
@@ -200,15 +209,6 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.7)
-      autoprefixer:
-        specifier: ^10.4.20
-        version: 10.4.22(postcss@8.5.6)
-      postcss:
-        specifier: ^8.4.49
-        version: 8.5.6
-      tailwindcss:
-        specifier: ^4.0.0
-        version: 4.1.17
       typescript:
         specifier: ^5
         version: 5.9.3
