@@ -14,3 +14,6 @@ export * from './constants/index.js';
 export * from './localization.js';
 export * from './image-utils.js';
 export * from './site-config.js';
+
+// Prompts
+export * from './prompts/review-templates.js';
