@@ -1,0 +1,26 @@
+runConfig:
+  runtime: nodejs20
+  concurrency: 80
+  minInstances: 0
+  maxInstances: 4
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: NODE_ENV
+    value: production
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: DATABASE_URL
+    secret: database-url
+  - variable: SITE_MODE
+    value: fanza
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://fanza.minpri.net
+    availability:
+      - BUILD
+      - RUNTIME
