@@ -20,8 +20,10 @@
     "crawl:fc2": "pnpm --filter=@adult-v/crawlers crawl:fc2",
     "crawl:b10f": "pnpm --filter=@adult-v/crawlers crawl:b10f"
   },
+  "dependencies": {
+    "turbo": "^2.3.3"
+  },
   "devDependencies": {
-    "turbo": "^2.3.3",
     "typescript": "^5"
   }
 }

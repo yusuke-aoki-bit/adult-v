@@ -7,10 +7,11 @@ settings:
 importers:
 
   .:
-    devDependencies:
+    dependencies:
       turbo:
         specifier: ^2.3.3
         version: 2.6.3
+    devDependencies:
       typescript:
         specifier: ^5
         version: 5.9.3
