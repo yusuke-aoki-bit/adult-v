@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// モノレポルート（apps/fanzaの2階層上）
+const monorepoRoot = path.resolve(__dirname, '../..');
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
@@ -200,8 +202,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // スタンドアロンモード（Firebase App Hosting用）
   output: 'standalone',
-  // monorepo用: standaloneの出力パスをアプリルートに設定
-  outputFileTracingRoot: __dirname,
+  // monorepo用: standaloneの出力パスをモノレポルートに設定
+  outputFileTracingRoot: monorepoRoot,
   // TypeScript型チェックをスキップ（ビルド時）
   typescript: {
     ignoreBuildErrors: true,
