@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"],
+      "@adult-v/shared": ["../../packages/shared/src"],
+      "@adult-v/shared/*": ["../../packages/shared/src/*"],
+      "@adult-v/database": ["../../packages/database/src"],
+      "@adult-v/database/*": ["../../packages/database/src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

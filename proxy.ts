@@ -1,7 +1,7 @@
 import createIntlMiddleware from 'next-intl/middleware';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { locales, defaultLocale } from './i18n';
+import { getSiteMode, type SiteMode } from './lib/site-config';
 
 // next-intlのミドルウェアを作成
 const intlMiddleware = createIntlMiddleware({
@@ -9,6 +9,60 @@ const intlMiddleware = createIntlMiddleware({
   defaultLocale,
   localePrefix: 'always', // 常にロケールプレフィックスを付ける
 });
+
+/**
+ * ホスト名からサイトモードを検出
+ * FANZAサブドメイン: f.dult-v.com, fanza.minpri.net など
+ */
+function detectSiteMode(request: NextRequest): SiteMode {
+  const hostname = request.headers.get('host') || request.nextUrl.hostname;
+  return getSiteMode(hostname);
+}
+
+/**
+ * サイトモードヘッダー付きのNextResponse.next()を返す
+ */
+function nextWithSiteHeaders(request: NextRequest, siteMode: SiteMode): NextResponse {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-site-mode', siteMode);
+  if (siteMode === 'fanza') {
+    requestHeaders.set('x-asp-filter', 'FANZA');
+  }
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+}
+
+/**
+ * intlMiddlewareを実行し、サイトモードヘッダーを追加
+ */
+function intlMiddlewareWithSiteHeaders(request: NextRequest, siteMode: SiteMode): NextResponse {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-site-mode', siteMode);
+  if (siteMode === 'fanza') {
+    requestHeaders.set('x-asp-filter', 'FANZA');
+  }
+
+  // リクエストヘッダーを変更したリクエストでintlMiddlewareを実行
+  const modifiedRequest = new NextRequest(request.url, {
+    headers: requestHeaders,
+    method: request.method,
+  });
+
+  // intlMiddlewareを実行
+  const response = intlMiddleware(modifiedRequest);
+
+  // レスポンスヘッダーにもサイトモードを追加
+  response.headers.set('x-site-mode', siteMode);
+  if (siteMode === 'fanza') {
+    response.headers.set('x-asp-filter', 'FANZA');
+  }
+
+  return response;
+}
 
 // Simple in-memory rate limiting (for production, use Redis or similar)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -58,6 +112,9 @@ const pathsRequiringLocale = [
 export default function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
+  // サイトモード検出（FANZAサブドメイン vs メインサイト）
+  const siteMode = detectSiteMode(request);
+
   // Rate limiting for API routes
   if (pathname.startsWith('/api')) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
@@ -95,7 +152,7 @@ export default function proxy(request: NextRequest) {
 
   // /admin ルートはロケールプレフィックスなしでアクセス可能（国際化をスキップ）
   if (pathname.startsWith('/admin')) {
-    return NextResponse.next();
+    return nextWithSiteHeaders(request, siteMode);
   }
 
   // SEOファイル（sitemap.xml, robots.txt）は検索エンジンのクローラーがアクセスできるよう常にアクセス可能
@@ -103,12 +160,12 @@ export default function proxy(request: NextRequest) {
                     pathname === '/robots.txt';
 
   if (isSEOFile) {
-    return NextResponse.next();
+    return nextWithSiteHeaders(request, siteMode);
   }
 
   // 年齢確認ページ自体は常にアクセス可能
   if (isAgeVerificationPage) {
-    return NextResponse.next();
+    return nextWithSiteHeaders(request, siteMode);
   }
 
   // 検索エンジンボット・PageSpeed Insightsは年齢確認をスキップ
@@ -148,7 +205,7 @@ export default function proxy(request: NextRequest) {
   }
 
   if (isBot || isPageSpeed || isGoogleIP) {
-    return intlMiddleware(request);
+    return intlMiddlewareWithSiteHeaders(request, siteMode);
   }
 
   // 年齢確認済みでない場合は年齢確認ページにリダイレクト
@@ -159,8 +216,8 @@ export default function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // next-intlのミドルウェアを実行
-  return intlMiddleware(request);
+  // next-intlのミドルウェアを実行（サイトモードヘッダー付き）
+  return intlMiddlewareWithSiteHeaders(request, siteMode);
 }
 
 export const config = {

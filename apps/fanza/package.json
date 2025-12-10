@@ -1,0 +1,47 @@
+{
+  "name": "@adult-v/fanza",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env SITE_MODE=fanza next dev -p 3001",
+    "build": "cross-env SITE_MODE=fanza next build",
+    "start": "cross-env SITE_MODE=fanza next start -p 3001",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "@adult-v/database": "workspace:*",
+    "@adult-v/shared": "workspace:*",
+    "@google-analytics/data": "^4.0.0",
+    "@google-cloud/storage": "^7.0.0",
+    "@google/generative-ai": "^0.21.0",
+    "cheerio": "^1.0.0",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "^0.44.7",
+    "firebase": "^11.0.0",
+    "google-auth-library": "^9.0.0",
+    "lucide-react": "^0.469.0",
+    "meilisearch": "^0.41.0",
+    "next": "^15.1.0",
+    "next-intl": "^4.0.2",
+    "openai": "^4.0.0",
+    "pg": "^8.16.3",
+    "puppeteer": "^23.0.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sharp": "^0.34.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22",
+    "@types/pg": "^8.15.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5"
+  }
+}

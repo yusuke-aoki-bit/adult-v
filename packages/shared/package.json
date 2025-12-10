@@ -1,0 +1,20 @@
+{
+  "name": "@adult-v/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./providers": "./src/providers.ts",
+    "./constants": "./src/constants/index.ts",
+    "./localization": "./src/localization.ts",
+    "./image-utils": "./src/image-utils.ts",
+    "./site-config": "./src/site-config.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
