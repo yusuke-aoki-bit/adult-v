@@ -21,15 +21,15 @@
     "google-auth-library": "^9.0.0",
     "lucide-react": "^0.469.0",
     "meilisearch": "^0.41.0",
-    "next": "15.3.6",
+    "next": "15.1.9",
     "next-intl": "^4.0.2",
     "openai": "^4.0.0",
     "pg": "^8.16.3",
     "puppeteer": "^23.0.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
     "sharp": "^0.34.0",
     "@tailwindcss/postcss": "^4.0.0",
     "autoprefixer": "^10.4.20",
@@ -41,6 +41,6 @@
     "@types/react-dom": "^19",
     "typescript": "^5",
     "eslint": "^9",
-    "eslint-config-next": "15.3.6"
+    "eslint-config-next": "15.1.9"
   }
 }
