@@ -1,8 +1,6 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { isSubscriptionProvider } from '@/lib/providers';
-import { formatPrice } from '@/lib/utils/subscription';
 
 /**
  * 再生時間を分単位でフォーマット
@@ -44,11 +42,7 @@ const translations = {
     people: '名',
     tagCount: 'タグ数:',
     items: '件',
-    distributionSites: '配信サイト',
-    sites: 'サイト',
     productId: '品番:',
-    subscriptionOnly: '月額会員限定',
-    dataInfo: '複数の配信サイトから価格・在庫情報を収集し、最新の情報を提供しています',
     lastUpdated: '最終更新:',
     verifiedData: '検証済みデータ',
     officialSource: '公式提供元',
@@ -63,11 +57,7 @@ const translations = {
     people: '',
     tagCount: 'Tags:',
     items: '',
-    distributionSites: 'Distribution Sites',
-    sites: 'sites',
     productId: 'Product ID:',
-    subscriptionOnly: 'Subscription Only',
-    dataInfo: 'We collect pricing and availability information from multiple distribution sites to provide the latest data',
     lastUpdated: 'Last Updated:',
     verifiedData: 'Verified Data',
     officialSource: 'Official Source',
@@ -82,11 +72,7 @@ const translations = {
     people: '人',
     tagCount: '标签数:',
     items: '个',
-    distributionSites: '分发站点',
-    sites: '个站点',
     productId: '产品编号:',
-    subscriptionOnly: '仅限会员',
-    dataInfo: '我们从多个分发站点收集价格和库存信息，以提供最新数据',
     lastUpdated: '最后更新:',
     verifiedData: '已验证数据',
     officialSource: '官方来源',
@@ -101,11 +87,7 @@ const translations = {
     people: '명',
     tagCount: '태그 수:',
     items: '개',
-    distributionSites: '배포 사이트',
-    sites: '개 사이트',
     productId: '제품번호:',
-    subscriptionOnly: '월간 회원 전용',
-    dataInfo: '여러 배포 사이트에서 가격 및 재고 정보를 수집하여 최신 정보를 제공합니다',
     lastUpdated: '최종 업데이트:',
     verifiedData: '검증된 데이터',
     officialSource: '공식 제공처',
@@ -174,41 +156,18 @@ export default function ProductDetailInfo({
         </div>
       </div>
 
-      {/* データソースの透明性 */}
+      {/* 品番表示（FANZAソースのみ） */}
       {sources.length > 0 && (
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-800 mb-3">
-            {t.distributionSites} ({sources.length} {t.sites})
-          </h3>
-          <div className="space-y-2">
-            {sources.map((source) => (
-              <div
-                key={`${source.aspName}-${source.originalProductId}`}
-                className="flex items-center justify-between bg-gray-50 rounded p-3 text-xs border border-gray-100"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="px-2 py-1 bg-gray-200 rounded font-mono text-gray-800">
-                    {source.aspName}
-                  </span>
-                  <span className="text-gray-600">
-                    {t.productId} {source.originalProductId}
-                  </span>
-                </div>
-                {source.price !== null && source.price > 0 ? (
-                  <span className="text-green-600 font-semibold">
-                    {formatPrice(source.price, source.currency ?? undefined)}
-                  </span>
-                ) : isSubscriptionProvider(source.aspName) ? (
-                  <span className="text-rose-700 font-semibold">
-                    {t.subscriptionOnly}
-                  </span>
-                ) : null}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          {sources
+            .filter(s => s.aspName === 'DMM' || s.aspName === 'FANZA')
+            .slice(0, 1)
+            .map((source) => (
+              <div key={source.originalProductId} className="text-sm">
+                <span className="text-gray-500">{t.productId}</span>
+                <span className="text-gray-800 ml-2 font-mono">{source.originalProductId}</span>
               </div>
             ))}
-          </div>
-          <p className="text-xs text-gray-500 mt-3">
-            {t.dataInfo}
-          </p>
         </div>
       )}
 
