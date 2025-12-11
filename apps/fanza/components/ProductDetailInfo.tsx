@@ -52,6 +52,7 @@ const translations = {
     lastUpdated: '最終更新:',
     verifiedData: '検証済みデータ',
     officialSource: '公式提供元',
+    copyrightNotice: 'すべての画像・動画コンテンツの著作権は各権利者に帰属します',
   },
   en: {
     productDetails: 'Product Details',
@@ -70,6 +71,7 @@ const translations = {
     lastUpdated: 'Last Updated:',
     verifiedData: 'Verified Data',
     officialSource: 'Official Source',
+    copyrightNotice: 'All image and video content copyrights belong to their respective owners',
   },
   zh: {
     productDetails: '作品详情',
@@ -88,6 +90,7 @@ const translations = {
     lastUpdated: '最后更新:',
     verifiedData: '已验证数据',
     officialSource: '官方来源',
+    copyrightNotice: '所有图片和视频内容的版权归各权利人所有',
   },
   ko: {
     productDetails: '작품 상세 정보',
@@ -106,6 +109,7 @@ const translations = {
     lastUpdated: '최종 업데이트:',
     verifiedData: '검증된 데이터',
     officialSource: '공식 제공처',
+    copyrightNotice: '모든 이미지 및 동영상 콘텐츠의 저작권은 각 권리자에게 있습니다',
   },
 } as const;
 
@@ -239,6 +243,11 @@ export default function ProductDetailInfo({
           <span className="text-xs text-green-700 font-medium">{t.officialSource}</span>
         </div>
       </div>
+
+      {/* 著作権表示 */}
+      <p className="text-xs text-gray-500 pt-4 border-t border-gray-200">
+        {t.copyrightNotice}
+      </p>
     </div>
   );
 }

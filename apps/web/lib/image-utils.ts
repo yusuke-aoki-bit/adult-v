@@ -87,6 +87,11 @@ export function getFallbackImageUrl(): string {
 /**
  * Convert thumbnail URL to full-size image URL
  * Supports all ASPs: DUGA, MGS, DMM/FANZA, Sokmil, DTI系(カリビアンコム、一本道、HEYZO等), b10f, Japanska, FC2
+ *
+ * ⚠️ 注意: この関数はサムネイルURLを操作して高解像度画像に直接アクセスします。
+ * 各プラットフォームの利用規約に抵触する可能性があります。
+ * 正式な画像配信許可を取得するか、提供されたサムネイルURLのみを使用することを検討してください。
+ *
  * @param thumbnailUrl - The thumbnail URL
  * @returns Full-size image URL or original URL if conversion not possible
  */
