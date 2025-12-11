@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 
-const AGE_VERIFICATION_COOKIE = 'age_verified';
+// Cookie名をAPIと統一（httpOnly Cookieはサーバーサイドで検証）
+const AGE_VERIFICATION_COOKIE = 'age-verified';
 const AGE_REQUIREMENTS = {
   ja: 18, // 日本: 18歳以上
   en: 18, // 英語圏(主にアメリカ): 18歳以上
@@ -21,23 +22,39 @@ export default function AgeVerification({ locale, children, initialVerified = fa
   // 初期値をサーバーサイドから受け取ることでCLS防止
   const [isVerified, setIsVerified] = useState(initialVerified);
   const [showModal, setShowModal] = useState(!initialVerified);
+  const [isLoading, setIsLoading] = useState(false);
 
   const minAge = AGE_REQUIREMENTS[locale as keyof typeof AGE_REQUIREMENTS] || 18;
 
   // クライアント側でクッキーを再確認（サーバーとクライアントの同期）
+  // 注: httpOnly Cookieはdocument.cookieからは読めないため、
+  // initialVerifiedがtrueの場合はサーバーサイドで検証済み
   useEffect(() => {
-    const cookieVerified = document.cookie.includes(`${AGE_VERIFICATION_COOKIE}=true`);
-    if (cookieVerified && !isVerified) {
+    // サーバーサイドで認証済みの場合は何もしない
+    if (initialVerified) {
       setIsVerified(true);
       setShowModal(false);
     }
-  }, [isVerified]);
+  }, [initialVerified]);
 
-  const handleConfirm = () => {
-    // クッキーに保存（1年間有効）
-    document.cookie = `${AGE_VERIFICATION_COOKIE}=true; path=/; max-age=31536000; SameSite=Lax`;
-    setIsVerified(true);
-    setShowModal(false);
+  const handleConfirm = async () => {
+    setIsLoading(true);
+    try {
+      // サーバーサイドAPIでhttpOnly Cookieを設定
+      const response = await fetch('/api/age-verify', {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+
+      if (response.ok) {
+        setIsVerified(true);
+        setShowModal(false);
+      }
+    } catch (error) {
+      console.error('Age verification failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDeny = () => {
@@ -98,9 +115,10 @@ export default function AgeVerification({ locale, children, initialVerified = fa
         <div className="space-y-3">
           <button
             onClick={handleConfirm}
-            className="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+            disabled={isLoading}
+            className="w-full bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
           >
-            {t('confirm').replace('{age}', minAge.toString())}
+            {isLoading ? '...' : t('confirm').replace('{age}', minAge.toString())}
           </button>
           <button
             onClick={handleDeny}

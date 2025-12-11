@@ -5,8 +5,10 @@ import { ConditionalLayout } from "@/components/ConditionalLayout";
 import { JsonLD } from "@/components/JsonLD";
 import { generateBaseMetadata, generateWebSiteSchema } from "@/lib/seo";
 import { defaultLocale } from "@/i18n";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
+import CookieConsent from "@/components/CookieConsent";
 import PWAInstaller from "@/components/PWAInstaller";
+import { SiteProvider } from "@/lib/contexts/SiteContext";
+import { getServerSiteMode } from "@/lib/server/site-mode";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,12 +52,14 @@ export const viewport = {
 
 const websiteSchema = generateWebSiteSchema();
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
+  const siteMode = await getServerSiteMode();
+  const themeClass = siteMode === 'fanza' ? 'theme-fanza' : 'theme-adult-v';
 
   return (
     <html lang={defaultLocale}>
@@ -74,10 +78,12 @@ export default function RootLayout({
         <JsonLD data={websiteSchema} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-gray-50`}
+        className={`${geistSans.variable} ${geistMono.variable} ${themeClass} antialiased flex flex-col min-h-screen`}
       >
-        {gaId && <GoogleAnalytics gaId={gaId} />}
-        <ConditionalLayout>{children}</ConditionalLayout>
+        {gaId && <CookieConsent gaId={gaId} />}
+        <SiteProvider mode={siteMode}>
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </SiteProvider>
         <PWAInstaller />
       </body>
     </html>

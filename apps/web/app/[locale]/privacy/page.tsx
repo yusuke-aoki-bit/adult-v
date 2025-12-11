@@ -56,9 +56,30 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-white mb-3">3. アクセス解析ツールについて</h2>
             <p className="leading-relaxed">
               当サイトでは、サイトの利用状況を把握するため、
-              アクセス解析ツールを使用する場合があります。
-              これらのツールは匿名の情報のみを収集し、
-              個人を特定できる情報は含まれません。
+              Google Analytics 4（GA4）を使用しています。
+              GA4はCookieを使用してユーザーの行動を匿名で収集します。
+            </p>
+            <p className="leading-relaxed mt-2">
+              収集される情報には、訪問したページ、滞在時間、使用デバイス、
+              おおよその地域などが含まれますが、個人を特定できる情報は含まれません。
+              また、IPアドレスは匿名化されています。
+            </p>
+            <p className="leading-relaxed mt-2">
+              当サイトでは、GDPR/CCPAに準拠するため、Cookie同意バナーを表示しています。
+              ユーザーが「同意する」を選択した場合のみ、GA4が有効になります。
+              「拒否する」を選択した場合、GA4のトラッキングは行われません。
+            </p>
+            <p className="leading-relaxed mt-2">
+              Google Analyticsの詳細については、
+              <a
+                href="https://policies.google.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-rose-400 hover:text-rose-300 underline"
+              >
+                Googleのプライバシーポリシー
+              </a>
+              をご確認ください。
             </p>
           </section>
 
@@ -106,7 +127,7 @@ export default function PrivacyPage() {
 
           <div className="pt-6 border-t border-gray-700">
             <p className="text-sm text-gray-400">
-              最終更新日: 2024年12月9日
+              最終更新日: 2025年12月12日
             </p>
           </div>
         </div>

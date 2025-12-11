@@ -208,6 +208,61 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // セキュリティヘッダー設定
+  async headers() {
+    return [
+      {
+        // 全ページに適用
+        source: '/:path*',
+        headers: [
+          // クリックジャッキング対策
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          // XSS対策（ブラウザのXSSフィルター有効化）
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          // MIMEタイプスニッフィング対策
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          // Referer情報の制御
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          // 権限ポリシー（不要な機能を無効化）
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+          // HTTPS強制（本番環境用）
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains',
+          },
+        ],
+      },
+      {
+        // API ルートに追加のセキュリティヘッダー
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate',
+          },
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow',
+          },
+        ],
+      },
+    ];
+  },
   // リダイレクト設定
   async redirects() {
     return [
