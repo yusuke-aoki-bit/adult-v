@@ -133,8 +133,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
   // 最後に商品タイトルを追加（リンクなし）
   breadcrumbItems.push({ label: product.title });
 
-  // 関連作品を取得
-  const relatedProducts = await getRelatedProducts(product.id, 12);
+  // 関連作品を取得（FANZAの商品のみ）
+  const relatedProducts = await getRelatedProducts(product.id, 12, 'fanza');
 
   // E-E-A-T強化: 全ASPソース情報を取得
   const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
@@ -146,21 +146,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
       <JsonLD data={breadcrumbSchema} />
       {videoSchema && <JsonLD data={videoSchema} />}
 
-      <div className="bg-gray-900 min-h-screen">
+      <div className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
           {/* パンくずリスト */}
           <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
           {/* サンプル動画セクション */}
           {product.sampleVideos && product.sampleVideos.length > 0 && (
-            <details className="bg-gray-800 rounded-lg shadow-md mb-6 group">
-              <summary className="p-4 cursor-pointer list-none flex items-center gap-2 hover:bg-gray-750 rounded-lg transition-colors">
-                <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <details className="theme-content rounded-lg shadow-sm border theme-border mb-6 group" open>
+              <summary className="p-4 cursor-pointer list-none flex items-center gap-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-lg font-semibold text-white flex-1">サンプル動画 ({product.sampleVideos.length}本)</span>
-                <svg className="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="text-lg font-semibold theme-text flex-1">サンプル動画 ({product.sampleVideos.length}本)</span>
+                <svg className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </summary>
@@ -173,7 +173,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </details>
           )}
 
-          <div className="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+          <div className="theme-content rounded-lg shadow-sm border theme-border overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
               {/* Product Image Gallery */}
               <ProductImageGallery
@@ -186,7 +186,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <div className="space-y-6">
                 <div>
                   <div className="flex items-start gap-3 mb-2">
-                    <h1 className="text-3xl font-bold text-white flex-1">{product.title}</h1>
+                    <h1 className="text-3xl font-bold theme-text flex-1">{product.title}</h1>
                     <FavoriteButton
                       type="product"
                       id={productId}
@@ -195,8 +195,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       size="lg"
                     />
                   </div>
-                  <p className="text-gray-300">{product.providerLabel}</p>
-                  <p className="text-sm text-gray-400 mt-2">
+                  <p className="theme-text-secondary">{product.providerLabel}</p>
+                  <p className="text-sm theme-text-muted mt-2">
                     作品ID: {product.normalizedProductId || product.id}
                     {sources.length > 0 && sources[0].originalProductId &&
                       ` / メーカー品番: ${sources[0].originalProductId}`}
@@ -205,7 +205,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                 {product.performers && product.performers.length > 0 ? (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">
+                    <h2 className="text-sm font-semibold theme-text mb-2">
                       {product.performers.length === 1 ? tCommon('actress') : '出演者'}
                     </h2>
                     <div className="flex flex-wrap gap-2">
@@ -213,7 +213,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         <Link
                           key={performer.id}
                           href={`/${locale}/actress/${performer.id}`}
-                          className="text-rose-600 hover:text-green-700 hover:underline"
+                          className="text-rose-700 hover:text-rose-800 hover:underline"
                         >
                           {performer.name}
                         </Link>
@@ -222,32 +222,32 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </div>
                 ) : product.actressName ? (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">{tCommon('actress')}</h2>
+                    <h2 className="text-sm font-semibold theme-text mb-2">{tCommon('actress')}</h2>
                     {product.actressId ? (
                       <Link
                         href={`/${locale}/actress/${product.actressId}`}
-                        className="text-rose-600 hover:text-green-700 hover:underline"
+                        className="text-rose-700 hover:text-rose-800 hover:underline"
                       >
                         {product.actressName}
                       </Link>
                     ) : (
-                      <p className="text-white">{product.actressName}</p>
+                      <p className="theme-text">{product.actressName}</p>
                     )}
                   </div>
                 ) : null}
 
                 {product.description && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">説明</h2>
-                    <p className="text-white whitespace-pre-wrap">{product.description}</p>
+                    <h2 className="text-sm font-semibold theme-text mb-2">説明</h2>
+                    <p className="theme-text whitespace-pre-wrap">{product.description}</p>
                   </div>
                 )}
 
                 {product.price && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">価格</h2>
-                    <p className="text-2xl font-bold text-white">
-                      {isSubscriptionSite(product.provider) && <span className="text-base text-gray-400 mr-1">月額</span>}
+                    <h2 className="text-sm font-semibold theme-text mb-2">価格</h2>
+                    <p className="text-2xl font-bold theme-text">
+                      {isSubscriptionSite(product.provider) && <span className="text-base theme-text-muted mr-1">月額</span>}
                       ¥{product.price.toLocaleString()}
                     </p>
                   </div>
@@ -255,19 +255,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                 {product.releaseDate && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">発売日</h2>
-                    <p className="text-white">{product.releaseDate}</p>
+                    <h2 className="text-sm font-semibold theme-text mb-2">発売日</h2>
+                    <p className="theme-text">{product.releaseDate}</p>
                   </div>
                 )}
 
                 {product.tags && product.tags.length > 0 && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">タグ</h2>
+                    <h2 className="text-sm font-semibold theme-text mb-2">タグ</h2>
                     <div className="flex flex-wrap gap-2">
                       {product.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1 bg-gray-700 text-gray-200 rounded-full text-sm"
+                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm border border-gray-200"
                         >
                           {tag}
                         </span>
@@ -280,7 +280,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <AffiliateButton
                     affiliateUrl={product.affiliateUrl}
                     providerLabel={product.providerLabel}
-                    aspName={sources[0]?.aspName}
                     price={product.regularPrice || product.price}
                     salePrice={product.salePrice}
                     discount={product.discount}

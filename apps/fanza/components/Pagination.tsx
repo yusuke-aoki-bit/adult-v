@@ -175,8 +175,8 @@ export default function Pagination({
           href={getUrl(1)}
           className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
             page === 1
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
-              : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600'
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none opacity-50'
+              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
           }`}
           aria-disabled={page === 1}
         >
@@ -189,8 +189,8 @@ export default function Pagination({
             href={getUrl(Math.max(1, page - 10))}
             className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
               page <= 10
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
-                : 'bg-blue-900/50 text-blue-400 hover:bg-blue-800/50 border border-blue-700'
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none opacity-50'
+                : 'bg-pink-50 text-pink-600 hover:bg-pink-100 border border-pink-200'
             }`}
             aria-disabled={page <= 10}
             title="10ページ戻る"
@@ -204,8 +204,8 @@ export default function Pagination({
           href={getUrl(page - 1)}
           className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[44px] sm:min-w-[60px] text-center ${
             page === 1
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
-              : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 active:bg-gray-600'
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none opacity-50'
+              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 active:bg-gray-100'
           }`}
           aria-disabled={page === 1}
         >
@@ -234,8 +234,8 @@ export default function Pagination({
                   href={getUrl(pageNum as number)}
                   className={`${showOnMobile ? '' : 'hidden sm:block'} px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors ${
                     isCurrent
-                      ? 'bg-rose-600 text-white'
-                      : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 active:bg-gray-600'
+                      ? 'bg-pink-500 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 active:bg-gray-100'
                   }`}
                   aria-current={isCurrent ? 'page' : undefined}
                 >
@@ -251,8 +251,8 @@ export default function Pagination({
           href={getUrl(page + 1)}
           className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[44px] sm:min-w-[60px] text-center ${
             page >= totalPages
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
-              : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 active:bg-gray-600'
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none opacity-50'
+              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 active:bg-gray-100'
           }`}
           aria-disabled={page >= totalPages}
         >
@@ -265,8 +265,8 @@ export default function Pagination({
             href={getUrl(Math.min(totalPages, page + 10))}
             className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
               page > totalPages - 10
-                ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
-                : 'bg-blue-900/50 text-blue-400 hover:bg-blue-800/50 border border-blue-700'
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none opacity-50'
+                : 'bg-pink-50 text-pink-600 hover:bg-pink-100 border border-pink-200'
             }`}
             aria-disabled={page > totalPages - 10}
             title="10ページ進む"
@@ -280,8 +280,8 @@ export default function Pagination({
           href={getUrl(totalPages)}
           className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
             page >= totalPages
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50'
-              : 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600'
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none opacity-50'
+              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
           }`}
           aria-disabled={page >= totalPages}
         >
@@ -292,7 +292,7 @@ export default function Pagination({
       {/* ページ情報 + コントロール */}
       <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
         {/* ページ情報 */}
-        <div className="text-gray-400">
+        <div className="text-gray-500">
           {total > 0 && (
             <>
               <span className="hidden sm:inline">
@@ -315,13 +315,13 @@ export default function Pagination({
               value={inputPage}
               onChange={(e) => setInputPage(e.target.value)}
               placeholder={t.inputPlaceholder}
-              className="w-20 px-2 py-1.5 text-center border border-gray-600 rounded-md text-sm text-white bg-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+              className="w-20 px-2 py-1.5 text-center border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               aria-label={t.goToPage}
             />
             <button
               type="submit"
               disabled={!inputPage || parseInt(inputPage) < 1 || parseInt(inputPage) > totalPages}
-              className="px-3 py-1.5 bg-rose-600 text-white rounded-md text-sm font-medium hover:bg-rose-700 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1.5 bg-pink-500 text-white rounded-md text-sm font-medium hover:bg-pink-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               {t.go}
             </button>
@@ -334,7 +334,7 @@ export default function Pagination({
             <select
               value={perPage}
               onChange={(e) => handlePerPageChange(parseInt(e.target.value))}
-              className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-600 rounded-md text-sm sm:text-base text-white bg-gray-700 focus:ring-rose-500 focus:border-rose-500"
+              className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md text-sm sm:text-base text-gray-900 bg-white focus:ring-pink-500 focus:border-pink-500"
               aria-label="表示件数"
             >
               {PER_PAGE_OPTIONS.map((option) => (

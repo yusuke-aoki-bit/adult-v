@@ -73,8 +73,8 @@ export default function InitialSearchMenu({
           <button
             className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               chars.some(c => initialFilter === c)
-                ? 'bg-rose-600 text-white'
-                : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                ? 'bg-pink-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
             }`}
           >
             {group}
@@ -87,15 +87,15 @@ export default function InitialSearchMenu({
               onMouseEnter={() => setHoveredGroup(group)}
               onMouseLeave={() => setHoveredGroup(null)}
             >
-              <div className="bg-gray-800 border border-gray-600 rounded shadow-lg p-2 flex gap-1">
+              <div className="bg-white border border-gray-200 rounded shadow-lg p-2 flex gap-1">
                 {chars.map((char) => (
                   <Link
                     key={char}
                     href={buildUrl(char)}
                     className={`px-2 py-1 rounded text-sm font-medium transition-colors whitespace-nowrap ${
                       initialFilter === char
-                        ? 'bg-rose-600 text-white'
-                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                        ? 'bg-pink-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
                     }`}
                   >
                     {char}
@@ -114,8 +114,8 @@ export default function InitialSearchMenu({
           href={buildUrl(char)}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             initialFilter === char
-              ? 'bg-rose-600 text-white'
-              : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+              ? 'bg-pink-500 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
           }`}
         >
           {char}
@@ -127,8 +127,8 @@ export default function InitialSearchMenu({
         href={buildUrl('etc')}
         className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
           initialFilter === 'etc'
-            ? 'bg-rose-600 text-white'
-            : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+            ? 'bg-pink-500 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
         }`}
       >
         {t.etc}

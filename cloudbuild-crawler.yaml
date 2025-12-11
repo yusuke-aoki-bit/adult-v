@@ -1,5 +1,4 @@
 steps:
-  - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "us-central1-docker.pkg.dev/$PROJECT_ID/adult-v-crawlers/crawler:latest", "-f", "Dockerfile.crawler", "."]
-images:
-  - "us-central1-docker.pkg.dev/$PROJECT_ID/adult-v-crawlers/crawler:latest"
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/adult-v/adult-v-crawlers/crawler:latest', '-f', 'Dockerfile.crawler', '.']
+images: ['us-central1-docker.pkg.dev/adult-v/adult-v-crawlers/crawler:latest']

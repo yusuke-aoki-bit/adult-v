@@ -56,7 +56,7 @@
     "viewProductListDesc": "Search across all streaming platforms"
   },
   "header": {
-    "title": "ADULT VIEWER LAB",
+    "title": "FANZA VIEWER LAB",
     "subtitle": "heavy user guide",
     "menu": "Menu",
     "close": "Close"
@@ -74,16 +74,16 @@
     "search": "Search"
   },
   "footer": {
-    "siteName": "ADULT VIEWER LAB",
-    "description": "Cross-platform adult streaming hub covering DUGA / SOKMIL / DTI with actress-based reviews, rankings, and campaign updates for heavy users.",
+    "siteName": "FANZA VIEWER LAB",
+    "description": "FANZA product search and comparison service with actress-based reviews, rankings, and campaign updates for heavy users.",
     "links": "Links",
     "legal": "Site Policies",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "contact": "Contact",
     "contactDescription": "For questions or requests, please contact us by email.",
-    "copyright": "© {year} Adult Viewer Lab. All rights reserved.",
-    "affiliateNotice": "This site participates in affiliate programs with DUGA, MGS, SOKMIL, DTI, B10F.jp, FC2, and Japanska. We may earn commissions from purchases made through product links.",
+    "copyright": "© {year} FANZA VIEWER LAB. All rights reserved.",
+    "affiliateNotice": "This site participates in the FANZA affiliate program. We may earn commissions from purchases made through product links.",
     "admin": "Admin"
   },
   "uncategorized": {

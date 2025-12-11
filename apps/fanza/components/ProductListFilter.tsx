@@ -186,28 +186,28 @@ export default function ProductListFilter({
   const includeTags = searchParams.get('include')?.split(',').filter(Boolean) || [];
   const excludeTags = searchParams.get('exclude')?.split(',').filter(Boolean) || [];
 
-  // アクセントカラー
+  // アクセントカラー（ライトテーマ用に調整）
   const accentClasses = {
     rose: {
-      bg: 'bg-rose-600',
-      bgLight: 'bg-rose-600/30',
-      ring: 'ring-rose-500',
-      text: 'text-rose-500',
-      border: 'border-rose-500/50',
+      bg: 'bg-pink-500',
+      bgLight: 'bg-pink-50',
+      ring: 'ring-pink-500',
+      text: 'text-pink-500',
+      border: 'border-pink-200',
     },
     yellow: {
-      bg: 'bg-yellow-600',
-      bgLight: 'bg-yellow-600/30',
-      ring: 'ring-yellow-400',
-      text: 'text-yellow-500',
-      border: 'border-yellow-500/50',
+      bg: 'bg-pink-500',
+      bgLight: 'bg-pink-50',
+      ring: 'ring-pink-500',
+      text: 'text-pink-500',
+      border: 'border-pink-200',
     },
     blue: {
-      bg: 'bg-blue-600',
-      bgLight: 'bg-blue-600/30',
-      ring: 'ring-blue-500',
-      text: 'text-blue-500',
-      border: 'border-blue-500/50',
+      bg: 'bg-pink-500',
+      bgLight: 'bg-pink-50',
+      ring: 'ring-pink-500',
+      text: 'text-pink-500',
+      border: 'border-pink-200',
     },
   };
   const accent = accentClasses[accentColor];
@@ -349,12 +349,12 @@ export default function ProductListFilter({
 
   return (
     <details
-      className="mb-3 sm:mb-8 bg-gray-800 rounded-lg border border-gray-700"
+      className="mb-3 sm:mb-8 bg-white rounded-lg border border-gray-200 shadow-sm"
       open={defaultOpen ?? hasActiveFilters}
     >
-      <summary className="px-3 sm:px-4 py-2.5 sm:py-3 cursor-pointer font-semibold text-white hover:bg-gray-750 active:bg-gray-700 flex items-center justify-between min-h-[44px] sm:min-h-0 select-none">
+      <summary className="px-3 sm:px-4 py-2.5 sm:py-3 cursor-pointer font-semibold text-gray-900 hover:bg-gray-50 active:bg-gray-100 flex items-center justify-between min-h-[44px] sm:min-h-0 select-none">
         <div className="flex items-center gap-2">
-          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
           </svg>
           <span className="text-sm sm:text-base">{t.filterSettings}</span>
@@ -370,14 +370,14 @@ export default function ProductListFilter({
         {isPending && (
           <div className="flex items-center justify-center py-2">
             <div className={`animate-spin rounded-full h-5 w-5 border-b-2 ${accent.border} mr-2`} />
-            <span className="text-sm text-gray-400">{t.loading}</span>
+            <span className="text-sm text-gray-500">{t.loading}</span>
           </div>
         )}
 
         {/* 頭文字検索 */}
         {showInitialFilter && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.initialSearch}</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">{t.initialSearch}</h3>
             <div className="flex flex-wrap gap-1.5 sm:gap-1">
               {/* ひらがなグループ */}
               {Object.entries(HIRAGANA_GROUPS).map(([group, chars]) => (
@@ -388,14 +388,14 @@ export default function ProductListFilter({
                     className={`px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium transition-colors ${
                       chars.some(c => initialFilter === c)
                         ? `${accent.bg} text-white`
-                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                        : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
                     }`}
                   >
                     {group}
                   </button>
                   {/* ドロップダウン */}
                   <div className="absolute top-full left-0 pt-1 z-20 hidden group-hover:block">
-                    <div className="bg-gray-800 border border-gray-600 rounded shadow-lg p-1.5 flex gap-1">
+                    <div className="bg-white border border-gray-200 rounded shadow-lg p-1.5 flex gap-1">
                       {chars.map((char) => (
                         <button
                           key={char}
@@ -404,7 +404,7 @@ export default function ProductListFilter({
                           className={`px-2 py-1 rounded text-sm font-medium transition-colors whitespace-nowrap ${
                             initialFilter === char
                               ? `${accent.bg} text-white`
-                              : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                              : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
                           }`}
                         >
                           {char}
@@ -423,7 +423,7 @@ export default function ProductListFilter({
                   className={`px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium transition-colors ${
                     initialFilter === char
                       ? `${accent.bg} text-white`
-                      : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
                   }`}
                 >
                   {char}
@@ -436,7 +436,7 @@ export default function ProductListFilter({
                 className={`px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium transition-colors ${
                   initialFilter === 'etc'
                     ? `${accent.bg} text-white`
-                    : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
                 }`}
               >
                 {t.other}
@@ -446,7 +446,7 @@ export default function ProductListFilter({
                 <button
                   type="button"
                   onClick={() => handleInitialChange(null)}
-                  className="px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium bg-gray-600 text-gray-200 hover:bg-gray-500 transition-colors"
+                  className="px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
                 >
                   ✕
                 </button>
@@ -458,7 +458,7 @@ export default function ProductListFilter({
         {/* 品番パターンフィルター */}
         {showPatternFilter && patternStats.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.productPattern}</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">{t.productPattern}</h3>
             <div className="flex flex-wrap gap-2">
               {patternStats.map((stat) => {
                 const isSelected = selectedPattern === stat.pattern;
@@ -469,7 +469,7 @@ export default function ProductListFilter({
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isSelected
                         ? `${accent.bg} text-white ring-2 ${accent.ring}`
-                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                        : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
                     }`}
                   >
                     {stat.label}
@@ -484,36 +484,36 @@ export default function ProductListFilter({
         {/* サンプルコンテンツフィルター */}
         {showSampleFilter && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.sampleContent}</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">{t.sampleContent}</h3>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
-                hasVideo ? `${accent.bgLight} ${accent.border} hover:opacity-80` : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+                hasVideo ? `${accent.bgLight} ${accent.border} hover:opacity-80` : 'border-gray-200 hover:bg-gray-50 active:bg-gray-100'
               }`}>
                 <input
                   type="checkbox"
                   checked={hasVideo}
                   onChange={handleVideoChange}
-                  className={`w-5 h-5 rounded border-gray-500 ${accent.text} focus:${accent.ring}`}
+                  className={`w-5 h-5 rounded border-gray-300 ${accent.text} focus:${accent.ring}`}
                 />
                 <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${accent.text} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">{t.hasVideo}</span>
+                <span className="text-base sm:text-sm text-gray-700">{t.hasVideo}</span>
               </label>
               <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
-                hasImage ? 'bg-blue-600/30 border-blue-500/50 hover:bg-blue-600/40' : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+                hasImage ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' : 'border-gray-200 hover:bg-gray-50 active:bg-gray-100'
               }`}>
                 <input
                   type="checkbox"
                   checked={hasImage}
                   onChange={handleImageChange}
-                  className="w-5 h-5 rounded border-gray-500 text-blue-600 focus:ring-blue-500"
+                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <svg className="w-6 h-6 sm:w-5 sm:h-5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">{t.hasImage}</span>
+                <span className="text-base sm:text-sm text-gray-700">{t.hasImage}</span>
               </label>
             </div>
           </div>
@@ -522,7 +522,7 @@ export default function ProductListFilter({
         {/* 出演形態フィルター */}
         {showPerformerTypeFilter && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.performerType}</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">{t.performerType}</h3>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
                 type="button"
@@ -530,27 +530,27 @@ export default function ProductListFilter({
                 className={`flex items-center justify-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
                   performerType === 'solo'
                     ? `${accent.bgLight} ${accent.border} hover:opacity-80`
-                    : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+                    : 'border-gray-200 hover:bg-gray-50 active:bg-gray-100'
                 }`}
               >
                 <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${performerType === 'solo' ? accent.text : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">{t.solo}</span>
+                <span className="text-base sm:text-sm text-gray-700">{t.solo}</span>
               </button>
               <button
                 type="button"
                 onClick={() => handlePerformerTypeChange('multi')}
                 className={`flex items-center justify-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
                   performerType === 'multi'
-                    ? 'bg-purple-600/30 border-purple-500/50 hover:opacity-80'
-                    : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+                    ? 'bg-purple-50 border-purple-200 hover:opacity-80'
+                    : 'border-gray-200 hover:bg-gray-50 active:bg-gray-100'
                 }`}
               >
                 <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${performerType === 'multi' ? 'text-purple-500' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">{t.multi}</span>
+                <span className="text-base sm:text-sm text-gray-700">{t.multi}</span>
               </button>
             </div>
           </div>
@@ -559,22 +559,22 @@ export default function ProductListFilter({
         {/* セールフィルター */}
         {showSaleFilter && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.saleFilter}</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">{t.saleFilter}</h3>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
-                onSale ? 'bg-red-600/30 border-red-500/50 hover:opacity-80' : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
+                onSale ? 'bg-red-50 border-red-200 hover:opacity-80' : 'border-gray-200 hover:bg-gray-50 active:bg-gray-100'
               }`}>
                 <input
                   type="checkbox"
                   checked={onSale}
                   onChange={handleSaleChange}
-                  className="w-5 h-5 rounded border-gray-500 text-red-600 focus:ring-red-500"
+                  className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
                 />
                 <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${onSale ? 'text-red-500' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">{t.onSaleOnly}</span>
+                <span className="text-base sm:text-sm text-gray-700">{t.onSaleOnly}</span>
               </label>
             </div>
           </div>
@@ -583,21 +583,21 @@ export default function ProductListFilter({
         {/* 未整理作品フィルター */}
         {showUncategorizedFilter && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.uncategorizedFilter}</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">{t.uncategorizedFilter}</h3>
             <div className="space-y-2">
               <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[48px] sm:min-h-0 transition-colors ${
-                uncategorized ? `${accent.bgLight} hover:opacity-80` : 'hover:bg-gray-700 active:bg-gray-600'
+                uncategorized ? `${accent.bgLight} hover:opacity-80` : 'hover:bg-gray-50 active:bg-gray-100'
               }`}>
                 <input
                   type="checkbox"
                   checked={uncategorized}
                   onChange={handleUncategorizedChange}
-                  className="w-5 h-5 rounded border-gray-500 text-orange-600 focus:ring-orange-500"
+                  className="w-5 h-5 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                 />
                 <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${uncategorized ? 'text-orange-500' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">{t.uncategorizedOnly}</span>
+                <span className="text-base sm:text-sm text-gray-700">{t.uncategorizedOnly}</span>
               </label>
             </div>
           </div>
@@ -606,21 +606,21 @@ export default function ProductListFilter({
         {/* レビューフィルター */}
         {showReviewFilter && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.reviewFilter}</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">{t.reviewFilter}</h3>
             <div className="space-y-2">
               <label className={`flex items-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[48px] sm:min-h-0 transition-colors ${
-                hasReview ? `${accent.bgLight} hover:opacity-80` : 'hover:bg-gray-700 active:bg-gray-600'
+                hasReview ? `${accent.bgLight} hover:opacity-80` : 'hover:bg-gray-50 active:bg-gray-100'
               }`}>
                 <input
                   type="checkbox"
                   checked={hasReview}
                   onChange={handleReviewChange}
-                  className="w-5 h-5 rounded border-gray-500 text-purple-600 focus:ring-purple-500"
+                  className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                 />
                 <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${hasReview ? 'text-purple-500' : 'text-gray-400'} shrink-0`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                 </svg>
-                <span className="text-base sm:text-sm text-gray-200">{t.hasReviewOnly}</span>
+                <span className="text-base sm:text-sm text-gray-700">{t.hasReviewOnly}</span>
               </label>
             </div>
           </div>
@@ -629,52 +629,52 @@ export default function ProductListFilter({
         {/* ジャンルタグフィルター */}
         {showGenreFilter && genreTags.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.genre}</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">{t.genre}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* 対象フィルタ */}
               <div>
-                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.include}</p>
-                <div className="space-y-1 max-h-[280px] sm:max-h-72 overflow-y-auto border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750 [-webkit-overflow-scrolling:touch]">
+                <p className="text-sm sm:text-xs text-gray-600 mb-2 font-medium">{t.include}</p>
+                <div className="space-y-1 max-h-[280px] sm:max-h-72 overflow-y-auto border border-gray-200 rounded-lg sm:rounded p-2 bg-gray-50 [-webkit-overflow-scrolling:touch]">
                   {genreTags.map((tag) => (
                     <label
                       key={`include-genre-${tag.id}`}
                       className={`flex items-center gap-3 p-3 sm:p-1.5 rounded-lg sm:rounded cursor-pointer min-h-[48px] sm:min-h-0 transition-colors ${
                         includeTags.includes(String(tag.id))
                           ? `${accent.bgLight} hover:opacity-80`
-                          : 'hover:bg-gray-700 active:bg-gray-600'
+                          : 'hover:bg-gray-100 active:bg-gray-200'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={includeTags.includes(String(tag.id))}
                         onChange={() => handleIncludeTagChange(String(tag.id))}
-                        className={`w-5 h-5 rounded border-gray-500 ${accent.text} focus:${accent.ring}`}
+                        className={`w-5 h-5 rounded border-gray-300 ${accent.text} focus:${accent.ring}`}
                       />
-                      <span className="text-base sm:text-sm text-gray-200">{tag.name} <span className="text-gray-400">({tag.count})</span></span>
+                      <span className="text-base sm:text-sm text-gray-700">{tag.name} <span className="text-gray-500">({tag.count})</span></span>
                     </label>
                   ))}
                 </div>
               </div>
               {/* 除外フィルタ */}
               <div>
-                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.exclude}</p>
-                <div className="space-y-1 max-h-[280px] sm:max-h-72 overflow-y-auto border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750 [-webkit-overflow-scrolling:touch]">
+                <p className="text-sm sm:text-xs text-gray-600 mb-2 font-medium">{t.exclude}</p>
+                <div className="space-y-1 max-h-[280px] sm:max-h-72 overflow-y-auto border border-gray-200 rounded-lg sm:rounded p-2 bg-gray-50 [-webkit-overflow-scrolling:touch]">
                   {genreTags.map((tag) => (
                     <label
                       key={`exclude-genre-${tag.id}`}
                       className={`flex items-center gap-3 p-3 sm:p-1.5 rounded-lg sm:rounded cursor-pointer min-h-[48px] sm:min-h-0 transition-colors ${
                         excludeTags.includes(String(tag.id))
-                          ? 'bg-red-600/30 hover:bg-red-600/40'
-                          : 'hover:bg-gray-700 active:bg-gray-600'
+                          ? 'bg-red-50 hover:bg-red-100'
+                          : 'hover:bg-gray-100 active:bg-gray-200'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={excludeTags.includes(String(tag.id))}
                         onChange={() => handleExcludeTagChange(String(tag.id))}
-                        className="w-5 h-5 rounded border-gray-500 text-red-600 focus:ring-red-500"
+                        className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
                       />
-                      <span className="text-base sm:text-sm text-gray-200">{tag.name} <span className="text-gray-400">({tag.count})</span></span>
+                      <span className="text-base sm:text-sm text-gray-700">{tag.name} <span className="text-gray-500">({tag.count})</span></span>
                     </label>
                   ))}
                 </div>
@@ -686,12 +686,12 @@ export default function ProductListFilter({
         {/* 配信サイト（ASP）フィルター - FANZAサイトでは非表示 */}
         {shouldShowAspFilter && aspStats.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.distributionSite}</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">{t.distributionSite}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* 対象フィルタ */}
               <div>
-                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.include}</p>
-                <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
+                <p className="text-sm sm:text-xs text-gray-600 mb-2 font-medium">{t.include}</p>
+                <div className="space-y-1 sm:space-y-0.5 border border-gray-200 rounded-lg sm:rounded p-2 bg-gray-50">
                   {aspStats.map((asp) => {
                     const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                     const meta = providerId ? providerMeta[providerId] : null;
@@ -700,14 +700,14 @@ export default function ProductListFilter({
                       <label
                         key={`include-asp-${asp.aspName}`}
                         className={`flex items-center gap-3 p-3 sm:p-1.5 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors ${
-                          isSelected ? `${accent.bgLight} ring-2 ${accent.ring}` : 'hover:bg-gray-700 active:bg-gray-600'
+                          isSelected ? `${accent.bgLight} ring-2 ${accent.ring}` : 'hover:bg-gray-100 active:bg-gray-200'
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleIncludeAspChange(asp.aspName)}
-                          className={`w-5 h-5 rounded border-gray-500 ${accent.text} focus:${accent.ring}`}
+                          className={`w-5 h-5 rounded border-gray-300 ${accent.text} focus:${accent.ring}`}
                         />
                         <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
                           {meta?.label || asp.aspName}
@@ -720,8 +720,8 @@ export default function ProductListFilter({
               </div>
               {/* 除外フィルタ */}
               <div>
-                <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.exclude}</p>
-                <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
+                <p className="text-sm sm:text-xs text-gray-600 mb-2 font-medium">{t.exclude}</p>
+                <div className="space-y-1 sm:space-y-0.5 border border-gray-200 rounded-lg sm:rounded p-2 bg-gray-50">
                   {aspStats.map((asp) => {
                     const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                     const meta = providerId ? providerMeta[providerId] : null;
@@ -730,14 +730,14 @@ export default function ProductListFilter({
                       <label
                         key={`exclude-asp-${asp.aspName}`}
                         className={`flex items-center gap-3 p-3 sm:p-1.5 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors ${
-                          isSelected ? 'bg-red-600/30 ring-2 ring-red-500' : 'hover:bg-gray-700 active:bg-gray-600'
+                          isSelected ? 'bg-red-50 ring-2 ring-red-500' : 'hover:bg-gray-100 active:bg-gray-200'
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleExcludeAspChange(asp.aspName)}
-                          className="w-5 h-5 rounded border-gray-500 text-red-600 focus:ring-red-500"
+                          className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
                         />
                         <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
                           {meta?.label || asp.aspName}
@@ -758,7 +758,7 @@ export default function ProductListFilter({
             <button
               type="button"
               onClick={handleClear}
-              className="flex-1 sm:flex-none text-center px-6 py-3.5 sm:py-2 border border-gray-600 text-gray-200 rounded-lg sm:rounded-md font-medium hover:bg-gray-700 active:bg-gray-600 transition-colors min-h-[52px] sm:min-h-0"
+              className="flex-1 sm:flex-none text-center px-6 py-3.5 sm:py-2 border border-gray-300 text-gray-700 rounded-lg sm:rounded-md font-medium hover:bg-gray-100 active:bg-gray-200 transition-colors min-h-[52px] sm:min-h-0"
             >
               {t.clear}
             </button>

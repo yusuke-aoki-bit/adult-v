@@ -1,11 +1,14 @@
 import { getDb } from './index';
-import { products, productPerformers, productTags } from './schema';
+import { products, productPerformers, productTags, productSources } from './schema';
 import { eq, and, inArray, ne, sql, desc } from 'drizzle-orm';
 
 /**
  * Get related products based on performers, tags, and genre similarity
+ * @param productId - The product ID to find related products for
+ * @param limit - Maximum number of products to return
+ * @param aspName - Optional ASP name to filter by (e.g., 'fanza')
  */
-export async function getRelatedProducts(productId: string, limit: number = 6) {
+export async function getRelatedProducts(productId: string, limit: number = 6, aspName?: string) {
   const db = getDb();
 
   // Get the current product's performers and tags
@@ -37,6 +40,11 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
   const performerIds = performerData.map((pp) => pp.performerId);
   const tagIds = tagData.map((pt) => pt.tagId);
 
+  // ASPフィルター条件を作成
+  const aspFilterCondition = aspName
+    ? sql`EXISTS (SELECT 1 FROM ${productSources} ps WHERE ps.product_id = ${products.id} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
+    : sql`1=1`;
+
   // Strategy 1: Same performers (highest priority)
   let relatedProducts: any[] = [];
 
@@ -55,7 +63,8 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
       .where(
         and(
           inArray(productPerformers.performerId, performerIds),
-          ne(products.id, productIdNum)
+          ne(products.id, productIdNum),
+          aspFilterCondition
         )
       )
       .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
@@ -87,7 +96,8 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
         and(
           inArray(productTags.tagId, tagIds),
           ne(products.id, productIdNum),
-          existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`
+          existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`,
+          aspFilterCondition
         )
       )
       .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
@@ -118,7 +128,8 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
       .where(
         and(
           ne(products.id, productIdNum),
-          existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`
+          existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`,
+          aspFilterCondition
         )
       )
       .orderBy(desc(products.releaseDate))

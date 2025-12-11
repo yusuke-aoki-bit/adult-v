@@ -12,9 +12,9 @@ if (!process.env.DATABASE_URL) {
 }
 
 import * as cheerio from 'cheerio';
-import { getDb } from './lib/db/index.js';
+import { getDb } from '../../lib/db/index.js';
 import { sql } from 'drizzle-orm';
-import { isValidPerformerName } from './lib/performer-validation.js';
+import { isValidPerformerName } from '../../lib/performer-validation.js';
 
 const db = getDb();
 const BASE_URL = 'http://mankowomiseruavzyoyu.blog.fc2.com';

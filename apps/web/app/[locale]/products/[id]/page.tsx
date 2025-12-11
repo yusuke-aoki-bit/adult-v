@@ -146,7 +146,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       <JsonLD data={breadcrumbSchema} />
       {videoSchema && <JsonLD data={videoSchema} />}
 
-      <div className="bg-gray-900 min-h-screen">
+      <div className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
           {/* パンくずリスト */}
           <Breadcrumb items={breadcrumbItems} className="mb-6" />
@@ -276,11 +276,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
-                {product.affiliateUrl && (
+                {/* FANZA商品は規約上adult側では購入リンクを非表示 */}
+                {product.affiliateUrl && product.provider !== 'fanza' && (
                   <AffiliateButton
                     affiliateUrl={product.affiliateUrl}
                     providerLabel={product.providerLabel}
-                    aspName={sources[0]?.aspName}
                     price={product.regularPrice || product.price}
                     salePrice={product.salePrice}
                     discount={product.discount}

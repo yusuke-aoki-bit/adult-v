@@ -64,10 +64,15 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
 
   const selectedImage = allImages[selectedIndex] || PLACEHOLDER_IMAGE;
 
-  // ライトボックス用の高解像度画像URL（scap -> sample等の変換）
+  // 高解像度画像URL（scap -> sample等の変換）- メイン表示とライトボックス両方で使用
   const fullSizeImage = useMemo(() => {
     return getFullSizeImageUrl(selectedImage);
   }, [selectedImage]);
+
+  // 全画像の高解像度URL版（ライトボックス用）
+  const fullSizeImages = useMemo(() => {
+    return allImages.map(img => getFullSizeImageUrl(img));
+  }, [allImages]);
 
   const handleImageError = () => {
     setImageError(true);
@@ -125,7 +130,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
       <div className="space-y-4">
         {/* メイン画像 */}
         <div
-          className="relative aspect-[3/4] w-full bg-gray-800 rounded-lg overflow-hidden cursor-pointer group select-none"
+          className="relative aspect-[3/4] w-full bg-gray-100 rounded-lg overflow-hidden cursor-pointer group select-none"
           onClick={() => setLightboxOpen(true)}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -139,7 +144,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
             }}
           >
             <Image
-              src={imageError ? PLACEHOLDER_IMAGE : selectedImage}
+              src={imageError ? PLACEHOLDER_IMAGE : fullSizeImage}
               alt={productTitle}
               fill
               className={`object-cover transition-transform group-hover:scale-105 ${isUncensored ? 'blur-[3px]' : ''}`}
@@ -189,8 +194,8 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
                 onClick={() => setSelectedIndex(idx)}
                 className={`relative aspect-[3/4] rounded overflow-hidden border-2 transition-all ${
                   selectedIndex === idx
-                    ? 'border-rose-600 ring-2 ring-rose-600/50'
-                    : 'border-gray-700 hover:border-gray-500'
+                    ? 'border-rose-700 ring-2 ring-rose-700/50'
+                    : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <Image
@@ -207,7 +212,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
 
         {/* 画像枚数表示 */}
         {hasMultipleImages && (
-          <p className="text-sm text-gray-400 text-center">
+          <p className="text-sm text-gray-500 text-center">
             {t('sampleImageCount', { count: allImages.length })}
           </p>
         )}
@@ -215,7 +220,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
 
       {/* ライトボックス */}
       <ImageLightbox
-        images={allImages}
+        images={fullSizeImages}
         initialIndex={selectedIndex}
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}

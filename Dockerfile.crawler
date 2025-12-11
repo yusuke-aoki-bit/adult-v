@@ -3,7 +3,7 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Install Chromium dependencies for Puppeteer
+# Install Chromium dependencies for Puppeteer and pnpm
 RUN apt-get update && apt-get install -y \
     chromium \
     fonts-ipafont-gothic \
@@ -13,32 +13,42 @@ RUN apt-get update && apt-get install -y \
     fonts-freefont-ttf \
     libxss1 \
     --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 # Set Puppeteer environment variables
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Install dependencies
-COPY package*.json ./
-RUN npm ci
+# Copy package files for monorepo
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY packages/crawlers/package.json ./packages/crawlers/
+COPY packages/database/package.json ./packages/database/
+COPY packages/shared/package.json ./packages/shared/
 
-# Copy only necessary files
-COPY lib ./lib
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source files
 COPY tsconfig.json ./tsconfig.json
 
-# Copy only necessary script files individually to avoid problematic files
+# Copy all packages
+COPY packages/crawlers/ ./packages/crawlers/
+COPY packages/database/ ./packages/database/
+COPY packages/shared/ ./packages/shared/
+
+# Copy scripts (legacy location for compatibility)
 RUN mkdir -p scripts/crawlers scripts/backfill
 COPY scripts/run-crawler.ts ./scripts/
 COPY scripts/normalize-performers.ts ./scripts/
 COPY scripts/generate-performer-reviews.ts ./scripts/
+COPY scripts/update-performer-tags.ts ./scripts/
 COPY scripts/crawlers/ ./scripts/crawlers/
 COPY scripts/backfill/ ./scripts/backfill/
 
 # Set environment
 ENV NODE_ENV=production
 
-# Entry point for different crawler jobs
-# Usage: docker run image CRAWLER_TYPE [options]
-# CRAWLER_TYPE: mgs, caribbeancom, heyzo, etc.
-ENTRYPOINT ["npx", "tsx", "scripts/run-crawler.ts"]
+# Default entry point (can be overridden by --args in Cloud Run)
+ENTRYPOINT ["npx"]
+CMD ["tsx", "scripts/run-crawler.ts"]

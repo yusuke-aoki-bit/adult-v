@@ -7,7 +7,7 @@
  *   npx tsx scripts/crawlers/crawl-sales.ts [--asp MGS|DUGA|SOKMIL|all] [--limit N]
  */
 
-import { getDb } from './lib/db';
+import { getDb } from '../lib/db';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
 import {
@@ -16,9 +16,9 @@ import {
   RateLimiter,
   crawlerLog,
   robustFetch,
-} from './lib/crawler';
-import { getDugaClient, DugaProduct } from './lib/providers/duga-client';
-import { getSokmilClient } from './lib/providers/sokmil-client';
+} from '../lib/crawler';
+import { getDugaClient, DugaProduct } from '../lib/providers/duga-client';
+import { getSokmilClient } from '../lib/providers/sokmil-client';
 
 interface SaleItem {
   originalProductId: string;

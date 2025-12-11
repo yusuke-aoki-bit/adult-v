@@ -4,6 +4,35 @@ import { useParams } from 'next/navigation';
 import { isSubscriptionProvider } from '@/lib/providers';
 import { formatPrice } from '@/lib/utils/subscription';
 
+/**
+ * 再生時間を分単位でフォーマット
+ * - 600分（10時間）以上の異常値は非表示
+ * - 時間と分に分けて表示
+ */
+function formatDuration(minutes: number, locale: string): string | null {
+  // 600分（10時間）以上は異常データとして非表示
+  if (minutes > 600) {
+    return null;
+  }
+
+  if (minutes < 60) {
+    return `${minutes}`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  if (locale === 'ja') {
+    return mins > 0 ? `${hours}時間${mins}分` : `${hours}時間`;
+  } else if (locale === 'zh') {
+    return mins > 0 ? `${hours}小时${mins}分钟` : `${hours}小时`;
+  } else if (locale === 'ko') {
+    return mins > 0 ? `${hours}시간 ${mins}분` : `${hours}시간`;
+  } else {
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  }
+}
+
 // Client-side translations (outside NextIntlClientProvider)
 const translations = {
   ja: {
@@ -117,10 +146,12 @@ export default function ProductDetailInfo({
 
       {/* 基本情報 */}
       <div className="grid grid-cols-2 gap-4 text-sm">
-        {duration && (
+        {duration && formatDuration(duration, locale) && (
           <div>
             <span className="text-gray-400">{t.duration}</span>
-            <span className="text-white ml-2 font-semibold">{duration}{t.minutes}</span>
+            <span className="text-white ml-2 font-semibold">
+              {formatDuration(duration, locale)}{duration < 60 ? t.minutes : ''}
+            </span>
           </div>
         )}
         {releaseDate && (

@@ -86,6 +86,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
       },
     })),
+    // Categories page (high traffic - GSC shows 287 impressions)
+    {
+      url: `${BASE_URL}/categories`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
+    // Actress list pages for each locale
+    ...locales.map((locale) => ({
+      url: `${BASE_URL}/${locale}/actresses`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+      alternates: {
+        languages: {
+          ja: `${BASE_URL}/ja/actresses`,
+          en: `${BASE_URL}/en/actresses`,
+          zh: `${BASE_URL}/zh/actresses`,
+          ko: `${BASE_URL}/ko/actresses`,
+        },
+      },
+    })),
     // Privacy policy page (Japanese only - legal content)
     {
       url: `${BASE_URL}/ja/privacy`,
@@ -151,11 +173,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .orderBy(desc(sql`product_count`))
     .limit(1000);
 
+  // GSC data shows actress pages get most clicks - prioritize them
   const performerPages: MetadataRoute.Sitemap = topPerformers.map((performer) => ({
     url: `${BASE_URL}/ja/actress/${performer.id}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
-    priority: 0.6,
+    priority: 0.8, // Increased from 0.6 - actress pages drive most traffic
     alternates: {
       languages: {
         ja: `${BASE_URL}/ja/actress/${performer.id}`,

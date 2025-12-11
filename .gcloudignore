@@ -14,5 +14,7 @@ scripts/data/
 scripts/*.sh
 scripts/*.json
 nul
-performers
-title
+# performers - removed, was excluding packages/crawlers/src/performers/
+# title - removed, kept for reference
+data/performers
+data/title

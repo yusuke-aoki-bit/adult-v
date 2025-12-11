@@ -20,16 +20,16 @@ if (!process.env.DATABASE_URL) {
 }
 
 import * as cheerio from 'cheerio';
-import { getDb } from './lib/db/index.js';
-import { performers, performerAliases, products, productPerformers } from './lib/db/schema.js';
+import { getDb } from '../../lib/db/index.js';
+import { performers, performerAliases, products, productPerformers } from '../../lib/db/schema.js';
 import { eq, and, sql } from 'drizzle-orm';
 import iconv from 'iconv-lite';
-import { isValidPerformerName } from './lib/performer-validation.js';
-import { getFirstRow, getRows, IdRow } from './lib/crawler/index.js';
+import { isValidPerformerName } from '../../lib/performer-validation.js';
+import { getFirstRow, getRows, IdRow } from '../../lib/crawler/index.js';
 import {
   upsertRawHtmlDataWithGcs,
   markRawDataAsProcessed,
-} from './lib/crawler/dedup-helper.js';
+} from '../../lib/crawler/dedup-helper.js';
 
 interface PerformerData {
   name: string;

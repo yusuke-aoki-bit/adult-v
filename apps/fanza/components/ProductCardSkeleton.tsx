@@ -2,31 +2,31 @@
 
 export default function ProductCardSkeleton() {
   return (
-    <div className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden animate-pulse">
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse border border-gray-200">
       {/* 画像プレースホルダー */}
-      <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-700 to-gray-600" />
+      <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-200 to-gray-100" />
 
       {/* テキストプレースホルダー */}
       <div className="p-4 space-y-3">
         {/* タイトル */}
         <div className="space-y-2">
-          <div className="h-4 bg-gray-700 rounded w-full" />
-          <div className="h-4 bg-gray-700 rounded w-3/4" />
+          <div className="h-4 bg-gray-200 rounded w-full" />
+          <div className="h-4 bg-gray-200 rounded w-3/4" />
         </div>
 
         {/* サブ情報 */}
         <div className="flex items-center gap-2">
-          <div className="h-3 bg-gray-700 rounded w-16" />
-          <div className="h-3 bg-gray-700 rounded w-20" />
+          <div className="h-3 bg-gray-200 rounded w-16" />
+          <div className="h-3 bg-gray-200 rounded w-20" />
         </div>
 
         {/* 価格 */}
-        <div className="h-6 bg-gray-700 rounded w-24" />
+        <div className="h-6 bg-gray-200 rounded w-24" />
 
         {/* ボタン */}
         <div className="flex gap-2 pt-2">
-          <div className="flex-1 h-10 bg-gray-700 rounded-xl" />
-          <div className="w-10 h-10 bg-gray-700 rounded-xl" />
+          <div className="flex-1 h-10 bg-gray-200 rounded-xl" />
+          <div className="w-10 h-10 bg-gray-200 rounded-xl" />
         </div>
       </div>
     </div>

@@ -18,17 +18,17 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-import { getDb } from './lib/db';
-import { products, productSources, performers, productPerformers, productImages, productVideos, rawHtmlData } from './lib/db/schema';
+import { getDb } from '../lib/db';
+import { products, productSources, performers, productPerformers, productImages, productVideos, rawHtmlData } from '../lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { validateProductData, isTopPageHtml } from './lib/crawler-utils';
-import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from './lib/performer-validation';
-import { generateProductDescription, extractProductTags, GeneratedDescription, translateProduct } from './lib/google-apis';
-import { saveSaleInfo, SaleInfo } from './lib/sale-helper';
+import { validateProductData, isTopPageHtml } from '../lib/crawler-utils';
+import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
+import { generateProductDescription, extractProductTags, GeneratedDescription, translateProduct } from '../lib/google-apis';
+import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
 import {
   upsertRawHtmlDataWithGcs,
   markRawDataAsProcessed,
-} from './lib/crawler/dedup-helper';
+} from '../lib/crawler/dedup-helper';
 
 const db = getDb();
 

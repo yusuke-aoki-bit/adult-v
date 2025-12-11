@@ -117,8 +117,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   }, []);
 
   return (
-    <div className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300 border border-gray-700">
-      <div className="relative h-72 bg-gradient-to-br from-gray-700 to-gray-800">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300 border border-gray-200">
+      <div className="relative h-72 bg-gradient-to-br from-gray-100 to-gray-200">
         <div className="relative block h-full group">
           {/* 画像クリックでフルサイズ表示 */}
           <button
@@ -150,9 +150,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
           {/* No Image オーバーレイ */}
           {(hasError || imgSrc === PLACEHOLDER_IMAGE || !hasValidImageUrl) && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
-              <div className="text-7xl mb-3 text-gray-500">📷</div>
-              <span className="inline-block px-4 py-1.5 bg-gray-600 text-white text-xs font-bold rounded-full shadow-md">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+              <div className="text-7xl mb-3 text-gray-400">📷</div>
+              <span className="inline-block px-4 py-1.5 bg-gray-300 text-gray-600 text-xs font-bold rounded-full shadow-md">
                 NO IMAGE
               </span>
             </div>
@@ -172,189 +172,127 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
         )}
-        <div className="absolute top-4 right-4 bg-gray-700 rounded-full shadow-md">
+        <div className="absolute top-4 right-4 bg-white rounded-full shadow-md">
           <FavoriteButton type="product" id={product.id} />
         </div>
         {product.discount && !product.salePrice && (
-          <span className="absolute bottom-4 right-4 bg-gray-900 text-white text-xs font-bold px-3 py-1 rounded-full">
+          <span className="absolute bottom-4 right-4 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full">
             {product.discount}%OFF
           </span>
         )}
       </div>
 
-      <div className="p-6 flex flex-col gap-4 flex-1">
+      <div className="p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 flex-1">
         <div>
-          <div className="text-xs uppercase tracking-wide text-gray-400 flex items-center gap-1 flex-wrap">
+          <div className="text-[10px] sm:text-xs text-gray-500 flex items-center gap-1 truncate">
             {product.actressId ? (
               <Link
                 href={`/${locale}/actress/${product.actressId}`}
-                className="text-rose-400/80 hover:text-rose-400 hover:underline underline-offset-2 transition-colors font-medium"
+                className="text-pink-500 hover:text-pink-600 hover:underline underline-offset-2 transition-colors font-medium truncate"
                 onClick={(e) => e.stopPropagation()}
               >
                 {product.actressName ?? t('performerInfo')}
               </Link>
             ) : product.performers && product.performers.length > 0 ? (
-              product.performers.slice(0, 3).map((performer, index) => (
-                <span key={performer.id}>
-                  <Link
-                    href={`/${locale}/actress/${performer.id}`}
-                    className="text-rose-400/80 hover:text-rose-400 hover:underline underline-offset-2 transition-colors font-medium"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {performer.name}
-                  </Link>
-                  {index < Math.min(product.performers!.length, 3) - 1 && <span className="mx-0.5 text-gray-500">/</span>}
-                </span>
-              ))
+              <span className="truncate">
+                {product.performers.slice(0, 2).map((performer, index) => (
+                  <span key={performer.id}>
+                    <Link
+                      href={`/${locale}/actress/${performer.id}`}
+                      className="text-pink-500 hover:text-pink-600 hover:underline underline-offset-2 transition-colors font-medium"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {performer.name}
+                    </Link>
+                    {index < Math.min(product.performers!.length, 2) - 1 && <span className="mx-0.5 text-gray-400">/</span>}
+                  </span>
+                ))}
+              </span>
             ) : (
-              <span className="text-gray-500">{product.actressName ?? t('performerInfo')}</span>
+              <span className="text-gray-400 truncate">{product.actressName ?? t('performerInfo')}</span>
             )}
-            <span className="mx-1 text-gray-600">|</span>
-            <span className="text-gray-500">{product.releaseDate ?? t('releaseDateTbd')}</span>
+            <span className="text-gray-300 shrink-0">|</span>
+            <span className="text-gray-400 shrink-0">{product.releaseDate ?? t('releaseDateTbd')}</span>
           </div>
           <Link href={`/${locale}/products/${product.id}`}>
-            <div className="text-xs text-gray-500 mt-1">
-              <p>{t('productId')}: {product.normalizedProductId || product.id}</p>
-              {product.originalProductId && (
-                <p>{t('manufacturerId')}: {product.originalProductId}</p>
-              )}
-            </div>
-            <h3 className="font-semibold text-xl leading-tight mt-1 line-clamp-2 text-white hover:text-gray-300">
+            <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 truncate">
+              {product.normalizedProductId || product.id}
+            </p>
+            <h3 className="font-semibold text-sm sm:text-base leading-tight mt-0.5 line-clamp-2 text-gray-900 hover:text-pink-500">
               {product.title}
             </h3>
           </Link>
-          <p className="text-sm text-gray-400 mt-2 line-clamp-3">{product.description}</p>
         </div>
 
-        {product.reviewHighlight && (
-          <p className="text-sm text-gray-200 bg-gray-700 rounded-xl px-4 py-2 italic">
-            &ldquo;{product.reviewHighlight}&rdquo;
-          </p>
-        )}
-
         {product.tags && product.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {product.tags.slice(0, 4).map((tag) => (
+          <div className="flex flex-wrap gap-1">
+            {product.tags.slice(0, 3).map((tag) => (
               <Link
                 key={tag}
                 href={getTagFilterUrl(tag)}
-                className="text-xs font-medium px-3 py-1.5 rounded-full bg-gray-700 text-gray-300 hover:bg-rose-600 hover:text-white transition-all border border-gray-600 hover:border-rose-500 cursor-pointer group"
+                className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 hover:bg-pink-500 hover:text-white transition-all"
                 onClick={(e) => e.stopPropagation()}
               >
-                <span className="inline-flex items-center gap-1">
-                  <svg className="w-3 h-3 opacity-60 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                  </svg>
-                  {tag}
-                </span>
+                {tag}
               </Link>
             ))}
           </div>
         )}
 
         {(product.rating || product.duration) && (
-          <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-gray-500">
             {product.rating && (
               <>
-                <span className="font-semibold text-white">{product.rating.toFixed(1)}</span>
-                <span>({product.reviewCount ?? 0}{t('reviews')})</span>
+                <span className="font-semibold text-gray-900">{product.rating.toFixed(1)}</span>
+                <span>({product.reviewCount ?? 0})</span>
               </>
             )}
-            {product.duration && <span>・ {product.duration}{t('minutes')}</span>}
+            {product.duration && <span className="shrink-0">・{product.duration}分</span>}
           </div>
         )}
 
-        <div className="mt-auto space-y-2">
+        <div className="mt-auto space-y-1.5">
           {/* 価格表示: セール中の場合は通常価格を取り消し線、セール価格を強調表示 */}
           {product.salePrice && product.regularPrice ? (
             <div>
-              <Link
-                href={getAspFilterUrl(product.provider)}
-                onClick={(e) => e.stopPropagation()}
-                className={`text-xs font-medium hover:underline underline-offset-2 transition-colors ${
-                  providerMeta[product.provider as ProviderId]?.textClass || 'text-gray-400 hover:text-gray-300'
-                }`}
-              >
-                {product.providerLabel}
-              </Link>
-              <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-semibold text-red-500">
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <p className="text-base sm:text-lg font-semibold text-red-500">
                   {formatPrice(product.salePrice, product.currency)}
                 </p>
-                <p className="text-sm text-gray-500 line-through">
+                <p className="text-[10px] sm:text-xs text-gray-400 line-through">
                   {formatPrice(product.regularPrice, product.currency)}
                 </p>
                 {product.discount && (
-                  <span className="text-xs font-bold text-red-400 bg-red-900/50 px-1.5 py-0.5 rounded">
-                    {product.discount}%OFF
+                  <span className="text-[10px] font-bold text-red-600 bg-red-100 px-1 py-0.5 rounded">
+                    -{product.discount}%
                   </span>
                 )}
               </div>
             </div>
           ) : product.price > 0 ? (
-            <div>
-              <Link
-                href={getAspFilterUrl(product.provider)}
-                onClick={(e) => e.stopPropagation()}
-                className={`text-xs font-medium hover:underline underline-offset-2 transition-colors ${
-                  providerMeta[product.provider as ProviderId]?.textClass || 'text-gray-400 hover:text-gray-300'
-                }`}
-              >
-                {product.providerLabel}
-              </Link>
-              <p className="text-2xl font-semibold text-white">
-                {formatPrice(product.price, product.currency)}
-              </p>
-            </div>
+            <p className="text-base sm:text-lg font-semibold text-gray-900">
+              {formatPrice(product.price, product.currency)}
+            </p>
           ) : isSubscriptionSite(product.provider) ? (
-            <div>
-              <Link
-                href={getAspFilterUrl(product.provider)}
-                onClick={(e) => e.stopPropagation()}
-                className={`text-xs font-medium hover:underline underline-offset-2 transition-colors ${
-                  providerMeta[product.provider as ProviderId]?.textClass || 'text-gray-400 hover:text-gray-300'
-                }`}
-              >
-                {product.providerLabel}
-              </Link>
-              <p className="text-lg font-semibold text-rose-500">
-                {t('subscriptionOnly')}
-              </p>
-            </div>
+            <p className="text-sm font-semibold text-pink-500">
+              {t('subscriptionOnly')}
+            </p>
           ) : null}
-          <div className="flex gap-2">
-            <Link
-              href={`/${locale}/products/${product.id}`}
-              className="inline-flex items-center justify-center rounded-xl bg-gray-900 text-white px-3 py-2 hover:bg-gray-800 active:scale-95 transition-transform"
-              title={t('viewDetails')}
-              aria-label={t('viewDetails')}
+          {product.affiliateUrl && (
+            <a
+              href={product.affiliateUrl}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              className="inline-flex items-center justify-center gap-1 rounded-lg bg-pink-500 text-white w-full px-2 py-1.5 text-xs sm:text-sm font-semibold hover:bg-pink-600 active:scale-95 transition-transform"
+              title={`${product.providerLabel}で購入`}
+              aria-label={`${product.providerLabel}で購入（外部リンク）`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <svg className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-            </Link>
-            {product.affiliateUrl && (
-              <a
-                href={product.affiliateUrl}
-                target="_blank"
-                rel="noopener noreferrer sponsored"
-                className="inline-flex items-center justify-center gap-1 rounded-xl bg-rose-600 text-white px-3 py-2 text-sm font-semibold hover:bg-rose-700 active:scale-95 transition-transform"
-                title={`${product.providerLabel}で購入`}
-                aria-label={`${product.providerLabel}で購入（外部リンク）`}
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
-            )}
-          </div>
+              <span className="truncate">{product.providerLabel}</span>
+            </a>
+          )}
         </div>
       </div>
 

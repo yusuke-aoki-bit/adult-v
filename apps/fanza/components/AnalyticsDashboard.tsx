@@ -111,7 +111,7 @@ export default function AnalyticsDashboard() {
 
   if (isLoading) {
     return (
-      <div className="text-center py-8 text-gray-400">
+      <div className="text-center py-8 text-gray-500">
         {t.loading}
       </div>
     );
@@ -119,7 +119,7 @@ export default function AnalyticsDashboard() {
 
   if (!data) {
     return (
-      <div className="text-center py-8 text-gray-400">
+      <div className="text-center py-8 text-gray-500">
         {t.fetchError}
       </div>
     );
@@ -166,8 +166,8 @@ export default function AnalyticsDashboard() {
             onClick={() => setPeriod(p)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               period === p
-                ? 'bg-rose-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-rose-700 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             {p === 'daily' && t.daily}
@@ -184,15 +184,15 @@ export default function AnalyticsDashboard() {
           return (
             <div
               key={stat.label}
-              className="bg-gray-800 rounded-lg p-6 border border-gray-700"
+              className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">{stat.label}</span>
+                <span className="text-sm text-gray-500">{stat.label}</span>
                 <div className={`p-2 rounded-lg ${stat.bgColor}`}>
                   <Icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
+              <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
             </div>
           );
         })}
@@ -200,20 +200,20 @@ export default function AnalyticsDashboard() {
 
       {/* Top products */}
       {data.topProducts && data.topProducts.length > 0 && (
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-lg font-bold text-white mb-4">{t.topProducts}</h3>
+        <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">{t.topProducts}</h3>
           <div className="space-y-3">
             {data.topProducts.slice(0, 5).map((product, index) => (
               <div
                 key={product.id}
-                className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg"
+                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
               >
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-rose-600 text-white font-bold text-sm">
                   {index + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">{product.title}</p>
-                  <p className="text-sm text-gray-400">{product.views.toLocaleString()} {t.views}</p>
+                  <p className="text-gray-800 font-medium truncate">{product.title}</p>
+                  <p className="text-sm text-gray-500">{product.views.toLocaleString()} {t.views}</p>
                 </div>
               </div>
             ))}
@@ -223,20 +223,20 @@ export default function AnalyticsDashboard() {
 
       {/* Top performers */}
       {data.topPerformers && data.topPerformers.length > 0 && (
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-lg font-bold text-white mb-4">{t.topPerformers}</h3>
+        <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">{t.topPerformers}</h3>
           <div className="space-y-3">
             {data.topPerformers.slice(0, 5).map((performer, index) => (
               <div
                 key={performer.id}
-                className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg"
+                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
               >
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white font-bold text-sm">
                   {index + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">{performer.name}</p>
-                  <p className="text-sm text-gray-400">{performer.views.toLocaleString()} {t.views}</p>
+                  <p className="text-gray-800 font-medium truncate">{performer.name}</p>
+                  <p className="text-sm text-gray-500">{performer.views.toLocaleString()} {t.views}</p>
                 </div>
               </div>
             ))}

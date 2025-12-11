@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env SITE_MODE=fanza next dev -p 3001",
-    "build": "cross-env SITE_MODE=fanza next build",
-    "start": "cross-env SITE_MODE=fanza next start -p 3001",
+    "dev": "cross-env SITE_MODE=fanza NEXT_PUBLIC_SITE_MODE=fanza next dev -p 3001",
+    "build": "cross-env SITE_MODE=fanza NEXT_PUBLIC_SITE_MODE=fanza next build",
+    "start": "cross-env SITE_MODE=fanza NEXT_PUBLIC_SITE_MODE=fanza next start -p 3001",
     "lint": "eslint ."
   },
   "dependencies": {

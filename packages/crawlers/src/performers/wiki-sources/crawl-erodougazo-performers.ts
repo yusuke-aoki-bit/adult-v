@@ -12,8 +12,8 @@
  */
 
 import * as cheerio from 'cheerio';
-import { db } from './lib/db';
-import { wikiPerformerIndex } from './lib/db/schema';
+import { db } from '../../lib/db';
+import { wikiPerformerIndex } from '../../lib/db/schema';
 import { sql } from 'drizzle-orm';
 
 // メーカー別プロダクションID と開始ページ

@@ -15,7 +15,8 @@ import { rawHtmlData, productSources, products, performers, productPerformers, t
 import { eq, and } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
 import { validateProductData, isTopPageHtml } from '../lib/crawler-utils';
-import { generateProductDescription, analyzeReviews, extractProductTags, analyzeImage, GeneratedDescription, translateProduct, ProductTranslation } from '../lib/google-apis';
+import { generateProductDescription, analyzeReviews, extractProductTags, analyzeImage, GeneratedDescription } from '../lib/google-apis';
+import { translateProductLingva, ProductTranslation } from '../lib/translate';
 import { saveRawHtml, calculateHash } from '../lib/gcs-crawler-helper';
 import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
 
@@ -1115,10 +1116,10 @@ async function translateAndSave(
     return;
   }
 
-  console.log('  🌐 翻訳処理を実行中...');
+  console.log('  🌐 翻訳処理を実行中（Lingva）...');
 
   try {
-    const translation = await translateProduct(title, description);
+    const translation = await translateProductLingva(title, description);
     if (!translation) {
       console.log('    ⚠️ 翻訳結果が取得できませんでした');
       return;

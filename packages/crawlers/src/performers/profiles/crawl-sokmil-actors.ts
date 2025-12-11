@@ -10,10 +10,10 @@
  * npx tsx scripts/crawlers/crawl-sokmil-actors.ts [--limit 100] [--offset 0] [--initial あ]
  */
 
-import { getDb } from './lib/db';
-import { performers } from './lib/db/schema';
+import { getDb } from '../../lib/db';
+import { performers } from '../../lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { RateLimiter, crawlerLog } from './lib/crawler';
+import { RateLimiter, crawlerLog } from '../../lib/crawler';
 
 const SOKMIL_API_KEY = process.env.SOKMIL_API_KEY || '52c5a783bce2839f841b887f8ab3d90a';
 const SOKMIL_AFFILIATE_ID = '47418-001';

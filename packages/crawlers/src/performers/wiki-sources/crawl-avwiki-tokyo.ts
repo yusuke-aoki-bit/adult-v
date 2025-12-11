@@ -8,10 +8,10 @@
  */
 
 import * as cheerio from 'cheerio';
-import { getDb } from './lib/db';
-import { performers, performerAliases, products, productPerformers } from './lib/db/schema';
+import { getDb } from '../../lib/db';
+import { performers, performerAliases, products, productPerformers } from '../../lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { StealthCrawler } from './lib/stealth-browser';
+import { StealthCrawler } from '../../lib/stealth-browser';
 
 const BASE_URL = 'https://av-wiki.tokyo';
 

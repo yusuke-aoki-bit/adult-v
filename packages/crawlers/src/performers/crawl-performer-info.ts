@@ -13,8 +13,8 @@
  */
 
 import * as cheerio from 'cheerio';
-import { getDb } from './lib/db';
-import { performers, performerAliases, products, productPerformers } from './lib/db/schema';
+import { getDb } from '../lib/db';
+import { performers, performerAliases, products, productPerformers } from '../lib/db/schema';
 import { eq, sql, and } from 'drizzle-orm';
 
 // ソースタイプ

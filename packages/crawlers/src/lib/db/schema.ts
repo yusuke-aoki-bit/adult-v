@@ -275,6 +275,25 @@ export const productTags = pgTable(
 );
 
 /**
+ * 演者-タグ 中間テーブル
+ * 演者の特徴（巨乳、スレンダー、美脚など）を保存
+ */
+export const performerTags = pgTable(
+  'performer_tags',
+  {
+    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    tagId: integer('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
+    source: varchar('source', { length: 50 }), // 'minnano-av', 'gravurefit' など
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.performerId, table.tagId] }),
+    performerIdx: index('idx_performer_tags_performer').on(table.performerId),
+    tagIdx: index('idx_performer_tags_tag').on(table.tagId),
+  }),
+);
+
+/**
  * 生データ保存テーブル（CSV）
  * DUGA CSVの生データを保存し、再解析と重複を避ける
  */

@@ -370,14 +370,18 @@ export async function searchProductByProductId(productId: string, locale: string
 /**
  * 商品一覧を取得
  */
-export type SortOption = 
+export type SortOption =
   | 'releaseDateDesc'    // リリース日（新しい順）
   | 'releaseDateAsc'     // リリース日（古い順）
   | 'priceDesc'          // 価格（高い順）
   | 'priceAsc'           // 価格（安い順）
   | 'ratingDesc'         // 評価（高い順）
   | 'ratingAsc'          // 評価（低い順）
-  | 'titleAsc';          // タイトル（あいうえお順）
+  | 'reviewCountDesc'    // レビュー数（多い順）
+  | 'durationDesc'       // 再生時間（長い順）
+  | 'durationAsc'        // 再生時間（短い順）
+  | 'titleAsc'           // タイトル（あいうえお順）
+  | 'random';            // ランダム
 
 export interface GetProductsOptions {
   limit?: number;
@@ -640,6 +644,24 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       case 'titleAsc':
         orderByClause = [asc(products.title)];
         break;
+      case 'ratingDesc':
+        orderByClause = [desc(sql`COALESCE(${products.averageRating}, 0)`), desc(products.releaseDate)];
+        break;
+      case 'ratingAsc':
+        orderByClause = [asc(sql`COALESCE(${products.averageRating}, 0)`), desc(products.releaseDate)];
+        break;
+      case 'reviewCountDesc':
+        orderByClause = [desc(sql`COALESCE(${products.reviewCount}, 0)`), desc(products.releaseDate)];
+        break;
+      case 'durationDesc':
+        orderByClause = [desc(sql`COALESCE(${products.duration}, 0)`), desc(products.releaseDate)];
+        break;
+      case 'durationAsc':
+        orderByClause = [asc(sql`COALESCE(${products.duration}, 0)`), desc(products.releaseDate)];
+        break;
+      case 'random':
+        orderByClause = [sql`RANDOM()`];
+        break;
       case 'releaseDateDesc':
       default:
         orderByClause = [desc(products.releaseDate), desc(products.createdAt)];
@@ -850,6 +872,11 @@ export async function getActresses(options?: {
   hasImage?: boolean; // サンプル画像のある作品を持つ女優のみ
   hasReview?: boolean; // AIレビューのある女優のみ
   locale?: string; // ロケール（'ja' | 'en' | 'zh' | 'ko'）
+  // 女優特徴フィルター
+  cupSizes?: string[]; // カップサイズ（複数選択可）
+  heightMin?: number; // 身長最小値（cm）
+  heightMax?: number; // 身長最大値（cm）
+  bloodTypes?: string[]; // 血液型（複数選択可）
 }): Promise<ActressType[]> {
   try {
     const db = getDb();
@@ -1028,6 +1055,30 @@ export async function getActresses(options?: {
       conditions.push(sql`${performers.aiReview} IS NOT NULL`);
     }
 
+    // カップサイズフィルタ
+    if (options?.cupSizes && options.cupSizes.length > 0) {
+      conditions.push(
+        sql`${performers.cup} IN (${sql.join(options.cupSizes.map(c => sql`${c}`), sql`, `)})`
+      );
+    }
+
+    // 身長フィルタ（最小）
+    if (options?.heightMin !== undefined) {
+      conditions.push(sql`${performers.height} >= ${options.heightMin}`);
+    }
+
+    // 身長フィルタ（最大）
+    if (options?.heightMax !== undefined) {
+      conditions.push(sql`${performers.height} <= ${options.heightMax}`);
+    }
+
+    // 血液型フィルタ
+    if (options?.bloodTypes && options.bloodTypes.length > 0) {
+      conditions.push(
+        sql`${performers.bloodType} IN (${sql.join(options.bloodTypes.map(b => sql`${b}`), sql`, `)})`
+      );
+    }
+
     // 検索クエリ（名前・別名・AIレビューを検索）
     // performer_aliases テーブルも検索対象に含める
     if (options?.query) {
@@ -1176,18 +1227,23 @@ export async function getActresses(options?: {
       }
     } else {
       try {
-        // 名前順
+        // 名前順（読み仮名があれば読み仮名でソート、なければ名前でソート）
         // 同じ名前の場合はperformer.idでソートして順序を安定させる
+        // SQLite/D1ではTRANSLATE関数が使えないため、nameKanaを直接使用
+        // カタカナとひらがなは同じ五十音順でソートされる
+        // nameKanaがない場合は末尾に配置（COALESCE使用）
         let orderByClauses;
         switch (sortBy) {
           case 'nameAsc':
-            orderByClauses = [asc(performers.name), asc(performers.id)];
+            // NULLを末尾に配置するためCOALESCEで空文字の代わりに'ん'より後の文字を使用
+            orderByClauses = [asc(sql`COALESCE(${performers.nameKana}, '龠')`), asc(performers.id)];
             break;
           case 'nameDesc':
-            orderByClauses = [desc(performers.name), desc(performers.id)];
+            // NULLを先頭に配置するためCOALESCEで空文字を使用
+            orderByClauses = [desc(sql`COALESCE(${performers.nameKana}, '')`), desc(performers.id)];
             break;
           default:
-            orderByClauses = [asc(performers.name), asc(performers.id)];
+            orderByClauses = [asc(sql`COALESCE(${performers.nameKana}, '龠')`), asc(performers.id)];
         }
 
         const results = await db
@@ -1473,6 +1529,11 @@ export async function getActressesCount(options?: {
   hasVideo?: boolean; // サンプル動画のある作品を持つ女優のみ
   hasImage?: boolean; // サンプル画像のある作品を持つ女優のみ
   hasReview?: boolean; // AIレビューのある女優のみ
+  // 女優特徴フィルター
+  cupSizes?: string[]; // カップサイズ（複数選択可）
+  heightMin?: number; // 身長最小値（cm）
+  heightMax?: number; // 身長最大値（cm）
+  bloodTypes?: string[]; // 血液型（複数選択可）
 }): Promise<number> {
   try {
     const db = getDb();
@@ -1613,6 +1674,30 @@ export async function getActressesCount(options?: {
     // hasReviewフィルタ（AIレビューのある女優のみ）
     if (options?.hasReview) {
       conditions.push(sql`${performers.aiReview} IS NOT NULL`);
+    }
+
+    // カップサイズフィルタ
+    if (options?.cupSizes && options.cupSizes.length > 0) {
+      conditions.push(
+        sql`${performers.cup} IN (${sql.join(options.cupSizes.map(c => sql`${c}`), sql`, `)})`
+      );
+    }
+
+    // 身長フィルタ（最小）
+    if (options?.heightMin !== undefined) {
+      conditions.push(sql`${performers.height} >= ${options.heightMin}`);
+    }
+
+    // 身長フィルタ（最大）
+    if (options?.heightMax !== undefined) {
+      conditions.push(sql`${performers.height} <= ${options.heightMax}`);
+    }
+
+    // 血液型フィルタ
+    if (options?.bloodTypes && options.bloodTypes.length > 0) {
+      conditions.push(
+        sql`${performers.bloodType} IN (${sql.join(options.bloodTypes.map(b => sql`${b}`), sql`, `)})`
+      );
     }
 
     // 検索クエリ（名前を検索）

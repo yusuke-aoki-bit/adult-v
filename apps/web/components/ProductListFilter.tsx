@@ -172,6 +172,9 @@ export default function ProductListFilter({
   // FANZAサイトではASPフィルターを非表示にする
   const shouldShowAspFilter = showAspFilter && !isFanzaSite;
 
+  // FANZA以外のASP統計のみ表示（FANZAは規約により除外）
+  const filteredAspStats = aspStats.filter(asp => asp.aspName !== 'FANZA');
+
   // 現在のフィルター状態を取得
   const hasVideo = searchParams.get('hasVideo') === 'true';
   const hasImage = searchParams.get('hasImage') === 'true';
@@ -683,8 +686,8 @@ export default function ProductListFilter({
           </div>
         )}
 
-        {/* 配信サイト（ASP）フィルター - FANZAサイトでは非表示 */}
-        {shouldShowAspFilter && aspStats.length > 0 && (
+        {/* 配信サイト（ASP）フィルター - FANZAサイトでは非表示、FANZAは規約により除外 */}
+        {shouldShowAspFilter && filteredAspStats.length > 0 && (
           <div>
             <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.distributionSite}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -692,7 +695,7 @@ export default function ProductListFilter({
               <div>
                 <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.include}</p>
                 <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
-                  {aspStats.map((asp) => {
+                  {filteredAspStats.map((asp) => {
                     const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                     const meta = providerId ? providerMeta[providerId] : null;
                     const isSelected = includeAsps.includes(asp.aspName);
@@ -722,7 +725,7 @@ export default function ProductListFilter({
               <div>
                 <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.exclude}</p>
                 <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
-                  {aspStats.map((asp) => {
+                  {filteredAspStats.map((asp) => {
                     const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                     const meta = providerId ? providerMeta[providerId] : null;
                     const isSelected = excludeAsps.includes(asp.aspName);

@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'お気に入り | Adult Viewer Lab',
+  title: 'お気に入り | FANZA VIEWER LAB',
   description: 'お気に入りに登録した作品・女優の一覧',
   robots: {
     index: false,

@@ -19,6 +19,280 @@
   }
 }
 
+/* ===========================================
+   Site Theme System
+   - .theme-adult-v: Dark theme (ADULT VIEWER LAB)
+   - .theme-fanza: Light theme (FANZA VIEWER LAB)
+   =========================================== */
+
+/* ADULT VIEWER LAB Theme (Dark: gray/black base) */
+.theme-adult-v {
+  /* Body/Main */
+  --body-bg: #111827; /* gray-900 */
+  --content-bg: #1f2937; /* gray-800 */
+  --card-bg: #374151; /* gray-700 */
+
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #d1d5db; /* gray-300 */
+  --text-muted: #9ca3af; /* gray-400 */
+  --text-accent: #f472b6; /* pink-400 */
+
+  /* Border Colors */
+  --border-primary: #374151; /* gray-700 */
+  --border-secondary: #1f2937; /* gray-800 */
+  --section-border: #374151; /* gray-700 */
+
+  /* Card Styles */
+  --card-ring: rgba(255, 255, 255, 0.1);
+  --card-ring-hover: rgba(255, 255, 255, 0.2);
+  --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+
+  /* Link/Button Colors */
+  --link-color: #60a5fa; /* blue-400 */
+  --link-hover: #93c5fd; /* blue-300 */
+  --btn-primary-bg: #ec4899; /* pink-500 */
+  --btn-primary-hover: #db2777; /* pink-600 */
+
+  /* Header */
+  --header-bg: #030712; /* gray-950 */
+  --header-text: #ffffff;
+  --header-border: rgba(255, 255, 255, 0.1);
+  --header-notice-bg: rgba(31, 41, 55, 0.8); /* gray-800/80 */
+  --header-notice-border: rgba(255, 255, 255, 0.05);
+  --header-notice-text: #d1d5db; /* gray-300 */
+
+  /* Logo */
+  --logo-primary: #fb7185; /* rose-400 */
+  --logo-secondary: #ffffff;
+  --logo-subtitle: rgba(255, 255, 255, 0.7);
+
+  /* Navigation */
+  --nav-hover-products: #d8b4fe; /* purple-300 */
+  --nav-hover-actresses: #f9a8d4; /* pink-300 */
+  --nav-hover-favorites: #fda4af; /* rose-300 */
+
+  /* ASP Stats Bar */
+  --asp-bar-bg: #1f2937; /* gray-800 */
+  --asp-bar-border: rgba(255, 255, 255, 0.05);
+  --asp-skeleton-bg: #374151; /* gray-700 */
+
+  /* Footer */
+  --footer-bg: #030712; /* gray-950 */
+  --footer-text: #d1d5db; /* gray-300 */
+  --footer-heading: #ffffff;
+  --footer-link: #9ca3af; /* gray-400 */
+  --footer-link-hover: #ffffff;
+  --footer-border: #1f2937; /* gray-800 */
+  --footer-email: #60a5fa; /* blue-400 */
+  --footer-email-hover: #93c5fd; /* blue-300 */
+}
+
+/* FANZA VIEWER LAB Theme (Light: white/gray base) */
+.theme-fanza {
+  /* Body/Main */
+  --body-bg: #ffffff; /* white */
+  --content-bg: #f9fafb; /* gray-50 */
+  --card-bg: #ffffff; /* white */
+
+  /* Text Colors */
+  --text-primary: #111827; /* gray-900 */
+  --text-secondary: #374151; /* gray-700 */
+  --text-muted: #6b7280; /* gray-500 */
+  --text-accent: #ec4899; /* pink-500 */
+
+  /* Border Colors */
+  --border-primary: #e5e7eb; /* gray-200 */
+  --border-secondary: #f3f4f6; /* gray-100 */
+  --section-border: #e5e7eb; /* gray-200 */
+
+  /* Card Styles */
+  --card-ring: rgba(0, 0, 0, 0.05);
+  --card-ring-hover: #ec4899; /* pink-500 */
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  /* Link/Button Colors */
+  --link-color: #ec4899; /* pink-500 */
+  --link-hover: #db2777; /* pink-600 */
+  --btn-primary-bg: #ec4899; /* pink-500 */
+  --btn-primary-hover: #db2777; /* pink-600 */
+
+  /* Header */
+  --header-bg: #ffffff; /* white */
+  --header-text: #111827; /* gray-900 */
+  --header-border: #e5e7eb; /* gray-200 */
+  --header-notice-bg: #fdf2f8; /* pink-50 */
+  --header-notice-border: #fbcfe8; /* pink-200 */
+  --header-notice-text: #4b5563; /* gray-600 */
+
+  /* Logo */
+  --logo-primary: #ec4899; /* pink-500 */
+  --logo-secondary: #111827; /* gray-900 */
+  --logo-subtitle: #6b7280; /* gray-500 */
+
+  /* Navigation */
+  --nav-hover-products: #ec4899; /* pink-500 */
+  --nav-hover-actresses: #ec4899; /* pink-500 */
+  --nav-hover-favorites: #ec4899; /* pink-500 */
+
+  /* ASP Stats Bar */
+  --asp-bar-bg: #fdf2f8; /* pink-50 */
+  --asp-bar-border: #fbcfe8; /* pink-200 */
+  --asp-skeleton-bg: #e5e7eb; /* gray-200 */
+
+  /* Footer */
+  --footer-bg: #fdf2f8; /* pink-50 */
+  --footer-text: #374151; /* gray-700 */
+  --footer-heading: #111827; /* gray-900 */
+  --footer-link: #4b5563; /* gray-600 */
+  --footer-link-hover: #ec4899; /* pink-500 */
+  --footer-border: #fbcfe8; /* pink-200 */
+  --footer-email: #ec4899; /* pink-500 */
+  --footer-email-hover: #db2777; /* pink-600 */
+}
+
+/* Theme utility classes */
+.theme-header {
+  background-color: var(--header-bg);
+  color: var(--header-text);
+  border-color: var(--header-border);
+}
+
+.theme-header-notice {
+  background-color: var(--header-notice-bg);
+  border-color: var(--header-notice-border);
+}
+
+.theme-header-notice-text {
+  color: var(--header-notice-text);
+}
+
+.theme-logo-primary {
+  color: var(--logo-primary);
+}
+
+.theme-logo-secondary {
+  color: var(--logo-secondary);
+}
+
+.theme-logo-subtitle {
+  color: var(--logo-subtitle);
+}
+
+.theme-nav-products:hover {
+  color: var(--nav-hover-products);
+}
+
+.theme-nav-actresses:hover {
+  color: var(--nav-hover-actresses);
+}
+
+.theme-nav-favorites:hover {
+  color: var(--nav-hover-favorites);
+}
+
+.theme-asp-bar {
+  background-color: var(--asp-bar-bg);
+  border-color: var(--asp-bar-border);
+}
+
+.theme-skeleton {
+  background-color: var(--asp-skeleton-bg);
+}
+
+.theme-body {
+  background-color: var(--body-bg);
+}
+
+.theme-content {
+  background-color: var(--content-bg);
+}
+
+.theme-card {
+  background-color: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-ring);
+}
+
+.theme-card:hover {
+  border-color: var(--card-ring-hover);
+}
+
+/* Text Color Classes */
+.theme-text {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-text-muted {
+  color: var(--text-muted);
+}
+
+.theme-text-accent {
+  color: var(--text-accent);
+}
+
+/* Border Classes */
+.theme-border {
+  border-color: var(--border-primary);
+}
+
+.theme-border-secondary {
+  border-color: var(--border-secondary);
+}
+
+.theme-section-border {
+  border-color: var(--section-border);
+}
+
+/* Link Classes */
+.theme-link {
+  color: var(--link-color);
+}
+
+.theme-link:hover {
+  color: var(--link-hover);
+}
+
+.theme-footer {
+  background-color: var(--footer-bg);
+  color: var(--footer-text);
+  border-color: var(--footer-border);
+}
+
+.theme-footer-heading {
+  color: var(--footer-heading);
+}
+
+.theme-footer-link {
+  color: var(--footer-link);
+}
+
+.theme-footer-link:hover {
+  color: var(--footer-link-hover);
+}
+
+.theme-footer-border {
+  border-color: var(--footer-border);
+}
+
+.theme-footer-email {
+  color: var(--footer-email);
+}
+
+.theme-footer-email:hover {
+  color: var(--footer-email-hover);
+}
+
+/* Body background using theme variable */
+.theme-adult-v,
+.theme-fanza {
+  background-color: var(--body-bg);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

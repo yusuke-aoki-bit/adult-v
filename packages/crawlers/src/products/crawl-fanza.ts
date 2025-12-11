@@ -22,7 +22,8 @@ import { products, productSources, performers, productPerformers, productImages,
 import { eq, and, sql } from 'drizzle-orm';
 import { validateProductData } from '../lib/crawler-utils';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
-import { generateProductDescription, extractProductTags, translateProduct } from '../lib/google-apis';
+import { generateProductDescription, extractProductTags } from '../lib/google-apis';
+import { translateProductLingva } from '../lib/translate';
 import {
   upsertRawHtmlDataWithGcs,
   markRawDataAsProcessed,
@@ -535,8 +536,9 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
  * アフィリエイトURLを生成
  */
 function generateAffiliateUrl(cid: string): string {
-  // 新FANZA URL形式
-  return `https://al.dmm.co.jp/?lurl=https://video.dmm.co.jp/av/content/?id=${cid}&af_id=${AFFILIATE_ID}`;
+  // 新FANZA URL形式（lurlパラメータはURLエンコードが必要）
+  const targetUrl = `https://www.dmm.co.jp/digital/videoa/-/detail/=/cid=${cid}/`;
+  return `https://al.dmm.co.jp/?lurl=${encodeURIComponent(targetUrl)}&af_id=${AFFILIATE_ID}`;
 }
 
 /**
@@ -772,31 +774,41 @@ async function saveAIContent(
 }
 
 /**
- * 翻訳機能
+ * 翻訳機能（Lingva版 - APIキー不要）
  */
 async function saveTranslations(productId: number, product: FanzaProduct): Promise<void> {
-  console.log(`    🌐 翻訳処理を実行中...`);
+  console.log(`    🌐 翻訳処理を実行中（Lingva）...`);
 
   try {
-    const translations = await translateProduct(product.title, product.description);
+    const translations = await translateProductLingva(product.title, product.description);
 
     if (translations) {
-      await db
-        .update(products)
-        .set({
-          titleEn: translations.title_en,
-          titleZh: translations.title_zh,
-          titleKo: translations.title_ko,
-          descriptionEn: translations.description_en,
-          descriptionZh: translations.description_zh,
-          descriptionKo: translations.description_ko,
-        })
-        .where(eq(products.id, productId));
+      const updateData: Record<string, string | undefined> = {};
 
-      console.log(`      EN: ${translations.title_en?.substring(0, 50)}...`);
-      console.log(`      ZH: ${translations.title_zh?.substring(0, 50)}...`);
-      console.log(`      KO: ${translations.title_ko?.substring(0, 50)}...`);
-      console.log(`    💾 翻訳データを保存しました`);
+      if (translations.en) {
+        updateData.titleEn = translations.en.title;
+        if (translations.en.description) updateData.descriptionEn = translations.en.description;
+      }
+      if (translations.zh) {
+        updateData.titleZh = translations.zh.title;
+        if (translations.zh.description) updateData.descriptionZh = translations.zh.description;
+      }
+      if (translations.ko) {
+        updateData.titleKo = translations.ko.title;
+        if (translations.ko.description) updateData.descriptionKo = translations.ko.description;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await db
+          .update(products)
+          .set(updateData)
+          .where(eq(products.id, productId));
+
+        console.log(`      EN: ${translations.en?.title?.substring(0, 50)}...`);
+        console.log(`      ZH: ${translations.zh?.title?.substring(0, 50)}...`);
+        console.log(`      KO: ${translations.ko?.title?.substring(0, 50)}...`);
+        console.log(`    💾 翻訳データを保存しました`);
+      }
     }
   } catch (error) {
     console.error(`    ⚠️ 翻訳エラー: ${error}`);

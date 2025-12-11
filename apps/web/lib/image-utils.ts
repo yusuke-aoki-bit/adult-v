@@ -95,12 +95,11 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
 
   // ========== DUGA ==========
   // e.g., https://pic.duga.jp/unsecure/xxx-t.jpg -> https://pic.duga.jp/unsecure/xxx-l.jpg
-  // scap (screen capture thumbnail) -> sample (high-res sample)
-  // e.g., https://pic.duga.jp/unsecure/switch/1014/noauth/scap/0001.jpg -> .../sample/0001.jpg
+  // sample (404になるパス) -> scap (存在するscreen capture画像)
   // e.g., https://pic.duga.jp/unsecure/mbm/1360/noauth/240x180.jpg -> 480x360.jpg (2x) or 640x480.jpg
   if (thumbnailUrl.includes('duga.jp')) {
     return thumbnailUrl
-      .replace(/\/scap\//, '/sample/')  // scap -> sample (高解像度サンプル画像)
+      .replace(/\/sample\//, '/scap/')  // sample -> scap（404対策）
       .replace(/\/240x180\.jpg$/, '/640x480.jpg')  // サムネイル → 大きいサイズ
       .replace(/\/noauth\/240x180\.jpg/, '/noauth/640x480.jpg')  // noauthパス含む場合
       .replace(/-t\./, '-l.')
@@ -135,8 +134,10 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
   // ========== Sokmil ==========
   // e.g., https://img.sokmil.com/xxx/s/xxx.jpg -> https://img.sokmil.com/xxx/l/xxx.jpg
   // e.g., pef_tak1656_01_100x142_xxx.jpg -> pef_tak1656_01_250x356_xxx.jpg (フルサイズ)
+  // e.g., /capture/ -> /content/ (フルサイズ画像フォルダ)
   if (thumbnailUrl.includes('sokmil.com')) {
     return thumbnailUrl
+      .replace(/\/capture\//, '/content/')  // capture -> content (フルサイズ画像)
       .replace(/_s\./, '_l.')
       .replace(/-s\./, '-l.')
       .replace(/\/s\//, '/l/')

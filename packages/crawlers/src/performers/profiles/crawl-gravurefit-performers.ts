@@ -1,11 +1,11 @@
 /**
  * gravurefit.com (AV:fit) 女優情報クローラー
- * 女優のプロフィール情報（スリーサイズ、身長、生年月日等）を取得
+ * 女優のプロフィール情報（スリーサイズ、身長、生年月日等）とタグ情報を取得
  */
 
 import * as cheerio from 'cheerio';
-import { db } from './lib/db';
-import { performers, performerAliases, performerExternalIds } from './lib/db/schema';
+import { db } from '../../lib/db';
+import { performers, performerAliases, performerExternalIds, tags, performerTags } from '../../lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { execSync } from 'child_process';
 
@@ -31,6 +31,7 @@ interface PerformerProfile {
   instagramId: string | null;
   sourceUrl: string;
   profileSlug: string;
+  tags: string[]; // タイプ・スタイルタグ（巨乳、スレンダーなど）
 }
 
 function fetchPage(url: string): string {
@@ -136,6 +137,7 @@ async function parseProfilePage(html: string, url: string): Promise<PerformerPro
     instagramId: null,
     sourceUrl: url,
     profileSlug: url.replace(BASE_URL + '/profile/', '').replace(/\/$/, ''),
+    tags: [],
   };
 
   // テーブルの行を走査
@@ -185,6 +187,18 @@ async function parseProfilePage(html: string, url: string): Promise<PerformerPro
       case 'instagram':
         profile.instagramId = td.replace('@', '') || null;
         break;
+    }
+  });
+
+  // タグ情報を取得（/women/type- と /women/style- のリンクから）
+  $('a[href*="/women/type-"], a[href*="/women/style-"]').each((_, el) => {
+    const tagText = $(el).text().trim();
+    // 有効なタグのみ追加
+    if (tagText && tagText.length >= 2 && tagText.length <= 30 &&
+        !tagText.includes('一覧') && !tagText.includes('検索')) {
+      if (!profile.tags.includes(tagText)) {
+        profile.tags.push(tagText);
+      }
     }
   });
 
@@ -285,6 +299,11 @@ async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
         profileUrl: profile.sourceUrl,
       })
       .onConflictDoNothing();
+
+    // タグを保存
+    if (profile.tags.length > 0) {
+      await savePerformerTags(performer.id, profile.tags);
+    }
   } else {
     // 新規performer作成
     const [newPerformer] = await db
@@ -331,6 +350,56 @@ async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
         profileUrl: profile.sourceUrl,
       })
       .onConflictDoNothing();
+
+    // タグを保存
+    if (profile.tags.length > 0) {
+      await savePerformerTags(newPerformer.id, profile.tags);
+    }
+  }
+}
+
+/**
+ * 演者のタグを保存
+ */
+async function savePerformerTags(performerId: number, tagNames: string[]): Promise<void> {
+  for (const tagName of tagNames) {
+    try {
+      // タグを取得または作成（performer_trait カテゴリ）
+      let tagRecord = await db
+        .select()
+        .from(tags)
+        .where(eq(tags.name, tagName))
+        .limit(1);
+
+      let tagId: number;
+
+      if (tagRecord.length === 0) {
+        // 新規タグを作成
+        const [newTag] = await db
+          .insert(tags)
+          .values({
+            name: tagName,
+            category: 'performer_trait', // 演者特徴カテゴリ
+          })
+          .returning({ id: tags.id });
+        tagId = newTag.id;
+      } else {
+        tagId = tagRecord[0].id;
+      }
+
+      // 演者-タグ関連を保存
+      await db
+        .insert(performerTags)
+        .values({
+          performerId,
+          tagId,
+          source: 'gravurefit',
+        })
+        .onConflictDoNothing();
+    } catch (error) {
+      // タグ保存エラーは無視して続行
+      console.error(`  Tag save error (${tagName}): ${error}`);
+    }
   }
 }
 

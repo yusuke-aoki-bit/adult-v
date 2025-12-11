@@ -17,8 +17,9 @@
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
 const GOOGLE_CUSTOM_SEARCH_ENGINE_ID = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID || '';
-// サービスアカウントキー（JSON文字列として環境変数に設定）
+// サービスアカウントキー（JSON文字列として環境変数に設定、またはファイルパス）
 const GOOGLE_SERVICE_ACCOUNT_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || '';
+const GOOGLE_SERVICE_ACCOUNT_KEY_FILE = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE || '';
 
 // サービスアカウントの認証情報をパース
 interface ServiceAccountCredentials {
@@ -38,17 +39,36 @@ let cachedAccessToken: { token: string; expiresAt: number } | null = null;
 function getServiceAccountCredentials(): ServiceAccountCredentials | null {
   if (serviceAccountCredentials) return serviceAccountCredentials;
 
-  if (!GOOGLE_SERVICE_ACCOUNT_KEY) {
-    return null;
+  // 1. まずJSON文字列から読み込みを試行
+  if (GOOGLE_SERVICE_ACCOUNT_KEY) {
+    try {
+      serviceAccountCredentials = JSON.parse(GOOGLE_SERVICE_ACCOUNT_KEY);
+      return serviceAccountCredentials;
+    } catch (error) {
+      console.error('[Google APIs] Failed to parse service account key from env:', error);
+    }
   }
 
-  try {
-    serviceAccountCredentials = JSON.parse(GOOGLE_SERVICE_ACCOUNT_KEY);
-    return serviceAccountCredentials;
-  } catch (error) {
-    console.error('[Google APIs] Failed to parse service account key:', error);
-    return null;
+  // 2. ファイルパスから読み込みを試行
+  if (GOOGLE_SERVICE_ACCOUNT_KEY_FILE) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const fullPath = path.resolve(GOOGLE_SERVICE_ACCOUNT_KEY_FILE);
+      if (fs.existsSync(fullPath)) {
+        const keyFileContent = fs.readFileSync(fullPath, 'utf8');
+        serviceAccountCredentials = JSON.parse(keyFileContent);
+        console.log('[Google APIs] Service account loaded from file:', fullPath);
+        return serviceAccountCredentials;
+      } else {
+        console.warn('[Google APIs] Service account key file not found:', fullPath);
+      }
+    } catch (error) {
+      console.error('[Google APIs] Failed to load service account key from file:', error);
+    }
   }
+
+  return null;
 }
 
 /**

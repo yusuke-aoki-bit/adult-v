@@ -221,7 +221,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
       <JsonLD data={breadcrumbSchema} />
       {worksSchema && <JsonLD data={worksSchema} />}
 
-      <div className="bg-gray-900 min-h-screen">
+      <div className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumb */}
           <Breadcrumb
@@ -233,57 +233,52 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           />
 
           {/* Header */}
-          <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4 mb-6 sm:mb-8">
-            <div className="flex items-center gap-2 sm:gap-4 flex-1">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-start gap-3 sm:gap-4">
               <ActressHeroImage
                 src={actress.heroImage || actress.thumbnail}
                 alt={actress.name}
                 size={64}
-                className="w-16 h-16"
+                className="w-14 h-14 sm:w-16 sm:h-16 shrink-0"
               />
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-white">{actress.name}</h1>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-xl sm:text-2xl font-bold text-white truncate">{actress.name}</h1>
                   <ActressFavoriteButton
                     id={actress.id}
                     name={actress.name}
                     thumbnail={actress.heroImage || actress.thumbnail}
                   />
                 </div>
-                <p className="text-gray-300">{t('totalProducts', { count: total })}</p>
+                <p className="text-sm sm:text-base text-gray-300">{t('totalProducts', { count: total })}</p>
                 {nonPrimaryAliases.length > 0 && (
-                  <div className="mt-2">
-                    <span className="text-sm text-gray-400">{t('aliases')}: </span>
-                    <span className="text-sm text-gray-300">
-                      {nonPrimaryAliases.map((alias, index) => (
-                        <span key={alias.id}>
-                          {alias.aliasName}
-                          {index < nonPrimaryAliases.length - 1 ? ', ' : ''}
-                        </span>
-                      ))}
-                    </span>
-                  </div>
-                )}
-                {/* ASP別作品数バッジ */}
-                {productCountByAsp.length > 0 && (
-                  <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2">
-                    {productCountByAsp.map((asp) => {
-                      const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
-                      const meta = providerId ? providerMeta[providerId] : null;
-                      return (
-                        <span
-                          key={asp.aspName}
-                          className={`text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full whitespace-nowrap bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
-                        >
-                          {meta?.label || asp.aspName}: {asp.count}本
-                        </span>
-                      );
-                    })}
-                  </div>
+                  <p className="mt-1 text-xs sm:text-sm text-gray-400 truncate">
+                    {t('aliases')}: {nonPrimaryAliases.map(a => a.aliasName).join(', ')}
+                  </p>
                 )}
               </div>
             </div>
-            <ProductSortDropdown sortBy={sortBy} basePath={basePath} />
+            {/* ASP別作品数バッジ */}
+            {productCountByAsp.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {productCountByAsp.map((asp) => {
+                  const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
+                  const meta = providerId ? providerMeta[providerId] : null;
+                  return (
+                    <span
+                      key={asp.aspName}
+                      className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
+                    >
+                      {meta?.label || asp.aspName}: {asp.count}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+            {/* ソートドロップダウン */}
+            <div className="mt-3 flex justify-end">
+              <ProductSortDropdown sortBy={sortBy} basePath={basePath} />
+            </div>
           </div>
 
           {/* AIレビュー表示 */}

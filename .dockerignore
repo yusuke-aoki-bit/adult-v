@@ -38,9 +38,8 @@ coverage
 dist
 build
 
-# Lock files (keep package-lock.json for npm ci)
+# Lock files (keep package-lock.json and pnpm-lock.yaml)
 yarn.lock
-pnpm-lock.yaml
 
 # Database
 *.db

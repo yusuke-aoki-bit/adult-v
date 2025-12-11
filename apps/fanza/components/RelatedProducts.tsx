@@ -44,15 +44,15 @@ export default function RelatedProducts({ products, title }: RelatedProductsProp
 
   return (
     <div className="mt-12">
-      <h2 className="text-2xl font-bold text-white mb-6">{title || t('title')}</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">{title || t('title')}</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {products.map((product) => (
           <Link
             key={product.id}
             href={`/${locale}/products/${product.id}`}
-            className="group bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-600 transition-all"
+            className="group bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:ring-2 hover:ring-rose-700 transition-all"
           >
-            <div className="relative aspect-[3/4] bg-gray-700">
+            <div className="relative aspect-[3/4] bg-gray-100">
               <Image
                 src={product.imageUrl ? normalizeImageUrl(product.imageUrl) : PLACEHOLDER_IMAGE}
                 alt={product.title}
@@ -62,17 +62,17 @@ export default function RelatedProducts({ products, title }: RelatedProductsProp
                 loading="lazy"
               />
               {product.matchType && (
-                <div className="absolute top-2 left-2 bg-gray-900/90 px-2 py-1 rounded text-xs text-gray-300">
+                <div className="absolute top-2 left-2 bg-white/90 px-2 py-1 rounded text-xs text-gray-700 shadow-sm">
                   {getMatchTypeLabel(product.matchType)}
                 </div>
               )}
             </div>
             <div className="p-3">
-              <p className="text-sm text-white line-clamp-2 group-hover:text-rose-600 transition-colors">
+              <p className="text-sm text-gray-800 line-clamp-2 group-hover:text-rose-700 transition-colors">
                 {product.title}
               </p>
               {product.releaseDate && (
-                <p className="text-xs text-gray-400 mt-1">{product.releaseDate}</p>
+                <p className="text-xs text-gray-500 mt-1">{product.releaseDate}</p>
               )}
             </div>
           </Link>

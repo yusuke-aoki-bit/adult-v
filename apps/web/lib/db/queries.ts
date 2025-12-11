@@ -370,14 +370,18 @@ export async function searchProductByProductId(productId: string, locale: string
 /**
  * 商品一覧を取得
  */
-export type SortOption = 
+export type SortOption =
   | 'releaseDateDesc'    // リリース日（新しい順）
   | 'releaseDateAsc'     // リリース日（古い順）
   | 'priceDesc'          // 価格（高い順）
   | 'priceAsc'           // 価格（安い順）
   | 'ratingDesc'         // 評価（高い順）
   | 'ratingAsc'          // 評価（低い順）
-  | 'titleAsc';          // タイトル（あいうえお順）
+  | 'reviewCountDesc'    // レビュー数（多い順）
+  | 'durationDesc'       // 再生時間（長い順）
+  | 'durationAsc'        // 再生時間（短い順）
+  | 'titleAsc'           // タイトル（あいうえお順）
+  | 'random';            // ランダム
 
 export interface GetProductsOptions {
   limit?: number;
@@ -639,6 +643,24 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         break;
       case 'titleAsc':
         orderByClause = [asc(products.title)];
+        break;
+      case 'ratingDesc':
+        orderByClause = [desc(sql`COALESCE(${products.averageRating}, 0)`), desc(products.releaseDate)];
+        break;
+      case 'ratingAsc':
+        orderByClause = [asc(sql`COALESCE(${products.averageRating}, 0)`), desc(products.releaseDate)];
+        break;
+      case 'reviewCountDesc':
+        orderByClause = [desc(sql`COALESCE(${products.reviewCount}, 0)`), desc(products.releaseDate)];
+        break;
+      case 'durationDesc':
+        orderByClause = [desc(sql`COALESCE(${products.duration}, 0)`), desc(products.releaseDate)];
+        break;
+      case 'durationAsc':
+        orderByClause = [asc(sql`COALESCE(${products.duration}, 0)`), desc(products.releaseDate)];
+        break;
+      case 'random':
+        orderByClause = [sql`RANDOM()`];
         break;
       case 'releaseDateDesc':
       default:
@@ -1176,18 +1198,23 @@ export async function getActresses(options?: {
       }
     } else {
       try {
-        // 名前順
+        // 名前順（読み仮名があれば読み仮名でソート、なければ名前でソート）
         // 同じ名前の場合はperformer.idでソートして順序を安定させる
+        // SQLite/D1ではTRANSLATE関数が使えないため、nameKanaを直接使用
+        // カタカナとひらがなは同じ五十音順でソートされる
+        // nameKanaがない場合は末尾に配置（COALESCE使用）
         let orderByClauses;
         switch (sortBy) {
           case 'nameAsc':
-            orderByClauses = [asc(performers.name), asc(performers.id)];
+            // NULLを末尾に配置するためCOALESCEで空文字の代わりに'ん'より後の文字を使用
+            orderByClauses = [asc(sql`COALESCE(${performers.nameKana}, '龠')`), asc(performers.id)];
             break;
           case 'nameDesc':
-            orderByClauses = [desc(performers.name), desc(performers.id)];
+            // NULLを先頭に配置するためCOALESCEで空文字を使用
+            orderByClauses = [desc(sql`COALESCE(${performers.nameKana}, '')`), desc(performers.id)];
             break;
           default:
-            orderByClauses = [asc(performers.name), asc(performers.id)];
+            orderByClauses = [asc(sql`COALESCE(${performers.nameKana}, '龠')`), asc(performers.id)];
         }
 
         const results = await db
@@ -3493,21 +3520,64 @@ export async function getSaleProducts(options?: {
 /**
  * セール情報の統計を取得
  */
-export async function getSaleStats(): Promise<{
+export async function getSaleStats(aspName?: string): Promise<{
   totalSales: number;
   byAsp: Array<{ aspName: string; count: number; avgDiscount: number }>;
 }> {
   try {
     const db = getDb();
 
-    // アクティブなセール総数
+    // ベース条件
+    const baseConditions = [
+      eq(productSales.isActive, true),
+      sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
+    ];
+
+    // aspNameが指定されている場合はフィルタ条件を追加
+    if (aspName) {
+      // totalの取得にもaspNameフィルタが必要なのでJOINが必要
+      const totalResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(productSales)
+        .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
+        .where(and(
+          ...baseConditions,
+          eq(productSources.aspName, aspName)
+        ));
+
+      const total = Number(totalResult[0]?.count || 0);
+
+      // ASP別統計（フィルタあり）
+      const byAspResult = await db
+        .select({
+          aspName: productSources.aspName,
+          count: sql<number>`count(*)`,
+          avgDiscount: sql<number>`avg(${productSales.discountPercent})`,
+        })
+        .from(productSales)
+        .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
+        .where(and(
+          ...baseConditions,
+          eq(productSources.aspName, aspName)
+        ))
+        .groupBy(productSources.aspName)
+        .orderBy(desc(sql`count(*)`));
+
+      return {
+        totalSales: total,
+        byAsp: byAspResult.map(r => ({
+          aspName: r.aspName,
+          count: Number(r.count),
+          avgDiscount: Math.round(Number(r.avgDiscount) || 0),
+        })),
+      };
+    }
+
+    // aspNameが指定されていない場合は全ASP対象
     const totalResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(productSales)
-      .where(and(
-        eq(productSales.isActive, true),
-        sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
-      ));
+      .where(and(...baseConditions));
 
     const total = Number(totalResult[0]?.count || 0);
 
@@ -3520,10 +3590,7 @@ export async function getSaleStats(): Promise<{
       })
       .from(productSales)
       .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
-      .where(and(
-        eq(productSales.isActive, true),
-        sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
-      ))
+      .where(and(...baseConditions))
       .groupBy(productSources.aspName)
       .orderBy(desc(sql`count(*)`));
 

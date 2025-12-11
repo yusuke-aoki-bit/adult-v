@@ -6,6 +6,12 @@ import { getSiteMode, getSiteConfig, type SiteMode, type SiteConfig } from '@/li
  * proxy.tsで設定されたx-site-modeヘッダーを読み取る
  */
 export async function getServerSiteMode(): Promise<SiteMode> {
+  // 環境変数を最優先でチェック（Cloud Run / ローカル開発用）
+  const envMode = process.env.SITE_MODE as SiteMode;
+  if (envMode === 'fanza' || envMode === 'adult-v') {
+    return envMode;
+  }
+
   const headersList = await headers();
   const siteModeHeader = headersList.get('x-site-mode');
 

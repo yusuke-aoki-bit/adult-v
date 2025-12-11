@@ -19,17 +19,17 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
         <div className="text-6xl mb-4">⚠️</div>
-        <h1 className="text-2xl font-bold text-white mb-2">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">
           {t('errorOccurred')}
         </h1>
-        <p className="text-gray-300 mb-6">
+        <p className="text-gray-600 mb-6">
           {t('errorMessage')}
         </p>
         {process.env.NODE_ENV === 'development' && error.message && (
-          <div className="mb-6 p-4 bg-red-50 rounded-lg text-left">
+          <div className="mb-6 p-4 bg-red-50 rounded-lg text-left border border-red-200">
             <p className="text-sm font-semibold text-red-900 mb-2">{t('errorDetails')}</p>
             <p className="text-xs text-red-700 font-mono break-all">{error.message}</p>
           </div>
@@ -37,13 +37,13 @@ export default function Error({
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={reset}
-            className="px-6 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+            className="px-6 py-3 bg-rose-700 text-white rounded-lg font-semibold hover:bg-rose-800 transition-colors"
           >
             {t('retry')}
           </button>
           <Link
             href={`/${locale}`}
-            className="px-6 py-3 bg-gray-700 text-gray-200 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
           >
             {t('goHome')}
           </Link>

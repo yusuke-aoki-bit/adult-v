@@ -81,27 +81,27 @@ function FavoritesSkeleton() {
       {/* Header skeleton */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="h-8 w-8 bg-gray-700 rounded animate-pulse" />
-          <div className="h-8 w-32 bg-gray-700 rounded animate-pulse" />
+          <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
         </div>
-        <div className="h-5 w-48 bg-gray-700 rounded animate-pulse" />
+        <div className="h-5 w-48 bg-gray-200 rounded animate-pulse" />
       </div>
 
       {/* Tabs skeleton */}
       <div className="flex gap-2 mb-6">
-        <div className="h-10 w-24 bg-gray-700 rounded-lg animate-pulse" />
-        <div className="h-10 w-28 bg-gray-700 rounded-lg animate-pulse" />
-        <div className="h-10 w-24 bg-gray-700 rounded-lg animate-pulse" />
+        <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="h-10 w-28 bg-gray-200 rounded-lg animate-pulse" />
+        <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse" />
       </div>
 
       {/* Grid skeleton */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="bg-gray-800 rounded-lg overflow-hidden animate-pulse">
-            <div className="aspect-3/4 bg-gray-700" />
+          <div key={i} className="bg-white rounded-lg overflow-hidden animate-pulse border border-gray-200">
+            <div className="aspect-3/4 bg-gray-200" />
             <div className="p-3 space-y-2">
-              <div className="h-4 bg-gray-700 rounded w-full" />
-              <div className="h-3 bg-gray-700 rounded w-20" />
+              <div className="h-4 bg-gray-200 rounded w-full" />
+              <div className="h-3 bg-gray-200 rounded w-20" />
             </div>
           </div>
         ))}
@@ -137,11 +137,11 @@ export default function FavoritesPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-          <Heart className="h-8 w-8 text-rose-600 fill-current" />
+        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+          <Heart className="h-8 w-8 text-rose-700 fill-current" />
           {t.title}
         </h1>
-        <p className="text-gray-400">
+        <p className="text-gray-500">
           {t.itemCount.replace('{count}', String(favorites.length))}
         </p>
       </div>
@@ -152,8 +152,8 @@ export default function FavoritesPage() {
           onClick={() => setActiveTab('all')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'all'
-              ? 'bg-rose-600 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              ? 'bg-rose-700 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
           {t.all} ({favorites.length})
@@ -162,8 +162,8 @@ export default function FavoritesPage() {
           onClick={() => setActiveTab('product')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
             activeTab === 'product'
-              ? 'bg-rose-600 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              ? 'bg-rose-700 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
           <Film className="h-4 w-4" />
@@ -173,8 +173,8 @@ export default function FavoritesPage() {
           onClick={() => setActiveTab('actress')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
             activeTab === 'actress'
-              ? 'bg-rose-600 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              ? 'bg-rose-700 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
           <User className="h-4 w-4" />
@@ -185,7 +185,7 @@ export default function FavoritesPage() {
         {favorites.length > 0 && (
           <button
             onClick={() => setShowClearConfirm(true)}
-            className="ml-auto px-4 py-2 rounded-lg font-medium bg-gray-800 text-gray-300 hover:bg-red-900 hover:text-white transition-colors flex items-center gap-2"
+            className="ml-auto px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-700 transition-colors flex items-center gap-2"
           >
             <Trash2 className="h-4 w-4" />
             {t.clearAll}
@@ -196,17 +196,17 @@ export default function FavoritesPage() {
       {/* Clear confirmation dialog */}
       {showClearConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-white mb-4">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
               {t.confirmTitle}
             </h3>
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-600 mb-6">
               {t.confirmMessage}
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
               >
                 {t.cancel}
               </button>
@@ -227,8 +227,8 @@ export default function FavoritesPage() {
       {/* Favorites grid */}
       {filteredFavorites.length === 0 ? (
         <div className="text-center py-16">
-          <Heart className="h-16 w-16 text-gray-700 mx-auto mb-4" />
-          <p className="text-gray-400 text-lg">
+          <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 text-lg">
             {activeTab === 'all'
               ? t.emptyAll
               : activeTab === 'product'
@@ -246,11 +246,11 @@ export default function FavoritesPage() {
             return (
               <div
                 key={`${item.type}-${item.id}`}
-                className="bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-600 transition-all group relative"
+                className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:ring-2 hover:ring-rose-700 transition-all group relative"
               >
                 <Link href={href}>
                   {/* Thumbnail */}
-                  <div className="aspect-3/4 relative bg-gray-700">
+                  <div className="aspect-3/4 relative bg-gray-100">
                     {(item.thumbnail || item.image) ? (
                       <Image
                         src={item.thumbnail || item.image || ''}
@@ -261,9 +261,9 @@ export default function FavoritesPage() {
                     ) : (
                       <div className="flex items-center justify-center h-full">
                         {item.type === 'product' ? (
-                          <Film className="h-12 w-12 text-gray-600" />
+                          <Film className="h-12 w-12 text-gray-400" />
                         ) : (
-                          <User className="h-12 w-12 text-gray-600" />
+                          <User className="h-12 w-12 text-gray-400" />
                         )}
                       </div>
                     )}
@@ -271,7 +271,7 @@ export default function FavoritesPage() {
 
                   {/* Title/Name */}
                   <div className="p-3">
-                    <h3 className="text-white text-sm font-medium line-clamp-2 mb-1">
+                    <h3 className="text-gray-800 text-sm font-medium line-clamp-2 mb-1">
                       {item.title || item.name}
                     </h3>
                     <p className="text-xs text-gray-500">

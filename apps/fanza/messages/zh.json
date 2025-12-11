@@ -51,7 +51,7 @@
     "viewProductListDesc": "跨平台搜索所有配信站点的作品"
   },
   "header": {
-    "title": "ADULT VIEWER LAB",
+    "title": "FANZA VIEWER LAB",
     "subtitle": "heavy user guide",
     "menu": "菜单",
     "close": "关闭"
@@ -69,13 +69,13 @@
     "search": "搜索"
   },
   "footer": {
-    "description": "跨平台成人流媒体中心，涵盖 DUGA / SOKMIL / DTI，为重度用户提供基于女优的评论、排行榜和活动更新。",
+    "description": "FANZA作品搜索和比较服务，提供女优评论、排行榜和重度用户活动更新。",
     "links": "链接",
     "legal": "法律信息",
     "privacy": "隐私政策",
     "terms": "服务条款",
     "contact": "联系我们",
-    "copyright": "© {year} Adult Viewer Lab. 版权所有。",
+    "copyright": "© {year} FANZA VIEWER LAB. 版权所有。",
     "affiliateNotice": "本站包含成人内容的联盟链接。"
   },
   "uncategorized": {

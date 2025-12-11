@@ -93,11 +93,13 @@ export default function ActiveFiltersChips() {
     activeFilters.push({ key: 'performerType', label: t.multi, type: 'performer' });
   }
 
-  // ASP filters - FANZAサイトでは非表示（ASPフィルター自体がないため）
+  // ASP filters - FANZAサイトでは非表示、またFANZAは規約により常に除外
   if (!isFanzaSite) {
     const includeAsp = searchParams.get('includeAsp');
     if (includeAsp) {
       includeAsp.split(',').forEach(asp => {
+        // FANZAは規約により表示しない
+        if (asp === 'FANZA') return;
         const providerId = ASP_TO_PROVIDER_ID[asp];
         const meta = providerId ? providerMeta[providerId] : null;
         activeFilters.push({

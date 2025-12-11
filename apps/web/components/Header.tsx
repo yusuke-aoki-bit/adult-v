@@ -114,12 +114,12 @@ export default function Header() {
 
   return (
     <header
-      className={`bg-gray-950 text-white border-b border-white/10 sticky top-0 z-50 transition-transform duration-300 ${
+      className={`${isFanzaSite ? 'bg-pink-950' : 'bg-gray-950'} text-white border-b ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'} sticky top-0 z-50 transition-transform duration-300 ${
         isHidden ? '-translate-y-full' : 'translate-y-0'
       }`}
     >
       {/* 成人向けコンテンツ注意文 */}
-      <div className="bg-gray-800/80 border-b border-white/5">
+      <div className={`${isFanzaSite ? 'bg-pink-900/60' : 'bg-gray-800/80'} border-b ${isFanzaSite ? 'border-pink-500/10' : 'border-white/5'}`}>
         <div className="container mx-auto px-3 sm:px-4 py-1">
           <p className="text-[10px] sm:text-xs text-gray-300 text-center leading-tight">
             {t.adultNotice}
@@ -236,14 +236,15 @@ export default function Header() {
           </button>
         </div>
 
-        {/* 検索バー（モバイル） */}
-        <div className="md:hidden w-full pb-4">
-          <SearchBar />
-        </div>
-
-        {/* モバイルメニュー */}
+        {/* モバイルメニュー（検索バー・ナビ・ASP統計を格納） */}
         {isMobileMenuOpen && (
-          <nav className="md:hidden py-4 space-y-4">
+          <nav className={`md:hidden py-4 space-y-4 border-t ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'} max-h-[calc(100vh-120px)] overflow-y-auto`}>
+            {/* 検索バー */}
+            <div className="pb-2">
+              <SearchBar />
+            </div>
+
+            {/* ナビゲーションリンク */}
             <Link
               href={`/${locale}/products`}
               className="block py-2 hover:text-purple-300 transition-colors"
@@ -271,54 +272,94 @@ export default function Header() {
             <div className="py-2">
               <LanguageSwitcher />
             </div>
+
+            {/* ASP統計バッジ（モバイル用） */}
+            <div className={`pt-2 border-t ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'}`}>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* セールバッジ */}
+                {saleStats === null ? (
+                  <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
+                ) : saleStats.totalSales > 0 ? (
+                  <Link
+                    href={`/${locale}/products?onSale=true`}
+                    className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0 animate-pulse"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <span className="font-bold">{t.sale}</span>
+                    <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
+                  </Link>
+                ) : null}
+                {aspStats.length === 0 ? (
+                  <>
+                    {(isFanzaSite ? [80] : [80, 90, 70, 65, 70, 60, 65, 60]).map((width, i) => (
+                      <div key={i} className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
+                    ))}
+                  </>
+                ) : (
+                  (isFanzaSite ? aspStats.filter(s => s.aspName === 'FANZA') : aspStats.filter(s => s.aspName !== 'FANZA')).map((stat) => {
+                    const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
+                    const meta = providerId ? providerMeta[providerId] : null;
+                    return (
+                      <Link
+                        key={stat.aspName}
+                        href={`/${locale}/products?includeAsp=${stat.aspName}`}
+                        className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <span className="font-bold">{meta?.label || stat.aspName}</span>
+                        <span className="ml-1 opacity-80">{stat.productCount.toLocaleString()}</span>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
+            </div>
           </nav>
         )}
       </div>
 
-      {/* ASP統計バー - ヘッダー下部に統合（FANZAサイトでは非表示） */}
-      {!isFanzaSite && (
-        <div className="bg-gray-900/80 border-t border-white/5">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center gap-2 py-1.5 flex-wrap min-h-[36px]">
-              {/* セールバッジ */}
-              {saleStats === null ? (
-                <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
-              ) : saleStats.totalSales > 0 ? (
-                <Link
-                  href={`/${locale}/products?onSale=true`}
-                  className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0 animate-pulse"
-                >
-                  <span className="font-bold">{t.sale}</span>
-                  <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
-                </Link>
-              ) : null}
-              {/* ASP統計バッジ */}
-              {aspStats.length === 0 ? (
-                <>
-                  {[80, 90, 70, 65, 70, 60, 65, 60].map((width, i) => (
-                    <div key={i} className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
-                  ))}
-                </>
-              ) : (
-                aspStats.map((stat) => {
-                  const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
-                  const meta = providerId ? providerMeta[providerId] : null;
-                  return (
-                    <Link
-                      key={stat.aspName}
-                      href={`/${locale}/products?includeAsp=${stat.aspName}`}
-                      className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
-                    >
-                      <span className="font-bold">{meta?.label || stat.aspName}</span>
-                      <span className="ml-1 opacity-80">{stat.productCount.toLocaleString()}</span>
-                    </Link>
-                  );
-                })
-              )}
-            </div>
+      {/* ASP統計バー - デスクトップのみ表示 */}
+      <div className={`hidden md:block ${isFanzaSite ? 'bg-pink-900/50' : 'bg-gray-900/80'} border-t ${isFanzaSite ? 'border-pink-500/10' : 'border-white/5'}`}>
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-2 py-1.5 flex-wrap min-h-[36px]">
+            {/* セールバッジ */}
+            {saleStats === null ? (
+              <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
+            ) : saleStats.totalSales > 0 ? (
+              <Link
+                href={`/${locale}/products?onSale=true`}
+                className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0 animate-pulse"
+              >
+                <span className="font-bold">{t.sale}</span>
+                <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
+              </Link>
+            ) : null}
+            {/* ASP統計バッジ */}
+            {aspStats.length === 0 ? (
+              <>
+                {(isFanzaSite ? [80] : [80, 90, 70, 65, 70, 60, 65, 60]).map((width, i) => (
+                  <div key={i} className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
+                ))}
+              </>
+            ) : (
+              (isFanzaSite ? aspStats.filter(s => s.aspName === 'FANZA') : aspStats.filter(s => s.aspName !== 'FANZA')).map((stat) => {
+                const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
+                const meta = providerId ? providerMeta[providerId] : null;
+                return (
+                  <Link
+                    key={stat.aspName}
+                    href={`/${locale}/products?includeAsp=${stat.aspName}`}
+                    className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
+                  >
+                    <span className="font-bold">{meta?.label || stat.aspName}</span>
+                    <span className="ml-1 opacity-80">{stat.productCount.toLocaleString()}</span>
+                  </Link>
+                );
+              })
+            )}
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }

@@ -14,14 +14,14 @@
 
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
-import { getDb } from './lib/db';
-import { rawHtmlData, productSources, products, performers, productPerformers, tags, productTags, productImages, productVideos, productReviews, productRatingSummary } from './lib/db/schema';
+import { getDb } from '../lib/db';
+import { rawHtmlData, productSources, products, performers, productPerformers, tags, productTags, productImages, productVideos, productReviews, productRatingSummary } from '../lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from './lib/performer-validation';
-import { validateProductData, isTopPageHtml } from './lib/crawler-utils';
-import { generateProductDescription, extractProductTags, translateProduct, GeneratedDescription } from './lib/google-apis';
-import { saveRawHtml, calculateHash } from './lib/gcs-crawler-helper';
-import { saveSaleInfo, SaleInfo } from './lib/sale-helper';
+import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
+import { validateProductData, isTopPageHtml } from '../lib/crawler-utils';
+import { generateProductDescription, extractProductTags, translateProduct, GeneratedDescription } from '../lib/google-apis';
+import { saveRawHtml, calculateHash } from '../lib/gcs-crawler-helper';
+import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
 
 const AFFILIATE_CODE = '6CS5PGEBQDUYPZLHYEM33TBZFJ';
 const SOURCE_NAME = 'MGS';

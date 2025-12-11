@@ -107,21 +107,21 @@ export default function RankingWidget({
       case 1:
         return 'bg-yellow-500 text-yellow-900';
       case 2:
-        return 'bg-gray-300 text-gray-900';
+        return 'bg-gray-300 text-gray-800';
       case 3:
         return 'bg-amber-600 text-amber-100';
       default:
-        return 'bg-gray-700 text-gray-200';
+        return 'bg-gray-200 text-gray-700';
     }
   };
 
   const defaultTitle = type === 'products' ? t.popularProducts : t.popularActresses;
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
+    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <Trophy className="h-6 w-6 text-yellow-500" />
           {title || defaultTitle}
         </h2>
@@ -135,8 +135,8 @@ export default function RankingWidget({
             onClick={() => setSelectedPeriod(p)}
             className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
               selectedPeriod === p
-                ? 'bg-rose-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-rose-700 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             {p === 'daily' && t.daily}
@@ -148,9 +148,9 @@ export default function RankingWidget({
 
       {/* Ranking list */}
       {isLoading ? (
-        <div className="text-center py-8 text-gray-400">{t.loading}</div>
+        <div className="text-center py-8 text-gray-500">{t.loading}</div>
       ) : ranking.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
+        <div className="text-center py-8 text-gray-500">
           <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
           <p>{t.noData}</p>
         </div>
@@ -166,7 +166,7 @@ export default function RankingWidget({
               <Link
                 key={`${type}-${item.rank}`}
                 href={href}
-                className="flex items-center gap-3 p-3 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100"
               >
                 {/* Rank badge */}
                 <div
@@ -179,7 +179,7 @@ export default function RankingWidget({
 
                 {/* Thumbnail */}
                 {(item.thumbnail || item.image) && (
-                  <div className="flex-shrink-0 w-16 h-16 relative rounded overflow-hidden bg-gray-600">
+                  <div className="flex-shrink-0 w-16 h-16 relative rounded overflow-hidden bg-gray-200">
                     <Image
                       src={item.thumbnail || item.image || ''}
                       alt={item.title || item.name || ''}
@@ -191,10 +191,10 @@ export default function RankingWidget({
 
                 {/* Title/Name */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-medium truncate">
+                  <h3 className="text-gray-800 font-medium truncate">
                     {item.title || item.name}
                   </h3>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-500">
                     {item.viewCount.toLocaleString()} {t.views}
                   </p>
                 </div>

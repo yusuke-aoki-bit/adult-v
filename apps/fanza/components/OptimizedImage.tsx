@@ -39,12 +39,12 @@ export default function OptimizedImage({
     <svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
         <linearGradient id="g">
-          <stop stop-color="#1f2937" offset="0%" />
-          <stop stop-color="#374151" offset="50%" />
-          <stop stop-color="#1f2937" offset="100%" />
+          <stop stop-color="#e5e7eb" offset="0%" />
+          <stop stop-color="#d1d5db" offset="50%" />
+          <stop stop-color="#e5e7eb" offset="100%" />
         </linearGradient>
       </defs>
-      <rect width="${w}" height="${h}" fill="#1f2937" />
+      <rect width="${w}" height="${h}" fill="#e5e7eb" />
       <rect id="r" width="${w}" height="${h}" fill="url(#g)" />
       <animate xlink:href="#r" attributeName="x" from="-${w}" to="${w}" dur="1s" repeatCount="indefinite"  />
     </svg>
@@ -60,7 +60,7 @@ export default function OptimizedImage({
   if (hasError) {
     return (
       <div
-        className={`bg-gray-800 flex items-center justify-center ${className}`}
+        className={`bg-gray-100 flex items-center justify-center ${className}`}
         style={
           fill
             ? undefined
@@ -71,7 +71,7 @@ export default function OptimizedImage({
         }
       >
         <svg
-          className="w-12 h-12 text-gray-600"
+          className="w-12 h-12 text-gray-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

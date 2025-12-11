@@ -71,8 +71,8 @@ export default function FavoriteButton({
         active:scale-110
         ${
           favorite
-            ? 'bg-rose-600 text-white hover:bg-rose-700 hover:scale-105'
-            : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:text-white hover:scale-105'
+            ? 'bg-rose-700 text-white hover:bg-rose-800 hover:scale-105'
+            : 'bg-white/90 text-gray-500 hover:bg-gray-100 hover:text-rose-700 hover:scale-105 border border-gray-200'
         }
         backdrop-blur-sm
         flex

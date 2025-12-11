@@ -163,13 +163,13 @@ export default function ActiveFiltersChips() {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 py-2 px-3 mb-2 bg-gray-800/50 rounded-lg border-l-4 border-rose-500 transition-all">
-      <span className="text-xs text-gray-300 font-medium">{t.activeFilters}:</span>
+    <div className="flex flex-wrap items-center gap-2 py-2 px-3 mb-2 bg-pink-50 rounded-lg border-l-4 border-pink-500 transition-all">
+      <span className="text-xs text-gray-600 font-medium">{t.activeFilters}:</span>
       {activeFilters.map(filter => (
         <button
           key={filter.key}
           onClick={() => removeFilter(filter)}
-          className="inline-flex items-center gap-1 bg-rose-600/80 hover:bg-rose-700 text-white text-xs px-2 py-1 rounded-full transition-colors group"
+          className="inline-flex items-center gap-1 bg-pink-500 hover:bg-pink-600 text-white text-xs px-2 py-1 rounded-full transition-colors group"
           aria-label={`${filter.label}を削除`}
         >
           <span>{filter.label}</span>
@@ -179,7 +179,7 @@ export default function ActiveFiltersChips() {
       {activeFilters.length > 1 && (
         <button
           onClick={clearAllFilters}
-          className="text-xs text-gray-400 hover:text-white underline transition-colors ml-1"
+          className="text-xs text-gray-500 hover:text-gray-700 underline transition-colors ml-1"
         >
           {t.clearAll}
         </button>

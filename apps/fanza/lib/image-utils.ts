@@ -95,12 +95,11 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
 
   // ========== DUGA ==========
   // e.g., https://pic.duga.jp/unsecure/xxx-t.jpg -> https://pic.duga.jp/unsecure/xxx-l.jpg
-  // scap (screen capture thumbnail) -> sample (high-res sample)
-  // e.g., https://pic.duga.jp/unsecure/switch/1014/noauth/scap/0001.jpg -> .../sample/0001.jpg
+  // sample -> scap 変換を行う（sampleフォルダが404になる商品が多いため）
   // e.g., https://pic.duga.jp/unsecure/mbm/1360/noauth/240x180.jpg -> 480x360.jpg (2x) or 640x480.jpg
   if (thumbnailUrl.includes('duga.jp')) {
     return thumbnailUrl
-      .replace(/\/scap\//, '/sample/')  // scap -> sample (高解像度サンプル画像)
+      .replace(/\/sample\//, '/scap/')  // sample -> scap（404対策）
       .replace(/\/240x180\.jpg$/, '/640x480.jpg')  // サムネイル → 大きいサイズ
       .replace(/\/noauth\/240x180\.jpg/, '/noauth/640x480.jpg')  // noauthパス含む場合
       .replace(/-t\./, '-l.')
@@ -122,19 +121,47 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
 
   // ========== DMM/FANZA ==========
   // e.g., https://pics.dmm.co.jp/xxx/xxx-ps.jpg -> https://pics.dmm.co.jp/xxx/xxx-pl.jpg
+  // e.g., https://awsimgsrc.dmm.co.jp/pics_dig/digital/video/xxx/xxx-2.jpg -> pics.dmm.co.jp版に変換
+  // e.g., https://pics.dmm.co.jp/digital/video/1rctd00704/1rctd00704-2.jpg -> 1rctd00704jp-2.jpg
   if (thumbnailUrl.includes('dmm.co.jp') || thumbnailUrl.includes('dmm.com')) {
-    return thumbnailUrl
+    let result = thumbnailUrl
       .replace(/-ps\./, '-pl.')
       .replace(/-pt\./, '-pl.')
       .replace(/ps\.jpg/, 'pl.jpg')
       .replace(/pt\.jpg/, 'pl.jpg')
       .replace(/_s\./, '_l.')
       .replace(/\/s\//, '/l/');
+
+    // awsimgsrc.dmm.co.jp の pics_dig 画像: pics.dmm.co.jp の大きい画像に変換
+    // e.g., https://awsimgsrc.dmm.co.jp/pics_dig/digital/video/mdvr00386/mdvr00386-2.jpg
+    //    -> https://pics.dmm.co.jp/digital/video/mdvr00386/mdvr00386-2.jpg
+    if (result.includes('awsimgsrc.dmm.co.jp') && result.includes('/pics_dig/')) {
+      result = result
+        .replace('awsimgsrc.dmm.co.jp/pics_dig/', 'pics.dmm.co.jp/')
+        .replace('awsimgsrc.dmm.co.jp/pics/', 'pics.dmm.co.jp/');
+    }
+
+    // pics.dmm.com も pics.dmm.co.jp に統一
+    if (result.includes('pics.dmm.com')) {
+      result = result.replace('pics.dmm.com', 'pics.dmm.co.jp');
+    }
+
+    // サンプル画像の番号付きファイル: {id}-{n}.jpg -> {id}jp-{n}.jpg に変換
+    // e.g., 1rctd00704-2.jpg -> 1rctd00704jp-2.jpg (6KB -> 114KB)
+    // パターン: /digital/video/{id}/{id}-{n}.jpg
+    // 注意: 既に jp が含まれている場合は変換しない（二重変換防止）
+    if (result.includes('/digital/video/') && !result.includes('jp-')) {
+      result = result.replace(/\/([a-z0-9]+)-(\d+)\.jpg$/i, '/$1jp-$2.jpg');
+    }
+
+    return result;
   }
 
   // ========== Sokmil ==========
   // e.g., https://img.sokmil.com/xxx/s/xxx.jpg -> https://img.sokmil.com/xxx/l/xxx.jpg
   // e.g., pef_tak1656_01_100x142_xxx.jpg -> pef_tak1656_01_250x356_xxx.jpg (フルサイズ)
+  // e.g., https://img.sokmil.com/image/capture/cs_ins0512_01_T1764556060.jpg
+  //    -> https://img.sokmil.com/image/content/cs_ins0512_01_T1764556060.jpg (フルサイズ)
   if (thumbnailUrl.includes('sokmil.com')) {
     return thumbnailUrl
       .replace(/_s\./, '_l.')
@@ -142,6 +169,7 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
       .replace(/\/s\//, '/l/')
       .replace(/\/small\//, '/large/')
       .replace(/\/thumb\//, '/large/')
+      .replace(/\/capture\//, '/content/')  // capture -> content (フルサイズ画像)
       .replace(/_100x142_/, '_250x356_')  // サムネイル→フルサイズ
       .replace(/_200x284_/, '_250x356_'); // 中間サイズ→フルサイズ
   }

@@ -58,7 +58,7 @@ export default function SortDropdown({ sortBy }: SortDropdownProps) {
 
   return (
     <div className="flex items-center gap-2 h-[40px]">
-      <label htmlFor="sort" className="text-sm font-medium text-gray-300">
+      <label htmlFor="sort" className="text-sm font-medium text-gray-600">
         {t.sortLabel}
       </label>
       <select
@@ -66,7 +66,7 @@ export default function SortDropdown({ sortBy }: SortDropdownProps) {
         name="sort"
         value={sortBy}
         onChange={(e) => handleSortChange(e.target.value)}
-        className="px-3 py-2 border border-gray-600 rounded-md text-sm text-white bg-gray-700 focus:ring-rose-500 focus:border-rose-500"
+        className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-800 bg-white focus:ring-rose-700 focus:border-rose-700"
       >
         <option value="nameAsc">{t.nameAsc}</option>
         <option value="nameDesc">{t.nameDesc}</option>

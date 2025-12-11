@@ -40,15 +40,17 @@ export async function GET() {
       }
     }
 
-    // 収集数に推定総数を追加
-    const enrichedStats = aspStats.map(stat => {
-      const mappedName = ASP_NAME_MAP[stat.aspName] || stat.aspName;
-      const estimatedTotal = totalsMap.get(mappedName) || null;
-      return {
-        ...stat,
-        estimatedTotal,
-      };
-    });
+    // 収集数に推定総数を追加（FANZAは規約により除外）
+    const enrichedStats = aspStats
+      .filter(stat => stat.aspName !== 'FANZA')
+      .map(stat => {
+        const mappedName = ASP_NAME_MAP[stat.aspName] || stat.aspName;
+        const estimatedTotal = totalsMap.get(mappedName) || null;
+        return {
+          ...stat,
+          estimatedTotal,
+        };
+      });
 
     return NextResponse.json(enrichedStats);
   } catch (error) {

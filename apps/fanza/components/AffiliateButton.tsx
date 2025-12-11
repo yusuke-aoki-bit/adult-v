@@ -3,7 +3,6 @@
 interface AffiliateButtonProps {
   affiliateUrl: string;
   providerLabel: string;
-  aspName?: string;
   price?: number;
   salePrice?: number;
   discount?: number;
@@ -36,7 +35,7 @@ function normalizeMgsProductId(productId: string): string {
 
 /**
  * MGSウィジェットからパラメータを抽出してMGS商品ページURLを生成
- * nakiny.com形式: agef=1で年齢確認スキップ、aff=でアフィリエイト追跡
+ * aff=でアフィリエイト追跡
  */
 function extractMgsProductUrl(widgetCode: string): string | null {
   const productIdMatch = widgetCode.match(/[?&]p=([^&"']+)/);
@@ -46,16 +45,58 @@ function extractMgsProductUrl(widgetCode: string): string | null {
     const rawProductId = productIdMatch[1];
     const productId = normalizeMgsProductId(rawProductId);
     const affCode = affCodeMatch ? affCodeMatch[1] : '';
-    // agef=1 で年齢確認をスキップ、aff= でアフィリエイトコードを付与
-    const affParam = affCode ? `&aff=${affCode}` : '';
-    return `https://www.mgstage.com/product/product_detail/${productId}/?agef=1${affParam}`;
+    // aff= でアフィリエイトコードを付与（MGS標準の年齢認証を経由）
+    const affParam = affCode ? `?aff=${affCode}` : '';
+    return `https://www.mgstage.com/product/product_detail/${productId}/${affParam}`;
   }
   return null;
 }
 
 /**
+ * FANZAのアフィリエイトURLを直リンクに変換
+ * al.dmm.co.jp/ad/p/... → www.dmm.co.jp/... への変換
+ * アフィリエイト未取得のため、直リンクを使用
+ */
+function convertFanzaToDirectUrl(affiliateUrl: string): string {
+  // アフィリエイトURL形式: https://al.dmm.co.jp/ad/p/r?_site=...&_article=...&_link=...&_mediatype=video&_url=https%3A%2F%2Fwww.dmm.co.jp%2F...
+  // または: https://www.dmm.co.jp/digital/videoa/-/detail/=/cid=... (直リンク)
+
+  // すでに直リンクの場合はそのまま返す
+  if (affiliateUrl.includes('www.dmm.co.jp') && !affiliateUrl.includes('al.dmm.co.jp')) {
+    return affiliateUrl;
+  }
+
+  // アフィリエイトURLから_urlパラメータを抽出
+  const urlMatch = affiliateUrl.match(/[?&]_url=([^&]+)/);
+  if (urlMatch) {
+    try {
+      return decodeURIComponent(urlMatch[1]);
+    } catch {
+      // デコードに失敗した場合は元のURLを返す
+    }
+  }
+
+  // _linkパラメータからcidを抽出してDMM直リンクを生成
+  const linkMatch = affiliateUrl.match(/[?&]_link=([^&]+)/);
+  if (linkMatch) {
+    try {
+      const decodedLink = decodeURIComponent(linkMatch[1]);
+      // リンクがDMM URLの場合
+      if (decodedLink.includes('dmm.co.jp')) {
+        return decodedLink;
+      }
+    } catch {
+      // デコードに失敗
+    }
+  }
+
+  // 変換できない場合は元のURLを返す（アフィリエイトリダイレクト経由）
+  return affiliateUrl;
+}
+
+/**
  * アフィリエイトボタンコンポーネント
- * MGSの場合は商品ページへのリンク、それ以外は通常のリンクとして表示
+ * MGSの場合は商品ページへのリンク、FANZAその他はアフィリエイトURLをそのまま使用
  */
 export default function AffiliateButton({
   affiliateUrl,
@@ -65,6 +106,7 @@ export default function AffiliateButton({
   discount,
 }: AffiliateButtonProps) {
   const isMgsWidget = affiliateUrl.includes('mgs_Widget_affiliate');
+  const isFanzaUrl = affiliateUrl.includes('dmm.co.jp') || affiliateUrl.includes('al.dmm.co.jp');
 
   // MGSウィジェットの場合、商品ページURLを抽出
   let finalUrl = affiliateUrl;
@@ -75,6 +117,9 @@ export default function AffiliateButton({
     } else {
       return null;
     }
+  } else if (isFanzaUrl) {
+    // FANZAの場合は直リンクに変換（アフィリエイト未取得のため）
+    finalUrl = convertFanzaToDirectUrl(affiliateUrl);
   }
 
   // URLが正常なリンクかどうかを確認

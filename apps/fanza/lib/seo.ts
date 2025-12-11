@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 
-const siteName = 'Adult Viewer Lab';
+const siteName = 'FANZA VIEWER LAB';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 const defaultDescription =
   '複数のプラットフォームを横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。';
@@ -233,7 +233,7 @@ export function generateWebSiteSchema(locale: string = 'ja') {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: siteName,
-    alternateName: 'アダルトビューアーラボ',
+    alternateName: 'ファンザビューアーラボ',
     url: siteUrl,
     description: localeDescriptions[locale] || localeDescriptions.ja,
     inLanguage: ['ja', 'en', 'zh', 'ko'],
@@ -431,8 +431,8 @@ export function getHomepageFAQs(locale: string = 'ja'): { question: string; answ
   const faqsByLocale: Record<string, { question: string; answer: string }[]> = {
     ja: [
       {
-        question: 'Adult Viewer Labとは何ですか？',
-        answer: 'Adult Viewer Labは、DUGA、MGS、SOKMIL、カリビアンコム、一本道、HEYZOなど主要アダルト動画配信サイトを横断検索できるサービスです。38,000名以上のAV女優情報、出演作品の価格比較、無料サンプル動画へのリンクを提供しています。',
+        question: 'FANZA VIEWER LABとは何ですか？',
+        answer: 'FANZA VIEWER LABは、FANZAの作品情報を整理し、女優ベースの検索・比較サービスを提供しています。女優情報、出演作品の価格比較、無料サンプル動画へのリンクを提供しています。',
       },
       {
         question: 'どのような配信サイトに対応していますか？',
@@ -449,8 +449,8 @@ export function getHomepageFAQs(locale: string = 'ja'): { question: string; answ
     ],
     en: [
       {
-        question: 'What is Adult Viewer Lab?',
-        answer: 'Adult Viewer Lab is a cross-platform search service for major adult video streaming sites including DUGA, MGS, SOKMIL, Caribbeancom, 1Pondo, and HEYZO. We provide information on over 38,000 JAV actresses, price comparisons, and links to free sample videos.',
+        question: 'What is FANZA VIEWER LAB?',
+        answer: 'FANZA VIEWER LAB is a search and comparison service for FANZA products. We provide actress information, price comparisons, and links to free sample videos.',
       },
       {
         question: 'Which streaming sites are supported?',
@@ -458,7 +458,7 @@ export function getHomepageFAQs(locale: string = 'ja'): { question: string; answ
       },
       {
         question: 'Is it free to use?',
-        answer: 'Yes, Adult Viewer Lab is completely free to use. All features including actress search, product search, price comparison, and free sample video viewing are available at no cost.',
+        answer: 'Yes, FANZA VIEWER LAB is completely free to use. All features including actress search, product search, price comparison, and free sample video viewing are available at no cost.',
       },
       {
         question: 'Where can I find sale information?',
@@ -467,8 +467,8 @@ export function getHomepageFAQs(locale: string = 'ja'): { question: string; answ
     ],
     zh: [
       {
-        question: 'Adult Viewer Lab是什么？',
-        answer: 'Adult Viewer Lab是一个跨平台搜索服务，涵盖DUGA、MGS、SOKMIL、加勒比海、一本道、HEYZO等主要成人视频平台。我们提供超过38,000名AV女优的信息、价格比较和免费样片链接。',
+        question: 'FANZA VIEWER LAB是什么？',
+        answer: 'FANZA VIEWER LAB是FANZA作品的搜索和比较服务。我们提供女优信息、价格比较和免费样片链接。',
       },
       {
         question: '支持哪些视频平台？',
@@ -476,7 +476,7 @@ export function getHomepageFAQs(locale: string = 'ja'): { question: string; answ
       },
       {
         question: '可以免费使用吗？',
-        answer: '是的，Adult Viewer Lab完全免费使用。女优搜索、作品搜索、价格比较、免费样片观看等所有功能都是免费的。',
+        answer: '是的，FANZA VIEWER LAB完全免费使用。女优搜索、作品搜索、价格比较、免费样片观看等所有功能都是免费的。',
       },
       {
         question: '在哪里可以查看特卖信息？',
@@ -485,8 +485,8 @@ export function getHomepageFAQs(locale: string = 'ja'): { question: string; answ
     ],
     ko: [
       {
-        question: 'Adult Viewer Lab이란 무엇인가요?',
-        answer: 'Adult Viewer Lab은 DUGA, MGS, SOKMIL, 카리비안컴, 일본도, HEYZO 등 주요 성인 비디오 스트리밍 사이트를 통합 검색할 수 있는 서비스입니다. 38,000명 이상의 AV 여배우 정보, 가격 비교, 무료 샘플 비디오 링크를 제공합니다.',
+        question: 'FANZA VIEWER LAB이란 무엇인가요?',
+        answer: 'FANZA VIEWER LAB은 FANZA 작품의 검색 및 비교 서비스입니다. 여배우 정보, 가격 비교, 무료 샘플 비디오 링크를 제공합니다.',
       },
       {
         question: '어떤 스트리밍 사이트를 지원하나요?',
@@ -494,7 +494,7 @@ export function getHomepageFAQs(locale: string = 'ja'): { question: string; answ
       },
       {
         question: '무료로 이용할 수 있나요?',
-        answer: '네, Adult Viewer Lab은 완전 무료입니다. 여배우 검색, 작품 검색, 가격 비교, 무료 샘플 비디오 시청 등 모든 기능을 무료로 이용하실 수 있습니다.',
+        answer: '네, FANZA VIEWER LAB은 완전 무료입니다. 여배우 검색, 작품 검색, 가격 비교, 무료 샘플 비디오 시청 등 모든 기능을 무료로 이용하실 수 있습니다.',
       },
       {
         question: '세일 정보는 어디서 확인할 수 있나요?',
@@ -565,7 +565,7 @@ export function generateOrganizationSchema(locale: string = 'ja') {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: siteName,
-    alternateName: 'アダルトビューアーラボ',
+    alternateName: 'ファンザビューアーラボ',
     url: siteUrl,
     description: localeDescriptions[locale] || localeDescriptions.ja,
     logo: {

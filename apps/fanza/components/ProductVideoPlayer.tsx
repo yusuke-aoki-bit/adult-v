@@ -57,7 +57,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
   return (
     <div className="space-y-4">
       {/* メイン動画プレイヤー */}
-      <div className="relative aspect-video w-full bg-gray-900 rounded-lg overflow-hidden">
+      <div className="relative aspect-video w-full bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
         {!isPlaying && (
           <button
             onClick={handlePlayClick}
@@ -83,10 +83,10 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
           </video>
         )}
         {hasError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95">
             <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-            <p className="text-white text-lg mb-2">{t('videoLoadError')}</p>
-            <p className="text-gray-400 text-sm mb-4 text-center px-4">
+            <p className="text-gray-800 text-lg mb-2">{t('videoLoadError')}</p>
+            <p className="text-gray-500 text-sm mb-4 text-center px-4">
               {t('securityRestriction')}
             </p>
             <div className="flex gap-3">
@@ -95,7 +95,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
                   href={selectedVideo.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-colors"
+                  className="px-4 py-2 bg-rose-700 text-white rounded-lg hover:bg-rose-800 transition-colors"
                 >
                   {t('playAtSource')}
                 </a>
@@ -105,7 +105,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
                   setHasError(false);
                   setIsPlaying(false);
                 }}
-                className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 {t('close')}
               </button>
@@ -127,20 +127,20 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
               }}
               className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all p-4 ${
                 selectedVideo === video
-                  ? 'border-rose-600 bg-rose-950/30 ring-2 ring-rose-600/50'
-                  : 'border-gray-700 bg-gray-800 hover:border-gray-500 hover:bg-gray-750'
+                  ? 'border-rose-700 bg-rose-50 ring-2 ring-rose-700/50'
+                  : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
               <div className="flex flex-col items-center justify-center h-full">
-                <Film className="w-8 h-8 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-300">
+                <Film className="w-8 h-8 text-gray-500 mb-2" />
+                <p className="text-sm text-gray-700">
                   {getVideoTypeLabel(video.type)} {idx + 1}
                 </p>
                 {video.quality && (
-                  <p className="text-xs text-gray-400 mt-1">{video.quality}</p>
+                  <p className="text-xs text-gray-500 mt-1">{video.quality}</p>
                 )}
                 {video.duration && (
-                  <p className="text-xs text-gray-500 mt-1">{formatDuration(video.duration)}</p>
+                  <p className="text-xs text-gray-400 mt-1">{formatDuration(video.duration)}</p>
                 )}
               </div>
             </button>
@@ -149,7 +149,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
       )}
 
       {/* 動画本数表示 */}
-      <p className="text-sm text-gray-400 text-center">
+      <p className="text-sm text-gray-500 text-center">
         {t('sampleVideoCount', { count: sampleVideos.length })}
       </p>
     </div>

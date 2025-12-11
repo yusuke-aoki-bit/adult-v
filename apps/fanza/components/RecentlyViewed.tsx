@@ -31,7 +31,7 @@ const translations = {
   },
 } as const;
 
-const PLACEHOLDER_IMAGE = 'https://placehold.co/80x112/1f2937/ffffff?text=NO+IMAGE';
+const PLACEHOLDER_IMAGE = 'https://placehold.co/80x112/f3f4f6/9ca3af?text=NO+IMAGE';
 
 export default function RecentlyViewed() {
   const params = useParams();
@@ -41,15 +41,15 @@ export default function RecentlyViewed() {
 
   if (isLoading) {
     return (
-      <div className="bg-gray-900/50 rounded-xl p-4 border border-white/5">
+      <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <div className="h-5 w-24 bg-gray-700 rounded animate-pulse" />
-          <div className="h-4 w-16 bg-gray-700 rounded animate-pulse" />
+          <div className="h-5 w-24 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
         </div>
         <div className="flex gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex-shrink-0 w-16 sm:w-20">
-              <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-700 animate-pulse" />
+              <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-200 animate-pulse" />
             </div>
           ))}
         </div>
@@ -62,21 +62,21 @@ export default function RecentlyViewed() {
   }
 
   return (
-    <div className="bg-gray-900/50 rounded-xl p-4 border border-white/5">
+    <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+        <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
           <Clock className="w-4 h-4" />
           {t.title}
         </h3>
         <button
           onClick={clearAll}
-          className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+          className="text-xs text-gray-500 hover:text-pink-500 transition-colors"
         >
           {t.clearAll}
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
         {items.slice(0, 10).map((item) => (
           <RecentlyViewedCard
             key={item.id}
@@ -108,7 +108,7 @@ function RecentlyViewedCard({
         href={`/${locale}/products/${item.id}`}
         className="block w-16 sm:w-20"
       >
-        <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-800">
+        <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-100">
           <Image
             src={imageUrl}
             alt={item.title}
@@ -131,10 +131,10 @@ function RecentlyViewedCard({
           e.stopPropagation();
           onRemove(item.id);
         }}
-        className="absolute -top-1 -right-1 w-5 h-5 bg-gray-800 hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        className="absolute -top-1 -right-1 w-5 h-5 bg-white border border-gray-300 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10 shadow-sm"
         aria-label="Remove from history"
       >
-        <X className="w-3 h-3 text-white" />
+        <X className="w-3 h-3" />
       </button>
     </div>
   );

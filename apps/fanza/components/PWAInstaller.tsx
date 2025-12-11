@@ -112,35 +112,35 @@ export default function PWAInstaller() {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 z-50 animate-slide-up">
+    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 animate-slide-up">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Download className="h-5 w-5 text-rose-500" />
-          <h3 className="font-semibold text-white">{t.title}</h3>
+          <Download className="h-5 w-5 text-rose-700" />
+          <h3 className="font-semibold text-gray-800">{t.title}</h3>
         </div>
         <button
           onClick={handleDismiss}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-gray-400 hover:text-gray-600 transition-colors"
           aria-label={t.close}
         >
           <X className="h-5 w-5" />
         </button>
       </div>
 
-      <p className="text-sm text-gray-300 mb-4">
+      <p className="text-sm text-gray-600 mb-4">
         {t.description}
       </p>
 
       <div className="flex gap-2">
         <button
           onClick={handleInstallClick}
-          className="flex-1 bg-rose-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-rose-700 transition-colors"
+          className="flex-1 bg-rose-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-rose-800 transition-colors"
         >
           {t.install}
         </button>
         <button
           onClick={handleDismiss}
-          className="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+          className="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
         >
           {t.later}
         </button>

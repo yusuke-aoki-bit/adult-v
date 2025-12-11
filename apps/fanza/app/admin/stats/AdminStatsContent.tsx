@@ -276,10 +276,10 @@ function ProgressBar({ value, max = 100 }: { value: number | null; max?: number 
 
   return (
     <div className="flex items-center gap-2">
-      <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
+      <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
         <div className={`h-full ${bgColor} transition-all`} style={{ width: `${width}%` }} />
       </div>
-      <span className="text-xs text-gray-400 w-12">{pct?.toFixed(1) ?? '0'}%</span>
+      <span className="text-xs text-gray-500 w-12">{pct?.toFixed(1) ?? '0'}%</span>
     </div>
   );
 }
@@ -344,26 +344,26 @@ export default function AdminStatsContent() {
 
   function getJobStatusClass(status: JobStatus['status']): string {
     switch (status) {
-      case 'running': return 'text-blue-400';
-      case 'succeeded': return 'text-green-400';
-      case 'failed': return 'text-red-400';
-      default: return 'text-gray-400';
+      case 'running': return 'text-blue-600';
+      case 'succeeded': return 'text-green-600';
+      case 'failed': return 'text-red-600';
+      default: return 'text-gray-500';
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-8 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
+        <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-8">
-        <div className="text-red-500">Error: {error}</div>
-        <button onClick={fetchStats} className="mt-4 px-4 py-2 bg-blue-600 rounded">
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="text-red-600">Error: {error}</div>
+        <button onClick={fetchStats} className="mt-4 px-4 py-2 bg-rose-700 text-white rounded hover:bg-rose-800">
           Retry
         </button>
       </div>
@@ -373,17 +373,17 @@ export default function AdminStatsContent() {
   const { aspSummary, videoStats, performerStats, totalStats, topPerformers, noImagePerformers, collectionRates, latestReleases, dailyCollection, rawDataCounts, generatedAt } = data;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
+    <div className="min-h-screen bg-gray-50 text-gray-800 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Data Collection Stats</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Data Collection Stats</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-gray-500">
               Generated: {new Date(generatedAt).toLocaleString('ja-JP')}
             </span>
             <button
               onClick={fetchStats}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+              className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded text-sm"
             >
               Refresh
             </button>
@@ -392,38 +392,38 @@ export default function AdminStatsContent() {
 
         {/* Total Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <div className="bg-gray-800 rounded-lg p-4">
-            <div className="text-2xl font-bold text-blue-400">{formatNumber(totalStats.total_products)}</div>
-            <div className="text-sm text-gray-400">Total Products</div>
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div className="text-2xl font-bold text-blue-600">{formatNumber(totalStats.total_products)}</div>
+            <div className="text-sm text-gray-500">Total Products</div>
           </div>
-          <div className="bg-gray-800 rounded-lg p-4">
-            <div className="text-2xl font-bold text-green-400">{formatNumber(totalStats.products_with_image)}</div>
-            <div className="text-sm text-gray-400">With Image</div>
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div className="text-2xl font-bold text-green-600">{formatNumber(totalStats.products_with_image)}</div>
+            <div className="text-sm text-gray-500">With Image</div>
           </div>
-          <div className="bg-gray-800 rounded-lg p-4">
-            <div className="text-2xl font-bold text-purple-400">{formatNumber(totalStats.products_with_video)}</div>
-            <div className="text-sm text-gray-400">With Video</div>
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div className="text-2xl font-bold text-purple-600">{formatNumber(totalStats.products_with_video)}</div>
+            <div className="text-sm text-gray-500">With Video</div>
           </div>
-          <div className="bg-gray-800 rounded-lg p-4">
-            <div className="text-2xl font-bold text-yellow-400">{formatNumber(totalStats.total_videos)}</div>
-            <div className="text-sm text-gray-400">Total Videos</div>
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div className="text-2xl font-bold text-yellow-600">{formatNumber(totalStats.total_videos)}</div>
+            <div className="text-sm text-gray-500">Total Videos</div>
           </div>
-          <div className="bg-gray-800 rounded-lg p-4">
-            <div className="text-2xl font-bold text-pink-400">{formatNumber(totalStats.products_with_performer)}</div>
-            <div className="text-sm text-gray-400">With Performer</div>
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div className="text-2xl font-bold text-rose-600">{formatNumber(totalStats.products_with_performer)}</div>
+            <div className="text-sm text-gray-500">With Performer</div>
           </div>
         </div>
 
         {/* Cloud Run Jobs Status */}
         {jobsData && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-8">
+          <div className="bg-white rounded-lg p-6 mb-8 shadow-sm border border-gray-200">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Crawler Jobs Status</h2>
+              <h2 className="text-xl font-semibold text-gray-800">Crawler Jobs Status</h2>
               <div className="flex items-center gap-4 text-sm">
-                <span className="text-blue-400">🔄 Running: {jobsData.summary.running}</span>
-                <span className="text-green-400">✅ Succeeded: {jobsData.summary.succeeded}</span>
-                <span className="text-red-400">❌ Failed: {jobsData.summary.failed}</span>
-                <div className="flex items-center gap-2 border-l border-gray-600 pl-4">
+                <span className="text-blue-600">🔄 Running: {jobsData.summary.running}</span>
+                <span className="text-green-600">✅ Succeeded: {jobsData.summary.succeeded}</span>
+                <span className="text-red-600">❌ Failed: {jobsData.summary.failed}</span>
+                <div className="flex items-center gap-2 border-l border-gray-300 pl-4">
                   <label className="flex items-center gap-1 cursor-pointer">
                     <input
                       type="checkbox"
@@ -431,12 +431,12 @@ export default function AdminStatsContent() {
                       onChange={(e) => setAutoRefresh(e.target.checked)}
                       className="w-4 h-4"
                     />
-                    <span className="text-xs">Auto</span>
+                    <span className="text-xs text-gray-600">Auto</span>
                   </label>
                   <select
                     value={refreshInterval}
                     onChange={(e) => setRefreshInterval(Number(e.target.value))}
-                    className="bg-gray-700 text-xs rounded px-2 py-1"
+                    className="bg-gray-100 text-xs rounded px-2 py-1 border border-gray-200"
                     disabled={!autoRefresh}
                   >
                     <option value={10}>10s</option>
@@ -446,7 +446,7 @@ export default function AdminStatsContent() {
                 </div>
                 <button
                   onClick={fetchJobs}
-                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
+                  className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs border border-gray-200"
                 >
                   Refresh
                 </button>
@@ -459,11 +459,11 @@ export default function AdminStatsContent() {
                   <div
                     key={job.name}
                     className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                      job.status === 'running' ? 'bg-blue-900/30 border-blue-700' :
-                      job.status === 'succeeded' ? 'bg-green-900/20 border-green-800' :
-                      job.status === 'failed' ? 'bg-red-900/30 border-red-700' :
-                      'bg-gray-700/30 border-gray-600'
-                    } ${isExpanded ? 'ring-2 ring-blue-500' : ''}`}
+                      job.status === 'running' ? 'bg-blue-50 border-blue-300' :
+                      job.status === 'succeeded' ? 'bg-green-50 border-green-300' :
+                      job.status === 'failed' ? 'bg-red-50 border-red-300' :
+                      'bg-gray-50 border-gray-200'
+                    } ${isExpanded ? 'ring-2 ring-blue-400' : ''}`}
                     onClick={() => setExpandedJob(isExpanded ? null : job.name)}
                   >
                     <div className="flex items-center justify-between">
@@ -473,7 +473,7 @@ export default function AdminStatsContent() {
                           {job.name.replace('-crawler', '')}
                         </span>
                         {job.status === 'running' && (
-                          <span className="animate-pulse text-xs text-blue-400">(running)</span>
+                          <span className="animate-pulse text-xs text-blue-600">(running)</span>
                         )}
                       </div>
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -482,7 +482,7 @@ export default function AdminStatsContent() {
                             href={job.consoleUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-gray-400 hover:text-blue-400 px-1"
+                            className="text-xs text-gray-500 hover:text-blue-600 px-1"
                             title="Cloud Console"
                           >
                             Console
@@ -493,7 +493,7 @@ export default function AdminStatsContent() {
                             href={job.logsUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-gray-400 hover:text-blue-400 px-1"
+                            className="text-xs text-gray-500 hover:text-blue-600 px-1"
                             title="View Logs"
                           >
                             Logs
@@ -515,20 +515,20 @@ export default function AdminStatsContent() {
                     </div>
                     {/* Expanded view */}
                     {isExpanded && (
-                      <div className="mt-3 pt-3 border-t border-gray-600 text-xs space-y-2">
+                      <div className="mt-3 pt-3 border-t border-gray-200 text-xs space-y-2">
                         <div className="grid grid-cols-2 gap-2">
                           <div className="text-gray-500">Execution ID:</div>
-                          <div className="text-gray-400 font-mono truncate" title={job.executionName || undefined}>
+                          <div className="text-gray-600 font-mono truncate" title={job.executionName || undefined}>
                             {job.executionName || '-'}
                           </div>
                           <div className="text-gray-500">Duration:</div>
-                          <div className="text-gray-400">{job.duration || '-'}</div>
+                          <div className="text-gray-600">{job.duration || '-'}</div>
                           <div className="text-gray-500">Started:</div>
-                          <div className="text-gray-400">
+                          <div className="text-gray-600">
                             {job.startedAt ? new Date(job.startedAt).toLocaleString('ja-JP') : '-'}
                           </div>
                           <div className="text-gray-500">Completed:</div>
-                          <div className="text-gray-400">
+                          <div className="text-gray-600">
                             {job.completedAt ? new Date(job.completedAt).toLocaleString('ja-JP') : (job.status === 'running' ? '(in progress)' : '-')}
                           </div>
                         </div>
@@ -539,7 +539,7 @@ export default function AdminStatsContent() {
               })}
             </div>
             {jobsData.error && (
-              <div className="mt-3 text-xs text-yellow-500">
+              <div className="mt-3 text-xs text-yellow-600">
                 Note: Could not fetch live status from Cloud Run
               </div>
             )}
@@ -547,13 +547,13 @@ export default function AdminStatsContent() {
         )}
 
         {/* Collection Rate Section - Most Important */}
-        <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Collection Rate (vs Estimated Total)</h2>
+        <div className="bg-white rounded-lg p-6 mb-8 shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">Collection Rate (vs Estimated Total)</h2>
           <p className="text-xs text-gray-500 mb-4">推定値は各ASPのAPI/サイトから動的に取得（1時間キャッシュ）</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-400 border-b border-gray-700">
+                <tr className="text-left text-gray-500 border-b border-gray-200">
                   <th className="pb-3 pr-4">Provider</th>
                   <th className="pb-3 pr-4 text-right">Collected</th>
                   <th className="pb-3 pr-4 text-right">Estimated</th>
@@ -568,20 +568,20 @@ export default function AdminStatsContent() {
                   const rateNum = rate.rate ? parseFloat(rate.rate) : 0;
                   const hasError = rate.estimated === null || rate.source?.includes('エラー');
                   return (
-                    <tr key={rate.asp_name} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                      <td className="py-3 pr-4 font-medium">{rate.asp_name}</td>
-                      <td className="py-3 pr-4 text-right font-mono">{formatNumber(rate.collected)}</td>
-                      <td className={`py-3 pr-4 text-right font-mono ${hasError ? 'text-red-400' : 'text-gray-400'}`}>
+                    <tr key={rate.asp_name} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 pr-4 font-medium text-gray-800">{rate.asp_name}</td>
+                      <td className="py-3 pr-4 text-right font-mono text-gray-700">{formatNumber(rate.collected)}</td>
+                      <td className={`py-3 pr-4 text-right font-mono ${hasError ? 'text-red-600' : 'text-gray-500'}`}>
                         {rate.estimated ? formatNumber(rate.estimated) : (hasError ? 'エラー' : '-')}
                       </td>
                       <td className="py-3 pr-4">
                         {rate.rate && !hasError && <ProgressBar value={rateNum} />}
-                        {hasError && <span className="text-red-400 text-xs">取得失敗</span>}
+                        {hasError && <span className="text-red-600 text-xs">取得失敗</span>}
                       </td>
                       <td className="py-3 pr-4 text-xs text-gray-500 max-w-48 truncate" title={rate.source || undefined}>
                         {rate.source || '-'}
                       </td>
-                      <td className="py-3 text-sm text-gray-400">
+                      <td className="py-3 text-sm text-gray-500">
                         {latest?.latest_release
                           ? new Date(latest.latest_release).toLocaleDateString('ja-JP')
                           : '-'}
@@ -595,12 +595,12 @@ export default function AdminStatsContent() {
         </div>
 
         {/* ASP Summary Table */}
-        <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">ASP Collection Summary</h2>
+        <div className="bg-white rounded-lg p-6 mb-8 shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">ASP Collection Summary</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-400 border-b border-gray-700">
+                <tr className="text-left text-gray-500 border-b border-gray-200">
                   <th className="pb-3 pr-4">ASP</th>
                   <th className="pb-3 pr-4 text-right">Products</th>
                   <th className="pb-3 pr-4">Image</th>
@@ -616,9 +616,9 @@ export default function AdminStatsContent() {
                   const performerPct = asp.performer_pct ? parseFloat(asp.performer_pct) : null;
 
                   return (
-                    <tr key={asp.asp_name} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                      <td className="py-3 pr-4 font-medium">{asp.asp_name}</td>
-                      <td className="py-3 pr-4 text-right font-mono">{formatNumber(asp.total_products)}</td>
+                    <tr key={asp.asp_name} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 pr-4 font-medium text-gray-800">{asp.asp_name}</td>
+                      <td className="py-3 pr-4 text-right font-mono text-gray-700">{formatNumber(asp.total_products)}</td>
                       <td className="py-3 pr-4">
                         <ProgressBar value={imagePct} />
                       </td>
@@ -645,11 +645,11 @@ export default function AdminStatsContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Video Stats */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Sample Videos by ASP</h2>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Sample Videos by ASP</h2>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-400 border-b border-gray-700">
+                <tr className="text-left text-gray-500 border-b border-gray-200">
                   <th className="pb-3">ASP</th>
                   <th className="pb-3 text-right">Videos</th>
                   <th className="pb-3 text-right">Products</th>
@@ -658,11 +658,11 @@ export default function AdminStatsContent() {
               </thead>
               <tbody>
                 {videoStats.map((v) => (
-                  <tr key={v.asp_name} className="border-b border-gray-700/50">
-                    <td className="py-2">{v.asp_name}</td>
-                    <td className="py-2 text-right font-mono">{formatNumber(v.total_videos)}</td>
-                    <td className="py-2 text-right font-mono">{formatNumber(v.products_with_video)}</td>
-                    <td className="py-2 text-right font-mono">
+                  <tr key={v.asp_name} className="border-b border-gray-100">
+                    <td className="py-2 text-gray-800">{v.asp_name}</td>
+                    <td className="py-2 text-right font-mono text-gray-700">{formatNumber(v.total_videos)}</td>
+                    <td className="py-2 text-right font-mono text-gray-700">{formatNumber(v.products_with_video)}</td>
+                    <td className="py-2 text-right font-mono text-gray-700">
                       {(parseInt(v.total_videos) / parseInt(v.products_with_video)).toFixed(1)}
                     </td>
                   </tr>
@@ -672,35 +672,35 @@ export default function AdminStatsContent() {
           </div>
 
           {/* Performer Stats */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Performer Statistics</h2>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Performer Statistics</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-400">Total Performers</span>
-                <span className="font-mono">{formatNumber(performerStats.total_performers)}</span>
+                <span className="text-gray-500">Total Performers</span>
+                <span className="font-mono text-gray-800">{formatNumber(performerStats.total_performers)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">With Image</span>
-                <span className="font-mono">
+                <span className="text-gray-500">With Image</span>
+                <span className="font-mono text-gray-800">
                   {formatNumber(performerStats.with_image)} (
                   {((parseInt(performerStats.with_image) / parseInt(performerStats.total_performers)) * 100).toFixed(1)}%)
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">With Wikipedia</span>
-                <span className="font-mono">{formatNumber(performerStats.with_wiki)}</span>
+                <span className="text-gray-500">With Wikipedia</span>
+                <span className="font-mono text-gray-800">{formatNumber(performerStats.with_wiki)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">With Products</span>
-                <span className="font-mono">{formatNumber(performerStats.with_products)}</span>
+                <span className="text-gray-500">With Products</span>
+                <span className="font-mono text-gray-800">{formatNumber(performerStats.with_products)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Total Aliases</span>
-                <span className="font-mono">{formatNumber(performerStats.total_aliases)}</span>
+                <span className="text-gray-500">Total Aliases</span>
+                <span className="font-mono text-gray-800">{formatNumber(performerStats.total_aliases)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Product-Performer Links</span>
-                <span className="font-mono">{formatNumber(performerStats.total_links)}</span>
+                <span className="text-gray-500">Product-Performer Links</span>
+                <span className="font-mono text-gray-800">{formatNumber(performerStats.total_links)}</span>
               </div>
             </div>
           </div>
@@ -708,11 +708,11 @@ export default function AdminStatsContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Top Performers */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Top 10 Performers</h2>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Top 10 Performers</h2>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-400 border-b border-gray-700">
+                <tr className="text-left text-gray-500 border-b border-gray-200">
                   <th className="pb-3">Name</th>
                   <th className="pb-3 text-center">Img</th>
                   <th className="pb-3 text-center">Wiki</th>
@@ -721,11 +721,11 @@ export default function AdminStatsContent() {
               </thead>
               <tbody>
                 {topPerformers.map((p) => (
-                  <tr key={p.id} className="border-b border-gray-700/50">
-                    <td className="py-2">{p.name}</td>
+                  <tr key={p.id} className="border-b border-gray-100">
+                    <td className="py-2 text-gray-800">{p.name}</td>
                     <td className="py-2 text-center">{p.has_image ? '✅' : '❌'}</td>
                     <td className="py-2 text-center">{p.has_wiki ? '✅' : '❌'}</td>
-                    <td className="py-2 text-right font-mono">{formatNumber(p.product_count)}</td>
+                    <td className="py-2 text-right font-mono text-gray-700">{formatNumber(p.product_count)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -733,21 +733,21 @@ export default function AdminStatsContent() {
           </div>
 
           {/* No Image Performers */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Missing Image (High Priority)</h2>
-            <p className="text-xs text-gray-400 mb-3">Performers without images but with many products</p>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Missing Image (High Priority)</h2>
+            <p className="text-xs text-gray-500 mb-3">Performers without images but with many products</p>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-400 border-b border-gray-700">
+                <tr className="text-left text-gray-500 border-b border-gray-200">
                   <th className="pb-3">Name</th>
                   <th className="pb-3 text-right">Products</th>
                 </tr>
               </thead>
               <tbody>
                 {noImagePerformers.map((p) => (
-                  <tr key={p.id} className="border-b border-gray-700/50">
-                    <td className="py-2">{p.name}</td>
-                    <td className="py-2 text-right font-mono">{formatNumber(p.product_count)}</td>
+                  <tr key={p.id} className="border-b border-gray-100">
+                    <td className="py-2 text-gray-800">{p.name}</td>
+                    <td className="py-2 text-right font-mono text-gray-700">{formatNumber(p.product_count)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -757,12 +757,12 @@ export default function AdminStatsContent() {
 
         {/* Daily Collection Activity */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Recent Collection Activity (14 days)</h2>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Recent Collection Activity (14 days)</h2>
             <div className="max-h-80 overflow-y-auto">
               <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-gray-800">
-                  <tr className="text-left text-gray-400 border-b border-gray-700">
+                <thead className="sticky top-0 bg-white">
+                  <tr className="text-left text-gray-500 border-b border-gray-200">
                     <th className="pb-3">Date</th>
                     <th className="pb-3">Provider</th>
                     <th className="pb-3 text-right">Count</th>
@@ -770,10 +770,10 @@ export default function AdminStatsContent() {
                 </thead>
                 <tbody>
                   {dailyCollection.slice(0, 30).map((d, i) => (
-                    <tr key={`${d.date}-${d.asp_name}-${i}`} className="border-b border-gray-700/50">
-                      <td className="py-2 text-gray-400">{d.date}</td>
-                      <td className="py-2">{d.asp_name}</td>
-                      <td className="py-2 text-right font-mono">{formatNumber(d.count)}</td>
+                    <tr key={`${d.date}-${d.asp_name}-${i}`} className="border-b border-gray-100">
+                      <td className="py-2 text-gray-500">{d.date}</td>
+                      <td className="py-2 text-gray-800">{d.asp_name}</td>
+                      <td className="py-2 text-right font-mono text-gray-700">{formatNumber(d.count)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -782,20 +782,20 @@ export default function AdminStatsContent() {
           </div>
 
           {/* Raw Data Counts */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Raw Data Storage</h2>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Raw Data Storage</h2>
             <div className="space-y-3">
               {rawDataCounts.map((r) => (
                 <div key={r.table_name} className="flex justify-between items-center">
-                  <span className="text-gray-400">{r.table_name}</span>
-                  <span className="font-mono">{formatNumber(r.count)}</span>
+                  <span className="text-gray-500">{r.table_name}</span>
+                  <span className="font-mono text-gray-800">{formatNumber(r.count)}</span>
                 </div>
               ))}
             </div>
-            <div className="mt-6 pt-4 border-t border-gray-700">
+            <div className="mt-6 pt-4 border-t border-gray-200">
               <div className="flex justify-between items-center">
-                <span className="text-gray-400">Total Raw Records</span>
-                <span className="font-mono font-bold text-blue-400">
+                <span className="text-gray-500">Total Raw Records</span>
+                <span className="font-mono font-bold text-blue-600">
                   {formatNumber(rawDataCounts.reduce((sum, r) => sum + parseInt(r.count), 0))}
                 </span>
               </div>
@@ -805,19 +805,19 @@ export default function AdminStatsContent() {
 
         {/* Database Table Row Counts */}
         {data.tableRowCounts && data.tableRowCounts.length > 0 && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Database Table Row Counts</h2>
+          <div className="bg-white rounded-lg p-6 mb-8 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Database Table Row Counts</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {data.tableRowCounts.map((t) => (
-                <div key={t.table_name} className="bg-gray-700/50 rounded p-3 flex justify-between items-center">
-                  <span className="text-sm text-gray-300">{t.table_name}</span>
-                  <span className="font-mono text-blue-400">{formatNumber(t.count)}</span>
+                <div key={t.table_name} className="bg-gray-50 rounded p-3 flex justify-between items-center border border-gray-100">
+                  <span className="text-sm text-gray-600">{t.table_name}</span>
+                  <span className="font-mono text-blue-600">{formatNumber(t.count)}</span>
                 </div>
               ))}
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-700 flex justify-between">
-              <span className="text-gray-400">Total Records</span>
-              <span className="font-mono font-bold text-green-400">
+            <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between">
+              <span className="text-gray-500">Total Records</span>
+              <span className="font-mono font-bold text-green-600">
                 {formatNumber(data.tableRowCounts.reduce((sum, t) => sum + parseInt(t.count), 0))}
               </span>
             </div>
@@ -827,12 +827,12 @@ export default function AdminStatsContent() {
         {/* AI Content Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {data.aiContentStats && data.aiContentStats.length > 0 && (
-            <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">AI Content (Products)</h2>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">AI Content (Products)</h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-gray-400 border-b border-gray-700">
+                    <tr className="text-left text-gray-500 border-b border-gray-200">
                       <th className="pb-3">Table</th>
                       <th className="pb-3 text-right">Total</th>
                       <th className="pb-3 text-right">AI Desc</th>
@@ -842,12 +842,12 @@ export default function AdminStatsContent() {
                   </thead>
                   <tbody>
                     {data.aiContentStats.map((s) => (
-                      <tr key={s.table_name} className="border-b border-gray-700/50">
-                        <td className="py-2">{s.table_name}</td>
-                        <td className="py-2 text-right font-mono">{formatNumber(s.total)}</td>
-                        <td className="py-2 text-right font-mono text-green-400">{formatNumber(s.with_ai_description)}</td>
-                        <td className="py-2 text-right font-mono text-blue-400">{formatNumber(s.with_ai_tags)}</td>
-                        <td className="py-2 text-right font-mono text-purple-400">{formatNumber(s.with_ai_review)}</td>
+                      <tr key={s.table_name} className="border-b border-gray-100">
+                        <td className="py-2 text-gray-800">{s.table_name}</td>
+                        <td className="py-2 text-right font-mono text-gray-700">{formatNumber(s.total)}</td>
+                        <td className="py-2 text-right font-mono text-green-600">{formatNumber(s.with_ai_description)}</td>
+                        <td className="py-2 text-right font-mono text-blue-600">{formatNumber(s.with_ai_tags)}</td>
+                        <td className="py-2 text-right font-mono text-purple-600">{formatNumber(s.with_ai_review)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -857,34 +857,34 @@ export default function AdminStatsContent() {
           )}
 
           {data.performerAiStats && data.performerAiStats.length > 0 && (
-            <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">AI Content (Performers)</h2>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">AI Content (Performers)</h2>
               <div className="space-y-3">
                 {data.performerAiStats.map((s) => (
                   <div key="performer-ai" className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Total Performers</span>
-                      <span className="font-mono">{formatNumber(s.total_performers)}</span>
+                      <span className="text-gray-500">Total Performers</span>
+                      <span className="font-mono text-gray-800">{formatNumber(s.total_performers)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">With AI Review</span>
-                      <span className="font-mono text-purple-400">{formatNumber(s.with_ai_review)}</span>
+                      <span className="text-gray-500">With AI Review</span>
+                      <span className="font-mono text-purple-600">{formatNumber(s.with_ai_review)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">With Height</span>
-                      <span className="font-mono">{formatNumber(s.with_height)}</span>
+                      <span className="text-gray-500">With Height</span>
+                      <span className="font-mono text-gray-800">{formatNumber(s.with_height)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">With Measurements</span>
-                      <span className="font-mono">{formatNumber(s.with_measurements)}</span>
+                      <span className="text-gray-500">With Measurements</span>
+                      <span className="font-mono text-gray-800">{formatNumber(s.with_measurements)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">With Birthday</span>
-                      <span className="font-mono">{formatNumber(s.with_birthday)}</span>
+                      <span className="text-gray-500">With Birthday</span>
+                      <span className="font-mono text-gray-800">{formatNumber(s.with_birthday)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">With Social Links</span>
-                      <span className="font-mono">{formatNumber(s.with_social)}</span>
+                      <span className="text-gray-500">With Social Links</span>
+                      <span className="font-mono text-gray-800">{formatNumber(s.with_social)}</span>
                     </div>
                   </div>
                 ))}
@@ -895,12 +895,12 @@ export default function AdminStatsContent() {
 
         {/* Translation Statistics */}
         {data.translationStats && data.translationStats.length > 0 && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Translation Coverage</h2>
+          <div className="bg-white rounded-lg p-6 mb-8 shadow-sm border border-gray-200">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Translation Coverage</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-400 border-b border-gray-700">
+                  <tr className="text-left text-gray-500 border-b border-gray-200">
                     <th className="pb-3">Table</th>
                     <th className="pb-3 text-right">Total</th>
                     <th className="pb-3 text-right">EN</th>
@@ -917,23 +917,23 @@ export default function AdminStatsContent() {
                     const zhTwPct = total > 0 ? ((parseInt(s.zh_tw) / total) * 100).toFixed(1) : '0';
                     const koPct = total > 0 ? ((parseInt(s.ko) / total) * 100).toFixed(1) : '0';
                     return (
-                      <tr key={s.table_name} className="border-b border-gray-700/50">
-                        <td className="py-2">{s.table_name}</td>
-                        <td className="py-2 text-right font-mono">{formatNumber(s.total)}</td>
+                      <tr key={s.table_name} className="border-b border-gray-100">
+                        <td className="py-2 text-gray-800">{s.table_name}</td>
+                        <td className="py-2 text-right font-mono text-gray-700">{formatNumber(s.total)}</td>
                         <td className="py-2 text-right">
-                          <span className="font-mono">{formatNumber(s.en)}</span>
+                          <span className="font-mono text-gray-700">{formatNumber(s.en)}</span>
                           <span className="text-xs text-gray-500 ml-1">({enPct}%)</span>
                         </td>
                         <td className="py-2 text-right">
-                          <span className="font-mono">{formatNumber(s.zh)}</span>
+                          <span className="font-mono text-gray-700">{formatNumber(s.zh)}</span>
                           <span className="text-xs text-gray-500 ml-1">({zhPct}%)</span>
                         </td>
                         <td className="py-2 text-right">
-                          <span className="font-mono">{formatNumber(s.zh_tw)}</span>
+                          <span className="font-mono text-gray-700">{formatNumber(s.zh_tw)}</span>
                           <span className="text-xs text-gray-500 ml-1">({zhTwPct}%)</span>
                         </td>
                         <td className="py-2 text-right">
-                          <span className="font-mono">{formatNumber(s.ko)}</span>
+                          <span className="font-mono text-gray-700">{formatNumber(s.ko)}</span>
                           <span className="text-xs text-gray-500 ml-1">({koPct}%)</span>
                         </td>
                       </tr>

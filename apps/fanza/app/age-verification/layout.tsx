@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: '年齢確認 | Adult Viewer Lab',
+  title: '年齢確認 | FANZA VIEWER LAB',
   robots: {
     index: false,
     follow: false,

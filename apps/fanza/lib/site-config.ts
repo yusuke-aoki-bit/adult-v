@@ -55,17 +55,16 @@ export const siteConfigs: Record<SiteMode, SiteConfig> = {
   },
   'fanza': {
     mode: 'fanza',
-    name: 'FANZA Reviews',
-    description: 'FANZA作品専門レビューサイト',
+    name: 'AV Viewer Lab',
+    description: 'AV作品レビューサイト',
     domain: 'www.f.adult-v.com',
     aspFilter: ['FANZA'], // FANZAのみ
-    primaryColor: '#ec4899', // pink (FANZA風)
+    primaryColor: '#ec4899', // pink
     accentColor: '#f43f5e', // rose
-    logo: '/fanza-logo.svg',
-    brandText: 'FANZA Reviews',
-    seoTitle: 'FANZA Reviews - FANZA作品専門レビュー',
-    seoDescription: 'FANZA（DMM）の新作・人気作品をレビュー。出演女優別・ジャンル別で探せます。',
-    // FANZAアフィリエイト規約遵守: 他ASPサイトへのリンクはNG
+    logo: '/av-logo.svg',
+    brandText: 'AV Viewer Lab',
+    seoTitle: 'AV Viewer Lab - 作品レビュー',
+    seoDescription: '新作・人気作品をレビュー。出演女優別・ジャンル別で探せます。当サイトはFANZA/DMMの公式サービスではありません。',
     crossLinkEnabled: false,
     crossLinkSite: null,
     crossLinkUrl: null,
@@ -76,10 +75,16 @@ export const siteConfigs: Record<SiteMode, SiteConfig> = {
  * 環境変数またはホスト名からサイトモードを取得
  */
 export function getSiteMode(hostname?: string): SiteMode {
-  // 環境変数による強制設定（Cloud Run用）
+  // 環境変数による強制設定（Cloud Run用、ローカル開発用）
   const envMode = process.env.SITE_MODE as SiteMode;
   if (envMode && (envMode === 'adult-v' || envMode === 'fanza')) {
     return envMode;
+  }
+
+  // Next.js環境変数（クライアント側でも参照可能）
+  const nextPublicMode = process.env.NEXT_PUBLIC_SITE_MODE as SiteMode;
+  if (nextPublicMode && (nextPublicMode === 'adult-v' || nextPublicMode === 'fanza')) {
+    return nextPublicMode;
   }
 
   // ホスト名から判定
@@ -87,6 +92,10 @@ export function getSiteMode(hostname?: string): SiteMode {
     const host = hostname.toLowerCase();
     // www.f.adult-v.com または fanza を含む場合はFANZAモード
     if (host.startsWith('www.f.') || host.startsWith('f.') || host.includes('fanza')) {
+      return 'fanza';
+    }
+    // ローカル開発: localhost:3001 はFANZAモード
+    if (host.includes('localhost:3001') || host.includes('127.0.0.1:3001')) {
       return 'fanza';
     }
   }

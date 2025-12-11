@@ -1,13 +1,13 @@
 /**
  * minnano-av.com AV女優リストクローラー
  * 24,000件以上の女優データを収集
- * 名前、読み仮名、別名、作品数等を取得
+ * 名前、読み仮名、別名、作品数、タグ等を取得
  */
 
 import * as cheerio from 'cheerio';
-import { db } from './lib/db';
-import { performers, performerAliases, performerExternalIds } from './lib/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { db } from '../../lib/db';
+import { performers, performerAliases, performerExternalIds, tags, performerTags } from '../../lib/db/schema';
+import { eq, sql, and } from 'drizzle-orm';
 
 const BASE_URL = 'https://www.minnano-av.com';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
@@ -35,6 +35,7 @@ interface PerformerDetail {
   cup: string | null;
   birthplace: string | null;
   hobby: string | null;
+  tags: string[]; // 特徴タグ（巨乳、スレンダーなど）
 }
 
 async function fetchPage(url: string): Promise<string> {
@@ -137,6 +138,7 @@ async function fetchActressDetail(url: string): Promise<PerformerDetail | null> 
       cup: null,
       birthplace: null,
       hobby: null,
+      tags: [],
     };
 
     // 名前を取得
@@ -185,6 +187,28 @@ async function fetchActressDetail(url: string): Promise<PerformerDetail | null> 
         detail.birthplace = td || null;
       } else if (th.includes('趣味')) {
         detail.hobby = td || null;
+      }
+    });
+
+    // タグ情報を取得（tag_a_id形式のリンクから）
+    $('a[href*="tag_a_id="]').each((_, el) => {
+      const tagText = $(el).text().trim();
+      // 有効なタグのみ追加（短すぎる、無効な文字を含むものは除外）
+      if (tagText && tagText.length >= 2 && tagText.length <= 20 &&
+          !tagText.includes('一覧') && !tagText.includes('評価')) {
+        if (!detail.tags.includes(tagText)) {
+          detail.tags.push(tagText);
+        }
+      }
+    });
+
+    // カップサイズもタグとして追加
+    $('a[href*="cup="]').each((_, el) => {
+      const cupText = $(el).text().trim();
+      if (cupText && cupText.includes('カップ')) {
+        if (!detail.tags.includes(cupText)) {
+          detail.tags.push(cupText);
+        }
       }
     });
 
@@ -259,6 +283,11 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
         profileUrl: performer.profileUrl,
       })
       .onConflictDoNothing();
+
+    // タグを保存
+    if (detail?.tags && detail.tags.length > 0) {
+      await savePerformerTags(existingPerformer.id, detail.tags);
+    }
   } else {
     // 新規performer作成
     const [newPerformer] = await db
@@ -303,6 +332,56 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
         profileUrl: performer.profileUrl,
       })
       .onConflictDoNothing();
+
+    // タグを保存
+    if (detail?.tags && detail.tags.length > 0) {
+      await savePerformerTags(newPerformer.id, detail.tags);
+    }
+  }
+}
+
+/**
+ * 演者のタグを保存
+ */
+async function savePerformerTags(performerId: number, tagNames: string[]): Promise<void> {
+  for (const tagName of tagNames) {
+    try {
+      // タグを取得または作成（performer_trait カテゴリ）
+      let tagRecord = await db
+        .select()
+        .from(tags)
+        .where(eq(tags.name, tagName))
+        .limit(1);
+
+      let tagId: number;
+
+      if (tagRecord.length === 0) {
+        // 新規タグを作成
+        const [newTag] = await db
+          .insert(tags)
+          .values({
+            name: tagName,
+            category: 'performer_trait', // 演者特徴カテゴリ
+          })
+          .returning({ id: tags.id });
+        tagId = newTag.id;
+      } else {
+        tagId = tagRecord[0].id;
+      }
+
+      // 演者-タグ関連を保存
+      await db
+        .insert(performerTags)
+        .values({
+          performerId,
+          tagId,
+          source: 'minnano-av',
+        })
+        .onConflictDoNothing();
+    } catch (error) {
+      // タグ保存エラーは無視して続行
+      console.error(`  Tag save error (${tagName}): ${error}`);
+    }
   }
 }
 

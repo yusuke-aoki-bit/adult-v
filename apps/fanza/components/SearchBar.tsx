@@ -149,12 +149,12 @@ export default function SearchBar() {
           onFocus={() => setShowShortcutHint(false)}
           placeholder={t.actressPlaceholder}
           aria-label={t.actressPlaceholder}
-          className="w-full px-4 py-2 pl-10 pr-8 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm"
+          className="w-full px-4 py-2 pl-10 pr-8 bg-white text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm placeholder:text-gray-400"
         />
         {/* キーボードショートカットヒント */}
         {showShortcutHint && !actressQuery && (
-          <span className="hidden sm:flex absolute right-3 top-1/2 transform -translate-y-1/2 items-center gap-1 text-xs text-gray-500 pointer-events-none">
-            <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-gray-400 font-mono">/</kbd>
+          <span className="hidden sm:flex absolute right-3 top-1/2 transform -translate-y-1/2 items-center gap-1 text-xs text-gray-400 pointer-events-none">
+            <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 font-mono border border-gray-200">/</kbd>
           </span>
         )}
         <svg
@@ -174,7 +174,7 @@ export default function SearchBar() {
           <button
             type="button"
             onClick={() => setActressQuery('')}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors"
             aria-label="クリア"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,7 +193,7 @@ export default function SearchBar() {
           placeholder={t.productPlaceholder}
           aria-label={t.productPlaceholder}
           disabled={isSearching}
-          className="w-full px-4 py-2 pl-10 pr-8 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm disabled:opacity-50"
+          className="w-full px-4 py-2 pl-10 pr-8 bg-white text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm placeholder:text-gray-400 disabled:opacity-50"
         />
         <svg
           className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -210,13 +210,13 @@ export default function SearchBar() {
         </svg>
         {isSearching ? (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-500"></div>
           </div>
         ) : productQuery && (
           <button
             type="button"
             onClick={() => setProductQuery('')}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors"
             aria-label="クリア"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

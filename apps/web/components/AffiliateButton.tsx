@@ -3,7 +3,6 @@
 interface AffiliateButtonProps {
   affiliateUrl: string;
   providerLabel: string;
-  aspName?: string;
   price?: number;
   salePrice?: number;
   discount?: number;
@@ -36,7 +35,7 @@ function normalizeMgsProductId(productId: string): string {
 
 /**
  * MGSウィジェットからパラメータを抽出してMGS商品ページURLを生成
- * nakiny.com形式: agef=1で年齢確認スキップ、aff=でアフィリエイト追跡
+ * aff=でアフィリエイト追跡
  */
 function extractMgsProductUrl(widgetCode: string): string | null {
   const productIdMatch = widgetCode.match(/[?&]p=([^&"']+)/);
@@ -46,9 +45,9 @@ function extractMgsProductUrl(widgetCode: string): string | null {
     const rawProductId = productIdMatch[1];
     const productId = normalizeMgsProductId(rawProductId);
     const affCode = affCodeMatch ? affCodeMatch[1] : '';
-    // agef=1 で年齢確認をスキップ、aff= でアフィリエイトコードを付与
-    const affParam = affCode ? `&aff=${affCode}` : '';
-    return `https://www.mgstage.com/product/product_detail/${productId}/?agef=1${affParam}`;
+    // aff= でアフィリエイトコードを付与（MGS標準の年齢認証を経由）
+    const affParam = affCode ? `?aff=${affCode}` : '';
+    return `https://www.mgstage.com/product/product_detail/${productId}/${affParam}`;
   }
   return null;
 }

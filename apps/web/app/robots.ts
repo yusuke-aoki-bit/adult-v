@@ -13,11 +13,6 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/_next/',
           '/private/',
-          // レガシーURL（ロケールなし）- 301リダイレクト済みだが念のためブロック
-          '/categories',
-          '/actress/',   // /actress/:id（ロケールなし）
-          '/product/',   // /product/:id（ロケールなし）
-          '/products/',  // /products/:id（ロケールなし、ルートのみ）
           '/age-verification',
         ],
       },
@@ -25,14 +20,14 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: ['Googlebot', 'Googlebot-Image'],
         allow: '/',
-        disallow: ['/api/', '/admin/', '/private/', '/categories', '/actress/', '/product/', '/products/', '/age-verification'],
+        disallow: ['/api/', '/admin/', '/private/', '/age-verification'],
         crawlDelay: 0,
       },
       // Be more permissive with major search engines
       {
         userAgent: ['Bingbot', 'Slurp', 'DuckDuckBot'],
         allow: '/',
-        disallow: ['/api/', '/admin/', '/private/', '/categories', '/actress/', '/product/', '/products/', '/age-verification'],
+        disallow: ['/api/', '/admin/', '/private/', '/age-verification'],
         crawlDelay: 1,
       },
     ],

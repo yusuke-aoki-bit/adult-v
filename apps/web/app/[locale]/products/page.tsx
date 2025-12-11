@@ -186,7 +186,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   ]);
 
   return (
-    <div className="bg-gray-900 min-h-screen">
+    <div className="theme-body min-h-screen">
       {/* 構造化データ */}
       <JsonLD data={itemListSchema} />
       <JsonLD data={breadcrumbSchema} />

@@ -38,12 +38,12 @@ export function SiteProvider({ children, mode }: SiteProviderProps) {
 export function useSite(): SiteContextValue {
   const context = useContext(SiteContext);
   if (!context) {
-    // サーバーサイドまたはProvider外でのフォールバック
+    // apps/fanzaアプリなので、Provider外でもFANZAモードをデフォルト
     return {
-      config: siteConfigs['adult-v'],
-      mode: 'adult-v',
-      isFanzaSite: false,
-      isMainSite: true,
+      config: siteConfigs['fanza'],
+      mode: 'fanza',
+      isFanzaSite: true,
+      isMainSite: false,
     };
   }
   return context;

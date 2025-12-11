@@ -69,17 +69,17 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }: S
   ).length;
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 mb-6">
+    <div className="bg-white rounded-lg p-4 mb-6 border border-gray-200 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 text-white hover:text-rose-500 transition-colors"
+          className="flex items-center gap-2 text-gray-800 hover:text-rose-700 transition-colors"
         >
           <Filter className="h-5 w-5" />
           <span className="font-medium">
             フィルター
             {activeFilterCount > 0 && (
-              <span className="ml-2 bg-rose-600 text-white text-xs px-2 py-0.5 rounded-full">
+              <span className="ml-2 bg-rose-700 text-white text-xs px-2 py-0.5 rounded-full">
                 {activeFilterCount}
               </span>
             )}
@@ -89,7 +89,7 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }: S
         {activeFilterCount > 0 && (
           <button
             onClick={clearFilters}
-            className="text-sm text-gray-400 hover:text-white flex items-center gap-1"
+            className="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1"
           >
             <X className="h-4 w-4" />
             クリア
@@ -98,16 +98,16 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }: S
       </div>
 
       {isOpen && (
-        <div className="space-y-4 pt-4 border-t border-gray-700">
+        <div className="space-y-4 pt-4 border-t border-gray-200">
           {/* Sort By */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               並び替え
             </label>
             <select
               value={filters.sortBy || 'relevance'}
               onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500 outline-none"
+              className="w-full bg-white text-gray-800 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-700 outline-none"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -120,7 +120,7 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }: S
           {/* Providers - FANZAサイトでは非表示 */}
           {!isFanzaSite && (
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 配信元
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -130,8 +130,8 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }: S
                     onClick={() => handleProviderToggle(provider.value)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       filters.providers?.includes(provider.value)
-                        ? 'bg-rose-600 text-white'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        ? 'bg-rose-700 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
                     {provider.label}
@@ -143,7 +143,7 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }: S
 
           {/* Date Range */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               発売日
             </label>
@@ -153,7 +153,7 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }: S
                   type="date"
                   value={filters.dateFrom || ''}
                   onChange={(e) => handleFilterChange('dateFrom', e.target.value || undefined)}
-                  className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500 outline-none text-sm"
+                  className="w-full bg-white text-gray-800 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-700 outline-none text-sm"
                   placeholder="開始日"
                 />
               </div>
@@ -162,7 +162,7 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }: S
                   type="date"
                   value={filters.dateTo || ''}
                   onChange={(e) => handleFilterChange('dateTo', e.target.value || undefined)}
-                  className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500 outline-none text-sm"
+                  className="w-full bg-white text-gray-800 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-700 outline-none text-sm"
                   placeholder="終了日"
                 />
               </div>
@@ -171,22 +171,22 @@ export default function SearchFilters({ onFilterChange, initialFilters = {} }: S
 
           {/* Boolean Filters */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
               <input
                 type="checkbox"
                 checked={filters.hasVideo || false}
                 onChange={(e) => handleFilterChange('hasVideo', e.target.checked || undefined)}
-                className="w-4 h-4 text-rose-600 bg-gray-700 border-gray-600 rounded focus:ring-rose-500"
+                className="w-4 h-4 text-rose-700 bg-white border-gray-300 rounded focus:ring-rose-700"
               />
               <span>サンプル動画あり</span>
             </label>
 
-            <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
               <input
                 type="checkbox"
                 checked={filters.hasImage || false}
                 onChange={(e) => handleFilterChange('hasImage', e.target.checked || undefined)}
-                className="w-4 h-4 text-rose-600 bg-gray-700 border-gray-600 rounded focus:ring-rose-500"
+                className="w-4 h-4 text-rose-700 bg-white border-gray-300 rounded focus:ring-rose-700"
               />
               <span>サンプル画像あり</span>
             </label>

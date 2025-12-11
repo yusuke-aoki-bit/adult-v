@@ -6,6 +6,7 @@ import ProductListFilter from '@/components/ProductListFilter';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import Breadcrumb from '@/components/Breadcrumb';
 import ActiveFiltersChips from '@/components/ActiveFiltersChips';
+import RecentlyViewed from '@/components/RecentlyViewed';
 import { JsonLD } from '@/components/JsonLD';
 import { getProducts, getProductsCount, getAspStats, getPopularTags } from '@/lib/db/queries';
 import { generateBaseMetadata, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
@@ -186,7 +187,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   ]);
 
   return (
-    <div className="bg-gray-900 min-h-screen">
+    <div className="theme-body min-h-screen">
       {/* 構造化データ */}
       <JsonLD data={itemListSchema} />
       <JsonLD data={breadcrumbSchema} />
@@ -201,10 +202,10 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           />
 
           <div className="mb-2 sm:mb-3">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-0.5">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold theme-text mb-0.5">
               {query ? `「${query}」の検索結果` : t('title')}
             </h1>
-            <p className="text-sm sm:text-base text-gray-300">
+            <p className="text-sm sm:text-base theme-text-secondary">
               {t('description', { count: totalCount.toLocaleString() })}
             </p>
           </div>
@@ -237,7 +238,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
 
           {products.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-gray-400 text-lg">{t('noProducts')}</p>
+              <p className="theme-text-muted text-lg">{t('noProducts')}</p>
             </div>
           ) : (
             <>
@@ -271,20 +272,23 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
             </>
           )}
 
+          {/* 最近見た作品 */}
+          <RecentlyViewed />
+
           {/* 女優一覧へのリンク */}
-          <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-800">
+          <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t theme-section-border">
             <Link
               href={`/${locale}`}
-              className="flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 hover:border-rose-600 transition-colors group"
+              className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-rose-600 transition-colors group"
             >
               <div className="flex items-center gap-3">
                 <span className="text-2xl">👩</span>
                 <div>
-                  <span className="text-white font-medium">{tNav('actressList')}</span>
-                  <p className="text-gray-400 text-sm mt-0.5">{t('viewActressListDesc')}</p>
+                  <span className="theme-text font-medium">{tNav('actressList')}</span>
+                  <p className="theme-text-muted text-sm mt-0.5">{t('viewActressListDesc')}</p>
                 </div>
               </div>
-              <svg className="w-5 h-5 text-gray-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 theme-text-muted group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </Link>

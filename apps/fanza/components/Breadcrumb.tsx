@@ -23,11 +23,11 @@ export default function Breadcrumb({ items, className = '' }: BreadcrumbProps) {
               <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0" />
             )}
             {isLast || !item.href ? (
-              <span className="text-gray-400">{item.label}</span>
+              <span className="text-gray-600">{item.label}</span>
             ) : (
               <Link
                 href={item.href}
-                className="text-pink-500 hover:text-pink-400 transition-colors"
+                className="text-pink-500 hover:text-pink-600 transition-colors"
               >
                 {item.label}
               </Link>

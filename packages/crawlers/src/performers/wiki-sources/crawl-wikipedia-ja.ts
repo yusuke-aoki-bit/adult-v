@@ -8,8 +8,8 @@
  */
 
 import * as cheerio from 'cheerio';
-import { getDb } from './lib/db';
-import { performers, performerAliases, products, productPerformers } from './lib/db/schema';
+import { getDb } from '../../lib/db';
+import { performers, performerAliases, products, productPerformers } from '../../lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 
 const WIKI_API_URL = 'https://ja.wikipedia.org/w/api.php';

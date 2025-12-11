@@ -198,7 +198,7 @@ export default function FilterSortBar({
         {hasActiveFilters && (
           <button
             onClick={clearAllFilters}
-            className="text-sm text-rose-600 hover:text-rose-800 font-medium flex items-center gap-1"
+            className="text-sm text-pink-600 hover:text-pink-800 font-medium flex items-center gap-1"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -217,7 +217,7 @@ export default function FilterSortBar({
           <select
             value={sortBy}
             onChange={(e) => handleSortChange(e.target.value as SortOption)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
           >
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -242,8 +242,8 @@ export default function FilterSortBar({
                     key={p.id}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-pink-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
                     }`}
                   >
                     <input
@@ -254,7 +254,7 @@ export default function FilterSortBar({
                     />
                     {p.label}
                     {count !== undefined && (
-                      <span className={`${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
+                      <span className={`${isSelected ? 'text-pink-200' : 'text-gray-400'}`}>
                         ({count.toLocaleString()})
                       </span>
                     )}
@@ -279,8 +279,8 @@ export default function FilterSortBar({
                     key={range.value}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-pink-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
                     }`}
                   >
                     <input

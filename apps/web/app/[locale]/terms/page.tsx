@@ -28,7 +28,7 @@ export async function generateMetadata({
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gray-900 py-12">
+    <div className="min-h-screen theme-body py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         <h1 className="text-3xl font-bold text-white mb-8">利用規約</h1>
 

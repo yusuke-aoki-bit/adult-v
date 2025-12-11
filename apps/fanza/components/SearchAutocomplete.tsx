@@ -244,12 +244,12 @@ export default function SearchAutocomplete({
             if (results.length > 0) setIsOpen(true);
           }}
           placeholder={resolvedPlaceholder}
-          className="block w-full pl-10 pr-10 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+          className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent"
         />
         {query && (
           <button
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-700"
           >
             <X className="h-5 w-5" />
           </button>
@@ -259,10 +259,10 @@ export default function SearchAutocomplete({
       {isOpen && (results.length > 0 || isLoading) && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-96 overflow-y-auto"
+          className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto"
         >
           {isLoading ? (
-            <div className="px-4 py-3 text-center text-gray-400">
+            <div className="px-4 py-3 text-center text-gray-500">
               {t.searching}
             </div>
           ) : (
@@ -272,9 +272,9 @@ export default function SearchAutocomplete({
                 onClick={() => handleResultClick(result)}
                 className={`px-4 py-3 cursor-pointer transition-colors flex items-center gap-3 ${
                   index === selectedIndex
-                    ? 'bg-gray-700'
-                    : 'hover:bg-gray-700'
-                } ${index > 0 ? 'border-t border-gray-700' : ''}`}
+                    ? 'bg-gray-100'
+                    : 'hover:bg-gray-50'
+                } ${index > 0 ? 'border-t border-gray-100' : ''}`}
               >
                 {result.image && (
                   <div className="flex-shrink-0">
@@ -298,10 +298,10 @@ export default function SearchAutocomplete({
                         {result.category}
                       </span>
                     )}
-                    <span className="text-white truncate">{result.name}</span>
+                    <span className="text-gray-800 truncate">{result.name}</span>
                   </div>
                   {result.count !== undefined && (
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-gray-500 mt-1">
                       {result.count}{t.videos}
                     </div>
                   )}
