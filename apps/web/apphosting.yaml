@@ -19,3 +19,8 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: NEXT_PUBLIC_GA_ID
+    value: G-V2X2861X15
+    availability:
+      - BUILD
+      - RUNTIME
