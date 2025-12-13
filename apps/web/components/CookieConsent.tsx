@@ -38,63 +38,115 @@ const translations = {
 };
 
 export default function CookieConsent({ gaId, locale = 'ja' }: CookieConsentProps) {
-  const [consent, setConsent] = useState<'pending' | 'accepted' | 'declined'>('pending');
   const [showBanner, setShowBanner] = useState(false);
+  const [consentInitialized, setConsentInitialized] = useState(false);
 
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
   useEffect(() => {
     // Check if consent was already given
     const savedConsent = localStorage.getItem(COOKIE_CONSENT_KEY);
-    if (savedConsent === 'accepted') {
-      setConsent('accepted');
-      setShowBanner(false);
-    } else if (savedConsent === 'declined') {
-      setConsent('declined');
+    if (savedConsent === 'accepted' || savedConsent === 'declined') {
       setShowBanner(false);
     } else {
       // Show banner after a short delay to avoid layout shift
       setTimeout(() => setShowBanner(true), 1000);
     }
+    setConsentInitialized(true);
   }, []);
+
+  // Update consent when user makes a choice
+  const updateConsent = (granted: boolean) => {
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('consent', 'update', {
+        analytics_storage: granted ? 'granted' : 'denied',
+        ad_storage: granted ? 'granted' : 'denied',
+        ad_user_data: granted ? 'granted' : 'denied',
+        ad_personalization: granted ? 'granted' : 'denied',
+      });
+    }
+  };
 
   const handleAccept = () => {
     localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
-    setConsent('accepted');
+    updateConsent(true);
     setShowBanner(false);
   };
 
   const handleDecline = () => {
     localStorage.setItem(COOKIE_CONSENT_KEY, 'declined');
-    setConsent('declined');
+    updateConsent(false);
     setShowBanner(false);
   };
 
+  // Get initial consent state for gtag config
+  const getInitialConsentState = () => {
+    if (typeof window !== 'undefined') {
+      const savedConsent = localStorage.getItem(COOKIE_CONSENT_KEY);
+      return savedConsent === 'accepted' ? 'granted' : 'denied';
+    }
+    return 'denied';
+  };
+
+  if (!gaId) return null;
+
   return (
     <>
-      {/* Google Analytics - only load if consent given */}
-      {consent === 'accepted' && gaId && (
-        <>
-          <Script
-            strategy="afterInteractive"
-            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-          />
-          <Script
-            id="google-analytics"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${gaId}', {
-                  anonymize_ip: true
-                });
-              `,
-            }}
-          />
-        </>
-      )}
+      {/* Google Consent Mode v2 - Default to denied, then update based on user choice */}
+      <Script
+        id="google-consent-init"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+
+            // Set default consent state (denied until user accepts)
+            gtag('consent', 'default', {
+              analytics_storage: 'denied',
+              ad_storage: 'denied',
+              ad_user_data: 'denied',
+              ad_personalization: 'denied',
+              wait_for_update: 500
+            });
+
+            // Check localStorage for previous consent
+            (function() {
+              try {
+                var consent = localStorage.getItem('${COOKIE_CONSENT_KEY}');
+                if (consent === 'accepted') {
+                  gtag('consent', 'update', {
+                    analytics_storage: 'granted',
+                    ad_storage: 'granted',
+                    ad_user_data: 'granted',
+                    ad_personalization: 'granted'
+                  });
+                }
+              } catch(e) {}
+            })();
+          `,
+        }}
+      />
+
+      {/* Google Analytics Tag */}
+      <Script
+        strategy="afterInteractive"
+        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+      />
+      <Script
+        id="google-analytics"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${gaId}', {
+              anonymize_ip: true
+            });
+          `,
+        }}
+      />
 
       {/* Cookie Consent Banner */}
       {showBanner && (
@@ -128,4 +180,12 @@ export default function CookieConsent({ gaId, locale = 'ja' }: CookieConsentProp
       )}
     </>
   );
+}
+
+// Extend Window interface for TypeScript
+declare global {
+  interface Window {
+    gtag: (...args: unknown[]) => void;
+    dataLayer: unknown[];
+  }
 }
