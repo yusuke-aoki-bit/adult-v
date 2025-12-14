@@ -250,9 +250,10 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       return false;
     };
 
-    // パターン1: sample-photo 内のaタグのhrefから拡大画像URLを取得
-    // MGSでは <a href="拡大画像URL"><img src="サムネイルURL"></a> の形式
-    $('.sample-photo a').each((_, elem) => {
+    // パターン1: #sample-photo 内のaタグのhrefから拡大画像URLを取得
+    // MGSでは <a class="sample_image" href="拡大画像URL"><img src="サムネイルURL"></a> の形式
+    // IDセレクタを使用（.sample-photoではなく#sample-photo）
+    $('#sample-photo a').each((_, elem) => {
       const href = $(elem).attr('href');
       if (href && !shouldExcludeImage(href)) {
         const fullUrl = href.startsWith('http') ? href : `https://www.mgstage.com${href}`;
@@ -262,8 +263,8 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       }
     });
 
-    // パターン2: サンプル画像リンク内のaタグから拡大画像URLを取得
-    $('.sample-box a, .sample-image a, .product-sample a').each((_, elem) => {
+    // パターン2: a.sample_image からも取得（クラスセレクタ）
+    $('a.sample_image').each((_, elem) => {
       const href = $(elem).attr('href');
       if (href && !shouldExcludeImage(href)) {
         const fullUrl = href.startsWith('http') ? href : `https://www.mgstage.com${href}`;
@@ -334,6 +335,26 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
             ? sampleUrlMatch[1]
             : `https://www.mgstage.com${sampleUrlMatch[1]}`;
         }
+      }
+    }
+
+    // パターン5: a.button_sample サンプルプレイヤーへのリンク
+    if (!sampleVideoUrl) {
+      const samplePlayerLink = $('a.button_sample[href*="sampleplayer"]').attr('href');
+      if (samplePlayerLink) {
+        sampleVideoUrl = samplePlayerLink.startsWith('http')
+          ? samplePlayerLink
+          : `https://www.mgstage.com${samplePlayerLink}`;
+      }
+    }
+
+    // パターン6: p.sample_movie_btn 内のリンク
+    if (!sampleVideoUrl) {
+      const sampleMovieBtnLink = $('p.sample_movie_btn a[href*="sampleplayer"]').attr('href');
+      if (sampleMovieBtnLink) {
+        sampleVideoUrl = sampleMovieBtnLink.startsWith('http')
+          ? sampleMovieBtnLink
+          : `https://www.mgstage.com${sampleMovieBtnLink}`;
       }
     }
 
