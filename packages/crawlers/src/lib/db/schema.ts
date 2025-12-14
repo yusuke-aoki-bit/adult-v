@@ -74,6 +74,7 @@ export const productSources = pgTable(
     price: integer('price'),
     currency: varchar('currency', { length: 3 }).default('JPY'), // 'JPY' or 'USD'
     isSubscription: boolean('is_subscription').default(false), // 月額制かどうか
+    productType: varchar('product_type', { length: 20 }), // 'haishin'(配信), 'dvd', 'monthly'(月額) など
     dataSource: varchar('data_source', { length: 10 }).notNull(), // 'API' or 'CSV'
     lastUpdated: timestamp('last_updated').defaultNow(),
   },
@@ -83,6 +84,8 @@ export const productSources = pgTable(
     aspIdx: index('idx_sources_asp').on(table.aspName),
     originalProductIdIdx: index('idx_sources_original_product_id').on(table.originalProductId),
     aspOriginalIdIdx: index('idx_sources_asp_original_id').on(table.aspName, table.originalProductId),
+    productTypeIdx: index('idx_sources_product_type').on(table.productType),
+    aspProductTypeIdx: index('idx_sources_asp_product_type').on(table.aspName, table.productType),
   }),
 );
 

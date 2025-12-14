@@ -98,7 +98,7 @@
   /* Text Colors - FANZA公式に準拠 */
   --text-primary: #2C2C2C; /* FANZA公式のメインテキスト */
   --text-secondary: #4B4B4B; /* FANZA公式のサブテキスト */
-  --text-muted: #6E6E6E; /* FANZA公式の薄いテキスト */
+  --text-muted: #595959; /* FANZA公式の薄いテキスト - コントラスト比改善 */
   --text-accent: #B42F5A; /* FANZA公式のアクセント rose-700相当 */
 
   /* Border Colors */
@@ -144,7 +144,7 @@
   --footer-bg: #F9FAFB; /* gray-50 - 控えめ */
   --footer-text: #4B4B4B; /* FANZA公式 */
   --footer-heading: #2C2C2C; /* FANZA公式 */
-  --footer-link: #6E6E6E; /* FANZA公式 */
+  --footer-link: #595959; /* FANZA公式 - コントラスト比改善 */
   --footer-link-hover: #B42F5A; /* rose-700相当 */
   --footer-border: #E5E7EB; /* gray-200 */
   --footer-email: #0052D4; /* FANZA公式のブルー */

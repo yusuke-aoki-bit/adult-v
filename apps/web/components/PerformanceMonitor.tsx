@@ -86,15 +86,4 @@ export default function PerformanceMonitor() {
   return null;
 }
 
-// Extend Window interface for gtag
-type GtagCommand = 'config' | 'event' | 'js' | 'set' | 'get' | 'consent';
-
-declare global {
-  interface Window {
-    gtag?: (
-      command: GtagCommand,
-      targetOrEventName: string | Date,
-      params?: Record<string, unknown>
-    ) => void;
-  }
-}
+// gtag types are defined in types/gtag.d.ts

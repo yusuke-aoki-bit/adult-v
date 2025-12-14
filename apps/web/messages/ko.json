@@ -36,8 +36,8 @@
     "filterSettings": "필터 설정"
   },
   "homepage": {
-    "title": "AV여배우 데이터베이스 - DUGA・MGS・DTI 작품 통합 검색 | Adult Viewer Lab",
-    "description": "DUGA, MGS, DTI, 카리비안컴, 1폰도, HEYZO 등 주요 동영상 스트리밍 사이트를 통합한 AV여배우・작품 데이터베이스. {count}명 이상의 배우 정보, 출연 작품, 장르별 검색, 가격 비교 가능. 헤비 유저를 위한 상세 리뷰와 랭킹 정보 제공.",
+    "title": "【무료 샘플・세일】38,000+명 AV여배우 작품 통합 검색 | Adult Viewer Lab",
+    "description": "DUGA・MGS・카리비안컴 등 {count}+명 AV여배우 작품 통합 검색. 무료 샘플・세일 정보・가격 비교 기능으로 최저가 발견. 장르・상황별 간편 검색.",
     "actressCount": "{count}명의 배우 게시 중",
     "initialSearch": "이니셜로 검색",
     "filterSettings": "필터 설정",
@@ -105,7 +105,8 @@
     "title": "{name}의 공연자",
     "description": "이 배우와 함께 출연한 여배우",
     "costarCount": "회 공연",
-    "productCount": "작품"
+    "productCount": "작품",
+    "genreMatch": "일치"
   },
   "filter": {
     "genre": "장르",
@@ -168,7 +169,8 @@
     "search": "검색",
     "clear": "지우기",
     "noResults": "해당 배우를 찾을 수 없습니다",
-    "tryDifferentSearch": "다른 키워드로 검색해 보세요"
+    "tryDifferentSearch": "다른 키워드로 검색해 보세요",
+    "viewOnFanzaSite": "FANZA 사이트에서 보기"
   },
   "product": {
     "details": "작품 상세",
@@ -264,6 +266,8 @@
   },
   "productCard": {
     "enlargeImage": "이미지 확대",
+    "playSampleVideo": "샘플 동영상 재생",
+    "videoNotSupported": "브라우저에서 동영상 재생을 지원하지 않습니다",
     "performerInfo": "출연자 정보",
     "releaseDateTbd": "발매일 미정",
     "productId": "작품 ID",
@@ -275,9 +279,12 @@
     "close": "닫기",
     "clickToCloseEsc": "← 이전 | 중앙 클릭하여 닫기 | 다음 →",
     "comingSoon": "출시 예정",
+    "monthly": "월정액",
     "previousImage": "이전 이미지",
     "nextImage": "다음 이미지",
-    "thumbnailAlt": "썸네일"
+    "thumbnailAlt": "썸네일",
+    "saleTomorrow": "내일까지",
+    "saleEndsIn": "{days}일 남음"
   },
   "imageLightbox": {
     "close": "닫기",
@@ -286,5 +293,47 @@
     "nextImage": "다음 이미지",
     "thumbnailAlt": "썸네일",
     "viewDetails": "상세보기"
+  },
+  "categories": {
+    "title": "장르・카테고리 목록",
+    "metaTitle": "【무료 샘플】AV 장르별 검색 - 38,000+편 | Adult Viewer Lab",
+    "metaDescription": "DUGA・MGS・카리비안컴 등 38,000+편의 AV를 장르별 검색. 무료 샘플・세일 정보 제공. 인기 장르, 상황, 플레이 유형으로 쉽게 찾기.",
+    "description": "장르와 카테고리별로 작품을 검색합니다.",
+    "allCategories": "모든 카테고리",
+    "popularGenres": "인기 장르",
+    "situationGenres": "상황",
+    "playGenres": "플레이",
+    "bodyTypeGenres": "체형",
+    "costumeGenres": "의상",
+    "otherGenres": "기타",
+    "productCount": "{count}편",
+    "viewProducts": "작품 보기",
+    "noCategories": "카테고리가 없습니다"
+  },
+  "stickyCta": {
+    "buyAt": "{provider}에서 구매"
+  },
+  "personalized": {
+    "recentlyViewed": "최근 본 작품",
+    "count": "{count}개 기록",
+    "basedOnHistory": "시청 기록 기반 추천",
+    "clearHistory": "기록 삭제"
+  },
+  "series": {
+    "series": "시리즈",
+    "seriesGuide": "시리즈 완주 가이드",
+    "seriesGuideDescription": "인기 시리즈를 탐색하고 시청 진행률을 추적하세요",
+    "pageTitle": "시리즈 목록 - 완주 가이드",
+    "pageDescription": "인기 AV 시리즈 목록과 진행률 추적",
+    "productCount": "{count}편",
+    "noSeries": "시리즈를 찾을 수 없습니다"
+  },
+  "viewingDiary": {
+    "markAsViewed": "시청 완료",
+    "unmarkAsViewed": "해제",
+    "viewed": "시청함",
+    "addedToDiary": "시청 일기에 추가됨",
+    "removedFromDiary": "시청 일기에서 삭제됨",
+    "viewCount": "{count}회 시청"
   }
 }

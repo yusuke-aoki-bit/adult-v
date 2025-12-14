@@ -78,7 +78,7 @@ export {
   type RawDataRow,
   type PerformerRow,
   type TagRow,
-  type ParsedProductData,
+  type ParsedProductData as LegacyParsedProductData, // types.tsのもの（レガシー用）
   type CrawlOptions,
   type CrawlResult,
   getFirstRow,
@@ -96,6 +96,47 @@ export {
   saveProductImages,
   replaceProductImages,
 } from './batch-helpers';
+
+// ベースクローラー
+export {
+  BaseCrawler,
+  generateDateRanges,
+  runCrawler,
+  type BaseCrawlerOptions,
+  type CrawlerStats,
+  type ParsedProductData,
+  type ParsedCliArgs,
+} from './base-crawler';
+
+// パースヘルパー
+export {
+  extractPrice,
+  extractPriceInfo,
+  parsePerformerName,
+  parsePerformerNames,
+  normalizePerformerName,
+  parseDate,
+  parseDuration,
+  stripHtml,
+  normalizeText,
+  normalizeProductId,
+  resolveUrl,
+  getQueryParam,
+  getLastPathSegment,
+  isValidImageUrl,
+  isValidVideoUrl,
+  isValidTitle,
+  type PriceInfo,
+  type ParsedPerformer,
+} from './parse-helpers';
+
+// ブラウザベースクローラー
+export {
+  BrowserCrawler,
+  puppeteer,
+  type BrowserCrawlerOptions,
+  type PageContext,
+} from './browser-crawler';
 
 /**
  * フル機能のfetch（タイムアウト + リトライ + レート制限対応）

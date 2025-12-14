@@ -6,8 +6,10 @@ import Pagination from '@/components/Pagination';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import RelatedActresses from '@/components/RelatedActresses';
-import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById } from '@/lib/db/queries';
-import { getRelatedPerformers } from '@/lib/db/recommendations';
+import RetirementAlert from '@/components/RetirementAlert';
+import ActressCareerTimeline from '@/components/ActressCareerTimeline';
+import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis } from '@/lib/db/queries';
+import { getRelatedPerformersWithGenreMatch } from '@/lib/db/recommendations';
 import {
   generateBaseMetadata,
   generatePersonSchema,
@@ -182,8 +184,11 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // Get product count by ASP
   const productCountByAsp = await getActressProductCountByAsp(actress.id);
 
-  // Get related performers (co-stars)
-  const relatedPerformers = await getRelatedPerformers(parseInt(actress.id), 6);
+  // Get related performers (co-stars) with genre match percentage
+  const relatedPerformers = await getRelatedPerformersWithGenreMatch(parseInt(actress.id), 6);
+
+  // Get career analysis
+  const careerAnalysis = await getActressCareerAnalysis(actress.id);
 
   // Get products
   const allWorks = await getProducts({
@@ -204,8 +209,20 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
   const basePath = `/${locale}/actress/${actress.id}`;
 
-  // Structured data
-  const personSchema = generatePersonSchema(actress.name, '', actress.heroImage || actress.thumbnail, basePath);
+  // Structured data with enhanced Person Schema
+  // aiReviewがオブジェクト型の場合は空文字列を使用
+  const aiReviewText = typeof actress.aiReview === 'string' ? actress.aiReview : '';
+  const personSchema = generatePersonSchema(
+    actress.name,
+    aiReviewText,
+    actress.heroImage || actress.thumbnail,
+    basePath,
+    {
+      workCount: total,
+      debutYear: careerAnalysis?.debutYear ?? undefined,
+      aliases: nonPrimaryAliases.map(a => a.aliasName),
+    }
+  );
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: tNav('home'), url: `/${locale}` },
     { name: actress.name, url: basePath },
@@ -243,43 +260,48 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl font-bold text-white truncate">{actress.name}</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold theme-text truncate">{actress.name}</h1>
                   <ActressFavoriteButton
                     id={actress.id}
                     name={actress.name}
                     thumbnail={actress.heroImage || actress.thumbnail}
                   />
                 </div>
-                <p className="text-sm sm:text-base text-gray-300">{t('totalProducts', { count: total })}</p>
+                <p className="text-sm sm:text-base theme-text-secondary">{t('totalProducts', { count: total })}</p>
                 {nonPrimaryAliases.length > 0 && (
-                  <p className="mt-1 text-xs sm:text-sm text-gray-400 truncate">
+                  <p className="mt-1 text-xs sm:text-sm theme-text-muted truncate">
                     {t('aliases')}: {nonPrimaryAliases.map(a => a.aliasName).join(', ')}
                   </p>
                 )}
               </div>
             </div>
-            {/* ASP別作品数バッジ */}
-            {productCountByAsp.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {productCountByAsp.map((asp) => {
-                  const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
-                  const meta = providerId ? providerMeta[providerId] : null;
-                  return (
-                    <span
-                      key={asp.aspName}
-                      className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
-                    >
-                      {meta?.label || asp.aspName}: {asp.count}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
             {/* ソートドロップダウン */}
             <div className="mt-3 flex justify-end">
               <ProductSortDropdown sortBy={sortBy} basePath={basePath} />
             </div>
           </div>
+
+          {/* 卒業/引退アラート */}
+          {careerAnalysis && (
+            <div className="mb-4">
+              <RetirementAlert
+                career={careerAnalysis}
+                actressName={actress.name}
+                locale={locale}
+              />
+            </div>
+          )}
+
+          {/* キャリアタイムライン */}
+          {careerAnalysis && (
+            <div className="mb-6">
+              <ActressCareerTimeline
+                career={careerAnalysis}
+                actressName={actress.name}
+                locale={locale}
+              />
+            </div>
+          )}
 
           {/* AIレビュー表示 */}
           {actress.aiReview && (
@@ -330,7 +352,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               )}
             </>
           ) : (
-            <p className="text-center text-gray-400 py-12">{t('noProducts')}</p>
+            <p className="text-center theme-text-muted py-12">{t('noProducts')}</p>
           )}
 
           {/* 関連女優（共演者）セクション */}

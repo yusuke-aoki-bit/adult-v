@@ -1,141 +1,151 @@
 'use client';
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { Clock, X } from 'lucide-react';
-import { useRecentlyViewed, RecentlyViewedItem } from '@/hooks/useRecentlyViewed';
-import { normalizeImageUrl, isDtiUncensoredSite } from '@/lib/image-utils';
-import { providerMeta, type ProviderId } from '@/lib/providers';
+import { useParams } from 'next/navigation';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import AccordionSection from './AccordionSection';
+import ProductCard from './ProductCard';
+import ProductSkeleton from './ProductSkeleton';
+import type { Product } from '@/types/product';
 
 const translations = {
   ja: {
     title: '最近見た作品',
-    empty: '閲覧履歴はありません',
     clearAll: 'すべて削除',
+    removeFromHistory: '履歴から削除',
   },
   en: {
     title: 'Recently Viewed',
-    empty: 'No viewing history',
     clearAll: 'Clear all',
+    removeFromHistory: 'Remove from history',
   },
   zh: {
     title: '最近浏览',
-    empty: '暂无浏览记录',
     clearAll: '全部删除',
+    removeFromHistory: '从历史记录中删除',
   },
   ko: {
     title: '최근 본 작품',
-    empty: '조회 기록이 없습니다',
     clearAll: '전체 삭제',
+    removeFromHistory: '기록에서 삭제',
   },
 } as const;
 
-const PLACEHOLDER_IMAGE = 'https://placehold.co/80x112/f3f4f6/9ca3af?text=NO+IMAGE';
-
+/**
+ * 最近見た作品セクション
+ * APIからフル情報を取得してProductCardで表示
+ * 各カードに削除ボタン付き
+ */
 export default function RecentlyViewed() {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
-  const { items, isLoading, removeItem, clearAll } = useRecentlyViewed();
+  const { items, isLoading: isViewedLoading, removeItem, clearAll } = useRecentlyViewed();
 
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <div className="h-5 w-24 bg-gray-200 rounded animate-pulse" />
-          <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
-        </div>
-        <div className="flex gap-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex-shrink-0 w-16 sm:w-20">
-              <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-200 animate-pulse" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  if (items.length === 0) {
+  // IDリストからフル商品情報を取得
+  useEffect(() => {
+    const fetchProducts = async () => {
+      if (items.length === 0) {
+        setProducts([]);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const ids = items.slice(0, 8).map(item => item.id).join(',');
+        const response = await fetch(`/api/products?ids=${ids}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
+
+        const data = await response.json();
+
+        // 閲覧順序を維持するためにソート
+        const productMap = new Map<string, Product>();
+        for (const product of data.products) {
+          productMap.set(String(product.id), product);
+        }
+
+        const orderedProducts: Product[] = [];
+        for (const item of items.slice(0, 8)) {
+          const product = productMap.get(item.id);
+          if (product) {
+            orderedProducts.push(product);
+          }
+        }
+
+        setProducts(orderedProducts);
+      } catch (err) {
+        console.error('Failed to fetch recently viewed products:', err);
+        setProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!isViewedLoading) {
+      fetchProducts();
+    }
+  }, [items, isViewedLoading]);
+
+  // ローディング中または履歴がない場合は表示しない
+  if (isViewedLoading || items.length === 0) {
     return null;
   }
 
-  return (
-    <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          {t.title}
-        </h3>
-        <button
-          onClick={clearAll}
-          className="text-xs text-gray-500 hover:text-pink-500 transition-colors"
-        >
-          {t.clearAll}
-        </button>
-      </div>
+  // ローディングスケルトン
+  if (isLoading) {
+    return (
+      <AccordionSection
+        icon={<Clock className="w-5 h-5" />}
+        title={t.title}
+        itemCount={items.length}
+        defaultOpen={false}
+        iconColorClass="text-blue-500"
+        bgClass="bg-gray-50"
+      >
+        <ProductSkeleton count={Math.min(items.length, 4)} />
+      </AccordionSection>
+    );
+  }
 
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-        {items.slice(0, 10).map((item) => (
-          <RecentlyViewedCard
-            key={item.id}
-            item={item}
-            locale={locale}
-            onRemove={removeItem}
-          />
+  return (
+    <AccordionSection
+      icon={<Clock className="w-5 h-5" />}
+      title={t.title}
+      itemCount={items.length}
+      defaultOpen={false}
+      showClear={true}
+      clearLabel={t.clearAll}
+      onClear={clearAll}
+      iconColorClass="text-blue-500"
+      bgClass="bg-gray-50"
+    >
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {products.map((product) => (
+          <div key={product.id} className="relative group/card">
+            <ProductCard product={product} />
+            {/* 削除ボタン - カードホバー時に表示 */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                removeItem(String(product.id));
+              }}
+              className="absolute top-2 left-2 z-30 w-7 h-7 bg-white/80 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity shadow-lg"
+              aria-label={t.removeFromHistory}
+            >
+              <X className="w-4 h-4 text-gray-700 group-hover/card:text-white" />
+            </button>
+          </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function RecentlyViewedCard({
-  item,
-  locale,
-  onRemove,
-}: {
-  item: RecentlyViewedItem;
-  locale: string;
-  onRemove: (id: string) => void;
-}) {
-  const meta = item.aspName ? providerMeta[item.aspName as ProviderId] : null;
-  const imageUrl = item.imageUrl ? normalizeImageUrl(item.imageUrl) : PLACEHOLDER_IMAGE;
-
-  return (
-    <div className="relative group flex-shrink-0">
-      <Link
-        href={`/${locale}/products/${item.id}`}
-        className="block w-16 sm:w-20"
-      >
-        <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-100">
-          <Image
-            src={imageUrl}
-            alt={item.title}
-            fill
-            sizes="80px"
-            className={`object-cover transition-transform group-hover:scale-105 ${isDtiUncensoredSite(item.imageUrl || '') ? 'blur-[3px]' : ''}`}
-          />
-          {meta && (
-            <div
-              className={`absolute bottom-0 left-0 right-0 py-0.5 text-center text-[8px] font-bold text-white bg-gradient-to-r ${meta.accentClass}`}
-            >
-              {meta.label}
-            </div>
-          )}
-        </div>
-      </Link>
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onRemove(item.id);
-        }}
-        className="absolute -top-1 -right-1 w-5 h-5 bg-white border border-gray-300 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10 shadow-sm"
-        aria-label="Remove from history"
-      >
-        <X className="w-3 h-3" />
-      </button>
-    </div>
+    </AccordionSection>
   );
 }

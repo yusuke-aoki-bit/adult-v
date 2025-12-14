@@ -4,9 +4,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { Heart, Trash2, Film, User } from 'lucide-react';
-import { useFavorites } from '@/hooks/useFavorites';
+import { Heart, Trash2, Film, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { useFavorites } from '@adult-v/ui-common/hooks';
+import { useWatchlistAnalysis } from '@/hooks/useWatchlistAnalysis';
 import FavoriteButton from '@/components/FavoriteButton';
+import WatchlistAnalysis from '@/components/WatchlistAnalysis';
+import ActressRecommendations from '@/components/ActressRecommendations';
 
 const translations = {
   ja: {
@@ -24,6 +27,9 @@ const translations = {
     emptyAll: 'お気に入りはまだありません',
     emptyProducts: 'お気に入りの作品はまだありません',
     emptyActresses: 'お気に入りの女優はまだありません',
+    showAnalysis: '分析を表示',
+    hideAnalysis: '分析を非表示',
+    recommendations: 'おすすめ',
   },
   en: {
     title: 'Favorites',
@@ -40,6 +46,9 @@ const translations = {
     emptyAll: 'No favorites yet',
     emptyProducts: 'No favorite products yet',
     emptyActresses: 'No favorite actresses yet',
+    showAnalysis: 'Show Analysis',
+    hideAnalysis: 'Hide Analysis',
+    recommendations: 'Recommendations',
   },
   zh: {
     title: '收藏夹',
@@ -56,6 +65,9 @@ const translations = {
     emptyAll: '暂无收藏',
     emptyProducts: '暂无收藏的作品',
     emptyActresses: '暂无收藏的女优',
+    showAnalysis: '显示分析',
+    hideAnalysis: '隐藏分析',
+    recommendations: '推荐',
   },
   ko: {
     title: '즐겨찾기',
@@ -72,6 +84,9 @@ const translations = {
     emptyAll: '즐겨찾기가 없습니다',
     emptyProducts: '즐겨찾기한 작품이 없습니다',
     emptyActresses: '즐겨찾기한 여배우가 없습니다',
+    showAnalysis: '분석 보기',
+    hideAnalysis: '분석 숨기기',
+    recommendations: '추천',
   },
 } as const;
 
@@ -116,8 +131,10 @@ export default function FavoritesPage() {
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
   const { favorites, isLoaded, clearFavorites, getFavoritesByType } = useFavorites();
+  const { products: enrichedProducts, isLoading: isLoadingAnalysis } = useWatchlistAnalysis();
   const [activeTab, setActiveTab] = useState<'all' | 'product' | 'actress'>('all');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(true);
 
   const filteredFavorites = activeTab === 'all'
     ? favorites
@@ -125,6 +142,9 @@ export default function FavoritesPage() {
 
   const productCount = getFavoritesByType('product').length;
   const actressCount = getFavoritesByType('actress').length;
+
+  // お気に入り女優のID一覧
+  const favoriteActressIds = getFavoritesByType('actress').map(f => String(f.id));
 
   // ロケール別の日付フォーマット
   const dateLocale = locale === 'ko' ? 'ko-KR' : locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-US' : 'ja-JP';
@@ -145,6 +165,49 @@ export default function FavoritesPage() {
           {t.itemCount.replace('{count}', String(favorites.length))}
         </p>
       </div>
+
+      {/* Watchlist Analysis Section */}
+      {productCount > 0 && (
+        <div className="mb-6">
+          <button
+            onClick={() => setShowAnalysis(!showAnalysis)}
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-3 transition-colors"
+          >
+            {showAnalysis ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+            {showAnalysis ? t.hideAnalysis : t.showAnalysis}
+          </button>
+          {showAnalysis && (
+            <div className="transition-all">
+              {isLoadingAnalysis ? (
+                <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
+                  <div className="h-6 w-32 bg-gray-700 rounded mb-4" />
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="h-20 bg-gray-750 rounded-lg" />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <WatchlistAnalysis products={enrichedProducts} locale={locale} />
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Actress Recommendations Section - B1機能 */}
+      {actressCount > 0 && (
+        <div className="mb-6">
+          <ActressRecommendations
+            favoritePerformerIds={favoriteActressIds}
+            locale={locale}
+          />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">

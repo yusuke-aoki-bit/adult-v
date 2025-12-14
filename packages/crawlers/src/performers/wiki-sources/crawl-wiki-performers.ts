@@ -704,7 +704,7 @@ async function searchAvWiki(productCode: string): Promise<string[]> {
     if (!response.ok) return [];
 
     const buffer = Buffer.from(await response.arrayBuffer());
-      const html = iconv.decode(buffer, 'euc-jp');
+    const html = iconv.decode(buffer, 'utf-8');  // av-wiki.netはUTF-8（WordPress）
     const $ = cheerio.load(html);
     const performers: string[] = [];
 
@@ -746,7 +746,7 @@ async function searchShiroutoname(productCode: string): Promise<string[]> {
     if (!response.ok) return [];
 
     const buffer = Buffer.from(await response.arrayBuffer());
-      const html = iconv.decode(buffer, 'euc-jp');
+    const html = iconv.decode(buffer, 'utf-8');  // shiroutoname.comはUTF-8
     const $ = cheerio.load(html);
     const performers: string[] = [];
 
@@ -1105,7 +1105,7 @@ async function crawlAvWikiAllPages(db: any, limit: number = 10000): Promise<void
       }
 
       const buffer = Buffer.from(await response.arrayBuffer());
-      const html = iconv.decode(buffer, 'euc-jp');
+      const html = iconv.decode(buffer, 'utf-8');  // av-wiki.netはUTF-8（WordPress）
       const $ = cheerio.load(html);
 
       // ページから品番と出演者を抽出

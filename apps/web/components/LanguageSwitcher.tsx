@@ -9,12 +9,20 @@ function LanguageSwitcherContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Detect current locale from pathname
+  // ?hl= パラメータまたはクッキーから現在の言語を取得
+  const hlParam = searchParams.get('hl');
   let locale: Locale = defaultLocale;
-  for (const loc of locales) {
-    if (pathname === `/${loc}` || pathname.startsWith(`/${loc}/`)) {
-      locale = loc;
-      break;
+
+  if (hlParam && locales.includes(hlParam as Locale)) {
+    locale = hlParam as Locale;
+  } else {
+    // クッキーから取得（フォールバック）
+    const cookieLocale = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('NEXT_LOCALE='))
+      ?.split('=')[1];
+    if (cookieLocale && locales.includes(cookieLocale as Locale)) {
+      locale = cookieLocale as Locale;
     }
   }
 
@@ -24,31 +32,21 @@ function LanguageSwitcherContent() {
     // クッキーに言語設定を保存
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`; // 1年間有効
 
-    // Detect the current locale from pathname
-    let currentLocale: Locale | null = null;
-    let pathWithoutLocale = pathname;
+    // 新しいURLを構築（?hl= パラメータ方式）
+    const newParams = new URLSearchParams(searchParams.toString());
 
-    // Check if pathname starts with any locale
-    for (const loc of locales) {
-      if (pathname === `/${loc}` || pathname.startsWith(`/${loc}/`)) {
-        currentLocale = loc;
-        pathWithoutLocale = pathname.slice(`/${loc}`.length) || '/';
-        break;
-      }
+    if (newLocale === defaultLocale) {
+      // デフォルトロケールの場合は hl パラメータを削除
+      newParams.delete('hl');
+    } else {
+      // 他の言語の場合は hl パラメータを設定
+      newParams.set('hl', newLocale);
     }
 
-    // クエリパラメータを保持
-    const queryString = searchParams.toString();
-    const queryPart = queryString ? `?${queryString}` : '';
+    const queryString = newParams.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
-    // If we're on a non-localized page, navigate to localized version
-    if (!currentLocale) {
-      router.push(`/${newLocale}${pathname}${queryPart}`);
-      return;
-    }
-
-    // Navigate to the new locale with the same path and query params
-    router.push(`/${newLocale}${pathWithoutLocale}${queryPart}`);
+    router.push(newUrl);
   };
 
   return (

@@ -1,78 +1,17 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 import { routing } from './routing';
-
-// Known malicious bot patterns (aggressive scrapers, not search engines)
-const MALICIOUS_BOT_PATTERNS = [
-  /curl/i,
-  /wget/i,
-  /python-requests/i,
-  /python-urllib/i,
-  /scrapy/i,
-  /httpclient/i,
-  /java\//i,
-  /libwww/i,
-  /Screaming Frog/i,
-  /HeadlessChrome\/\d+.*Headless/i,
-  /PhantomJS/i,
-  /Puppeteer/i,
-  /Playwright/i,
-];
-
-// Paths that are sensitive and need stricter protection
-const SENSITIVE_PATHS = [
-  '/api/age-verify',
-  '/api/notifications',
-  '/api/admin',
-];
-
-// SQL Injection patterns to block
-const SQL_INJECTION_PATTERNS = [
-  /(\%27)|(\')|(\-\-)|(\%23)|(#)/i,
-  /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i,
-  /\w*((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))/i,
-  /((\%27)|(\'))union/i,
-];
-
-// XSS patterns to block
-const XSS_PATTERNS = [
-  /<script[^>]*>[\s\S]*?<\/script[^>]*>/gi,
-  /javascript:/gi,
-  /on\w+\s*=/gi,
-  /<iframe/gi,
-  /<object/gi,
-  /<embed/gi,
-];
-
-// Check if request is from a malicious bot
-function isMaliciousBot(userAgent: string): boolean {
-  return MALICIOUS_BOT_PATTERNS.some(pattern => pattern.test(userAgent));
-}
-
-// Check if path is sensitive
-function isSensitivePath(pathname: string): boolean {
-  return SENSITIVE_PATHS.some(path => pathname.startsWith(path));
-}
-
-// Check for SQL injection attempts
-function hasSqlInjection(url: string): boolean {
-  try {
-    const decodedUrl = decodeURIComponent(url);
-    return SQL_INJECTION_PATTERNS.some(pattern => pattern.test(decodedUrl));
-  } catch {
-    return false;
-  }
-}
-
-// Check for XSS attempts
-function hasXssAttempt(url: string): boolean {
-  try {
-    const decodedUrl = decodeURIComponent(url);
-    return XSS_PATTERNS.some(pattern => pattern.test(decodedUrl));
-  } catch {
-    return false;
-  }
-}
+import {
+  locales,
+  defaultLocale,
+  getLocaleFromHlParam,
+  getLocaleFromCookie,
+  detectLocalePrefix,
+  isMaliciousBot,
+  isSensitivePath,
+  hasSqlInjection,
+  hasXssAttempt,
+} from '@adult-v/shared/i18n/middleware-helpers';
 
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware(routing);
@@ -122,7 +61,45 @@ export default function middleware(request: NextRequest) {
     return response;
   }
 
-  // 6. For static files and other paths, use intl middleware
+  // 6. ロケールプレフィックス → ?hl= パラメータへの301リダイレクト（SEO対応）
+  // /ja/, /en/, /zh/, /zh-TW/, /ko/ をすべて ?hl= 形式に変換
+  const { locale: prefixLocale, newPath } = detectLocalePrefix(pathname);
+  if (prefixLocale) {
+    const newUrl = new URL(newPath || '/', request.url);
+    // 既存のクエリパラメータを保持
+    request.nextUrl.searchParams.forEach((value, key) => {
+      newUrl.searchParams.set(key, value);
+    });
+    // デフォルトロケール(ja)以外は ?hl= パラメータを追加
+    if (prefixLocale !== defaultLocale) {
+      newUrl.searchParams.set('hl', prefixLocale);
+    }
+    return NextResponse.redirect(newUrl, 301);
+  }
+
+  // 7. ?hl= パラメータで言語切り替え（クッキーに保存）
+  const hlLocale = getLocaleFromHlParam(request.nextUrl.searchParams);
+  if (hlLocale) {
+    // hlパラメータがある場合、その言語をクッキーに設定してintlMiddlewareに渡す
+    const response = intlMiddleware(request);
+    // NEXT_LOCALEクッキーを設定（next-intlが使用）
+    response.cookies.set('NEXT_LOCALE', hlLocale, {
+      maxAge: 365 * 24 * 60 * 60, // 1年
+      path: '/',
+      sameSite: 'lax',
+    });
+    return response;
+  }
+
+  // 8. クッキーから言語を取得（?hl=がない場合の継続セッション用）
+  const cookieLocale = getLocaleFromCookie(request.cookies.get('NEXT_LOCALE')?.value);
+  if (cookieLocale && cookieLocale !== defaultLocale) {
+    // クッキーに保存された言語でintlMiddlewareを実行
+    const response = intlMiddleware(request);
+    return response;
+  }
+
+  // 9. For static files and other paths, use intl middleware with default locale
   return intlMiddleware(request);
 }
 

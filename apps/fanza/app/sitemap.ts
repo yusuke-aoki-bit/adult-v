@@ -9,93 +9,75 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Revalidate every hour
 
+// ロケールに応じたURLを生成（?hl=パラメータ方式）
+// デフォルトロケール(ja)はパラメータなし、他の言語は ?hl=en, ?hl=zh, ?hl=ko
+function getLocalizedUrl(basePath: string, locale: string): string {
+  if (locale === 'ja') {
+    return `${BASE_URL}${basePath}`;
+  }
+  // basePath に既存のクエリパラメータがある場合は & で追加
+  const separator = basePath.includes('?') ? '&' : '?';
+  return `${BASE_URL}${basePath}${separator}hl=${locale}`;
+}
+
+// hreflang用の言語バリエーションを生成（?hl=パラメータ方式）
+function getLanguageAlternates(basePath: string) {
+  const separator = basePath.includes('?') ? '&' : '?';
+  return {
+    ja: `${BASE_URL}${basePath}`,
+    en: `${BASE_URL}${basePath}${separator}hl=en`,
+    zh: `${BASE_URL}${basePath}${separator}hl=zh`,
+    'zh-TW': `${BASE_URL}${basePath}${separator}hl=zh-TW`,
+    ko: `${BASE_URL}${basePath}${separator}hl=ko`,
+  };
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const locales = ['ja', 'en', 'zh', 'ko'];
+  const locales = ['ja', 'en', 'zh', 'zh-TW', 'ko'];
 
   // Static pages with high priority and daily updates
+  // ?hl=パラメータ方式: デフォルト(ja)はパラメータなし、他言語は?hl=xxで指定
   const staticPages: MetadataRoute.Sitemap = [
-    // Home pages for each locale
+    // Home page - canonical URL (all languages share this)
     {
-      url: `${BASE_URL}/ja`,
+      url: `${BASE_URL}/`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1.0,
       alternates: {
-        languages: {
-          ja: `${BASE_URL}/ja`,
-          en: `${BASE_URL}/en`,
-          zh: `${BASE_URL}/zh`,
-          ko: `${BASE_URL}/ko`,
-        },
+        languages: getLanguageAlternates('/'),
       },
     },
+    // Products pages - canonical URL with language alternates
     {
-      url: `${BASE_URL}/en`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-      alternates: {
-        languages: {
-          ja: `${BASE_URL}/ja`,
-          en: `${BASE_URL}/en`,
-          zh: `${BASE_URL}/zh`,
-          ko: `${BASE_URL}/ko`,
-        },
-      },
-    },
-    {
-      url: `${BASE_URL}/zh`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-      alternates: {
-        languages: {
-          ja: `${BASE_URL}/ja`,
-          en: `${BASE_URL}/en`,
-          zh: `${BASE_URL}/zh`,
-          ko: `${BASE_URL}/ko`,
-        },
-      },
-    },
-    {
-      url: `${BASE_URL}/ko`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-      alternates: {
-        languages: {
-          ja: `${BASE_URL}/ja`,
-          en: `${BASE_URL}/en`,
-          zh: `${BASE_URL}/zh`,
-          ko: `${BASE_URL}/ko`,
-        },
-      },
-    },
-    // Products pages for each locale
-    ...locales.map((locale) => ({
-      url: `${BASE_URL}/${locale}/products`,
+      url: `${BASE_URL}/products`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.9,
       alternates: {
-        languages: {
-          ja: `${BASE_URL}/ja/products`,
-          en: `${BASE_URL}/en/products`,
-          zh: `${BASE_URL}/zh/products`,
-          ko: `${BASE_URL}/ko/products`,
-        },
+        languages: getLanguageAlternates('/products'),
       },
-    })),
-    // Privacy policy page (Japanese only - legal content)
+    },
+    // Categories pages
     {
-      url: `${BASE_URL}/ja/privacy`,
+      url: `${BASE_URL}/categories`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+      alternates: {
+        languages: getLanguageAlternates('/categories'),
+      },
+    },
+    // Privacy policy page (no language alternates - Japanese only)
+    {
+      url: `${BASE_URL}/privacy`,
       lastModified: new Date('2024-12-09'),
       changeFrequency: 'yearly' as const,
       priority: 0.3,
     },
-    // Terms of service page (Japanese only - legal content)
+    // Terms of service page (no language alternates - Japanese only)
     {
-      url: `${BASE_URL}/ja/terms`,
+      url: `${BASE_URL}/terms`,
       lastModified: new Date('2024-12-09'),
       changeFrequency: 'yearly' as const,
       priority: 0.3,
@@ -121,50 +103,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .orderBy(desc(products.releaseDate))
       .limit(5000);
 
-  const productPages: MetadataRoute.Sitemap = recentProducts.map((product) => ({
-    url: `${BASE_URL}/ja/products/${product.id}`,
-    lastModified: product.updatedAt || new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-    alternates: {
-      languages: {
-        ja: `${BASE_URL}/ja/products/${product.id}`,
-        en: `${BASE_URL}/en/products/${product.id}`,
-        zh: `${BASE_URL}/zh/products/${product.id}`,
-        ko: `${BASE_URL}/ko/products/${product.id}`,
+    // 商品ページ - canonical URLはパラメータなし、alternatesで各言語を指定
+    const productPages: MetadataRoute.Sitemap = recentProducts.map((product) => ({
+      url: `${BASE_URL}/products/${product.id}`,
+      lastModified: product.updatedAt || new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+      alternates: {
+        languages: getLanguageAlternates(`/products/${product.id}`),
       },
-    },
-  }));
+    }));
 
-  // Top performers (1000 items) - Prioritize performers with most products
-  const topPerformers = await db
-    .select({
-      id: performers.id,
-      productCount: sql<number>`COUNT(DISTINCT pp.product_id)`.as('product_count'),
-    })
-    .from(performers)
-    .leftJoin(
-      sql`product_performers pp`,
-      sql`${performers.id} = pp.performer_id`
-    )
-    .groupBy(performers.id)
-    .orderBy(desc(sql`product_count`))
-    .limit(1000);
+    // Top performers (1000 items) - Prioritize performers with most products
+    const topPerformers = await db
+      .select({
+        id: performers.id,
+        productCount: sql<number>`COUNT(DISTINCT pp.product_id)`.as('product_count'),
+      })
+      .from(performers)
+      .leftJoin(
+        sql`product_performers pp`,
+        sql`${performers.id} = pp.performer_id`
+      )
+      .groupBy(performers.id)
+      .orderBy(desc(sql`product_count`))
+      .limit(1000);
 
-  const performerPages: MetadataRoute.Sitemap = topPerformers.map((performer) => ({
-    url: `${BASE_URL}/ja/actress/${performer.id}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.6,
-    alternates: {
-      languages: {
-        ja: `${BASE_URL}/ja/actress/${performer.id}`,
-        en: `${BASE_URL}/en/actress/${performer.id}`,
-        zh: `${BASE_URL}/zh/actress/${performer.id}`,
-        ko: `${BASE_URL}/ko/actress/${performer.id}`,
+    // 女優ページ - canonical URLはパラメータなし、alternatesで各言語を指定
+    const performerPages: MetadataRoute.Sitemap = topPerformers.map((performer) => ({
+      url: `${BASE_URL}/actress/${performer.id}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+      alternates: {
+        languages: getLanguageAlternates(`/actress/${performer.id}`),
       },
-    },
-  }));
+    }));
 
     return [...staticPages, ...productPages, ...performerPages];
   } catch (error) {

@@ -489,6 +489,46 @@ async function main() {
         }
         break;
 
+      case 'mgs-continuous':
+        {
+          // MGS繰り返し実行（全ページスキャンまで）
+          const batchSize = args.find(a => a.startsWith('--batch='))?.split('=')[1] || '500';
+          const command = `npx tsx scripts/run-mgs-continuous.ts --batch=${batchSize}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'fanza-continuous':
+        {
+          // FANZA繰り返し実行（全ページスキャンまで）
+          const batchSize = args.find(a => a.startsWith('--batch='))?.split('=')[1] || '100';
+          const command = `npx tsx scripts/run-fanza-continuous.ts --batch=${batchSize}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'update-performer-tags':
+        {
+          // 演者タグ更新（繰り返し実行）
+          const command = `npx tsx scripts/run-performer-tags-all.ts`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
+      case 'link-performers':
+        {
+          // 演者紐づけ
+          const limitArg = args.find(a => a.startsWith('--limit='));
+          const limit = limitArg ? limitArg.split('=')[1] : '10000';
+          const command = `npx tsx scripts/link-performers.ts --limit=${limit}`;
+          console.log(`Executing: ${command}`);
+          execSync(command, { stdio: 'inherit', env: process.env });
+        }
+        break;
+
       // ワークフロー統合コマンド
       case 'workflow':
       case 'workflow-all':

@@ -59,9 +59,11 @@ export interface Product {
   isFeatured?: boolean;
   isNew?: boolean;
   isFuture?: boolean; // 発売予定（リリース日が未来）
+  productType?: 'haishin' | 'dvd' | 'monthly'; // MGS商品タイプ（配信/DVD/月額）
   discount?: number;
   salePrice?: number; // セール価格
   regularPrice?: number; // 通常価格（セール時の元値）
+  saleEndAt?: string; // セール終了日時（ISO 8601形式）
   reviewHighlight?: string;
   ctaLabel?: string;
   sampleImages?: string[]; // サンプル画像URL配列
@@ -71,6 +73,9 @@ export interface Product {
     quality?: string; // '720p', '1080p', '4k'
     duration?: number; // seconds
   }>; // サンプル動画URL配列
+  // AI生成コンテンツ
+  aiReview?: string; // AI生成のレビュー
+  aiReviewUpdatedAt?: string; // AI生成レビュー更新日時
 }
 
 // カテゴリ情報
@@ -146,11 +151,14 @@ export interface RankingEntry {
 }
 
 // ソートオプション
-export type SortOption = 
+export type SortOption =
   | 'releaseDateDesc'    // リリース日（新しい順）
   | 'releaseDateAsc'     // リリース日（古い順）
   | 'priceDesc'          // 価格（高い順）
   | 'priceAsc'           // 価格（安い順）
   | 'ratingDesc'         // 評価（高い順）
   | 'ratingAsc'          // 評価（低い順）
-  | 'titleAsc';          // タイトル（あいうえお順）
+  | 'titleAsc'           // タイトル（あいうえお順）
+  | 'nameAsc'            // タイトル（A-Z）
+  | 'nameDesc'           // タイトル（Z-A）
+  | 'viewsDesc';         // 閲覧数（多い順）

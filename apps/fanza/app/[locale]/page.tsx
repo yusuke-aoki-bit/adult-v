@@ -5,12 +5,13 @@ import SortDropdown from '@/components/SortDropdown';
 import Pagination from '@/components/Pagination';
 import ActressListFilter from '@/components/ActressListFilter';
 import RecentlyViewed from '@/components/RecentlyViewed';
+import ForYouRecommendations from '@/components/ForYouRecommendations';
+import WeeklyHighlights from '@/components/WeeklyHighlights';
+import SalesSection from '@/components/SalesSection';
 import { getActresses, getActressesCount, getTags, getUncategorizedProductsCount, getAspStats, getSaleProducts, SaleProduct } from '@/lib/db/queries';
 import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
-import { providerMeta } from '@/lib/providers';
-import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
 
 export async function generateMetadata({
@@ -70,7 +71,7 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 const DEFAULT_ITEMS_PER_PAGE = 48;
@@ -218,7 +219,10 @@ export default async function Home({ params, searchParams }: PageProps) {
   let uncategorizedCount = 0;
 
   // TOPページのみ表示（検索、フィルター、ソート変更時は非表示）
-  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && includeAsps.length === 0 && excludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && cupSizes.length === 0 && heightMin === undefined && heightMax === undefined && bloodTypes.length === 0 && sortBy === 'recent' && page === 1;
+  // FANZAサイトではincludeAspsが自動的に['FANZA']になるため、ASPフィルターはTOPページ判定に含めない
+  const userSetIncludeAsps = isFanzaSite ? [] : includeAsps;
+  const userSetExcludeAsps = isFanzaSite ? [] : excludeAsps;
+  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && cupSizes.length === 0 && heightMin === undefined && heightMax === undefined && bloodTypes.length === 0 && sortBy === 'recent' && page === 1;
 
   if (isTopPage) {
     try {
@@ -228,7 +232,9 @@ export default async function Home({ params, searchParams }: PageProps) {
           minDiscount: 30,
           aspName: isFanzaSite ? 'FANZA' : undefined, // FANZAサイトの場合はFANZAのみ
         }),
-        getUncategorizedProductsCount(),
+        getUncategorizedProductsCount({
+          includeAsp: isFanzaSite ? ['FANZA'] : undefined,
+        }),
       ]);
       saleProducts = sales;
       uncategorizedCount = uncatCount;
@@ -253,109 +259,34 @@ export default async function Home({ params, searchParams }: PageProps) {
       {faqSchema && <JsonLD data={faqSchema} />}
       {/* セール情報セクション */}
       {saleProducts.length > 0 && (
-        <details className="border-b theme-section-border bg-gradient-to-r from-red-500/10 to-transparent group">
-          <summary className="h-[44px] md:h-[52px] cursor-pointer hover:opacity-80 transition-colors flex items-center">
-            <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 bg-red-600 text-white text-xs font-semibold rounded-full animate-pulse">
-                    🔥 SALE
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 theme-text-muted text-sm">
-                  <span className="hidden sm:inline group-open:hidden">クリックして展開</span>
-                  <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </summary>
-          <div className="container mx-auto px-4 pb-4">
-            <div className="relative -mx-4 px-4">
-              <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800">
-                <div className="flex gap-4 md:gap-6 min-w-max">
-                  {saleProducts.map((product) => {
-                    const providerId = ASP_TO_PROVIDER_ID[product.aspName];
-                    const meta = providerId ? providerMeta[providerId] : null;
-                    return (
-                      <a
-                        key={`${product.productId}-${product.aspName}`}
-                        href={product.affiliateUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block shrink-0 w-44 md:w-52 theme-card rounded-lg overflow-hidden hover:ring-2 hover:ring-red-500/50 transition-all"
-                      >
-                        <div className="relative aspect-[3/4]">
-                          {product.thumbnailUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={product.thumbnailUrl}
-                              alt={product.title}
-                              width={208}
-                              height={277}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full theme-skeleton flex items-center justify-center theme-text-muted">
-                              No Image
-                            </div>
-                          )}
-                          {/* 割引バッジ */}
-                          <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
-                            {product.discountPercent}% OFF
-                          </div>
-                          {/* ASPバッジ */}
-                          <div className={`absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'}`}>
-                            {meta?.label || product.aspName}
-                          </div>
-                          {/* セール終了時刻 */}
-                          {product.endAt && (
-                            <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white text-[10px] px-2 py-1 rounded text-center">
-                              〜{new Date(product.endAt).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}まで
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-3">
-                          <h3 className="text-sm theme-text font-medium line-clamp-2 mb-2">{product.title}</h3>
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-red-500 font-bold text-lg">¥{product.salePrice.toLocaleString()}</span>
-                            <span className="theme-text-muted text-sm line-through">¥{product.regularPrice.toLocaleString()}</span>
-                          </div>
-                          {product.performers.length > 0 && (
-                            <div className="mt-2 text-xs theme-text-muted truncate">
-                              {product.performers.map(p => p.name).join(', ')}
-                            </div>
-                          )}
-                        </div>
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            {/* 全セールを見るリンク */}
-            <Link
-              href={`/${locale}/products?onSale=true`}
-              className="flex items-center justify-center gap-2 mt-2 py-2 theme-text-accent hover:opacity-80 transition-colors text-sm font-medium"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              全てのセール商品を見る
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
+        <section className="py-3 sm:py-4 border-b theme-section-border">
+          <div className="container mx-auto px-3 sm:px-4">
+            <SalesSection saleProducts={saleProducts.map(p => ({
+              ...p,
+              endAt: p.endAt ? p.endAt.toISOString() : null,
+            }))} />
           </div>
-        </details>
+        </section>
       )}
 
       {/* 最近見た作品 */}
       <section className="py-3 sm:py-4 border-b theme-section-border">
         <div className="container mx-auto px-3 sm:px-4">
           <RecentlyViewed />
+        </div>
+      </section>
+
+      {/* あなたへのおすすめ（閲覧履歴に基づく） */}
+      <section className="py-3 sm:py-4 border-b theme-section-border">
+        <div className="container mx-auto px-3 sm:px-4">
+          <ForYouRecommendations />
+        </div>
+      </section>
+
+      {/* 今週の注目（自動キュレーション） */}
+      <section className="py-3 sm:py-4 border-b theme-section-border">
+        <div className="container mx-auto px-3 sm:px-4">
+          <WeeklyHighlights locale={locale} />
         </div>
       </section>
 
@@ -401,6 +332,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             genreTags={genreTags}
             availableAsps={availableAsps}
             aspProductCounts={aspProductCounts}
+            isFanzaSite={isFanzaSite}
             translations={{
               filterSettings: tFilter('filterSettings'),
               initialSearch: tFilter('initialSearch'),
@@ -440,8 +372,8 @@ export default async function Home({ params, searchParams }: PageProps) {
               ...(sortBy !== 'nameAsc' ? { sort: sortBy } : {}),
               ...(includeTags.length > 0 ? { include: includeTags.join(',') } : {}),
               ...(excludeTags.length > 0 ? { exclude: excludeTags.join(',') } : {}),
-              ...(includeAsps.length > 0 ? { includeAsp: includeAsps.join(',') } : {}),
-              ...(excludeAsps.length > 0 ? { excludeAsp: excludeAsps.join(',') } : {}),
+              ...(!isFanzaSite && includeAsps.length > 0 ? { includeAsp: includeAsps.join(',') } : {}),
+              ...(!isFanzaSite && excludeAsps.length > 0 ? { excludeAsp: excludeAsps.join(',') } : {}),
               ...(hasVideo ? { hasVideo: 'true' } : {}),
               ...(hasImage ? { hasImage: 'true' } : {}),
               ...(hasReview ? { hasReview: 'true' } : {}),
@@ -474,8 +406,8 @@ export default async function Home({ params, searchParams }: PageProps) {
               ...(sortBy !== 'nameAsc' ? { sort: sortBy } : {}),
               ...(includeTags.length > 0 ? { include: includeTags.join(',') } : {}),
               ...(excludeTags.length > 0 ? { exclude: excludeTags.join(',') } : {}),
-              ...(includeAsps.length > 0 ? { includeAsp: includeAsps.join(',') } : {}),
-              ...(excludeAsps.length > 0 ? { excludeAsp: excludeAsps.join(',') } : {}),
+              ...(!isFanzaSite && includeAsps.length > 0 ? { includeAsp: includeAsps.join(',') } : {}),
+              ...(!isFanzaSite && excludeAsps.length > 0 ? { excludeAsp: excludeAsps.join(',') } : {}),
               ...(hasVideo ? { hasVideo: 'true' } : {}),
               ...(hasImage ? { hasImage: 'true' } : {}),
               ...(hasReview ? { hasReview: 'true' } : {}),

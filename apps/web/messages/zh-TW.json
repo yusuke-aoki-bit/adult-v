@@ -138,7 +138,8 @@
     "search": "搜尋",
     "clear": "清除",
     "noResults": "未找到匹配的女優",
-    "tryDifferentSearch": "請嘗試使用其他關鍵字搜尋"
+    "tryDifferentSearch": "請嘗試使用其他關鍵字搜尋",
+    "viewOnFanzaSite": "在FANZA網站查看"
   },
   "product": {
     "details": "作品詳情",
@@ -231,5 +232,51 @@
     "disclosure": "聯盟揭露",
     "disclaimerShort": "本站使用聯盟廣告。",
     "disclaimerFull": "本站是亞馬遜聯盟計劃的參與者，該計劃旨在透過廣告和連結到 Amazon.com 為網站提供賺取廣告費的方式。我們還參與 DUGA、SOKMIL 和 DTI 的聯盟計劃。"
+  },
+  "productCard": {
+    "enlargeImage": "放大圖片",
+    "playSampleVideo": "播放示例影片",
+    "videoNotSupported": "您的瀏覽器不支援影片播放",
+    "performerInfo": "演員資訊",
+    "releaseDateTbd": "發售日期待定",
+    "productId": "作品ID",
+    "manufacturerId": "廠商編號",
+    "reviews": "則評價",
+    "minutes": "分鐘",
+    "subscriptionOnly": "僅限月費會員",
+    "viewDetails": "查看詳情",
+    "close": "關閉",
+    "clickToCloseEsc": "← 上一張 | 中央關閉 | 下一張 →",
+    "comingSoon": "即將上市",
+    "previousImage": "上一張圖片",
+    "nextImage": "下一張圖片",
+    "thumbnailAlt": "縮圖",
+    "saleTomorrow": "明天截止",
+    "saleEndsIn": "還剩{days}天"
+  },
+  "imageLightbox": {
+    "close": "關閉",
+    "clickToCloseEsc": "← 上一張 | 中央關閉 | 下一張 →",
+    "previousImage": "上一張圖片",
+    "nextImage": "下一張圖片",
+    "thumbnailAlt": "縮圖",
+    "viewDetails": "查看詳情"
+  },
+  "stickyCta": {
+    "buyAt": "在{provider}購買"
+  },
+  "personalized": {
+    "recentlyViewed": "最近瀏覽",
+    "count": "{count}條記錄",
+    "basedOnHistory": "根據您的瀏覽歷史推薦",
+    "clearHistory": "清除歷史"
+  },
+  "viewingDiary": {
+    "markAsViewed": "標記已看",
+    "unmarkAsViewed": "取消標記",
+    "viewed": "已看",
+    "addedToDiary": "已添加到觀看日記",
+    "removedFromDiary": "已從觀看日記移除",
+    "viewCount": "已看{count}次"
   }
 }

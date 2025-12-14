@@ -3,7 +3,7 @@
  */
 
 interface JsonLDProps {
-  data: Record<string, unknown>;
+  data: Record<string, unknown> | Record<string, unknown>[];
 }
 
 export function JsonLD({ data }: JsonLDProps) {

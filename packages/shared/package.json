@@ -11,9 +11,33 @@
     "./constants": "./src/constants/index.ts",
     "./localization": "./src/localization.ts",
     "./image-utils": "./src/image-utils.ts",
-    "./site-config": "./src/site-config.ts"
+    "./site-config": "./src/site-config.ts",
+    "./i18n": "./src/i18n/index.ts",
+    "./i18n/middleware-helpers": "./src/i18n/middleware-helpers.ts",
+    "./lib": "./src/lib/index.ts",
+    "./lib/ab-testing": "./src/lib/ab-testing.ts",
+    "./lib/affiliate": "./src/lib/affiliate.ts",
+    "./lib/api-utils": "./src/lib/api-utils.ts",
+    "./lib/cache": "./src/lib/cache.ts",
+    "./lib/firebase": "./src/lib/firebase.ts",
+    "./lib/seo": "./src/lib/seo.ts",
+    "./lib/seo-utils": "./src/lib/seo-utils.ts",
+    "./lib/theme": "./src/lib/theme.ts",
+    "./lib/translate": "./src/lib/translate.ts",
+    "./hooks": "./src/hooks/index.ts",
+    "./hooks/*": "./src/hooks/*.ts",
+    "./contexts": "./src/contexts/index.ts",
+    "./components/*": "./src/components/*.tsx"
   },
-  "dependencies": {},
+  "dependencies": {
+    "firebase": "^11.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18 || ^19",
+    "next": "^14 || ^15",
+    "lucide-react": "^0.400.0",
+    "recharts": "^2.12.0"
+  },
   "devDependencies": {
     "typescript": "^5"
   }

@@ -15,7 +15,7 @@ export function DtiCredit({ className = '' }: DtiCreditProps) {
       className={`inline-block ${className}`}
       aria-label="カリビアンコム"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      { }
       <img
         src="https://pixelarchivenow.com/image/carib/3day_900_250.jpg"
         alt="カリビアンコム"

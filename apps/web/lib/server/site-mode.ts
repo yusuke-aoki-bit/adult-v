@@ -6,6 +6,12 @@ import { getSiteMode, getSiteConfig, type SiteMode, type SiteConfig } from '@/li
  * proxy.tsで設定されたx-site-modeヘッダーを読み取る
  */
 export async function getServerSiteMode(): Promise<SiteMode> {
+  // 環境変数を最優先でチェック（Cloud Run / ローカル開発用）
+  const envMode = process.env.SITE_MODE as SiteMode;
+  if (envMode === 'fanza' || envMode === 'adult-v') {
+    return envMode;
+  }
+
   const headersList = await headers();
   const siteModeHeader = headersList.get('x-site-mode');
 
@@ -26,9 +32,13 @@ export async function getServerSiteConfig(): Promise<SiteConfig> {
   return getSiteConfig(mode);
 }
 
+// Adult Viewerで表示するASP一覧（FANZA以外）
+const ADULT_V_ASPS = ['MGS', 'DUGA', 'SOKMIL', 'b10f', 'FC2', 'caribbeancom', 'caribbeancompr', '1pondo', 'heyzo', '10musume', 'pacopacomama', 'muramura', 'tokyohot', 'Japanska'];
+
 /**
  * サーバーコンポーネントからASPフィルターを取得
  * FANZAサイトの場合は['FANZA']を返す
+ * Adult Viewerの場合はFANZA以外のASPを返す
  */
 export async function getServerAspFilter(): Promise<string[] | null> {
   const headersList = await headers();
@@ -42,6 +52,9 @@ export async function getServerAspFilter(): Promise<string[] | null> {
   const mode = await getServerSiteMode();
   if (mode === 'fanza') {
     return ['FANZA'];
+  }
+  if (mode === 'adult-v') {
+    return ADULT_V_ASPS;
   }
 
   return null;

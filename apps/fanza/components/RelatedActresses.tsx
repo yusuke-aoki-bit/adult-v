@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
 
 interface RelatedActress {
   id: number;
@@ -11,6 +12,7 @@ interface RelatedActress {
   heroImageUrl: string | null;
   sharedCount: number;
   productCount: number;
+  genreMatchPercent?: number;
 }
 
 interface RelatedActressesProps {
@@ -20,8 +22,17 @@ interface RelatedActressesProps {
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/150x150/1f2937/ffffff?text=No+Image';
 
+// ジャンル一致率に応じた色を返す（ライトテーマ用）
+function getMatchColor(percent: number): string {
+  if (percent >= 80) return 'text-green-600';
+  if (percent >= 60) return 'text-yellow-600';
+  if (percent >= 40) return 'text-orange-600';
+  return 'text-gray-500';
+}
+
 export default function RelatedActresses({ actresses, currentActressName }: RelatedActressesProps) {
-  const locale = useLocale();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'ja';
   const t = useTranslations('relatedActresses');
 
   if (actresses.length === 0) {
@@ -57,6 +68,15 @@ export default function RelatedActresses({ actresses, currentActressName }: Rela
               <div className="absolute bottom-1 right-1 bg-rose-700 text-white text-[10px] px-1.5 py-0.5 rounded">
                 {actress.sharedCount}{t('costarCount')}
               </div>
+              {/* ジャンル一致率バッジ */}
+              {actress.genreMatchPercent !== undefined && actress.genreMatchPercent > 0 && (
+                <div className="absolute top-1 left-1 bg-white/90 text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-sm">
+                  <span className={getMatchColor(actress.genreMatchPercent)}>
+                    {actress.genreMatchPercent}%
+                  </span>
+                  <span className="text-gray-600">{t('genreMatch')}</span>
+                </div>
+              )}
             </div>
             <p className="text-sm text-gray-800 group-hover:text-rose-700 transition-colors line-clamp-1">
               {actress.name}

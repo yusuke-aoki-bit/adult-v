@@ -1,0 +1,366 @@
+'use client';
+
+import Link from 'next/link';
+import { useSearchParams, useParams, useRouter } from 'next/navigation';
+import { useState, useCallback } from 'react';
+import { getThemeMode, getPrimaryColor } from '../lib/theme';
+
+// Client-side translations (outside NextIntlClientProvider)
+const translations = {
+  ja: {
+    first: '最初',
+    prev: '前へ',
+    next: '次へ',
+    last: '最後',
+    items: '件',
+    page: 'ページ',
+    goToPage: 'ページへ移動',
+    inputPlaceholder: 'ページ番号',
+    go: '移動',
+    jumpBack: '-10',
+    jumpForward: '+10',
+    perPage: '件/ページ',
+  },
+  en: {
+    first: 'First',
+    prev: 'Prev',
+    next: 'Next',
+    last: 'Last',
+    items: 'items',
+    page: 'page',
+    goToPage: 'Go to page',
+    inputPlaceholder: 'Page #',
+    go: 'Go',
+    jumpBack: '-10',
+    jumpForward: '+10',
+    perPage: '/page',
+  },
+  zh: {
+    first: '首页',
+    prev: '上一页',
+    next: '下一页',
+    last: '末页',
+    items: '条',
+    page: '页',
+    goToPage: '跳转到',
+    inputPlaceholder: '页码',
+    go: '跳转',
+    jumpBack: '-10',
+    jumpForward: '+10',
+    perPage: '条/页',
+  },
+  ko: {
+    first: '처음',
+    prev: '이전',
+    next: '다음',
+    last: '마지막',
+    items: '건',
+    page: '페이지',
+    goToPage: '페이지로 이동',
+    inputPlaceholder: '페이지 번호',
+    go: '이동',
+    jumpBack: '-10',
+    jumpForward: '+10',
+    perPage: '건/페이지',
+  },
+} as const;
+
+// 表示件数オプション
+const PER_PAGE_OPTIONS = [12, 24, 48, 96] as const;
+
+interface PaginationProps {
+  total: number;
+  page: number;
+  perPage: number;
+  basePath: string;
+  queryParams?: Record<string, string>;
+  position?: 'top' | 'bottom';
+  showPerPageSelector?: boolean;
+  onSavePerPage?: (perPage: number) => void;
+}
+
+export default function Pagination({
+  total,
+  page,
+  perPage,
+  basePath,
+  queryParams = {},
+  position = 'bottom',
+  showPerPageSelector = false,
+  onSavePerPage,
+}: PaginationProps) {
+  const searchParams = useSearchParams();
+  const params = useParams();
+  const router = useRouter();
+  const locale = (params?.locale as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const totalPages = Math.ceil(total / perPage);
+  const [inputPage, setInputPage] = useState('');
+
+  const mode = getThemeMode();
+  const primaryColor = getPrimaryColor();
+
+  // テーマに応じたスタイル
+  const styles = mode === 'dark' ? {
+    button: 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 active:bg-gray-600',
+    buttonActive: `bg-${primaryColor}-600 text-white`,
+    buttonDisabled: 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50',
+    jumpButton: 'bg-blue-900/50 text-blue-400 hover:bg-blue-800/50 border border-blue-700',
+    jumpButtonDisabled: 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50',
+    input: 'border-gray-600 text-white bg-gray-700 focus:ring-rose-500',
+    submitButton: `bg-${primaryColor}-600 text-white hover:bg-${primaryColor}-700 disabled:bg-gray-600 disabled:text-gray-400`,
+    select: `border-gray-600 text-white bg-gray-700 focus:ring-${primaryColor}-500 focus:border-${primaryColor}-500`,
+    pageInfo: 'text-gray-400',
+    dots: 'text-gray-400',
+  } : {
+    button: 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 active:bg-gray-100',
+    buttonActive: `bg-${primaryColor}-500 text-white`,
+    buttonDisabled: 'bg-gray-100 text-gray-500 cursor-not-allowed pointer-events-none opacity-50',
+    jumpButton: `bg-${primaryColor}-50 text-${primaryColor}-600 hover:bg-${primaryColor}-100 border border-${primaryColor}-200`,
+    jumpButtonDisabled: 'bg-gray-100 text-gray-500 cursor-not-allowed pointer-events-none opacity-50',
+    input: `border-gray-300 text-gray-900 bg-white focus:ring-${primaryColor}-500`,
+    submitButton: `bg-${primaryColor}-500 text-white hover:bg-${primaryColor}-600 disabled:bg-gray-200 disabled:text-gray-400`,
+    select: `border-gray-300 text-gray-900 bg-white focus:ring-${primaryColor}-500 focus:border-${primaryColor}-500`,
+    pageInfo: 'text-gray-500',
+    dots: 'text-gray-500',
+  };
+
+  // クエリパラメータを保持
+  const getUrl = useCallback((pageNum: number, newPerPage?: number) => {
+    const urlParams = new URLSearchParams(searchParams.toString());
+    Object.entries(queryParams).forEach(([key, value]) => {
+      if (!urlParams.has(key)) {
+        urlParams.set(key, value);
+      }
+    });
+    urlParams.set('page', pageNum.toString());
+    if (newPerPage) {
+      urlParams.set('limit', newPerPage.toString());
+    }
+    return `${basePath}?${urlParams.toString()}`;
+  }, [searchParams, queryParams, basePath]);
+
+  // ページ番号入力での移動
+  const handlePageInputSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    const targetPage = parseInt(inputPage, 10);
+    if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= totalPages) {
+      router.push(getUrl(targetPage));
+      setInputPage('');
+    }
+  }, [inputPage, totalPages, router, getUrl]);
+
+  // 表示件数変更
+  const handlePerPageChange = useCallback((newPerPage: number) => {
+    if (onSavePerPage) {
+      onSavePerPage(newPerPage);
+    }
+    const currentFirstItem = (page - 1) * perPage + 1;
+    const newPage = Math.max(1, Math.ceil(currentFirstItem / newPerPage));
+    router.push(getUrl(newPage, newPerPage));
+  }, [page, perPage, router, getUrl, onSavePerPage]);
+
+  if (totalPages <= 1 && !showPerPageSelector) {
+    return null;
+  }
+
+  const showJumpButtons = totalPages > 10;
+
+  const getVisiblePages = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+
+    for (
+      let i = Math.max(2, page - delta);
+      i <= Math.min(totalPages - 1, page + delta);
+      i++
+    ) {
+      range.push(i);
+    }
+
+    if (page - delta > 2) {
+      rangeWithDots.push(1, '...');
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (page + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages);
+    } else {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  };
+
+  return (
+    <nav className={`flex flex-col items-center gap-2 sm:gap-3 ${position === 'top' ? 'mb-4 sm:mb-6' : 'mt-6 sm:mt-8'}`}>
+      {/* メインナビゲーション */}
+      <div className="flex flex-nowrap items-center justify-center gap-1 sm:gap-2">
+        {/* 最初 */}
+        <Link
+          href={getUrl(1)}
+          className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
+            page === 1 ? styles.buttonDisabled : styles.button
+          }`}
+          aria-disabled={page === 1}
+        >
+          {t.first}
+        </Link>
+
+        {/* -10ジャンプ */}
+        {showJumpButtons && (
+          <Link
+            href={getUrl(Math.max(1, page - 10))}
+            className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
+              page <= 10 ? styles.jumpButtonDisabled : styles.jumpButton
+            }`}
+            aria-disabled={page <= 10}
+            title="10ページ戻る"
+          >
+            {t.jumpBack}
+          </Link>
+        )}
+
+        {/* 前へ */}
+        <Link
+          href={getUrl(page - 1)}
+          className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[44px] sm:min-w-[60px] text-center ${
+            page === 1 ? styles.buttonDisabled : styles.button
+          }`}
+          aria-disabled={page === 1}
+        >
+          {t.prev}
+        </Link>
+
+        {/* ページ番号 */}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-0.5 sm:gap-1">
+            {getVisiblePages().map((pageNum, index) => {
+              if (pageNum === '...') {
+                return (
+                  <span key={`dots-${index}`} className={`hidden sm:inline px-2 sm:px-3 py-2 text-sm ${styles.dots}`}>
+                    ...
+                  </span>
+                );
+              }
+
+              const isCurrent = pageNum === page;
+              const isFirstOrLast = pageNum === 1 || pageNum === totalPages;
+              const showOnMobile = isCurrent || isFirstOrLast;
+              return (
+                <Link
+                  key={pageNum}
+                  href={getUrl(pageNum as number)}
+                  className={`${showOnMobile ? '' : 'hidden sm:block'} px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors ${
+                    isCurrent ? styles.buttonActive : styles.button
+                  }`}
+                  aria-current={isCurrent ? 'page' : undefined}
+                >
+                  {pageNum}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 次へ */}
+        <Link
+          href={getUrl(page + 1)}
+          className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[44px] sm:min-w-[60px] text-center ${
+            page >= totalPages ? styles.buttonDisabled : styles.button
+          }`}
+          aria-disabled={page >= totalPages}
+        >
+          {t.next}
+        </Link>
+
+        {/* +10ジャンプ */}
+        {showJumpButtons && (
+          <Link
+            href={getUrl(Math.min(totalPages, page + 10))}
+            className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
+              page > totalPages - 10 ? styles.jumpButtonDisabled : styles.jumpButton
+            }`}
+            aria-disabled={page > totalPages - 10}
+            title="10ページ進む"
+          >
+            {t.jumpForward}
+          </Link>
+        )}
+
+        {/* 最後 */}
+        <Link
+          href={getUrl(totalPages)}
+          className={`hidden sm:block px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
+            page >= totalPages ? styles.buttonDisabled : styles.button
+          }`}
+          aria-disabled={page >= totalPages}
+        >
+          {t.last}
+        </Link>
+      </div>
+
+      {/* ページ情報 + コントロール */}
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
+        {/* ページ情報 */}
+        <div className={styles.pageInfo}>
+          {total > 0 && (
+            <>
+              <span className="hidden sm:inline">
+                {(page - 1) * perPage + 1} - {Math.min(page * perPage, total)} / {total.toLocaleString()} {t.items}
+              </span>
+              <span className="sm:hidden">
+                {page} / {totalPages}
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* 直接ページ入力 */}
+        {totalPages >= 5 && (
+          <form onSubmit={handlePageInputSubmit} className="hidden sm:flex items-center gap-1">
+            <input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={inputPage}
+              onChange={(e) => setInputPage(e.target.value)}
+              placeholder={t.inputPlaceholder}
+              className={`w-20 px-2 py-1.5 text-center border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${styles.input}`}
+              aria-label={t.goToPage}
+            />
+            <button
+              type="submit"
+              disabled={!inputPage || parseInt(inputPage) < 1 || parseInt(inputPage) > totalPages}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium disabled:cursor-not-allowed transition-colors ${styles.submitButton}`}
+            >
+              {t.go}
+            </button>
+          </form>
+        )}
+
+        {/* 表示件数セレクター */}
+        {showPerPageSelector && (
+          <div className="flex items-center gap-1">
+            <select
+              value={perPage}
+              onChange={(e) => handlePerPageChange(parseInt(e.target.value))}
+              className={`px-2 sm:px-3 py-1.5 sm:py-2 border rounded-md text-sm sm:text-base ${styles.select}`}
+              aria-label="表示件数"
+            >
+              {PER_PAGE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}{t.perPage}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}

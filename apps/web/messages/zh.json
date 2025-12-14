@@ -36,8 +36,8 @@
     "filterSettings": "筛选设置"
   },
   "homepage": {
-    "title": "女优列表 - 成人流媒体中心",
-    "description": "探索 {count}+ 位来自DUGA、MGS和DTI平台的JAV女优。按人气、新作品和类型浏览。从知名明星到新兴人才，找到您喜爱的表演者。",
+    "title": "【免费样片・特惠】38,000+名AV女优作品跨平台搜索 | Adult Viewer Lab",
+    "description": "跨DUGA・MGS・加勒比搜索{count}+名AV女优作品。免费样片・特惠信息・价格比较。按类型・女优・场景轻松找到最优惠价格。",
     "actressCount": "收录 {count} 位女优",
     "initialSearch": "按首字母搜索",
     "filterSettings": "筛选设置",
@@ -105,7 +105,8 @@
     "title": "{name}的合作演员",
     "description": "与该演员合作过的女优",
     "costarCount": "次合作",
-    "productCount": "作品"
+    "productCount": "作品",
+    "genreMatch": "匹配"
   },
   "filter": {
     "genre": "类型",
@@ -168,7 +169,8 @@
     "search": "搜索",
     "clear": "清除",
     "noResults": "未找到匹配的女优",
-    "tryDifferentSearch": "请尝试使用其他关键词搜索"
+    "tryDifferentSearch": "请尝试使用其他关键词搜索",
+    "viewOnFanzaSite": "在FANZA网站查看"
   },
   "product": {
     "details": "作品详情",
@@ -264,6 +266,8 @@
   },
   "productCard": {
     "enlargeImage": "放大图片",
+    "playSampleVideo": "播放示例视频",
+    "videoNotSupported": "您的浏览器不支持视频播放",
     "performerInfo": "演员信息",
     "releaseDateTbd": "发售日期待定",
     "productId": "作品ID",
@@ -275,9 +279,12 @@
     "close": "关闭",
     "clickToCloseEsc": "← 上一张 | 中央关闭 | 下一张 →",
     "comingSoon": "即将上市",
+    "monthly": "月费",
     "previousImage": "上一张图片",
     "nextImage": "下一张图片",
-    "thumbnailAlt": "缩略图"
+    "thumbnailAlt": "缩略图",
+    "saleTomorrow": "明天截止",
+    "saleEndsIn": "还剩{days}天"
   },
   "imageLightbox": {
     "close": "关闭",
@@ -286,5 +293,47 @@
     "nextImage": "下一张图片",
     "thumbnailAlt": "缩略图",
     "viewDetails": "查看详情"
+  },
+  "categories": {
+    "title": "类型・分类一览",
+    "metaTitle": "【免费样片】AV视频分类搜索 - 38,000+作品 | Adult Viewer Lab",
+    "metaDescription": "DUGA・MGS・加勒比等38,000+部AV按类型搜索。免费样片・特惠信息。按人气类型、场景、玩法轻松找到喜欢的作品。",
+    "description": "按类型和分类搜索视频作品。",
+    "allCategories": "所有分类",
+    "popularGenres": "人气类型",
+    "situationGenres": "场景",
+    "playGenres": "玩法",
+    "bodyTypeGenres": "身材类型",
+    "costumeGenres": "服装",
+    "otherGenres": "其他",
+    "productCount": "{count}部作品",
+    "viewProducts": "查看作品",
+    "noCategories": "暂无分类"
+  },
+  "stickyCta": {
+    "buyAt": "在{provider}购买"
+  },
+  "personalized": {
+    "recentlyViewed": "最近浏览",
+    "count": "{count}条记录",
+    "basedOnHistory": "根据您的浏览历史推荐",
+    "clearHistory": "清除历史"
+  },
+  "series": {
+    "series": "系列",
+    "seriesGuide": "系列完结攻略",
+    "seriesGuideDescription": "浏览热门系列并追踪观看进度",
+    "pageTitle": "系列列表 - 完结攻略",
+    "pageDescription": "热门AV系列列表与进度追踪",
+    "productCount": "{count}部作品",
+    "noSeries": "未找到系列"
+  },
+  "viewingDiary": {
+    "markAsViewed": "标记已看",
+    "unmarkAsViewed": "取消标记",
+    "viewed": "已看",
+    "addedToDiary": "已添加到观看日记",
+    "removedFromDiary": "已从观看日记移除",
+    "viewCount": "已看{count}次"
   }
 }

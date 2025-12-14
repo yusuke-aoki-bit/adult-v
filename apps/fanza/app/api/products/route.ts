@@ -29,6 +29,16 @@ export async function GET(request: Request) {
     }
     const { limit, offset } = paginationResult.params!;
 
+    // Parse IDs parameter (comma-separated list of numeric IDs)
+    const idsParam = searchParams.get('ids');
+    let ids: number[] | undefined;
+    if (idsParam) {
+      ids = idsParam.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+      if (ids.length === 0) {
+        ids = undefined;
+      }
+    }
+
     // Parse and validate other parameters
     const category = searchParams.get('category') || undefined;
     const provider = searchParams.get('provider') || undefined;
@@ -51,6 +61,7 @@ export async function GET(request: Request) {
     const products = await getProducts({
       limit,
       offset,
+      ids,
       category,
       provider,
       actressId,

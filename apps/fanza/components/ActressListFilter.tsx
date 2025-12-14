@@ -24,6 +24,7 @@ interface ActressListFilterProps {
   genreTags: Tag[];
   availableAsps: Asp[];
   aspProductCounts: Record<string, number>;
+  isFanzaSite?: boolean; // FANZAサイトの場合、ASPフィルターは自動適用されるためUIに反映しない
   translations: {
     filterSettings: string;
     initialSearch: string;
@@ -64,6 +65,7 @@ export default function ActressListFilter({
   genreTags,
   availableAsps,
   aspProductCounts,
+  isFanzaSite = false,
   translations: t,
 }: ActressListFilterProps) {
   const router = useRouter();
@@ -227,8 +229,11 @@ export default function ActressListFilter({
     });
   };
 
-  const hasActiveFilters = hasVideo || hasImage || onSale || hasReview || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0 || !!initialFilter || cupSizes.length > 0 || !!heightMin || !!heightMax || bloodTypes.length > 0;
-  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0) + (onSale ? 1 : 0) + (hasReview ? 1 : 0) + (initialFilter ? 1 : 0) + cupSizes.length + (heightMin || heightMax ? 1 : 0) + bloodTypes.length;
+  // FANZAサイトではASPフィルターは自動適用されるため、アクティブフィルターとしてカウントしない
+  const effectiveIncludeAsps = isFanzaSite ? [] : includeAsps;
+  const effectiveExcludeAsps = isFanzaSite ? [] : excludeAsps;
+  const hasActiveFilters = hasVideo || hasImage || onSale || hasReview || includeTags.length > 0 || excludeTags.length > 0 || effectiveIncludeAsps.length > 0 || effectiveExcludeAsps.length > 0 || !!initialFilter || cupSizes.length > 0 || !!heightMin || !!heightMax || bloodTypes.length > 0;
+  const activeFilterCount = includeTags.length + excludeTags.length + effectiveIncludeAsps.length + effectiveExcludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0) + (onSale ? 1 : 0) + (hasReview ? 1 : 0) + (initialFilter ? 1 : 0) + cupSizes.length + (heightMin || heightMax ? 1 : 0) + bloodTypes.length;
 
   return (
     <details

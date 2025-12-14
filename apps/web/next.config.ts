@@ -210,11 +210,45 @@ const nextConfig: NextConfig = {
   },
   // セキュリティヘッダー設定
   async headers() {
+    // CSP設定 - Google Analytics、外部画像、アフィリエイトリンクに対応
+    const cspDirectives = [
+      "default-src 'self'",
+      // スクリプト: Next.js, Google Analytics, Google Tag Manager
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com",
+      // スタイル: Next.js インラインスタイル
+      "style-src 'self' 'unsafe-inline'",
+      // 画像: 許可された画像ホスト
+      "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://pic.duga.jp https://img.duga.jp https://*.mgstage.com https://image.mgstage.com https://static.mgstage.com https://img.sokmil.com https://*.sokmil.com https://*.japanska-xxx.com https://*.fc2.com https://*.contents.fc2.com https://ads.b10f.jp https://b10f.jp https://www.heyzo.com https://*.caribbeancompr.com https://*.1pondo.tv https://www.nyoshin.com https://www.unkotare.com https://www.caribbeancom.com https://www.10musume.com https://www.pacopacomama.com https://www.hitozuma-giri.com https://www.av-e-body.com https://www.av-4610.com https://www.av-0230.com https://www.kin8tengoku.com https://www.nozox.com https://www.3d-eros.net https://www.pikkur.com https://www.javholic.com https://smovie.1pondo.tv https://awsimgsrc.dmm.co.jp https://placehold.co https://www.googletagmanager.com https://www.google-analytics.com",
+      // フォント
+      "font-src 'self' data:",
+      // 接続先: API, Google Analytics
+      "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com",
+      // フレーム: 動画埋め込み用
+      "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.dmm.co.jp https://*.dmm.com https://*.mgstage.com",
+      // メディア: 動画/音声
+      "media-src 'self' https://*.dmm.co.jp https://*.dmm.com https://*.mgstage.com https://smovie.1pondo.tv https://sample.heyzo.com https://*.caribbeancom.com https://*.caribbeancompr.com https://*.10musume.com https://*.pacopacomama.com https://cc3001.dmm.co.jp https://litevideo.dmm.co.jp",
+      // オブジェクト（プラグイン）は無効化
+      "object-src 'none'",
+      // base-uri制限
+      "base-uri 'self'",
+      // フォーム送信先
+      "form-action 'self'",
+      // フレーム祖先（クリックジャッキング対策）
+      "frame-ancestors 'self'",
+      // アップグレード
+      "upgrade-insecure-requests",
+    ].join('; ');
+
     return [
       {
         // 全ページに適用
         source: '/:path*',
         headers: [
+          // Content Security Policy
+          {
+            key: 'Content-Security-Policy',
+            value: cspDirectives,
+          },
           // クリックジャッキング対策
           {
             key: 'X-Frame-Options',
@@ -264,89 +298,134 @@ const nextConfig: NextConfig = {
     ];
   },
   // リダイレクト設定
+  // 新URL構造: 全言語でパスプレフィックスを使用しない（Googleスタイル）
+  // 言語は ?hl= パラメータで指定: /products/123?hl=en, /products/123?hl=zh
+  // デフォルトロケール(ja)は ?hl= パラメータなしでアクセス可能
   async redirects() {
     return [
       // ============================
-      // レガシーURL（locale なし）から ja へのリダイレクト
+      // i18n完全移行: ロケールプレフィックス → ?hl= パラメータ
+      // 全言語のパスプレフィックスを ?hl= パラメータに変換
       // ============================
-      // /categories → /ja/products
+      // /ja/* → /* (デフォルトロケールはパラメータなし)
       {
-        source: '/categories',
-        destination: '/ja/products',
+        source: '/ja',
+        destination: '/',
         permanent: true,
       },
-      // /categories?category=xxx → /ja/products
+      {
+        source: '/ja/:path*',
+        destination: '/:path*',
+        permanent: true,
+      },
+      // /en/* → /*?hl=en
+      {
+        source: '/en',
+        destination: '/?hl=en',
+        permanent: true,
+      },
+      {
+        source: '/en/:path*',
+        destination: '/:path*?hl=en',
+        permanent: true,
+      },
+      // /zh/* → /*?hl=zh (簡体字中国語)
+      {
+        source: '/zh',
+        destination: '/?hl=zh',
+        permanent: true,
+      },
+      {
+        source: '/zh/:path*',
+        destination: '/:path*?hl=zh',
+        permanent: true,
+      },
+      // /zh-TW/* → /*?hl=zh-TW (繁体字中国語)
+      {
+        source: '/zh-TW',
+        destination: '/?hl=zh-TW',
+        permanent: true,
+      },
+      {
+        source: '/zh-TW/:path*',
+        destination: '/:path*?hl=zh-TW',
+        permanent: true,
+      },
+      // /ko/* → /*?hl=ko (韓国語)
+      {
+        source: '/ko',
+        destination: '/?hl=ko',
+        permanent: true,
+      },
+      {
+        source: '/ko/:path*',
+        destination: '/:path*?hl=ko',
+        permanent: true,
+      },
+      // ============================
+      // レガシーURL → 新URL へのリダイレクト
+      // ============================
+      // /categories → /products
+      {
+        source: '/categories',
+        destination: '/products',
+        permanent: true,
+      },
+      // /categories?category=xxx → /products
       {
         source: '/categories',
         has: [{ type: 'query', key: 'category' }],
-        destination: '/ja/products',
+        destination: '/products',
         permanent: true,
       },
-      // /actress/:id → /ja/actress/:id
-      {
-        source: '/actress/:id',
-        destination: '/ja/actress/:id',
-        permanent: true,
-      },
-      // /product/:id → /ja/products/:id（product → products に修正）
+      // /product/:id → /products/:id（product → products に修正）
       {
         source: '/product/:id',
-        destination: '/ja/products/:id',
-        permanent: true,
-      },
-      // /products/:id (locale なし) → /ja/products/:id
-      {
-        source: '/products/:id',
-        destination: '/ja/products/:id',
+        destination: '/products/:id',
         permanent: true,
       },
       // ============================
-      // locale ありのリダイレクト
+      // レガシーページリダイレクト（パスプレフィックスなし）
       // ============================
       // カテゴリページから一覧ページへの301リダイレクト
       {
-        source: '/:locale/categories/:tagId',
-        destination: '/:locale/products?include=:tagId',
-        permanent: true,
-      },
-      {
-        source: '/:locale/categories',
-        destination: '/:locale/products',
+        source: '/categories/:tagId',
+        destination: '/products?include=:tagId',
         permanent: true,
       },
       // 未整理作品ページから一覧ページへの301リダイレクト
       {
-        source: '/:locale/uncategorized',
-        destination: '/:locale/products?uncategorized=true',
+        source: '/uncategorized',
+        destination: '/products?uncategorized=true',
         permanent: true,
       },
       // レビューページからホームへの301リダイレクト
       {
-        source: '/:locale/reviews',
-        destination: '/:locale?hasReview=true',
+        source: '/reviews',
+        destination: '/?hasReview=true',
         permanent: true,
       },
       // 女優一覧ページからホームへの301リダイレクト
       {
-        source: '/:locale/actress',
-        destination: '/:locale',
+        source: '/actress',
+        destination: '/',
         permanent: true,
       },
       // 女優×ジャンルページから女優詳細ページへの301リダイレクト
       {
-        source: '/:locale/actress/:performerId/genre/:tagId',
-        destination: '/:locale/actress/:performerId?include=:tagId',
+        source: '/actress/:performerId/genre/:tagId',
+        destination: '/actress/:performerId?include=:tagId',
         permanent: true,
       },
       // 検索ページから各一覧ページへの301リダイレクト
       {
-        source: '/:locale/search',
-        destination: '/:locale/products',
+        source: '/search',
+        destination: '/products',
         permanent: true,
       },
       {
-        source: '/:locale/products/search',
-        destination: '/:locale/products',
+        source: '/products/search',
+        destination: '/products',
         permanent: true,
       },
     ];

@@ -36,8 +36,8 @@
     "filterSettings": "Filter Settings"
   },
   "homepage": {
-    "title": "Actresses - Adult Streaming Hub",
-    "description": "Discover {count}+ JAV actresses across DUGA, MGS, and DTI platforms. Browse by popularity, new releases, and genres. Find your favorite performers from established stars to emerging talents.",
+    "title": "Free Samples & Sales | 38,000+ JAV Actresses Cross-Search | Adult Viewer Lab",
+    "description": "Search {count}+ JAV actresses across DUGA, MGS, Caribbeancom. Free sample videos, sale info & price comparison. Find best deals by genre, actress & situation.",
     "actressCount": "{count} actresses listed",
     "initialSearch": "Search by Initial",
     "filterSettings": "Filter Settings",
@@ -113,7 +113,8 @@
     "title": "Co-stars of {name}",
     "description": "Actresses who have appeared with this performer",
     "costarCount": " co-appearances",
-    "productCount": " videos"
+    "productCount": " videos",
+    "genreMatch": "match"
   },
   "filter": {
     "genre": "Genre",
@@ -176,7 +177,8 @@
     "search": "Search",
     "clear": "Clear",
     "noResults": "No matching actress found",
-    "tryDifferentSearch": "Try searching with different keywords"
+    "tryDifferentSearch": "Try searching with different keywords",
+    "viewOnFanzaSite": "View on FANZA Site"
   },
   "product": {
     "details": "Video Details",
@@ -286,6 +288,8 @@
   },
   "productCard": {
     "enlargeImage": "Enlarge image",
+    "playSampleVideo": "Play sample video",
+    "videoNotSupported": "Your browser does not support video playback",
     "performerInfo": "Performer info",
     "releaseDateTbd": "Release date TBD",
     "productId": "Product ID",
@@ -297,9 +301,12 @@
     "close": "Close",
     "clickToCloseEsc": "← Prev | Center to close | Next →",
     "comingSoon": "Coming Soon",
+    "monthly": "Monthly",
     "previousImage": "Previous image",
     "nextImage": "Next image",
-    "thumbnailAlt": "Thumbnail"
+    "thumbnailAlt": "Thumbnail",
+    "saleTomorrow": "Ends tomorrow",
+    "saleEndsIn": "{days} days left"
   },
   "imageLightbox": {
     "close": "Close",
@@ -365,5 +372,47 @@
   "favoriteButton": {
     "addToFavorites": "Add to Favorites",
     "removeFromFavorites": "Remove from Favorites"
+  },
+  "categories": {
+    "title": "Genres & Categories",
+    "metaTitle": "JAV Genres & Categories - Free Samples | 38,000+ Videos | Adult Viewer Lab",
+    "metaDescription": "Browse 38,000+ JAV videos by genre from DUGA, MGS, Caribbeancom. Free sample videos & sale info. Find your favorites by genre, situation, play type & more.",
+    "description": "Browse and search videos by genre and category.",
+    "allCategories": "All Categories",
+    "popularGenres": "Popular Genres",
+    "situationGenres": "Situations",
+    "playGenres": "Play Types",
+    "bodyTypeGenres": "Body Types",
+    "costumeGenres": "Costumes",
+    "otherGenres": "Others",
+    "productCount": "{count} videos",
+    "viewProducts": "View Videos",
+    "noCategories": "No categories found"
+  },
+  "stickyCta": {
+    "buyAt": "Buy at {provider}"
+  },
+  "personalized": {
+    "recentlyViewed": "Recently Viewed",
+    "count": "{count} items",
+    "basedOnHistory": "Based on your history",
+    "clearHistory": "Clear history"
+  },
+  "series": {
+    "series": "Series",
+    "seriesGuide": "Series Completion Guide",
+    "seriesGuideDescription": "Browse popular series and track your watching progress",
+    "pageTitle": "Series List - Completion Guide",
+    "pageDescription": "Popular AV series list with progress tracking",
+    "productCount": "{count} products",
+    "noSeries": "No series found"
+  },
+  "viewingDiary": {
+    "markAsViewed": "Mark as Viewed",
+    "unmarkAsViewed": "Unmark",
+    "viewed": "Viewed",
+    "addedToDiary": "Added to viewing diary",
+    "removedFromDiary": "Removed from diary",
+    "viewCount": "Viewed {count}x"
   }
 }

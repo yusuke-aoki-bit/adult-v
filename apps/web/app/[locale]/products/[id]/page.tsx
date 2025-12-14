@@ -5,16 +5,22 @@ import ProductVideoPlayer from '@/components/ProductVideoPlayer';
 import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
 import RelatedProducts from '@/components/RelatedProducts';
 import ProductDetailInfo from '@/components/ProductDetailInfo';
-import FavoriteButton from '@/components/FavoriteButton';
+import ProductActions from '@/components/ProductActions';
 import ViewTracker from '@/components/ViewTracker';
 import AffiliateButton from '@/components/AffiliateButton';
-import { getProductById, searchProductByProductId, getProductSources } from '@/lib/db/queries';
+import StickyCta from '@/components/StickyCta';
+import { getProductById, searchProductByProductId, getProductSources, getActressAvgPricePerMin, getProductSourcesWithSales } from '@/lib/db/queries';
+import CostPerformanceCard from '@/components/CostPerformanceCard';
+import PriceComparisonServer from '@/components/PriceComparisonServer';
+import SceneTimeline from '@/components/SceneTimeline';
+import EnhancedAiReview from '@/components/EnhancedAiReview';
 import { isSubscriptionSite } from '@/lib/image-utils';
 import { getRelatedProducts } from '@/lib/db/recommendations';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import FanzaCrossLink from '@/components/FanzaCrossLink';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,13 +40,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
-    // SEO最適化されたメタディスクリプション生成
+    // SEO最適化されたメタディスクリプション生成（セール・レーティング情報含む）
     const optimizedDescription = generateOptimizedDescription(
       product.title,
       product.actressName,
       product.tags,
       product.releaseDate,
       product.normalizedProductId || product.id,
+      {
+        salePrice: product.salePrice,
+        regularPrice: product.regularPrice,
+        discount: product.discount,
+        rating: product.rating,
+        reviewCount: product.reviewCount,
+      },
     );
 
     return {
@@ -51,12 +64,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         `/${locale}/products/${product.id}`,
       ),
       alternates: {
+        canonical: `${baseUrl}/products/${product.id}`,
         languages: {
-          'ja': `${baseUrl}/ja/products/${product.id}`,
-          'en': `${baseUrl}/en/products/${product.id}`,
-          'zh': `${baseUrl}/zh/products/${product.id}`,
-          'ko': `${baseUrl}/ko/products/${product.id}`,
-          'x-default': `${baseUrl}/ja/products/${product.id}`,
+          'ja': `${baseUrl}/products/${product.id}`,
+          'en': `${baseUrl}/products/${product.id}?hl=en`,
+          'zh': `${baseUrl}/products/${product.id}?hl=zh`,
+          'zh-TW': `${baseUrl}/products/${product.id}?hl=zh-TW`,
+          'ko': `${baseUrl}/products/${product.id}?hl=ko`,
+          'x-default': `${baseUrl}/products/${product.id}`,
         },
       },
     };
@@ -79,7 +94,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const basePath = `/${locale}/products/${product.id}`;
 
-  // Structured data
+  // Structured data（レーティング情報含む）
   const productSchema = generateProductSchema(
     product.title,
     product.description || '',
@@ -87,7 +102,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
     basePath,
     product.regularPrice || product.price,
     product.providerLabel,
-    undefined, // aggregateRating
+    product.rating && product.reviewCount ? {
+      ratingValue: product.rating,
+      reviewCount: product.reviewCount,
+    } : undefined,
     product.salePrice,
     product.currency || 'JPY',
     product.normalizedProductId || undefined, // SKU（品番）
@@ -140,6 +158,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
   const sources = await getProductSources(productId);
 
+  // 価格比較: セール情報付きソースを取得
+  const sourcesWithSales = await getProductSourcesWithSales(productId);
+
+  // コスパ分析: 女優の平均価格/分を取得
+  const actressId = product.actressId || product.performers?.[0]?.id;
+  const actressAvgPricePerMin = actressId
+    ? await getActressAvgPricePerMin(String(actressId))
+    : null;
+
   return (
     <>
       <JsonLD data={productSchema} />
@@ -187,12 +214,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <div>
                   <div className="flex items-start gap-3 mb-2">
                     <h1 className="text-3xl font-bold text-white flex-1">{product.title}</h1>
-                    <FavoriteButton
-                      type="product"
-                      id={productId}
+                    <ProductActions
+                      productId={productId}
                       title={product.title}
-                      thumbnail={product.imageUrl}
-                      size="lg"
+                      imageUrl={product.imageUrl}
+                      provider={product.provider}
+                      performerName={product.actressName || product.performers?.[0]?.name}
+                      performerId={product.actressId || product.performers?.[0]?.id}
+                      tags={product.tags}
+                      duration={product.duration}
+                      locale={locale}
                     />
                   </div>
                   <p className="text-gray-300">{product.providerLabel}</p>
@@ -286,6 +317,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     discount={product.discount}
                   />
                 )}
+
+                {/* FANZAで見る直リンク（FANZAソースがある場合） */}
+                <FanzaCrossLink
+                  fanzaUrl={sources.find(s => s.aspName === 'FANZA')?.affiliateUrl}
+                  className="mt-4"
+                />
               </div>
             </div>
           </div>
@@ -304,6 +341,47 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           )}
 
+          {/* 価格比較セクション */}
+          {sourcesWithSales.length > 1 && (
+            <div className="mt-8">
+              <PriceComparisonServer sources={sourcesWithSales} locale={locale} />
+            </div>
+          )}
+
+          {/* コスパ分析セクション */}
+          {product.price && product.duration && product.duration > 0 && (
+            <div className="mt-8">
+              <CostPerformanceCard
+                price={product.price}
+                salePrice={product.salePrice}
+                duration={product.duration}
+                actressAvgPricePerMin={actressAvgPricePerMin ?? undefined}
+                locale={locale}
+              />
+            </div>
+          )}
+
+          {/* AI分析レビューセクション */}
+          {product.aiReview && (
+            <div className="mt-8">
+              <EnhancedAiReview
+                aiReview={product.aiReview}
+                rating={product.rating}
+                ratingCount={product.reviewCount}
+                locale={locale}
+              />
+            </div>
+          )}
+
+          {/* シーン情報セクション（ユーザー参加型） */}
+          <div className="mt-8">
+            <SceneTimeline
+              productId={productId}
+              totalDuration={product.duration || undefined}
+              locale={locale}
+            />
+          </div>
+
           {/* 関連作品セクション */}
           {relatedProducts.length > 0 && (
             <RelatedProducts products={relatedProducts} title="関連作品" />
@@ -321,6 +399,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
           aspName: product.provider,
         }}
       />
+
+      {/* Mobile Sticky CTA - FANZA以外の商品のみ */}
+      {product.affiliateUrl && product.provider !== 'fanza' && (
+        <StickyCta
+          affiliateUrl={product.affiliateUrl}
+          providerLabel={product.providerLabel}
+          price={product.regularPrice || product.price}
+          salePrice={product.salePrice}
+          discount={product.discount}
+          currency={product.currency}
+        />
+      )}
     </>
   );
 }

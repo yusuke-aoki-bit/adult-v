@@ -34,15 +34,18 @@ function getDb() {
       const url = new URL(connectionString);
       const cleanConnectionString = `postgresql://${url.username}:${url.password}@${url.host}${url.pathname}`;
 
+      // 開発環境と本番環境で接続プール設定を分ける
+      const isDev = process.env.NODE_ENV !== 'production';
+
       dbStore.pool = new Pool({
         connectionString: cleanConnectionString,
         // Cloud SQL Proxy経由の場合はSSL不要、それ以外は環境に応じて設定
         ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
-        max: 50, // 最大接続数（本番環境での同時リクエスト対応強化）
-        min: 10, // 最小接続数（常に10接続をプールに保持）
-        idleTimeoutMillis: 60000, // アイドル接続のタイムアウト（60秒）
+        max: isDev ? 10 : 50, // 開発環境では10、本番は50
+        min: isDev ? 2 : 10, // 開発環境では2、本番は10
+        idleTimeoutMillis: isDev ? 30000 : 60000, // 開発環境では30秒、本番は60秒
         connectionTimeoutMillis: 15000, // 接続タイムアウト（15秒）
-        allowExitOnIdle: false, // プロセスがアイドル時でも終了させない
+        allowExitOnIdle: isDev, // 開発環境ではアイドル時に終了を許可
       });
 
       dbStore.instance = drizzle(dbStore.pool, { schema });

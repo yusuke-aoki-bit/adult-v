@@ -14,21 +14,60 @@ export default function robots(): MetadataRoute.Robots {
           '/_next/',
           '/private/',
           '/age-verification',
+          // フィルターパラメータ付きURLを除外（重複コンテンツ防止）
+          '/*?*include=',
+          '/*?*exclude=',
+          '/*?*hasVideo=',
+          '/*?*hasImage=',
+          '/*?*performerType=',
+          '/*?*asp=',
+          // ページネーションパラメータ付きURLを除外（sitemap以外からの発見を防ぐ）
+          '/*?*page=',
+          // ソートパラメータ付きURLを除外
+          '/*?*sort=',
         ],
       },
-      // Specific rules for well-behaved bots
+      // Specific rules for well-behaved bots (Google)
       {
         userAgent: ['Googlebot', 'Googlebot-Image'],
-        allow: '/',
-        disallow: ['/api/', '/admin/', '/private/', '/age-verification'],
-        crawlDelay: 0,
+        allow: [
+          '/',
+          '/*.js',
+          '/*.css',
+          '/*.png',
+          '/*.jpg',
+          '/*.webp',
+        ],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/private/',
+          '/age-verification',
+          '/*?*include=',
+          '/*?*exclude=',
+          '/*?*page=',
+          '/*?*sort=',
+        ],
       },
-      // Be more permissive with major search engines
+      // Bing, Yahoo, DuckDuckGo
       {
         userAgent: ['Bingbot', 'Slurp', 'DuckDuckBot'],
         allow: '/',
-        disallow: ['/api/', '/admin/', '/private/', '/age-verification'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/private/',
+          '/age-verification',
+          '/*?*include=',
+          '/*?*exclude=',
+          '/*?*page=',
+        ],
         crawlDelay: 1,
+      },
+      // Block aggressive bots
+      {
+        userAgent: ['AhrefsBot', 'SemrushBot', 'MJ12bot', 'DotBot'],
+        disallow: '/',
       },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,

@@ -178,7 +178,7 @@ export default function ImageLightbox({
             transition: isTransitioning ? 'transform 0.3s ease-out' : 'none',
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           <img
             src={imageError ? currentImage : fullSizeImage}
             alt={alt}
@@ -229,7 +229,7 @@ export default function ImageLightbox({
                   : 'border-transparent hover:border-gray-500'
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              { }
               <img
                 src={imgUrl}
                 alt={`${t('thumbnailAlt')} ${idx + 1}`}

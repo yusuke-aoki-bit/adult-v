@@ -5,8 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { Heart, Trash2, Film, User } from 'lucide-react';
-import { useFavorites } from '@/hooks/useFavorites';
+import { useFavorites } from '@adult-v/ui-common/hooks';
 import FavoriteButton from '@/components/FavoriteButton';
+import ActressRecommendations from '@/components/ActressRecommendations';
 
 const translations = {
   ja: {
@@ -126,6 +127,9 @@ export default function FavoritesPage() {
   const productCount = getFavoritesByType('product').length;
   const actressCount = getFavoritesByType('actress').length;
 
+  // お気に入り女優のID一覧
+  const favoriteActressIds = getFavoritesByType('actress').map(f => String(f.id));
+
   // ロケール別の日付フォーマット
   const dateLocale = locale === 'ko' ? 'ko-KR' : locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-US' : 'ja-JP';
 
@@ -145,6 +149,16 @@ export default function FavoritesPage() {
           {t.itemCount.replace('{count}', String(favorites.length))}
         </p>
       </div>
+
+      {/* Actress Recommendations Section - B1機能 */}
+      {actressCount > 0 && (
+        <div className="mb-6">
+          <ActressRecommendations
+            favoritePerformerIds={favoriteActressIds}
+            locale={locale}
+          />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">

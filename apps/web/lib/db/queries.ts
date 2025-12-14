@@ -1,5 +1,5 @@
 import { getDb } from './index';
-import { products, performers, productPerformers, tags, productTags, productSources, performerAliases, productImages, productVideos, productSales } from './schema';
+import { products, performers, productPerformers, tags, productTags, productSources, performerAliases, productImages, productVideos, productSales, productRatingSummary } from './schema';
 import { eq, and, or, desc, asc, gte, sql, inArray, notInArray } from 'drizzle-orm';
 import type { Product as ProductType, Actress as ActressType, ProductCategory, ProviderId } from '@/types/product';
 import type { InferSelectModel } from 'drizzle-orm';
@@ -7,6 +7,29 @@ import { mapLegacyProvider } from '@/lib/provider-utils';
 import { getDtiServiceFromUrl } from '@/lib/image-utils';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@/lib/localization';
+import { unstable_cache } from 'next/cache';
+
+// メモリ内キャッシュ（dev環境でのメモリリーク対策）
+const memoryCache = new Map<string, { data: unknown; timestamp: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5分
+
+function getFromMemoryCache<T>(key: string): T | null {
+  const cached = memoryCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data as T;
+  }
+  memoryCache.delete(key);
+  return null;
+}
+
+function setToMemoryCache<T>(key: string, data: T): void {
+  // キャッシュサイズ制限（100エントリまで）
+  if (memoryCache.size > 100) {
+    const oldestKey = memoryCache.keys().next().value;
+    if (oldestKey) memoryCache.delete(oldestKey);
+  }
+  memoryCache.set(key, { data, timestamp: Date.now() });
+}
 
 type DbProduct = InferSelectModel<typeof products>;
 type DbPerformer = InferSelectModel<typeof performers>;
@@ -49,23 +72,27 @@ export function generateActressId(name: string): string {
 type PerformerData = { id: number; name: string; nameKana: string | null };
 type TagData = { id: number; name: string; category: string | null };
 type ImageData = { productId: number; imageUrl: string; imageType: string; displayOrder: number | null };
-type SaleData = { productId: number; regularPrice: number; salePrice: number; discountPercent: number | null };
+type VideoData = { productId: number; videoUrl: string; videoType: string | null; quality: string | null; duration: number | null };
+type SaleData = { productId: number; regularPrice: number; salePrice: number; discountPercent: number | null; endAt: Date | null };
 
 interface BatchRelatedDataResult {
   performersMap: Map<number, PerformerData[]>;
   tagsMap: Map<number, TagData[]>;
   sourcesMap: Map<number, typeof productSources.$inferSelect>;
   imagesMap: Map<number, ImageData[]>;
+  videosMap: Map<number, VideoData[]>;
   salesMap: Map<number, SaleData>;
 }
 
 /**
  * 複数商品の関連データをバッチ取得するヘルパー関数
  * N+1問題を解消し、商品一覧の高速化に使用
+ * @param preferredProviders - 優先プロバイダー（フィルター用）
  */
 async function batchFetchProductRelatedData(
   db: ReturnType<typeof getDb>,
-  productIds: number[]
+  productIds: number[],
+  preferredProviders?: string[]
 ): Promise<BatchRelatedDataResult> {
   if (productIds.length === 0) {
     return {
@@ -73,11 +100,12 @@ async function batchFetchProductRelatedData(
       tagsMap: new Map(),
       sourcesMap: new Map(),
       imagesMap: new Map(),
+      videosMap: new Map(),
       salesMap: new Map(),
     };
   }
 
-  const [allPerformers, allTags, allSources, allImages, allSales] = await Promise.all([
+  const [allPerformers, allTags, allSources, allImages, allVideos, allSales] = await Promise.all([
     db
       .select({
         productId: productPerformers.productId,
@@ -112,6 +140,17 @@ async function batchFetchProductRelatedData(
       .from(productImages)
       .where(inArray(productImages.productId, productIds))
       .orderBy(asc(productImages.displayOrder)),
+    // サンプル動画を取得
+    db
+      .select({
+        productId: productVideos.productId,
+        videoUrl: productVideos.videoUrl,
+        videoType: productVideos.videoType,
+        quality: productVideos.quality,
+        duration: productVideos.duration,
+      })
+      .from(productVideos)
+      .where(inArray(productVideos.productId, productIds)),
     // アクティブなセール情報を取得
     db
       .select({
@@ -119,6 +158,7 @@ async function batchFetchProductRelatedData(
         regularPrice: productSales.regularPrice,
         salePrice: productSales.salePrice,
         discountPercent: productSales.discountPercent,
+        endAt: productSales.endAt,
       })
       .from(productSales)
       .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
@@ -144,15 +184,64 @@ async function batchFetchProductRelatedData(
     tagsMap.get(t.productId)!.push({ id: t.id, name: t.name, category: t.category });
   }
 
+  // 優先プロバイダーを考慮してソースを選択
+  // フィルター指定時は、フィルターに一致するソースを優先的に選択
   const sourcesMap = new Map<number, typeof allSources[0]>();
+  const preferredProvidersUpper = preferredProviders?.map(p => p.toUpperCase()) || [];
+
+  // まず各productIdごとにソースをグループ化
+  const sourcesByProduct = new Map<number, typeof allSources>();
   for (const s of allSources) {
-    if (!sourcesMap.has(s.productId)) sourcesMap.set(s.productId, s);
+    if (!sourcesByProduct.has(s.productId)) sourcesByProduct.set(s.productId, []);
+    sourcesByProduct.get(s.productId)!.push(s);
+  }
+
+  // 各商品で優先プロバイダーに一致するソースを選択
+  // 重要: adult-vサイトではFANZAソースを絶対に使用しない（規約違反防止）
+  let matchedCount = 0;
+  let fallbackCount = 0;
+  let skippedFanzaOnly = 0;
+  for (const [productId, sources] of sourcesByProduct) {
+    // FANZAソースを除外（adult-vサイトでは表示禁止）
+    const nonFanzaSources = sources.filter(s => s.aspName.toUpperCase() !== 'FANZA');
+
+    // FANZAのみの商品はスキップ
+    if (nonFanzaSources.length === 0) {
+      skippedFanzaOnly++;
+      continue;
+    }
+
+    if (preferredProvidersUpper.length > 0) {
+      // 優先プロバイダーに一致するソースを探す（FANZAは既に除外済み）
+      const preferredSource = nonFanzaSources.find(s =>
+        preferredProvidersUpper.includes(s.aspName.toUpperCase())
+      );
+      if (preferredSource) {
+        sourcesMap.set(productId, preferredSource);
+        matchedCount++;
+        continue;
+      }
+      fallbackCount++;
+    }
+    // 一致するソースがない場合はFANZA以外の最初のソースを使用
+    sourcesMap.set(productId, nonFanzaSources[0]);
+  }
+
+  // デバッグ: フィルター適用結果のサマリー
+  if (preferredProvidersUpper.length > 0 || skippedFanzaOnly > 0) {
+    console.log(`[batchFetch] Provider filter: ${preferredProvidersUpper.join(',') || 'none'} - matched: ${matchedCount}, fallback: ${fallbackCount}, skipped FANZA-only: ${skippedFanzaOnly}`);
   }
 
   const imagesMap = new Map<number, ImageData[]>();
   for (const img of allImages) {
     if (!imagesMap.has(img.productId)) imagesMap.set(img.productId, []);
     imagesMap.get(img.productId)!.push(img);
+  }
+
+  const videosMap = new Map<number, VideoData[]>();
+  for (const vid of allVideos) {
+    if (!videosMap.has(vid.productId)) videosMap.set(vid.productId, []);
+    videosMap.get(vid.productId)!.push(vid);
   }
 
   const salesMap = new Map<number, SaleData>();
@@ -163,7 +252,7 @@ async function batchFetchProductRelatedData(
     }
   }
 
-  return { performersMap, tagsMap, sourcesMap, imagesMap, salesMap };
+  return { performersMap, tagsMap, sourcesMap, imagesMap, videosMap, salesMap };
 }
 
 /**
@@ -179,8 +268,9 @@ function mapProductsWithBatchData(
     const performerData = (batchData.performersMap.get(product.id) || []).filter(isValidPerformer);
     const tagData = batchData.tagsMap.get(product.id) || [];
     const imagesData = batchData.imagesMap.get(product.id);
+    const videosData = batchData.videosMap.get(product.id);
     const saleData = batchData.salesMap.get(product.id);
-    return mapProductToType(product, performerData, tagData, batchData.sourcesMap.get(product.id), undefined, imagesData, undefined, locale, saleData);
+    return mapProductToType(product, performerData, tagData, batchData.sourcesMap.get(product.id), undefined, imagesData, videosData, locale, saleData);
   });
 }
 
@@ -386,9 +476,11 @@ export type SortOption =
 export interface GetProductsOptions {
   limit?: number;
   offset?: number;
+  ids?: number[]; // 特定のIDリストで取得（バッチ取得用）
   category?: string;
   provider?: string;
   providers?: string[]; // 複数プロバイダー/ASPでフィルタ（いずれかを含む）
+  excludeProviders?: string[]; // 除外プロバイダー/ASPでフィルタ（いずれも含まない）
   actressId?: string;
   isFeatured?: boolean;
   isNew?: boolean;
@@ -419,6 +511,26 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         OR ${products.normalizedProductId} LIKE 'うんこたれ%'
       )`
     );
+
+    // FANZA商品を除外（規約によりadult-vサイトでは表示禁止）
+    // FANZA専用商品（FANZAのみで配信されている商品）を除外
+    conditions.push(
+      sql`NOT EXISTS (
+        SELECT 1 FROM ${productSources} ps_fanza
+        WHERE ps_fanza.product_id = ${products.id}
+        AND ps_fanza.asp_name = 'FANZA'
+        AND NOT EXISTS (
+          SELECT 1 FROM ${productSources} ps_other
+          WHERE ps_other.product_id = ${products.id}
+          AND ps_other.asp_name != 'FANZA'
+        )
+      )`
+    );
+
+    // 特定のIDリストでフィルタ（バッチ取得用）
+    if (options?.ids && options.ids.length > 0) {
+      conditions.push(inArray(products.id, options.ids));
+    }
 
     // プロバイダー（ASP）でフィルタ（単一）
     if (options?.provider) {
@@ -452,13 +564,61 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     }
 
     // 複数プロバイダー（ASP）でフィルタ（いずれかを含む）
+    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
     if (options?.providers && options.providers.length > 0) {
       const aspNames = options.providers;
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
+          LEFT JOIN ${products} p2 ON ps.product_id = p2.id
           WHERE ps.product_id = ${products.id}
-          AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
+          AND (
+            CASE
+              WHEN ps.asp_name = 'DTI' THEN
+                CASE
+                  WHEN p2.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+                  WHEN p2.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+                  WHEN p2.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
+                  WHEN p2.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
+                  WHEN p2.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
+                  WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+                  WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
+                  WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  ELSE 'dti'
+                END
+              ELSE ps.asp_name
+            END
+          ) IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
+        )`
+      );
+    }
+
+    // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
+    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
+    if (options?.excludeProviders && options.excludeProviders.length > 0) {
+      const excludeAspNames = options.excludeProviders;
+      conditions.push(
+        sql`NOT EXISTS (
+          SELECT 1 FROM ${productSources} ps
+          LEFT JOIN ${products} p2 ON ps.product_id = p2.id
+          WHERE ps.product_id = ${products.id}
+          AND (
+            CASE
+              WHEN ps.asp_name = 'DTI' THEN
+                CASE
+                  WHEN p2.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+                  WHEN p2.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+                  WHEN p2.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
+                  WHEN p2.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
+                  WHEN p2.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
+                  WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+                  WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
+                  WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  ELSE 'dti'
+                END
+              ELSE ps.asp_name
+            END
+          ) IN (${sql.join(excludeAspNames.map(name => sql`${name}`), sql`, `)})
         )`
       );
     }
@@ -631,40 +791,66 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       const productIds = productList.map(p => p.id);
       if (productIds.length === 0) return [];
 
-      const batchData = await batchFetchProductRelatedData(db, productIds);
+      const batchData = await batchFetchProductRelatedData(db, productIds, options?.providers);
+      return mapProductsWithBatchData(productList, batchData, options?.locale || 'ja');
+    }
+
+    // 評価/レビュー数ソートの場合は特別な処理が必要（productRatingSummaryとJOIN）
+    if (options?.sortBy === 'ratingDesc' || options?.sortBy === 'ratingAsc' || options?.sortBy === 'reviewCountDesc') {
+      const results = await db
+        .selectDistinct({
+          product: products,
+          avgRating: productRatingSummary.averageRating,
+          totalReviews: productRatingSummary.totalReviews,
+        })
+        .from(products)
+        .leftJoin(productRatingSummary, eq(products.id, productRatingSummary.productId))
+        .where(whereClause)
+        .orderBy(
+          options.sortBy === 'ratingDesc'
+            ? desc(sql`COALESCE(${productRatingSummary.averageRating}, 0)`)
+            : options.sortBy === 'ratingAsc'
+            ? asc(sql`COALESCE(${productRatingSummary.averageRating}, 0)`)
+            : desc(sql`COALESCE(${productRatingSummary.totalReviews}, 0)`),
+          desc(products.releaseDate)
+        )
+        .limit(options?.limit || 100)
+        .offset(options?.offset || 0);
+
+      // バッチでデータを取得（共通ヘルパー使用）
+      const productList = results.map(r => r.product);
+      const productIds = productList.map(p => p.id);
+      if (productIds.length === 0) return [];
+
+      const batchData = await batchFetchProductRelatedData(db, productIds, options?.providers);
       return mapProductsWithBatchData(productList, batchData, options?.locale || 'ja');
     }
 
     // 通常のソート処理
+    // NULLS LAST を使用して、配信日未定の商品は最後に配置
     let orderByClause;
     switch (options?.sortBy) {
       case 'releaseDateAsc':
-        orderByClause = [asc(products.releaseDate), asc(products.createdAt)];
+        // 品番ID (normalizedProductId) を第2ソートキーにして安定ソート
+        orderByClause = [sql`${products.releaseDate} ASC NULLS LAST`, asc(products.normalizedProductId)];
         break;
       case 'titleAsc':
-        orderByClause = [asc(products.title)];
-        break;
-      case 'ratingDesc':
-        orderByClause = [desc(sql`COALESCE(${products.averageRating}, 0)`), desc(products.releaseDate)];
-        break;
-      case 'ratingAsc':
-        orderByClause = [asc(sql`COALESCE(${products.averageRating}, 0)`), desc(products.releaseDate)];
-        break;
-      case 'reviewCountDesc':
-        orderByClause = [desc(sql`COALESCE(${products.reviewCount}, 0)`), desc(products.releaseDate)];
+        // タイトル同一時は品番IDでソート
+        orderByClause = [asc(products.title), asc(products.normalizedProductId)];
         break;
       case 'durationDesc':
-        orderByClause = [desc(sql`COALESCE(${products.duration}, 0)`), desc(products.releaseDate)];
+        orderByClause = [desc(sql`COALESCE(${products.duration}, 0)`), sql`${products.releaseDate} DESC NULLS LAST`, desc(products.normalizedProductId)];
         break;
       case 'durationAsc':
-        orderByClause = [asc(sql`COALESCE(${products.duration}, 0)`), desc(products.releaseDate)];
+        orderByClause = [asc(sql`COALESCE(${products.duration}, 0)`), sql`${products.releaseDate} DESC NULLS LAST`, asc(products.normalizedProductId)];
         break;
       case 'random':
         orderByClause = [sql`RANDOM()`];
         break;
       case 'releaseDateDesc':
       default:
-        orderByClause = [desc(products.releaseDate), desc(products.createdAt)];
+        // 品番ID (normalizedProductId) を第2ソートキーにして安定ソート
+        orderByClause = [sql`${products.releaseDate} DESC NULLS LAST`, desc(products.normalizedProductId)];
         break;
     }
 
@@ -680,7 +866,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     const productIds = results.map(p => p.id);
     if (productIds.length === 0) return [];
 
-    const batchData = await batchFetchProductRelatedData(db, productIds);
+    const batchData = await batchFetchProductRelatedData(db, productIds, options?.providers);
     return mapProductsWithBatchData(results, batchData, options?.locale || 'ja');
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -735,13 +921,61 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
     }
 
     // 複数プロバイダー（ASP）でフィルタ
+    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
     if (options?.providers && options.providers.length > 0) {
       const aspNames = options.providers;
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
+          LEFT JOIN ${products} p2 ON ps.product_id = p2.id
           WHERE ps.product_id = ${products.id}
-          AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
+          AND (
+            CASE
+              WHEN ps.asp_name = 'DTI' THEN
+                CASE
+                  WHEN p2.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+                  WHEN p2.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+                  WHEN p2.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
+                  WHEN p2.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
+                  WHEN p2.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
+                  WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+                  WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
+                  WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  ELSE 'dti'
+                END
+              ELSE ps.asp_name
+            END
+          ) IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
+        )`
+      );
+    }
+
+    // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
+    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
+    if (options?.excludeProviders && options.excludeProviders.length > 0) {
+      const excludeAspNames = options.excludeProviders;
+      conditions.push(
+        sql`NOT EXISTS (
+          SELECT 1 FROM ${productSources} ps
+          LEFT JOIN ${products} p2 ON ps.product_id = p2.id
+          WHERE ps.product_id = ${products.id}
+          AND (
+            CASE
+              WHEN ps.asp_name = 'DTI' THEN
+                CASE
+                  WHEN p2.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+                  WHEN p2.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+                  WHEN p2.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
+                  WHEN p2.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
+                  WHEN p2.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
+                  WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+                  WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
+                  WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  ELSE 'dti'
+                END
+              ELSE ps.asp_name
+            END
+          ) IN (${sql.join(excludeAspNames.map(name => sql`${name}`), sql`, `)})
         )`
       );
     }
@@ -880,6 +1114,7 @@ export async function getActresses(options?: {
 
     // 作品と紐付いている女優のみ表示（出演数0の女優を除外）
     // nyoshin/unkotare専用女優も除外（それ以外の商品に出演していない女優）
+    // FANZA専用女優も除外（規約によりadult-vサイトでは表示禁止）
     conditions.push(
       sql`EXISTS (
         SELECT 1 FROM ${productPerformers} pp
@@ -888,6 +1123,16 @@ export async function getActresses(options?: {
         AND NOT (
           p2.normalized_product_id LIKE '女体のしんぴ%'
           OR p2.normalized_product_id LIKE 'うんこたれ%'
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM product_sources ps_fanza
+          WHERE ps_fanza.product_id = p2.id
+          AND ps_fanza.asp_name = 'FANZA'
+          AND NOT EXISTS (
+            SELECT 1 FROM product_sources ps_other
+            WHERE ps_other.product_id = p2.id
+            AND ps_other.asp_name != 'FANZA'
+          )
         )
       )`
     );
@@ -1400,32 +1645,49 @@ async function batchGetPerformerAliases(db: ReturnType<typeof getDb>, performerI
 }
 
 /**
- * タグ一覧を取得（カテゴリ別）
+ * タグ一覧を取得（カテゴリ別） - 内部実装
+ */
+async function getTagsInternal(category?: string): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
+  const db = getDb();
+
+  // タグとその使用数を取得
+  const results = await db
+    .select({
+      id: tags.id,
+      name: tags.name,
+      category: tags.category,
+      count: sql<number>`count(${productTags.productId})`,
+    })
+    .from(tags)
+    .leftJoin(productTags, eq(tags.id, productTags.tagId))
+    .where(category ? eq(tags.category, category) : undefined)
+    .groupBy(tags.id, tags.name, tags.category)
+    .orderBy(desc(sql`count(${productTags.productId})`));
+
+  return results.map(r => ({
+    id: r.id,
+    name: r.name,
+    category: r.category,
+    count: Number(r.count),
+  }));
+}
+
+/**
+ * タグ一覧を取得（カテゴリ別） - キャッシュ付き
  */
 export async function getTags(category?: string): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
+  const cacheKey = `tags:${category || 'all'}`;
+
+  // メモリキャッシュをチェック
+  const cached = getFromMemoryCache<Array<{ id: number; name: string; category: string | null; count: number }>>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   try {
-    const db = getDb();
-
-    // タグとその使用数を取得
-    const results = await db
-      .select({
-        id: tags.id,
-        name: tags.name,
-        category: tags.category,
-        count: sql<number>`count(${productTags.productId})`,
-      })
-      .from(tags)
-      .leftJoin(productTags, eq(tags.id, productTags.tagId))
-      .where(category ? eq(tags.category, category) : undefined)
-      .groupBy(tags.id, tags.name, tags.category)
-      .orderBy(desc(sql`count(${productTags.productId})`));
-
-    return results.map(r => ({
-      id: r.id,
-      name: r.name,
-      category: r.category,
-      count: Number(r.count),
-    }));
+    const result = await getTagsInternal(category);
+    setToMemoryCache(cacheKey, result);
+    return result;
   } catch (error) {
     console.error('Error fetching tags:', error);
     throw error;
@@ -1508,6 +1770,7 @@ export async function getActressesCount(options?: {
 
     // 作品と紐付いている女優のみカウント（出演数0の女優を除外）
     // nyoshin/unkotare専用女優も除外（それ以外の商品に出演していない女優）
+    // FANZA専用女優も除外（規約によりadult-vサイトでは表示禁止）
     conditions.push(
       sql`EXISTS (
         SELECT 1 FROM ${productPerformers} pp
@@ -1516,6 +1779,16 @@ export async function getActressesCount(options?: {
         AND NOT (
           p2.normalized_product_id LIKE '女体のしんぴ%'
           OR p2.normalized_product_id LIKE 'うんこたれ%'
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM product_sources ps_fanza
+          WHERE ps_fanza.product_id = p2.id
+          AND ps_fanza.asp_name = 'FANZA'
+          AND NOT EXISTS (
+            SELECT 1 FROM product_sources ps_other
+            WHERE ps_other.product_id = p2.id
+            AND ps_other.asp_name != 'FANZA'
+          )
         )
       )`
     );
@@ -1920,6 +2193,81 @@ export async function getProductSources(productId: number) {
 }
 
 /**
+ * 商品の全ASPソース情報（セール情報付き）を取得
+ * 価格比較機能用
+ */
+export async function getProductSourcesWithSales(productId: number) {
+  try {
+    const db = getDb();
+
+    // Get all sources for this product
+    const sources = await db
+      .select({
+        id: productSources.id,
+        aspName: productSources.aspName,
+        originalProductId: productSources.originalProductId,
+        price: productSources.price,
+        currency: productSources.currency,
+        affiliateUrl: productSources.affiliateUrl,
+        isSubscription: productSources.isSubscription,
+        productType: productSources.productType,
+      })
+      .from(productSources)
+      .where(eq(productSources.productId, productId));
+
+    if (sources.length === 0) {
+      return [];
+    }
+
+    // Get sale info for these sources
+    const sourceIds = sources.map(s => s.id);
+    const sales = await db
+      .select({
+        productSourceId: productSales.productSourceId,
+        regularPrice: productSales.regularPrice,
+        salePrice: productSales.salePrice,
+        discountPercent: productSales.discountPercent,
+        endAt: productSales.endAt,
+        isActive: productSales.isActive,
+      })
+      .from(productSales)
+      .where(and(
+        inArray(productSales.productSourceId, sourceIds),
+        eq(productSales.isActive, true)
+      ));
+
+    // Create sale map
+    const saleMap = new Map(sales.map(s => [s.productSourceId, s]));
+
+    // Combine sources with sale info
+    return sources.map(source => {
+      const sale = saleMap.get(source.id);
+      return {
+        aspName: source.aspName,
+        originalProductId: source.originalProductId,
+        regularPrice: sale?.regularPrice ?? source.price,
+        salePrice: sale?.salePrice ?? null,
+        discountPercent: sale?.discountPercent ?? null,
+        saleEndAt: sale?.endAt ?? null,
+        currency: source.currency,
+        affiliateUrl: source.affiliateUrl,
+        isSubscription: source.isSubscription,
+        productType: source.productType,
+        isOnSale: !!sale,
+      };
+    }).sort((a, b) => {
+      // Sort by effective price (sale price or regular price)
+      const priceA = a.salePrice ?? a.regularPrice ?? Infinity;
+      const priceB = b.salePrice ?? b.regularPrice ?? Infinity;
+      return priceA - priceB;
+    });
+  } catch (error) {
+    console.error(`Error fetching product sources with sales for product ${productId}:`, error);
+    return [];
+  }
+}
+
+/**
  * データベースの商品をProduct型に変換
  * @param locale - ロケール（'ja' | 'en' | 'zh' | 'ko'）。指定された言語のタイトル/説明を使用
  */
@@ -1930,9 +2278,9 @@ function mapProductToType(
   source?: any,
   cache?: any,
   imagesData?: Array<{ imageUrl: string; imageType: string; displayOrder: number | null }>,
-  videosData?: Array<{ videoUrl: string; videoType: string; quality: string | null; duration: number | null }>,
+  videosData?: Array<{ videoUrl: string; videoType: string | null; quality: string | null; duration: number | null }>,
   locale: string = 'ja',
-  saleData?: { regularPrice: number; salePrice: number; discountPercent: number | null }
+  saleData?: { regularPrice: number; salePrice: number; discountPercent: number | null; endAt?: Date | null }
 ): ProductType {
   // ASP情報から provider を取得
   const aspName = source?.aspName || 'DUGA';
@@ -2018,7 +2366,7 @@ function mapProductToType(
   const sampleVideos = videosData && videosData.length > 0
     ? videosData.map(video => ({
         url: video.videoUrl,
-        type: video.videoType,
+        type: video.videoType || 'sample',
         quality: video.quality || undefined,
         duration: video.duration || undefined,
       }))
@@ -2049,13 +2397,18 @@ function mapProductToType(
     isFeatured: false,
     isNew,
     isFuture,
+    productType: source?.productType as 'haishin' | 'dvd' | 'monthly' | undefined,
     discount: saleData?.discountPercent || undefined,
     salePrice: saleData?.salePrice,
     regularPrice: saleData?.regularPrice,
+    saleEndAt: saleData?.endAt?.toISOString(),
     reviewHighlight: undefined,
     ctaLabel: undefined,
     sampleImages,
     sampleVideos,
+    // AI生成コンテンツ
+    aiReview: product.aiReview || undefined,
+    aiReviewUpdatedAt: product.aiReviewUpdatedAt?.toISOString(),
   };
 }
 
@@ -2442,13 +2795,46 @@ export async function getUncategorizedProducts(options?: {
     }
 
     // ASPフィルター条件（対象/除外）
+    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
     let aspCondition = sql`TRUE`;
     if (includeAsp.length > 0) {
-      aspCondition = sql`ps.asp_name IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+      aspCondition = sql`(
+        CASE
+          WHEN ps.asp_name = 'DTI' THEN
+            CASE
+              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
+              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
+              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
+              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
+              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              ELSE 'dti'
+            END
+          ELSE ps.asp_name
+        END
+      ) IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
     }
     let excludeAspCondition = sql`TRUE`;
     if (excludeAsp.length > 0) {
-      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+      excludeAspCondition = sql`(ps.asp_name IS NULL OR (
+        CASE
+          WHEN ps.asp_name = 'DTI' THEN
+            CASE
+              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
+              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
+              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
+              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
+              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              ELSE 'dti'
+            END
+          ELSE ps.asp_name
+        END
+      ) NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
     }
 
     // サンプルコンテンツフィルター条件
@@ -2557,6 +2943,7 @@ export async function getUncategorizedProducts(options?: {
 
 /**
  * 出演者なし作品（未整理作品）の数を取得
+ * 注: Adult-VサイトではFANZA専用商品を除外（規約によりadult-vサイトでは表示禁止）
  */
 export async function getUncategorizedProductsCount(options?: {
   pattern?: string;
@@ -2647,6 +3034,16 @@ export async function getUncategorizedProductsCount(options?: {
       AND ${excludeAspCondition}
       AND ${videoCondition}
       AND ${imageCondition}
+      AND NOT EXISTS (
+        SELECT 1 FROM product_sources ps_fanza
+        WHERE ps_fanza.product_id = p.id
+        AND ps_fanza.asp_name = 'FANZA'
+        AND NOT EXISTS (
+          SELECT 1 FROM product_sources ps_other
+          WHERE ps_other.product_id = p.id
+          AND ps_other.asp_name != 'FANZA'
+        )
+      )
     `;
 
     const result = await db.execute(query);
@@ -2815,68 +3212,85 @@ export async function getProviderProductCounts(): Promise<Record<string, number>
 }
 
 /**
- * ASP別商品数統計を取得
+ * ASP別商品数統計を取得 - 内部実装
  * DTIも含めて全ASPの統計を返す（UIレベルでフィルタリング可能）
  */
+async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCount: number; actressCount: number }>> {
+  const db = getDb();
+
+  // DTIはproductsテーブルのdefault_thumbnail_urlから個別サービス名を取得
+  // affiliate_urlはclear-tv.comリダイレクトドメインのため使用不可
+  const result = await db.execute<{
+    asp_name: string;
+    product_count: string;
+    actress_count: string;
+  }>(sql`
+    SELECT
+      CASE
+        WHEN ps.asp_name = 'DTI' THEN
+          CASE
+            WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+            WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+            WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
+            WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
+            WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
+            WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+            WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
+            WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+            ELSE 'dti'
+          END
+        ELSE ps.asp_name
+      END as asp_name,
+      COUNT(DISTINCT ps.product_id) as product_count,
+      COUNT(DISTINCT pp.performer_id) as actress_count
+    FROM product_sources ps
+    LEFT JOIN products p ON ps.product_id = p.id
+    LEFT JOIN product_performers pp ON ps.product_id = pp.product_id
+    WHERE ps.asp_name IS NOT NULL
+    GROUP BY
+      CASE
+        WHEN ps.asp_name = 'DTI' THEN
+          CASE
+            WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+            WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+            WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
+            WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
+            WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
+            WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+            WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
+            WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+            ELSE 'dti'
+          END
+        ELSE ps.asp_name
+      END
+    ORDER BY product_count DESC
+  `);
+
+  if (!result.rows) return [];
+
+  return result.rows.map(row => ({
+    aspName: row.asp_name,
+    productCount: parseInt(row.product_count, 10),
+    actressCount: parseInt(row.actress_count, 10),
+  }));
+}
+
+/**
+ * ASP別商品数統計を取得 - キャッシュ付き
+ */
 export async function getAspStats(): Promise<Array<{ aspName: string; productCount: number; actressCount: number }>> {
+  const cacheKey = 'aspStats';
+
+  // メモリキャッシュをチェック
+  const cached = getFromMemoryCache<Array<{ aspName: string; productCount: number; actressCount: number }>>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   try {
-    const db = getDb();
-
-    // DTIはproductsテーブルのdefault_thumbnail_urlから個別サービス名を取得
-    // affiliate_urlはclear-tv.comリダイレクトドメインのため使用不可
-    const result = await db.execute<{
-      asp_name: string;
-      product_count: string;
-      actress_count: string;
-    }>(sql`
-      SELECT
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              ELSE 'dti'
-            END
-          ELSE ps.asp_name
-        END as asp_name,
-        COUNT(DISTINCT ps.product_id) as product_count,
-        COUNT(DISTINCT pp.performer_id) as actress_count
-      FROM product_sources ps
-      LEFT JOIN products p ON ps.product_id = p.id
-      LEFT JOIN product_performers pp ON ps.product_id = pp.product_id
-      WHERE ps.asp_name IS NOT NULL
-      GROUP BY
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              ELSE 'dti'
-            END
-          ELSE ps.asp_name
-        END
-      ORDER BY product_count DESC
-    `);
-
-    if (!result.rows) return [];
-
-    return result.rows.map(row => ({
-      aspName: row.asp_name,
-      productCount: parseInt(row.product_count, 10),
-      actressCount: parseInt(row.actress_count, 10),
-    }));
+    const result = await getAspStatsInternal();
+    setToMemoryCache(cacheKey, result);
+    return result;
   } catch (error) {
     console.error('Error getting ASP stats:', error);
     return [];
@@ -3605,6 +4019,877 @@ export async function getSaleStats(aspName?: string): Promise<{
   } catch (error) {
     console.error('Error fetching sale stats:', error);
     return { totalSales: 0, byAsp: [] };
+  }
+}
+
+/**
+ * 女優の平均価格/分を取得
+ */
+export async function getActressAvgPricePerMin(actressId: string): Promise<number | null> {
+  try {
+    const db = getDb();
+    const performerId = parseInt(actressId);
+
+    if (isNaN(performerId)) {
+      return null;
+    }
+
+    const result = await db.execute<{ avg_price_per_min: string | null }>(sql`
+      SELECT
+        AVG(CASE WHEN p.duration > 0 AND ps.price > 0 THEN ps.price / p.duration ELSE NULL END) as avg_price_per_min
+      FROM product_performers pp
+      INNER JOIN products p ON pp.product_id = p.id
+      INNER JOIN product_sources ps ON p.id = ps.product_id
+      WHERE pp.performer_id = ${performerId}
+      AND p.duration IS NOT NULL
+      AND p.duration > 0
+      AND ps.price IS NOT NULL
+      AND ps.price > 0
+    `);
+
+    const avgPricePerMin = result.rows[0]?.avg_price_per_min;
+    return avgPricePerMin ? parseFloat(avgPricePerMin) : null;
+  } catch (error) {
+    console.error(`Error fetching avg price per min for actress ${actressId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * 女優のキャリア分析データを取得
+ * 年別の作品数、デビュー作、最新作、全盛期などを分析
+ */
+export interface CareerAnalysis {
+  debutYear: number | null;
+  debutProduct: { id: number; title: string; releaseDate: string } | null;
+  latestProduct: { id: number; title: string; releaseDate: string } | null;
+  totalProducts: number;
+  yearlyStats: Array<{
+    year: number;
+    count: number;
+    products: Array<{ id: number; title: string; releaseDate: string }>;
+  }>;
+  peakYear: number | null;
+  peakYearCount: number;
+  isActive: boolean; // 過去6ヶ月以内にリリースがあるか
+  monthsSinceLastRelease: number | null;
+  averageProductsPerYear: number;
+}
+
+export async function getActressCareerAnalysis(actressId: string): Promise<CareerAnalysis | null> {
+  try {
+    const db = getDb();
+    const performerId = parseInt(actressId);
+    if (isNaN(performerId)) return null;
+
+    // 年別の作品数を取得
+    const yearlyResult = await db.execute(sql`
+      SELECT
+        EXTRACT(YEAR FROM p.release_date)::int as year,
+        COUNT(*)::int as count,
+        json_agg(
+          json_build_object(
+            'id', p.id,
+            'title', p.title,
+            'releaseDate', p.release_date
+          ) ORDER BY p.release_date
+        ) as products
+      FROM products p
+      JOIN product_performers pp ON p.id = pp.product_id
+      WHERE pp.performer_id = ${performerId}
+        AND p.release_date IS NOT NULL
+      GROUP BY EXTRACT(YEAR FROM p.release_date)
+      ORDER BY year
+    `);
+
+    if (!yearlyResult.rows || yearlyResult.rows.length === 0) {
+      return null;
+    }
+
+    const yearlyStats = yearlyResult.rows.map((row: Record<string, unknown>) => ({
+      year: row.year as number,
+      count: row.count as number,
+      products: (row.products as Array<{ id: number; title: string; releaseDate: string }>).slice(0, 5), // 各年最大5件
+    }));
+
+    // 全盛期（最も作品数が多い年）
+    const peakYearData = yearlyStats.reduce((max, curr) =>
+      curr.count > max.count ? curr : max, yearlyStats[0]);
+
+    // デビュー作と最新作
+    const firstYear = yearlyStats[0];
+    const lastYear = yearlyStats[yearlyStats.length - 1];
+    const debutProduct = firstYear?.products[0] || null;
+    const latestProduct = lastYear?.products[lastYear.products.length - 1] || null;
+
+    // 総作品数
+    const totalProducts = yearlyStats.reduce((sum, y) => sum + y.count, 0);
+
+    // 活動期間（年数）
+    const activeYears = yearlyStats.length;
+    const averageProductsPerYear = activeYears > 0 ? totalProducts / activeYears : 0;
+
+    // 最終リリースからの経過月数
+    let monthsSinceLastRelease: number | null = null;
+    let isActive = false;
+    if (latestProduct?.releaseDate) {
+      const lastDate = new Date(latestProduct.releaseDate);
+      const now = new Date();
+      monthsSinceLastRelease = Math.floor(
+        (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
+      );
+      isActive = monthsSinceLastRelease <= 6;
+    }
+
+    return {
+      debutYear: firstYear?.year || null,
+      debutProduct,
+      latestProduct,
+      totalProducts,
+      yearlyStats,
+      peakYear: peakYearData?.year || null,
+      peakYearCount: peakYearData?.count || 0,
+      isActive,
+      monthsSinceLastRelease,
+      averageProductsPerYear: Math.round(averageProductsPerYear * 10) / 10,
+    };
+  } catch (error) {
+    console.error(`Error fetching career analysis for actress ${actressId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * ランダム作品の型定義
+ */
+export interface RandomProduct {
+  id: number;
+  title: string;
+  imageUrl: string;
+  sampleImages: string[] | null;
+  releaseDate: string | null;
+  duration: number | null;
+  price: number | null;
+  provider: string | null;
+}
+
+/**
+ * ランダムな作品を取得（発掘モード用）
+ */
+export async function getRandomProduct(options?: {
+  excludeIds?: number[];
+  tags?: string[];
+  providers?: string[];
+  locale?: string;
+}): Promise<RandomProduct | null> {
+  try {
+    const db = getDb();
+    const locale = options?.locale || 'ja';
+    const conditions = [];
+
+    // 除外ID
+    if (options?.excludeIds && options.excludeIds.length > 0) {
+      conditions.push(sql`p.id NOT IN ${options.excludeIds}`);
+    }
+
+    // タグフィルター
+    if (options?.tags && options.tags.length > 0) {
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM product_tags pt
+        JOIN tags t ON pt.tag_id = t.id
+        WHERE pt.product_id = p.id AND t.id IN ${options.tags.map(t => parseInt(t))}
+      )`);
+    }
+
+    // プロバイダーフィルター
+    if (options?.providers && options.providers.length > 0) {
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM product_sources ps
+        WHERE ps.product_id = p.id AND ps.asp_name IN ${options.providers}
+      )`);
+    }
+
+    // サンプル画像がある作品のみ
+    conditions.push(sql`p.sample_images IS NOT NULL AND jsonb_array_length(p.sample_images) > 0`);
+
+    const whereClause = conditions.length > 0
+      ? sql`WHERE ${sql.join(conditions, sql` AND `)}`
+      : sql`WHERE p.sample_images IS NOT NULL`;
+
+    const result = await db.execute(sql`
+      SELECT
+        p.id,
+        COALESCE(${locale === 'en' ? sql`p.title_en` : locale === 'zh' ? sql`p.title_zh` : locale === 'ko' ? sql`p.title_ko` : sql`p.title`}, p.title) as title,
+        p.image_url,
+        p.sample_images,
+        p.release_date,
+        p.duration,
+        ps.price,
+        ps.asp_name as provider
+      FROM products p
+      LEFT JOIN LATERAL (
+        SELECT price, asp_name FROM product_sources
+        WHERE product_id = p.id
+        ORDER BY price NULLS LAST
+        LIMIT 1
+      ) ps ON true
+      ${whereClause}
+      ORDER BY RANDOM()
+      LIMIT 1
+    `);
+
+    if (!result.rows || result.rows.length === 0) {
+      return null;
+    }
+
+    const row = result.rows[0] as Record<string, unknown>;
+    return {
+      id: row.id as number,
+      title: row.title as string,
+      imageUrl: row.image_url as string,
+      sampleImages: row.sample_images as string[] | null,
+      releaseDate: row.release_date as string | null,
+      duration: row.duration as number | null,
+      price: row.price as number | null,
+      provider: row.provider as string | null,
+    };
+  } catch (error) {
+    console.error('Error fetching random product:', error);
+    return null;
+  }
+}
+
+/**
+ * シリーズ情報を取得（シリーズ完走ガイド用）
+ * seriesタイプのタグからシリーズを特定し、関連作品を取得
+ */
+export interface SeriesBasicInfo {
+  id: number;
+  name: string;
+  totalProducts: number;
+  totalDuration: number; // 総再生時間（分）
+  products: Array<{
+    id: number;
+    title: string;
+    imageUrl: string;
+    releaseDate: string | null;
+    duration: number | null;
+    price: number | null;
+  }>;
+}
+
+export async function getSeriesByTagId(tagId: number, locale: string = 'ja'): Promise<SeriesBasicInfo | null> {
+  try {
+    const db = getDb();
+
+    // タグ情報を取得
+    const tagResult = await db.execute(sql`
+      SELECT id, name, name_en, name_zh, name_ko
+      FROM tags
+      WHERE id = ${tagId} AND type = 'series'
+    `);
+
+    if (!tagResult.rows || tagResult.rows.length === 0) {
+      return null;
+    }
+
+    const tag = tagResult.rows[0] as Record<string, unknown>;
+    const tagName = locale === 'en' ? (tag.name_en || tag.name)
+      : locale === 'zh' ? (tag.name_zh || tag.name)
+      : locale === 'ko' ? (tag.name_ko || tag.name)
+      : tag.name;
+
+    // タイトルのローカライズ
+    const titleColumn = locale === 'en' ? sql`COALESCE(p.title_en, p.title)`
+      : locale === 'zh' ? sql`COALESCE(p.title_zh, p.title)`
+      : locale === 'ko' ? sql`COALESCE(p.title_ko, p.title)`
+      : sql`p.title`;
+
+    // シリーズに属する作品を取得
+    const productsResult = await db.execute(sql`
+      SELECT
+        p.id,
+        ${titleColumn} as title,
+        p.image_url,
+        p.release_date,
+        p.duration,
+        ps.price
+      FROM products p
+      JOIN product_tags pt ON p.id = pt.product_id
+      LEFT JOIN LATERAL (
+        SELECT price FROM product_sources
+        WHERE product_id = p.id
+        ORDER BY price NULLS LAST
+        LIMIT 1
+      ) ps ON true
+      WHERE pt.tag_id = ${tagId}
+      ORDER BY p.release_date NULLS LAST
+    `);
+
+    const products = (productsResult.rows || []).map((row: Record<string, unknown>) => ({
+      id: row.id as number,
+      title: row.title as string,
+      imageUrl: row.image_url as string,
+      releaseDate: row.release_date as string | null,
+      duration: row.duration as number | null,
+      price: row.price as number | null,
+    }));
+
+    const totalDuration = products.reduce((sum, p) => sum + (p.duration || 0), 0);
+
+    return {
+      id: tagId,
+      name: tagName as string,
+      totalProducts: products.length,
+      totalDuration,
+      products,
+    };
+  } catch (error) {
+    console.error(`Error fetching series ${tagId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * メーカー/レーベル情報を取得
+ */
+export interface MakerInfo {
+  id: number;
+  name: string;
+  category: 'maker' | 'label';
+  productCount: number;
+  averageRating: number | null;
+  topPerformers: Array<{ id: number; name: string; productCount: number }>;
+  topGenres: Array<{ id: number; name: string; productCount: number }>;
+  yearlyStats: Array<{ year: number; count: number }>;
+  recentProducts: Array<{
+    id: number;
+    title: string;
+    imageUrl: string;
+    releaseDate: string | null;
+  }>;
+}
+
+export async function getMakerById(makerId: number, locale: string = 'ja'): Promise<MakerInfo | null> {
+  try {
+    const db = getDb();
+
+    // タグ情報を取得（メーカーまたはレーベル）
+    const tagResult = await db.execute<{
+      id: number;
+      name: string;
+      name_en: string | null;
+      name_zh: string | null;
+      name_ko: string | null;
+      category: string;
+    }>(sql`
+      SELECT id, name, name_en, name_zh, name_ko, category
+      FROM tags
+      WHERE id = ${makerId} AND category IN ('maker', 'label')
+    `);
+
+    if (!tagResult.rows || tagResult.rows.length === 0) {
+      return null;
+    }
+
+    const tag = tagResult.rows[0];
+    const makerName = locale === 'en' ? (tag.name_en || tag.name)
+      : locale === 'zh' ? (tag.name_zh || tag.name)
+      : locale === 'ko' ? (tag.name_ko || tag.name)
+      : tag.name;
+
+    // 作品数と平均評価を取得
+    const statsResult = await db.execute<{ count: string; avg_rating: string | null }>(sql`
+      SELECT
+        COUNT(DISTINCT pt.product_id)::text as count,
+        AVG(prs.average_rating)::text as avg_rating
+      FROM product_tags pt
+      LEFT JOIN product_rating_summary prs ON pt.product_id = prs.product_id
+      WHERE pt.tag_id = ${makerId}
+    `);
+
+    const productCount = parseInt(statsResult.rows?.[0]?.count || '0', 10);
+    const averageRating = statsResult.rows?.[0]?.avg_rating
+      ? parseFloat(statsResult.rows[0].avg_rating)
+      : null;
+
+    // 人気女優トップ5
+    const performersResult = await db.execute<{
+      performer_id: number;
+      performer_name: string;
+      product_count: string;
+    }>(sql`
+      SELECT
+        perf.id as performer_id,
+        perf.name as performer_name,
+        COUNT(DISTINCT pt.product_id)::text as product_count
+      FROM product_tags pt
+      JOIN product_performers pp ON pt.product_id = pp.product_id
+      JOIN performers perf ON pp.performer_id = perf.id
+      WHERE pt.tag_id = ${makerId}
+      GROUP BY perf.id, perf.name
+      ORDER BY COUNT(DISTINCT pt.product_id) DESC
+      LIMIT 5
+    `);
+
+    const topPerformers = (performersResult.rows || []).map(row => ({
+      id: row.performer_id,
+      name: row.performer_name,
+      productCount: parseInt(row.product_count, 10),
+    }));
+
+    // 人気ジャンルトップ5
+    const genresResult = await db.execute<{
+      genre_id: number;
+      genre_name: string;
+      product_count: string;
+    }>(sql`
+      SELECT
+        g.id as genre_id,
+        COALESCE(
+          ${locale === 'en' ? sql`g.name_en` : locale === 'zh' ? sql`g.name_zh` : locale === 'ko' ? sql`g.name_ko` : sql`g.name`},
+          g.name
+        ) as genre_name,
+        COUNT(DISTINCT pt.product_id)::text as product_count
+      FROM product_tags pt
+      JOIN product_tags pt2 ON pt.product_id = pt2.product_id
+      JOIN tags g ON pt2.tag_id = g.id AND g.category = 'genre'
+      WHERE pt.tag_id = ${makerId}
+      GROUP BY g.id, g.name, g.name_en, g.name_zh, g.name_ko
+      ORDER BY COUNT(DISTINCT pt.product_id) DESC
+      LIMIT 5
+    `);
+
+    const topGenres = (genresResult.rows || []).map(row => ({
+      id: row.genre_id,
+      name: row.genre_name,
+      productCount: parseInt(row.product_count, 10),
+    }));
+
+    // 年別統計
+    const yearlyResult = await db.execute<{ year: string; count: string }>(sql`
+      SELECT
+        EXTRACT(YEAR FROM p.release_date)::text as year,
+        COUNT(DISTINCT pt.product_id)::text as count
+      FROM product_tags pt
+      JOIN products p ON pt.product_id = p.id
+      WHERE pt.tag_id = ${makerId} AND p.release_date IS NOT NULL
+      GROUP BY EXTRACT(YEAR FROM p.release_date)
+      ORDER BY year DESC
+      LIMIT 10
+    `);
+
+    const yearlyStats = (yearlyResult.rows || []).map(row => ({
+      year: parseInt(row.year, 10),
+      count: parseInt(row.count, 10),
+    }));
+
+    // 最新作品5件
+    const recentResult = await db.execute<{
+      id: number;
+      title: string;
+      image_url: string | null;
+      release_date: string | null;
+    }>(sql`
+      SELECT DISTINCT
+        p.id,
+        COALESCE(
+          ${locale === 'en' ? sql`p.title_en` : locale === 'zh' ? sql`p.title_zh` : locale === 'ko' ? sql`p.title_ko` : sql`p.title`},
+          p.title
+        ) as title,
+        p.default_thumbnail_url as image_url,
+        p.release_date::text
+      FROM products p
+      JOIN product_tags pt ON p.id = pt.product_id
+      WHERE pt.tag_id = ${makerId}
+      ORDER BY p.release_date DESC NULLS LAST
+      LIMIT 5
+    `);
+
+    const recentProducts = (recentResult.rows || []).map(row => ({
+      id: row.id,
+      title: row.title,
+      imageUrl: row.image_url || '',
+      releaseDate: row.release_date,
+    }));
+
+    return {
+      id: makerId,
+      name: makerName,
+      category: tag.category as 'maker' | 'label',
+      productCount,
+      averageRating,
+      topPerformers,
+      topGenres,
+      yearlyStats,
+      recentProducts,
+    };
+  } catch (error) {
+    console.error(`Error fetching maker ${makerId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * 人気メーカー/レーベル一覧を取得
+ */
+export async function getPopularMakers(options?: {
+  category?: 'maker' | 'label' | 'both';
+  limit?: number;
+  locale?: string;
+}): Promise<Array<{
+  id: number;
+  name: string;
+  category: string;
+  productCount: number;
+}>> {
+  try {
+    const db = getDb();
+    const category = options?.category || 'both';
+    const limit = options?.limit || 20;
+    const locale = options?.locale || 'ja';
+
+    const categoryCondition = category === 'both'
+      ? sql`t.category IN ('maker', 'label')`
+      : sql`t.category = ${category}`;
+
+    const nameColumn = locale === 'en' ? sql`COALESCE(t.name_en, t.name)`
+      : locale === 'zh' ? sql`COALESCE(t.name_zh, t.name)`
+      : locale === 'ko' ? sql`COALESCE(t.name_ko, t.name)`
+      : sql`t.name`;
+
+    const result = await db.execute<{
+      id: number;
+      name: string;
+      category: string;
+      product_count: string;
+    }>(sql`
+      SELECT
+        t.id,
+        ${nameColumn} as name,
+        t.category,
+        COUNT(pt.product_id)::text as product_count
+      FROM tags t
+      JOIN product_tags pt ON t.id = pt.tag_id
+      WHERE ${categoryCondition}
+      GROUP BY t.id, t.name, t.name_en, t.name_zh, t.name_ko, t.category
+      HAVING COUNT(pt.product_id) >= 5
+      ORDER BY COUNT(pt.product_id) DESC
+      LIMIT ${limit}
+    `);
+
+    return (result.rows || []).map(row => ({
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      productCount: parseInt(row.product_count, 10),
+    }));
+  } catch (error) {
+    console.error('Error fetching popular makers:', error);
+    return [];
+  }
+}
+
+/**
+ * 女優が高評価した作品のメーカー傾向を分析
+ * ユーザーのお気に入り作品からメーカー傾向を分析
+ */
+export async function analyzeMakerPreference(productIds: number[], locale: string = 'ja'): Promise<Array<{
+  makerId: number;
+  makerName: string;
+  category: string;
+  count: number;
+  averageRating: number | null;
+}>> {
+  try {
+    if (productIds.length === 0) return [];
+    const db = getDb();
+
+    const nameColumn = locale === 'en' ? sql`COALESCE(t.name_en, t.name)`
+      : locale === 'zh' ? sql`COALESCE(t.name_zh, t.name)`
+      : locale === 'ko' ? sql`COALESCE(t.name_ko, t.name)`
+      : sql`t.name`;
+
+    const result = await db.execute<{
+      maker_id: number;
+      maker_name: string;
+      category: string;
+      count: string;
+      avg_rating: string | null;
+    }>(sql`
+      SELECT
+        t.id as maker_id,
+        ${nameColumn} as maker_name,
+        t.category,
+        COUNT(pt.product_id)::text as count,
+        AVG(prs.average_rating)::text as avg_rating
+      FROM product_tags pt
+      JOIN tags t ON pt.tag_id = t.id
+      LEFT JOIN product_rating_summary prs ON pt.product_id = prs.product_id
+      WHERE pt.product_id IN (${sql.join(productIds.map(id => sql`${id}`), sql`, `)})
+        AND t.category IN ('maker', 'label')
+      GROUP BY t.id, t.name, t.name_en, t.name_zh, t.name_ko, t.category
+      ORDER BY COUNT(pt.product_id) DESC
+      LIMIT 10
+    `);
+
+    return (result.rows || []).map(row => ({
+      makerId: row.maker_id,
+      makerName: row.maker_name,
+      category: row.category,
+      count: parseInt(row.count, 10),
+      averageRating: row.avg_rating ? parseFloat(row.avg_rating) : null,
+    }));
+  } catch (error) {
+    console.error('Error analyzing maker preference:', error);
+    return [];
+  }
+}
+
+/**
+ * シリーズ情報を取得（シリーズ完走ガイド用）
+ */
+export interface SeriesInfo {
+  id: number;
+  name: string;
+  nameEn: string | null;
+  nameZh: string | null;
+  nameKo: string | null;
+  totalProducts: number;
+  totalDuration: number; // 総再生時間（分）
+  firstReleaseDate: string | null;
+  lastReleaseDate: string | null;
+  topPerformers: Array<{ id: number; name: string; count: number }>;
+  averageRating: number | null;
+  products?: SeriesProduct[]; // オプショナル
+}
+
+export async function getSeriesInfo(seriesTagId: number): Promise<SeriesInfo | null> {
+  try {
+    const db = getDb();
+
+    // シリーズタグ情報を取得
+    const tagResult = await db
+      .select()
+      .from(tags)
+      .where(and(eq(tags.id, seriesTagId), eq(tags.category, 'series')))
+      .limit(1);
+
+    if (tagResult.length === 0) return null;
+
+    const tag = tagResult[0];
+
+    // シリーズの統計情報を取得
+    const statsResult = await db.execute(sql`
+      SELECT
+        COUNT(DISTINCT p.id)::int as total_products,
+        COALESCE(SUM(p.duration), 0)::int as total_duration,
+        MIN(p.release_date) as first_release,
+        MAX(p.release_date) as last_release,
+        AVG(rs.average_rating)::numeric(3,2) as avg_rating
+      FROM products p
+      JOIN product_tags pt ON p.id = pt.product_id
+      LEFT JOIN product_rating_summary rs ON p.id = rs.product_id
+      WHERE pt.tag_id = ${seriesTagId}
+    `);
+
+    const stats = statsResult.rows?.[0] as Record<string, unknown> || {};
+
+    // トップ出演者を取得
+    const performersResult = await db.execute(sql`
+      SELECT
+        pf.id,
+        pf.name,
+        COUNT(*)::int as count
+      FROM products p
+      JOIN product_tags pt ON p.id = pt.product_id
+      JOIN product_performers pp ON p.id = pp.product_id
+      JOIN performers pf ON pp.performer_id = pf.id
+      WHERE pt.tag_id = ${seriesTagId}
+      GROUP BY pf.id, pf.name
+      ORDER BY count DESC
+      LIMIT 5
+    `);
+
+    return {
+      id: tag.id,
+      name: tag.name,
+      nameEn: tag.nameEn,
+      nameZh: tag.nameZh,
+      nameKo: tag.nameKo,
+      totalProducts: Number(stats.total_products) || 0,
+      totalDuration: Number(stats.total_duration) || 0,
+      firstReleaseDate: stats.first_release ? String(stats.first_release) : null,
+      lastReleaseDate: stats.last_release ? String(stats.last_release) : null,
+      topPerformers: (performersResult.rows || []).map((row: Record<string, unknown>) => ({
+        id: Number(row.id),
+        name: String(row.name),
+        count: Number(row.count),
+      })),
+      averageRating: stats.avg_rating ? Number(stats.avg_rating) : null,
+    };
+  } catch (error) {
+    console.error('Error getting series info:', error);
+    return null;
+  }
+}
+
+/**
+ * シリーズ作品の型定義
+ */
+export interface SeriesProduct {
+  id: string;
+  normalizedProductId: string;
+  title: string;
+  releaseDate?: string;
+  duration?: number;
+  thumbnail: string;
+  performers: Array<{ id: number; name: string }>;
+  price?: number;
+  rating?: number;
+  reviewCount?: number;
+  hasVideo: boolean;
+  aiCatchphrase?: string;
+}
+
+/**
+ * シリーズ内の作品リストを取得（完走ガイド用）
+ */
+export async function getSeriesProducts(
+  seriesTagId: number,
+  options?: {
+    sortBy?: 'releaseDateAsc' | 'releaseDateDesc' | 'ratingDesc';
+    locale?: string;
+  }
+): Promise<SeriesProduct[]> {
+  try {
+    const db = getDb();
+    const locale = options?.locale || 'ja';
+    const sortBy = options?.sortBy || 'releaseDateAsc';
+
+    // 基本クエリ
+    const result = await db.execute(sql`
+      SELECT
+        p.id,
+        p.normalized_product_id,
+        p.title,
+        CASE WHEN ${locale} = 'en' THEN COALESCE(p.title_en, p.title)
+             WHEN ${locale} = 'zh' THEN COALESCE(p.title_zh, p.title)
+             WHEN ${locale} = 'ko' THEN COALESCE(p.title_ko, p.title)
+             ELSE p.title END as localized_title,
+        p.release_date,
+        p.duration,
+        p.default_thumbnail_url,
+        p.ai_catchphrase,
+        (
+          SELECT json_agg(json_build_object('id', pf.id, 'name', pf.name))
+          FROM product_performers pp
+          JOIN performers pf ON pp.performer_id = pf.id
+          WHERE pp.product_id = p.id
+        ) as performers,
+        (
+          SELECT MIN(ps.price)
+          FROM product_sources ps
+          WHERE ps.product_id = p.id
+        ) as min_price,
+        (
+          SELECT AVG(rs.average_rating)::numeric(3,2)
+          FROM product_rating_summary rs
+          WHERE rs.product_id = p.id
+        ) as avg_rating,
+        (
+          SELECT SUM(rs.total_reviews)::int
+          FROM product_rating_summary rs
+          WHERE rs.product_id = p.id
+        ) as total_reviews,
+        (
+          SELECT pi.image_url
+          FROM product_images pi
+          WHERE pi.product_id = p.id AND pi.image_type = 'thumbnail'
+          ORDER BY pi.display_order
+          LIMIT 1
+        ) as thumbnail_url,
+        (
+          SELECT EXISTS(
+            SELECT 1 FROM product_videos pv WHERE pv.product_id = p.id
+          )
+        ) as has_video
+      FROM products p
+      JOIN product_tags pt ON p.id = pt.product_id
+      WHERE pt.tag_id = ${seriesTagId}
+      ORDER BY ${sortBy === 'ratingDesc'
+        ? sql`avg_rating DESC NULLS LAST`
+        : sortBy === 'releaseDateDesc'
+        ? sql`p.release_date DESC NULLS LAST`
+        : sql`p.release_date ASC NULLS LAST`}
+    `);
+
+    return (result.rows || []).map((row: Record<string, unknown>) => ({
+      id: String(row.id),
+      normalizedProductId: String(row.normalized_product_id || ''),
+      title: String(row.localized_title || row.title),
+      releaseDate: row.release_date ? String(row.release_date) : undefined,
+      duration: row.duration ? Number(row.duration) : undefined,
+      thumbnail: String(row.thumbnail_url || row.default_thumbnail_url || ''),
+      performers: (row.performers as Array<{ id: number; name: string }>) || [],
+      price: row.min_price ? Number(row.min_price) : undefined,
+      rating: row.avg_rating ? Number(row.avg_rating) : undefined,
+      reviewCount: row.total_reviews ? Number(row.total_reviews) : undefined,
+      hasVideo: Boolean(row.has_video),
+      aiCatchphrase: row.ai_catchphrase ? String(row.ai_catchphrase) : undefined,
+    }));
+  } catch (error) {
+    console.error('Error getting series products:', error);
+    return [];
+  }
+}
+
+/**
+ * 人気シリーズ一覧を取得
+ */
+export async function getPopularSeries(limit: number = 20): Promise<Array<{
+  id: number;
+  name: string;
+  nameEn: string | null;
+  nameZh: string | null;
+  nameKo: string | null;
+  productCount: number;
+  latestReleaseDate: string | null;
+}>> {
+  try {
+    const db = getDb();
+
+    const result = await db.execute(sql`
+      SELECT
+        t.id,
+        t.name,
+        t.name_en,
+        t.name_zh,
+        t.name_ko,
+        COUNT(DISTINCT pt.product_id)::int as product_count,
+        MAX(p.release_date) as latest_release
+      FROM tags t
+      JOIN product_tags pt ON t.id = pt.tag_id
+      JOIN products p ON pt.product_id = p.id
+      WHERE t.category = 'series'
+      GROUP BY t.id, t.name, t.name_en, t.name_zh, t.name_ko
+      HAVING COUNT(DISTINCT pt.product_id) >= 5
+      ORDER BY product_count DESC
+      LIMIT ${limit}
+    `);
+
+    return (result.rows || []).map((row: Record<string, unknown>) => ({
+      id: Number(row.id),
+      name: String(row.name),
+      nameEn: row.name_en ? String(row.name_en) : null,
+      nameZh: row.name_zh ? String(row.name_zh) : null,
+      nameKo: row.name_ko ? String(row.name_ko) : null,
+      productCount: Number(row.product_count),
+      latestReleaseDate: row.latest_release ? String(row.latest_release) : null,
+    }));
+  } catch (error) {
+    console.error('Error getting popular series:', error);
+    return [];
   }
 }
 

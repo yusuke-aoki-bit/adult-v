@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Actress } from '@/types/product';
 import { providerMeta } from '@/lib/providers';
 import { normalizeImageUrl, isUncensoredThumbnail } from '@/lib/image-utils';
@@ -91,7 +91,7 @@ export default function ActressCard({ actress, compact = false, priority = false
                 return (
                   <span
                     key={service}
-                    className={`text-[9px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-0.5 rounded bg-gradient-to-r ${meta.accentClass}`}
+                    className={`text-[9px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-0.5 rounded bg-gradient-to-r text-white ${meta.accentClass}`}
                   >
                     {meta.label}
                   </span>
@@ -178,7 +178,7 @@ export default function ActressCard({ actress, compact = false, priority = false
               return (
                 <span
                   key={service}
-                  className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${meta.accentClass}`}
+                  className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r text-white ${meta.accentClass}`}
                 >
                   {meta.label}
                 </span>

@@ -92,12 +92,29 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
 
   const query = typeof searchParamsData.q === 'string' ? searchParamsData.q.trim() : undefined;
 
-  // FANZAサイトの場合は自動的にFANZAのみをフィルタ
-  const includeAsp = serverAspFilter
-    ? serverAspFilter
-    : (typeof searchParamsData.includeAsp === 'string'
-        ? searchParamsData.includeAsp.split(',').filter(Boolean)
-        : []);
+  // ASPフィルターの決定ロジック:
+  // 1. URLパラメータが指定されている場合は、それを優先（サイト許可ASP内でフィルター）
+  // 2. URLパラメータがない場合は、サイトデフォルト（FANZAサイト:FANZA, adult-v:全ASP）
+  const urlIncludeAsp = typeof searchParamsData.includeAsp === 'string'
+    ? searchParamsData.includeAsp.split(',').filter(Boolean)
+    : [];
+
+  let includeAsp: string[];
+  if (urlIncludeAsp.length > 0) {
+    // URLパラメータが指定されている場合
+    if (serverAspFilter) {
+      // サイトの許可ASPリストがある場合、その中でフィルター
+      includeAsp = urlIncludeAsp.filter(asp =>
+        serverAspFilter.some(allowed => allowed.toUpperCase() === asp.toUpperCase())
+      );
+    } else {
+      includeAsp = urlIncludeAsp;
+    }
+  } else {
+    // URLパラメータがない場合はサイトデフォルト（またはなし）
+    // adult-vサイトではデフォルトで全ASP表示（フィルターなし）
+    includeAsp = isFanzaSite && serverAspFilter ? serverAspFilter : [];
+  }
   const excludeAsp = typeof searchParamsData.excludeAsp === 'string'
     ? searchParamsData.excludeAsp.split(',').filter(Boolean)
     : [];
@@ -119,6 +136,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   const filterOptions = {
     query: query || undefined,
     providers: includeAsp.length > 0 ? includeAsp : undefined,
+    excludeProviders: excludeAsp.length > 0 ? excludeAsp : undefined,
     hasVideo: hasVideo || undefined,
     hasImage: hasImage || undefined,
     onSale: onSale || undefined,
@@ -145,10 +163,11 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   });
 
   // ページネーション用のクエリパラメータ
+  // FANZAサイトではASPフィルターは自動適用されるためURLに含めない
   const queryParams: Record<string, string> = {};
   if (query) queryParams.q = query;
-  if (includeAsp.length > 0) queryParams.includeAsp = includeAsp.join(',');
-  if (excludeAsp.length > 0) queryParams.excludeAsp = excludeAsp.join(',');
+  if (!isFanzaSite && includeAsp.length > 0) queryParams.includeAsp = includeAsp.join(',');
+  if (!isFanzaSite && excludeAsp.length > 0) queryParams.excludeAsp = excludeAsp.join(',');
   if (hasVideo) queryParams.hasVideo = 'true';
   if (hasImage) queryParams.hasImage = 'true';
   if (onSale) queryParams.onSale = 'true';

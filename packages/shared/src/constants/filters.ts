@@ -4,7 +4,7 @@
  * UIコンポーネント間で共有される定数を一元管理
  */
 
-import type { ProviderId } from '../types/product.js';
+import type { ProviderId, SortOption } from '../types/product.js';
 
 // ============================================================
 // ひらがな・アルファベット定数
@@ -101,18 +101,6 @@ export function getProviderId(aspName: string): ProviderId | undefined {
 // ============================================================
 // ソートオプション
 // ============================================================
-
-/**
- * ソートオプションの型
- */
-export type SortOption =
-  | 'releaseDateDesc'
-  | 'releaseDateAsc'
-  | 'priceAsc'
-  | 'priceDesc'
-  | 'nameAsc'
-  | 'nameDesc'
-  | 'viewsDesc';
 
 /**
  * ソートオプションのラベル

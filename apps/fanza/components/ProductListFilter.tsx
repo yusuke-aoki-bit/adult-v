@@ -35,6 +35,10 @@ const translations = {
     uncategorizedOnly: '出演者なしの作品のみ',
     reviewFilter: 'レビュー',
     hasReviewOnly: 'レビューありのみ',
+    mgsProductType: 'MGS商品タイプ',
+    streaming: '配信',
+    dvd: 'DVD',
+    monthly: '月額',
   },
   en: {
     filterSettings: 'Filter Settings',
@@ -59,6 +63,10 @@ const translations = {
     uncategorizedOnly: 'Without performer only',
     reviewFilter: 'Review',
     hasReviewOnly: 'With Review Only',
+    mgsProductType: 'MGS Product Type',
+    streaming: 'Streaming',
+    dvd: 'DVD',
+    monthly: 'Monthly',
   },
   zh: {
     filterSettings: '筛选设置',
@@ -83,6 +91,10 @@ const translations = {
     uncategorizedOnly: '仅无演员作品',
     reviewFilter: '评论',
     hasReviewOnly: '仅有评论',
+    mgsProductType: 'MGS商品类型',
+    streaming: '流媒体',
+    dvd: 'DVD',
+    monthly: '月费',
   },
   ko: {
     filterSettings: '필터 설정',
@@ -107,6 +119,10 @@ const translations = {
     uncategorizedOnly: '출연자 없는 작품만',
     reviewFilter: '리뷰',
     hasReviewOnly: '리뷰가 있는 것만',
+    mgsProductType: 'MGS 상품 유형',
+    streaming: '스트리밍',
+    dvd: 'DVD',
+    monthly: '월정액',
   },
 } as const;
 
@@ -140,6 +156,7 @@ interface ProductListFilterProps {
   showSaleFilter?: boolean;
   showUncategorizedFilter?: boolean;
   showReviewFilter?: boolean;
+  showMgsProductTypeFilter?: boolean;
   accentColor?: 'rose' | 'yellow' | 'blue';
   defaultOpen?: boolean;
 }
@@ -157,6 +174,7 @@ export default function ProductListFilter({
   showSaleFilter = true,
   showUncategorizedFilter = false,
   showReviewFilter = false,
+  showMgsProductTypeFilter = true,
   accentColor = 'yellow',
   defaultOpen,
 }: ProductListFilterProps) {
@@ -185,6 +203,7 @@ export default function ProductListFilter({
   const excludeAsps = searchParams.get('excludeAsp')?.split(',').filter(Boolean) || [];
   const includeTags = searchParams.get('include')?.split(',').filter(Boolean) || [];
   const excludeTags = searchParams.get('exclude')?.split(',').filter(Boolean) || [];
+  const mgsProductType = searchParams.get('mgsProductType') as 'haishin' | 'dvd' | 'monthly' | null;
 
   // アクセントカラー（ライトテーマ用に調整）
   const accentClasses = {
@@ -296,6 +315,10 @@ export default function ProductListFilter({
     updateFilter('exclude', tagId, true, excludeTags);
   };
 
+  const handleMgsProductTypeChange = (type: 'haishin' | 'dvd' | 'monthly' | null) => {
+    updateFilter('mgsProductType', mgsProductType === type ? null : type);
+  };
+
   // クリアボタン
   const handleClear = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -311,6 +334,7 @@ export default function ProductListFilter({
     params.delete('excludeAsp');
     params.delete('include');
     params.delete('exclude');
+    params.delete('mgsProductType');
     params.delete('page');
 
     const queryString = params.toString();
@@ -318,6 +342,10 @@ export default function ProductListFilter({
       router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
     });
   };
+
+  // FANZAサイトではASPフィルターは自動適用されるため、アクティブフィルターとしてカウントしない
+  const effectiveIncludeAsps = isFanzaSite ? [] : includeAsps;
+  const effectiveExcludeAsps = isFanzaSite ? [] : excludeAsps;
 
   const hasActiveFilters =
     hasVideo ||
@@ -328,10 +356,11 @@ export default function ProductListFilter({
     performerType !== null ||
     selectedPattern !== '' ||
     initialFilter !== '' ||
-    includeAsps.length > 0 ||
-    excludeAsps.length > 0 ||
+    effectiveIncludeAsps.length > 0 ||
+    effectiveExcludeAsps.length > 0 ||
     includeTags.length > 0 ||
-    excludeTags.length > 0;
+    excludeTags.length > 0 ||
+    mgsProductType !== null;
 
   const activeFilterCount =
     (hasVideo ? 1 : 0) +
@@ -342,10 +371,11 @@ export default function ProductListFilter({
     (performerType ? 1 : 0) +
     (selectedPattern ? 1 : 0) +
     (initialFilter ? 1 : 0) +
-    includeAsps.length +
-    excludeAsps.length +
+    effectiveIncludeAsps.length +
+    effectiveExcludeAsps.length +
     includeTags.length +
-    excludeTags.length;
+    excludeTags.length +
+    (mgsProductType ? 1 : 0);
 
   return (
     <details
@@ -551,6 +581,58 @@ export default function ProductListFilter({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 <span className="text-base sm:text-sm text-gray-700">{t.multi}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* MGS商品タイプフィルター */}
+        {showMgsProductTypeFilter && (
+          <div>
+            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">{t.mgsProductType}</h3>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <button
+                type="button"
+                onClick={() => handleMgsProductTypeChange('haishin')}
+                className={`flex items-center justify-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
+                  mgsProductType === 'haishin'
+                    ? 'bg-green-50 border-green-200 hover:opacity-80'
+                    : 'border-gray-200 hover:bg-gray-50 active:bg-gray-100'
+                }`}
+              >
+                <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${mgsProductType === 'haishin' ? 'text-green-500' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span className="text-base sm:text-sm text-gray-700">{t.streaming}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleMgsProductTypeChange('dvd')}
+                className={`flex items-center justify-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
+                  mgsProductType === 'dvd'
+                    ? 'bg-amber-50 border-amber-200 hover:opacity-80'
+                    : 'border-gray-200 hover:bg-gray-50 active:bg-gray-100'
+                }`}
+              >
+                <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${mgsProductType === 'dvd' ? 'text-amber-600' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" strokeWidth={2} />
+                  <circle cx="12" cy="12" r="3" strokeWidth={2} />
+                </svg>
+                <span className="text-base sm:text-sm text-gray-700">{t.dvd}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleMgsProductTypeChange('monthly')}
+                className={`flex items-center justify-center gap-3 p-3 sm:p-2 rounded-lg sm:rounded cursor-pointer min-h-[52px] sm:min-h-0 transition-colors border ${
+                  mgsProductType === 'monthly'
+                    ? 'bg-purple-50 border-purple-200 hover:opacity-80'
+                    : 'border-gray-200 hover:bg-gray-50 active:bg-gray-100'
+                }`}
+              >
+                <svg className={`w-6 h-6 sm:w-5 sm:h-5 ${mgsProductType === 'monthly' ? 'text-purple-600' : 'text-gray-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-base sm:text-sm text-gray-700">{t.monthly}</span>
               </button>
             </div>
           </div>

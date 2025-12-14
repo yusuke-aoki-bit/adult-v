@@ -36,8 +36,8 @@
     "filterSettings": "フィルター設定"
   },
   "homepage": {
-    "title": "AV女優データベース - DUGA・MGS・DTI作品横断検索 | Adult Viewer Lab",
-    "description": "DUGA、MGS、DTI、カリビアンコム、一本道、HEYZOなど主要動画配信サイトを横断したAV女優・作品データベース。{count}名以上の女優情報、出演作品、ジャンル別検索、価格比較が可能。ヘビーユーザー向けの詳細レビューとランキング情報を提供。",
+    "title": "【無料サンプル・セール情報】AV女優38,000名 作品横断検索 | Adult Viewer Lab",
+    "description": "DUGA・MGS・カリビアンコム等{count}名以上のAV女優・作品を横断検索。無料サンプル動画・セール情報・価格比較機能で最安値を発見。ジャンル・シチュエーション別に簡単検索。",
     "actressCount": "{count}名の女優を掲載中",
     "initialSearch": "頭文字で検索",
     "filterSettings": "フィルター設定",
@@ -113,7 +113,8 @@
     "title": "{name}との共演者",
     "description": "この女優と共演したことのある女優",
     "costarCount": "回共演",
-    "productCount": "作品"
+    "productCount": "作品",
+    "genreMatch": "一致"
   },
   "filter": {
     "genre": "ジャンル",
@@ -176,7 +177,8 @@
     "search": "検索",
     "clear": "クリア",
     "noResults": "該当する女優が見つかりません",
-    "tryDifferentSearch": "別のキーワードで検索してみてください"
+    "tryDifferentSearch": "別のキーワードで検索してみてください",
+    "viewOnFanzaSite": "FANZAサイトで見る"
   },
   "product": {
     "details": "作品詳細",
@@ -272,6 +274,8 @@
   },
   "productCard": {
     "enlargeImage": "画像を拡大表示",
+    "playSampleVideo": "サンプル動画を再生",
+    "videoNotSupported": "お使いのブラウザは動画再生に対応していません",
     "performerInfo": "出演者情報",
     "releaseDateTbd": "配信日未定",
     "productId": "作品ID",
@@ -283,9 +287,12 @@
     "close": "閉じる",
     "clickToCloseEsc": "← 前 | 中央で閉じる | 次 →",
     "comingSoon": "発売予定",
+    "monthly": "月額",
     "previousImage": "前の画像",
     "nextImage": "次の画像",
-    "thumbnailAlt": "サムネイル"
+    "thumbnailAlt": "サムネイル",
+    "saleTomorrow": "明日まで",
+    "saleEndsIn": "あと{days}日"
   },
   "imageLightbox": {
     "close": "閉じる",
@@ -351,5 +358,47 @@
   "favoriteButton": {
     "addToFavorites": "お気に入りに追加",
     "removeFromFavorites": "お気に入りから削除"
+  },
+  "categories": {
+    "title": "ジャンル・カテゴリ一覧",
+    "metaTitle": "【無料サンプルあり】AV動画ジャンル別検索 - 38,000本以上 | Adult Viewer Lab",
+    "metaDescription": "DUGA・MGS・カリビアンコム等のAV動画38,000本以上をジャンル別検索。無料サンプル動画・セール情報あり。人気ジャンル・シチュエーション・プレイ内容から好みの作品を簡単検索。",
+    "description": "ジャンル・カテゴリ別に作品を検索できます。",
+    "allCategories": "すべてのカテゴリ",
+    "popularGenres": "人気ジャンル",
+    "situationGenres": "シチュエーション",
+    "playGenres": "プレイ",
+    "bodyTypeGenres": "ボディタイプ",
+    "costumeGenres": "コスチューム",
+    "otherGenres": "その他",
+    "productCount": "{count}作品",
+    "viewProducts": "作品を見る",
+    "noCategories": "カテゴリがありません"
+  },
+  "stickyCta": {
+    "buyAt": "{provider}で購入"
+  },
+  "personalized": {
+    "recentlyViewed": "最近チェックした作品",
+    "count": "{count}件の履歴",
+    "basedOnHistory": "閲覧履歴に基づくおすすめ",
+    "clearHistory": "履歴をクリア"
+  },
+  "series": {
+    "series": "シリーズ",
+    "seriesGuide": "シリーズ完走ガイド",
+    "seriesGuideDescription": "人気シリーズの作品を整理し、視聴進捗を管理できます",
+    "pageTitle": "シリーズ一覧 - 完走ガイド",
+    "pageDescription": "人気AVシリーズの作品一覧と視聴進捗管理",
+    "productCount": "{count}作品",
+    "noSeries": "シリーズが見つかりません"
+  },
+  "viewingDiary": {
+    "markAsViewed": "視聴済み",
+    "unmarkAsViewed": "視聴済み解除",
+    "viewed": "視聴済み",
+    "addedToDiary": "視聴日記に追加しました",
+    "removedFromDiary": "視聴日記から削除しました",
+    "viewCount": "{count}回視聴"
   }
 }

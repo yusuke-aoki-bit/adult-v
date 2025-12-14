@@ -9,72 +9,21 @@ import NotificationSubscriber from './NotificationSubscriber';
 import { providerMeta } from '@/lib/providers';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { useSite } from '@/lib/contexts/SiteContext';
-
-interface AspStat {
-  aspName: string;
-  productCount: number;
-  actressCount: number;
-  estimatedTotal: number | null;
-}
-
-interface SaleStats {
-  totalSales: number;
-}
-
-// Client-side translations (ConditionalLayout is outside NextIntlClientProvider)
-const translations = {
-  ja: {
-    subtitle: 'heavy user guide',
-    products: '作品一覧',
-    actresses: '女優一覧',
-    favorites: 'お気に入り',
-    menu: 'メニュー',
-    sale: 'SALE',
-    saleItems: '件セール中',
-    adultNotice: '※このページは成人向けコンテンツを含みます。表示価格は税込みです。販売サイトにより価格が異なる場合がありますので、購入前に各サイトで最新価格をご確認ください。',
-  },
-  en: {
-    subtitle: 'heavy user guide',
-    products: 'Products',
-    actresses: 'Actresses',
-    favorites: 'Favorites',
-    menu: 'Menu',
-    sale: 'SALE',
-    saleItems: 'items on sale',
-    adultNotice: '※This page contains adult content. Prices shown include tax. Prices may vary by retailer, so please check the latest prices on each site before purchasing.',
-  },
-  zh: {
-    subtitle: 'heavy user guide',
-    products: '作品列表',
-    actresses: '女优列表',
-    favorites: '收藏',
-    menu: '菜单',
-    sale: 'SALE',
-    saleItems: '件特卖中',
-    adultNotice: '※本页面包含成人内容。显示价格含税。价格可能因销售网站而异，请在购买前确认各网站的最新价格。',
-  },
-  ko: {
-    subtitle: 'heavy user guide',
-    products: '작품 목록',
-    actresses: '배우 목록',
-    favorites: '즐겨찾기',
-    menu: '메뉴',
-    sale: 'SALE',
-    saleItems: '개 세일 중',
-    adultNotice: '※이 페이지는 성인용 콘텐츠를 포함합니다. 표시 가격은 세금 포함입니다. 판매 사이트에 따라 가격이 다를 수 있으니 구매 전 각 사이트에서 최신 가격을 확인하세요.',
-  },
-} as const;
+import { useHeaderStats, headerTranslations } from '@/lib/hooks/useHeaderStats';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [aspStats, setAspStats] = useState<AspStat[]>([]);
-  const [saleStats, setSaleStats] = useState<SaleStats | null>(null);
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
-  const { isFanzaSite, config } = useSite();
+  const t = headerTranslations[locale as keyof typeof headerTranslations] || headerTranslations.ja;
+  const { isFanzaSite } = useSite();
+
+  // カスタムフックでASP/Sale統計を取得
+  const { saleStats, filteredAspStats, skeletonWidths } = useHeaderStats({
+    filterFanzaOnly: isFanzaSite,
+  });
 
   // スクロール時にヘッダーを自動非表示/表示
   useEffect(() => {
@@ -100,25 +49,6 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    fetch('/api/stats/asp')
-      .then(res => res.json())
-      .then(data => setAspStats(data))
-      .catch(() => setAspStats([]));
-
-    fetch('/api/stats/sales')
-      .then(res => res.json())
-      .then(data => setSaleStats(data))
-      .catch(() => setSaleStats(null));
-  }, []);
-
-  // Filter ASP stats based on site mode
-  const filteredAspStats = isFanzaSite
-    ? aspStats.filter(s => s.aspName === 'FANZA')
-    : aspStats;
-
-  const skeletonWidths = isFanzaSite ? [80] : [80, 90, 70, 65, 70, 60, 65, 60];
-
   return (
     <header
       className={`theme-header border-b sticky top-0 z-50 transition-transform duration-300 ${
@@ -136,7 +66,7 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* ロゴ */}
-          <Link href={`/${locale}`} className="flex items-center space-x-2 flex-shrink-0">
+          <Link href={`/${locale}`} className="flex items-center space-x-2 shrink-0">
             <div className="text-2xl font-bold tracking-tight">
               <span className="theme-logo-primary">AV</span>
               <span className="theme-logo-secondary">VIEWER LAB</span>
@@ -152,7 +82,7 @@ export default function Header() {
           </div>
 
           {/* デスクトップナビゲーション */}
-          <nav className="hidden md:flex items-center space-x-3 flex-shrink-0">
+          <nav className="hidden md:flex items-center space-x-3 shrink-0">
             <Link
               href={`/${locale}/products`}
               className="theme-nav-products transition-colors font-medium flex items-center gap-1 text-sm"
@@ -276,11 +206,11 @@ export default function Header() {
               <div className="flex items-center gap-2 flex-wrap">
                 {/* セールバッジ */}
                 {saleStats === null ? (
-                  <div className="px-2 py-1 rounded theme-skeleton text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
+                  <div className="px-2 py-1 rounded theme-skeleton text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse shrink-0" />
                 ) : saleStats.totalSales > 0 ? (
                   <Link
                     href={`/${locale}/products?onSale=true`}
-                    className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0 animate-pulse"
+                    className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center shrink-0 animate-pulse"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <span className="font-bold">{t.sale}</span>
@@ -290,7 +220,7 @@ export default function Header() {
                 {filteredAspStats.length === 0 ? (
                   <>
                     {skeletonWidths.map((width, i) => (
-                      <div key={i} className="px-2 py-1 rounded theme-skeleton text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
+                      <div key={i} className="px-2 py-1 rounded theme-skeleton text-transparent text-[11px] font-medium h-[24px] animate-pulse shrink-0" style={{ width: `${width}px` }} />
                     ))}
                   </>
                 ) : (
@@ -301,7 +231,7 @@ export default function Header() {
                       <Link
                         key={stat.aspName}
                         href={`/${locale}/products?includeAsp=${stat.aspName}`}
-                        className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
+                        className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center shrink-0`}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <span className="font-bold">{meta?.label || stat.aspName}</span>
@@ -322,11 +252,11 @@ export default function Header() {
           <div className="flex items-center gap-2 py-1.5 flex-wrap min-h-[36px]">
             {/* セールバッジ */}
             {saleStats === null ? (
-              <div className="px-2 py-1 rounded theme-skeleton text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
+              <div className="px-2 py-1 rounded theme-skeleton text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse shrink-0" />
             ) : saleStats.totalSales > 0 ? (
               <Link
                 href={`/${locale}/products?onSale=true`}
-                className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0 animate-pulse"
+                className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center shrink-0 animate-pulse"
               >
                 <span className="font-bold">{t.sale}</span>
                 <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
@@ -336,7 +266,7 @@ export default function Header() {
             {filteredAspStats.length === 0 ? (
               <>
                 {skeletonWidths.map((width, i) => (
-                  <div key={i} className="px-2 py-1 rounded theme-skeleton text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
+                  <div key={i} className="px-2 py-1 rounded theme-skeleton text-transparent text-[11px] font-medium h-[24px] animate-pulse shrink-0" style={{ width: `${width}px` }} />
                 ))}
               </>
             ) : (
@@ -347,7 +277,7 @@ export default function Header() {
                   <Link
                     key={stat.aspName}
                     href={`/${locale}/products?includeAsp=${stat.aspName}`}
-                    className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
+                    className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center shrink-0`}
                   >
                     <span className="font-bold">{meta?.label || stat.aspName}</span>
                     <span className="ml-1 opacity-80">{stat.productCount.toLocaleString()}</span>

@@ -1,8 +1,12 @@
 'use client';
 
+import { getVariant, trackCtaClick } from '@/lib/ab-testing';
+
 interface AffiliateButtonProps {
   affiliateUrl: string;
   providerLabel: string;
+  provider?: string;
+  productId?: number | string;
   price?: number;
   salePrice?: number;
   discount?: number;
@@ -54,34 +58,40 @@ function extractMgsProductUrl(widgetCode: string): string | null {
 
 /**
  * FANZAのアフィリエイトURLを直リンクに変換
- * al.dmm.co.jp/ad/p/... → www.dmm.co.jp/... への変換
+ * al.dmm.co.jp/... → www.dmm.co.jp/... への変換
  * アフィリエイト未取得のため、直リンクを使用
  */
 function convertFanzaToDirectUrl(affiliateUrl: string): string {
-  // アフィリエイトURL形式: https://al.dmm.co.jp/ad/p/r?_site=...&_article=...&_link=...&_mediatype=video&_url=https%3A%2F%2Fwww.dmm.co.jp%2F...
-  // または: https://www.dmm.co.jp/digital/videoa/-/detail/=/cid=... (直リンク)
-
   // すでに直リンクの場合はそのまま返す
   if (affiliateUrl.includes('www.dmm.co.jp') && !affiliateUrl.includes('al.dmm.co.jp')) {
     return affiliateUrl;
   }
 
-  // アフィリエイトURLから_urlパラメータを抽出
+  // lurl パラメータから直リンクを抽出 (https://al.dmm.co.jp/?lurl=...&af_id=... 形式)
+  const lurlMatch = affiliateUrl.match(/[?&]lurl=([^&]+)/);
+  if (lurlMatch) {
+    try {
+      return decodeURIComponent(lurlMatch[1]);
+    } catch {
+      // デコードに失敗
+    }
+  }
+
+  // _url パラメータから直リンクを抽出 (旧形式)
   const urlMatch = affiliateUrl.match(/[?&]_url=([^&]+)/);
   if (urlMatch) {
     try {
       return decodeURIComponent(urlMatch[1]);
     } catch {
-      // デコードに失敗した場合は元のURLを返す
+      // デコードに失敗
     }
   }
 
-  // _linkパラメータからcidを抽出してDMM直リンクを生成
+  // _link パラメータからcidを抽出してDMM直リンクを生成
   const linkMatch = affiliateUrl.match(/[?&]_link=([^&]+)/);
   if (linkMatch) {
     try {
       const decodedLink = decodeURIComponent(linkMatch[1]);
-      // リンクがDMM URLの場合
       if (decodedLink.includes('dmm.co.jp')) {
         return decodedLink;
       }
@@ -90,7 +100,7 @@ function convertFanzaToDirectUrl(affiliateUrl: string): string {
     }
   }
 
-  // 変換できない場合は元のURLを返す（アフィリエイトリダイレクト経由）
+  // 変換できない場合は元のURLを返す
   return affiliateUrl;
 }
 
@@ -101,6 +111,8 @@ function convertFanzaToDirectUrl(affiliateUrl: string): string {
 export default function AffiliateButton({
   affiliateUrl,
   providerLabel,
+  provider,
+  productId,
   price,
   salePrice,
   discount,
@@ -130,6 +142,34 @@ export default function AffiliateButton({
 
   const hasSale = salePrice && price && salePrice < price;
 
+  // A/Bテスト: CTAボタンテキストのバリエーション
+  const ctaVariant = getVariant('ctaButtonText');
+  const getCtaText = () => {
+    if (hasSale) {
+      switch (ctaVariant) {
+        case 'urgency': return `${providerLabel}で今すぐ購入`;
+        case 'action': return `${providerLabel}でお得にゲット`;
+        default: return `${providerLabel}で今すぐ購入`;
+      }
+    } else {
+      switch (ctaVariant) {
+        case 'urgency': return `${providerLabel}で今すぐ見る`;
+        case 'action': return `${providerLabel}をチェック`;
+        default: return `${providerLabel}で購入`;
+      }
+    }
+  };
+
+  const handleCtaClick = () => {
+    if (productId) {
+      trackCtaClick('ctaButtonText', productId, {
+        is_sale: !!hasSale,
+        provider: provider || '',
+        page_type: 'detail',
+      });
+    }
+  };
+
   return (
     <div className="pt-4 space-y-3">
       {/* セール価格の強調表示 */}
@@ -153,16 +193,17 @@ export default function AffiliateButton({
         href={finalUrl}
         target="_blank"
         rel="noopener noreferrer sponsored"
-        className={`flex items-center justify-center gap-2 w-full text-white text-center py-4 px-6 rounded-lg font-semibold transition-colors ${
+        onClick={handleCtaClick}
+        className={`flex items-center justify-center gap-2 w-full text-white text-center py-4 px-6 rounded-lg font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] ${
           hasSale
-            ? 'bg-red-600 hover:bg-red-700 animate-pulse'
+            ? 'bg-red-600 hover:bg-red-700'
             : 'bg-rose-600 hover:bg-rose-700'
         }`}
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
         </svg>
-        {providerLabel}で{hasSale ? '今すぐ' : ''}購入
+        {getCtaText()}
       </a>
     </div>
   );

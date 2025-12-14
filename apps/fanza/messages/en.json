@@ -56,7 +56,7 @@
     "viewProductListDesc": "Search across all streaming platforms"
   },
   "header": {
-    "title": "FANZA VIEWER LAB",
+    "title": "AVVIEWER LAB",
     "subtitle": "heavy user guide",
     "menu": "Menu",
     "close": "Close"
@@ -74,7 +74,7 @@
     "search": "Search"
   },
   "footer": {
-    "siteName": "FANZA VIEWER LAB",
+    "siteName": "AVVIEWER LAB",
     "description": "FANZA product search and comparison service with actress-based reviews, rankings, and campaign updates for heavy users.",
     "links": "Links",
     "legal": "Site Policies",
@@ -82,8 +82,7 @@
     "terms": "Terms of Service",
     "contact": "Contact",
     "contactDescription": "For questions or requests, please contact us by email.",
-    "copyright": "© {year} FANZA VIEWER LAB. All rights reserved.",
-    "affiliateNotice": "This site participates in the FANZA affiliate program. We may earn commissions from purchases made through product links.",
+    "copyright": "© {year} AVVIEWER LAB. All rights reserved.",
     "admin": "Admin"
   },
   "uncategorized": {
@@ -113,7 +112,8 @@
     "title": "Co-stars of {name}",
     "description": "Actresses who have appeared with this performer",
     "costarCount": " co-appearances",
-    "productCount": " videos"
+    "productCount": " videos",
+    "genreMatch": "match"
   },
   "filter": {
     "genre": "Genre",
@@ -286,6 +286,8 @@
   },
   "productCard": {
     "enlargeImage": "Enlarge image",
+    "playSampleVideo": "Play sample video",
+    "videoNotSupported": "Your browser does not support video playback",
     "performerInfo": "Performer info",
     "releaseDateTbd": "Release date TBD",
     "productId": "Product ID",
@@ -297,9 +299,12 @@
     "close": "Close",
     "clickToCloseEsc": "← Prev | Center to close | Next →",
     "comingSoon": "Coming Soon",
+    "monthly": "Monthly",
     "previousImage": "Previous image",
     "nextImage": "Next image",
-    "thumbnailAlt": "Thumbnail"
+    "thumbnailAlt": "Thumbnail",
+    "saleTomorrow": "Ends tomorrow",
+    "saleEndsIn": "{days} days left"
   },
   "imageLightbox": {
     "close": "Close",
@@ -365,5 +370,38 @@
   "favoriteButton": {
     "addToFavorites": "Add to Favorites",
     "removeFromFavorites": "Remove from Favorites"
+  },
+  "categories": {
+    "title": "Genre & Category List",
+    "metaTitle": "Genre & Category List | Search JAV by Genre - AVVIEWER LAB",
+    "metaDescription": "Search FANZA JAV videos by genre and category. Browse by popular genres, situations, play types and body types.",
+    "description": "Browse all videos by genre and category. Find your favorite videos easily.",
+    "popularGenres": "Popular Genres",
+    "situationGenres": "Situation",
+    "playGenres": "Play Types",
+    "bodyTypeGenres": "Body Types",
+    "costumeGenres": "Costumes",
+    "otherGenres": "Other",
+    "allCategories": "All",
+    "productCount": "{count} videos",
+    "noCategories": "No categories found",
+    "viewProducts": "View All"
+  },
+  "stickyCta": {
+    "buyAt": "Buy at {provider}"
+  },
+  "personalized": {
+    "recentlyViewed": "Recently Viewed",
+    "count": "{count} items",
+    "basedOnHistory": "Based on your history",
+    "clearHistory": "Clear history"
+  },
+  "viewingDiary": {
+    "markAsViewed": "Mark as Viewed",
+    "unmarkAsViewed": "Unmark",
+    "viewed": "Viewed",
+    "addedToDiary": "Added to viewing diary",
+    "removedFromDiary": "Removed from diary",
+    "viewCount": "Viewed {count}x"
   }
 }

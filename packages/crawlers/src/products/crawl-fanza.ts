@@ -365,13 +365,8 @@ async function parseDetailPage(cid: string, forceReprocess: boolean): Promise<{
   // Raw HTMLを保存（エラーは無視して続行）
   let rawDataId: number | null = null;
   try {
-    rawDataId = await upsertRawHtmlDataWithGcs({
-      url,
-      html,
-      contentType: 'product_detail',
-      providerId: `fanza-${cid}`,
-      aspName: 'FANZA',
-    });
+    const result = await upsertRawHtmlDataWithGcs('FANZA', cid, url, html);
+    rawDataId = result.id;
   } catch (gcsError) {
     console.log(`    ⚠️ Raw HTML保存スキップ: ${gcsError instanceof Error ? gcsError.message : gcsError}`);
   }
@@ -532,9 +527,15 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
     // 収録時間（分単位）
     let duration: number | null = null;
-    const durationMatch = html.match(/(\d+)分/);
+    // パターン1: テーブル形式 <td>...<span>123分</span></td>（商品情報テーブル内）
+    // 最初に見つかる「○分」のspanタグを取得（商品情報テーブルの収録時間）
+    const durationMatch = html.match(/<td[^>]*>\s*<span>(\d{1,3})分<\/span>\s*<\/td>/i);
     if (durationMatch) {
-      duration = parseInt(durationMatch[1]) * 60; // 秒に変換
+      const mins = parseInt(durationMatch[1]);
+      // 妥当な収録時間の範囲（1分〜600分）のみ採用
+      if (mins >= 1 && mins <= 600) {
+        duration = mins * 60; // 秒に変換
+      }
     }
 
     // メーカー・レーベル・シリーズ（HTMLから）
@@ -547,14 +548,26 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     const seriesMatch = html.match(/href="[^"]*\/av\/list\/\?series=\d+"[^>]*>([^<]+)</i);
     const series = seriesMatch ? seriesMatch[1].trim() : null;
 
-    // 価格（セール価格優先）
+    // 価格（JSON-LD優先、なければHTMLから）
     let price: number | null = null;
-    // セール価格パターン: 取り消し線価格の後のお手頃価格
-    const priceMatches = [...html.matchAll(/(\d{1,3}(?:,\d{3})*)円/g)];
-    if (priceMatches.length > 0) {
-      // 最も低い価格を選択（セール価格）
-      const prices = priceMatches.map(m => parseInt(m[1].replace(/,/g, '')));
-      price = Math.min(...prices.filter(p => p > 0));
+    // JSON-LDのoffers.priceを優先使用（最も信頼性が高い）
+    if (jsonLdData?.offers) {
+      const offers = Array.isArray(jsonLdData.offers) ? jsonLdData.offers[0] : jsonLdData.offers;
+      if (offers?.price && typeof offers.price === 'number') {
+        price = offers.price;
+      }
+    }
+    // JSON-LDになければHTMLから取得
+    if (!price) {
+      const priceMatches = [...html.matchAll(/(\d{1,3}(?:,\d{3})*)円/g)];
+      if (priceMatches.length > 0) {
+        // 500円以上の価格のみを対象（月額チャンネルや関連商品の安い価格を除外）
+        const prices = priceMatches.map(m => parseInt(m[1].replace(/,/g, ''))).filter(p => p >= 500);
+        if (prices.length > 0) {
+          // 最も低い価格を選択（セール価格）
+          price = Math.min(...prices);
+        }
+      }
     }
 
     // 説明文（☆マーク付きテキスト）
@@ -951,7 +964,7 @@ async function runFullScan(
               await saveTranslations(savedId, product);
 
               if (rawDataId) {
-                await markRawDataAsProcessed(rawDataId, 'raw_html_data');
+                await markRawDataAsProcessed('raw_html_data', rawDataId);
               }
 
               totalSaved++;
@@ -1108,7 +1121,7 @@ async function main() {
           await saveTranslations(savedId, product);
 
           if (rawDataId) {
-            await markRawDataAsProcessed(rawDataId, 'raw_html_data');
+            await markRawDataAsProcessed('raw_html_data', rawDataId);
           }
 
           totalSaved++;

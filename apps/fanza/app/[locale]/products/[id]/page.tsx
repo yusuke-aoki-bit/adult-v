@@ -8,6 +8,9 @@ import ProductDetailInfo from '@/components/ProductDetailInfo';
 import FavoriteButton from '@/components/FavoriteButton';
 import ViewTracker from '@/components/ViewTracker';
 import AffiliateButton from '@/components/AffiliateButton';
+import StickyCta from '@/components/StickyCta';
+import SceneTimeline from '@/components/SceneTimeline';
+import EnhancedAiReview from '@/components/EnhancedAiReview';
 import { getProductById, searchProductByProductId, getProductSources } from '@/lib/db/queries';
 import { isSubscriptionSite } from '@/lib/image-utils';
 import { getRelatedProducts } from '@/lib/db/recommendations';
@@ -34,13 +37,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
-    // SEO最適化されたメタディスクリプション生成
+    // SEO最適化されたメタディスクリプション生成（セール/評価情報を含む）
     const optimizedDescription = generateOptimizedDescription(
       product.title,
       product.actressName,
       product.tags,
       product.releaseDate,
       product.normalizedProductId || product.id,
+      {
+        salePrice: product.salePrice,
+        regularPrice: product.regularPrice,
+        discount: product.discount,
+        rating: product.rating,
+        reviewCount: product.reviewCount,
+      },
     );
 
     return {
@@ -79,7 +89,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const basePath = `/${locale}/products/${product.id}`;
 
-  // Structured data
+  // Structured data（評価情報を含む - リッチリザルト表示でCTR向上）
   const productSchema = generateProductSchema(
     product.title,
     product.description || '',
@@ -87,7 +97,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
     basePath,
     product.regularPrice || product.price,
     product.providerLabel,
-    undefined, // aggregateRating
+    product.rating && product.reviewCount ? {
+      ratingValue: product.rating,
+      reviewCount: product.reviewCount,
+    } : undefined,
     product.salePrice,
     product.currency || 'JPY',
     product.normalizedProductId || undefined, // SKU（品番）
@@ -303,6 +316,27 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           )}
 
+          {/* AI分析レビューセクション */}
+          {product.aiReview && (
+            <div className="mt-8">
+              <EnhancedAiReview
+                aiReview={product.aiReview}
+                rating={product.rating}
+                ratingCount={product.reviewCount}
+                locale={locale}
+              />
+            </div>
+          )}
+
+          {/* シーン情報セクション（ユーザー参加型） */}
+          <div className="mt-8">
+            <SceneTimeline
+              productId={productId}
+              totalDuration={product.duration || undefined}
+              locale={locale}
+            />
+          </div>
+
           {/* 関連作品セクション */}
           {relatedProducts.length > 0 && (
             <RelatedProducts products={relatedProducts} title="関連作品" />
@@ -320,6 +354,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
           aspName: product.provider,
         }}
       />
+
+      {/* Mobile Sticky CTA */}
+      {product.affiliateUrl && (
+        <StickyCta
+          affiliateUrl={product.affiliateUrl}
+          providerLabel={product.providerLabel}
+          price={product.regularPrice || product.price}
+          salePrice={product.salePrice}
+          discount={product.discount}
+          currency={product.currency}
+        />
+      )}
     </>
   );
 }

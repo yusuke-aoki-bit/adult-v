@@ -1,9 +1,7 @@
-import { getDb } from '../lib/db';
+import { db } from '../packages/crawlers/src/lib/db';
 import { sql } from 'drizzle-orm';
 
 async function listTables() {
-  const db = getDb();
-
   const result = await db.execute(sql`
     SELECT tablename
     FROM pg_tables
@@ -12,7 +10,9 @@ async function listTables() {
   `);
 
   console.log('Available tables:');
-  console.log(JSON.stringify(result.rows, null, 2));
+  for (const r of result.rows) {
+    console.log(`  ${r.tablename}`);
+  }
 
   process.exit(0);
 }

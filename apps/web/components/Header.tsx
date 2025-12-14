@@ -2,79 +2,33 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import SearchBar from './SearchBar';
 import LanguageSwitcher from './LanguageSwitcher';
 import NotificationSubscriber from './NotificationSubscriber';
 import { providerMeta } from '@/lib/providers';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { useSite } from '@/lib/contexts/SiteContext';
-
-interface AspStat {
-  aspName: string;
-  productCount: number;
-  actressCount: number;
-  estimatedTotal: number | null;
-}
-
-interface SaleStats {
-  totalSales: number;
-}
-
-// Client-side translations (ConditionalLayout is outside NextIntlClientProvider)
-const translations = {
-  ja: {
-    subtitle: 'heavy user guide',
-    products: '作品一覧',
-    actresses: '女優一覧',
-    favorites: 'お気に入り',
-    menu: 'メニュー',
-    sale: 'SALE',
-    saleItems: '件セール中',
-    adultNotice: '※このページは成人向けコンテンツを含みます。表示価格は税込みです。販売サイトにより価格が異なる場合がありますので、購入前に各サイトで最新価格をご確認ください。',
-  },
-  en: {
-    subtitle: 'heavy user guide',
-    products: 'Products',
-    actresses: 'Actresses',
-    favorites: 'Favorites',
-    menu: 'Menu',
-    sale: 'SALE',
-    saleItems: 'items on sale',
-    adultNotice: '※This page contains adult content. Prices shown include tax. Prices may vary by retailer, so please check the latest prices on each site before purchasing.',
-  },
-  zh: {
-    subtitle: 'heavy user guide',
-    products: '作品列表',
-    actresses: '女优列表',
-    favorites: '收藏',
-    menu: '菜单',
-    sale: 'SALE',
-    saleItems: '件特卖中',
-    adultNotice: '※本页面包含成人内容。显示价格含税。价格可能因销售网站而异，请在购买前确认各网站的最新价格。',
-  },
-  ko: {
-    subtitle: 'heavy user guide',
-    products: '작품 목록',
-    actresses: '배우 목록',
-    favorites: '즐겨찾기',
-    menu: '메뉴',
-    sale: 'SALE',
-    saleItems: '개 세일 중',
-    adultNotice: '※이 페이지는 성인용 콘텐츠를 포함합니다. 표시 가격은 세금 포함입니다. 판매 사이트에 따라 가격이 다를 수 있으니 구매 전 각 사이트에서 최신 가격을 확인하세요.',
-  },
-} as const;
+import { useHeaderStats, headerTranslations } from '@/lib/hooks/useHeaderStats';
+import { localizedHref } from '@/lib/i18n-utils';
+import { locales, defaultLocale, type Locale } from '@/i18n';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [aspStats, setAspStats] = useState<AspStat[]>([]);
-  const [saleStats, setSaleStats] = useState<SaleStats | null>(null);
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
-  const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
-  const { isFanzaSite, config } = useSite();
+  const searchParams = useSearchParams();
+
+  // ?hl= パラメータから現在の言語を取得
+  const hlParam = searchParams.get('hl');
+  const locale = (hlParam && locales.includes(hlParam as Locale) ? hlParam : defaultLocale) as string;
+  const t = headerTranslations[locale as keyof typeof headerTranslations] || headerTranslations.ja;
+  const { isFanzaSite } = useSite();
+
+  // カスタムフックでASP/Sale統計を取得
+  const { saleStats, filteredAspStats, skeletonWidths } = useHeaderStats({
+    filterFanzaOnly: isFanzaSite,
+  });
 
   // スクロール時にヘッダーを自動非表示/表示
   useEffect(() => {
@@ -100,18 +54,6 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    fetch('/api/stats/asp')
-      .then(res => res.json())
-      .then(data => setAspStats(data))
-      .catch(() => setAspStats([]));
-
-    fetch('/api/stats/sales')
-      .then(res => res.json())
-      .then(data => setSaleStats(data))
-      .catch(() => setSaleStats(null));
-  }, []);
-
   return (
     <header
       className={`${isFanzaSite ? 'bg-pink-950' : 'bg-gray-950'} text-white border-b ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'} sticky top-0 z-50 transition-transform duration-300 ${
@@ -129,7 +71,7 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* ロゴ */}
-          <Link href={`/${locale}`} className="flex items-center space-x-2 flex-shrink-0">
+          <Link href={localizedHref('/', locale)} className="flex items-center space-x-2 flex-shrink-0">
             {isFanzaSite ? (
               <div className="text-2xl font-bold tracking-tight">
                 <span className="text-pink-400">FANZA</span>
@@ -156,7 +98,7 @@ export default function Header() {
           {/* デスクトップナビゲーション */}
           <nav className="hidden md:flex items-center space-x-3 flex-shrink-0">
             <Link
-              href={`/${locale}/products`}
+              href={localizedHref('/products', locale)}
               className="hover:text-purple-300 transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
@@ -170,7 +112,7 @@ export default function Header() {
               {t.products}
             </Link>
             <Link
-              href={`/${locale}`}
+              href={localizedHref('/', locale)}
               className="hover:text-pink-300 transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
@@ -185,7 +127,35 @@ export default function Header() {
             </Link>
             <NotificationSubscriber />
             <Link
-              href={`/${locale}/favorites`}
+              href={localizedHref('/diary', locale)}
+              className="hover:text-green-300 transition-colors font-medium flex items-center gap-1 text-sm"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+              </svg>
+              {t.diary}
+            </Link>
+            <Link
+              href={localizedHref('/profile', locale)}
+              className="hover:text-cyan-300 transition-colors font-medium flex items-center gap-1 text-sm"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              {t.profile}
+            </Link>
+            <Link
+              href={localizedHref('/favorites', locale)}
               className="hover:text-rose-300 transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
@@ -246,14 +216,14 @@ export default function Header() {
 
             {/* ナビゲーションリンク */}
             <Link
-              href={`/${locale}/products`}
+              href={localizedHref('/products', locale)}
               className="block py-2 hover:text-purple-300 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               {t.products}
             </Link>
             <Link
-              href={`/${locale}`}
+              href={localizedHref('/', locale)}
               className="block py-2 hover:text-pink-300 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -263,7 +233,21 @@ export default function Header() {
               <NotificationSubscriber />
             </div>
             <Link
-              href={`/${locale}/favorites`}
+              href={localizedHref('/diary', locale)}
+              className="block py-2 hover:text-green-300 transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              {t.diary}
+            </Link>
+            <Link
+              href={localizedHref('/profile', locale)}
+              className="block py-2 hover:text-cyan-300 transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              {t.profile}
+            </Link>
+            <Link
+              href={localizedHref('/favorites', locale)}
               className="block py-2 hover:text-rose-300 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -281,7 +265,7 @@ export default function Header() {
                   <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
                 ) : saleStats.totalSales > 0 ? (
                   <Link
-                    href={`/${locale}/products?onSale=true`}
+                    href={localizedHref('/products?onSale=true', locale)}
                     className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0 animate-pulse"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -289,20 +273,20 @@ export default function Header() {
                     <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
                   </Link>
                 ) : null}
-                {aspStats.length === 0 ? (
+                {filteredAspStats.length === 0 ? (
                   <>
-                    {(isFanzaSite ? [80] : [80, 90, 70, 65, 70, 60, 65, 60]).map((width, i) => (
+                    {skeletonWidths.map((width, i) => (
                       <div key={i} className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
                     ))}
                   </>
                 ) : (
-                  (isFanzaSite ? aspStats.filter(s => s.aspName === 'FANZA') : aspStats.filter(s => s.aspName !== 'FANZA')).map((stat) => {
+                  filteredAspStats.map((stat) => {
                     const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
                     const meta = providerId ? providerMeta[providerId] : null;
                     return (
                       <Link
                         key={stat.aspName}
-                        href={`/${locale}/products?includeAsp=${stat.aspName}`}
+                        href={localizedHref(`/products?includeAsp=${stat.aspName}`, locale)}
                         className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
@@ -327,7 +311,7 @@ export default function Header() {
               <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
             ) : saleStats.totalSales > 0 ? (
               <Link
-                href={`/${locale}/products?onSale=true`}
+                href={localizedHref('/products?onSale=true', locale)}
                 className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0 animate-pulse"
               >
                 <span className="font-bold">{t.sale}</span>
@@ -335,20 +319,20 @@ export default function Header() {
               </Link>
             ) : null}
             {/* ASP統計バッジ */}
-            {aspStats.length === 0 ? (
+            {filteredAspStats.length === 0 ? (
               <>
-                {(isFanzaSite ? [80] : [80, 90, 70, 65, 70, 60, 65, 60]).map((width, i) => (
+                {skeletonWidths.map((width, i) => (
                   <div key={i} className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
                 ))}
               </>
             ) : (
-              (isFanzaSite ? aspStats.filter(s => s.aspName === 'FANZA') : aspStats.filter(s => s.aspName !== 'FANZA')).map((stat) => {
+              filteredAspStats.map((stat) => {
                 const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
                 const meta = providerId ? providerMeta[providerId] : null;
                 return (
                   <Link
                     key={stat.aspName}
-                    href={`/${locale}/products?includeAsp=${stat.aspName}`}
+                    href={localizedHref(`/products?includeAsp=${stat.aspName}`, locale)}
                     className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
                   >
                     <span className="font-bold">{meta?.label || stat.aspName}</span>

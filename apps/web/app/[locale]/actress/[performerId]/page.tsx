@@ -6,8 +6,12 @@ import Pagination from '@/components/Pagination';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import RelatedActresses from '@/components/RelatedActresses';
-import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById } from '@/lib/db/queries';
-import { getRelatedPerformers } from '@/lib/db/recommendations';
+import { FanzaSiteLink } from '@/components/FanzaCrossLink';
+import CrossAspInfo from '@/components/CrossAspInfo';
+import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis } from '@/lib/db/queries';
+import ActressCareerTimeline from '@/components/ActressCareerTimeline';
+import RetirementAlert from '@/components/RetirementAlert';
+import { getRelatedPerformersWithGenreMatch } from '@/lib/db/recommendations';
 import {
   generateBaseMetadata,
   generatePersonSchema,
@@ -50,6 +54,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     if (!actress) return {};
 
     const t = await getTranslations('actress');
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
     // フィルター・ページネーションがある場合はnoindex
     const hasFilters = !!(
@@ -114,15 +119,29 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       locale,
     );
 
+    // hreflang/canonical設定（?hl=パラメータ方式）
+    const alternates = {
+      canonical: `${baseUrl}/actress/${actress.id}`,
+      languages: {
+        'ja': `${baseUrl}/actress/${actress.id}`,
+        'en': `${baseUrl}/actress/${actress.id}?hl=en`,
+        'zh': `${baseUrl}/actress/${actress.id}?hl=zh`,
+        'zh-TW': `${baseUrl}/actress/${actress.id}?hl=zh-TW`,
+        'ko': `${baseUrl}/actress/${actress.id}?hl=ko`,
+        'x-default': `${baseUrl}/actress/${actress.id}`,
+      },
+    };
+
     // フィルター/ページネーション時はnoindex（重複コンテンツ防止）
     if (hasFilters || hasPageParam) {
       return {
         ...metadata,
+        alternates,
         robots: { index: false, follow: true },
       };
     }
 
-    return metadata;
+    return { ...metadata, alternates };
   } catch {
     return {};
   }
@@ -182,8 +201,11 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // Get product count by ASP
   const productCountByAsp = await getActressProductCountByAsp(actress.id);
 
-  // Get related performers (co-stars)
-  const relatedPerformers = await getRelatedPerformers(parseInt(actress.id), 6);
+  // Get related performers (co-stars) with genre match percentage
+  const relatedPerformers = await getRelatedPerformersWithGenreMatch(parseInt(actress.id), 6);
+
+  // Get career analysis
+  const careerAnalysis = await getActressCareerAnalysis(actress.id);
 
   // Get products
   const allWorks = await getProducts({
@@ -204,8 +226,20 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
   const basePath = `/${locale}/actress/${actress.id}`;
 
-  // Structured data
-  const personSchema = generatePersonSchema(actress.name, '', actress.heroImage || actress.thumbnail, basePath);
+  // Structured data with enhanced Person Schema
+  // aiReviewがオブジェクト型の場合は空文字列を使用
+  const aiReviewText = typeof actress.aiReview === 'string' ? actress.aiReview : '';
+  const personSchema = generatePersonSchema(
+    actress.name,
+    aiReviewText,
+    actress.heroImage || actress.thumbnail,
+    basePath,
+    {
+      workCount: total,
+      debutYear: careerAnalysis?.debutYear ?? undefined,
+      aliases: nonPrimaryAliases.map(a => a.aliasName),
+    }
+  );
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: tNav('home'), url: `/${locale}` },
     { name: actress.name, url: basePath },
@@ -243,16 +277,16 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl font-bold text-white truncate">{actress.name}</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold theme-text truncate">{actress.name}</h1>
                   <ActressFavoriteButton
                     id={actress.id}
                     name={actress.name}
                     thumbnail={actress.heroImage || actress.thumbnail}
                   />
                 </div>
-                <p className="text-sm sm:text-base text-gray-300">{t('totalProducts', { count: total })}</p>
+                <p className="text-sm sm:text-base theme-text-secondary">{t('totalProducts', { count: total })}</p>
                 {nonPrimaryAliases.length > 0 && (
-                  <p className="mt-1 text-xs sm:text-sm text-gray-400 truncate">
+                  <p className="mt-1 text-xs sm:text-sm theme-text-muted truncate">
                     {t('aliases')}: {nonPrimaryAliases.map(a => a.aliasName).join(', ')}
                   </p>
                 )}
@@ -260,7 +294,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
             </div>
             {/* ASP別作品数バッジ */}
             {productCountByAsp.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
+              <div className="mt-3 flex flex-wrap gap-1.5 items-center">
                 {productCountByAsp.map((asp) => {
                   const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                   const meta = providerId ? providerMeta[providerId] : null;
@@ -273,6 +307,15 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                     </span>
                   );
                 })}
+                {/* FANZAサイトへのクロスリンク */}
+                {productCountByAsp.some(asp => asp.aspName === 'FANZA') && (
+                  <FanzaSiteLink
+                    path={`/actress/${actress.id}`}
+                    locale={locale}
+                    label={t('viewOnFanzaSite')}
+                    compact
+                  />
+                )}
               </div>
             )}
             {/* ソートドロップダウン */}
@@ -281,6 +324,17 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
             </div>
           </div>
 
+          {/* 卒業/引退アラート */}
+          {careerAnalysis && (
+            <div className="mb-4">
+              <RetirementAlert
+                career={careerAnalysis}
+                actressName={actress.name}
+                locale={locale}
+              />
+            </div>
+          )}
+
           {/* AIレビュー表示 */}
           {actress.aiReview && (
             <div className="mb-8">
@@ -288,6 +342,30 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 review={actress.aiReview}
                 updatedAt={actress.aiReviewUpdatedAt}
                 actressName={actress.name}
+              />
+            </div>
+          )}
+
+          {/* クロスASP情報表示 */}
+          {(aliases.length > 0 || productCountByAsp.length > 1) && (
+            <div className="mb-8">
+              <CrossAspInfo
+                performerId={parseInt(actress.id)}
+                performerName={actress.name}
+                aliases={aliases}
+                aspCounts={productCountByAsp}
+                locale={locale}
+              />
+            </div>
+          )}
+
+          {/* キャリア分析セクション */}
+          {careerAnalysis && (
+            <div className="mb-8">
+              <ActressCareerTimeline
+                career={careerAnalysis}
+                actressName={actress.name}
+                locale={locale}
               />
             </div>
           )}
@@ -330,7 +408,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               )}
             </>
           ) : (
-            <p className="text-center text-gray-400 py-12">{t('noProducts')}</p>
+            <p className="text-center theme-text-muted py-12">{t('noProducts')}</p>
           )}
 
           {/* 関連女優（共演者）セクション */}

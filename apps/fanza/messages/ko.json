@@ -36,7 +36,7 @@
     "filterSettings": "필터 설정"
   },
   "homepage": {
-    "title": "AV여배우 데이터베이스 - FANZA 작품 검색 | FANZA VIEWER LAB",
+    "title": "AV여배우 데이터베이스 - FANZA 작품 검색 | AVVIEWER LAB",
     "description": "DUGA, MGS, DTI, 카리비안컴, 1폰도, HEYZO 등 주요 동영상 스트리밍 사이트를 통합한 AV여배우・작품 데이터베이스. {count}명 이상의 배우 정보, 출연 작품, 장르별 검색, 가격 비교 가능. 헤비 유저를 위한 상세 리뷰와 랭킹 정보 제공.",
     "actressCount": "{count}명의 배우 게시 중",
     "initialSearch": "이니셜로 검색",
@@ -51,7 +51,7 @@
     "viewProductListDesc": "모든 스트리밍 사이트의 작품을 통합 검색"
   },
   "header": {
-    "title": "FANZA VIEWER LAB",
+    "title": "AVVIEWER LAB",
     "subtitle": "heavy user guide",
     "menu": "메뉴",
     "close": "닫기"
@@ -75,8 +75,7 @@
     "privacy": "개인정보 보호정책",
     "terms": "이용약관",
     "contact": "문의하기",
-    "copyright": "© {year} FANZA VIEWER LAB. All rights reserved.",
-    "affiliateNotice": "이 사이트는 성인 콘텐츠의 제휴 링크를 포함합니다."
+    "copyright": "© {year} AVVIEWER LAB. All rights reserved."
   },
   "uncategorized": {
     "title": "미분류 작품",
@@ -105,7 +104,8 @@
     "title": "{name}의 공연자",
     "description": "이 배우와 함께 출연한 여배우",
     "costarCount": "회 공연",
-    "productCount": "작품"
+    "productCount": "작품",
+    "genreMatch": "일치"
   },
   "filter": {
     "genre": "장르",
@@ -264,6 +264,8 @@
   },
   "productCard": {
     "enlargeImage": "이미지 확대",
+    "playSampleVideo": "샘플 동영상 재생",
+    "videoNotSupported": "브라우저에서 동영상 재생을 지원하지 않습니다",
     "performerInfo": "출연자 정보",
     "releaseDateTbd": "발매일 미정",
     "productId": "작품 ID",
@@ -275,9 +277,12 @@
     "close": "닫기",
     "clickToCloseEsc": "← 이전 | 중앙 클릭하여 닫기 | 다음 →",
     "comingSoon": "출시 예정",
+    "monthly": "월정액",
     "previousImage": "이전 이미지",
     "nextImage": "다음 이미지",
-    "thumbnailAlt": "썸네일"
+    "thumbnailAlt": "썸네일",
+    "saleTomorrow": "내일까지",
+    "saleEndsIn": "{days}일 남음"
   },
   "imageLightbox": {
     "close": "닫기",
@@ -286,5 +291,38 @@
     "nextImage": "다음 이미지",
     "thumbnailAlt": "썸네일",
     "viewDetails": "상세보기"
+  },
+  "categories": {
+    "title": "장르・카테고리 목록",
+    "metaTitle": "장르・카테고리 목록 | 장르별 AV 검색 - AVVIEWER LAB",
+    "metaDescription": "FANZA AV 작품을 장르와 카테고리별로 검색. 인기 장르, 시추에이션, 플레이, 체형별로 작품을 찾을 수 있습니다.",
+    "description": "장르와 카테고리별로 모든 작품을 탐색하세요. 좋아하는 작품을 쉽게 찾을 수 있습니다.",
+    "popularGenres": "인기 장르",
+    "situationGenres": "시추에이션",
+    "playGenres": "플레이 유형",
+    "bodyTypeGenres": "체형 유형",
+    "costumeGenres": "코스튬",
+    "otherGenres": "기타",
+    "allCategories": "전체",
+    "productCount": "{count}개 작품",
+    "noCategories": "카테고리를 찾을 수 없습니다",
+    "viewProducts": "전체 보기"
+  },
+  "stickyCta": {
+    "buyAt": "{provider}에서 구매"
+  },
+  "personalized": {
+    "recentlyViewed": "최근 본 작품",
+    "count": "{count}개 기록",
+    "basedOnHistory": "시청 기록 기반 추천",
+    "clearHistory": "기록 삭제"
+  },
+  "viewingDiary": {
+    "markAsViewed": "시청 완료",
+    "unmarkAsViewed": "해제",
+    "viewed": "시청함",
+    "addedToDiary": "시청 일기에 추가됨",
+    "removedFromDiary": "시청 일기에서 삭제됨",
+    "viewCount": "{count}회 시청"
   }
 }

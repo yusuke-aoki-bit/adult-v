@@ -210,11 +210,45 @@ const nextConfig: NextConfig = {
   },
   // セキュリティヘッダー設定
   async headers() {
+    // CSP設定 - Google Analytics、FANZA画像・動画に対応
+    const cspDirectives = [
+      "default-src 'self'",
+      // スクリプト: Next.js, Google Analytics, Google Tag Manager, DMM/FANZA
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://*.dmm.co.jp https://*.dmm.com",
+      // スタイル: Next.js インラインスタイル
+      "style-src 'self' 'unsafe-inline'",
+      // 画像: FANZA/DMMホスト
+      "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://awsimgsrc.dmm.co.jp https://placehold.co https://www.googletagmanager.com https://www.google-analytics.com",
+      // フォント
+      "font-src 'self' data:",
+      // 接続先: API, Google Analytics
+      "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com",
+      // フレーム: FANZA動画埋め込み用
+      "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.dmm.co.jp https://*.dmm.com",
+      // メディア: FANZA動画
+      "media-src 'self' https://*.dmm.co.jp https://*.dmm.com https://cc3001.dmm.co.jp https://litevideo.dmm.co.jp",
+      // オブジェクト（プラグイン）は無効化
+      "object-src 'none'",
+      // base-uri制限
+      "base-uri 'self'",
+      // フォーム送信先
+      "form-action 'self'",
+      // フレーム祖先（クリックジャッキング対策）
+      "frame-ancestors 'self'",
+      // アップグレード
+      "upgrade-insecure-requests",
+    ].join('; ');
+
     return [
       {
         // 全ページに適用
         source: '/:path*',
         headers: [
+          // Content Security Policy
+          {
+            key: 'Content-Security-Policy',
+            value: cspDirectives,
+          },
           // クリックジャッキング対策
           {
             key: 'X-Frame-Options',
@@ -264,89 +298,123 @@ const nextConfig: NextConfig = {
     ];
   },
   // リダイレクト設定
+  // 新URL構造: デフォルトロケール(ja)はパスプレフィックスなし
+  // 他の言語: /en/, /zh/, /zh-TW/, /ko/ または ?hl=en 等
   async redirects() {
     return [
       // ============================
-      // レガシーURL（locale なし）から ja へのリダイレクト
+      // レガシーURL → 新URL へのリダイレクト
       // ============================
-      // /categories → /ja/products
+      // /categories → /products
       {
         source: '/categories',
-        destination: '/ja/products',
+        destination: '/products',
         permanent: true,
       },
-      // /categories?category=xxx → /ja/products
+      // /categories?category=xxx → /products
       {
         source: '/categories',
         has: [{ type: 'query', key: 'category' }],
-        destination: '/ja/products',
+        destination: '/products',
         permanent: true,
       },
-      // /actress/:id → /ja/actress/:id
-      {
-        source: '/actress/:id',
-        destination: '/ja/actress/:id',
-        permanent: true,
-      },
-      // /product/:id → /ja/products/:id（product → products に修正）
+      // /product/:id → /products/:id（product → products に修正）
       {
         source: '/product/:id',
-        destination: '/ja/products/:id',
-        permanent: true,
-      },
-      // /products/:id (locale なし) → /ja/products/:id
-      {
-        source: '/products/:id',
-        destination: '/ja/products/:id',
+        destination: '/products/:id',
         permanent: true,
       },
       // ============================
-      // locale ありのリダイレクト
+      // 非デフォルトロケール用リダイレクト
       // ============================
       // カテゴリページから一覧ページへの301リダイレクト
       {
-        source: '/:locale/categories/:tagId',
+        source: '/:locale(en|zh|zh-TW|ko)/categories/:tagId',
         destination: '/:locale/products?include=:tagId',
         permanent: true,
       },
       {
-        source: '/:locale/categories',
+        source: '/:locale(en|zh|zh-TW|ko)/categories',
         destination: '/:locale/products',
         permanent: true,
       },
       // 未整理作品ページから一覧ページへの301リダイレクト
       {
-        source: '/:locale/uncategorized',
+        source: '/:locale(en|zh|zh-TW|ko)/uncategorized',
         destination: '/:locale/products?uncategorized=true',
         permanent: true,
       },
       // レビューページからホームへの301リダイレクト
       {
-        source: '/:locale/reviews',
+        source: '/:locale(en|zh|zh-TW|ko)/reviews',
         destination: '/:locale?hasReview=true',
         permanent: true,
       },
       // 女優一覧ページからホームへの301リダイレクト
       {
-        source: '/:locale/actress',
+        source: '/:locale(en|zh|zh-TW|ko)/actress',
         destination: '/:locale',
         permanent: true,
       },
       // 女優×ジャンルページから女優詳細ページへの301リダイレクト
       {
-        source: '/:locale/actress/:performerId/genre/:tagId',
+        source: '/:locale(en|zh|zh-TW|ko)/actress/:performerId/genre/:tagId',
         destination: '/:locale/actress/:performerId?include=:tagId',
         permanent: true,
       },
       // 検索ページから各一覧ページへの301リダイレクト
       {
-        source: '/:locale/search',
+        source: '/:locale(en|zh|zh-TW|ko)/search',
         destination: '/:locale/products',
         permanent: true,
       },
       {
-        source: '/:locale/products/search',
+        source: '/:locale(en|zh|zh-TW|ko)/products/search',
         destination: '/:locale/products',
+        permanent: true,
+      },
+      // ============================
+      // デフォルトロケール(ja)用リダイレクト（パスプレフィックスなし）
+      // ============================
+      // カテゴリページから一覧ページへの301リダイレクト
+      {
+        source: '/categories/:tagId',
+        destination: '/products?include=:tagId',
+        permanent: true,
+      },
+      // 未整理作品ページから一覧ページへの301リダイレクト
+      {
+        source: '/uncategorized',
+        destination: '/products?uncategorized=true',
+        permanent: true,
+      },
+      // レビューページからホームへの301リダイレクト
+      {
+        source: '/reviews',
+        destination: '/?hasReview=true',
+        permanent: true,
+      },
+      // 女優一覧ページからホームへの301リダイレクト
+      {
+        source: '/actress',
+        destination: '/',
+        permanent: true,
+      },
+      // 女優×ジャンルページから女優詳細ページへの301リダイレクト
+      {
+        source: '/actress/:performerId/genre/:tagId',
+        destination: '/actress/:performerId?include=:tagId',
+        permanent: true,
+      },
+      // 検索ページから各一覧ページへの301リダイレクト
+      {
+        source: '/search',
+        destination: '/products',
+        permanent: true,
+      },
+      {
+        source: '/products/search',
+        destination: '/products',
         permanent: true,
       },
     ];

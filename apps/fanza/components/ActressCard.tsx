@@ -2,11 +2,12 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Actress } from '@/types/product';
 import { providerMeta } from '@/lib/providers';
 import { normalizeImageUrl, isUncensoredThumbnail } from '@/lib/image-utils';
 import FavoriteButton from './FavoriteButton';
+import { useSite } from '@/lib/contexts/SiteContext';
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/400x520/E5E7EB/6B7280?text=NO+IMAGE';
 
@@ -18,6 +19,13 @@ interface Props {
 
 export default function ActressCard({ actress, compact = false, priority = false }: Props) {
   const t = useTranslations('actressCard');
+  const { isFanzaSite } = useSite();
+
+  // FANZAサイトではFANZAサービスのみ表示
+  const filteredServices = isFanzaSite
+    ? (actress.services || []).filter(s => s.toLowerCase() === 'fanza')
+    : (actress.services || []);
+
   // 通常表示ではheroImage優先、コンパクト表示ではthumbnail優先
   const rawImageUrl = compact
     ? (actress.thumbnail || actress.heroImage)
@@ -83,22 +91,22 @@ export default function ActressCard({ actress, compact = false, priority = false
             <span className="theme-text-muted hidden sm:inline">{t('releaseCount')}</span>
             <span className="font-semibold">{actress.metrics?.releaseCount || 0}{t('videos')}</span>
           </div>
-          {actress.services && actress.services.length > 0 && (
+          {filteredServices.length > 0 && (
             <div className="flex flex-wrap gap-0.5 sm:gap-1 min-h-[18px]">
-              {actress.services.slice(0, 3).map((service) => {
+              {filteredServices.slice(0, 3).map((service) => {
                 const meta = providerMeta[service];
                 if (!meta) return null;
                 return (
                   <span
                     key={service}
-                    className={`text-[9px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-0.5 rounded bg-gradient-to-r ${meta.accentClass}`}
+                    className={`text-[9px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-0.5 rounded bg-gradient-to-r text-white ${meta.accentClass}`}
                   >
                     {meta.label}
                   </span>
                 );
               })}
-              {actress.services.length > 3 && (
-                <span className="text-[9px] sm:text-[10px] theme-text-muted">+{actress.services.length - 3}</span>
+              {filteredServices.length > 3 && (
+                <span className="text-[9px] sm:text-[10px] theme-text-muted">+{filteredServices.length - 3}</span>
               )}
             </div>
           )}
@@ -170,15 +178,15 @@ export default function ActressCard({ actress, compact = false, priority = false
           </div>
         )}
 
-        {actress.services && actress.services.length > 0 && (
+        {filteredServices.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {actress.services.map((service) => {
+            {filteredServices.map((service) => {
               const meta = providerMeta[service];
               if (!meta) return null;
               return (
                 <span
                   key={service}
-                  className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r ${meta.accentClass}`}
+                  className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r text-white ${meta.accentClass}`}
                 >
                   {meta.label}
                 </span>

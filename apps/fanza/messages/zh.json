@@ -51,7 +51,7 @@
     "viewProductListDesc": "跨平台搜索所有配信站点的作品"
   },
   "header": {
-    "title": "FANZA VIEWER LAB",
+    "title": "AVVIEWER LAB",
     "subtitle": "heavy user guide",
     "menu": "菜单",
     "close": "关闭"
@@ -75,8 +75,7 @@
     "privacy": "隐私政策",
     "terms": "服务条款",
     "contact": "联系我们",
-    "copyright": "© {year} FANZA VIEWER LAB. 版权所有。",
-    "affiliateNotice": "本站包含成人内容的联盟链接。"
+    "copyright": "© {year} AVVIEWER LAB. 版权所有。"
   },
   "uncategorized": {
     "title": "未分类作品",
@@ -105,7 +104,8 @@
     "title": "{name}的合作演员",
     "description": "与该演员合作过的女优",
     "costarCount": "次合作",
-    "productCount": "作品"
+    "productCount": "作品",
+    "genreMatch": "匹配"
   },
   "filter": {
     "genre": "类型",
@@ -264,6 +264,8 @@
   },
   "productCard": {
     "enlargeImage": "放大图片",
+    "playSampleVideo": "播放示例视频",
+    "videoNotSupported": "您的浏览器不支持视频播放",
     "performerInfo": "演员信息",
     "releaseDateTbd": "发售日期待定",
     "productId": "作品ID",
@@ -275,9 +277,12 @@
     "close": "关闭",
     "clickToCloseEsc": "← 上一张 | 中央关闭 | 下一张 →",
     "comingSoon": "即将上市",
+    "monthly": "月费",
     "previousImage": "上一张图片",
     "nextImage": "下一张图片",
-    "thumbnailAlt": "缩略图"
+    "thumbnailAlt": "缩略图",
+    "saleTomorrow": "明天截止",
+    "saleEndsIn": "还剩{days}天"
   },
   "imageLightbox": {
     "close": "关闭",
@@ -286,5 +291,38 @@
     "nextImage": "下一张图片",
     "thumbnailAlt": "缩略图",
     "viewDetails": "查看详情"
+  },
+  "categories": {
+    "title": "类型・分类一览",
+    "metaTitle": "类型・分类一览 | 按类型搜索AV作品 - AVVIEWER LAB",
+    "metaDescription": "按类型和分类搜索FANZA AV作品。可按人气类型、场景、玩法、体型等分类浏览作品。",
+    "description": "按类型和分类浏览所有作品。轻松找到您喜爱的作品。",
+    "popularGenres": "人气类型",
+    "situationGenres": "场景类型",
+    "playGenres": "玩法类型",
+    "bodyTypeGenres": "体型类型",
+    "costumeGenres": "服装类型",
+    "otherGenres": "其他",
+    "allCategories": "全部",
+    "productCount": "{count}件作品",
+    "noCategories": "未找到分类",
+    "viewProducts": "查看全部"
+  },
+  "stickyCta": {
+    "buyAt": "在{provider}购买"
+  },
+  "personalized": {
+    "recentlyViewed": "最近浏览",
+    "count": "{count}条记录",
+    "basedOnHistory": "根据您的浏览历史推荐",
+    "clearHistory": "清除历史"
+  },
+  "viewingDiary": {
+    "markAsViewed": "标记已看",
+    "unmarkAsViewed": "取消标记",
+    "viewed": "已看",
+    "addedToDiary": "已添加到观看日记",
+    "removedFromDiary": "已从观看日记移除",
+    "viewCount": "已看{count}次"
   }
 }

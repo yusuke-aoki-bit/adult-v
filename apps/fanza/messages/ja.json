@@ -36,8 +36,8 @@
     "filterSettings": "フィルター設定"
   },
   "homepage": {
-    "title": "AV女優データベース - FANZA作品検索 | FANZA VIEWER LAB",
-    "description": "DUGA、MGS、DTI、カリビアンコム、一本道、HEYZOなど主要動画配信サイトを横断したAV女優・作品データベース。{count}名以上の女優情報、出演作品、ジャンル別検索、価格比較が可能。ヘビーユーザー向けの詳細レビューとランキング情報を提供。",
+    "title": "【無料サンプル・セール情報】AV女優38,000名 FANZA作品検索 | AVVIEWER LAB",
+    "description": "FANZA・DMM等{count}名以上のAV女優・作品を検索。無料サンプル動画・セール情報・価格比較機能で最安値を発見。ジャンル・シチュエーション別に簡単検索。",
     "actressCount": "{count}名の女優を掲載中",
     "initialSearch": "頭文字で検索",
     "filterSettings": "フィルター設定",
@@ -56,7 +56,7 @@
     "viewProductListDesc": "全ての配信サイトの作品を横断検索"
   },
   "header": {
-    "title": "FANZA VIEWER LAB",
+    "title": "AVVIEWER LAB",
     "subtitle": "heavy user guide",
     "menu": "メニュー",
     "close": "閉じる"
@@ -74,7 +74,7 @@
     "search": "検索"
   },
   "footer": {
-    "siteName": "FANZA VIEWER LAB",
+    "siteName": "AVVIEWER LAB",
     "description": "FANZAの作品情報を整理し、ヘビー視聴者のための女優ベースの検索・比較サービスを提供しています。",
     "links": "リンク",
     "legal": "サイトポリシー",
@@ -82,8 +82,7 @@
     "terms": "利用規約",
     "contact": "お問い合わせ",
     "contactDescription": "ご質問・ご要望はメールにてお問い合わせください。",
-    "copyright": "© {year} FANZA VIEWER LAB. All rights reserved.",
-    "affiliateNotice": "当サイトはFANZAのアフィリエイトプログラムに参加しています。商品リンクから購入された場合、紹介料が発生することがあります。",
+    "copyright": "© {year} AVVIEWER LAB. All rights reserved.",
     "admin": "管理ページ"
   },
   "uncategorized": {
@@ -113,7 +112,8 @@
     "title": "{name}との共演者",
     "description": "この女優と共演したことのある女優",
     "costarCount": "回共演",
-    "productCount": "作品"
+    "productCount": "作品",
+    "genreMatch": "一致"
   },
   "filter": {
     "genre": "ジャンル",
@@ -272,6 +272,8 @@
   },
   "productCard": {
     "enlargeImage": "画像を拡大表示",
+    "playSampleVideo": "サンプル動画を再生",
+    "videoNotSupported": "お使いのブラウザは動画再生に対応していません",
     "performerInfo": "出演者情報",
     "releaseDateTbd": "配信日未定",
     "productId": "作品ID",
@@ -283,9 +285,12 @@
     "close": "閉じる",
     "clickToCloseEsc": "← 前 | 中央で閉じる | 次 →",
     "comingSoon": "発売予定",
+    "monthly": "月額",
     "previousImage": "前の画像",
     "nextImage": "次の画像",
-    "thumbnailAlt": "サムネイル"
+    "thumbnailAlt": "サムネイル",
+    "saleTomorrow": "明日まで",
+    "saleEndsIn": "あと{days}日"
   },
   "imageLightbox": {
     "close": "閉じる",
@@ -351,5 +356,38 @@
   "favoriteButton": {
     "addToFavorites": "お気に入りに追加",
     "removeFromFavorites": "お気に入りから削除"
+  },
+  "categories": {
+    "title": "ジャンル・カテゴリ一覧",
+    "metaTitle": "【無料サンプルあり】FANZA動画ジャンル別検索 - 38,000本以上 | AVVIEWER LAB",
+    "metaDescription": "FANZA動画38,000本以上をジャンル別検索。無料サンプル動画・セール情報あり。人気ジャンル・シチュエーション・プレイ内容から好みの作品を簡単検索。",
+    "description": "ジャンル・カテゴリ別に作品を検索できます。",
+    "allCategories": "すべてのカテゴリ",
+    "popularGenres": "人気ジャンル",
+    "situationGenres": "シチュエーション",
+    "playGenres": "プレイ",
+    "bodyTypeGenres": "ボディタイプ",
+    "costumeGenres": "コスチューム",
+    "otherGenres": "その他",
+    "productCount": "{count}作品",
+    "viewProducts": "作品を見る",
+    "noCategories": "カテゴリがありません"
+  },
+  "stickyCta": {
+    "buyAt": "{provider}で購入"
+  },
+  "personalized": {
+    "recentlyViewed": "最近チェックした作品",
+    "count": "{count}件の履歴",
+    "basedOnHistory": "閲覧履歴に基づくおすすめ",
+    "clearHistory": "履歴をクリア"
+  },
+  "viewingDiary": {
+    "markAsViewed": "視聴済み",
+    "unmarkAsViewed": "視聴済み解除",
+    "viewed": "視聴済み",
+    "addedToDiary": "視聴日記に追加しました",
+    "removedFromDiary": "視聴日記から削除しました",
+    "viewCount": "{count}回視聴"
   }
 }

@@ -333,6 +333,106 @@ export async function getRecommendationsFromFavorites(
 }
 
 /**
+ * Get related products based on performer names and tag names
+ * Used for "Viewers also watched" feature
+ */
+export async function getRelatedProductsByNames(options: {
+  performers: string[];
+  tags: string[];
+  excludeProductId?: string;
+  limit?: number;
+}) {
+  const { performers = [], tags = [], excludeProductId, limit = 6 } = options;
+  const db = getDb();
+
+  const excludeId = excludeProductId ? parseInt(excludeProductId, 10) : null;
+
+  // Build performer IDs from names
+  let performerIds: number[] = [];
+  if (performers.length > 0) {
+    const performerResults = await db.execute(sql`
+      SELECT id FROM performers WHERE name IN (${sql.join(performers.map(p => sql`${p}`), sql`, `)})
+    `);
+    performerIds = (performerResults.rows as any[]).map(r => r.id);
+  }
+
+  // Build tag IDs from names
+  let tagIds: number[] = [];
+  if (tags.length > 0) {
+    const tagResults = await db.execute(sql`
+      SELECT id FROM tags WHERE name IN (${sql.join(tags.map(t => sql`${t}`), sql`, `)})
+    `);
+    tagIds = (tagResults.rows as any[]).map(r => r.id);
+  }
+
+  let relatedProducts: any[] = [];
+
+  // Strategy 1: Same performers
+  if (performerIds.length > 0) {
+    const excludeClause = excludeId ? sql`AND p.id != ${excludeId}` : sql``;
+    const samePerformerProducts = await db.execute(sql`
+      SELECT
+        p.id,
+        p.title,
+        p.normalized_product_id as "normalizedProductId",
+        p.default_thumbnail_url as "imageUrl",
+        COUNT(DISTINCT pp.performer_id) as match_score
+      FROM products p
+      INNER JOIN product_performers pp ON p.id = pp.product_id
+      WHERE pp.performer_id IN (${sql.join(performerIds.map(id => sql`${id}`), sql`, `)})
+        ${excludeClause}
+      GROUP BY p.id, p.title, p.normalized_product_id, p.default_thumbnail_url
+      ORDER BY match_score DESC, p.release_date DESC
+      LIMIT ${limit}
+    `);
+
+    relatedProducts = (samePerformerProducts.rows as any[]).map(p => ({
+      ...p,
+      matchType: 'performer',
+      performers: [],
+      tags: [],
+    }));
+  }
+
+  // Strategy 2: Same tags (if we need more)
+  if (relatedProducts.length < limit && tagIds.length > 0) {
+    const existingIds = relatedProducts.map(p => p.id);
+    const excludeClause = excludeId ? sql`AND p.id != ${excludeId}` : sql``;
+    const existingClause = existingIds.length > 0
+      ? sql`AND p.id NOT IN (${sql.join(existingIds.map(id => sql`${id}`), sql`, `)})`
+      : sql``;
+
+    const sameTagProducts = await db.execute(sql`
+      SELECT
+        p.id,
+        p.title,
+        p.normalized_product_id as "normalizedProductId",
+        p.default_thumbnail_url as "imageUrl",
+        COUNT(DISTINCT pt.tag_id) as match_score
+      FROM products p
+      INNER JOIN product_tags pt ON p.id = pt.product_id
+      WHERE pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
+        ${excludeClause}
+        ${existingClause}
+      GROUP BY p.id, p.title, p.normalized_product_id, p.default_thumbnail_url
+      ORDER BY match_score DESC, p.release_date DESC
+      LIMIT ${limit - relatedProducts.length}
+    `);
+
+    relatedProducts.push(
+      ...(sameTagProducts.rows as any[]).map(p => ({
+        ...p,
+        matchType: 'tag',
+        performers: [],
+        tags: [],
+      }))
+    );
+  }
+
+  return relatedProducts.slice(0, limit);
+}
+
+/**
  * Get related performers based on shared tags/genres
  * Returns performers who share the most common tags with the given performer
  */
@@ -379,6 +479,390 @@ export async function getRelatedPerformers(performerId: number, limit: number = 
     }>;
   } catch {
     // クエリエラー時は空配列を返す（共演者データがない場合など）
+    return [];
+  }
+}
+
+/**
+ * Get recommended actresses based on user's favorite performers
+ * B1機能: 「この女優が好きなら」レコメンド
+ * お気に入り女優の共演者・ジャンル傾向から類似女優をおすすめ
+ */
+export async function getRecommendedActressesFromFavorites(
+  favoritePerformerIds: number[],
+  limit: number = 8
+): Promise<Array<{
+  id: number;
+  name: string;
+  thumbnailUrl: string | null;
+  heroImageUrl: string | null;
+  productCount: number;
+  matchScore: number;
+  matchReasons: string[];
+  genreMatchPercent: number;
+  sharedCoStars: number;
+}>> {
+  if (favoritePerformerIds.length === 0) {
+    return [];
+  }
+
+  try {
+    const db = getDb();
+
+    // お気に入り女優の共演者とジャンル一致率を計算
+    const recommendedPerformers = await db.execute(sql`
+      WITH favorite_tags AS (
+        -- お気に入り女優が出演した作品のタグを収集
+        SELECT DISTINCT pt.tag_id, t.name as tag_name
+        FROM product_performers pp
+        INNER JOIN product_tags pt ON pp.product_id = pt.product_id
+        INNER JOIN tags t ON pt.tag_id = t.id
+        WHERE pp.performer_id IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
+      ),
+      favorite_tag_count AS (
+        SELECT COUNT(*) as total FROM favorite_tags
+      ),
+      favorite_products AS (
+        -- お気に入り女優の出演作品
+        SELECT DISTINCT product_id
+        FROM product_performers
+        WHERE performer_id IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
+      ),
+      co_performers AS (
+        -- お気に入り女優と共演した女優
+        SELECT
+          pp.performer_id,
+          COUNT(DISTINCT pp.product_id) as shared_product_count
+        FROM product_performers pp
+        INNER JOIN favorite_products fp ON pp.product_id = fp.product_id
+        WHERE pp.performer_id NOT IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
+        GROUP BY pp.performer_id
+      ),
+      candidate_tags AS (
+        -- 候補女優のタグ
+        SELECT
+          pp.performer_id,
+          pt.tag_id
+        FROM product_performers pp
+        INNER JOIN product_tags pt ON pp.product_id = pt.product_id
+        GROUP BY pp.performer_id, pt.tag_id
+      ),
+      genre_match AS (
+        -- ジャンル一致率を計算
+        SELECT
+          ct.performer_id,
+          COUNT(DISTINCT ct.tag_id) FILTER (WHERE ct.tag_id IN (SELECT tag_id FROM favorite_tags)) as matching_tags,
+          (SELECT total FROM favorite_tag_count) as total_tags
+        FROM candidate_tags ct
+        WHERE ct.performer_id NOT IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
+        GROUP BY ct.performer_id
+      )
+      SELECT
+        p.id,
+        p.name,
+        p.thumbnail_url as "thumbnailUrl",
+        p.hero_image_url as "heroImageUrl",
+        (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
+        COALESCE(cp.shared_product_count, 0) as "sharedCoStars",
+        COALESCE(gm.matching_tags, 0) as "matchingTags",
+        COALESCE(gm.total_tags, 1) as "totalTags",
+        CASE
+          WHEN COALESCE(gm.total_tags, 1) > 0
+          THEN ROUND((COALESCE(gm.matching_tags, 0)::numeric / GREATEST(gm.total_tags::numeric, 1)) * 100)
+          ELSE 0
+        END as "genreMatchPercent",
+        -- 総合スコア: 共演回数 * 2 + ジャンル一致タグ数
+        (COALESCE(cp.shared_product_count, 0) * 2 + COALESCE(gm.matching_tags, 0)) as "matchScore"
+      FROM performers p
+      LEFT JOIN co_performers cp ON p.id = cp.performer_id
+      LEFT JOIN genre_match gm ON p.id = gm.performer_id
+      WHERE p.id NOT IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
+        AND (cp.shared_product_count > 0 OR gm.matching_tags > 5)
+      ORDER BY
+        "matchScore" DESC,
+        "genreMatchPercent" DESC,
+        "productCount" DESC
+      LIMIT ${limit}
+    `);
+
+    // マッチ理由を生成
+    return (recommendedPerformers.rows as any[]).map(p => {
+      const matchReasons: string[] = [];
+      if (p.sharedCoStars > 0) {
+        matchReasons.push(`${p.sharedCoStars}回共演`);
+      }
+      if (p.genreMatchPercent >= 70) {
+        matchReasons.push(`ジャンル${p.genreMatchPercent}%一致`);
+      } else if (p.genreMatchPercent >= 50) {
+        matchReasons.push(`ジャンル類似`);
+      }
+      if (matchReasons.length === 0 && p.matchingTags > 0) {
+        matchReasons.push(`${p.matchingTags}タグ一致`);
+      }
+
+      return {
+        id: Number(p.id),
+        name: p.name,
+        thumbnailUrl: p.thumbnailUrl,
+        heroImageUrl: p.heroImageUrl,
+        productCount: Number(p.productCount),
+        matchScore: Number(p.matchScore),
+        matchReasons,
+        genreMatchPercent: Number(p.genreMatchPercent),
+        sharedCoStars: Number(p.sharedCoStars),
+      };
+    });
+  } catch (error) {
+    console.error('Error getting recommended actresses from favorites:', error);
+    return [];
+  }
+}
+
+/**
+ * B4機能: 今週の注目（自動キュレーション）
+ * 閲覧数増加率、新作、再評価作品を取得
+ */
+export interface WeeklyHighlights {
+  trendingActresses: Array<{
+    id: number;
+    name: string;
+    thumbnailUrl: string | null;
+    heroImageUrl: string | null;
+    productCount: number;
+    viewsThisWeek: number;
+    viewsLastWeek: number;
+    growthRate: number;
+  }>;
+  hotNewReleases: Array<{
+    id: number;
+    title: string;
+    imageUrl: string | null;
+    releaseDate: string | null;
+    rating: number | null;
+    viewCount: number;
+  }>;
+  rediscoveredClassics: Array<{
+    id: number;
+    title: string;
+    imageUrl: string | null;
+    releaseDate: string | null;
+    recentViews: number;
+    daysSinceRelease: number;
+  }>;
+}
+
+export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
+  const db = getDb();
+
+  // FANZAのみのフィルター条件
+  const fanzaFilter = sql`EXISTS (
+    SELECT 1 FROM product_sources ps
+    WHERE ps.product_id = p.id
+    AND LOWER(ps.asp_name) = 'fanza'
+  )`;
+
+  // 1. 急上昇女優（今週 vs 先週の閲覧数比較）
+  const trendingActresses = await db.execute(sql`
+    WITH this_week_views AS (
+      SELECT
+        pp.performer_id,
+        COUNT(*) as view_count
+      FROM product_views pv
+      INNER JOIN product_performers pp ON pv.product_id = pp.product_id
+      WHERE pv.viewed_at >= NOW() - INTERVAL '7 days'
+      GROUP BY pp.performer_id
+    ),
+    last_week_views AS (
+      SELECT
+        pp.performer_id,
+        COUNT(*) as view_count
+      FROM product_views pv
+      INNER JOIN product_performers pp ON pv.product_id = pp.product_id
+      WHERE pv.viewed_at >= NOW() - INTERVAL '14 days'
+        AND pv.viewed_at < NOW() - INTERVAL '7 days'
+      GROUP BY pp.performer_id
+    )
+    SELECT
+      p.id,
+      p.name,
+      p.thumbnail_url as "thumbnailUrl",
+      p.hero_image_url as "heroImageUrl",
+      (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
+      COALESCE(tw.view_count, 0) as "viewsThisWeek",
+      COALESCE(lw.view_count, 0) as "viewsLastWeek",
+      CASE
+        WHEN COALESCE(lw.view_count, 0) = 0 THEN COALESCE(tw.view_count, 0) * 100
+        ELSE ROUND(((COALESCE(tw.view_count, 0) - COALESCE(lw.view_count, 0))::numeric / GREATEST(lw.view_count, 1)) * 100)
+      END as "growthRate"
+    FROM performers p
+    LEFT JOIN this_week_views tw ON p.id = tw.performer_id
+    LEFT JOIN last_week_views lw ON p.id = lw.performer_id
+    WHERE COALESCE(tw.view_count, 0) >= 3
+    ORDER BY "growthRate" DESC, "viewsThisWeek" DESC
+    LIMIT 6
+  `);
+
+  // 2. 話題の新作（今週リリース + 高評価/高閲覧）- FANZAのみ
+  const hotNewReleases = await db.execute(sql`
+    SELECT
+      p.id,
+      p.title,
+      p.default_thumbnail_url as "imageUrl",
+      p.release_date as "releaseDate",
+      p.average_rating as "rating",
+      (
+        SELECT COUNT(*)
+        FROM product_views pv
+        WHERE pv.product_id = p.id
+          AND pv.viewed_at >= NOW() - INTERVAL '7 days'
+      ) as "viewCount"
+    FROM products p
+    WHERE p.release_date >= NOW() - INTERVAL '14 days'
+      AND ${fanzaFilter}
+    ORDER BY "viewCount" DESC, p.average_rating DESC NULLS LAST
+    LIMIT 6
+  `);
+
+  // 3. 再評価作品（1年以上前の作品で最近閲覧が増えているもの）- FANZAのみ
+  const rediscoveredClassics = await db.execute(sql`
+    SELECT
+      p.id,
+      p.title,
+      p.default_thumbnail_url as "imageUrl",
+      p.release_date as "releaseDate",
+      COUNT(pv.id) as "recentViews",
+      EXTRACT(DAY FROM NOW() - p.release_date::timestamp) as "daysSinceRelease"
+    FROM products p
+    INNER JOIN product_views pv ON p.id = pv.product_id
+    WHERE p.release_date < NOW() - INTERVAL '365 days'
+      AND pv.viewed_at >= NOW() - INTERVAL '7 days'
+      AND ${fanzaFilter}
+    GROUP BY p.id, p.title, p.default_thumbnail_url, p.release_date
+    HAVING COUNT(pv.id) >= 2
+    ORDER BY "recentViews" DESC
+    LIMIT 6
+  `);
+
+  return {
+    trendingActresses: (trendingActresses.rows as any[]).map(r => ({
+      id: Number(r.id),
+      name: r.name,
+      thumbnailUrl: r.thumbnailUrl,
+      heroImageUrl: r.heroImageUrl,
+      productCount: Number(r.productCount),
+      viewsThisWeek: Number(r.viewsThisWeek),
+      viewsLastWeek: Number(r.viewsLastWeek),
+      growthRate: Number(r.growthRate),
+    })),
+    hotNewReleases: (hotNewReleases.rows as any[]).map(r => ({
+      id: Number(r.id),
+      title: r.title,
+      imageUrl: r.imageUrl,
+      releaseDate: r.releaseDate,
+      rating: r.rating ? Number(r.rating) : null,
+      viewCount: Number(r.viewCount),
+    })),
+    rediscoveredClassics: (rediscoveredClassics.rows as any[]).map(r => ({
+      id: Number(r.id),
+      title: r.title,
+      imageUrl: r.imageUrl,
+      releaseDate: r.releaseDate,
+      recentViews: Number(r.recentViews),
+      daysSinceRelease: Number(r.daysSinceRelease),
+    })),
+  };
+}
+
+/**
+ * Get related performers with genre match percentage
+ * Returns performers who share tags and calculates match percentage
+ */
+export async function getRelatedPerformersWithGenreMatch(performerId: number, limit: number = 6) {
+  try {
+    const db = getDb();
+
+    // 共演者 + ジャンル一致率を計算
+    const relatedPerformers = await db.execute(sql`
+      WITH performer_tags AS (
+        -- 対象女優のタグを取得
+        SELECT DISTINCT pt.tag_id
+        FROM product_performers pp
+        INNER JOIN product_tags pt ON pp.product_id = pt.product_id
+        WHERE pp.performer_id = ${performerId}
+      ),
+      performer_tag_count AS (
+        SELECT COUNT(*) as total FROM performer_tags
+      ),
+      performer_products AS (
+        SELECT DISTINCT product_id
+        FROM product_performers
+        WHERE performer_id = ${performerId}
+      ),
+      co_performers AS (
+        SELECT
+          pp.performer_id,
+          COUNT(DISTINCT pp.product_id) as shared_count
+        FROM product_performers pp
+        INNER JOIN performer_products prods ON pp.product_id = prods.product_id
+        WHERE pp.performer_id != ${performerId}
+        GROUP BY pp.performer_id
+      ),
+      co_performer_tags AS (
+        -- 共演者のタグを取得
+        SELECT
+          pp.performer_id,
+          pt.tag_id
+        FROM product_performers pp
+        INNER JOIN product_tags pt ON pp.product_id = pt.product_id
+        WHERE pp.performer_id IN (SELECT performer_id FROM co_performers)
+        GROUP BY pp.performer_id, pt.tag_id
+      ),
+      genre_match AS (
+        SELECT
+          cpt.performer_id,
+          COUNT(DISTINCT cpt.tag_id) FILTER (WHERE cpt.tag_id IN (SELECT tag_id FROM performer_tags)) as matching_tags,
+          (SELECT total FROM performer_tag_count) as total_tags
+        FROM co_performer_tags cpt
+        GROUP BY cpt.performer_id
+      )
+      SELECT
+        p.id,
+        p.name,
+        p.thumbnail_url as "thumbnailUrl",
+        p.hero_image_url as "heroImageUrl",
+        cp.shared_count as "sharedCount",
+        (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
+        COALESCE(gm.matching_tags, 0) as "matchingTags",
+        COALESCE(gm.total_tags, 0) as "totalTags",
+        CASE
+          WHEN COALESCE(gm.total_tags, 0) > 0
+          THEN ROUND((COALESCE(gm.matching_tags, 0)::numeric / gm.total_tags::numeric) * 100)
+          ELSE 0
+        END as "genreMatchPercent"
+      FROM performers p
+      INNER JOIN co_performers cp ON p.id = cp.performer_id
+      LEFT JOIN genre_match gm ON p.id = gm.performer_id
+      ORDER BY
+        -- 共演回数 * ジャンル一致率でスコアリング
+        (cp.shared_count * COALESCE(gm.matching_tags, 0)) DESC,
+        cp.shared_count DESC,
+        p.name ASC
+      LIMIT ${limit}
+    `);
+
+    return relatedPerformers.rows as Array<{
+      id: number;
+      name: string;
+      thumbnailUrl: string | null;
+      heroImageUrl: string | null;
+      sharedCount: number;
+      productCount: number;
+      matchingTags: number;
+      totalTags: number;
+      genreMatchPercent: number;
+    }>;
+  } catch (error) {
+    console.error('Error getting related performers with genre match:', error);
     return [];
   }
 }

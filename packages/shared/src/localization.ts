@@ -3,6 +3,8 @@
  * 言語設定に応じて適切なカラムの値を返す
  */
 
+import type { ActressAiReview } from './types/product';
+
 export type SupportedLocale = 'ja' | 'en' | 'zh' | 'zh-TW' | 'ko';
 
 /**
@@ -173,16 +175,8 @@ export function getLocalizedTagDescription(
   }
 }
 
-/**
- * AIレビュー型定義（types/product.tsのActressAiReviewと同一）
- */
-export interface ActressAiReview {
-  overview: string;           // 演者の総合的な紹介
-  style: string;              // 演技スタイル・特徴
-  appeal: string;             // 魅力ポイント
-  recommendation: string;     // おすすめコメント
-  keywords: string[];         // 検索キーワード
-}
+// Re-export ActressAiReview for backwards compatibility
+export type { ActressAiReview } from './types/product';
 
 /**
  * AIレビューのローカライズ

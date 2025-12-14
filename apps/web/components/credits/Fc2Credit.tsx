@@ -15,7 +15,7 @@ export function Fc2Credit({ className = '' }: Fc2CreditProps) {
       className={`inline-block ${className}`}
       aria-label="FC2動画"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      { }
       <img
         src="https://cnt.affiliate.fc2.com/cgi-bin/banner.cgi?aff_siteid=347884&bid=20831&uid=355464"
         alt="FC2動画"

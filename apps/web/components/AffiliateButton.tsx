@@ -1,8 +1,12 @@
 'use client';
 
+import { getVariant, trackCtaClick } from '@/lib/ab-testing';
+
 interface AffiliateButtonProps {
   affiliateUrl: string;
   providerLabel: string;
+  provider?: string;
+  productId?: number | string;
   price?: number;
   salePrice?: number;
   discount?: number;
@@ -59,6 +63,8 @@ function extractMgsProductUrl(widgetCode: string): string | null {
 export default function AffiliateButton({
   affiliateUrl,
   providerLabel,
+  provider,
+  productId,
   price,
   salePrice,
   discount,
@@ -84,6 +90,34 @@ export default function AffiliateButton({
 
   const hasSale = salePrice && price && salePrice < price;
 
+  // A/Bテスト: CTAボタンテキストのバリエーション
+  const ctaVariant = getVariant('ctaButtonText');
+  const getCtaText = () => {
+    if (hasSale) {
+      switch (ctaVariant) {
+        case 'urgency': return `${providerLabel}で今すぐ購入`;
+        case 'action': return `${providerLabel}でお得にゲット`;
+        default: return `${providerLabel}で今すぐ購入`;
+      }
+    } else {
+      switch (ctaVariant) {
+        case 'urgency': return `${providerLabel}で今すぐ見る`;
+        case 'action': return `${providerLabel}をチェック`;
+        default: return `${providerLabel}で購入`;
+      }
+    }
+  };
+
+  const handleCtaClick = () => {
+    if (productId) {
+      trackCtaClick('ctaButtonText', productId, {
+        is_sale: !!hasSale,
+        provider: provider || '',
+        page_type: 'detail',
+      });
+    }
+  };
+
   return (
     <div className="pt-4 space-y-3">
       {/* セール価格の強調表示 */}
@@ -107,16 +141,17 @@ export default function AffiliateButton({
         href={finalUrl}
         target="_blank"
         rel="noopener noreferrer sponsored"
-        className={`flex items-center justify-center gap-2 w-full text-white text-center py-4 px-6 rounded-lg font-semibold transition-colors ${
+        onClick={handleCtaClick}
+        className={`flex items-center justify-center gap-2 w-full text-white text-center py-4 px-6 rounded-lg font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] ${
           hasSale
-            ? 'bg-red-600 hover:bg-red-700 animate-pulse'
+            ? 'bg-red-600 hover:bg-red-700'
             : 'bg-rose-600 hover:bg-rose-700'
         }`}
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
         </svg>
-        {providerLabel}で{hasSale ? '今すぐ' : ''}購入
+        {getCtaText()}
       </a>
     </div>
   );
