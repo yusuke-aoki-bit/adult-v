@@ -99,6 +99,17 @@ async function fetchActressList(page: number): Promise<MinnanoPerformer[]> {
           !name.includes('女優') &&
           !name.includes('一覧')) {
 
+        // リンク周辺の画像を探す
+        let imageUrl: string | null = null;
+        const parentEl = $(el).parent();
+        const imgEl = parentEl.find('img').first();
+        if (imgEl.length > 0) {
+          const src = imgEl.attr('src') || imgEl.attr('data-src');
+          if (src && !src.includes('noimage') && !src.includes('blank')) {
+            imageUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
+          }
+        }
+
         // 重複チェック
         if (!performers.find(p => p.actressId === actressId)) {
           performers.push({
@@ -106,7 +117,7 @@ async function fetchActressList(page: number): Promise<MinnanoPerformer[]> {
             nameKana: null,
             actressId,
             profileUrl: `${BASE_URL}/actress${actressId}.html`,
-            imageUrl: null,
+            imageUrl,
             workCount: null,
           });
         }
@@ -117,15 +128,19 @@ async function fetchActressList(page: number): Promise<MinnanoPerformer[]> {
   return performers;
 }
 
+interface PerformerDetailWithImage extends PerformerDetail {
+  imageUrl: string | null;
+}
+
 /**
  * 女優詳細ページから詳細情報を取得
  */
-async function fetchActressDetail(url: string): Promise<PerformerDetail | null> {
+async function fetchActressDetail(url: string): Promise<PerformerDetailWithImage | null> {
   try {
     const html = await fetchPage(url);
     const $ = cheerio.load(html);
 
-    const detail: PerformerDetail = {
+    const detail: PerformerDetailWithImage = {
       name: '',
       nameKana: null,
       aliases: [],
@@ -139,6 +154,7 @@ async function fetchActressDetail(url: string): Promise<PerformerDetail | null> 
       birthplace: null,
       hobby: null,
       tags: [],
+      imageUrl: null,
     };
 
     // 名前を取得
@@ -212,6 +228,26 @@ async function fetchActressDetail(url: string): Promise<PerformerDetail | null> 
       }
     });
 
+    // プロフィール画像を取得
+    const profileImg = $('img.actress-photo, img.actress-image, .actress-profile img, .profile-image img').first();
+    if (profileImg.length > 0) {
+      const src = profileImg.attr('src') || profileImg.attr('data-src');
+      if (src && !src.includes('noimage') && !src.includes('blank')) {
+        detail.imageUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
+      }
+    }
+
+    // 代替パターン: メインコンテンツエリアの最初の画像
+    if (!detail.imageUrl) {
+      const mainImg = $('#main img, .main-content img, .content img').first();
+      if (mainImg.length > 0) {
+        const src = mainImg.attr('src') || mainImg.attr('data-src');
+        if (src && !src.includes('noimage') && !src.includes('blank') && !src.includes('banner') && !src.includes('ad')) {
+          detail.imageUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
+        }
+      }
+    }
+
     return detail.name ? detail : null;
   } catch (error) {
     console.error(`  Error fetching detail: ${error}`);
@@ -222,8 +258,10 @@ async function fetchActressDetail(url: string): Promise<PerformerDetail | null> 
 /**
  * DBに保存
  */
-async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerDetail | null): Promise<void> {
+async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerDetailWithImage | null): Promise<void> {
   const name = detail?.name || performer.name;
+  // 画像URLは詳細ページから取得したものを優先、なければリストから
+  const imageUrl = detail?.imageUrl || performer.imageUrl;
 
   // 既存のperformerを検索（名前で）
   const existing = await db
@@ -247,6 +285,11 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
       if (!existingPerformer.birthday && detail.birthday) updates.birthday = detail.birthday;
       if (!existingPerformer.bloodType && detail.bloodType) updates.bloodType = detail.bloodType;
       if (!existingPerformer.birthplace && detail.birthplace) updates.birthplace = detail.birthplace;
+    }
+
+    // プロフィール画像URLを更新（既存がnullの場合のみ）
+    if (!existingPerformer.profileImageUrl && imageUrl) {
+      updates.profileImageUrl = imageUrl;
     }
 
     if (Object.keys(updates).length > 0) {
@@ -295,6 +338,7 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
       .values({
         name,
         nameKana: detail?.nameKana,
+        profileImageUrl: imageUrl || undefined,
         height: detail?.height,
         bust: detail?.bust,
         waist: detail?.waist,
