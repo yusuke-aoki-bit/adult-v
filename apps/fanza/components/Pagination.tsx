@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import SharedPagination from '@adult-v/shared/components/Pagination';
 import { savePerPage } from '@/lib/filter-storage';
 
@@ -17,11 +18,19 @@ interface PaginationProps {
   showPerPageSelector?: boolean;
 }
 
-export default function Pagination(props: PaginationProps) {
+function PaginationInner(props: PaginationProps) {
   return (
     <SharedPagination
       {...props}
       onSavePerPage={savePerPage}
     />
+  );
+}
+
+export default function Pagination(props: PaginationProps) {
+  return (
+    <Suspense fallback={null}>
+      <PaginationInner {...props} />
+    </Suspense>
   );
 }
