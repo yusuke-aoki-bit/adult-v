@@ -10,7 +10,11 @@
  *
  * 使い方:
  * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fanza.ts [--pages 10] [--start-page 1] [--no-ai] [--force]
+ * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fanza.ts --full-scan [--sort=old] [--max-pages=1000]
  */
+
+// ソートオプション（新しい順、古い順、人気順）
+type SortOrder = 'date' | 'ranking' | 'review';
 
 if (!process.env.DATABASE_URL) {
   console.error('ERROR: DATABASE_URL environment variable is not set');
@@ -228,10 +232,12 @@ async function fetchPage(url: string): Promise<{ html: string; status: number } 
 
 /**
  * リストページから商品CIDを取得（新FANZA: video.dmm.co.jp対応）
+ * @param pageNum ページ番号
+ * @param sort ソート順（date=新しい順, ranking=人気順, review=レビュー順）
  */
-async function getCidsFromListPage(pageNum: number): Promise<string[]> {
+async function getCidsFromListPage(pageNum: number, sort: SortOrder = 'date'): Promise<string[]> {
   // 新FANZAはページネーションパラメータが異なる
-  const url = `https://video.dmm.co.jp/av/list/?sort=date&page=${pageNum}`;
+  const url = `https://video.dmm.co.jp/av/list/?sort=${sort}&page=${pageNum}`;
   console.log(`📋 リストページ取得中: ${url}`);
 
   await rateLimit();
@@ -456,12 +462,60 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       }
     }
 
-    // サンプル動画
+    // サンプル動画（複数パターンで抽出）
     const sampleVideos: string[] = [];
-    const videoMatch = html.match(/src="(https:\/\/[^"]*litevideo[^"]*\.mp4[^"]*)"/i)
-      || html.match(/data-src="(https:\/\/[^"]*sample[^"]*\.mp4[^"]*)"/i);
-    if (videoMatch) {
-      sampleVideos.push(videoMatch[1]);
+    const videoUrlSet = new Set<string>();
+
+    // パターン1: litevideo MP4
+    const liteVideoMatches = html.matchAll(/src="(https:\/\/[^"]*litevideo[^"]*\.mp4[^"]*)"/gi);
+    for (const match of liteVideoMatches) {
+      const url = match[1].split('?')[0];
+      if (!videoUrlSet.has(url)) {
+        videoUrlSet.add(url);
+        sampleVideos.push(url);
+      }
+    }
+
+    // パターン2: data-src属性のサンプル動画
+    const dataSrcMatches = html.matchAll(/data-src="(https:\/\/[^"]*(?:sample|preview)[^"]*\.mp4[^"]*)"/gi);
+    for (const match of dataSrcMatches) {
+      const url = match[1].split('?')[0];
+      if (!videoUrlSet.has(url)) {
+        videoUrlSet.add(url);
+        sampleVideos.push(url);
+      }
+    }
+
+    // パターン3: cc3001.dmm.co.jp からのサンプル動画
+    const cc3001Matches = html.matchAll(/["'](https:\/\/cc3001\.dmm\.co\.jp\/[^"']*\.mp4[^"']*)["']/gi);
+    for (const match of cc3001Matches) {
+      const url = match[1].split('?')[0];
+      if (!videoUrlSet.has(url)) {
+        videoUrlSet.add(url);
+        sampleVideos.push(url);
+      }
+    }
+
+    // パターン4: sample.mp4 や _sm_w.mp4 などのパターン
+    const sampleMp4Matches = html.matchAll(/["'](https:\/\/[^"']*(?:_sm_|sample|_sample_)[^"']*\.mp4[^"']*)["']/gi);
+    for (const match of sampleMp4Matches) {
+      const url = match[1].split('?')[0];
+      if (!videoUrlSet.has(url)) {
+        videoUrlSet.add(url);
+        sampleVideos.push(url);
+      }
+    }
+
+    // パターン5: JSON-LDからの動画URL
+    if (jsonLdData?.video) {
+      const videos = Array.isArray(jsonLdData.video) ? jsonLdData.video : [jsonLdData.video];
+      for (const video of videos) {
+        const contentUrl = video.contentUrl || video.embedUrl;
+        if (contentUrl && contentUrl.includes('.mp4') && !videoUrlSet.has(contentUrl)) {
+          videoUrlSet.add(contentUrl);
+          sampleVideos.push(contentUrl);
+        }
+      }
     }
 
     // 発売日（JSON-LDまたはHTML）
@@ -666,11 +720,13 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
       }
 
       // サンプル動画保存
-      for (const videoUrl of product.sampleVideos) {
+      for (let i = 0; i < product.sampleVideos.length; i++) {
         await db.insert(productVideos).values({
           productId,
-          videoUrl,
-          source: 'FANZA',
+          videoUrl: product.sampleVideos[i],
+          videoType: 'sample',
+          aspName: 'FANZA',
+          displayOrder: i,
         }).onConflictDoNothing();
       }
     }
@@ -816,22 +872,164 @@ async function saveTranslations(productId: number, product: FanzaProduct): Promi
 }
 
 /**
+ * フルスキャンモード: 全ページをクロールして全商品を収集
+ */
+async function runFullScan(
+  sort: SortOrder,
+  maxPages: number,
+  enableAI: boolean,
+  forceReprocess: boolean,
+): Promise<void> {
+  console.log('=== FANZA フルスキャンモード ===');
+  console.log(`ソート順: ${sort}`);
+  console.log(`最大ページ数: ${maxPages}`);
+  console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
+  console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}`);
+  console.log(`レート制限: ${RATE_LIMIT_MS}ms + ${JITTER_MS}msジッター\n`);
+
+  let totalSaved = 0;
+  let totalSkipped = 0;
+  let totalErrors = 0;
+  let consecutiveEmptyPages = 0;
+  const maxConsecutiveEmpty = 3; // 3回連続で空ページが続いたら終了
+
+  const processedCids = new Set<string>();
+
+  for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+    console.log(`\n========================================`);
+    console.log(`📋 ページ ${pageNum}/${maxPages} を処理中...`);
+    console.log(`========================================`);
+
+    try {
+      const cids = await getCidsFromListPage(pageNum, sort);
+
+      if (cids.length === 0) {
+        consecutiveEmptyPages++;
+        console.log(`  ⚠️ 商品が見つかりません（${consecutiveEmptyPages}/${maxConsecutiveEmpty}）`);
+
+        if (consecutiveEmptyPages >= maxConsecutiveEmpty) {
+          console.log(`\n🏁 ${maxConsecutiveEmpty}回連続で空ページのため終了`);
+          break;
+        }
+        continue;
+      }
+
+      consecutiveEmptyPages = 0;
+
+      // 重複を除外
+      const newCids = cids.filter(cid => !processedCids.has(cid));
+      console.log(`  📦 新規CID: ${newCids.length}件 (重複除外: ${cids.length - newCids.length}件)`);
+
+      for (let i = 0; i < newCids.length; i++) {
+        const cid = newCids[i];
+        processedCids.add(cid);
+
+        console.log(`\n  [${i + 1}/${newCids.length}] 商品CID: ${cid}`);
+
+        try {
+          const { product, rawDataId, shouldSkip } = await parseDetailPage(cid, forceReprocess);
+
+          if (shouldSkip) {
+            totalSkipped++;
+            continue;
+          }
+
+          if (product) {
+            console.log(`      タイトル: ${product.title.substring(0, 50)}...`);
+            console.log(`      出演者: ${product.performers.join(', ') || '不明'}`);
+            console.log(`      📷 サンプル画像: ${product.sampleImages.length}件`);
+            console.log(`      🎬 サンプル動画: ${product.sampleVideos.length}件`);
+
+            const savedId = await saveProduct(product);
+
+            if (savedId) {
+              if (enableAI) {
+                const { aiDescription, aiTags } = await generateAIContent(product, enableAI);
+                await saveAIContent(savedId, aiDescription, aiTags);
+              }
+
+              await saveTranslations(savedId, product);
+
+              if (rawDataId) {
+                await markRawDataAsProcessed(rawDataId, 'raw_html_data');
+              }
+
+              totalSaved++;
+            } else {
+              totalSkipped++;
+            }
+          }
+        } catch (error) {
+          console.error(`      ❌ エラー: ${error}`);
+          totalErrors++;
+        }
+      }
+
+      // ページ単位の進捗表示
+      console.log(`\n  📊 ページ ${pageNum} 完了 - 累計: 保存=${totalSaved}, スキップ=${totalSkipped}, エラー=${totalErrors}`);
+
+    } catch (error) {
+      console.error(`  ❌ ページ ${pageNum} でエラー: ${error}`);
+      totalErrors++;
+
+      // エラーが続いても少し待って続行
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
+
+  await closeBrowser();
+
+  console.log('\n========================================');
+  console.log('=== フルスキャン完了 ===');
+  console.log('========================================');
+  console.log(`処理商品数: ${processedCids.size}件`);
+  console.log(`新規保存: ${totalSaved}件`);
+  console.log(`スキップ: ${totalSkipped}件`);
+  console.log(`エラー: ${totalErrors}件`);
+}
+
+/**
  * メイン処理
  */
 async function main() {
   const args = process.argv.slice(2);
 
-  // 引数パース
+  // 共通引数
+  const enableAI = !args.includes('--no-ai');
+  const forceReprocess = args.includes('--force');
+  const fullScan = args.includes('--full-scan');
+
+  // ソートオプション
+  let sort: SortOrder = 'date';
+  const sortArg = args.find(arg => arg.startsWith('--sort='));
+  if (sortArg) {
+    const sortValue = sortArg.split('=')[1];
+    if (sortValue === 'ranking' || sortValue === 'review' || sortValue === 'date') {
+      sort = sortValue;
+    }
+  }
+
+  // フルスキャンモード
+  if (fullScan) {
+    let maxPages = 10000; // デフォルト最大ページ数
+    const maxPagesArg = args.find(arg => arg.startsWith('--max-pages='));
+    if (maxPagesArg) {
+      maxPages = parseInt(maxPagesArg.split('=')[1], 10);
+    }
+
+    await runFullScan(sort, maxPages, enableAI, forceReprocess);
+    process.exit(0);
+    return;
+  }
+
+  // 通常モード: 引数パース
   let pages = 5;
   let startPage = 1;
   let limit = 100;
-  const enableAI = !args.includes('--no-ai');
-  const forceReprocess = args.includes('--force');
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    // --pages=N 形式
     if (arg.startsWith('--pages=')) {
       pages = parseInt(arg.split('=')[1], 10);
     } else if (arg === '--pages' && args[i + 1]) {
@@ -839,7 +1037,6 @@ async function main() {
       i++;
     }
 
-    // --start-page=N 形式
     if (arg.startsWith('--start-page=')) {
       startPage = parseInt(arg.split('=')[1], 10);
     } else if (arg === '--start-page' && args[i + 1]) {
@@ -847,7 +1044,6 @@ async function main() {
       i++;
     }
 
-    // --limit=N 形式
     if (arg.startsWith('--limit=')) {
       limit = parseInt(arg.split('=')[1], 10);
     } else if (arg === '--limit' && args[i + 1]) {
@@ -859,6 +1055,7 @@ async function main() {
   console.log('=== FANZA クローラー ===');
   console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
   console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}`);
+  console.log(`ソート順: ${sort}`);
   console.log(`設定: pages=${pages}, start-page=${startPage}, limit=${limit}`);
   console.log(`レート制限: ${RATE_LIMIT_MS}ms + ${JITTER_MS}msジッター\n`);
 
@@ -867,7 +1064,7 @@ async function main() {
   const endPage = startPage + pages - 1;
 
   for (let pageNum = startPage; pageNum <= endPage && allCids.length < limit; pageNum++) {
-    const cids = await getCidsFromListPage(pageNum);
+    const cids = await getCidsFromListPage(pageNum, sort);
     for (const cid of cids) {
       if (!allCids.includes(cid) && allCids.length < limit) {
         allCids.push(cid);
@@ -903,16 +1100,13 @@ async function main() {
         const savedId = await saveProduct(product);
 
         if (savedId) {
-          // AI機能
           if (enableAI) {
             const { aiDescription, aiTags } = await generateAIContent(product, enableAI);
             await saveAIContent(savedId, aiDescription, aiTags);
           }
 
-          // 翻訳
           await saveTranslations(savedId, product);
 
-          // Raw dataを処理済みマーク
           if (rawDataId) {
             await markRawDataAsProcessed(rawDataId, 'raw_html_data');
           }
