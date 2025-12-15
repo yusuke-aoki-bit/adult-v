@@ -5,6 +5,9 @@ runConfig:
   maxInstances: 4
   cpu: 1
   memoryMiB: 512
+  vpcAccess:
+    connector: projects/adult-v/locations/asia-east1/connectors/adult-v-connector
+    egress: PRIVATE_RANGES_ONLY
 
 env:
   - variable: NODE_ENV
