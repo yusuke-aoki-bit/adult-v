@@ -224,8 +224,15 @@ export function validateSecurityHeaders(request: NextRequest): boolean {
         'adult-v.com',
         'www.adult-v.com',
         'f.adult-v.com',
+        'fanza.minpri.net',
       ];
-      if (!allowedHosts.some(host => url.hostname === host || url.hostname.endsWith('.' + host))) {
+      // Firebase App Hosting preview domains
+      const allowedPatterns = [
+        /\.hosted\.app$/,  // Firebase App Hosting
+      ];
+      const hostMatches = allowedHosts.some(host => url.hostname === host || url.hostname.endsWith('.' + host));
+      const patternMatches = allowedPatterns.some(pattern => pattern.test(url.hostname));
+      if (!hostMatches && !patternMatches) {
         return false;
       }
     } catch {

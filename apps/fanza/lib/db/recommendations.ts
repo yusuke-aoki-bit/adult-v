@@ -685,15 +685,23 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
     AND LOWER(ps.asp_name) = 'fanza'
   )`;
 
-  // 1. 急上昇女優（今週 vs 先週の閲覧数比較）
+  // 1. 急上昇女優（今週 vs 先週の閲覧数比較）- FANZAのみ
   // ※演者プロフィール画像（minnano-av由来）は使用せず、作品サムネイルを使用
   const trendingActresses = await db.execute(sql`
-    WITH this_week_views AS (
+    WITH fanza_products AS (
+      -- FANZA作品のみを抽出
+      SELECT DISTINCT p.id
+      FROM products p
+      INNER JOIN product_sources ps ON p.id = ps.product_id
+      WHERE LOWER(ps.asp_name) = 'fanza'
+    ),
+    this_week_views AS (
       SELECT
         pp.performer_id,
         COUNT(*) as view_count
       FROM product_views pv
       INNER JOIN product_performers pp ON pv.product_id = pp.product_id
+      INNER JOIN fanza_products fp ON pv.product_id = fp.id
       WHERE pv.viewed_at >= NOW() - INTERVAL '7 days'
       GROUP BY pp.performer_id
     ),
@@ -703,6 +711,7 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
         COUNT(*) as view_count
       FROM product_views pv
       INNER JOIN product_performers pp ON pv.product_id = pp.product_id
+      INNER JOIN fanza_products fp ON pv.product_id = fp.id
       WHERE pv.viewed_at >= NOW() - INTERVAL '14 days'
         AND pv.viewed_at < NOW() - INTERVAL '7 days'
       GROUP BY pp.performer_id
@@ -713,16 +722,24 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
         prod.default_thumbnail_url as thumbnail_url
       FROM product_performers pp
       INNER JOIN products prod ON pp.product_id = prod.id
+      INNER JOIN fanza_products fp ON prod.id = fp.id
       WHERE prod.default_thumbnail_url IS NOT NULL
         AND prod.default_thumbnail_url != ''
       ORDER BY pp.performer_id, prod.created_at DESC
+    ),
+    fanza_product_counts AS (
+      -- FANZA作品のみの出演数をカウント
+      SELECT pp.performer_id, COUNT(*) as product_count
+      FROM product_performers pp
+      INNER JOIN fanza_products fp ON pp.product_id = fp.id
+      GROUP BY pp.performer_id
     )
     SELECT
       p.id,
       p.name,
       pt.thumbnail_url as "thumbnailUrl",
       pt.thumbnail_url as "heroImageUrl",
-      (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
+      COALESCE(fpc.product_count, 0) as "productCount",
       COALESCE(tw.view_count, 0) as "viewsThisWeek",
       COALESCE(lw.view_count, 0) as "viewsLastWeek",
       CASE
@@ -733,7 +750,9 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
     LEFT JOIN this_week_views tw ON p.id = tw.performer_id
     LEFT JOIN last_week_views lw ON p.id = lw.performer_id
     LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
+    LEFT JOIN fanza_product_counts fpc ON p.id = fpc.performer_id
     WHERE COALESCE(tw.view_count, 0) >= 3
+      AND fpc.product_count > 0
     ORDER BY "growthRate" DESC, "viewsThisWeek" DESC
     LIMIT 6
   `);

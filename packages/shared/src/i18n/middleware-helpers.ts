@@ -90,11 +90,15 @@ export const SQL_INJECTION_PATTERNS = [
 
 /**
  * セキュリティ: XSSパターン
+ * 注意: クエリパラメータ名（onSale=など）を誤検知しないよう、
+ * HTMLタグ内のイベントハンドラのみを検出
  */
 export const XSS_PATTERNS = [
   /<script[^>]*>[\s\S]*?<\/script[^>]*>/gi,
   /javascript:/gi,
-  /on\w+\s*=/gi,
+  // HTMLタグ内のイベントハンドラ（<tag onclick=...>形式）のみ検出
+  // onSale=, onPage= などのクエリパラメータは除外
+  /<[^>]+\s+on\w+\s*=/gi,
   /<iframe/gi,
   /<object/gi,
   /<embed/gi,
