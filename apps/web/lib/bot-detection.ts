@@ -225,7 +225,13 @@ export function validateSecurityHeaders(request: NextRequest): boolean {
         'www.adult-v.com',
         'f.adult-v.com',
       ];
-      if (!allowedHosts.some(host => url.hostname === host || url.hostname.endsWith('.' + host))) {
+      // Also allow Firebase App Hosting preview domains
+      const allowedPatterns = [
+        /\.hosted\.app$/,  // Firebase App Hosting
+      ];
+      const isAllowedHost = allowedHosts.some(host => url.hostname === host || url.hostname.endsWith('.' + host));
+      const isAllowedPattern = allowedPatterns.some(pattern => pattern.test(url.hostname));
+      if (!isAllowedHost && !isAllowedPattern) {
         return false;
       }
     } catch {

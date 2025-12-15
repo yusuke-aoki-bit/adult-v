@@ -3,14 +3,19 @@ import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit';
 import { detectBot, validateSecurityHeaders } from '@/lib/bot-detection';
 
 export async function POST(request: NextRequest) {
-  // 1. Bot detection
+  // 1. Bot detection (relaxed for age-verify - Firebase App Hosting may strip some headers)
   const botResult = detectBot(request);
   if (botResult.isBot && botResult.reason !== 'allowed_bot') {
-    console.warn('[age-verify] Bot detected:', botResult.reason, 'score:', botResult.score);
-    return NextResponse.json(
-      { error: 'Access denied' },
-      { status: 403 }
-    );
+    // Only block known bot UAs (score >= 80), allow suspicious but potentially legitimate requests
+    if (botResult.score >= 80) {
+      console.warn('[age-verify] Known bot blocked:', botResult.reason, 'score:', botResult.score);
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
+      );
+    }
+    // Log suspicious requests but don't block - CDN/proxy may strip headers
+    console.info('[age-verify] Suspicious request (allowed):', botResult.reason, 'score:', botResult.score);
   }
 
   // 2. Rate limiting
