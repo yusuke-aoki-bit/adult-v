@@ -10,6 +10,8 @@ import { getFilterSettings, saveFilterSettings, clearFilterSettings } from '@/li
  * - URLにフィルターパラメータがない場合、localStorageから復元してリダイレクト
  * - URLにフィルターパラメータがある場合、localStorageに保存
  * - クリアボタンでlocalStorageも削除
+ *
+ * 注意: /products ページでは動作しない（ページネーションへのフィルター自動追加を防ぐため）
  */
 export default function FilterPersistence() {
   const router = useRouter();
@@ -19,10 +21,12 @@ export default function FilterPersistence() {
 
   useEffect(() => {
     // トップページまたは女優詳細ページでのみ動作
+    // /products ページでは動作させない（ページネーション時にフィルターが追加されるバグを防ぐ）
     const isHomePage = pathname === '/';
     const isActressPage = pathname.startsWith('/actress/');
+    const isProductsPage = pathname === '/products' || pathname.startsWith('/products/');
 
-    if (!isHomePage && !isActressPage) {
+    if (isProductsPage || (!isHomePage && !isActressPage)) {
       return;
     }
 

@@ -6,9 +6,9 @@ import { JsonLD } from "@/components/JsonLD";
 import { generateBaseMetadata, generateWebSiteSchema } from "@/lib/seo";
 import { defaultLocale } from "@/i18n";
 import CookieConsent from "@/components/CookieConsent";
-import PWAInstaller from "@/components/PWAInstaller";
 import { SiteProvider } from "@/lib/contexts/SiteContext";
 import { getServerSiteMode } from "@/lib/server/site-mode";
+import { LazyPWAInstaller } from "@/components/LazyPWAInstaller";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -84,7 +84,7 @@ export default async function RootLayout({
         <SiteProvider mode={siteMode}>
           <ConditionalLayout>{children}</ConditionalLayout>
         </SiteProvider>
-        <PWAInstaller />
+        <LazyPWAInstaller />
       </body>
     </html>
   );

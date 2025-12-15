@@ -295,6 +295,36 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // 静的アセット（JS/CSS）に長期キャッシュを設定
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // 画像最適化のキャッシュ設定
+        source: '/_next/image/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
+      {
+        // フォントファイルのキャッシュ設定
+        source: '/fonts/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
     ];
   },
   // リダイレクト設定

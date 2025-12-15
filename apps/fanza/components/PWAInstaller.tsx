@@ -1,8 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Download, X } from 'lucide-react';
 import { useParams } from 'next/navigation';
+
+// SVGアイコン（lucide-reactを避けてバンドルサイズ削減）
+const DownloadIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
 
 // Client-side translations (PWAInstaller is outside NextIntlClientProvider)
 const translations = {
@@ -55,18 +70,20 @@ export default function PWAInstaller() {
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(true); // デフォルトで非表示
 
   useEffect(() => {
-    // Register service worker
-    if ('serviceWorker' in navigator) {
+    // クライアントサイドでのみlocalStorageをチェック
+    const dismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
+    setIsDismissed(dismissed);
+
+    // Register service worker (本番環境のみ、エラーログは抑制)
+    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       window.addEventListener('load', () => {
         navigator.serviceWorker
           .register('/sw.js')
-          .then((registration) => {
-            console.log('SW registered:', registration);
-          })
-          .catch((error) => {
-            console.log('SW registration failed:', error);
+          .catch(() => {
+            // SW登録失敗は静かに無視（コンソールエラー抑制）
           });
       });
     }
@@ -92,9 +109,7 @@ export default function PWAInstaller() {
     }
 
     deferredPrompt.prompt();
-
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to the install prompt: ${outcome}`);
+    await deferredPrompt.userChoice;
 
     setDeferredPrompt(null);
     setShowInstallPrompt(false);
@@ -102,12 +117,13 @@ export default function PWAInstaller() {
 
   const handleDismiss = () => {
     setShowInstallPrompt(false);
+    setIsDismissed(true);
     // Remember dismissal in localStorage
     localStorage.setItem('pwa-install-dismissed', 'true');
   };
 
   // Don't show if dismissed before or not available
-  if (!showInstallPrompt || localStorage.getItem('pwa-install-dismissed') === 'true') {
+  if (!showInstallPrompt || isDismissed) {
     return null;
   }
 
@@ -115,15 +131,15 @@ export default function PWAInstaller() {
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 animate-slide-up">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Download className="h-5 w-5 text-rose-700" />
+          <span className="text-rose-700"><DownloadIcon /></span>
           <h3 className="font-semibold text-gray-800">{t.title}</h3>
         </div>
         <button
           onClick={handleDismiss}
-          className="text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-gray-500 hover:text-gray-700 transition-colors"
           aria-label={t.close}
         >
-          <X className="h-5 w-5" />
+          <CloseIcon />
         </button>
       </div>
 
@@ -140,7 +156,7 @@ export default function PWAInstaller() {
         </button>
         <button
           onClick={handleDismiss}
-          className="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          className="px-4 py-2 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors"
         >
           {t.later}
         </button>
