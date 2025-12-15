@@ -126,17 +126,35 @@ export default function Pagination({
   };
 
   // クエリパラメータを保持
+  // 注意: queryParams（サーバーサイドから渡される正確な値）を優先し、
+  // searchParams（現在のURL）からは hl と limit のみ保持する
   const getUrl = useCallback((pageNum: number, newPerPage?: number) => {
-    const urlParams = new URLSearchParams(searchParams.toString());
+    const urlParams = new URLSearchParams();
+
+    // 言語パラメータを保持（?hl=形式）
+    const hlParam = searchParams.get('hl');
+    if (hlParam) {
+      urlParams.set('hl', hlParam);
+    }
+
+    // queryParamsから全フィルターパラメータを設定（サーバーサイドの正確な値）
     Object.entries(queryParams).forEach(([key, value]) => {
-      if (!urlParams.has(key)) {
-        urlParams.set(key, value);
-      }
+      urlParams.set(key, value);
     });
+
+    // ページ番号を設定
     urlParams.set('page', pageNum.toString());
+
+    // 表示件数を設定（新しい値またはsearchParamsから）
     if (newPerPage) {
       urlParams.set('limit', newPerPage.toString());
+    } else {
+      const currentLimit = searchParams.get('limit');
+      if (currentLimit) {
+        urlParams.set('limit', currentLimit);
+      }
     }
+
     return `${basePath}?${urlParams.toString()}`;
   }, [searchParams, queryParams, basePath]);
 

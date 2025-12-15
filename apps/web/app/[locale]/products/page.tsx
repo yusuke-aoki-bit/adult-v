@@ -11,6 +11,7 @@ import { getProducts, getProductsCount, getAspStats, getPopularTags } from '@/li
 import { generateBaseMetadata, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 export async function generateMetadata({
   params,
@@ -188,19 +189,22 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     count: tag.count,
   }));
 
-  // ItemListSchemaを生成
+  // basePath（?hl=形式）
+  const basePath = localizedHref('/products', locale);
+
+  // ItemListSchemaを生成（?hl=形式のURL）
   const itemListSchema = generateItemListSchema(
     products.map((product) => ({
       name: product.title,
-      url: `/${locale}/products/${product.id}`,
+      url: localizedHref(`/products/${product.id}`, locale),
     })),
     t('title')
   );
 
-  // BreadcrumbSchemaを生成
+  // BreadcrumbSchemaを生成（?hl=形式のURL）
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: tNav('home'), url: `/${locale}` },
-    { name: t('title'), url: `/${locale}/products` },
+    { name: tNav('home'), url: localizedHref('/', locale) },
+    { name: t('title'), url: basePath },
   ]);
 
   return (
@@ -212,7 +216,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
         <div className="container mx-auto px-3 sm:px-4">
           <Breadcrumb
             items={[
-              { label: tNav('home'), href: `/${locale}` },
+              { label: tNav('home'), href: localizedHref('/', locale) },
               { label: t('title') },
             ]}
             className="mb-2 sm:mb-3"
@@ -249,7 +253,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           <div className="flex justify-end mb-2 sm:mb-4">
             <ProductSortDropdown
               sortBy={sortBy}
-              basePath={`/${locale}/products`}
+              basePath={basePath}
             />
           </div>
 
@@ -264,7 +268,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
                 total={totalCount}
                 page={page}
                 perPage={itemsPerPage}
-                basePath={`/${locale}/products`}
+                basePath={basePath}
                 position="top"
                 queryParams={queryParams}
                 showPerPageSelector
@@ -281,7 +285,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
                 total={totalCount}
                 page={page}
                 perPage={itemsPerPage}
-                basePath={`/${locale}/products`}
+                basePath={basePath}
                 position="bottom"
                 queryParams={queryParams}
                 showPerPageSelector
@@ -292,7 +296,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           {/* 女優一覧へのリンク */}
           <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-800">
             <Link
-              href={`/${locale}`}
+              href={localizedHref('/', locale)}
               className="flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 hover:border-rose-600 transition-colors group"
             >
               <div className="flex items-center gap-3">

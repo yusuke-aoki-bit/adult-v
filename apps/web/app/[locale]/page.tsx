@@ -233,7 +233,7 @@ export default async function Home({ params, searchParams }: PageProps) {
       {faqSchema && <JsonLD data={faqSchema} />}
       {/* セール情報セクション */}
       {saleProducts.length > 0 && (
-        <section className="py-3 sm:py-4 border-b theme-section-border">
+        <section className="py-3 sm:py-4">
           <div className="container mx-auto px-3 sm:px-4">
             <SalesSection saleProducts={saleProducts.map(p => ({
               ...p,
@@ -244,29 +244,17 @@ export default async function Home({ params, searchParams }: PageProps) {
       )}
 
       {/* 最近見た作品 */}
-      <section className="py-3 sm:py-4 border-b theme-section-border">
-        <div className="container mx-auto px-3 sm:px-4">
-          <RecentlyViewed />
-        </div>
-      </section>
+      <RecentlyViewed />
 
       {/* あなたへのおすすめ（閲覧履歴に基づく） */}
-      <section className="py-3 sm:py-4 border-b theme-section-border">
-        <div className="container mx-auto px-3 sm:px-4">
-          <ForYouRecommendations />
-        </div>
-      </section>
+      <ForYouRecommendations />
 
       {/* 今週の注目（B4: 自動キュレーション） */}
-      <section className="py-3 sm:py-4 border-b theme-section-border">
-        <div className="container mx-auto px-3 sm:px-4">
-          <WeeklyHighlights locale={locale} />
-        </div>
-      </section>
+      <WeeklyHighlights locale={locale} />
 
       {/* 未整理作品へのリンク */}
       {uncategorizedCount > 0 && (
-        <section className="py-3 sm:py-6 border-b theme-section-border">
+        <section className="py-3 sm:py-6">
           <div className="container mx-auto px-3 sm:px-4">
             <Link
               href={`/${locale}/products?uncategorized=true`}

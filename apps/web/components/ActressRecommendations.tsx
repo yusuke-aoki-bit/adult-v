@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Sparkles, User, ChevronDown, ChevronUp } from 'lucide-react';
@@ -77,7 +77,17 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
 
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
+  // 配列の参照ではなく内容で比較するためにシリアライズ
+  const idsKey = JSON.stringify(favoritePerformerIds.slice().sort());
+  const prevIdsKey = useRef<string>('');
+
   useEffect(() => {
+    // IDが実際に変わった場合のみfetch
+    if (idsKey === prevIdsKey.current) {
+      return;
+    }
+    prevIdsKey.current = idsKey;
+
     async function fetchRecommendations() {
       if (favoritePerformerIds.length === 0) {
         setRecommendations([]);
@@ -107,7 +117,7 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
     }
 
     fetchRecommendations();
-  }, [favoritePerformerIds]);
+  }, [idsKey, favoritePerformerIds]);
 
   if (favoritePerformerIds.length === 0) {
     return null;

@@ -5,6 +5,7 @@ import { generateBaseMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { Library, Film, Calendar } from 'lucide-react';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,7 +77,7 @@ export default async function SeriesListPage({ params }: PageProps) {
       <div className="container mx-auto px-4 py-8">
         <Breadcrumb
           items={[
-            { label: tNav('home'), href: `/${locale}` },
+            { label: tNav('home'), href: localizedHref('/', locale) },
             { label: t.title },
           ]}
           className="mb-6"
@@ -94,7 +95,7 @@ export default async function SeriesListPage({ params }: PageProps) {
           {series.map((s) => (
             <Link
               key={s.id}
-              href={`/${locale}/series/${s.id}`}
+              href={localizedHref(`/series/${s.id}`, locale)}
               className="theme-card rounded-lg p-4 hover:shadow-lg transition-shadow group"
             >
               <h2 className="text-lg font-bold theme-text group-hover:text-purple-400 transition-colors line-clamp-2">

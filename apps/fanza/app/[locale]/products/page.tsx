@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import ProductCard from '@/components/ProductCard';
-import Pagination from '@/components/Pagination';
+import { Pagination } from '@adult-v/shared/components';
 import ProductListFilter from '@/components/ProductListFilter';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import Breadcrumb from '@/components/Breadcrumb';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface FavoriteItem {
   type: 'product' | 'actress';
@@ -80,9 +80,9 @@ export function useFavorites() {
     }
   };
 
-  const getFavoritesByType = (type: 'product' | 'actress') => {
+  const getFavoritesByType = useCallback((type: 'product' | 'actress') => {
     return favorites.filter((f) => f.type === type);
-  };
+  }, [favorites]);
 
   const clearFavorites = () => {
     setFavorites([]);

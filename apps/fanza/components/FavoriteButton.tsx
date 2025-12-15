@@ -4,9 +4,9 @@ import { useFavorites } from '@adult-v/ui-common/hooks';
 import { useTranslations } from 'next-intl';
 import SharedFavoriteButton from '@adult-v/shared/components/FavoriteButton';
 
-// Initialize theme for light mode (AVVIEWER LAB / FANZA)
+// Initialize theme for FANZA (Pink theme)
 import { setThemeConfig } from '@adult-v/shared/lib/theme';
-setThemeConfig({ mode: 'light', primaryColor: 'rose' });
+setThemeConfig({ mode: 'dark', primaryColor: 'pink' });
 
 interface FavoriteButtonProps {
   type: 'product' | 'actress';

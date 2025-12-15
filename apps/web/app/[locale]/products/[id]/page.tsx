@@ -6,12 +6,15 @@ import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
 import RelatedProducts from '@/components/RelatedProducts';
 import ProductDetailInfo from '@/components/ProductDetailInfo';
 import ProductActions from '@/components/ProductActions';
-import ViewTracker from '@/components/ViewTracker';
+import {
+  ViewTracker,
+  CostPerformanceCard,
+  PriceComparisonServer,
+  FanzaCrossLink,
+} from '@adult-v/shared/components';
 import AffiliateButton from '@/components/AffiliateButton';
 import StickyCta from '@/components/StickyCta';
 import { getProductById, searchProductByProductId, getProductSources, getActressAvgPricePerMin, getProductSourcesWithSales } from '@/lib/db/queries';
-import CostPerformanceCard from '@/components/CostPerformanceCard';
-import PriceComparisonServer from '@/components/PriceComparisonServer';
 import SceneTimeline from '@/components/SceneTimeline';
 import EnhancedAiReview from '@/components/EnhancedAiReview';
 import { isSubscriptionSite } from '@/lib/image-utils';
@@ -20,7 +23,6 @@ import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, 
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import FanzaCrossLink from '@/components/FanzaCrossLink';
 
 export const dynamic = 'force-dynamic';
 

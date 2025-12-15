@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useFavorites, type FavoriteItem } from './useFavorites';
 
 export interface EnrichedProduct extends FavoriteItem {
@@ -21,8 +21,21 @@ export function useWatchlistAnalysis() {
     return getFavoritesByType('product');
   }, [getFavoritesByType]);
 
+  // 配列の参照ではなく内容で比較するためにシリアライズ
+  const productIdsKey = useMemo(
+    () => JSON.stringify(productFavorites.map(p => p.id).sort()),
+    [productFavorites]
+  );
+  const prevProductIdsKey = useRef<string>('');
+
   // Fetch enriched product data (prices, sale info) when favorites change
   useEffect(() => {
+    // IDが実際に変わった場合のみfetch
+    if (productIdsKey === prevProductIdsKey.current && prevProductIdsKey.current !== '') {
+      return;
+    }
+    prevProductIdsKey.current = productIdsKey;
+
     const fetchEnrichedData = async () => {
       if (!isLoaded || productFavorites.length === 0) {
         setEnrichedProducts([]);
@@ -72,7 +85,7 @@ export function useWatchlistAnalysis() {
     };
 
     fetchEnrichedData();
-  }, [productFavorites, isLoaded]);
+  }, [productIdsKey, isLoaded, productFavorites]);
 
   // Calculate statistics
   const stats = useMemo(() => {

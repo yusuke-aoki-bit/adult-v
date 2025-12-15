@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { locales, localeNames, type Locale, defaultLocale } from '@/i18n';
 
@@ -8,23 +8,25 @@ function LanguageSwitcherContent() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [locale, setLocale] = useState<Locale>(defaultLocale);
 
   // ?hl= パラメータまたはクッキーから現在の言語を取得
-  const hlParam = searchParams.get('hl');
-  let locale: Locale = defaultLocale;
+  useEffect(() => {
+    const hlParam = searchParams.get('hl');
 
-  if (hlParam && locales.includes(hlParam as Locale)) {
-    locale = hlParam as Locale;
-  } else {
-    // クッキーから取得（フォールバック）
-    const cookieLocale = document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('NEXT_LOCALE='))
-      ?.split('=')[1];
-    if (cookieLocale && locales.includes(cookieLocale as Locale)) {
-      locale = cookieLocale as Locale;
+    if (hlParam && locales.includes(hlParam as Locale)) {
+      setLocale(hlParam as Locale);
+    } else {
+      // クッキーから取得（フォールバック）
+      const cookieLocale = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('NEXT_LOCALE='))
+        ?.split('=')[1];
+      if (cookieLocale && locales.includes(cookieLocale as Locale)) {
+        setLocale(cookieLocale as Locale);
+      }
     }
-  }
+  }, [searchParams]);
 
   const handleLanguageChange = (newLocale: Locale) => {
     if (newLocale === locale) return;

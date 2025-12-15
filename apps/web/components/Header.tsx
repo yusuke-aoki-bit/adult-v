@@ -10,7 +10,7 @@ import { providerMeta } from '@/lib/providers';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { useSite } from '@/lib/contexts/SiteContext';
 import { useHeaderStats, headerTranslations } from '@/lib/hooks/useHeaderStats';
-import { localizedHref } from '@/lib/i18n-utils';
+import { localizedHref } from '@adult-v/shared/i18n';
 import { locales, defaultLocale, type Locale } from '@/i18n';
 
 export default function Header() {

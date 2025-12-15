@@ -261,7 +261,18 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
 
   // 1. 急上昇女優（今週 vs 先週の閲覧数比較）
   const trendingActresses = await db.execute(sql`
-    WITH this_week_views AS (
+    WITH performer_thumbnails AS (
+      -- 演者ごとに最新の作品サムネイルを取得（minnano-avの画像を使用しないため）
+      SELECT DISTINCT ON (pp.performer_id)
+        pp.performer_id,
+        prod.default_thumbnail_url as thumbnail_url
+      FROM product_performers pp
+      INNER JOIN products prod ON pp.product_id = prod.id
+      WHERE prod.default_thumbnail_url IS NOT NULL
+        AND prod.default_thumbnail_url != ''
+      ORDER BY pp.performer_id, prod.created_at DESC
+    ),
+    this_week_views AS (
       SELECT
         pp.performer_id,
         COUNT(*) as view_count
@@ -283,8 +294,8 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
     SELECT
       p.id,
       p.name,
-      p.thumbnail_url as "thumbnailUrl",
-      p.hero_image_url as "heroImageUrl",
+      pt.thumbnail_url as "thumbnailUrl",
+      pt.thumbnail_url as "heroImageUrl",
       (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
       COALESCE(tw.view_count, 0) as "viewsThisWeek",
       COALESCE(lw.view_count, 0) as "viewsLastWeek",
@@ -293,6 +304,7 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
         ELSE ROUND(((COALESCE(tw.view_count, 0) - COALESCE(lw.view_count, 0))::numeric / GREATEST(lw.view_count, 1)) * 100)
       END as "growthRate"
     FROM performers p
+    LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
     LEFT JOIN this_week_views tw ON p.id = tw.performer_id
     LEFT JOIN last_week_views lw ON p.id = lw.performer_id
     WHERE COALESCE(tw.view_count, 0) >= 3
@@ -307,7 +319,7 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
       p.title,
       p.default_thumbnail_url as "imageUrl",
       p.release_date as "releaseDate",
-      p.average_rating as "rating",
+      COALESCE(prs.average_rating, 0) as "rating",
       (
         SELECT COUNT(*)
         FROM product_views pv
@@ -315,13 +327,14 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
           AND pv.viewed_at >= NOW() - INTERVAL '7 days'
       ) as "viewCount"
     FROM products p
+    LEFT JOIN product_rating_summary prs ON p.id = prs.product_id
     WHERE p.release_date >= NOW() - INTERVAL '14 days'
       AND NOT EXISTS (
         SELECT 1 FROM product_sources ps
         WHERE ps.product_id = p.id
         AND ps.asp_name = 'DTI'
       )
-    ORDER BY "viewCount" DESC, p.average_rating DESC NULLS LAST
+    ORDER BY "viewCount" DESC, prs.average_rating DESC NULLS LAST
     LIMIT 6
   `);
 
@@ -587,7 +600,18 @@ export async function getRelatedPerformers(performerId: number, limit: number = 
 
     // 同じ作品に出演している共演者を取得
     const coPerformers = await db.execute(sql`
-      WITH performer_products AS (
+      WITH performer_thumbnails AS (
+        -- 演者ごとに最新の作品サムネイルを取得（minnano-avの画像を使用しないため）
+        SELECT DISTINCT ON (pp.performer_id)
+          pp.performer_id,
+          prod.default_thumbnail_url as thumbnail_url
+        FROM product_performers pp
+        INNER JOIN products prod ON pp.product_id = prod.id
+        WHERE prod.default_thumbnail_url IS NOT NULL
+          AND prod.default_thumbnail_url != ''
+        ORDER BY pp.performer_id, prod.created_at DESC
+      ),
+      performer_products AS (
         SELECT DISTINCT product_id
         FROM product_performers
         WHERE performer_id = ${performerId}
@@ -604,12 +628,13 @@ export async function getRelatedPerformers(performerId: number, limit: number = 
       SELECT
         p.id,
         p.name,
-        p.thumbnail_url as "thumbnailUrl",
-        p.hero_image_url as "heroImageUrl",
+        pt.thumbnail_url as "thumbnailUrl",
+        pt.thumbnail_url as "heroImageUrl",
         cp.shared_count as "sharedCount",
         (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount"
       FROM performers p
       INNER JOIN co_performers cp ON p.id = cp.performer_id
+      LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
       ORDER BY cp.shared_count DESC, p.name ASC
       LIMIT ${limit}
     `);
@@ -656,7 +681,18 @@ export async function getRecommendedActressesFromFavorites(
 
     // お気に入り女優の共演者とジャンル一致率を計算
     const recommendedPerformers = await db.execute(sql`
-      WITH favorite_tags AS (
+      WITH performer_thumbnails AS (
+        -- 演者ごとに最新の作品サムネイルを取得（minnano-avの画像を使用しないため）
+        SELECT DISTINCT ON (pp.performer_id)
+          pp.performer_id,
+          prod.default_thumbnail_url as thumbnail_url
+        FROM product_performers pp
+        INNER JOIN products prod ON pp.product_id = prod.id
+        WHERE prod.default_thumbnail_url IS NOT NULL
+          AND prod.default_thumbnail_url != ''
+        ORDER BY pp.performer_id, prod.created_at DESC
+      ),
+      favorite_tags AS (
         -- お気に入り女優が出演した作品のタグを収集
         SELECT DISTINCT pt.tag_id, t.name as tag_name
         FROM product_performers pp
@@ -705,8 +741,8 @@ export async function getRecommendedActressesFromFavorites(
       SELECT
         p.id,
         p.name,
-        p.thumbnail_url as "thumbnailUrl",
-        p.hero_image_url as "heroImageUrl",
+        pt.thumbnail_url as "thumbnailUrl",
+        pt.thumbnail_url as "heroImageUrl",
         (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
         COALESCE(cp.shared_product_count, 0) as "sharedCoStars",
         COALESCE(gm.matching_tags, 0) as "matchingTags",
@@ -719,6 +755,7 @@ export async function getRecommendedActressesFromFavorites(
         -- 総合スコア: 共演回数 * 2 + ジャンル一致タグ数
         (COALESCE(cp.shared_product_count, 0) * 2 + COALESCE(gm.matching_tags, 0)) as "matchScore"
       FROM performers p
+      LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
       LEFT JOIN co_performers cp ON p.id = cp.performer_id
       LEFT JOIN genre_match gm ON p.id = gm.performer_id
       WHERE p.id NOT IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
@@ -949,7 +986,18 @@ export async function getRelatedPerformersWithGenreMatch(performerId: number, li
 
     // 共演者 + ジャンル一致率を計算
     const relatedPerformers = await db.execute(sql`
-      WITH performer_tags AS (
+      WITH performer_thumbnails AS (
+        -- 演者ごとに最新の作品サムネイルを取得（minnano-avの画像を使用しないため）
+        SELECT DISTINCT ON (pp.performer_id)
+          pp.performer_id,
+          prod.default_thumbnail_url as thumbnail_url
+        FROM product_performers pp
+        INNER JOIN products prod ON pp.product_id = prod.id
+        WHERE prod.default_thumbnail_url IS NOT NULL
+          AND prod.default_thumbnail_url != ''
+        ORDER BY pp.performer_id, prod.created_at DESC
+      ),
+      performer_tags AS (
         -- 対象女優のタグを取得
         SELECT DISTINCT pt.tag_id
         FROM product_performers pp
@@ -994,8 +1042,8 @@ export async function getRelatedPerformersWithGenreMatch(performerId: number, li
       SELECT
         p.id,
         p.name,
-        p.thumbnail_url as "thumbnailUrl",
-        p.hero_image_url as "heroImageUrl",
+        pt.thumbnail_url as "thumbnailUrl",
+        pt.thumbnail_url as "heroImageUrl",
         cp.shared_count as "sharedCount",
         (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
         COALESCE(gm.matching_tags, 0) as "matchingTags",
@@ -1007,6 +1055,7 @@ export async function getRelatedPerformersWithGenreMatch(performerId: number, li
         END as "genreMatchPercent"
       FROM performers p
       INNER JOIN co_performers cp ON p.id = cp.performer_id
+      LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
       LEFT JOIN genre_match gm ON p.id = gm.performer_id
       ORDER BY
         -- 共演回数 * ジャンル一致率でスコアリング

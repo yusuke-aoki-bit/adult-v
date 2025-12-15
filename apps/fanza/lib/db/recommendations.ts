@@ -441,6 +441,7 @@ export async function getRelatedPerformers(performerId: number, limit: number = 
     const db = getDb();
 
     // 同じ作品に出演している共演者を取得
+    // ※演者プロフィール画像（minnano-av由来）は使用せず、作品サムネイルを使用
     const coPerformers = await db.execute(sql`
       WITH performer_products AS (
         SELECT DISTINCT product_id
@@ -455,16 +456,27 @@ export async function getRelatedPerformers(performerId: number, limit: number = 
         INNER JOIN performer_products prods ON pp.product_id = prods.product_id
         WHERE pp.performer_id != ${performerId}
         GROUP BY pp.performer_id
+      ),
+      performer_thumbnails AS (
+        SELECT DISTINCT ON (pp.performer_id)
+          pp.performer_id,
+          prod.default_thumbnail_url as thumbnail_url
+        FROM product_performers pp
+        INNER JOIN products prod ON pp.product_id = prod.id
+        WHERE prod.default_thumbnail_url IS NOT NULL
+          AND prod.default_thumbnail_url != ''
+        ORDER BY pp.performer_id, prod.created_at DESC
       )
       SELECT
         p.id,
         p.name,
-        p.thumbnail_url as "thumbnailUrl",
-        p.hero_image_url as "heroImageUrl",
+        pt.thumbnail_url as "thumbnailUrl",
+        pt.thumbnail_url as "heroImageUrl",
         cp.shared_count as "sharedCount",
         (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount"
       FROM performers p
       INNER JOIN co_performers cp ON p.id = cp.performer_id
+      LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
       ORDER BY cp.shared_count DESC, p.name ASC
       LIMIT ${limit}
     `);
@@ -556,12 +568,23 @@ export async function getRecommendedActressesFromFavorites(
         FROM candidate_tags ct
         WHERE ct.performer_id NOT IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
         GROUP BY ct.performer_id
+      ),
+      performer_thumbnails AS (
+        -- 作品サムネイルを取得（演者プロフィール画像は使用しない）
+        SELECT DISTINCT ON (pp.performer_id)
+          pp.performer_id,
+          prod.default_thumbnail_url as thumbnail_url
+        FROM product_performers pp
+        INNER JOIN products prod ON pp.product_id = prod.id
+        WHERE prod.default_thumbnail_url IS NOT NULL
+          AND prod.default_thumbnail_url != ''
+        ORDER BY pp.performer_id, prod.created_at DESC
       )
       SELECT
         p.id,
         p.name,
-        p.thumbnail_url as "thumbnailUrl",
-        p.hero_image_url as "heroImageUrl",
+        pt.thumbnail_url as "thumbnailUrl",
+        pt.thumbnail_url as "heroImageUrl",
         (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
         COALESCE(cp.shared_product_count, 0) as "sharedCoStars",
         COALESCE(gm.matching_tags, 0) as "matchingTags",
@@ -576,6 +599,7 @@ export async function getRecommendedActressesFromFavorites(
       FROM performers p
       LEFT JOIN co_performers cp ON p.id = cp.performer_id
       LEFT JOIN genre_match gm ON p.id = gm.performer_id
+      LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
       WHERE p.id NOT IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
         AND (cp.shared_product_count > 0 OR gm.matching_tags > 5)
       ORDER BY
@@ -662,6 +686,7 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
   )`;
 
   // 1. 急上昇女優（今週 vs 先週の閲覧数比較）
+  // ※演者プロフィール画像（minnano-av由来）は使用せず、作品サムネイルを使用
   const trendingActresses = await db.execute(sql`
     WITH this_week_views AS (
       SELECT
@@ -681,12 +706,22 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
       WHERE pv.viewed_at >= NOW() - INTERVAL '14 days'
         AND pv.viewed_at < NOW() - INTERVAL '7 days'
       GROUP BY pp.performer_id
+    ),
+    performer_thumbnails AS (
+      SELECT DISTINCT ON (pp.performer_id)
+        pp.performer_id,
+        prod.default_thumbnail_url as thumbnail_url
+      FROM product_performers pp
+      INNER JOIN products prod ON pp.product_id = prod.id
+      WHERE prod.default_thumbnail_url IS NOT NULL
+        AND prod.default_thumbnail_url != ''
+      ORDER BY pp.performer_id, prod.created_at DESC
     )
     SELECT
       p.id,
       p.name,
-      p.thumbnail_url as "thumbnailUrl",
-      p.hero_image_url as "heroImageUrl",
+      pt.thumbnail_url as "thumbnailUrl",
+      pt.thumbnail_url as "heroImageUrl",
       (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
       COALESCE(tw.view_count, 0) as "viewsThisWeek",
       COALESCE(lw.view_count, 0) as "viewsLastWeek",
@@ -697,6 +732,7 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
     FROM performers p
     LEFT JOIN this_week_views tw ON p.id = tw.performer_id
     LEFT JOIN last_week_views lw ON p.id = lw.performer_id
+    LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
     WHERE COALESCE(tw.view_count, 0) >= 3
     ORDER BY "growthRate" DESC, "viewsThisWeek" DESC
     LIMIT 6
@@ -709,7 +745,7 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
       p.title,
       p.default_thumbnail_url as "imageUrl",
       p.release_date as "releaseDate",
-      p.average_rating as "rating",
+      COALESCE(prs.average_rating, 0) as "rating",
       (
         SELECT COUNT(*)
         FROM product_views pv
@@ -717,9 +753,10 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlights> {
           AND pv.viewed_at >= NOW() - INTERVAL '7 days'
       ) as "viewCount"
     FROM products p
+    LEFT JOIN product_rating_summary prs ON p.id = prs.product_id
     WHERE p.release_date >= NOW() - INTERVAL '14 days'
       AND ${fanzaFilter}
-    ORDER BY "viewCount" DESC, p.average_rating DESC NULLS LAST
+    ORDER BY "viewCount" DESC, prs.average_rating DESC NULLS LAST
     LIMIT 6
   `);
 
@@ -824,12 +861,23 @@ export async function getRelatedPerformersWithGenreMatch(performerId: number, li
           (SELECT total FROM performer_tag_count) as total_tags
         FROM co_performer_tags cpt
         GROUP BY cpt.performer_id
+      ),
+      performer_thumbnails AS (
+        -- 作品サムネイルを取得（演者プロフィール画像は使用しない）
+        SELECT DISTINCT ON (pp.performer_id)
+          pp.performer_id,
+          prod.default_thumbnail_url as thumbnail_url
+        FROM product_performers pp
+        INNER JOIN products prod ON pp.product_id = prod.id
+        WHERE prod.default_thumbnail_url IS NOT NULL
+          AND prod.default_thumbnail_url != ''
+        ORDER BY pp.performer_id, prod.created_at DESC
       )
       SELECT
         p.id,
         p.name,
-        p.thumbnail_url as "thumbnailUrl",
-        p.hero_image_url as "heroImageUrl",
+        pth.thumbnail_url as "thumbnailUrl",
+        pth.thumbnail_url as "heroImageUrl",
         cp.shared_count as "sharedCount",
         (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
         COALESCE(gm.matching_tags, 0) as "matchingTags",
@@ -842,6 +890,7 @@ export async function getRelatedPerformersWithGenreMatch(performerId: number, li
       FROM performers p
       INNER JOIN co_performers cp ON p.id = cp.performer_id
       LEFT JOIN genre_match gm ON p.id = gm.performer_id
+      LEFT JOIN performer_thumbnails pth ON p.id = pth.performer_id
       ORDER BY
         -- 共演回数 * ジャンル一致率でスコアリング
         (cp.shared_count * COALESCE(gm.matching_tags, 0)) DESC,
@@ -865,4 +914,179 @@ export async function getRelatedPerformersWithGenreMatch(performerId: number, li
     console.error('Error getting related performers with genre match:', error);
     return [];
   }
+}
+
+/**
+ * E2機能: みんなの視聴パターン統計
+ * 匿名の閲覧データに基づくレコメンド
+ */
+export interface ViewingPatternStats {
+  alsoViewed: Array<{
+    id: number;
+    title: string;
+    imageUrl: string | null;
+    coViewRate: number; // この作品を見た人が他の作品も見た割合(%)
+    viewCount: number;
+  }>;
+  popularTimes: Array<{
+    hour: number;
+    viewCount: number;
+  }>;
+  viewerProfile: {
+    avgProductsViewed: number;
+    topGenres: Array<{ tagName: string; count: number }>;
+    repeatViewRate: number; // 再視聴率(%)
+  };
+}
+
+export async function getViewingPatternStats(productId: number): Promise<ViewingPatternStats> {
+  const db = getDb();
+
+  // 1. この作品を見た人が他に見た作品 (上位6件)
+  const alsoViewedResult = await db.execute(sql`
+    WITH product_viewers AS (
+      -- この作品を見たセッション(IP)を取得
+      SELECT DISTINCT session_id
+      FROM product_views
+      WHERE product_id = ${productId}
+        AND session_id IS NOT NULL
+    ),
+    viewer_count AS (
+      SELECT COUNT(DISTINCT session_id) as total FROM product_viewers
+    ),
+    co_viewed AS (
+      -- 同じセッションが見た他の作品
+      SELECT
+        pv.product_id,
+        COUNT(DISTINCT pv.session_id) as co_view_count
+      FROM product_views pv
+      INNER JOIN product_viewers pv_ref ON pv.session_id = pv_ref.session_id
+      WHERE pv.product_id != ${productId}
+      GROUP BY pv.product_id
+      HAVING COUNT(DISTINCT pv.session_id) >= 2
+    )
+    SELECT
+      p.id,
+      p.title,
+      p.default_thumbnail_url as "imageUrl",
+      cv.co_view_count as "coViewCount",
+      ROUND((cv.co_view_count::numeric / GREATEST(vc.total, 1)) * 100) as "coViewRate",
+      (SELECT COUNT(*) FROM product_views WHERE product_id = p.id) as "viewCount"
+    FROM products p
+    INNER JOIN co_viewed cv ON p.id = cv.product_id
+    CROSS JOIN viewer_count vc
+    WHERE NOT EXISTS (
+      SELECT 1 FROM product_sources ps
+      WHERE ps.product_id = p.id
+      AND ps.asp_name = 'DTI'
+    )
+    ORDER BY cv.co_view_count DESC, "viewCount" DESC
+    LIMIT 6
+  `);
+
+  // 2. 人気の時間帯 (この作品が視聴された時間帯)
+  const popularTimesResult = await db.execute(sql`
+    SELECT
+      EXTRACT(HOUR FROM viewed_at) as hour,
+      COUNT(*) as view_count
+    FROM product_views
+    WHERE product_id = ${productId}
+    GROUP BY EXTRACT(HOUR FROM viewed_at)
+    ORDER BY hour
+  `);
+
+  // 3. 視聴者プロファイル (この作品を見た人の傾向)
+  const viewerProfileResult = await db.execute(sql`
+    WITH product_viewers AS (
+      SELECT DISTINCT session_id
+      FROM product_views
+      WHERE product_id = ${productId}
+        AND session_id IS NOT NULL
+    ),
+    viewer_products AS (
+      SELECT
+        pv.session_id,
+        pv.product_id,
+        COUNT(*) OVER (PARTITION BY pv.session_id) as products_per_viewer
+      FROM product_views pv
+      INNER JOIN product_viewers pvr ON pv.session_id = pvr.session_id
+    ),
+    viewer_stats AS (
+      SELECT
+        AVG(products_per_viewer) as avg_products,
+        (
+          SELECT COUNT(*) FROM product_views pv
+          WHERE pv.product_id = ${productId}
+            AND EXISTS (
+              SELECT 1 FROM product_views pv2
+              WHERE pv2.session_id = pv.session_id
+                AND pv2.product_id = pv.product_id
+                AND pv2.id < pv.id
+            )
+        )::numeric / GREATEST(
+          (SELECT COUNT(*) FROM product_views WHERE product_id = ${productId}),
+          1
+        ) * 100 as repeat_rate
+      FROM viewer_products
+    )
+    SELECT
+      COALESCE(avg_products, 0) as "avgProductsViewed",
+      COALESCE(repeat_rate, 0) as "repeatViewRate"
+    FROM viewer_stats
+  `);
+
+  // 4. この作品を見た人が好むジャンル
+  const topGenresResult = await db.execute(sql`
+    WITH product_viewers AS (
+      SELECT DISTINCT session_id
+      FROM product_views
+      WHERE product_id = ${productId}
+        AND session_id IS NOT NULL
+    ),
+    viewer_product_tags AS (
+      SELECT DISTINCT
+        pt.tag_id
+      FROM product_views pv
+      INNER JOIN product_viewers pvr ON pv.session_id = pvr.session_id
+      INNER JOIN product_tags pt ON pv.product_id = pt.product_id
+    )
+    SELECT
+      t.name as "tagName",
+      COUNT(*) as count
+    FROM viewer_product_tags vpt
+    INNER JOIN tags t ON vpt.tag_id = t.id
+    WHERE t.category = 'genre' OR t.category IS NULL
+    GROUP BY t.name
+    ORDER BY count DESC
+    LIMIT 5
+  `);
+
+  const alsoViewed = (alsoViewedResult.rows as any[]).map(r => ({
+    id: Number(r.id),
+    title: r.title,
+    imageUrl: r.imageUrl,
+    coViewRate: Number(r.coViewRate),
+    viewCount: Number(r.viewCount),
+  }));
+
+  const popularTimes = (popularTimesResult.rows as any[]).map(r => ({
+    hour: Number(r.hour),
+    viewCount: Number(r.view_count),
+  }));
+
+  const viewerStats = viewerProfileResult.rows[0] as any || { avgProductsViewed: 0, repeatViewRate: 0 };
+  const topGenres = (topGenresResult.rows as any[]).map(r => ({
+    tagName: r.tagName,
+    count: Number(r.count),
+  }));
+
+  return {
+    alsoViewed,
+    popularTimes,
+    viewerProfile: {
+      avgProductsViewed: Number(viewerStats.avgProductsViewed) || 0,
+      topGenres,
+      repeatViewRate: Number(viewerStats.repeatViewRate) || 0,
+    },
+  };
 }

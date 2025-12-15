@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCart, TrendingDown, Clock, AlertTriangle, CheckCircle2, DollarSign, Film, Sparkles } from 'lucide-react';
-import type { FavoriteItem } from '@adult-v/ui-common/hooks';
+import type { FavoriteItem } from '../hooks/useFavorites';
 
 interface ProductWithPrice extends FavoriteItem {
   price?: number | null;

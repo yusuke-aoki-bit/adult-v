@@ -2416,12 +2416,14 @@ const ACTRESS_PLACEHOLDER = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+
 
 /**
  * データベースの出演者(performer)をActress型に変換（同期版）
- * 画像優先順位: 1. profileImageUrl（女優プロフィール画像） 2. thumbnailUrl（商品画像） 3. プレースホルダー
+ * 画像優先順位: thumbnailUrl（作品サムネイル画像） > プレースホルダー
+ * ※profileImageUrlはminnano-avから取得した画像のため使用しない
  * @param locale - ロケール（'ja' | 'en' | 'zh' | 'ko'）。指定された言語の名前/バイオを使用
  */
 function mapPerformerToActressTypeSync(performer: DbPerformer, releaseCount: number, thumbnailUrl?: string, services?: string[], aliases?: string[], locale: string = 'ja'): ActressType {
-  // 画像の優先順位: profileImageUrl > thumbnailUrl（商品画像） > プレースホルダー
-  const imageUrl = performer.profileImageUrl || thumbnailUrl || ACTRESS_PLACEHOLDER;
+  // 画像の優先順位: thumbnailUrl（作品サムネイル画像） > プレースホルダー
+  // ※profileImageUrlはminnano-avから取得した画像のため使用しない
+  const imageUrl = thumbnailUrl || ACTRESS_PLACEHOLDER;
   // ASP名をProviderId型に変換（共通定数を使用）
   const providerIds = (services || [])
     .map(s => ASP_TO_PROVIDER_ID[s])

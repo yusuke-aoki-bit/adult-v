@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { Heart, Trash2, Film, User, ChevronDown, ChevronUp } from 'lucide-react';
 import { useFavorites } from '@adult-v/ui-common/hooks';
 import { useWatchlistAnalysis } from '@/hooks/useWatchlistAnalysis';
+import { WatchlistAnalysis } from '@adult-v/shared/components';
 import FavoriteButton from '@/components/FavoriteButton';
-import WatchlistAnalysis from '@/components/WatchlistAnalysis';
 import ActressRecommendations from '@/components/ActressRecommendations';
 
 const translations = {
@@ -143,8 +143,11 @@ export default function FavoritesPage() {
   const productCount = getFavoritesByType('product').length;
   const actressCount = getFavoritesByType('actress').length;
 
-  // お気に入り女優のID一覧
-  const favoriteActressIds = getFavoritesByType('actress').map(f => String(f.id));
+  // お気に入り女優のID一覧（メモ化して無限ループを防止）
+  const favoriteActressIds = useMemo(
+    () => getFavoritesByType('actress').map(f => String(f.id)),
+    [getFavoritesByType]
+  );
 
   // ロケール別の日付フォーマット
   const dateLocale = locale === 'ko' ? 'ko-KR' : locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-US' : 'ja-JP';

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown, ChevronUp, Globe, ExternalLink } from 'lucide-react';
-import { providerMeta, type ProviderId } from '@/lib/providers';
+import { providerMeta, type ProviderId } from '../providers';
 
 interface AliasInfo {
   id: number;

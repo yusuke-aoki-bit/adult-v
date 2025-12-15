@@ -1,13 +1,15 @@
 import { notFound } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
-import ActressHeroImage from '@/components/ActressHeroImage';
+import {
+  ActressHeroImage,
+  Pagination,
+  FanzaSiteLink,
+  CrossAspInfo,
+} from '@adult-v/shared/components';
 import ActressAiReview from '@/components/ActressAiReview';
-import Pagination from '@/components/Pagination';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import RelatedActresses from '@/components/RelatedActresses';
-import { FanzaSiteLink } from '@/components/FanzaCrossLink';
-import CrossAspInfo from '@/components/CrossAspInfo';
 import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis } from '@/lib/db/queries';
 import ActressCareerTimeline from '@/components/ActressCareerTimeline';
 import RetirementAlert from '@/components/RetirementAlert';
@@ -25,6 +27,7 @@ import { providerMeta } from '@/lib/providers';
 import ActressProductFilter from '@/components/ActressProductFilter';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import ActressFavoriteButton from '@/components/ActressFavoriteButton';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -224,7 +227,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const total = allWorks.length;
   const works = allWorks.slice((page - 1) * perPage, page * perPage);
 
-  const basePath = `/${locale}/actress/${actress.id}`;
+  const basePath = localizedHref(`/actress/${actress.id}`, locale);
 
   // Structured data with enhanced Person Schema
   // aiReviewがオブジェクト型の場合は空文字列を使用
@@ -241,11 +244,11 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     }
   );
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: tNav('home'), url: `/${locale}` },
+    { name: tNav('home'), url: localizedHref('/', locale) },
     { name: actress.name, url: basePath },
   ]);
   const worksSchema = works.length > 0 ? generateItemListSchema(
-    works.map((w) => ({ name: w.title, url: `/${locale}/product/${w.id}` })),
+    works.map((w) => ({ name: w.title, url: localizedHref(`/products/${w.id}`, locale) })),
     t('filmography'),
   ) : null;
 
@@ -260,7 +263,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* Breadcrumb */}
           <Breadcrumb
             items={[
-              { label: tNav('home'), href: `/${locale}` },
+              { label: tNav('home'), href: localizedHref('/', locale) },
               { label: actress.name },
             ]}
             className="mb-6"

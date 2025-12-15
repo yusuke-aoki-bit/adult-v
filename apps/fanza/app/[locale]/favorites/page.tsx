@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { Heart, Trash2, Film, User } from 'lucide-react';
 import { useFavorites } from '@adult-v/ui-common/hooks';
+import { WatchlistAnalysis } from '@adult-v/shared/components';
+import { useWatchlistAnalysis } from '@/hooks/useWatchlistAnalysis';
 import FavoriteButton from '@/components/FavoriteButton';
 import ActressRecommendations from '@/components/ActressRecommendations';
 

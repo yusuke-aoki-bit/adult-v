@@ -1,13 +1,17 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, ReactNode } from 'react';
 import { usePathname, useParams } from 'next/navigation';
-import Header from './Header';
-import Footer from './Footer';
 import FilterPersistence from './FilterPersistence';
 import PerPagePersistence from './PerPagePersistence';
 
-export function ConditionalLayout({ children }: { children: React.ReactNode }) {
+interface ConditionalLayoutProps {
+  children: ReactNode;
+  Header: React.ComponentType;
+  Footer: React.ComponentType<{ locale: string }>;
+}
+
+export function ConditionalLayout({ children, Header, Footer }: ConditionalLayoutProps) {
   const pathname = usePathname();
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';

@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Clock } from 'lucide-react';
 import { useRecentlyViewed, RecentlyViewedItem } from '@/hooks/useRecentlyViewed';
-import AccordionSection from './AccordionSection';
+import { AccordionSection } from '@adult-v/shared/components';
 import ProductCard from './ProductCard';
 import { Product } from '@/types/product';
 

@@ -235,6 +235,19 @@
   color: var(--text-accent);
 }
 
+/* Accordion Classes */
+.theme-accordion-bg {
+  background-color: rgba(31, 41, 55, 0.5);
+}
+
+.theme-accordion-border {
+  border-color: var(--border-primary);
+}
+
+.theme-accordion-hover:hover {
+  background-color: rgba(31, 41, 55, 0.7);
+}
+
 /* Border Classes */
 .theme-border {
   border-color: var(--border-primary);

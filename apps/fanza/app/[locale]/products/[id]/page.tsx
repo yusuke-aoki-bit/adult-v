@@ -5,13 +5,18 @@ import ProductVideoPlayer from '@/components/ProductVideoPlayer';
 import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
 import RelatedProducts from '@/components/RelatedProducts';
 import ProductDetailInfo from '@/components/ProductDetailInfo';
-import FavoriteButton from '@/components/FavoriteButton';
-import ViewTracker from '@/components/ViewTracker';
+import ProductActions from '@/components/ProductActions';
+import {
+  ViewTracker,
+  CostPerformanceCard,
+  PriceComparisonServer,
+} from '@adult-v/shared/components';
 import AffiliateButton from '@/components/AffiliateButton';
+import FavoriteButton from '@/components/FavoriteButton';
 import StickyCta from '@/components/StickyCta';
 import SceneTimeline from '@/components/SceneTimeline';
 import EnhancedAiReview from '@/components/EnhancedAiReview';
-import { getProductById, searchProductByProductId, getProductSources } from '@/lib/db/queries';
+import { getProductById, searchProductByProductId, getProductSources, getActressAvgPricePerMin, getProductSourcesWithSales } from '@/lib/db/queries';
 import { isSubscriptionSite } from '@/lib/image-utils';
 import { getRelatedProducts } from '@/lib/db/recommendations';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema } from '@/lib/seo';

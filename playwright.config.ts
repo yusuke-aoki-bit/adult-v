@@ -6,19 +6,27 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: 'list',
+  timeout: 30000,
   use: {
-    baseURL: 'https://adult-v--adult-v.asia-east1.hosted.app',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
 
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'web',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'http://localhost:3000',
+      },
+    },
+    {
+      name: 'fanza',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'http://localhost:3001',
+      },
     },
   ],
-
-  webServer: undefined, // Testing against deployed site
 });

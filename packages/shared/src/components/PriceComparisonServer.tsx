@@ -1,5 +1,5 @@
 import { ExternalLink, Tag, Clock, Crown, TrendingDown } from 'lucide-react';
-import { providerMeta, type ProviderId } from '@/lib/providers';
+import { providerMeta, type ProviderId } from '../providers';
 
 interface PriceSource {
   aspName: string;

@@ -113,6 +113,34 @@ export default function Header() {
             </Link>
             <NotificationSubscriber />
             <Link
+              href={`/${locale}/diary`}
+              className="hover:text-green-300 transition-colors font-medium flex items-center gap-1 text-sm"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+              </svg>
+              {t.diary}
+            </Link>
+            <Link
+              href={`/${locale}/profile`}
+              className="hover:text-cyan-300 transition-colors font-medium flex items-center gap-1 text-sm"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              {t.profile}
+            </Link>
+            <Link
               href={`/${locale}/favorites`}
               className="theme-nav-favorites transition-colors font-medium flex items-center gap-1 text-sm"
             >
@@ -190,6 +218,20 @@ export default function Header() {
             <div className="py-2">
               <NotificationSubscriber />
             </div>
+            <Link
+              href={`/${locale}/diary`}
+              className="block py-2 hover:text-green-300 transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              {t.diary}
+            </Link>
+            <Link
+              href={`/${locale}/profile`}
+              className="block py-2 hover:text-cyan-300 transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              {t.profile}
+            </Link>
             <Link
               href={`/${locale}/favorites`}
               className="block py-2 theme-nav-favorites transition-colors"

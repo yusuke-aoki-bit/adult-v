@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Check, Eye, Star, X } from 'lucide-react';
-import { useViewingDiary, type DiaryEntry } from '@/hooks/useViewingDiary';
+import { useViewingDiary, type DiaryEntry } from '../hooks/useViewingDiary';
 
 interface MarkAsViewedButtonProps {
   productId: string;

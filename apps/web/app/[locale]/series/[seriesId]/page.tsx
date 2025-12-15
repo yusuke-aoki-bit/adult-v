@@ -10,6 +10,7 @@ import { getTranslations } from 'next-intl/server';
 import { Library, Clock, Film, Star, User, Trophy, ChevronDown } from 'lucide-react';
 import SeriesProgressTracker from '@/components/SeriesProgressTracker';
 import { Product } from '@/types/product';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 /**
  * SeriesProductをProduct型に変換（ProductCard用）
@@ -164,10 +165,12 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
   const totalHours = Math.floor(seriesInfo.totalDuration / 60);
   const totalMinutes = seriesInfo.totalDuration % 60;
 
+  const basePath = localizedHref(`/series/${seriesId}`, locale);
+
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: tNav('home'), url: `/${locale}` },
-    { name: t.completionGuide.replace('{name}', ''), url: `/${locale}/series` },
-    { name: name, url: `/${locale}/series/${seriesId}` },
+    { name: tNav('home'), url: localizedHref('/', locale) },
+    { name: t.completionGuide.replace('{name}', ''), url: localizedHref('/series', locale) },
+    { name: name, url: basePath },
   ]);
 
   return (
@@ -177,8 +180,8 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb
             items={[
-              { label: tNav('home'), href: `/${locale}` },
-              { label: t.backToList.split(' ')[0], href: `/${locale}/series` },
+              { label: tNav('home'), href: localizedHref('/', locale) },
+              { label: t.backToList.split(' ')[0], href: localizedHref('/series', locale) },
               { label: name },
             ]}
             className="mb-6"
@@ -254,7 +257,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
                   {seriesInfo.topPerformers.map((p) => (
                     <Link
                       key={p.id}
-                      href={`/${locale}/actress/${p.id}`}
+                      href={localizedHref(`/actress/${p.id}`, locale)}
                       className="bg-gray-700/50 hover:bg-gray-600/50 px-3 py-1 rounded-full text-sm theme-text transition-colors"
                     >
                       {p.name} ({p.count})
@@ -272,7 +275,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
             </p>
             <div className="flex gap-2">
               <Link
-                href={`/${locale}/series/${seriesId}`}
+                href={basePath}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   !sort || sort === 'release'
                     ? 'bg-purple-500 text-white'
@@ -282,7 +285,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
                 {t.sortByRelease}
               </Link>
               <Link
-                href={`/${locale}/series/${seriesId}?sort=newest`}
+                href={`${basePath}${basePath.includes('?') ? '&' : '?'}sort=newest`}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   sort === 'newest'
                     ? 'bg-purple-500 text-white'
@@ -292,7 +295,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
                 {t.sortByReleaseDesc}
               </Link>
               <Link
-                href={`/${locale}/series/${seriesId}?sort=rating`}
+                href={`${basePath}${basePath.includes('?') ? '&' : '?'}sort=rating`}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   sort === 'rating'
                     ? 'bg-purple-500 text-white'
@@ -333,7 +336,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           {/* 戻るリンク */}
           <div className="mt-8 text-center">
             <Link
-              href={`/${locale}/series`}
+              href={localizedHref('/series', locale)}
               className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
             >
               &larr; {t.backToList}

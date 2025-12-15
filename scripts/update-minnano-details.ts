@@ -19,7 +19,7 @@ interface PerformerDetail {
   hip: number | null;
   cup: string | null;
   birthplace: string | null;
-  imageUrl: string | null;
+  // 画像URLは著作権の問題があるため収集しない
 }
 
 async function fetchPage(url: string): Promise<string> {
@@ -48,17 +48,9 @@ async function fetchActressDetail(url: string): Promise<PerformerDetail | null> 
       hip: null,
       cup: null,
       birthplace: null,
-      imageUrl: null,
     };
 
-    // プロフィール画像
-    const imgEl = $('img[src*="actress_image"]').first();
-    if (imgEl.length) {
-      const src = imgEl.attr('src');
-      if (src && !src.includes('noimage')) {
-        detail.imageUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
-      }
-    }
+    // 画像URLは著作権の問題があるため収集しない
 
     // プロフィールテーブルから情報を取得
     $('table tr').each((_, row) => {
@@ -151,7 +143,7 @@ async function main() {
       if (detail.hip) updates.hip = detail.hip;
       if (detail.cup) updates.cup = detail.cup;
       if (detail.birthplace) updates.birthplace = detail.birthplace;
-      if (detail.imageUrl) updates.profileImageUrl = detail.imageUrl;
+      // 画像URLは著作権の問題があるため収集しない
 
       if (Object.keys(updates).length > 0) {
         await db

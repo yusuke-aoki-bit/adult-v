@@ -1,8 +1,11 @@
 import { notFound } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
-import ActressHeroImage from '@/components/ActressHeroImage';
+import {
+  ActressHeroImage,
+  Pagination,
+  CrossAspInfo,
+} from '@adult-v/shared/components';
 import ActressAiReview from '@/components/ActressAiReview';
-import Pagination from '@/components/Pagination';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import RelatedActresses from '@/components/RelatedActresses';

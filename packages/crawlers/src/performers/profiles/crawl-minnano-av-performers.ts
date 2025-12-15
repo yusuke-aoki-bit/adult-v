@@ -260,8 +260,8 @@ async function fetchActressDetail(url: string): Promise<PerformerDetailWithImage
  */
 async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerDetailWithImage | null): Promise<void> {
   const name = detail?.name || performer.name;
-  // 画像URLは詳細ページから取得したものを優先、なければリストから
-  const imageUrl = detail?.imageUrl || performer.imageUrl;
+  // 画像URLは著作権の問題があるため収集しない
+  // const imageUrl = detail?.imageUrl || performer.imageUrl;
 
   // 既存のperformerを検索（名前で）
   const existing = await db
@@ -287,10 +287,7 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
       if (!existingPerformer.birthplace && detail.birthplace) updates.birthplace = detail.birthplace;
     }
 
-    // プロフィール画像URLを更新（既存がnullの場合のみ）
-    if (!existingPerformer.profileImageUrl && imageUrl) {
-      updates.profileImageUrl = imageUrl;
-    }
+    // 画像URLは著作権の問題があるため収集しない
 
     if (Object.keys(updates).length > 0) {
       await db
@@ -338,7 +335,7 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
       .values({
         name,
         nameKana: detail?.nameKana,
-        profileImageUrl: imageUrl || undefined,
+        // 画像URLは著作権の問題があるため収集しない
         height: detail?.height,
         bust: detail?.bust,
         waist: detail?.waist,

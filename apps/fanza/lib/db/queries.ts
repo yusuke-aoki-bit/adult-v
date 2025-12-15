@@ -2359,12 +2359,14 @@ const ACTRESS_PLACEHOLDER = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+
 
 /**
  * データベースの出演者(performer)をActress型に変換（同期版）
- * 画像優先順位: 1. profileImageUrl（女優プロフィール画像） 2. thumbnailUrl（商品画像） 3. プレースホルダー
+ * 画像優先順位: thumbnailUrl（作品サムネイル画像） > プレースホルダー
+ * ※profileImageUrlはminnano-avから取得した画像のため使用しない
  * @param locale - ロケール（'ja' | 'en' | 'zh' | 'ko'）。指定された言語の名前/バイオを使用
  */
 function mapPerformerToActressTypeSync(performer: DbPerformer, releaseCount: number, thumbnailUrl?: string, services?: string[], aliases?: string[], locale: string = 'ja'): ActressType {
-  // 画像の優先順位: profileImageUrl > thumbnailUrl（商品画像） > プレースホルダー
-  const imageUrl = performer.profileImageUrl || thumbnailUrl || ACTRESS_PLACEHOLDER;
+  // 画像の優先順位: thumbnailUrl（作品サムネイル画像） > プレースホルダー
+  // ※profileImageUrlはminnano-avから取得した画像のため使用しない
+  const imageUrl = thumbnailUrl || ACTRESS_PLACEHOLDER;
   // ASP名をProviderId型に変換（共通定数を使用）
   const providerIds = (services || [])
     .map(s => ASP_TO_PROVIDER_ID[s])
@@ -4575,6 +4577,183 @@ export async function getMakerById(makerId: number, locale: string = 'ja'): Prom
     };
   } catch (error) {
     console.error(`Error fetching maker ${makerId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * 商品ソースとセール情報を取得
+ */
+export async function getProductSourcesWithSales(productId: number) {
+  try {
+    const db = getDb();
+
+    // Get all sources for this product
+    const sources = await db
+      .select({
+        id: productSources.id,
+        aspName: productSources.aspName,
+        originalProductId: productSources.originalProductId,
+        price: productSources.price,
+        currency: productSources.currency,
+        affiliateUrl: productSources.affiliateUrl,
+        isSubscription: productSources.isSubscription,
+        productType: productSources.productType,
+      })
+      .from(productSources)
+      .where(eq(productSources.productId, productId));
+
+    if (sources.length === 0) {
+      return [];
+    }
+
+    // Get sale info for these sources
+    const sourceIds = sources.map(s => s.id);
+    const sales = await db
+      .select({
+        productSourceId: productSales.productSourceId,
+        regularPrice: productSales.regularPrice,
+        salePrice: productSales.salePrice,
+        discountPercent: productSales.discountPercent,
+        startAt: productSales.startAt,
+        endAt: productSales.endAt,
+      })
+      .from(productSales)
+      .where(inArray(productSales.productSourceId, sourceIds));
+
+    // Create a map for quick lookup
+    const saleMap = new Map(sales.map(s => [s.productSourceId, s]));
+
+    // Combine sources with sales
+    return sources.map(source => ({
+      ...source,
+      sale: saleMap.get(source.id) || null,
+    }));
+  } catch (error) {
+    console.error(`Error fetching product sources with sales for ${productId}:`, error);
+    return [];
+  }
+}
+
+/**
+ * 女優の平均分単価を取得
+ */
+export async function getActressAvgPricePerMin(actressId: string): Promise<number | null> {
+  try {
+    const db = getDb();
+    const performerId = parseInt(actressId);
+
+    if (isNaN(performerId)) {
+      return null;
+    }
+
+    const result = await db.execute<{ avg_price_per_min: string | null }>(sql`
+      SELECT
+        AVG(CASE WHEN p.duration > 0 AND ps.price > 0 THEN ps.price / p.duration ELSE NULL END) as avg_price_per_min
+      FROM product_performers pp
+      INNER JOIN products p ON pp.product_id = p.id
+      INNER JOIN product_sources ps ON p.id = ps.product_id
+      WHERE pp.performer_id = ${performerId}
+      AND p.duration IS NOT NULL
+      AND p.duration > 0
+      AND ps.price IS NOT NULL
+      AND ps.price > 0
+    `);
+
+    const avgPricePerMin = result.rows[0]?.avg_price_per_min;
+    return avgPricePerMin ? parseFloat(avgPricePerMin) : null;
+  } catch (error) {
+    console.error(`Error fetching avg price per min for actress ${actressId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * seriesタイプのタグからシリーズを特定し、関連作品を取得
+ */
+export interface SeriesBasicInfo {
+  id: number;
+  name: string;
+  totalProducts: number;
+  totalDuration: number; // 総再生時間（分）
+  products: Array<{
+    id: number;
+    title: string;
+    imageUrl: string;
+    releaseDate: string | null;
+    duration: number | null;
+    price: number | null;
+  }>;
+}
+
+export async function getSeriesByTagId(tagId: number, locale: string = 'ja'): Promise<SeriesBasicInfo | null> {
+  try {
+    const db = getDb();
+
+    // タグ情報を取得
+    const tagResult = await db.execute(sql`
+      SELECT id, name, name_en, name_zh, name_ko
+      FROM tags
+      WHERE id = ${tagId} AND type = 'series'
+    `);
+
+    if (!tagResult.rows || tagResult.rows.length === 0) {
+      return null;
+    }
+
+    const tag = tagResult.rows[0] as Record<string, unknown>;
+    const tagName = locale === 'en' ? (tag.name_en || tag.name)
+      : locale === 'zh' ? (tag.name_zh || tag.name)
+      : locale === 'ko' ? (tag.name_ko || tag.name)
+      : tag.name;
+
+    // タイトルのローカライズ
+    const titleColumn = locale === 'en' ? sql`COALESCE(p.title_en, p.title)`
+      : locale === 'zh' ? sql`COALESCE(p.title_zh, p.title)`
+      : locale === 'ko' ? sql`COALESCE(p.title_ko, p.title)`
+      : sql`p.title`;
+
+    // シリーズに属する作品を取得
+    const productsResult = await db.execute(sql`
+      SELECT
+        p.id,
+        ${titleColumn} as title,
+        p.image_url,
+        p.release_date,
+        p.duration,
+        ps.price
+      FROM products p
+      JOIN product_tags pt ON p.id = pt.product_id
+      LEFT JOIN LATERAL (
+        SELECT price FROM product_sources
+        WHERE product_id = p.id
+        ORDER BY price NULLS LAST
+        LIMIT 1
+      ) ps ON true
+      WHERE pt.tag_id = ${tagId}
+      ORDER BY p.release_date NULLS LAST
+    `);
+
+    const products = (productsResult.rows || []).map((row: Record<string, unknown>) => ({
+      id: row.id as number,
+      title: row.title as string,
+      imageUrl: row.image_url as string,
+      releaseDate: row.release_date as string | null,
+      duration: row.duration as number | null,
+      price: row.price as number | null,
+    }));
+
+    const totalDuration = products.reduce((sum, p) => sum + (p.duration || 0), 0);
+
+    return {
+      id: tagId,
+      name: tagName as string,
+      totalProducts: products.length,
+      totalDuration,
+      products,
+    };
+  } catch (error) {
+    console.error(`Error fetching series ${tagId}:`, error);
     return null;
   }
 }
