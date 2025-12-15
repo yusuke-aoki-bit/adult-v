@@ -41,12 +41,12 @@ export default function ScrollToTop() {
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed bottom-6 right-6 z-50 p-3 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 hover:scale-105 ${
+      className={`fixed bottom-4 right-4 md:bottom-5 md:right-5 z-50 p-2.5 md:p-3 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 hover:scale-105 ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
       }`}
       aria-label="ページトップへ戻る"
     >
-      <ChevronUp className="w-6 h-6" />
+      <ChevronUp className="w-5 h-5 md:w-6 md:h-6" />
     </button>
   );
 }
