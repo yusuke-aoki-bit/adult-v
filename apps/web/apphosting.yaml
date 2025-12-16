@@ -4,7 +4,7 @@ runConfig:
   minInstances: 0
   maxInstances: 4
   cpu: 1
-  memoryMiB: 1024
+  memoryMiB: 2048
   vpcAccess:
     connector: projects/adult-v/locations/asia-east1/connectors/adult-v-connector
     egress: PRIVATE_RANGES_ONLY
