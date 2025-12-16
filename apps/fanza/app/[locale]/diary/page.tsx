@@ -17,7 +17,8 @@ import {
   BarChart3,
   Trash2,
 } from 'lucide-react';
-import { useViewingDiary, type DiaryEntry } from '@/hooks/useViewingDiary';
+import { useViewingDiary } from '@/hooks';
+import type { DiaryEntry } from '@adult-v/shared/hooks';
 import { normalizeImageUrl } from '@/lib/image-utils';
 
 const translations = {

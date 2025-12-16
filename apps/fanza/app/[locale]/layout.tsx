@@ -12,6 +12,7 @@ import AgeVerification from '@/components/AgeVerification';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import ScrollToTop from '@/components/ScrollToTop';
 import NavigationProgress from '@/components/NavigationProgress';
+import { FirebaseProvider } from '@adult-v/shared/components';
 import { JsonLD } from '@/components/JsonLD';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import { Metadata } from 'next';
@@ -70,16 +71,18 @@ export default async function LocaleLayout({
       <SiteProvider mode={siteMode}>
         <FavoritesProvider>
           <ToastProvider>
-            <Suspense fallback={null}>
-              <NavigationProgress />
-            </Suspense>
-            <JsonLD data={webSiteSchema} />
-            <JsonLD data={organizationSchema} />
-            <PerformanceMonitor />
-            <AgeVerification locale={locale} initialVerified={ageVerified}>
-              {children}
-            </AgeVerification>
-            <ScrollToTop />
+            <FirebaseProvider>
+              <Suspense fallback={null}>
+                <NavigationProgress />
+              </Suspense>
+              <JsonLD data={webSiteSchema} />
+              <JsonLD data={organizationSchema} />
+              <PerformanceMonitor />
+              <AgeVerification locale={locale} initialVerified={ageVerified}>
+                {children}
+              </AgeVerification>
+              <ScrollToTop />
+            </FirebaseProvider>
           </ToastProvider>
         </FavoritesProvider>
       </SiteProvider>

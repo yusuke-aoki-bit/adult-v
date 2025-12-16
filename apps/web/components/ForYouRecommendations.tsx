@@ -1,7 +1,7 @@
 'use client';
 
 import { ForYouRecommendationsSection } from '@adult-v/shared/components';
-import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { useRecentlyViewed } from '@/hooks';
 import ProductCard from './ProductCard';
 import type { Product } from '@/types/product';
 

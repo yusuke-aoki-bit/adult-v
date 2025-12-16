@@ -16,8 +16,8 @@ import PreferenceChart, { PreferenceBarChart } from '@/components/PreferenceChar
 import MakerAnalysis from '@/components/MakerAnalysis';
 import BudgetTracker from '@/components/BudgetTracker';
 import DiscoveryBadges from '@/components/DiscoveryBadges';
-import { usePreferenceAnalysis, profileTranslations } from '@/hooks/usePreferenceAnalysis';
-import { useViewingDiary } from '@/hooks/useViewingDiary';
+import { usePreferenceAnalysis, useViewingDiary } from '@/hooks';
+import { profileTranslations } from '@adult-v/shared/hooks';
 
 type TranslationKey = keyof typeof profileTranslations;
 type Translation = typeof profileTranslations[TranslationKey];

@@ -92,3 +92,6 @@ export type { FilterTheme, FilterThemeConfig, SortTranslationKey, ActiveFiltersT
 
 // Client providers (Firebase auth, etc.)
 export { ClientProviders } from './ClientProviders';
+
+// Firebase provider (Analytics, Performance Monitoring, Remote Config)
+export { FirebaseProvider } from './FirebaseProvider';

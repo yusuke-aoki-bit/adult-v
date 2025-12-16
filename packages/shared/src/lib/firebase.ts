@@ -40,6 +40,7 @@ import {
   type RemoteConfig,
 } from 'firebase/remote-config';
 import { getMessaging, getToken, onMessage, type Messaging } from 'firebase/messaging';
+import { getPerformance, type FirebasePerformance } from 'firebase/performance';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -59,6 +60,7 @@ let db: Firestore | null = null;
 let analytics: Analytics | null = null;
 let remoteConfig: RemoteConfig | null = null;
 let messaging: Messaging | null = null;
+let performance: FirebasePerformance | null = null;
 
 // Check if Firebase is configured
 export function isFirebaseConfigured(): boolean {
@@ -152,6 +154,19 @@ export function getFirebaseMessaging(): Messaging | null {
     messaging = getMessaging(firebaseApp);
   }
   return messaging;
+}
+
+// Initialize Performance Monitoring
+export function getFirebasePerformance(): FirebasePerformance | null {
+  if (typeof window === 'undefined') return null;
+
+  const firebaseApp = getFirebaseApp();
+  if (!firebaseApp) return null;
+
+  if (!performance) {
+    performance = getPerformance(firebaseApp);
+  }
+  return performance;
 }
 
 // ============================================

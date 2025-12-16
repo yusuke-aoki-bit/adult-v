@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Wallet, AlertTriangle, Check, Edit2 } from 'lucide-react';
-import { useBudget } from '@/hooks/useBudget';
+import { useBudget } from '@/hooks';
 
 const translations = {
   ja: {

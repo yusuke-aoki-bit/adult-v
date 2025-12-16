@@ -3,7 +3,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, Eye } from 'lucide-react';
-import { useViewingDiary, type DiaryEntry } from '@/hooks/useViewingDiary';
+import { useViewingDiary } from '@/hooks';
+import type { DiaryEntry } from '@adult-v/shared/hooks';
 
 interface ViewedButtonProps {
   productId: string;

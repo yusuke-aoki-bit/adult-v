@@ -13,8 +13,8 @@ import {
   Sparkles,
   ShoppingCart,
 } from 'lucide-react';
-import { useBudget } from '@/hooks/useBudget';
-import { useWatchlistAnalysis, type EnrichedProduct } from '@/hooks/useWatchlistAnalysis';
+import { useBudget, useWatchlistAnalysis } from '@/hooks';
+import type { EnrichedProduct } from '@adult-v/shared/hooks';
 import BudgetManager from '@/components/BudgetManager';
 
 const translations = {

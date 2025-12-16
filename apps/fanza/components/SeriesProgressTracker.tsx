@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { useRecentlyViewed } from '@/hooks';
 
 interface SeriesProgressTrackerProps {
   seriesId: string;

@@ -1,41 +1,52 @@
-import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-// TODO: Re-enable Vertex AI when correct import path is determined
-// import { getVertexAI, getGenerativeModel } from 'firebase/vertexai';
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
+// Re-export from @adult-v/shared for backwards compatibility
+export {
+  // Firebase app and services
+  getFirebaseApp,
+  getFirebaseAuth,
+  getFirebaseFirestore,
+  getFirebaseAnalytics,
+  getFirebaseRemoteConfig,
+  getFirebaseMessaging,
+  getFirebasePerformance,
+  isFirebaseConfigured,
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+  // Auth functions
+  signInAnonymouslyIfNeeded,
+  linkWithGoogle,
+  linkWithTwitter,
+  onAuthStateChange,
+  isAnonymousUser,
 
-let app: FirebaseApp;
+  // Firestore functions
+  saveFavoriteToFirestore,
+  removeFavoriteFromFirestore,
+  getFavoritesFromFirestore,
+  saveRecentlyViewedToFirestore,
+  getRecentlyViewedFromFirestore,
 
-// Initialize Firebase
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
+  // Analytics functions
+  logEvent,
+  setAnalyticsUserId,
+  setAnalyticsUserProperties,
 
-  // Initialize App Check with reCAPTCHA v3
-  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
-      isTokenAutoRefreshEnabled: true,
-    });
-  }
-} else {
-  app = getApps()[0];
-}
+  // Remote Config functions
+  fetchRemoteConfig,
+  getRemoteConfigValue,
 
-// TODO: Re-enable Vertex AI when correct import path is determined
-// Initialize Vertex AI
-// export const vertexAI = getVertexAI(app);
+  // Cloud Messaging functions
+  requestNotificationPermission,
+  saveFcmToken,
+  onForegroundMessage,
 
-// Get generative model (Gemini)
-// export const getAIModel = (modelName: string = 'gemini-2.0-flash-001') => {
-//   return getGenerativeModel(vertexAI, { model: modelName });
-// };
+  // App instance
+  app,
+} from '@adult-v/shared/lib/firebase';
 
-export { app };
+// Re-export types
+export type {
+  FirestoreFavorite,
+  FirestoreRecentlyViewed,
+  AnalyticsEventName,
+  AnalyticsEventParams,
+  RemoteConfigDefaults,
+} from '@adult-v/shared/lib/firebase';

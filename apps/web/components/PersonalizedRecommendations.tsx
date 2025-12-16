@@ -2,7 +2,8 @@
 
 import { useTranslations } from 'next-intl';
 import { Clock } from 'lucide-react';
-import { useRecentlyViewed, RecentlyViewedItem } from '@/hooks/useRecentlyViewed';
+import { useRecentlyViewed } from '@/hooks';
+import type { RecentlyViewedItem } from '@adult-v/shared/hooks';
 import { AccordionSection } from '@adult-v/shared/components';
 import ProductCard from './ProductCard';
 import { Product } from '@/types/product';

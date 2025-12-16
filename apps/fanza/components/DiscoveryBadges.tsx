@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Award, ChevronDown, ChevronUp, Trophy, Flame, Eye } from 'lucide-react';
-import { useDiscoveryBadge, Badge } from '@/hooks/useDiscoveryBadge';
+import { useDiscoveryBadge } from '@/hooks';
+import type { Badge } from '@adult-v/shared/hooks';
 
 const translations = {
   ja: {

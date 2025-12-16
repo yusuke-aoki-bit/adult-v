@@ -14,7 +14,7 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react';
-import { useBudgetTracker } from '@/hooks/useBudgetTracker';
+import { useBudgetTracker } from '@/hooks';
 
 const translations = {
   ja: {
