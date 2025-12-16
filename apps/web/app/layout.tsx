@@ -9,6 +9,7 @@ import CookieConsent from "@/components/CookieConsent";
 import { SiteProvider } from "@/lib/contexts/SiteContext";
 import { getServerSiteMode } from "@/lib/server/site-mode";
 import { LazyPWAInstaller } from "@/components/LazyPWAInstaller";
+import { ClientProviders } from "@adult-v/shared/components";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -81,9 +82,11 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${themeClass} antialiased flex flex-col min-h-screen`}
       >
         {gaId && <CookieConsent gaId={gaId} />}
-        <SiteProvider mode={siteMode}>
-          <ConditionalLayout>{children}</ConditionalLayout>
-        </SiteProvider>
+        <ClientProviders>
+          <SiteProvider mode={siteMode}>
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </SiteProvider>
+        </ClientProviders>
         <LazyPWAInstaller />
       </body>
     </html>

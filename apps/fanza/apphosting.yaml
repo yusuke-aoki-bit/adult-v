@@ -32,3 +32,39 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  # Firebase Configuration
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBHjzwH1866mA8IZIop1yllt5pg8GZ1RBw
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: adult-v.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: adult-v
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: adult-v.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "933323943498"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:933323943498:web:97f8b7e6a3cc8b32a82c63
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-6LDLKB6QSL
+    availability:
+      - BUILD
+      - RUNTIME

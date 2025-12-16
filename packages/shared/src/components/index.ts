@@ -89,3 +89,6 @@ export {
   getActiveFiltersTranslation,
 } from './filters';
 export type { FilterTheme, FilterThemeConfig, SortTranslationKey, ActiveFiltersTranslationKey, SupportedLocale } from './filters';
+
+// Client providers (Firebase auth, etc.)
+export { ClientProviders } from './ClientProviders';
