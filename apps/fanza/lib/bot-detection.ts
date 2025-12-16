@@ -224,7 +224,7 @@ export function validateSecurityHeaders(request: NextRequest): boolean {
         'adult-v.com',
         'www.adult-v.com',
         'f.adult-v.com',
-        'fanza.minpri.net',
+        'www.f.adult-v.com',
       ];
       // Firebase App Hosting preview domains
       const allowedPatterns = [

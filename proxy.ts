@@ -12,7 +12,7 @@ const intlMiddleware = createIntlMiddleware({
 
 /**
  * ホスト名からサイトモードを検出
- * FANZAサブドメイン: f.dult-v.com, fanza.minpri.net など
+ * FANZAサブドメイン: f.adult-v.com, www.f.adult-v.com など
  */
 function detectSiteMode(request: NextRequest): SiteMode {
   const hostname = request.headers.get('host') || request.nextUrl.hostname;

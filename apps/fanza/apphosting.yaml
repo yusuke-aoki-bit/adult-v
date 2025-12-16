@@ -23,7 +23,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_SITE_URL
-    value: https://fanza.minpri.net
+    value: https://www.f.adult-v.com
     availability:
       - BUILD
       - RUNTIME
