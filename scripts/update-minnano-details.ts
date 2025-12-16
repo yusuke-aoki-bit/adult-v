@@ -106,14 +106,45 @@ async function main() {
   console.log(`Limit: ${limit}, Offset: ${offset}\n`);
 
   // 詳細情報が未取得でexternal_idがあるperformerを取得
-  const targetPerformers = await db.execute(sql`
-    SELECT p.id, p.name, pei.external_id, pei.external_url
-    FROM performers p
-    JOIN performer_external_ids pei ON p.id = pei.performer_id AND pei.provider = 'minnano-av'
-    WHERE p.birthday IS NULL AND p.height IS NULL AND p.bust IS NULL
-    ORDER BY p.id
-    LIMIT ${limit} OFFSET ${offset}
+  // JOINが重いため、2段階クエリに分割
+  console.log('対象performer取得中...');
+
+  // Step 1: minnano-avのexternal_idを持つperformer_idを取得
+  const externalIds = await db.execute(sql`
+    SELECT performer_id, external_id, external_url
+    FROM performer_external_ids
+    WHERE provider = 'minnano-av'
+    ORDER BY performer_id
   `);
+
+  const externalIdMap = new Map<number, { externalId: string; externalUrl: string | null }>();
+  for (const row of externalIds.rows as any[]) {
+    externalIdMap.set(row.performer_id, {
+      externalId: row.external_id,
+      externalUrl: row.external_url,
+    });
+  }
+  console.log(`minnano-av external_id: ${externalIdMap.size}件`);
+
+  // Step 2: 詳細未取得のperformerを取得（JOINなし）
+  const performers_result = await db.execute(sql`
+    SELECT id, name
+    FROM performers
+    WHERE birthday IS NULL AND height IS NULL AND bust IS NULL
+    ORDER BY id
+  `);
+
+  // フィルタ: external_idを持つもののみ
+  const targetPerformers = {
+    rows: (performers_result.rows as any[])
+      .filter(p => externalIdMap.has(p.id))
+      .map(p => ({
+        ...p,
+        external_id: externalIdMap.get(p.id)!.externalId,
+        external_url: externalIdMap.get(p.id)!.externalUrl,
+      }))
+      .slice(offset, offset + limit)
+  };
 
   console.log(`対象performer: ${targetPerformers.rows.length}件\n`);
 
