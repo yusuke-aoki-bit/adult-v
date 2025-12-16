@@ -34,10 +34,7 @@ env:
       - RUNTIME
   # Firebase Configuration
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: AIzaSyBHjzwH1866mA8IZIop1yllt5pg8GZ1RBw
-    availability:
-      - BUILD
-      - RUNTIME
+    secret: firebase-api-key
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: adult-v.firebaseapp.com
     availability:
