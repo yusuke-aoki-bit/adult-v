@@ -26,6 +26,7 @@ interface UseRecentlyViewedReturn {
 interface ProductCardProps<T extends BaseProduct> {
   product: T;
   compact?: boolean;
+  mini?: boolean;
 }
 
 interface RecommendationMeta {
@@ -188,9 +189,11 @@ export function ForYouRecommendationsSection<T extends BaseProduct>({
           bgClass={themeConfig.forYouRecommendations.bgClass}
         >
           <p className={`text-xs ${themeConfig.forYouRecommendations.subtitleClass} mb-3`}>{t.basedOn}</p>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} compact />
+              <div key={product.id} className="flex-shrink-0 w-16 sm:w-20">
+                <ProductCard product={product} mini />
+              </div>
             ))}
           </div>
         </AccordionSection>

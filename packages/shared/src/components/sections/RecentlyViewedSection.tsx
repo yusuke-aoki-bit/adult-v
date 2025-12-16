@@ -28,6 +28,7 @@ interface UseRecentlyViewedReturn {
 interface ProductCardProps<T extends BaseProduct> {
   product: T;
   compact?: boolean;
+  mini?: boolean;
 }
 
 interface RecentlyViewedSectionProps<T extends BaseProduct> {
@@ -153,10 +154,10 @@ export function RecentlyViewedSection<T extends BaseProduct>({
           iconColorClass={themeConfig.recentlyViewed.iconColorClass}
           bgClass={themeConfig.recentlyViewed.bgClass}
         >
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
             {products.map((product) => (
-              <div key={product.id} className="relative group/card">
-                <ProductCard product={product} compact />
+              <div key={product.id} className="relative group/card flex-shrink-0 w-16 sm:w-20">
+                <ProductCard product={product} mini />
                 {/* Delete button - shows on card hover */}
                 <button
                   type="button"
@@ -165,7 +166,7 @@ export function RecentlyViewedSection<T extends BaseProduct>({
                     e.stopPropagation();
                     removeItem(String(product.id));
                   }}
-                  className={`absolute top-1 left-1 z-30 w-5 h-5 ${themeConfig.recentlyViewed.deleteButtonBgClass} hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity shadow-lg`}
+                  className={`absolute -top-1 -right-1 z-30 w-5 h-5 ${themeConfig.recentlyViewed.deleteButtonBgClass} hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity shadow-lg`}
                   aria-label={t.removeFromHistory}
                 >
                   <X className="w-3 h-3 text-white" />

@@ -97,13 +97,15 @@ interface ProductCardProps {
   product: Product;
   /** 人気ランキング順位（1-10の場合にバッジ表示） */
   rankPosition?: number;
-  /** コンパクト表示（50%サイズ、情報を最小限に） */
+  /** コンパクト表示（グリッド用の小さいカード） */
   compact?: boolean;
+  /** ミニ表示（最近見た作品用のサムネイルのみ表示） */
+  mini?: boolean;
 }
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/400x560/1f2937/ffffff?text=NO+IMAGE';
 
-export default function ProductCard({ product, rankPosition, compact = false }: ProductCardProps) {
+export default function ProductCard({ product, rankPosition, compact = false, mini = false }: ProductCardProps) {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
   const t = useTranslations('productCard');
@@ -217,6 +219,34 @@ export default function ProductCard({ product, rankPosition, compact = false }: 
   const handleCloseVideoModal = useCallback(() => {
     setShowVideoModal(false);
   }, []);
+
+  // ミニモード: 最近見た作品用の超コンパクトサムネイル（タイトルなし）
+  if (mini) {
+    return (
+      <Link
+        href={`/${locale}/products/${product.id}`}
+        className="block group"
+      >
+        <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-100">
+          <Image
+            src={imgSrc}
+            alt={product.title}
+            fill
+            sizes="80px"
+            className={`object-cover transition-transform group-hover:scale-105 ${isUncensored ? 'blur-[3px]' : ''}`}
+            loading="lazy"
+            onError={handleImageError}
+          />
+          {/* セールバッジ */}
+          {product.salePrice && (
+            <div className="absolute top-0.5 left-0.5 bg-red-600 text-white text-[8px] font-bold px-1 py-0.5 rounded z-10">
+              SALE
+            </div>
+          )}
+        </div>
+      </Link>
+    );
+  }
 
   // コンパクトモード: 最小限の情報でサムネイル表示（イベント機能付き）
   if (compact) {
