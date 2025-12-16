@@ -142,8 +142,10 @@ export default function Pagination({
       urlParams.set(key, value);
     });
 
-    // ページ番号を設定
-    urlParams.set('page', pageNum.toString());
+    // ページ番号を設定（1の場合は省略）
+    if (pageNum > 1) {
+      urlParams.set('page', pageNum.toString());
+    }
 
     // 表示件数を設定（新しい値またはsearchParamsから）
     if (newPerPage) {
@@ -155,7 +157,8 @@ export default function Pagination({
       }
     }
 
-    return `${basePath}?${urlParams.toString()}`;
+    const queryString = urlParams.toString();
+    return queryString ? `${basePath}?${queryString}` : basePath;
   }, [searchParams, queryParams, basePath]);
 
   // ページ番号入力での移動

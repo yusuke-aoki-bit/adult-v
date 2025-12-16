@@ -69,8 +69,7 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const DEFAULT_ITEMS_PER_PAGE = 50;
-const ALLOWED_PER_PAGE = [12, 24, 48, 96];
+const ITEMS_PER_PAGE = 24;
 
 export default async function ProductsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -86,9 +85,6 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     isServerFanzaSite(),
   ]);
 
-  // 表示件数（URLパラメータから取得、許可リストでバリデーション）
-  const requestedLimit = Number(searchParamsData.limit) || DEFAULT_ITEMS_PER_PAGE;
-  const itemsPerPage = ALLOWED_PER_PAGE.includes(requestedLimit) ? requestedLimit : DEFAULT_ITEMS_PER_PAGE;
 
   const query = typeof searchParamsData.q === 'string' ? searchParamsData.q.trim() : undefined;
 
@@ -130,7 +126,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     ? searchParamsData.exclude.split(',').filter(Boolean)
     : [];
   const sortBy = typeof searchParamsData.sort === 'string' ? searchParamsData.sort : 'releaseDateDesc';
-  const offset = (page - 1) * itemsPerPage;
+  const offset = (page - 1) * ITEMS_PER_PAGE;
 
   // フィルタオプションを共通化
   const filterOptions = {
@@ -157,7 +153,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   const products = await getProducts({
     ...filterOptions,
     offset,
-    limit: itemsPerPage,
+    limit: ITEMS_PER_PAGE,
     sortBy: sortBy as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'titleAsc',
     locale,
   });
@@ -265,11 +261,10 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
               <Pagination
                 total={totalCount}
                 page={page}
-                perPage={itemsPerPage}
+                perPage={ITEMS_PER_PAGE}
                 basePath={`/${locale}/products`}
                 position="top"
                 queryParams={queryParams}
-                showPerPageSelector
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
@@ -282,11 +277,10 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
               <Pagination
                 total={totalCount}
                 page={page}
-                perPage={itemsPerPage}
+                perPage={ITEMS_PER_PAGE}
                 basePath={`/${locale}/products`}
                 position="bottom"
                 queryParams={queryParams}
-                showPerPageSelector
               />
             </>
           )}

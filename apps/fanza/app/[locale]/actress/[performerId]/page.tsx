@@ -44,8 +44,7 @@ interface PageProps {
   }>;
 }
 
-const DEFAULT_PER_PAGE = 24;
-const ALLOWED_PER_PAGE = [12, 24, 48, 96];
+const PER_PAGE = 24;
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   try {
@@ -149,9 +148,6 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const page = parseInt(resolvedSearchParams.page || '1', 10);
   const sortBy = (resolvedSearchParams.sort || 'releaseDateDesc') as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'titleAsc';
 
-  // 表示件数（URLパラメータから取得、許可リストでバリデーション）
-  const requestedLimit = parseInt(resolvedSearchParams.limit || String(DEFAULT_PER_PAGE), 10);
-  const perPage = ALLOWED_PER_PAGE.includes(requestedLimit) ? requestedLimit : DEFAULT_PER_PAGE;
 
   // hasVideo/hasImageフィルター
   const hasVideo = resolvedSearchParams.hasVideo === 'true';
@@ -208,7 +204,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   });
 
   const total = allWorks.length;
-  const works = allWorks.slice((page - 1) * perPage, page * perPage);
+  const works = allWorks.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   const basePath = `/${locale}/actress/${actress.id}`;
 
@@ -341,8 +337,8 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {total > 0 ? (
             <>
               {/* ページネーション（上部） */}
-              {total > perPage && (
-                <Pagination total={total} page={page} perPage={perPage} basePath={basePath} position="top" showPerPageSelector />
+              {total > PER_PAGE && (
+                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="top" />
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {works.map((work) => (
@@ -350,8 +346,8 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 ))}
               </div>
               {/* ページネーション（下部） */}
-              {total > perPage && (
-                <Pagination total={total} page={page} perPage={perPage} basePath={basePath} position="bottom" showPerPageSelector />
+              {total > PER_PAGE && (
+                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="bottom" />
               )}
             </>
           ) : (

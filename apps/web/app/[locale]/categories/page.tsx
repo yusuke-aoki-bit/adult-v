@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateFAQSchema, getCategoryPageFAQs } from '@/lib/seo';
+import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateFAQSchema, getCategoryPageFAQs, generateItemListSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import { getPopularTags } from '@/lib/db/queries';
@@ -84,6 +84,12 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
   // カテゴリページ用FAQ
   const categoryFAQs = getCategoryPageFAQs(locale);
 
+  // ItemListSchema用のタグデータ（上位30件）
+  const itemListData = tags.slice(0, 30).map((tag) => ({
+    name: tag.name,
+    url: localizedHref(`/products?include=${tag.id}`, locale),
+  }));
+
   return (
     <>
       <JsonLD
@@ -96,6 +102,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
             locale,
           ),
           generateFAQSchema(categoryFAQs),
+          generateItemListSchema(itemListData, t('title')),
         ]}
       />
 
