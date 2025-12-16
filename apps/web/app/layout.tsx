@@ -66,6 +66,7 @@ export default async function RootLayout({
     <html lang={defaultLocale}>
       <head>
         {/* SEO: PageSpeedがStreaming SSR遅延出力を検出できない問題の対策 */}
+        <title>ADULT VIEWER LAB - heavy user guide</title>
         <meta name="description" content="Cross-platform adult streaming database covering DUGA, MGS, DTI, Caribbeancom with 38,000+ actresses. Browse by popularity, genres, and new releases." />
         {/* LCP改善: 画像配信ドメインへのpreconnect */}
         <link rel="preconnect" href="https://pics.dmm.co.jp" />
