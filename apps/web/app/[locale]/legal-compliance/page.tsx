@@ -44,29 +44,30 @@ export default function LegalCompliancePage() {
             </p>
           </section>
 
-          {/* DMM アフィリエイト */}
+          {/* DMM/FANZA について */}
           <section className="border-t border-gray-700 pt-6">
             <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">
-                準拠
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-900 text-yellow-300">
+                未提携
               </span>
-              <h2 className="text-xl font-semibold text-white">DMM アフィリエイト</h2>
+              <h2 className="text-xl font-semibold text-white">DMM/FANZA</h2>
             </div>
 
             <div className="space-y-3">
               <div>
-                <h3 className="text-sm font-medium text-gray-400 mb-1">利用方法</h3>
+                <h3 className="text-sm font-medium text-gray-400 mb-1">現在の状況</h3>
                 <p className="leading-relaxed">
-                  DMM Web API（公式提供）を使用して商品情報を取得しています。
-                  API IDはDMMアフィリエイトに正式登録の上、発行されたものを使用しています。
+                  当サイトは現時点でDMM/FANZAアフィリエイトプログラムに<strong className="text-white">未提携</strong>です。
+                  DMM APIは使用しておらず、アフィリエイトリンクも生成していません。
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-400 mb-1">画像利用</h3>
+                <h3 className="text-sm font-medium text-gray-400 mb-1">今後の予定</h3>
                 <p className="leading-relaxed">
-                  商品画像はAPI経由で取得した公式素材を使用。
-                  規約に基づき、拡大・縮小のみ行い、改変は行っていません。
+                  DMMアフィリエイトへの登録申請を予定しています。
+                  承認後は、公式APIを使用した正規の方法で商品情報を取得し、
+                  規約に準拠した形でサービスを提供する予定です。
                 </p>
               </div>
 
@@ -76,11 +77,6 @@ export default function LegalCompliancePage() {
                   <li>
                     <a href="https://affiliate.dmm.com/" target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:text-rose-300 transition-colors">
                       DMM アフィリエイト公式サイト
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://affiliate.dmm.com/api/v3/itemlist.html" target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:text-rose-300 transition-colors">
-                      DMM API リファレンス
                     </a>
                   </li>
                 </ul>
@@ -318,11 +314,11 @@ export default function LegalCompliancePage() {
                 </thead>
                 <tbody className="divide-y divide-gray-700">
                   <tr>
-                    <td className="py-2 px-3">DMM API利用</td>
+                    <td className="py-2 px-3">DMM/FANZA</td>
                     <td className="py-2 px-3">
-                      <span className="text-green-400">準拠</span>
+                      <span className="text-yellow-400">未提携</span>
                     </td>
-                    <td className="py-2 px-3 text-gray-400">公式API使用</td>
+                    <td className="py-2 px-3 text-gray-400">申請予定</td>
                   </tr>
                   <tr>
                     <td className="py-2 px-3">DUGA画像利用</td>
