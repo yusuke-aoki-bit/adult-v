@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { isSubscriptionProvider } from '@/lib/providers';
+import { isSubscriptionProvider } from '../lib/providers';
 import { useTranslations } from 'next-intl';
 
 interface PriceOption {

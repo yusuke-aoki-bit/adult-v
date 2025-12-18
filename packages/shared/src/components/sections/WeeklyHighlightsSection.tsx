@@ -181,6 +181,7 @@ export function WeeklyHighlightsSection({
                                   src={actress.heroImageUrl || actress.thumbnailUrl || ''}
                                   alt={actress.name}
                                   fill
+                                  sizes="(max-width: 768px) 33vw, 10vw"
                                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
                               ) : (
@@ -226,6 +227,7 @@ export function WeeklyHighlightsSection({
                                   src={product.imageUrl}
                                   alt={product.title}
                                   fill
+                                  sizes="(max-width: 768px) 33vw, 10vw"
                                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
                               ) : (
@@ -271,6 +273,7 @@ export function WeeklyHighlightsSection({
                                   src={product.imageUrl}
                                   alt={product.title}
                                   fill
+                                  sizes="(max-width: 768px) 33vw, 10vw"
                                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
                               ) : (

@@ -69,24 +69,39 @@ async function main() {
 
   // 1. product_imagesテーブルの画像を修正
   console.log('--- product_images テーブル ---');
+  // 注: /t/ は /tender/, /takara/ などにもマッチしてしまうので除外
+  // 具体的なサイズ指定パターンのみを対象とする
   const imagesResult = await db.execute(sql`
     SELECT id, product_id, image_url
     FROM product_images
     WHERE asp_name = 'DUGA'
     AND (
-      image_url LIKE '%/240x180%'
-      OR image_url LIKE '%/480x360%'
-      OR image_url LIKE '%-t.jpg%'
-      OR image_url LIKE '%_t.jpg%'
-      OR image_url LIKE '%/t/%'
-      OR image_url LIKE '%-s.jpg%'
-      OR image_url LIKE '%_s.jpg%'
+      image_url LIKE '%/240x180.jpg%'
+      OR image_url LIKE '%/480x360.jpg%'
+      OR image_url LIKE '%-t.jpg'
+      OR image_url LIKE '%_t.jpg'
+      OR image_url LIKE '%-s.jpg'
+      OR image_url LIKE '%_s.jpg'
     )
     LIMIT ${limit}
   `);
 
   const images = imagesResult.rows as ImageRow[];
   console.log(`対象画像: ${images.length}件`);
+
+  // デバッグ: 最初の10件のURLパターンを表示
+  if (images.length > 0) {
+    console.log('\n--- サンプルURL ---');
+    for (const img of images.slice(0, 10)) {
+      const newUrl = convertToLargeSize(img.image_url);
+      const changed = newUrl !== img.image_url;
+      console.log(`[${changed ? '変換あり' : '変換なし'}] ${img.image_url}`);
+      if (changed) {
+        console.log(`  -> ${newUrl}`);
+      }
+    }
+    console.log('--- サンプルURL終わり ---\n');
+  }
 
   for (const img of images) {
     processed++;
@@ -133,13 +148,12 @@ async function main() {
     WHERE ps.asp_name = 'DUGA'
     AND p.default_thumbnail_url IS NOT NULL
     AND (
-      p.default_thumbnail_url LIKE '%/240x180%'
-      OR p.default_thumbnail_url LIKE '%/480x360%'
-      OR p.default_thumbnail_url LIKE '%-t.jpg%'
-      OR p.default_thumbnail_url LIKE '%_t.jpg%'
-      OR p.default_thumbnail_url LIKE '%/t/%'
-      OR p.default_thumbnail_url LIKE '%-s.jpg%'
-      OR p.default_thumbnail_url LIKE '%_s.jpg%'
+      p.default_thumbnail_url LIKE '%/240x180.jpg%'
+      OR p.default_thumbnail_url LIKE '%/480x360.jpg%'
+      OR p.default_thumbnail_url LIKE '%-t.jpg'
+      OR p.default_thumbnail_url LIKE '%_t.jpg'
+      OR p.default_thumbnail_url LIKE '%-s.jpg'
+      OR p.default_thumbnail_url LIKE '%_s.jpg'
     )
     LIMIT ${limit}
   `);
@@ -189,10 +203,12 @@ async function main() {
       FROM product_images
       WHERE asp_name = 'DUGA'
       AND (
-        image_url LIKE '%/240x180%'
-        OR image_url LIKE '%/480x360%'
-        OR image_url LIKE '%-t.jpg%'
-        OR image_url LIKE '%_t.jpg%'
+        image_url LIKE '%/240x180.jpg%'
+        OR image_url LIKE '%/480x360.jpg%'
+        OR image_url LIKE '%-t.jpg'
+        OR image_url LIKE '%_t.jpg'
+        OR image_url LIKE '%-s.jpg'
+        OR image_url LIKE '%_s.jpg'
       )
     `);
     console.log(`残りの小サイズ画像: ${(remainingImages.rows[0] as any)?.count || 0}件`);
@@ -203,8 +219,12 @@ async function main() {
       JOIN product_sources ps ON p.id = ps.product_id
       WHERE ps.asp_name = 'DUGA'
       AND (
-        p.default_thumbnail_url LIKE '%/240x180%'
-        OR p.default_thumbnail_url LIKE '%/480x360%'
+        p.default_thumbnail_url LIKE '%/240x180.jpg%'
+        OR p.default_thumbnail_url LIKE '%/480x360.jpg%'
+        OR p.default_thumbnail_url LIKE '%-t.jpg'
+        OR p.default_thumbnail_url LIKE '%_t.jpg'
+        OR p.default_thumbnail_url LIKE '%-s.jpg'
+        OR p.default_thumbnail_url LIKE '%_s.jpg'
       )
     `);
     console.log(`残りの小サイズサムネイル: ${(remainingProducts.rows[0] as any)?.count || 0}件`);

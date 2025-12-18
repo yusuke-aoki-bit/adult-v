@@ -519,8 +519,9 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     // FANZA専用商品を除外（規約によりadult-vサイトでは表示禁止）
     // FANZAのみで配信されている商品を除外（他ASPがある商品は許可）
     // 最適化: EXISTS + COUNT で入れ子サブクエリを回避
+    // NOTE: OR条件は括弧で囲んで優先順位を明確にする（他の条件とANDで結合されるため）
     conditions.push(
-      sql`EXISTS (
+      sql`(EXISTS (
         SELECT 1 FROM ${productSources} ps_check
         WHERE ps_check.product_id = ${products.id}
         AND ps_check.asp_name != 'FANZA'
@@ -528,7 +529,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         SELECT 1 FROM ${productSources} ps_fanza
         WHERE ps_fanza.product_id = ${products.id}
         AND ps_fanza.asp_name = 'FANZA'
-      )`
+      ))`
     );
 
     // 特定のIDリストでフィルタ（バッチ取得用）
@@ -651,12 +652,11 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     if (options?.actressId) {
       const performerId = parseInt(options.actressId);
       if (!isNaN(performerId)) {
-        // EXISTSを使用
+        // INを使用してproduct_performersとJOIN的にフィルタ
         conditions.push(
-          sql`EXISTS (
-            SELECT 1 FROM ${productPerformers} pp
-            WHERE pp.product_id = ${products.id}
-            AND pp.performer_id = ${performerId}
+          sql`${products.id} IN (
+            SELECT pp.product_id FROM product_performers pp
+            WHERE pp.performer_id = ${performerId}
           )`
         );
       }
@@ -1092,6 +1092,7 @@ export async function getActresses(options?: {
   limit?: number;
   offset?: number;
   query?: string;
+  ids?: number[]; // 特定のIDで取得
   includeTags?: string[];
   excludeTags?: string[];
   sortBy?: ActressSortOption;
@@ -1108,19 +1109,24 @@ export async function getActresses(options?: {
 
     const conditions = [];
 
-    // 作品と紐付いている女優のみ表示（出演数0の女優を除外）
-    conditions.push(
-      sql`EXISTS (
-        SELECT 1 FROM ${productPerformers} pp
-        WHERE pp.performer_id = ${performers.id}
-      )`
-    );
+    // IDsが指定されている場合は、そのIDのみで絞り込み
+    if (options?.ids && options.ids.length > 0) {
+      conditions.push(inArray(performers.id, options.ids));
+    } else {
+      // 作品と紐付いている女優のみ表示（出演数0の女優を除外）
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productPerformers} pp
+          WHERE pp.performer_id = ${performers.id}
+        )`
+      );
 
-    // FANZA専用女優を除外（規約によりadult-vサイトでは表示禁止）
-    // is_fanza_onlyフラグを使用（事前計算済み）
-    conditions.push(
-      sql`(${performers}.is_fanza_only = FALSE OR ${performers}.is_fanza_only IS NULL)`
-    );
+      // FANZA専用女優を除外（規約によりadult-vサイトでは表示禁止）
+      // is_fanza_onlyフラグを使用（事前計算済み）
+      conditions.push(
+        sql`(${performers}.is_fanza_only = FALSE OR ${performers}.is_fanza_only IS NULL)`
+      );
+    }
 
     // 'etc'フィルタ: 50音・アルファベット以外で始まる名前
     if (options?.excludeInitials) {
@@ -2426,6 +2432,7 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
       .from(productPerformers)
       .where(eq(productPerformers.performerId, performer.id)),
     // サムネイル（DTI以外の商品を優先、なければDTIから取得）
+    // FANZA専用商品は除外（webサイトでは表示禁止のため）
     db.select({ thumbnailUrl: products.defaultThumbnailUrl, aspName: productSources.aspName })
       .from(productPerformers)
       .innerJoin(products, eq(productPerformers.productId, products.id))
@@ -2434,7 +2441,19 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
         and(
           eq(productPerformers.performerId, performer.id),
           sql`${products.defaultThumbnailUrl} IS NOT NULL`,
-          sql`${products.defaultThumbnailUrl} != ''`
+          sql`${products.defaultThumbnailUrl} != ''`,
+          // FANZA専用商品を除外: 他ASPソースが存在するか、FANZAソースが存在しない
+          sql`(
+            EXISTS (
+              SELECT 1 FROM ${productSources} ps_check
+              WHERE ps_check.product_id = ${products.id}
+              AND ps_check.asp_name != 'FANZA'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM ${productSources} ps_fanza
+              WHERE ps_fanza.product_id = ${products.id}
+              AND ps_fanza.asp_name = 'FANZA'
+            )
+          )`
         )
       )
       .orderBy(

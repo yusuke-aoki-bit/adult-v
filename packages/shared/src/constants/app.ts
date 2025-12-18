@@ -34,11 +34,22 @@ export const RATE_LIMIT = {
   MAX_REQUESTS: 100,
 } as const;
 
-// Image placeholders
+// Image placeholders (inline SVG data URLs - no external requests)
+const createPlaceholderSvg = (width: number, height: number, text: string, bgColor = '#1f2937') => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+    <rect width="100%" height="100%" fill="${bgColor}"/>
+    <text x="50%" y="50%" fill="#6b7280" font-family="system-ui,sans-serif" font-size="16" text-anchor="middle" dy=".3em">${text}</text>
+  </svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
 export const PLACEHOLDERS = {
-  PRODUCT: 'https://placehold.co/600x800/052e16/ffffff?text=DUGA',
-  ACTRESS: 'https://placehold.co/600x800/052e16/ffffff?text=Actress',
-  ACTRESS_THUMB: 'https://placehold.co/400x520/052e16/ffffff?text=Actress',
+  PRODUCT: createPlaceholderSvg(600, 800, 'NO IMAGE'),
+  ACTRESS: createPlaceholderSvg(600, 800, 'NO IMAGE'),
+  ACTRESS_THUMB: createPlaceholderSvg(400, 520, 'NO IMAGE'),
+  // Legacy external URLs (for gradual migration)
+  PRODUCT_EXTERNAL: 'https://placehold.co/600x800/1f2937/6b7280?text=NO+IMAGE',
+  ACTRESS_EXTERNAL: 'https://placehold.co/600x800/1f2937/6b7280?text=NO+IMAGE',
 } as const;
 
 // Search settings

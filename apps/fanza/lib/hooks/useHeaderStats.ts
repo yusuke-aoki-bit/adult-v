@@ -2,20 +2,12 @@
 
 import { useState, useEffect } from 'react';
 
-export interface AspStat {
-  aspName: string;
-  productCount: number;
-  actressCount: number;
-  estimatedTotal: number | null;
-}
-
 export interface SaleStats {
   totalSales: number;
 }
 
 // localStorageキャッシュ（10分間有効）
 const CACHE_DURATION_MS = 10 * 60 * 1000;
-const CACHE_KEY_ASP = 'header_asp_stats';
 const CACHE_KEY_SALES = 'header_sale_stats';
 
 interface CachedData<T> {
@@ -49,69 +41,39 @@ function setCachedData<T>(key: string, data: T): void {
   }
 }
 
-interface UseHeaderStatsOptions {
-  filterFanzaOnly?: boolean;
-}
-
-interface UseHeaderStatsResult {
-  aspStats: AspStat[];
+interface UseSaleStatsResult {
   saleStats: SaleStats | null;
-  filteredAspStats: AspStat[];
-  skeletonWidths: number[];
 }
 
-export function useHeaderStats(options: UseHeaderStatsOptions = {}): UseHeaderStatsResult {
-  const { filterFanzaOnly = false } = options;
-  const [aspStats, setAspStats] = useState<AspStat[]>([]);
+/**
+ * セール統計のみを取得するフック
+ * ASP統計は静的リストを使用するため、このフックはセール件数のみを取得
+ */
+export function useSaleStats(): UseSaleStatsResult {
   const [saleStats, setSaleStats] = useState<SaleStats | null>(null);
 
   useEffect(() => {
     // キャッシュから即座に復元
-    const cachedAsp = getCachedData<AspStat[]>(CACHE_KEY_ASP);
     const cachedSales = getCachedData<SaleStats>(CACHE_KEY_SALES);
 
-    if (cachedAsp) {
-      setAspStats(cachedAsp);
-    }
     if (cachedSales) {
       setSaleStats(cachedSales);
     }
 
-    // バックグラウンドで最新データを取得
-    fetch('/api/stats/asp')
-      .then(res => res.json())
-      .then(data => {
-        setAspStats(data);
-        setCachedData(CACHE_KEY_ASP, data);
-      })
-      .catch(() => {
-        if (!cachedAsp) setAspStats([]);
-      });
-
-    fetch('/api/stats/sales')
-      .then(res => res.json())
-      .then(data => {
-        setSaleStats(data);
-        setCachedData(CACHE_KEY_SALES, data);
-      })
-      .catch(() => {
-        if (!cachedSales) setSaleStats(null);
-      });
+    if (!cachedSales) {
+      fetch('/api/stats/sales')
+        .then(res => res.json())
+        .then(data => {
+          setSaleStats(data);
+          setCachedData(CACHE_KEY_SALES, data);
+        })
+        .catch(() => {
+          setSaleStats(null);
+        });
+    }
   }, []);
 
-  // Filter ASP stats based on site mode
-  const filteredAspStats = filterFanzaOnly
-    ? aspStats.filter(s => s.aspName === 'FANZA')
-    : aspStats.filter(s => s.aspName !== 'FANZA');
-
-  const skeletonWidths = filterFanzaOnly ? [80] : [80, 90, 70, 65, 70, 60, 65, 60];
-
-  return {
-    aspStats,
-    saleStats,
-    filteredAspStats,
-    skeletonWidths,
-  };
+  return { saleStats };
 }
 
 // Header用翻訳（ConditionalLayoutはNextIntlClientProvider外にあるため）

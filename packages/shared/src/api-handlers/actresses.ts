@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { validatePagination, validateSearchQuery } from '../lib/api-utils';
 
+// Cache durations
+const CACHE_1_HOUR = 'public, s-maxage=3600, stale-while-revalidate=86400';
+const CACHE_5_MIN = 'public, s-maxage=300, stale-while-revalidate=3600';
+
 export interface ActressesHandlerDeps {
-  getActresses: (params: { limit: number; offset: number; query?: string }) => Promise<unknown[]>;
+  getActresses: (params: { limit: number; offset: number; query?: string; ids?: number[] }) => Promise<unknown[]>;
   getFeaturedActresses: (limit: number) => Promise<unknown[]>;
 }
 
@@ -16,7 +20,29 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
       if (featured) {
         const limit = Math.min(parseInt(searchParams.get('limit') || '3', 10), 20);
         const actresses = await deps.getFeaturedActresses(limit);
-        return NextResponse.json({ actresses, total: actresses.length });
+        return NextResponse.json(
+          { actresses, total: actresses.length },
+          { headers: { 'Cache-Control': CACHE_1_HOUR } }
+        );
+      }
+
+      // Parse IDs parameter (comma-separated list of numeric IDs)
+      const idsParam = searchParams.get('ids');
+      let ids: number[] | undefined;
+      if (idsParam) {
+        ids = idsParam.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+        if (ids.length === 0) {
+          ids = undefined;
+        }
+      }
+
+      // If IDs are provided, fetch by IDs directly (stable cache key)
+      if (ids && ids.length > 0) {
+        const actresses = await deps.getActresses({ limit: ids.length, offset: 0, ids });
+        return NextResponse.json(
+          { actresses, total: actresses.length },
+          { headers: { 'Cache-Control': CACHE_1_HOUR } }
+        );
       }
 
       // Validate pagination
@@ -30,12 +56,13 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
 
       const actresses = await deps.getActresses({ limit, offset, query });
 
-      return NextResponse.json({
-        actresses,
-        total: actresses.length,
-        limit,
-        offset,
-      });
+      // Search results cache shorter, static lists cache longer
+      const cacheControl = query ? CACHE_5_MIN : CACHE_1_HOUR;
+
+      return NextResponse.json(
+        { actresses, total: actresses.length, limit, offset },
+        { headers: { 'Cache-Control': cacheControl } }
+      );
     } catch (error) {
       console.error('Error fetching actresses:', error);
       return NextResponse.json(

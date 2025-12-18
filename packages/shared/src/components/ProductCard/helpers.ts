@@ -58,6 +58,19 @@ export function convertFanzaToDirectUrl(affiliateUrl: string): string {
     }
   }
 
+  // _link パラメータからcidを抽出してDMM直リンクを生成
+  const linkMatch = affiliateUrl.match(/[?&]_link=([^&]+)/);
+  if (linkMatch) {
+    try {
+      const decodedLink = decodeURIComponent(linkMatch[1]);
+      if (decodedLink.includes('dmm.co.jp')) {
+        return decodedLink;
+      }
+    } catch {
+      // デコードに失敗
+    }
+  }
+
   return affiliateUrl;
 }
 

@@ -17,48 +17,47 @@ import {
 const intlMiddleware = createMiddleware(routing);
 
 export default function middleware(request: NextRequest) {
-  const userAgent = request.headers.get('user-agent') || '';
   const pathname = request.nextUrl.pathname;
-  const fullUrl = request.url;
 
-  // 1. Security: Check for SQL Injection attempts
-  if (hasSqlInjection(fullUrl)) {
-    console.warn('[middleware] SQL Injection attempt blocked:', fullUrl.substring(0, 200));
-    return new NextResponse('Bad Request', { status: 400 });
-  }
-
-  // 2. Security: Check for XSS attempts
-  if (hasXssAttempt(fullUrl)) {
-    console.warn('[middleware] XSS attempt blocked:', fullUrl.substring(0, 200));
-    return new NextResponse('Bad Request', { status: 400 });
-  }
-
-  // 3. Check for malicious bots on sensitive paths
-  if (isSensitivePath(pathname) && isMaliciousBot(userAgent)) {
-    console.warn('[middleware] Blocked malicious bot:', userAgent.substring(0, 100));
-    return new NextResponse('Access Denied', { status: 403 });
-  }
-
-  // 4. Block requests with suspicious headers
-  const contentType = request.headers.get('content-type') || '';
-  if (pathname.startsWith('/api') && request.method === 'POST') {
-    // For POST requests to API, ensure proper content type
-    if (contentType && !contentType.includes('application/json') &&
-        !contentType.includes('application/x-www-form-urlencoded') &&
-        !contentType.includes('multipart/form-data')) {
-      console.warn('[middleware] Suspicious content-type:', contentType);
-      return new NextResponse('Unsupported Media Type', { status: 415 });
-    }
-  }
-
-  // 5. For API routes, skip intl middleware and add security headers
+  // Fast path: API routes - minimal processing
   if (pathname.startsWith('/api')) {
+    const fullUrl = request.url;
+
+    // Security checks only for API routes (performance optimization)
+    if (hasSqlInjection(fullUrl)) {
+      console.warn('[middleware] SQL Injection attempt blocked:', fullUrl.substring(0, 200));
+      return new NextResponse('Bad Request', { status: 400 });
+    }
+
+    if (hasXssAttempt(fullUrl)) {
+      console.warn('[middleware] XSS attempt blocked:', fullUrl.substring(0, 200));
+      return new NextResponse('Bad Request', { status: 400 });
+    }
+
+    // Block requests with suspicious headers for POST
+    if (request.method === 'POST') {
+      const contentType = request.headers.get('content-type') || '';
+      if (contentType && !contentType.includes('application/json') &&
+          !contentType.includes('application/x-www-form-urlencoded') &&
+          !contentType.includes('multipart/form-data')) {
+        console.warn('[middleware] Suspicious content-type:', contentType);
+        return new NextResponse('Unsupported Media Type', { status: 415 });
+      }
+    }
+
     const response = NextResponse.next();
     // Add CORS headers for API
     response.headers.set('Access-Control-Allow-Origin', request.headers.get('origin') || '*');
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     return response;
+  }
+
+  // Page routes: Check for malicious bots on sensitive paths only
+  const userAgent = request.headers.get('user-agent') || '';
+  if (isSensitivePath(pathname) && isMaliciousBot(userAgent)) {
+    console.warn('[middleware] Blocked malicious bot:', userAgent.substring(0, 100));
+    return new NextResponse('Access Denied', { status: 403 });
   }
 
   // 6. ロケールプレフィックス → ?hl= パラメータへの301リダイレクト（SEO対応）

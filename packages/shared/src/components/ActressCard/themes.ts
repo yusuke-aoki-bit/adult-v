@@ -1,6 +1,7 @@
 /**
  * ActressCard theme configuration
  */
+import { PLACEHOLDERS } from '../../constants/app';
 
 export type ActressCardTheme = 'dark' | 'light';
 
@@ -10,14 +11,23 @@ export interface ActressCardThemeConfig {
   modalTheme: 'dark' | 'light';
 }
 
+// Create light theme placeholder inline (different background)
+const LIGHT_PLACEHOLDER = (() => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="520" viewBox="0 0 400 520">
+    <rect width="100%" height="100%" fill="#E5E7EB"/>
+    <text x="50%" y="50%" fill="#6b7280" font-family="system-ui,sans-serif" font-size="16" text-anchor="middle" dy=".3em">NO IMAGE</text>
+  </svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+})();
+
 export const actressCardThemes: Record<ActressCardTheme, ActressCardThemeConfig> = {
   dark: {
-    placeholderImage: 'https://placehold.co/400x520/1f2937/ffffff?text=NO+IMAGE',
+    placeholderImage: PLACEHOLDERS.ACTRESS_THUMB,
     hoverColor: 'hover:text-rose-500',
     modalTheme: 'dark',
   },
   light: {
-    placeholderImage: 'https://placehold.co/400x520/E5E7EB/6B7280?text=NO+IMAGE',
+    placeholderImage: LIGHT_PLACEHOLDER,
     hoverColor: 'hover:text-pink-500',
     modalTheme: 'light',
   },

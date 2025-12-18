@@ -14,6 +14,9 @@ export default function robots(): MetadataRoute.Robots {
           '/_next/',
           '/private/',
           '/age-verification',
+          // レガシーURL（/productsにリダイレクト済み）
+          '/categories',
+          '/categories/',
           // フィルターパラメータ付きURLを除外（重複コンテンツ防止）
           '/*?*include=',
           '/*?*exclude=',
@@ -43,6 +46,8 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/private/',
           '/age-verification',
+          '/categories',
+          '/categories/',
           '/*?*include=',
           '/*?*exclude=',
           '/*?*page=',
@@ -58,6 +63,8 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/private/',
           '/age-verification',
+          '/categories',
+          '/categories/',
           '/*?*include=',
           '/*?*exclude=',
           '/*?*page=',

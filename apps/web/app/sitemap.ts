@@ -9,7 +9,8 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Revalidate every hour
 
-// hreflang用の言語バリエーションを生成（ロケールプレフィックス方式）
+// hreflang用の言語バリエーションを生成
+// canonical URLは /ja/ プレフィックス付き（デフォルトロケール）
 // 例: /products/123 → { ja: /ja/products/123, en: /en/products/123, ... }
 function getLanguageAlternates(basePath: string) {
   // basePath が空の場合（ルートページ）は空文字列として扱う
@@ -23,10 +24,9 @@ function getLanguageAlternates(basePath: string) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const _locales = ['ja', 'en', 'zh', 'zh-TW', 'ko'];
-
   // Static pages with high priority and daily updates
   // canonical URLは日本語版（/ja/...）、alternatesで各言語を指定
+  // 注意: /categories は /products にリダイレクトされるため、sitemapには含めない
   const staticPages: MetadataRoute.Sitemap = [
     // Home page - canonical URL is /ja (Japanese default)
     {
@@ -38,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         languages: getLanguageAlternates('/'),
       },
     },
-    // Products pages
+    // Products pages (replaced /categories which now redirects here)
     {
       url: `${BASE_URL}/ja/products`,
       lastModified: new Date(),
@@ -46,16 +46,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
       alternates: {
         languages: getLanguageAlternates('/products'),
-      },
-    },
-    // Categories pages (high traffic - GSC shows 357 impressions)
-    {
-      url: `${BASE_URL}/ja/categories`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.9,
-      alternates: {
-        languages: getLanguageAlternates('/categories'),
       },
     },
     // Privacy policy page (Japanese only)

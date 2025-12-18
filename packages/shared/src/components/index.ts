@@ -124,15 +124,17 @@ export type {
 export { ActressCareerTimeline } from './ActressCareerTimeline';
 export { RetirementAlert } from './RetirementAlert';
 
-// ActressCard utilities (themes and helpers)
+// ActressCard utilities (themes and helpers) and base component
 export {
   actressCardThemes,
   getActressCardThemeConfig,
   filterServicesForSite,
+  ActressCardBase,
 } from './ActressCard';
 export type {
   ActressCardTheme,
   ActressCardThemeConfig,
+  ActressCardBaseProps,
 } from './ActressCard';
 
 // Cloud sync settings

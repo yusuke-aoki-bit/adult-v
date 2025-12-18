@@ -5,9 +5,12 @@ export * from './api-utils';
 export * from './bot-detection';
 export * from './cache';
 export * from './categories';
+export * from './fetch-dedup';
+export * from './filter-storage';
 export * from './firebase';
 export * from './image-utils';
 export * from './localization';
+export * from './providers';
 export * from './seo';
 // Note: seo-utils has generateBreadcrumbSchema which conflicts with seo.ts
 // Import directly from './seo-utils' if needed

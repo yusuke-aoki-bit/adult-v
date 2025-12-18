@@ -38,7 +38,8 @@
     "./components/*": "./src/components/*.tsx",
     "./api-handlers": "./src/api-handlers/index.ts",
     "./cron-handlers": "./src/cron-handlers/index.ts",
-    "./db-queries": "./src/db-queries/index.ts"
+    "./db-queries": "./src/db-queries/index.ts",
+    "./config/next-config-base": "./src/config/next-config-base.ts"
   },
   "dependencies": {
     "firebase": "^11.0.0"

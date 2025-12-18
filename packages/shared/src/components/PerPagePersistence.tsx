@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { getPerPage, savePerPage } from '@/lib/filter-storage';
+import { getPerPage, savePerPage } from '../lib/filter-storage';
 
 /**
  * 一覧ページの表示件数をlocalStorageに保存・復元するコンポーネント

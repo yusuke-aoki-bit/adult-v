@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
-import { Clock, X } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo, type ReactNode, type ComponentType } from 'react';
+import { Clock, X, Users } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
@@ -11,6 +11,13 @@ import { recentlyViewedTranslations, getTranslation } from './translations';
 // Generic product type that works with both apps
 interface BaseProduct {
   id: string | number;
+  performers?: Array<{ id: string | number; name: string }>;
+}
+
+// Generic actress type that works with both apps
+interface BaseActress {
+  id: string | number;
+  name: string;
 }
 
 interface RecentlyViewedItem {
@@ -30,15 +37,26 @@ interface ProductCardProps<T extends BaseProduct> {
   compact?: boolean;
 }
 
-interface RecentlyViewedSectionProps<T extends BaseProduct> {
+interface ActressCardProps<A extends BaseActress> {
+  actress: A;
+  compact?: boolean;
+}
+
+interface RecentlyViewedSectionProps<T extends BaseProduct, A extends BaseActress = BaseActress> {
   /** Theme for styling: 'dark' for apps/web, 'light' for apps/fanza */
   theme: SectionTheme;
   /** ProductCard component from the app */
   ProductCard: ComponentType<ProductCardProps<T>>;
+  /** ActressCard component from the app (optional) */
+  ActressCard?: ComponentType<ActressCardProps<A>>;
   /** useRecentlyViewed hook from the app */
   useRecentlyViewed: () => UseRecentlyViewedReturn;
   /** Custom fetch function for products, defaults to /api/products?ids=... */
   fetchProducts?: (ids: string[]) => Promise<T[]>;
+  /** Custom fetch function for actresses */
+  fetchActresses?: (ids: (string | number)[]) => Promise<A[]>;
+  /** Function to convert performer to actress type */
+  toActressType?: (performer: { id: string | number; name: string }) => A;
 }
 
 /**
@@ -46,12 +64,15 @@ interface RecentlyViewedSectionProps<T extends BaseProduct> {
  * Displays products the user has recently viewed with delete functionality
  * Performance optimized: Only fetches product data when section is expanded
  */
-export function RecentlyViewedSection<T extends BaseProduct>({
+export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActress = BaseActress>({
   theme,
   ProductCard,
+  ActressCard,
   useRecentlyViewed,
   fetchProducts,
-}: RecentlyViewedSectionProps<T>): ReactNode {
+  fetchActresses,
+  toActressType,
+}: RecentlyViewedSectionProps<T, A>): ReactNode {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
   const t = getTranslation(recentlyViewedTranslations, locale);
@@ -60,7 +81,9 @@ export function RecentlyViewedSection<T extends BaseProduct>({
   const { items, isLoading: isViewedLoading, removeItem, clearAll } = useRecentlyViewed();
 
   const [products, setProducts] = useState<T[]>([]);
+  const [actresses, setActresses] = useState<A[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isActressLoading, setIsActressLoading] = useState(false);
   // 遅延フェッチ用: 一度でも展開されたかどうか
   const [hasExpanded, setHasExpanded] = useState(false);
 
@@ -79,6 +102,7 @@ export function RecentlyViewedSection<T extends BaseProduct>({
     const doFetch = async () => {
       if (items.length === 0) {
         setProducts([]);
+        setActresses([]);
         return;
       }
 
@@ -114,6 +138,47 @@ export function RecentlyViewedSection<T extends BaseProduct>({
         }
 
         setProducts(orderedProducts);
+
+        // 女優データは商品表示後に非同期で取得（遅延読み込み）
+        // これにより商品が先に表示され、体感速度が向上
+        if (ActressCard && (fetchActresses || toActressType)) {
+          // 非同期で女優データを取得（awaitしない）
+          (async () => {
+            setIsActressLoading(true);
+            try {
+              const performerMap = new Map<string | number, { id: string | number; name: string }>();
+              for (const product of orderedProducts) {
+                if (product.performers) {
+                  for (const performer of product.performers) {
+                    if (!performerMap.has(performer.id)) {
+                      performerMap.set(performer.id, performer);
+                    }
+                  }
+                }
+              }
+
+              const uniquePerformers = Array.from(performerMap.values()).slice(0, 6);
+
+              if (uniquePerformers.length > 0) {
+                if (fetchActresses) {
+                  const actressIds = uniquePerformers.map(p => p.id);
+                  const fetchedActresses = await fetchActresses(actressIds);
+                  setActresses(fetchedActresses);
+                } else if (toActressType) {
+                  const convertedActresses = uniquePerformers.map(p => toActressType(p));
+                  setActresses(convertedActresses);
+                }
+              } else {
+                setActresses([]);
+              }
+            } catch (err) {
+              console.error('Failed to fetch actresses:', err);
+              setActresses([]);
+            } finally {
+              setIsActressLoading(false);
+            }
+          })();
+        }
       } catch (err) {
         console.error('Failed to fetch recently viewed products:', err);
         setProducts([]);
@@ -125,10 +190,15 @@ export function RecentlyViewedSection<T extends BaseProduct>({
     if (!isViewedLoading) {
       doFetch();
     }
-  }, [items, isViewedLoading, fetchProducts, hasExpanded]);
+  }, [items, isViewedLoading, fetchProducts, fetchActresses, toActressType, ActressCard, hasExpanded]);
 
   // Don't render if loading viewed items or no history
   if (isViewedLoading || items.length === 0) {
+    return null;
+  }
+
+  // Don't render if expanded but no products (e.g., all items are FANZA-only on web)
+  if (hasExpanded && !isLoading && products.length === 0) {
     return null;
   }
 
@@ -144,25 +214,59 @@ export function RecentlyViewedSection<T extends BaseProduct>({
     }
 
     return (
-      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-        {products.map((product) => (
-          <div key={product.id} className="relative group/card">
-            <ProductCard product={product} compact />
-            {/* Delete button - shows on card hover */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                removeItem(String(product.id));
-              }}
-              className={`absolute -top-1 -right-1 z-30 w-5 h-5 ${themeConfig.recentlyViewed.deleteButtonBgClass} hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity shadow-lg`}
-              aria-label={t.removeFromHistory}
-            >
-              <X className="w-3 h-3 text-white" />
-            </button>
+      <div className="space-y-4">
+        {/* 共演者セクション（遅延読み込み） */}
+        {ActressCard && (isActressLoading || actresses.length > 0) && (
+          <div>
+            <h4 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}>
+              <Users className="w-3.5 h-3.5" />
+              共演者
+              {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">読み込み中...</span>}
+            </h4>
+            {isActressLoading ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="aspect-[3/4] bg-gray-700/50 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {actresses.map((actress) => (
+                  <ActressCard key={actress.id} actress={actress} compact />
+                ))}
+              </div>
+            )}
           </div>
-        ))}
+        )}
+
+        {/* 作品セクション */}
+        <div>
+          {ActressCard && actresses.length > 0 && (
+            <h4 className={`text-xs font-semibold mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+              作品
+            </h4>
+          )}
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+            {products.map((product) => (
+              <div key={product.id} className="relative group/card">
+                <ProductCard product={product} compact />
+                {/* Delete button - shows on card hover */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeItem(String(product.id));
+                  }}
+                  className={`absolute -top-1 -right-1 z-30 w-5 h-5 ${themeConfig.recentlyViewed.deleteButtonBgClass} hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity shadow-lg`}
+                  aria-label={t.removeFromHistory}
+                >
+                  <X className="w-3 h-3 text-white" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   };
@@ -173,7 +277,7 @@ export function RecentlyViewedSection<T extends BaseProduct>({
         <AccordionSection
           icon={<Clock className="w-5 h-5" />}
           title={t.title}
-          itemCount={items.length}
+          itemCount={hasExpanded && products.length > 0 ? products.length : undefined}
           defaultOpen={false}
           showClear={hasExpanded && products.length > 0}
           clearLabel={t.clearAll}

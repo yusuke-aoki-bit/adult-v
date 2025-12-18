@@ -23,7 +23,9 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 
-export const dynamic = 'force-dynamic';
+// ISR: Revalidate every 10 minutes for product details
+// Product data changes rarely, cache improves performance significantly
+export const revalidate = 600;
 
 // Dynamic imports for heavy components (494 + 469 lines) to reduce initial bundle size
 const SceneTimeline = nextDynamic(() => import('@/components/SceneTimeline'), {

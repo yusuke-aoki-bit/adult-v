@@ -1,13 +1,13 @@
 /**
- * ProductCard shared utilities
+ * ProductCard shared module
  *
- * Note: The ProductCard component itself remains in each app due to
- * app-specific dependencies (@/types/product, @/lib/image-utils, etc.)
- *
- * This module exports:
+ * Exports:
+ * - ProductCardBase: Shared component with theme support
  * - Theme configuration for styling
  * - Helper functions for URL processing
  */
 
+export { default as ProductCardBase } from './ProductCardBase';
+export type { ProductCardBaseProps } from './ProductCardBase';
 export * from './themes';
 export * from './helpers';

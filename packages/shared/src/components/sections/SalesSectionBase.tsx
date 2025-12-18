@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Flame } from 'lucide-react';
+import { Flame, Users } from 'lucide-react';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { getThemeConfig, type SectionTheme } from './theme';
@@ -12,6 +12,13 @@ import { salesTranslations, getTranslation } from './translations';
 // Generic product type that works with both apps
 interface BaseProduct {
   id: string | number;
+  performers?: Array<{ id: string | number; name: string }>;
+}
+
+// Generic actress type that works with both apps
+interface BaseActress {
+  id: string | number;
+  name: string;
 }
 
 interface SaleProductMeta {
@@ -35,37 +42,53 @@ interface ProductCardProps<T extends BaseProduct> {
   compact?: boolean;
 }
 
-interface SalesSectionBaseProps<T extends BaseProduct> {
+interface ActressCardProps<A extends BaseActress> {
+  actress: A;
+  compact?: boolean;
+}
+
+interface SalesSectionBaseProps<T extends BaseProduct, A extends BaseActress = BaseActress> {
   /** Theme for styling: 'dark' for apps/web, 'light' for apps/fanza */
   theme: SectionTheme;
   /** ProductCard component from the app */
   ProductCard: ComponentType<ProductCardProps<T>>;
+  /** ActressCard component from the app (optional) */
+  ActressCard?: ComponentType<ActressCardProps<A>>;
   /** Sale products metadata from server */
   saleProducts: SaleProductMeta[];
   /** Custom fetch function for products */
   fetchProducts?: (ids: number[]) => Promise<T[]>;
   /** Function to merge sale info into product */
   mergeSaleInfo?: (product: T, sale: SaleProductMeta) => T;
+  /** Custom fetch function for actresses */
+  fetchActresses?: (ids: (string | number)[]) => Promise<A[]>;
+  /** Function to convert performer to actress type */
+  toActressType?: (performer: { id: string | number; name: string }) => A;
 }
 
 /**
  * Shared SalesSection component
  * Displays products currently on sale
  */
-export function SalesSectionBase<T extends BaseProduct>({
+export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = BaseActress>({
   theme,
   ProductCard,
+  ActressCard,
   saleProducts,
   fetchProducts,
   mergeSaleInfo,
-}: SalesSectionBaseProps<T>): ReactNode {
+  fetchActresses,
+  toActressType,
+}: SalesSectionBaseProps<T, A>): ReactNode {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
   const t = getTranslation(salesTranslations, locale);
   const themeConfig = getThemeConfig(theme);
 
   const [products, setProducts] = useState<T[]>([]);
+  const [actresses, setActresses] = useState<A[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isActressLoading, setIsActressLoading] = useState(false);
   // 遅延フェッチ用: 一度でも展開されたかどうか
   const [hasExpanded, setHasExpanded] = useState(false);
 
@@ -84,6 +107,7 @@ export function SalesSectionBase<T extends BaseProduct>({
     const doFetch = async () => {
       if (saleProducts.length === 0) {
         setProducts([]);
+        setActresses([]);
         setIsLoading(false);
         return;
       }
@@ -128,6 +152,47 @@ export function SalesSectionBase<T extends BaseProduct>({
         }
 
         setProducts(orderedProducts);
+
+        // 女優データは商品表示後に非同期で取得（遅延読み込み）
+        // これにより商品が先に表示され、体感速度が向上
+        if (ActressCard && (fetchActresses || toActressType)) {
+          // 非同期で女優データを取得（awaitしない）
+          (async () => {
+            setIsActressLoading(true);
+            try {
+              const performerMap = new Map<number, { id: number; name: string }>();
+              for (const sale of saleProducts.slice(0, 8)) {
+                if (sale.performers) {
+                  for (const performer of sale.performers) {
+                    if (!performerMap.has(performer.id)) {
+                      performerMap.set(performer.id, performer);
+                    }
+                  }
+                }
+              }
+
+              const uniquePerformers = Array.from(performerMap.values()).slice(0, 6);
+
+              if (uniquePerformers.length > 0) {
+                if (fetchActresses) {
+                  const actressIds = uniquePerformers.map(p => p.id);
+                  const fetchedActresses = await fetchActresses(actressIds);
+                  setActresses(fetchedActresses);
+                } else if (toActressType) {
+                  const convertedActresses = uniquePerformers.map(p => toActressType(p));
+                  setActresses(convertedActresses);
+                }
+              } else {
+                setActresses([]);
+              }
+            } catch (err) {
+              console.error('Failed to fetch actresses:', err);
+              setActresses([]);
+            } finally {
+              setIsActressLoading(false);
+            }
+          })();
+        }
       } catch (err) {
         console.error('Failed to fetch sale products:', err);
         setProducts([]);
@@ -138,9 +203,14 @@ export function SalesSectionBase<T extends BaseProduct>({
 
     setIsLoading(true);
     doFetch();
-  }, [saleProducts, fetchProducts, mergeSaleInfo, hasExpanded]);
+  }, [saleProducts, fetchProducts, mergeSaleInfo, fetchActresses, toActressType, ActressCard, hasExpanded]);
 
   if (saleProducts.length === 0) {
+    return null;
+  }
+
+  // 展開後かつロード完了後に実際の商品数が0の場合は非表示
+  if (hasExpanded && !isLoading && products.length === 0) {
     return null;
   }
 
@@ -156,31 +226,67 @@ export function SalesSectionBase<T extends BaseProduct>({
     }
 
     return (
-      <>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} compact />
-          ))}
+      <div className="space-y-4">
+        {/* 共演者セクション（遅延読み込み） */}
+        {ActressCard && (isActressLoading || actresses.length > 0) && (
+          <div>
+            <h4 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}>
+              <Users className="w-3.5 h-3.5" />
+              セール中の女優
+              {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">読み込み中...</span>}
+            </h4>
+            {isActressLoading ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="aspect-[3/4] bg-gray-700/50 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {actresses.map((actress) => (
+                  <ActressCard key={actress.id} actress={actress} compact />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 作品セクション */}
+        <div>
+          {ActressCard && actresses.length > 0 && (
+            <h4 className={`text-xs font-semibold mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+              セール作品
+            </h4>
+          )}
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} compact />
+            ))}
+          </div>
         </div>
+
         {/* View all sales link */}
         <Link
           href={`/${locale}/products?onSale=true`}
-          className={`flex items-center justify-center gap-2 mt-4 py-2 ${themeConfig.salesSection.linkColorClass} transition-colors text-sm font-medium`}
+          className={`flex items-center justify-center gap-2 mt-2 py-2 ${themeConfig.salesSection.linkColorClass} transition-colors text-sm font-medium`}
         >
           {t.viewAll}
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </Link>
-      </>
+      </div>
     );
   };
+
+  // 展開後は実際に取得できた商品数を表示、未展開時はカウントを表示しない
+  const displayCount = hasExpanded && !isLoading ? products.length : undefined;
 
   return (
     <AccordionSection
       icon={<Flame className="w-5 h-5" />}
       title={t.title}
-      itemCount={saleProducts.length}
+      itemCount={displayCount}
       defaultOpen={false}
       onToggle={handleToggle}
       iconColorClass={themeConfig.salesSection.iconColorClass}

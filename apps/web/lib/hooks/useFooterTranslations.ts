@@ -5,6 +5,7 @@ export const footerTranslations = {
   ja: {
     siteName: 'ADULT VIEWER LAB',
     description: '複数のプラットフォームを横断し、ヘビー視聴者が欲しい女優ベースの情報を整理しています。',
+    popularActresses: '人気女優',
     legal: 'サイトポリシー',
     privacy: 'プライバシーポリシー',
     terms: '利用規約',
@@ -18,6 +19,7 @@ export const footerTranslations = {
   en: {
     siteName: 'ADULT VIEWER LAB',
     description: 'Cross-platform adult streaming hub covering DUGA / SOKMIL / DTI with actress-based reviews, rankings, and campaign updates for heavy users.',
+    popularActresses: 'Popular Actresses',
     legal: 'Site Policies',
     privacy: 'Privacy Policy',
     terms: 'Terms of Service',
@@ -31,6 +33,7 @@ export const footerTranslations = {
   zh: {
     siteName: 'ADULT VIEWER LAB',
     description: '跨平台成人流媒体中心，涵盖DUGA / SOKMIL / DTI，提供女优评论、排行榜和重度用户活动更新。',
+    popularActresses: '人气女优',
     legal: '网站政策',
     privacy: '隐私政策',
     terms: '服务条款',
@@ -44,6 +47,7 @@ export const footerTranslations = {
   ko: {
     siteName: 'ADULT VIEWER LAB',
     description: 'DUGA / SOKMIL / DTI를 아우르는 크로스 플랫폼 성인 스트리밍 허브로, 헤비 유저를 위한 여배우 기반 리뷰, 랭킹 및 캠페인 업데이트를 제공합니다.',
+    popularActresses: '인기 여배우',
     legal: '사이트 정책',
     privacy: '개인정보 처리방침',
     terms: '이용약관',

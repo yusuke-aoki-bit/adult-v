@@ -3,7 +3,41 @@
 import { ForYouRecommendationsSection } from '@adult-v/shared/components';
 import { useRecentlyViewed } from '@/hooks';
 import ProductCard from './ProductCard';
-import type { Product } from '@/types/product';
+import ActressCard from './ActressCard';
+import type { Product, Actress } from '@/types/product';
+
+// performer情報からActress型に変換
+function toActressType(performer: { id: string | number; name: string }): Actress {
+  return {
+    id: String(performer.id),
+    name: performer.name,
+    catchcopy: '',
+    description: '',
+    heroImage: '',
+    thumbnail: '',
+    primaryGenres: [],
+    services: [],
+    metrics: {
+      releaseCount: 0,
+      trendingScore: 0,
+      fanScore: 0,
+    },
+    highlightWorks: [],
+    tags: [],
+  };
+}
+
+// 女優情報をAPIからフェッチ
+async function fetchActresses(ids: (string | number)[]): Promise<Actress[]> {
+  try {
+    const response = await fetch(`/api/actresses?ids=${ids.join(',')}`);
+    if (!response.ok) return ids.map(id => toActressType({ id, name: '' }));
+    const data = await response.json();
+    return data.actresses || [];
+  } catch {
+    return ids.map(id => toActressType({ id, name: '' }));
+  }
+}
 
 /**
  * あなたへのおすすめセクション
@@ -11,10 +45,13 @@ import type { Product } from '@/types/product';
  */
 export default function ForYouRecommendations() {
   return (
-    <ForYouRecommendationsSection<Product>
+    <ForYouRecommendationsSection<Product, Actress>
       theme="light"
       ProductCard={ProductCard}
+      ActressCard={ActressCard}
       useRecentlyViewed={useRecentlyViewed}
+      fetchActresses={fetchActresses}
+      toActressType={toActressType}
     />
   );
 }

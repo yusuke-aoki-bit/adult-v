@@ -1,13 +1,13 @@
 /**
- * ActressCard shared utilities
- *
- * Note: The ActressCard component itself remains in each app due to
- * app-specific dependencies (@/types/product, @/lib/providers, @/lib/image-utils, etc.)
+ * ActressCard shared component and utilities
  *
  * This module exports:
+ * - ActressCardBase: The shared ActressCard component
  * - Theme configuration for styling
  * - Placeholder images
  * - Helper functions
  */
 
 export * from './themes';
+export { ActressCardBase } from './ActressCardBase';
+export type { ActressCardBaseProps } from './ActressCardBase';

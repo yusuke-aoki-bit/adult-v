@@ -638,6 +638,69 @@ export const wikiPerformerIndex = pgTable(
   }),
 );
 
+/**
+ * SEOメトリクステーブル
+ * Google Search Consoleからの検索パフォーマンスデータを保存
+ */
+export const seoMetrics = pgTable(
+  'seo_metrics',
+  {
+    id: serial('id').primaryKey(),
+    // 検索クエリまたはページ情報
+    queryType: varchar('query_type', { length: 20 }).notNull(), // 'query' or 'page'
+    queryOrUrl: text('query_or_url').notNull(), // 検索クエリまたはページURL
+    // 女優との関連付け（女優ページの場合）
+    performerId: integer('performer_id').references(() => performers.id, { onDelete: 'set null' }),
+    // GSCメトリクス
+    clicks: integer('clicks').default(0),
+    impressions: integer('impressions').default(0),
+    ctr: decimal('ctr', { precision: 6, scale: 4 }), // クリック率（0.0000〜1.0000）
+    position: decimal('position', { precision: 6, scale: 2 }), // 平均掲載順位
+    // データ期間
+    dateStart: date('date_start').notNull(),
+    dateEnd: date('date_end').notNull(),
+    // メタデータ
+    fetchedAt: timestamp('fetched_at').defaultNow().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    queryTypeIdx: index('idx_seo_metrics_query_type').on(table.queryType),
+    performerIdx: index('idx_seo_metrics_performer').on(table.performerId),
+    positionIdx: index('idx_seo_metrics_position').on(table.position),
+    impressionsIdx: index('idx_seo_metrics_impressions').on(table.impressions),
+    dateIdx: index('idx_seo_metrics_date').on(table.dateStart, table.dateEnd),
+    queryUrlUnique: uniqueIndex('idx_seo_metrics_query_url_date').on(
+      table.queryType,
+      table.queryOrUrl,
+      table.dateStart,
+      table.dateEnd,
+    ),
+  }),
+);
+
+/**
+ * フッター用おすすめ女優テーブル
+ * GSCデータに基づいて動的に更新される
+ */
+export const footerFeaturedActresses = pgTable(
+  'footer_featured_actresses',
+  {
+    id: serial('id').primaryKey(),
+    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerName: varchar('performer_name', { length: 200 }).notNull(),
+    // 選定理由スコア
+    impressions: integer('impressions').default(0), // GSC表示回数
+    position: decimal('position', { precision: 6, scale: 2 }), // 平均順位
+    priorityScore: integer('priority_score').default(0), // 優先度スコア（高い=表示優先）
+    // メタデータ
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    performerUnique: uniqueIndex('idx_footer_featured_performer').on(table.performerId),
+    priorityIdx: index('idx_footer_featured_priority').on(table.priorityScore),
+  }),
+);
+
 // 型エクスポート
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
@@ -675,3 +738,7 @@ export type ProductRawDataLink = typeof productRawDataLinks.$inferSelect;
 export type NewProductRawDataLink = typeof productRawDataLinks.$inferInsert;
 export type WikiPerformerIndex = typeof wikiPerformerIndex.$inferSelect;
 export type NewWikiPerformerIndex = typeof wikiPerformerIndex.$inferInsert;
+export type SeoMetrics = typeof seoMetrics.$inferSelect;
+export type NewSeoMetrics = typeof seoMetrics.$inferInsert;
+export type FooterFeaturedActress = typeof footerFeaturedActresses.$inferSelect;
+export type NewFooterFeaturedActress = typeof footerFeaturedActresses.$inferInsert;

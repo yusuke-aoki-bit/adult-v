@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { getFilterSettings, saveFilterSettings, clearFilterSettings } from '@/lib/filter-storage';
+import { getFilterSettings, saveFilterSettings, clearFilterSettings } from '../lib/filter-storage';
 
 /**
  * フィルター設定をlocalStorageに保存・復元するコンポーネント

@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Campaign } from '@/types/product';
-import { providerMeta } from '@/lib/providers';
+import { Campaign } from '../types/product';
+import { providerMeta } from '../lib/providers';
 
 // Client-side translations (outside NextIntlClientProvider)
 const translations = {
