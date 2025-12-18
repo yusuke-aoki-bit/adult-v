@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { validatePagination, validateSearchQuery, validatePriceRange } from '../lib/api-utils';
 
+// Cache durations
+const CACHE_1_HOUR = 'public, s-maxage=3600, stale-while-revalidate=86400';
+const CACHE_5_MIN = 'public, s-maxage=300, stale-while-revalidate=3600';
+const CACHE_1_MIN = 'public, s-maxage=60, stale-while-revalidate=300';
+
 export type SortOption =
   | 'releaseDateDesc'
   | 'releaseDateAsc'
@@ -111,12 +116,30 @@ export function createProductsHandler(
         maxPrice,
       });
 
-      return NextResponse.json({
-        products,
-        total: products.length,
-        limit,
-        offset,
-      });
+      // Determine cache duration based on request type
+      // ID-based requests are stable - cache longer
+      // Search/filter requests change more frequently
+      let cacheControl = CACHE_5_MIN;
+      if (ids && ids.length > 0) {
+        cacheControl = CACHE_1_HOUR; // Stable product IDs
+      } else if (query) {
+        cacheControl = CACHE_1_MIN; // Search results more dynamic
+      } else if (actressId) {
+        cacheControl = CACHE_1_HOUR; // Actress-specific results are stable
+      } else if (!category && !provider) {
+        cacheControl = CACHE_5_MIN; // General list
+      }
+
+      return NextResponse.json(
+        { products, total: products.length, limit, offset },
+        {
+          headers: {
+            'Cache-Control': cacheControl,
+            // Ensure different query params result in different cache entries
+            'Vary': 'Accept-Encoding',
+          }
+        }
+      );
     } catch (error) {
       console.error('Error fetching products:', error);
       return NextResponse.json(
