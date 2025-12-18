@@ -7,11 +7,18 @@ import SearchBar from './SearchBar';
 import LanguageSwitcher from './LanguageSwitcher';
 import NotificationSubscriber from './NotificationSubscriber';
 import { providerMeta } from '@/lib/providers';
-import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { useSite } from '@/lib/contexts/SiteContext';
-import { useHeaderStats, headerTranslations } from '@/lib/hooks/useHeaderStats';
+import { useSaleStats, headerTranslations } from '@/lib/hooks/useHeaderStats';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { locales, defaultLocale, type Locale } from '@/i18n';
+
+// 静的ASPリスト（件数なし - パフォーマンス改善のためAPIコールを廃止）
+const STATIC_ASP_LIST = [
+  { aspName: 'DUGA', providerId: 'duga' as const },
+  { aspName: 'MGS', providerId: 'mgs' as const },
+  { aspName: 'SOKMIL', providerId: 'sokmil' as const },
+  { aspName: 'DTI', providerId: 'dti' as const },
+];
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -25,10 +32,11 @@ export default function Header() {
   const t = headerTranslations[locale as keyof typeof headerTranslations] || headerTranslations.ja;
   const { isFanzaSite } = useSite();
 
-  // カスタムフックでASP/Sale統計を取得
-  const { saleStats, filteredAspStats, skeletonWidths } = useHeaderStats({
-    filterFanzaOnly: isFanzaSite,
-  });
+  // セール統計のみ取得（ASP統計は静的リストを使用）
+  const { saleStats } = useSaleStats();
+
+  // FANZAサイトの場合はASPリストを非表示
+  const aspList = isFanzaSite ? [] : STATIC_ASP_LIST;
 
   // スクロール時にヘッダーを自動非表示/表示
   useEffect(() => {
@@ -259,12 +267,12 @@ export default function Header() {
               <LanguageSwitcher />
             </div>
 
-            {/* ASP統計バッジ（モバイル用） */}
+            {/* ASPリンク（モバイル用） */}
             <div className={`pt-2 border-t ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'}`}>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {/* セールバッジ */}
                 {saleStats === null ? (
-                  <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
+                  <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[80px] animate-pulse flex-shrink-0" />
                 ) : saleStats.totalSales > 0 ? (
                   <Link
                     href={localizedHref('/products?onSale=true', locale)}
@@ -275,42 +283,33 @@ export default function Header() {
                     <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
                   </Link>
                 ) : null}
-                {filteredAspStats.length === 0 ? (
-                  <>
-                    {skeletonWidths.map((width, i) => (
-                      <div key={i} className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
-                    ))}
-                  </>
-                ) : (
-                  filteredAspStats.map((stat) => {
-                    const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
-                    const meta = providerId ? providerMeta[providerId] : null;
-                    return (
-                      <Link
-                        key={stat.aspName}
-                        href={localizedHref(`/products?includeAsp=${stat.aspName}`, locale)}
-                        className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <span className="font-bold">{meta?.label || stat.aspName}</span>
-                        <span className="ml-1 opacity-80">{stat.productCount.toLocaleString()}</span>
-                      </Link>
-                    );
-                  })
-                )}
+                {/* ASPリンク（件数なし） */}
+                {aspList.map((asp) => {
+                  const meta = providerMeta[asp.providerId];
+                  return (
+                    <Link
+                      key={asp.aspName}
+                      href={localizedHref(`/products?includeAsp=${asp.aspName}`, locale)}
+                      className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <span className="font-bold">{meta?.label || asp.aspName}</span>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </nav>
         )}
       </div>
 
-      {/* ASP統計バー - デスクトップのみ表示 */}
+      {/* ASPリンクバー - デスクトップのみ表示 */}
       <div className={`hidden md:block ${isFanzaSite ? 'bg-pink-900/50' : 'bg-gray-900/80'} border-t ${isFanzaSite ? 'border-pink-500/10' : 'border-white/5'}`}>
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-2 py-1.5 flex-wrap min-h-[36px]">
             {/* セールバッジ */}
             {saleStats === null ? (
-              <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />
+              <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[80px] animate-pulse flex-shrink-0" />
             ) : saleStats.totalSales > 0 ? (
               <Link
                 href={localizedHref('/products?onSale=true', locale)}
@@ -320,29 +319,19 @@ export default function Header() {
                 <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
               </Link>
             ) : null}
-            {/* ASP統計バッジ */}
-            {filteredAspStats.length === 0 ? (
-              <>
-                {skeletonWidths.map((width, i) => (
-                  <div key={i} className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] animate-pulse flex-shrink-0" style={{ width: `${width}px` }} />
-                ))}
-              </>
-            ) : (
-              filteredAspStats.map((stat) => {
-                const providerId = ASP_TO_PROVIDER_ID[stat.aspName];
-                const meta = providerId ? providerMeta[providerId] : null;
-                return (
-                  <Link
-                    key={stat.aspName}
-                    href={localizedHref(`/products?includeAsp=${stat.aspName}`, locale)}
-                    className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
-                  >
-                    <span className="font-bold">{meta?.label || stat.aspName}</span>
-                    <span className="ml-1 opacity-80">{stat.productCount.toLocaleString()}</span>
-                  </Link>
-                );
-              })
-            )}
+            {/* ASPリンク（件数なし） */}
+            {aspList.map((asp) => {
+              const meta = providerMeta[asp.providerId];
+              return (
+                <Link
+                  key={asp.aspName}
+                  href={localizedHref(`/products?includeAsp=${asp.aspName}`, locale)}
+                  className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
+                >
+                  <span className="font-bold">{meta?.label || asp.aspName}</span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>
