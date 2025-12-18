@@ -35,7 +35,7 @@
   /* Text Colors */
   --text-primary: #ffffff;
   --text-secondary: #d1d5db; /* gray-300 */
-  --text-muted: #9ca3af; /* gray-400 */
+  --text-muted: #d1d5db; /* gray-300 - improved contrast ratio for WCAG AA */
   --text-accent: #f472b6; /* pink-400 */
 
   /* Border Colors */
