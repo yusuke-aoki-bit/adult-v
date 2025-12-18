@@ -9,26 +9,16 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Revalidate every hour
 
-// ロケールに応じたURLを生成（?hl=パラメータ方式）
-// デフォルトロケール(ja)はパラメータなし、他の言語は ?hl=en, ?hl=zh, ?hl=ko
-function _getLocalizedUrl(basePath: string, locale: string): string {
-  if (locale === 'ja') {
-    return `${BASE_URL}${basePath}`;
-  }
-  // basePath に既存のクエリパラメータがある場合は & で追加
-  const separator = basePath.includes('?') ? '&' : '?';
-  return `${BASE_URL}${basePath}${separator}hl=${locale}`;
-}
-
-// hreflang用の言語バリエーションを生成（?hl=パラメータ方式）
+// hreflang用の言語バリエーションを生成（ロケールプレフィックス方式）
+// 例: /products/123 → { ja: /ja/products/123, en: /en/products/123, ... }
 function getLanguageAlternates(basePath: string) {
-  const separator = basePath.includes('?') ? '&' : '?';
+  // basePath が空の場合（ルートページ）は空文字列として扱う
+  const path = basePath === '/' ? '' : basePath;
   return {
-    ja: `${BASE_URL}${basePath}`,
-    en: `${BASE_URL}${basePath}${separator}hl=en`,
-    zh: `${BASE_URL}${basePath}${separator}hl=zh`,
-    'zh-TW': `${BASE_URL}${basePath}${separator}hl=zh-TW`,
-    ko: `${BASE_URL}${basePath}${separator}hl=ko`,
+    ja: `${BASE_URL}/ja${path}`,
+    en: `${BASE_URL}/en${path}`,
+    zh: `${BASE_URL}/zh${path}`,
+    ko: `${BASE_URL}/ko${path}`,
   };
 }
 
@@ -36,11 +26,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const _locales = ['ja', 'en', 'zh', 'zh-TW', 'ko'];
 
   // Static pages with high priority and daily updates
-  // ?hl=パラメータ方式: デフォルト(ja)はパラメータなし、他言語は?hl=xxで指定
+  // canonical URLは日本語版（/ja/...）、alternatesで各言語を指定
   const staticPages: MetadataRoute.Sitemap = [
-    // Home page - canonical URL (all languages share this)
+    // Home page - canonical URL is /ja (Japanese default)
     {
-      url: `${BASE_URL}/`,
+      url: `${BASE_URL}/ja`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1.0,
@@ -48,9 +38,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         languages: getLanguageAlternates('/'),
       },
     },
-    // Products pages - canonical URL with language alternates
+    // Products pages
     {
-      url: `${BASE_URL}/products`,
+      url: `${BASE_URL}/ja/products`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.9,
@@ -60,7 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     // Categories pages (high traffic - GSC shows 357 impressions)
     {
-      url: `${BASE_URL}/categories`,
+      url: `${BASE_URL}/ja/categories`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.9,
@@ -68,26 +58,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         languages: getLanguageAlternates('/categories'),
       },
     },
-    // Actress list pages
+    // Privacy policy page (Japanese only)
     {
-      url: `${BASE_URL}/actresses`,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 0.9,
-      alternates: {
-        languages: getLanguageAlternates('/actresses'),
-      },
-    },
-    // Privacy policy page (no language alternates - Japanese only)
-    {
-      url: `${BASE_URL}/privacy`,
+      url: `${BASE_URL}/ja/privacy`,
       lastModified: new Date('2024-12-09'),
       changeFrequency: 'yearly' as const,
       priority: 0.3,
     },
-    // Terms of service page (no language alternates - Japanese only)
+    // Terms of service page (Japanese only)
     {
-      url: `${BASE_URL}/terms`,
+      url: `${BASE_URL}/ja/terms`,
       lastModified: new Date('2024-12-09'),
       changeFrequency: 'yearly' as const,
       priority: 0.3,
@@ -113,9 +93,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .orderBy(desc(products.releaseDate))
       .limit(5000);
 
-  // 商品ページ - canonical URLはパラメータなし、alternatesで各言語を指定
+  // 商品ページ - canonical URLは/ja/products/..., alternatesで各言語を指定
   const productPages: MetadataRoute.Sitemap = recentProducts.map((product) => ({
-    url: `${BASE_URL}/products/${product.id}`,
+    url: `${BASE_URL}/ja/products/${product.id}`,
     lastModified: product.updatedAt || new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.7,
@@ -139,10 +119,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .orderBy(desc(sql`product_count`))
     .limit(1000);
 
-  // 女優ページ - canonical URLはパラメータなし、alternatesで各言語を指定
+  // 女優ページ - canonical URLは/ja/actress/..., alternatesで各言語を指定
   // GSC data shows actress pages get most clicks - prioritize them
   const performerPages: MetadataRoute.Sitemap = topPerformers.map((performer) => ({
-    url: `${BASE_URL}/actress/${performer.id}`,
+    url: `${BASE_URL}/ja/actress/${performer.id}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.8, // Increased from 0.6 - actress pages drive most traffic

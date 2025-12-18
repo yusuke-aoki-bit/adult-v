@@ -218,7 +218,7 @@ const nextConfig: NextConfig = {
       // スタイル: Next.js インラインスタイル
       "style-src 'self' 'unsafe-inline'",
       // 画像: FANZA/DMMホスト
-      "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://awsimgsrc.dmm.co.jp https://placehold.co https://www.googletagmanager.com https://www.google-analytics.com",
+      "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://awsimgsrc.dmm.co.jp https://placehold.co https://www.googletagmanager.com https://www.google-analytics.com https://*.mgstage.com https://image.mgstage.com https://*.duga.jp https://pic.duga.jp https://img.duga.jp https://*.sokmil.com https://img.sokmil.com",
       // フォント
       "font-src 'self' data:",
       // 接続先: API, Google Analytics, Firebase

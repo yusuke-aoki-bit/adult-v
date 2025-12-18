@@ -50,6 +50,8 @@ export async function generateMetadata({
     searchParamsData.hasReview
   );
   const hasPageParam = !!searchParamsData.page && searchParamsData.page !== '1';
+  // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
+  const hasNonDefaultSort = !!searchParamsData.sort && searchParamsData.sort !== 'releaseCount';
 
   const metadata = generateBaseMetadata(
     t('title'),
@@ -60,8 +62,8 @@ export async function generateMetadata({
     locale,
   );
 
-  // 検索・フィルター・2ページ目以降はnoindex（重複コンテンツ防止）
-  if (hasQuery || hasFilters || hasPageParam) {
+  // 検索・フィルター・2ページ目以降・非デフォルトソートはnoindex（重複コンテンツ防止）
+  if (hasQuery || hasFilters || hasPageParam || hasNonDefaultSort) {
     return {
       ...metadata,
       robots: {
