@@ -12,12 +12,15 @@
     "crawl:fc2": "tsx src/products/crawl-fc2-video.ts",
     "crawl:b10f": "tsx src/products/crawl-b10f-csv.ts",
     "crawl:fanza": "tsx src/products/crawl-fanza.ts",
+    "fetch:gsc": "tsx src/seo/fetch-gsc-data.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@adult-v/database": "workspace:*",
     "@adult-v/shared": "workspace:*",
+    "@google-cloud/secret-manager": "^5.0.0",
     "@google-cloud/storage": "^7.0.0",
+    "googleapis": "^144.0.0",
     "@google/generative-ai": "^0.21.0",
     "adm-zip": "^0.5.10",
     "cheerio": "^1.0.0",
