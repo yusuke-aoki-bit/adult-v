@@ -1,39 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
+import { createTrackViewHandler } from '@adult-v/shared/api-handlers';
 
 export const dynamic = 'force-dynamic';
 
-interface TrackViewRequest {
-  productId?: number;
-  performerId?: number;
+async function trackProductView(productId: number) {
+  const db = getDb();
+  await db.execute(sql`
+    INSERT INTO product_views (product_id, viewed_at)
+    VALUES (${productId}, NOW())
+  `);
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body: TrackViewRequest = await request.json();
-    const db = getDb();
-
-    if (body.productId) {
-      // Track product view
-      await db.execute(sql`
-        INSERT INTO product_views (product_id, viewed_at)
-        VALUES (${body.productId}, NOW())
-      `);
-    }
-
-    if (body.performerId) {
-      // Track performer view
-      await db.execute(sql`
-        INSERT INTO performer_views (performer_id, viewed_at)
-        VALUES (${body.performerId}, NOW())
-      `);
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error tracking view:', error);
-    // Don't fail the request if tracking fails
-    return NextResponse.json({ success: false }, { status: 200 });
-  }
+async function trackPerformerView(performerId: number) {
+  const db = getDb();
+  await db.execute(sql`
+    INSERT INTO performer_views (performer_id, viewed_at)
+    VALUES (${performerId}, NOW())
+  `);
 }
+
+export const POST = createTrackViewHandler({
+  trackProductView,
+  trackPerformerView,
+});

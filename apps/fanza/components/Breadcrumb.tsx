@@ -1,40 +1,17 @@
-import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+'use client';
 
-export interface BreadcrumbItem {
-  label: string;
-  href?: string;
-}
+import { Breadcrumb as BreadcrumbBase } from '@adult-v/shared/components';
+import type { BreadcrumbItem } from '@adult-v/shared/components';
+import { ComponentProps } from 'react';
 
-interface BreadcrumbProps {
-  items: BreadcrumbItem[];
-  className?: string;
-}
+// Re-export BreadcrumbItem type
+export type { BreadcrumbItem };
 
-export default function Breadcrumb({ items, className = '' }: BreadcrumbProps) {
-  return (
-    <nav aria-label="Breadcrumb" className={`flex items-center gap-1 text-sm sm:text-base whitespace-nowrap ${className}`}>
-      {items.map((item, index) => {
-        const isLast = index === items.length - 1;
+type BreadcrumbProps = Omit<ComponentProps<typeof BreadcrumbBase>, 'theme'>;
 
-        return (
-          <span key={`${item.href || 'current'}-${item.label}`} className="inline-flex items-center gap-1">
-            {index > 0 && (
-              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0" />
-            )}
-            {isLast || !item.href ? (
-              <span className="text-gray-600">{item.label}</span>
-            ) : (
-              <Link
-                href={item.href}
-                className="text-pink-500 hover:text-pink-600 transition-colors"
-              >
-                {item.label}
-              </Link>
-            )}
-          </span>
-        );
-      })}
-    </nav>
-  );
+/**
+ * Breadcrumb for apps/fanza (light theme)
+ */
+export default function Breadcrumb(props: BreadcrumbProps) {
+  return <BreadcrumbBase {...props} theme="light" />;
 }

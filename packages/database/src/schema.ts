@@ -149,6 +149,7 @@ export const performers = pgTable(
     instagramId: varchar('instagram_id', { length: 100 }), // Instagram
     debutYear: integer('debut_year'), // デビュー年
     isRetired: boolean('is_retired').default(false), // 引退フラグ
+    isFanzaOnly: boolean('is_fanza_only').default(false), // FANZA専用フラグ（FANZA以外のASPに出演作品がない）
     // AIレビュー
     aiReview: text('ai_review'), // Gemini AIによる演者レビュー
     aiReviewUpdatedAt: timestamp('ai_review_updated_at'), // レビュー更新日時
@@ -164,6 +165,7 @@ export const performers = pgTable(
     heightIdx: index('idx_performers_height').on(table.height),
     cupIdx: index('idx_performers_cup').on(table.cup),
     birthdayIdx: index('idx_performers_birthday').on(table.birthday),
+    fanzaOnlyIdx: index('idx_performers_fanza_only').on(table.isFanzaOnly),
   }),
 );
 

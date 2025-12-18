@@ -23,8 +23,12 @@ const eslintConfig = [
   },
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
+      // Changed from "off" to "warn" for gradual improvement
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+      }],
       "@typescript-eslint/no-require-imports": "off",
       // beforeInteractive is needed for Google Consent Mode to work properly
       "@next/next/no-before-interactive-script-outside-document": "off",

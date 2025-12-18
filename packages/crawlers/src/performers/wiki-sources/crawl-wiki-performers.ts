@@ -847,13 +847,23 @@ async function processWikiCrawlData(db: any, limit: number): Promise<{ processed
     product_code: string;
     performer_name: string;
   }
+
+  const totalRows = unprocessed.rows.length;
+  console.log(`Found ${totalRows} unprocessed records`);
+
   for (const row of unprocessed.rows as WikiCrawlRow[]) {
     const { id, product_code, performer_name } = row;
-    const normalizedCode = product_code.toLowerCase().replace(/-/g, '');
+    // 小文字化のみ（ハイフンは残す）- 商品テーブルはabc-123形式
+    const normalizedCode = product_code.toLowerCase();
+    // ハイフン除去版も用意（一部の商品はハイフンなしで登録されている場合がある）
+    const normalizedCodeNoHyphen = product_code.toLowerCase().replace(/-/g, '');
 
-    // 商品を検索
+    // 商品を検索（小文字ハイフンあり形式を優先、なければハイフンなし形式で検索）
     const productResult = await db.execute(sql`
-      SELECT id FROM products WHERE normalized_product_id = ${normalizedCode}
+      SELECT id FROM products
+      WHERE normalized_product_id = ${normalizedCode}
+         OR normalized_product_id = ${normalizedCodeNoHyphen}
+      LIMIT 1
     `);
 
     const productRow = getFirstRow<IdRow>(productResult);
@@ -896,6 +906,11 @@ async function processWikiCrawlData(db: any, limit: number): Promise<{ processed
     // 処理済みマーク
     await db.execute(sql`UPDATE wiki_crawl_data SET processed_at = NOW() WHERE id = ${id}`);
     processed++;
+
+    // 進捗ログ（1000件ごと）
+    if (processed % 1000 === 0) {
+      console.log(`Progress: ${processed}/${totalRows}, Linked: ${linked}`);
+    }
   }
 
   return { processed, linked };

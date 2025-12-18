@@ -12,7 +12,6 @@ import {
 interface Tag {
   id: number;
   name: string;
-  count: number;
 }
 
 interface Asp {
@@ -532,7 +531,7 @@ export default function ActressListFilter({
                         onChange={() => handleIncludeTagChange(String(tag.id))}
                         className="w-5 h-5 rounded border-gray-300 text-pink-500 focus:ring-pink-500"
                       />
-                      <span className="text-base sm:text-sm text-gray-700">{tag.name} <span className="text-gray-500">({tag.count})</span></span>
+                      <span className="text-base sm:text-sm text-gray-700">{tag.name}</span>
                     </label>
                   ))}
                 </div>
@@ -556,7 +555,7 @@ export default function ActressListFilter({
                         onChange={() => handleExcludeTagChange(String(tag.id))}
                         className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
                       />
-                      <span className="text-base sm:text-sm text-gray-700">{tag.name} <span className="text-gray-500">({tag.count})</span></span>
+                      <span className="text-base sm:text-sm text-gray-700">{tag.name}</span>
                     </label>
                   ))}
                 </div>

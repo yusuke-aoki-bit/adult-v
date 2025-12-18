@@ -61,13 +61,17 @@ export function WeeklyHighlightsSection({
 }: WeeklyHighlightsSectionProps): ReactNode {
   const [data, setData] = useState<WeeklyHighlightsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const t = getTranslation(weeklyHighlightsTranslations, locale);
   const themeConfig = getThemeConfig(theme);
   const styles = themeConfig.weeklyHighlights;
 
+  // 遅延フェッチ: 展開されたときのみデータを取得（パフォーマンス優先）
   useEffect(() => {
+    if (!isExpanded || hasFetched) return;
+
     async function doFetch() {
       try {
         let highlights: WeeklyHighlightsData;
@@ -82,6 +86,7 @@ export function WeeklyHighlightsSection({
           }
         }
         setData(highlights);
+        setHasFetched(true);
       } catch (error) {
         console.error('Failed to fetch weekly highlights:', error);
       } finally {
@@ -90,7 +95,7 @@ export function WeeklyHighlightsSection({
     }
 
     doFetch();
-  }, [fetchHighlights]);
+  }, [isExpanded, hasFetched, fetchHighlights]);
 
   const hasData = data && (
     data.trendingActresses.length > 0 ||
@@ -98,13 +103,16 @@ export function WeeklyHighlightsSection({
     data.rediscoveredClassics.length > 0
   );
 
-  if (!hasData && !isLoading) {
+  // 初期状態（閉じている & 未フェッチ）では常に表示
+  // フェッチ後にデータがなければ非表示
+  if (hasFetched && !hasData && !isLoading) {
     return null;
   }
 
   // Determine placeholder icon color based on theme
+  // Light テーマでは bg-white にして、amber/orange 系の背景と被らないようにする
   const placeholderIconClass = theme === 'dark' ? 'text-gray-600' : 'text-gray-400';
-  const placeholderBgClass = theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100';
+  const placeholderBgClass = theme === 'dark' ? 'bg-gray-700' : 'bg-white';
 
   return (
     <section className="py-3 sm:py-4">

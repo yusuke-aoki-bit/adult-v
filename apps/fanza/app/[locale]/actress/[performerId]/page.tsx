@@ -3,7 +3,6 @@ import ProductCard from '@/components/ProductCard';
 import {
   ActressHeroImage,
   Pagination,
-  CrossAspInfo,
 } from '@adult-v/shared/components';
 import ActressAiReview from '@/components/ActressAiReview';
 import { JsonLD } from '@/components/JsonLD';
@@ -22,9 +21,9 @@ import {
 import { Metadata } from 'next';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import { getTranslations } from 'next-intl/server';
-import { providerMeta } from '@/lib/providers';
+import '@/lib/providers';
 import ActressProductFilter from '@/components/ActressProductFilter';
-import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
+import '@/lib/constants/filters';
 import ActressFavoriteButton from '@/components/ActressFavoriteButton';
 
 export const dynamic = 'force-dynamic';
@@ -136,7 +135,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const { performerId, locale } = await params;
   const resolvedSearchParams = await searchParams;
   const t = await getTranslations('actress');
-  const tc = await getTranslations('common');
+  const _tc = await getTranslations('common');
   const tf = await getTranslations('filter');
   const tNav = await getTranslations('nav');
 

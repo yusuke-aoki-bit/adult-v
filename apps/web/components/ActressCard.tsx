@@ -1,14 +1,19 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import Link from 'next/link';
+import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
 import { Actress } from '@/types/product';
 import { providerMeta } from '@/lib/providers';
 import { normalizeImageUrl, isUncensoredThumbnail } from '@/lib/image-utils';
 import FavoriteButton from './FavoriteButton';
+import { ImageLightbox, getActressCardThemeConfig } from '@adult-v/shared/components';
 
-const PLACEHOLDER_IMAGE = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+IMAGE';
+// Theme configuration for apps/web (dark theme)
+const themeConfig = getActressCardThemeConfig('dark');
+const PLACEHOLDER_IMAGE = themeConfig.placeholderImage;
 
 interface Props {
   actress: Actress;
@@ -18,6 +23,9 @@ interface Props {
 
 export default function ActressCard({ actress, compact = false, priority = false }: Props) {
   const t = useTranslations('actressCard');
+  const params = useParams();
+  const locale = (params?.locale as string) || 'ja';
+
   // 通常表示ではheroImage優先、コンパクト表示ではthumbnail優先
   const rawImageUrl = compact
     ? (actress.thumbnail || actress.heroImage)
@@ -26,8 +34,15 @@ export default function ActressCard({ actress, compact = false, priority = false
   const [imgSrc, setImgSrc] = useState(initialSrc || PLACEHOLDER_IMAGE);
   const [hasError, setHasError] = useState(!initialSrc);
 
+  // Lightbox表示用の状態
+  const [showLightbox, setShowLightbox] = useState(false);
+  const [productImages, setProductImages] = useState<string[]>([]);
+
   // 無修正サイトのサムネイルかどうか判定（ブラー適用用）
   const shouldBlur = isUncensoredThumbnail(rawImageUrl);
+
+  // Use services directly (no filtering for web app)
+  const displayServices = actress.services || [];
 
   const handleImageError = () => {
     if (!hasError) {
@@ -36,74 +51,121 @@ export default function ActressCard({ actress, compact = false, priority = false
     }
   };
 
+  // 画像クリックで出演作品をフェッチしてLightbox表示
+  const handleImageClick = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const response = await fetch(`/api/products?actressId=${actress.id}&limit=30`);
+      if (response.ok) {
+        const data = await response.json();
+        const images = (data.products || [])
+          .map((p: { imageUrl?: string | null }) => p.imageUrl)
+          .filter((url: string | null | undefined): url is string => !!url)
+          .map((url: string) => normalizeImageUrl(url))
+          .filter((url: string | null): url is string => !!url);
+        setProductImages(images);
+        if (images.length > 0) {
+          setShowLightbox(true);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    }
+  }, [actress.id]);
+
+  const handleCloseLightbox = useCallback(() => {
+    setShowLightbox(false);
+  }, []);
+
   if (compact) {
-    // コンパクト表示: 名前と基本情報のみ（モバイル最適化）
+    // コンパクト表示: 画像クリックでモーダル、名前クリックで詳細ページへ
     return (
-      <div className="theme-card theme-text rounded-lg overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-200 active:scale-[0.98]">
-        <div className="relative aspect-[3/4]">
-          <Image
-            src={imgSrc}
-            alt={actress.name}
-            fill
-            sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 16vw"
-            className={`object-cover opacity-90 ${shouldBlur ? 'blur-md' : ''}`}
-            loading={priority ? undefined : "lazy"}
-            priority={priority}
-            fetchPriority={priority ? "high" : "auto"}
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-            onError={handleImageError}
-            unoptimized
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-          {/* お気に入りボタン - モバイルでは小さく */}
-          <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-white rounded-full shadow-md scale-90 sm:scale-100">
-            <FavoriteButton type="actress" id={actress.id} />
+      <>
+        <div className="theme-card theme-text rounded-lg overflow-hidden hover:shadow-xl transition-all duration-200">
+          {/* 画像部分 - クリックでモーダル表示 */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={handleImageClick}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleImageClick(e as unknown as React.MouseEvent); }}
+            className="relative aspect-[3/4] w-full block cursor-pointer group"
+          >
+            <Image
+              src={imgSrc}
+              alt={actress.name}
+              fill
+              sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 16vw"
+              className={`object-cover opacity-90 group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-md' : ''}`}
+              loading={priority ? undefined : "lazy"}
+              priority={priority}
+              fetchPriority={priority ? "high" : "auto"}
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+              onError={handleImageError}
+              unoptimized
+            />
+            {/* お気に入りボタン */}
+            <div
+              className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-white rounded-full shadow-md scale-90 sm:scale-100 z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FavoriteButton type="actress" id={actress.id} />
+            </div>
+            {/* ホバー時のオーバーレイ */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
           </div>
-          <div className="absolute bottom-1.5 left-1.5 right-1.5 sm:bottom-2 sm:left-2 sm:right-2 text-white">
-            <h3 className="text-sm sm:text-base font-semibold truncate leading-tight">{actress.name}</h3>
+
+          {/* 名前と情報部分 - 画像外に配置 */}
+          <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+            {/* 名前 - 詳細ページへのリンク */}
+            <Link
+              href={`/${locale}/actress/${actress.id}`}
+              className={`block text-sm sm:text-base font-semibold truncate leading-tight ${themeConfig.hoverColor} transition-colors`}
+            >
+              {actress.name}
+            </Link>
             {/* 別名表示（デスクトップのみ） */}
             {actress.aliases && actress.aliases.length > 0 && (
-              <p className="hidden sm:block text-[10px] text-white/70 truncate">
+              <p className="hidden sm:block text-[10px] theme-text-muted truncate">
                 ({actress.aliases.slice(0, 2).join(', ')}{actress.aliases.length > 2 ? ' ...' : ''})
               </p>
             )}
-            {/* AIレビューキーワード or キャッチコピー（デスクトップのみ） */}
-            {actress.aiReview?.keywords && actress.aiReview.keywords.length > 0 ? (
-              <p className="hidden sm:block text-[10px] text-purple-300 truncate">
-                {actress.aiReview.keywords.slice(0, 2).map(k => `#${k}`).join(' ')}
-              </p>
-            ) : !actress.aliases?.length && actress.catchcopy && (
-              <p className="hidden sm:block text-xs text-white/80 truncate">{actress.catchcopy}</p>
+            <div className="flex items-center justify-between text-xs">
+              <span className="theme-text-muted hidden sm:inline">{t('releaseCount')}</span>
+              <span className="font-semibold">{actress.metrics?.releaseCount || 0}{t('videos')}</span>
+            </div>
+            {displayServices.length > 0 && (
+              <div className="flex flex-wrap gap-0.5 sm:gap-1 min-h-[18px]">
+                {displayServices.slice(0, 3).map((service) => {
+                  const meta = providerMeta[service];
+                  if (!meta) return null;
+                  return (
+                    <span
+                      key={service}
+                      className={`text-[9px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-0.5 rounded bg-gradient-to-r text-white ${meta.accentClass}`}
+                    >
+                      {meta.label}
+                    </span>
+                  );
+                })}
+                {displayServices.length > 3 && (
+                  <span className="text-[9px] sm:text-[10px] theme-text-muted">+{displayServices.length - 3}</span>
+                )}
+              </div>
             )}
           </div>
         </div>
-        <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2 min-h-[52px] sm:min-h-[60px]">
-          <div className="flex items-center justify-between text-xs">
-            <span className="theme-text-muted hidden sm:inline">{t('releaseCount')}</span>
-            <span className="font-semibold">{actress.metrics?.releaseCount || 0}{t('videos')}</span>
-          </div>
-          {actress.services && actress.services.length > 0 && (
-            <div className="flex flex-wrap gap-0.5 sm:gap-1 min-h-[18px]">
-              {actress.services.slice(0, 3).map((service) => {
-                const meta = providerMeta[service];
-                if (!meta) return null;
-                return (
-                  <span
-                    key={service}
-                    className={`text-[9px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-0.5 rounded bg-gradient-to-r text-white ${meta.accentClass}`}
-                  >
-                    {meta.label}
-                  </span>
-                );
-              })}
-              {actress.services.length > 3 && (
-                <span className="text-[9px] sm:text-[10px] theme-text-muted">+{actress.services.length - 3}</span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+
+        {/* 出演作品Lightbox */}
+        <ImageLightbox
+          images={productImages}
+          isOpen={showLightbox}
+          onClose={handleCloseLightbox}
+          alt={actress.name}
+        />
+      </>
     );
   }
 
@@ -170,9 +232,9 @@ export default function ActressCard({ actress, compact = false, priority = false
           </div>
         )}
 
-        {actress.services && actress.services.length > 0 && (
+        {displayServices.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {actress.services.map((service) => {
+            {displayServices.map((service) => {
               const meta = providerMeta[service];
               if (!meta) return null;
               return (
@@ -199,4 +261,3 @@ function Stat({ label, value }: { label: string; value: string | number }) {
     </div>
   );
 }
-

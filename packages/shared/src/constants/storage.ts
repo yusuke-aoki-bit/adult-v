@@ -11,4 +11,5 @@ export const STORAGE_KEYS = {
   FILTER_SETTINGS: `filterSettings-${SITE_MODE}`,
   PWA_DISMISSED: `pwa-install-dismissed-${SITE_MODE}`,
   NOTIFICATIONS_ENABLED: `notifications-enabled-${SITE_MODE}`,
+  CLOUD_SYNC_ENABLED: `cloud-sync-enabled-${SITE_MODE}`,
 } as const;

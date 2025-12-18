@@ -9,53 +9,13 @@ import { Product } from '@/types/product';
 import { normalizeImageUrl, getFullSizeImageUrl, isDtiUncensoredSite, isSubscriptionSite } from '@/lib/image-utils';
 import { generateAltText } from '@/lib/seo-utils';
 import { formatPrice } from '@/lib/utils/subscription';
-import { providerMeta, type ProviderId } from '@/lib/providers';
+import '@/lib/providers';
 import FavoriteButton from './FavoriteButton';
 import ViewedButton from './ViewedButton';
 import ImageLightbox from './ImageLightbox';
 import StarRating from './StarRating';
 import { getVariant, trackCtaClick } from '@/lib/ab-testing';
-
-/**
- * MGS商品IDを正規化（ハイフンがない場合は適切な位置に挿入）
- */
-function normalizeMgsProductId(productId: string): string {
-  if (productId.includes('-')) return productId;
-  const prefixMatch = productId.match(/^(\d+)([A-Z]+)(\d+)$/i);
-  if (prefixMatch) return `${prefixMatch[1]}${prefixMatch[2]}-${prefixMatch[3]}`;
-  const simpleMatch = productId.match(/^([A-Z]+)(\d+)$/i);
-  if (simpleMatch) return `${simpleMatch[1]}-${simpleMatch[2]}`;
-  return productId;
-}
-
-/**
- * MGSウィジェットコードから実際の商品ページURLを抽出
- */
-function extractMgsProductUrl(widgetCode: string): string | null {
-  const productIdMatch = widgetCode.match(/[?&]p=([^&"']+)/);
-  const affCodeMatch = widgetCode.match(/[?&]c=([^&"']+)/);
-  if (productIdMatch) {
-    const productId = normalizeMgsProductId(productIdMatch[1]);
-    const affCode = affCodeMatch ? affCodeMatch[1] : '';
-    const affParam = affCode ? `?aff=${affCode}` : '';
-    return `https://www.mgstage.com/product/product_detail/${productId}/${affParam}`;
-  }
-  return null;
-}
-
-/**
- * アフィリエイトURLを取得（MGSウィジェットの場合は変換）
- */
-function getAffiliateUrl(affiliateUrl: string | undefined | null): string | null {
-  if (!affiliateUrl) return null;
-  if (affiliateUrl.includes('mgs_Widget_affiliate')) {
-    return extractMgsProductUrl(affiliateUrl);
-  }
-  if (affiliateUrl.startsWith('http://') || affiliateUrl.startsWith('https://')) {
-    return affiliateUrl;
-  }
-  return null;
-}
+import { getAffiliateUrl } from '@adult-v/shared/components';
 
 interface ProductCardProps {
   product: Product;
@@ -63,13 +23,11 @@ interface ProductCardProps {
   rankPosition?: number;
   /** コンパクト表示（グリッド用の小さいカード） */
   compact?: boolean;
-  /** ミニ表示（最近見た作品用のサムネイルのみ表示） */
-  mini?: boolean;
 }
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/400x560/1f2937/ffffff?text=NO+IMAGE';
 
-export default function ProductCard({ product, rankPosition, compact = false, mini = false }: ProductCardProps) {
+export default function ProductCard({ product, rankPosition, compact = false }: ProductCardProps) {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
   const t = useTranslations('productCard');
@@ -111,7 +69,7 @@ export default function ProductCard({ product, rankPosition, compact = false, mi
   const isActressPage = pathname.includes('/actress/');
 
   // ASPフィルタURLを生成
-  const getAspFilterUrl = useCallback((provider: string) => {
+  const _getAspFilterUrl = useCallback((provider: string) => {
     // 女優ページの場合は現在のページ+ASPフィルタ
     if (isActressPage) {
       const params = new URLSearchParams(searchParams.toString());
@@ -183,34 +141,6 @@ export default function ProductCard({ product, rankPosition, compact = false, mi
   const handleCloseVideoModal = useCallback(() => {
     setShowVideoModal(false);
   }, []);
-
-  // ミニモード: 最近見た作品用の超コンパクトサムネイル（タイトルなし）
-  if (mini) {
-    return (
-      <Link
-        href={`/${locale}/products/${product.id}`}
-        className="block group"
-      >
-        <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-800">
-          <Image
-            src={imgSrc}
-            alt={product.title}
-            fill
-            sizes="80px"
-            className={`object-cover transition-transform group-hover:scale-105 ${isUncensored ? 'blur-[3px]' : ''}`}
-            loading="lazy"
-            onError={handleImageError}
-          />
-          {/* セールバッジ */}
-          {product.salePrice && (
-            <div className="absolute top-0.5 left-0.5 bg-red-600 text-white text-[8px] font-bold px-1 py-0.5 rounded z-10">
-              SALE
-            </div>
-          )}
-        </div>
-      </Link>
-    );
-  }
 
   // コンパクトモード: 最小限の情報でサムネイル表示（イベント機能付き）
   if (compact) {

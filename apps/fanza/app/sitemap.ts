@@ -11,7 +11,7 @@ export const revalidate = 3600; // Revalidate every hour
 
 // ロケールに応じたURLを生成（?hl=パラメータ方式）
 // デフォルトロケール(ja)はパラメータなし、他の言語は ?hl=en, ?hl=zh, ?hl=ko
-function getLocalizedUrl(basePath: string, locale: string): string {
+function _getLocalizedUrl(basePath: string, locale: string): string {
   if (locale === 'ja') {
     return `${BASE_URL}${basePath}`;
   }
@@ -33,7 +33,7 @@ function getLanguageAlternates(basePath: string) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const locales = ['ja', 'en', 'zh', 'zh-TW', 'ko'];
+  const _locales = ['ja', 'en', 'zh', 'zh-TW', 'ko'];
 
   // Static pages with high priority and daily updates
   // ?hl=パラメータ方式: デフォルト(ja)はパラメータなし、他言語は?hl=xxで指定

@@ -153,7 +153,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const { performerId, locale } = await params;
   const resolvedSearchParams = await searchParams;
   const t = await getTranslations('actress');
-  const tc = await getTranslations('common');
+  const _tc = await getTranslations('common');
   const tf = await getTranslations('filter');
   const tNav = await getTranslations('nav');
 

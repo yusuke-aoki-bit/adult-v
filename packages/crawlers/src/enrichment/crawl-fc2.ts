@@ -23,7 +23,8 @@ import { products, productSources, performers, productPerformers, productImages,
 import { eq, and, sql } from 'drizzle-orm';
 import { validateProductData, isTopPageHtml } from '../lib/crawler-utils';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
-import { generateProductDescription, extractProductTags, GeneratedDescription, translateProduct } from '../lib/google-apis';
+import { getAIHelper } from '../lib/crawler';
+import type { GeneratedDescription, ProductTranslation } from '../lib/google-apis';
 import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
 import {
   upsertRawHtmlDataWithGcs,
@@ -588,7 +589,7 @@ async function fetchArticleIds(page: number = 1): Promise<string[]> {
 }
 
 /**
- * AI機能を使って説明文とタグを生成
+ * AI機能を使って説明文とタグを生成（CrawlerAIHelper使用）
  */
 async function generateAIContent(
   product: FC2Product,
@@ -600,37 +601,42 @@ async function generateAIContent(
 
   console.log('    🤖 AI機能を実行中...');
 
-  // AI説明文生成
-  let aiDescription: GeneratedDescription | undefined;
-  try {
-    const result = await generateProductDescription({
+  const aiHelper = getAIHelper();
+  const result = await aiHelper.processProduct(
+    {
       title: product.title,
-      originalDescription: product.description,
+      description: product.description,
       performers: product.performers,
       genres: product.tags,
-    });
-
-    if (result) {
-      aiDescription = result;
-      console.log(`      ✅ AI説明文生成完了`);
-      console.log(`         キャッチコピー: ${result.catchphrase}`);
+    },
+    {
+      extractTags: true,
+      translate: false, // 翻訳は別関数で実行
+      generateDescription: true,
     }
-  } catch (error) {
-    console.error('      ❌ AI説明文生成エラー:', error);
+  );
+
+  // エラーがあれば警告
+  if (result.errors.length > 0) {
+    console.log(`      ⚠️ AI処理で一部エラー: ${result.errors.join(', ')}`);
   }
 
-  // AIタグ抽出
+  let aiDescription: GeneratedDescription | undefined;
   let aiTags: FC2Product['aiTags'];
-  try {
-    const tags = await extractProductTags(product.title, product.description);
-    if (tags.genres.length > 0 || tags.attributes.length > 0 || tags.plays.length > 0 || tags.situations.length > 0) {
-      aiTags = tags;
-      console.log(`      ✅ AIタグ抽出完了`);
-      console.log(`         ジャンル: ${tags.genres.join(', ') || 'なし'}`);
-      console.log(`         属性: ${tags.attributes.join(', ') || 'なし'}`);
-    }
-  } catch (error) {
-    console.error('      ❌ AIタグ抽出エラー:', error);
+
+  // AI説明文
+  if (result.description) {
+    aiDescription = result.description;
+    console.log(`      ✅ AI説明文生成完了`);
+    console.log(`         キャッチコピー: ${result.description.catchphrase}`);
+  }
+
+  // AIタグ
+  if (result.tags && (result.tags.genres.length > 0 || result.tags.attributes.length > 0 || result.tags.plays.length > 0 || result.tags.situations.length > 0)) {
+    aiTags = result.tags;
+    console.log(`      ✅ AIタグ抽出完了`);
+    console.log(`         ジャンル: ${result.tags.genres.join(', ') || 'なし'}`);
+    console.log(`         属性: ${result.tags.attributes.join(', ') || 'なし'}`);
   }
 
   return { aiDescription, aiTags };
@@ -675,7 +681,7 @@ async function saveAIContent(
 }
 
 /**
- * 翻訳機能を使ってタイトルと説明を多言語翻訳
+ * 翻訳機能を使ってタイトルと説明を多言語翻訳（CrawlerAIHelper使用）
  */
 async function translateAndSave(
   productId: number,
@@ -690,7 +696,8 @@ async function translateAndSave(
   console.log('    🌐 翻訳処理を実行中...');
 
   try {
-    const translation = await translateProduct(title, description);
+    const aiHelper = getAIHelper();
+    const translation = await aiHelper.translate(title, description);
     if (!translation) {
       console.log('      ⚠️ 翻訳結果が取得できませんでした');
       return;

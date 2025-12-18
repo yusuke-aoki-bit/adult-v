@@ -49,6 +49,8 @@ COPY scripts/run-fanza-continuous.ts ./scripts/
 COPY scripts/link-performers.ts ./scripts/
 COPY scripts/migrate-raw-html-to-gcs.ts ./scripts/
 COPY scripts/update-minnano-details.ts ./scripts/
+COPY scripts/db-stats.ts ./scripts/
+COPY scripts/analyze-wiki-product-codes.ts ./scripts/
 COPY scripts/crawlers/ ./scripts/crawlers/
 COPY scripts/backfill/ ./scripts/backfill/
 

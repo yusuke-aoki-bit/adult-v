@@ -65,7 +65,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
   const selectedImage = allImages[selectedIndex] || PLACEHOLDER_IMAGE;
 
   // ライトボックス用の高解像度画像URL（scap -> sample等の変換）
-  const fullSizeImage = useMemo(() => {
+  const _fullSizeImage = useMemo(() => {
     return getFullSizeImageUrl(selectedImage);
   }, [selectedImage]);
 

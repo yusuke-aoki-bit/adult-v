@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Wallet, TrendingDown, AlertTriangle, Check, Edit2 } from 'lucide-react';
+import { Wallet, AlertTriangle, Check, Edit2 } from 'lucide-react';
 import { useBudget } from '@/hooks';
 
 const translations = {

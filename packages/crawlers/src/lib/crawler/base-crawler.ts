@@ -26,7 +26,7 @@ import {
   type UpsertRawDataResult,
 } from './dedup-helper';
 import { processProductPerformers, ensureTags, linkProductToTags, saveProductImages } from './batch-helpers';
-import { generateProductDescription, extractProductTags, translateProduct } from '../google-apis';
+import { CrawlerAIHelper, getAIHelper } from './ai-helper';
 import { saveSaleInfo } from '../sale-helper';
 
 // ============================================================
@@ -179,6 +179,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
   protected stats: CrawlerStats;
   protected options: BaseCrawlerOptions;
   protected cliArgs: ParsedCliArgs;
+  protected aiHelper: CrawlerAIHelper;
 
   constructor(options: BaseCrawlerOptions) {
     this.options = options;
@@ -186,6 +187,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     this.rateLimiter = getRateLimiterForSite(options.sourceType);
     this.cliArgs = this.parseCliArgs();
     this.stats = this.initStats();
+    this.aiHelper = getAIHelper();
   }
 
   // ============================================================
@@ -836,30 +838,44 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
   /**
    * AI処理（説明文生成、タグ抽出、翻訳）
+   * CrawlerAIHelperを使用して並列処理を行う
    */
   protected async processAI(productId: number, data: ParsedProductData): Promise<void> {
     try {
       console.log(`  🤖 AI機能を実行中...`);
 
-      // AI説明文生成
-      const aiResult = await generateProductDescription({
-        title: data.title,
-        originalDescription: data.description,
-        performers: data.performers,
-        genres: data.categories,
-      });
+      // CrawlerAIHelperを使用して全AI処理を並列実行
+      const aiResult = await this.aiHelper.processProduct(
+        {
+          title: data.title,
+          description: data.description,
+          performers: data.performers,
+          genres: data.categories,
+        },
+        {
+          extractTags: true,
+          translate: true,
+          generateDescription: true,
+        }
+      );
 
-      if (aiResult) {
+      // エラーがあれば警告
+      if (aiResult.errors.length > 0) {
+        console.log(`    ⚠️ AI処理で一部エラー: ${aiResult.errors.join(', ')}`);
+      }
+
+      // AI説明文を保存
+      if (aiResult.description) {
         console.log(`    ✅ AI説明文生成完了`);
-        console.log(`       キャッチコピー: ${aiResult.catchphrase}`);
+        console.log(`       キャッチコピー: ${aiResult.description.catchphrase}`);
 
         try {
           await this.db.execute(sql`
             UPDATE products
             SET
-              ai_description = ${JSON.stringify(aiResult)}::jsonb,
-              ai_catchphrase = ${aiResult.catchphrase},
-              ai_short_description = ${aiResult.shortDescription},
+              ai_description = ${JSON.stringify(aiResult.description)}::jsonb,
+              ai_catchphrase = ${aiResult.description.catchphrase},
+              ai_short_description = ${aiResult.description.shortDescription},
               updated_at = NOW()
             WHERE id = ${productId}
           `);
@@ -870,16 +886,15 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         }
       }
 
-      // AIタグ抽出
-      const aiTags = await extractProductTags(data.title, data.description);
-      if (aiTags.genres.length > 0 || aiTags.attributes.length > 0) {
+      // AIタグを保存
+      if (aiResult.tags && (aiResult.tags.genres.length > 0 || aiResult.tags.attributes.length > 0)) {
         console.log(`    ✅ AIタグ抽出完了`);
-        console.log(`       ジャンル: ${aiTags.genres.join(', ') || 'なし'}`);
+        console.log(`       ジャンル: ${aiResult.tags.genres.join(', ') || 'なし'}`);
 
         try {
           await this.db.execute(sql`
             UPDATE products
-            SET ai_tags = ${JSON.stringify(aiTags)}::jsonb
+            SET ai_tags = ${JSON.stringify(aiResult.tags)}::jsonb
             WHERE id = ${productId}
           `);
         } catch {
@@ -887,26 +902,25 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         }
       }
 
-      // 翻訳処理
-      console.log(`  🌐 翻訳処理を実行中...`);
-      const translation = await translateProduct(data.title, data.description);
-      if (translation) {
+      // 翻訳を保存
+      if (aiResult.translations) {
+        console.log(`  🌐 翻訳処理完了`);
         try {
           await this.db.execute(sql`
             UPDATE products
             SET
-              title_en = ${translation.en?.title || null},
-              title_zh = ${translation.zh?.title || null},
-              title_ko = ${translation.ko?.title || null},
-              description_en = ${translation.en?.description || null},
-              description_zh = ${translation.zh?.description || null},
-              description_ko = ${translation.ko?.description || null},
+              title_en = ${aiResult.translations.en?.title || null},
+              title_zh = ${aiResult.translations.zh?.title || null},
+              title_ko = ${aiResult.translations.ko?.title || null},
+              description_en = ${aiResult.translations.en?.description || null},
+              description_zh = ${aiResult.translations.zh?.description || null},
+              description_ko = ${aiResult.translations.ko?.description || null},
               updated_at = NOW()
             WHERE id = ${productId}
           `);
-          console.log(`    ✅ 翻訳完了`);
-          if (translation.en?.title) {
-            console.log(`       EN: ${translation.en.title.slice(0, 50)}...`);
+          console.log(`    ✅ 翻訳保存完了`);
+          if (aiResult.translations.en?.title) {
+            console.log(`       EN: ${aiResult.translations.en.title.slice(0, 50)}...`);
           }
         } catch {
           // カラム未作成の場合はスキップ

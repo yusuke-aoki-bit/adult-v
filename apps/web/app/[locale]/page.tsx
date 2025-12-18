@@ -14,6 +14,14 @@ import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
 
+// LCP最適化用のシンプルな画像URL正規化
+function normalizeImageUrlForPreload(url: string | null | undefined): string | null {
+  if (!url || url.trim() === '') return null;
+  // Protocol-relative URLを絶対URLに変換
+  if (url.startsWith('//')) return `https:${url}`;
+  return url;
+}
+
 export async function generateMetadata({
   params,
   searchParams,
@@ -66,15 +74,16 @@ export async function generateMetadata({
   return metadata;
 }
 
-// 動的生成（DBから毎回取得）
-export const dynamic = 'force-dynamic';
+// ISR: 60秒ごとに再検証（searchParamsがあるため完全な静的生成は不可）
+// 注: searchParamsを使用しているため、実際のキャッシュはNext.jsの判断による
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const ITEMS_PER_PAGE = 24;
+const ITEMS_PER_PAGE = 16;
 
 export default async function Home({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -128,27 +137,6 @@ export default async function Home({ params, searchParams }: PageProps) {
   const hasImage = searchParamsData.hasImage === 'true';
   const hasReview = searchParamsData.hasReview === 'true';
 
-  // タグ一覧を取得（全カテゴリ、siteカテゴリは除外）
-  const allTags = await getTags();
-  const genreTags = allTags.filter(tag => tag.category !== 'site');
-
-  // ASP統計は常に取得（フィルター表示用）- 早い段階で取得してavailableAspsに使用
-  // FANZAサイトではASP統計は不要（FANZAのみを表示）
-  let aspStats: Array<{ aspName: string; productCount: number; actressCount: number }> = [];
-  if (!isFanzaSite) {
-    try {
-      aspStats = await getAspStats();
-    } catch (error) {
-      console.error('Failed to fetch ASP stats:', error);
-    }
-  }
-
-  // 利用可能なASP一覧（aspStatsから動的に生成、画面上部と一致させる）
-  const availableAsps = aspStats.map(stat => ({
-    id: stat.aspName,
-    name: stat.aspName,
-  }));
-
   const offset = (page - 1) * ITEMS_PER_PAGE;
 
   // "etc"の場合は特別処理（50音・アルファベット以外）
@@ -159,34 +147,45 @@ export default async function Home({ params, searchParams }: PageProps) {
     searchQuery = undefined;
   }
 
-  const actresses = await getActresses({
-    limit: ITEMS_PER_PAGE,
-    offset,
+  // 共通のクエリオプション
+  const actressQueryOptions = {
     query: searchQuery,
     includeTags,
     excludeTags,
     sortBy,
-    excludeInitials: isEtcFilter, // データベース側で'etc'フィルタリング
-    includeAsps,
-    excludeAsps,
-    hasVideo: hasVideo || undefined,
-    hasImage: hasImage || undefined,
-    hasReview: hasReview || undefined,
-    locale,
-  });
-
-  // 総数を効率的に取得
-  const totalCount = await getActressesCount({
-    query: searchQuery,
-    includeTags,
-    excludeTags,
     excludeInitials: isEtcFilter,
     includeAsps,
     excludeAsps,
     hasVideo: hasVideo || undefined,
     hasImage: hasImage || undefined,
     hasReview: hasReview || undefined,
-  });
+  };
+
+  // 並列クエリ実行（パフォーマンス最適化）
+  // タグ、ASP統計、女優リスト、女優数を同時に取得
+  const [allTags, aspStatsResult, actresses, totalCount] = await Promise.all([
+    getTags(),
+    !isFanzaSite ? getAspStats().catch((error) => {
+      console.error('Failed to fetch ASP stats:', error);
+      return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
+    }) : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
+    getActresses({
+      ...actressQueryOptions,
+      limit: ITEMS_PER_PAGE,
+      offset,
+      locale,
+    }),
+    getActressesCount(actressQueryOptions),
+  ]);
+
+  const genreTags = allTags.filter(tag => tag.category !== 'site');
+  const aspStats = aspStatsResult;
+
+  // 利用可能なASP一覧（aspStatsから動的に生成、画面上部と一致させる）
+  const availableAsps = aspStats.map(stat => ({
+    id: stat.aspName,
+    name: stat.aspName,
+  }));
 
   // セール情報を取得（フィルターがない場合のみ）
   let saleProducts: SaleProduct[] = [];
@@ -223,8 +222,22 @@ export default async function Home({ params, searchParams }: PageProps) {
   // FAQスキーマ（トップページのみ）
   const faqSchema = isTopPage ? generateFAQSchema(getHomepageFAQs(locale)) : null;
 
+  // LCP最適化: 最初の女優画像をpreload（コンパクトモードではthumbnail優先）
+  const firstActressImageUrl = actresses.length > 0
+    ? normalizeImageUrlForPreload(actresses[0].thumbnail || actresses[0].heroImage)
+    : null;
+
   return (
     <div className="theme-body min-h-screen">
+      {/* LCP最適化: 最初の画像をpreload */}
+      {firstActressImageUrl && (
+        <link
+          rel="preload"
+          as="image"
+          href={firstActressImageUrl}
+          fetchPriority="high"
+        />
+      )}
       {/* FAQスキーマ（トップページのみ） */}
       {faqSchema && <JsonLD data={faqSchema} />}
       {/* セール情報セクション */}
@@ -325,11 +338,11 @@ export default async function Home({ params, searchParams }: PageProps) {
             queryParams={{
               ...(query ? { q: query } : {}),
               ...(initialFilter ? { initial: initialFilter } : {}),
-              ...(sortBy !== 'nameAsc' ? { sort: sortBy } : {}),
+              ...(sortBy !== 'recent' ? { sort: sortBy } : {}),
               ...(includeTags.length > 0 ? { include: includeTags.join(',') } : {}),
               ...(excludeTags.length > 0 ? { exclude: excludeTags.join(',') } : {}),
-              ...(includeAsps.length > 0 ? { includeAsp: includeAsps.join(',') } : {}),
-              ...(excludeAsps.length > 0 ? { excludeAsp: excludeAsps.join(',') } : {}),
+              ...(userSetIncludeAsps.length > 0 ? { includeAsp: userSetIncludeAsps.join(',') } : {}),
+              ...(userSetExcludeAsps.length > 0 ? { excludeAsp: userSetExcludeAsps.join(',') } : {}),
               ...(hasVideo ? { hasVideo: 'true' } : {}),
               ...(hasImage ? { hasImage: 'true' } : {}),
               ...(hasReview ? { hasReview: 'true' } : {}),
@@ -338,9 +351,7 @@ export default async function Home({ params, searchParams }: PageProps) {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
             {actresses.map((actress, index) => (
-              <Link key={actress.id} href={`/${locale}/actress/${actress.id}`} className="block">
-                <ActressCard actress={actress} compact priority={index < 6} />
-              </Link>
+              <ActressCard key={actress.id} actress={actress} compact priority={index < 6} />
             ))}
           </div>
 
@@ -354,11 +365,11 @@ export default async function Home({ params, searchParams }: PageProps) {
             queryParams={{
               ...(query ? { q: query } : {}),
               ...(initialFilter ? { initial: initialFilter } : {}),
-              ...(sortBy !== 'nameAsc' ? { sort: sortBy } : {}),
+              ...(sortBy !== 'recent' ? { sort: sortBy } : {}),
               ...(includeTags.length > 0 ? { include: includeTags.join(',') } : {}),
               ...(excludeTags.length > 0 ? { exclude: excludeTags.join(',') } : {}),
-              ...(includeAsps.length > 0 ? { includeAsp: includeAsps.join(',') } : {}),
-              ...(excludeAsps.length > 0 ? { excludeAsp: excludeAsps.join(',') } : {}),
+              ...(userSetIncludeAsps.length > 0 ? { includeAsp: userSetIncludeAsps.join(',') } : {}),
+              ...(userSetExcludeAsps.length > 0 ? { excludeAsp: userSetExcludeAsps.join(',') } : {}),
               ...(hasVideo ? { hasVideo: 'true' } : {}),
               ...(hasImage ? { hasImage: 'true' } : {}),
               ...(hasReview ? { hasReview: 'true' } : {}),

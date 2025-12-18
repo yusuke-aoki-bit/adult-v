@@ -365,7 +365,8 @@
     "releaseCount": "Videos",
     "trend": "Trend",
     "fanScore": "Fan Score",
-    "videos": " videos"
+    "videos": " videos",
+    "viewWorks": "View Works"
   },
   "favoriteButton": {
     "addToFavorites": "Add to Favorites",

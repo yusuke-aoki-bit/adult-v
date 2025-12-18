@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Building2, Tag, Star, TrendingUp, ChevronRight, ChevronDown } from 'lucide-react';
+import { Building2, Tag, Star, ChevronRight, ChevronDown } from 'lucide-react';
 import { useRecentlyViewed } from '@/hooks';
 
 interface MakerPreference {

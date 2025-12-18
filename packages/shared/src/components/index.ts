@@ -17,10 +17,18 @@ export { default as ImageLightbox } from './ImageLightbox';
 
 // Notice and content components
 export { default as AdultContentNotice } from './AdultContentNotice';
+export { default as AgeVerification } from './AgeVerification';
 export { default as CampaignCard } from './CampaignCard';
 
 // Layout components
 export { ConditionalLayout } from './ConditionalLayout';
+
+// Navigation components
+export { default as Breadcrumb } from './Breadcrumb';
+export type { BreadcrumbItem } from './Breadcrumb';
+
+// SEO components
+export { JsonLD } from './JsonLD';
 
 // Persistence components
 export { default as FilterPersistence } from './FilterPersistence';
@@ -35,6 +43,7 @@ export { default as StructuredData } from './StructuredData';
 export { default as NavigationProgress } from './NavigationProgress';
 export { default as ScrollToTop } from './ScrollToTop';
 export { default as PreferenceChart, PreferenceBarChart } from './PreferenceChart';
+export { default as StarRating } from './StarRating';
 
 // E-commerce components
 export { default as PriceComparison } from './PriceComparison';
@@ -95,3 +104,37 @@ export { ClientProviders } from './ClientProviders';
 
 // Firebase provider (Analytics, Performance Monitoring, Remote Config)
 export { FirebaseProvider } from './FirebaseProvider';
+
+// ProductCard utilities (themes and helpers)
+export {
+  getThemeConfig as getProductCardThemeConfig,
+  themes as productCardThemes,
+  getAffiliateUrl,
+  normalizeMgsProductId,
+  extractMgsProductUrl,
+  convertFanzaToDirectUrl,
+} from './ProductCard';
+export type {
+  ProductCardTheme,
+  ThemeConfig as ProductCardThemeConfig,
+  GetAffiliateUrlOptions,
+} from './ProductCard';
+
+// Actress career components
+export { ActressCareerTimeline } from './ActressCareerTimeline';
+export { RetirementAlert } from './RetirementAlert';
+
+// ActressCard utilities (themes and helpers)
+export {
+  actressCardThemes,
+  getActressCardThemeConfig,
+  filterServicesForSite,
+} from './ActressCard';
+export type {
+  ActressCardTheme,
+  ActressCardThemeConfig,
+} from './ActressCard';
+
+// Cloud sync settings
+export { CloudSyncSettings, cloudSyncTranslations } from './CloudSyncSettings';
+export type { CloudSyncSettingsProps } from './CloudSyncSettings';

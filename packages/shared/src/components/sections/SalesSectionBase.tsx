@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode, type ComponentType } from 'react';
+import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Flame } from 'lucide-react';
@@ -65,9 +65,22 @@ export function SalesSectionBase<T extends BaseProduct>({
   const themeConfig = getThemeConfig(theme);
 
   const [products, setProducts] = useState<T[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  // 遅延フェッチ用: 一度でも展開されたかどうか
+  const [hasExpanded, setHasExpanded] = useState(false);
 
+  // 展開時にフェッチをトリガー
+  const handleToggle = useCallback((isOpen: boolean) => {
+    if (isOpen && !hasExpanded) {
+      setHasExpanded(true);
+    }
+  }, [hasExpanded]);
+
+  // Fetch products (only when expanded)
   useEffect(() => {
+    // 展開されていない場合はフェッチしない（パフォーマンス優先）
+    if (!hasExpanded) return;
+
     const doFetch = async () => {
       if (saleProducts.length === 0) {
         setProducts([]);
@@ -123,28 +136,45 @@ export function SalesSectionBase<T extends BaseProduct>({
       }
     };
 
+    setIsLoading(true);
     doFetch();
-  }, [saleProducts, fetchProducts, mergeSaleInfo]);
+  }, [saleProducts, fetchProducts, mergeSaleInfo, hasExpanded]);
 
   if (saleProducts.length === 0) {
     return null;
   }
 
-  // Loading skeleton
-  if (isLoading) {
+  // コンテンツの決定：未展開→空、ロード中→スケルトン、ロード完了→商品リスト
+  const renderContent = () => {
+    if (!hasExpanded) {
+      // まだ展開されていない場合は空のプレースホルダー
+      return <div className="h-24 flex items-center justify-center text-sm theme-text-muted">クリックして表示</div>;
+    }
+
+    if (isLoading) {
+      return <ProductSkeleton count={Math.min(saleProducts.length, 8)} />;
+    }
+
     return (
-      <AccordionSection
-        icon={<Flame className="w-5 h-5" />}
-        title={t.title}
-        itemCount={saleProducts.length}
-        defaultOpen={false}
-        iconColorClass={themeConfig.salesSection.iconColorClass}
-        bgClass={themeConfig.salesSection.bgClass}
-      >
-        <ProductSkeleton count={Math.min(saleProducts.length, 8)} />
-      </AccordionSection>
+      <>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} compact />
+          ))}
+        </div>
+        {/* View all sales link */}
+        <Link
+          href={`/${locale}/products?onSale=true`}
+          className={`flex items-center justify-center gap-2 mt-4 py-2 ${themeConfig.salesSection.linkColorClass} transition-colors text-sm font-medium`}
+        >
+          {t.viewAll}
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </>
     );
-  }
+  };
 
   return (
     <AccordionSection
@@ -152,24 +182,11 @@ export function SalesSectionBase<T extends BaseProduct>({
       title={t.title}
       itemCount={saleProducts.length}
       defaultOpen={false}
+      onToggle={handleToggle}
       iconColorClass={themeConfig.salesSection.iconColorClass}
       bgClass={themeConfig.salesSection.bgClass}
     >
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} compact />
-        ))}
-      </div>
-      {/* View all sales link */}
-      <Link
-        href={`/${locale}/products?onSale=true`}
-        className={`flex items-center justify-center gap-2 mt-4 py-2 ${themeConfig.salesSection.linkColorClass} transition-colors text-sm font-medium`}
-      >
-        {t.viewAll}
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </Link>
+      {renderContent()}
     </AccordionSection>
   );
 }

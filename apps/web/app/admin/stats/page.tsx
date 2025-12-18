@@ -1,6 +1,5 @@
-import { Suspense } from 'react';
 import { Metadata } from 'next';
-import AdminStatsContent from './AdminStatsContent';
+import AdminStatsWrapper from './AdminStatsWrapper';
 
 export const metadata: Metadata = {
   title: '管理ページ | Adult Viewer Lab',
@@ -13,13 +12,5 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default function AdminStatsPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-900 text-white p-8 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    }>
-      <AdminStatsContent />
-    </Suspense>
-  );
+  return <AdminStatsWrapper />;
 }

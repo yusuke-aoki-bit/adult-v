@@ -57,7 +57,7 @@ export default async function LocaleLayout({
 
   // サーバーサイドで年齢確認クッキーを読み取り（CLS防止）
   const cookieStore = await cookies();
-  const ageVerified = cookieStore.get('age_verified')?.value === 'true';
+  const ageVerified = cookieStore.get('age-verified')?.value === 'true';
 
   // サイトモードを取得（FANZAサブドメイン vs メインサイト）
   const siteMode = await getServerSiteMode();

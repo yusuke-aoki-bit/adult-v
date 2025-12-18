@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -177,7 +177,7 @@ export default function BudgetPage() {
     return categories;
   }, [products]);
 
-  const getPriorityLabel = (category: PriorityCategory) => {
+  const _getPriorityLabel = (category: PriorityCategory) => {
     switch (category) {
       case 'urgent':
         return t.saleSoon;

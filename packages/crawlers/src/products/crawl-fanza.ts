@@ -26,7 +26,7 @@ import { products, productSources, performers, productPerformers, productImages,
 import { eq, and, sql } from 'drizzle-orm';
 import { validateProductData } from '../lib/crawler-utils';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
-import { generateProductDescription, extractProductTags } from '../lib/google-apis';
+import { getAIHelper } from '../lib/crawler';
 import { translateProductLingva } from '../lib/translate';
 import {
   upsertRawHtmlDataWithGcs,
@@ -752,7 +752,7 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
 }
 
 /**
- * AI機能: 説明文生成とタグ抽出
+ * AI機能: 説明文生成とタグ抽出（CrawlerAIHelper使用）
  */
 async function generateAIContent(product: FanzaProduct, enableAI: boolean): Promise<{
   aiDescription: { catchphrase: string; shortDescription: string } | null;
@@ -768,33 +768,38 @@ async function generateAIContent(product: FanzaProduct, enableAI: boolean): Prom
   let aiTags = null;
 
   try {
-    // 説明文生成
-    const description = await generateProductDescription(
-      product.title,
-      product.performers,
-      product.description
+    const aiHelper = getAIHelper();
+    const result = await aiHelper.processProduct(
+      {
+        title: product.title,
+        description: product.description,
+        performers: product.performers,
+      },
+      {
+        extractTags: true,
+        translate: false, // FANZAはLingvaで翻訳するため
+        generateDescription: true,
+      }
     );
 
-    if (description) {
+    // エラーがあれば警告
+    if (result.errors.length > 0) {
+      console.log(`      ⚠️ AI処理で一部エラー: ${result.errors.join(', ')}`);
+    }
+
+    if (result.description) {
       aiDescription = {
-        catchphrase: description.catchphrase || '',
-        shortDescription: description.shortDescription || '',
+        catchphrase: result.description.catchphrase || '',
+        shortDescription: result.description.shortDescription || '',
       };
       console.log(`      ✅ AI説明文生成完了`);
       console.log(`         キャッチコピー: ${aiDescription.catchphrase.substring(0, 30)}...`);
     }
 
-    // タグ抽出
-    const tags = await extractProductTags(
-      product.title,
-      product.performers,
-      product.description
-    );
-
-    if (tags) {
+    if (result.tags) {
       aiTags = {
-        genres: tags.genres || [],
-        attributes: tags.attributes || [],
+        genres: result.tags.genres || [],
+        attributes: result.tags.attributes || [],
       };
       console.log(`      ✅ AIタグ抽出完了`);
     }

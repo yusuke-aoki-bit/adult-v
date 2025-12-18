@@ -324,5 +324,12 @@
     "addedToDiary": "已添加到观看日记",
     "removedFromDiary": "已从观看日记移除",
     "viewCount": "已看{count}次"
+  },
+  "actressCard": {
+    "releaseCount": "出演数",
+    "trend": "趋势",
+    "fanScore": "支持率",
+    "videos": "部",
+    "viewWorks": "查看作品"
   }
 }

@@ -456,3 +456,9 @@ img {
 .scroll-snap-x > * {
   scroll-snap-align: start;
 }
+
+/* Force include dynamic Tailwind classes used in shared components */
+.border-red-500 {
+  border-color: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}

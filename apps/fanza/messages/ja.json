@@ -351,7 +351,8 @@
     "releaseCount": "出演数",
     "trend": "トレンド",
     "fanScore": "支持率",
-    "videos": "本"
+    "videos": "本",
+    "viewWorks": "作品を見る"
   },
   "favoriteButton": {
     "addToFavorites": "お気に入りに追加",

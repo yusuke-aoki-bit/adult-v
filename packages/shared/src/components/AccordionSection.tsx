@@ -18,6 +18,8 @@ interface AccordionSectionProps {
   clearLabel?: string;
   /** クリア時のコールバック */
   onClear?: () => void;
+  /** トグル時のコールバック（遅延フェッチ用） */
+  onToggle?: (isOpen: boolean) => void;
   /** アイコンの色クラス */
   iconColorClass?: string;
   /** 背景グラデーションクラス */
@@ -41,12 +43,19 @@ export default function AccordionSection({
   showClear = false,
   clearLabel = 'クリア',
   onClear,
+  onToggle,
   iconColorClass = 'text-rose-500',
   bgClass,
   children,
   className = '',
 }: AccordionSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  const handleToggle = () => {
+    const newState = !isOpen;
+    setIsOpen(newState);
+    onToggle?.(newState);
+  };
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -63,7 +72,7 @@ export default function AccordionSection({
       {/* アコーディオンヘッダー */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="w-full flex items-center justify-between py-3 px-4 theme-accordion-hover rounded-lg transition-colors"
         aria-expanded={isOpen}
       >

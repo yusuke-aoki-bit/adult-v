@@ -24,11 +24,21 @@
     "./lib/seo-utils": "./src/lib/seo-utils.ts",
     "./lib/theme": "./src/lib/theme.ts",
     "./lib/translate": "./src/lib/translate.ts",
+    "./lib/performer-validation": "./src/lib/performer-validation.ts",
+    "./lib/crawler-utils": "./src/lib/crawler-utils.ts",
+    "./lib/google-apis": "./src/lib/google-apis.ts",
+    "./lib/cron-auth": "./src/lib/cron-auth.ts",
+    "./providers/duga-client": "./src/providers/duga-client.ts",
+    "./providers/sokmil-client": "./src/providers/sokmil-client.ts",
+    "./providers/duga-page-scraper": "./src/providers/duga-page-scraper.ts",
     "./hooks": "./src/hooks/index.ts",
     "./hooks/*": "./src/hooks/*.ts",
     "./contexts": "./src/contexts/index.ts",
     "./components": "./src/components/index.ts",
-    "./components/*": "./src/components/*.tsx"
+    "./components/*": "./src/components/*.tsx",
+    "./api-handlers": "./src/api-handlers/index.ts",
+    "./cron-handlers": "./src/cron-handlers/index.ts",
+    "./db-queries": "./src/db-queries/index.ts"
   },
   "dependencies": {
     "firebase": "^11.0.0"

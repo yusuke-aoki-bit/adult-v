@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, TouchEvent, ReactNode } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getFullSizeImageUrl, isDtiUncensoredSite } from '@/lib/image-utils';
+import { getFullSizeImageUrl, isDtiUncensoredSite } from '../lib/image-utils';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
@@ -134,13 +134,17 @@ export default function ImageLightbox({
   if (!isOpen) return null;
 
   const fullSizeImage = getFullSizeImageUrl(currentImage);
-  const hasDetailsOrChildren = detailsUrl || children;
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center cursor-pointer select-none"
+      className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer select-none lightbox-backdrop"
       onClick={handleZoneClick}
-      style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
+      style={{
+        backgroundColor: '#000000',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+        WebkitTouchCallout: 'none'
+      }}
     >
       {/* 閉じるボタン */}
       <button
@@ -215,52 +219,63 @@ export default function ImageLightbox({
         </>
       )}
 
-      {/* サムネイル一覧 */}
-      {hasMultipleImages && (
-        <div className={`absolute ${hasDetailsOrChildren ? 'bottom-24' : 'bottom-8'} left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/60 rounded-lg max-w-[90vw] overflow-x-auto`}>
-          {images.map((imgUrl, idx) => (
-            <button
-              key={imgUrl}
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); setImageError(false); }}
-              className={`relative w-20 h-28 shrink-0 rounded overflow-hidden border-2 transition-all ${
-                currentIndex === idx
-                  ? 'border-rose-600'
-                  : 'border-transparent hover:border-gray-500'
-              }`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imgUrl}
-                alt={`${t('thumbnailAlt')} ${idx + 1}`}
-                className={`w-full h-full object-cover ${isDtiUncensoredSite(imgUrl) ? 'blur-[2px]' : ''}`}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                }}
-              />
-              {/* フォールバック表示 */}
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-700 -z-10">
-                <span className="text-gray-400 text-xs">{idx + 1}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+      {/* 下部コンテンツエリア */}
+      <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3 z-10 pointer-events-none">
+        {/* 詳細ページへのリンク */}
+        {detailsUrl && (
+          <Link
+            href={detailsUrl}
+            className="px-6 py-3 rounded-lg text-white font-semibold transition-colors pointer-events-auto flex items-center gap-2 whitespace-nowrap"
+            style={{ backgroundColor: '#e11d48' }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#be123c'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#e11d48'; }}
+          >
+            {t('viewDetails')}
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        )}
 
-      {/* 詳細ページへのリンク */}
-      {detailsUrl && (
-        <Link
-          href={detailsUrl}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-rose-600 hover:bg-rose-700 rounded-lg text-white font-semibold transition-colors pointer-events-auto flex items-center gap-2 whitespace-nowrap"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {t('viewDetails')}
-          <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
-      )}
+        {/* サムネイル一覧 */}
+        {hasMultipleImages && (
+          <div
+            className="flex gap-2 p-2 rounded-lg max-w-[90vw] overflow-x-auto pointer-events-auto"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {images.map((imgUrl, idx) => (
+              <button
+                key={`thumb-${idx}`}
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); setImageError(false); }}
+                className={`relative w-16 h-12 shrink-0 rounded overflow-hidden border-2 transition-all ${
+                  currentIndex === idx
+                    ? 'border-rose-600'
+                    : 'border-transparent hover:border-gray-500'
+                }`}
+                style={{ backgroundColor: '#374151' }}
+              >
+                {/* フォールバック番号 */}
+                <span className="absolute inset-0 flex items-center justify-center text-xs" style={{ color: '#9ca3af' }}>
+                  {idx + 1}
+                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imgUrl}
+                  alt={`${t('thumbnailAlt')} ${idx + 1}`}
+                  className={`absolute inset-0 w-full h-full object-cover ${isDtiUncensoredSite(imgUrl) ? 'blur-[2px]' : ''}`}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.opacity = '0';
+                  }}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* 追加コンテンツ（詳細ボタンなど） */}
       {children}

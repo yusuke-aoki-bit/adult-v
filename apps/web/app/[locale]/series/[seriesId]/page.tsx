@@ -7,7 +7,7 @@ import { generateBaseMetadata, generateBreadcrumbSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { Library, Clock, Film, Star, User, Trophy, ChevronDown } from 'lucide-react';
+import { Library, Clock, Film, Star, User, Trophy } from 'lucide-react';
 import SeriesProgressTracker from '@/components/SeriesProgressTracker';
 import { Product } from '@/types/product';
 import { localizedHref } from '@adult-v/shared/i18n';

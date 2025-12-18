@@ -150,6 +150,9 @@ export const performers = pgTable(
     instagramId: varchar('instagram_id', { length: 100 }), // Instagram
     debutYear: integer('debut_year'), // デビュー年
     isRetired: boolean('is_retired').default(false), // 引退フラグ
+    isFanzaOnly: boolean('is_fanza_only').default(false), // FANZA専用女優フラグ（事前計算）
+    latestReleaseDate: date('latest_release_date'), // 最新作品のリリース日（事前計算・ソート用）
+    releaseCount: integer('release_count').default(0), // 作品数（事前計算・ソート用）
     // AIレビュー
     aiReview: text('ai_review'), // Gemini AIによる演者レビュー
     aiReviewUpdatedAt: timestamp('ai_review_updated_at'), // レビュー更新日時
@@ -165,6 +168,9 @@ export const performers = pgTable(
     heightIdx: index('idx_performers_height').on(table.height),
     cupIdx: index('idx_performers_cup').on(table.cup),
     birthdayIdx: index('idx_performers_birthday').on(table.birthday),
+    // パフォーマンス最適化用インデックス
+    latestReleaseDateIdx: index('idx_performers_latest_release').on(table.latestReleaseDate),
+    releaseCountIdx: index('idx_performers_release_count').on(table.releaseCount),
   }),
 );
 

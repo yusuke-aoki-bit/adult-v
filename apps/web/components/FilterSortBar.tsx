@@ -173,7 +173,8 @@ export default function FilterSortBar({
 
   const hasActiveFilters = selectedProviders.size > 0 || selectedPriceRanges.size > 0 || sortBy !== defaultSort;
 
-  const sortOptions: { value: SortOption; label: string }[] = [
+  // Memoize sort options to prevent recreation on every render
+  const sortOptions = useMemo<{ value: SortOption; label: string }[]>(() => [
     { value: 'releaseDateDesc', label: t.releaseDateDesc },
     { value: 'releaseDateAsc', label: t.releaseDateAsc },
     { value: 'priceDesc', label: t.priceDesc },
@@ -181,14 +182,15 @@ export default function FilterSortBar({
     { value: 'ratingDesc', label: t.ratingDesc },
     { value: 'ratingAsc', label: t.ratingAsc },
     { value: 'titleAsc', label: t.titleAsc },
-  ];
+  ], [t]);
 
-  const priceRanges: { value: string; label: string }[] = [
+  // Memoize price ranges to prevent recreation on every render
+  const priceRanges = useMemo<{ value: string; label: string }[]>(() => [
     { value: '0-1000', label: '¥0 - ¥1,000' },
     { value: '1000-2000', label: '¥1,000 - ¥2,000' },
     { value: '2000-3000', label: '¥2,000 - ¥3,000' },
     { value: '3000', label: `¥3,000${t.priceAbove}` },
-  ];
+  ], [t.priceAbove]);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">

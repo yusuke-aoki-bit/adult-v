@@ -63,7 +63,7 @@ function convertToProduct(product: RelatedProduct): Product {
 
 export default function RelatedProducts({ products, title }: RelatedProductsProps) {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const _locale = (params?.locale as string) || 'ja';
   const t = useTranslations('relatedProducts');
 
   if (products.length === 0) {

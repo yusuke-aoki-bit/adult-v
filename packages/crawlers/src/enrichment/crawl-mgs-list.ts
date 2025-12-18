@@ -19,7 +19,8 @@ import { rawHtmlData, productSources, products, performers, productPerformers, t
 import { eq, and, sql } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
 import { validateProductData, isTopPageHtml } from '../lib/crawler-utils';
-import { generateProductDescription, extractProductTags, translateProduct, GeneratedDescription } from '../lib/google-apis';
+import { getAIHelper } from '../lib/crawler';
+import type { GeneratedDescription } from '../lib/google-apis';
 import { saveRawHtml, calculateHash } from '../lib/gcs-crawler-helper';
 import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
 
@@ -1171,43 +1172,54 @@ async function saveProduct(
       await saveSaleInfo(SOURCE_NAME, mgsProduct.productId, mgsProduct.saleInfo);
     }
 
-    // AI処理
+    // AI処理（CrawlerAIHelper使用）
     if (enableAI) {
       try {
         console.log('    🤖 AI processing...');
-        const aiDescription = await generateProductDescription({
-          title: mgsProduct.title,
-          originalDescription: mgsProduct.description,
-          performers: mgsProduct.performerNames,
-          genres: mgsProduct.genres,
-        });
+        const aiHelper = getAIHelper();
+        const aiResult = await aiHelper.processProduct(
+          {
+            title: mgsProduct.title,
+            description: mgsProduct.description,
+            performers: mgsProduct.performerNames,
+            genres: mgsProduct.genres,
+          },
+          {
+            extractTags: true,
+            translate: true,
+            generateDescription: true,
+          }
+        );
 
-        const aiTags = await extractProductTags(mgsProduct.title, mgsProduct.description);
+        // エラーがあれば警告
+        if (aiResult.errors.length > 0) {
+          console.log(`    ⚠️ AI処理で一部エラー: ${aiResult.errors.join(', ')}`);
+        }
 
-        if (aiDescription || (aiTags.genres.length > 0)) {
+        // AI説明文とタグを保存
+        if (aiResult.description || (aiResult.tags && aiResult.tags.genres.length > 0)) {
           await db
             .update(products)
             .set({
-              aiDescription: aiDescription ? JSON.stringify(aiDescription) : undefined,
-              aiCatchphrase: aiDescription?.catchphrase,
-              aiShortDescription: aiDescription?.shortDescription,
-              aiTags: (aiTags.genres.length > 0 || aiTags.attributes.length > 0) ? JSON.stringify(aiTags) : undefined,
+              aiDescription: aiResult.description ? JSON.stringify(aiResult.description) : undefined,
+              aiCatchphrase: aiResult.description?.catchphrase,
+              aiShortDescription: aiResult.description?.shortDescription,
+              aiTags: (aiResult.tags && (aiResult.tags.genres.length > 0 || aiResult.tags.attributes.length > 0)) ? JSON.stringify(aiResult.tags) : undefined,
             })
             .where(eq(products.id, productId));
         }
 
-        // 翻訳
-        const translation = await translateProduct(mgsProduct.title, mgsProduct.description);
-        if (translation) {
+        // 翻訳を保存
+        if (aiResult.translations) {
           await db
             .update(products)
             .set({
-              titleEn: translation.en?.title,
-              titleZh: translation.zh?.title,
-              titleKo: translation.ko?.title,
-              descriptionEn: translation.en?.description,
-              descriptionZh: translation.zh?.description,
-              descriptionKo: translation.ko?.description,
+              titleEn: aiResult.translations.en?.title,
+              titleZh: aiResult.translations.zh?.title,
+              titleKo: aiResult.translations.ko?.title,
+              descriptionEn: aiResult.translations.en?.description,
+              descriptionZh: aiResult.translations.zh?.description,
+              descriptionKo: aiResult.translations.ko?.description,
             })
             .where(eq(products.id, productId));
         }

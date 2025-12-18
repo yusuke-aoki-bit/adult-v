@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
   Dna,
   BookOpen,
@@ -10,14 +11,27 @@ import {
   TrendingUp,
   Star,
   ChevronRight,
-  Building2,
 } from 'lucide-react';
 import PreferenceChart, { PreferenceBarChart } from '@/components/PreferenceChart';
-import MakerAnalysis from '@/components/MakerAnalysis';
-import BudgetTracker from '@/components/BudgetTracker';
 import DiscoveryBadges from '@/components/DiscoveryBadges';
 import { usePreferenceAnalysis, useViewingDiary } from '@/hooks';
 import { profileTranslations } from '@adult-v/shared/hooks';
+import { CloudSyncSettings, cloudSyncTranslations } from '@adult-v/shared/components';
+
+// Dynamic imports for heavy components to reduce initial bundle size
+const BudgetTracker = dynamic(() => import('@/components/BudgetTracker'), {
+  loading: () => (
+    <div className="bg-white rounded-lg p-4 h-32 animate-pulse border border-gray-200" />
+  ),
+  ssr: false,
+});
+// MakerAnalysis (283 lines)
+const MakerAnalysis = dynamic(() => import('@/components/MakerAnalysis'), {
+  loading: () => (
+    <div className="bg-white rounded-lg p-4 h-48 animate-pulse border border-gray-200" />
+  ),
+  ssr: false,
+});
 
 type TranslationKey = keyof typeof profileTranslations;
 type Translation = typeof profileTranslations[TranslationKey];
@@ -146,6 +160,11 @@ export default function ProfilePage() {
 
           {/* メーカー分析 */}
           <MakerAnalysis locale={locale} />
+
+          {/* クラウド同期設定 */}
+          <CloudSyncSettings
+            translations={cloudSyncTranslations[locale as keyof typeof cloudSyncTranslations] || cloudSyncTranslations.ja}
+          />
 
           {/* おすすめキーワード */}
           {analysis.recommendedKeywords.length > 0 && (

@@ -407,15 +407,6 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     const db = getDb();
     const conditions = [];
 
-    // nyoshin/unkotareの商品を除外（画像リンク切れ）
-    // normalized_product_idで判定
-    conditions.push(
-      sql`NOT (
-        ${products.normalizedProductId} LIKE '女体のしんぴ%'
-        OR ${products.normalizedProductId} LIKE 'うんこたれ%'
-      )`
-    );
-
     // プロバイダー（ASP）でフィルタ（単一）
     if (options?.provider) {
       // Map frontend provider names to ASP names
@@ -675,14 +666,6 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
     const db = getDb();
     const conditions = [];
 
-    // nyoshin/unkotareの商品を除外
-    conditions.push(
-      sql`NOT (
-        ${products.normalizedProductId} LIKE '女体のしんぴ%'
-        OR ${products.normalizedProductId} LIKE 'うんこたれ%'
-      )`
-    );
-
     // プロバイダー（ASP）でフィルタ（単一）
     if (options?.provider) {
       const aspMapping: Record<string, string[]> = {
@@ -857,16 +840,11 @@ export async function getActresses(options?: {
     const conditions = [];
 
     // 作品と紐付いている女優のみ表示（出演数0の女優を除外）
-    // nyoshin/unkotare専用女優も除外（それ以外の商品に出演していない女優）
     conditions.push(
       sql`EXISTS (
         SELECT 1 FROM ${productPerformers} pp
         INNER JOIN products p2 ON pp.product_id = p2.id
         WHERE pp.performer_id = ${performers.id}
-        AND NOT (
-          p2.normalized_product_id LIKE '女体のしんぴ%'
-          OR p2.normalized_product_id LIKE 'うんこたれ%'
-        )
       )`
     );
 
@@ -1480,16 +1458,11 @@ export async function getActressesCount(options?: {
     const conditions = [];
 
     // 作品と紐付いている女優のみカウント（出演数0の女優を除外）
-    // nyoshin/unkotare専用女優も除外（それ以外の商品に出演していない女優）
     conditions.push(
       sql`EXISTS (
         SELECT 1 FROM ${productPerformers} pp
         INNER JOIN products p2 ON pp.product_id = p2.id
         WHERE pp.performer_id = ${performers.id}
-        AND NOT (
-          p2.normalized_product_id LIKE '女体のしんぴ%'
-          OR p2.normalized_product_id LIKE 'うんこたれ%'
-        )
       )`
     );
 

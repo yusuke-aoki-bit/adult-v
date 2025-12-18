@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode, type ComponentType } from 'react';
+import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 import { Clock, X } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import AccordionSection from '../AccordionSection';
@@ -28,7 +28,6 @@ interface UseRecentlyViewedReturn {
 interface ProductCardProps<T extends BaseProduct> {
   product: T;
   compact?: boolean;
-  mini?: boolean;
 }
 
 interface RecentlyViewedSectionProps<T extends BaseProduct> {
@@ -45,6 +44,7 @@ interface RecentlyViewedSectionProps<T extends BaseProduct> {
 /**
  * Shared RecentlyViewed section component
  * Displays products the user has recently viewed with delete functionality
+ * Performance optimized: Only fetches product data when section is expanded
  */
 export function RecentlyViewedSection<T extends BaseProduct>({
   theme,
@@ -61,9 +61,21 @@ export function RecentlyViewedSection<T extends BaseProduct>({
 
   const [products, setProducts] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  // 遅延フェッチ用: 一度でも展開されたかどうか
+  const [hasExpanded, setHasExpanded] = useState(false);
 
-  // Fetch full product info from ID list
+  // 展開時にフェッチをトリガー
+  const handleToggle = useCallback((isOpen: boolean) => {
+    if (isOpen && !hasExpanded) {
+      setHasExpanded(true);
+    }
+  }, [hasExpanded]);
+
+  // Fetch full product info from ID list (only when expanded)
   useEffect(() => {
+    // 展開されていない場合はフェッチしない（パフォーマンス優先）
+    if (!hasExpanded) return;
+
     const doFetch = async () => {
       if (items.length === 0) {
         setProducts([]);
@@ -113,32 +125,47 @@ export function RecentlyViewedSection<T extends BaseProduct>({
     if (!isViewedLoading) {
       doFetch();
     }
-  }, [items, isViewedLoading, fetchProducts]);
+  }, [items, isViewedLoading, fetchProducts, hasExpanded]);
 
-  // Don't render if loading or no history
+  // Don't render if loading viewed items or no history
   if (isViewedLoading || items.length === 0) {
     return null;
   }
 
-  // Loading skeleton
-  if (isLoading) {
+  // コンテンツの決定：未展開→空、ロード中→スケルトン、ロード完了→商品リスト
+  const renderContent = () => {
+    if (!hasExpanded) {
+      // まだ展開されていない場合は空のプレースホルダー
+      return <div className="h-24 flex items-center justify-center text-sm theme-text-muted">クリックして表示</div>;
+    }
+
+    if (isLoading) {
+      return <ProductSkeleton count={Math.min(items.length, 8)} />;
+    }
+
     return (
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <AccordionSection
-            icon={<Clock className="w-5 h-5" />}
-            title={t.title}
-            itemCount={items.length}
-            defaultOpen={false}
-            iconColorClass={themeConfig.recentlyViewed.iconColorClass}
-            bgClass={themeConfig.recentlyViewed.bgClass}
-          >
-            <ProductSkeleton count={Math.min(items.length, 8)} />
-          </AccordionSection>
-        </div>
-      </section>
+      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+        {products.map((product) => (
+          <div key={product.id} className="relative group/card">
+            <ProductCard product={product} compact />
+            {/* Delete button - shows on card hover */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                removeItem(String(product.id));
+              }}
+              className={`absolute -top-1 -right-1 z-30 w-5 h-5 ${themeConfig.recentlyViewed.deleteButtonBgClass} hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity shadow-lg`}
+              aria-label={t.removeFromHistory}
+            >
+              <X className="w-3 h-3 text-white" />
+            </button>
+          </div>
+        ))}
+      </div>
     );
-  }
+  };
 
   return (
     <section className="py-3 sm:py-4">
@@ -148,32 +175,14 @@ export function RecentlyViewedSection<T extends BaseProduct>({
           title={t.title}
           itemCount={items.length}
           defaultOpen={false}
-          showClear={true}
+          showClear={hasExpanded && products.length > 0}
           clearLabel={t.clearAll}
           onClear={clearAll}
+          onToggle={handleToggle}
           iconColorClass={themeConfig.recentlyViewed.iconColorClass}
           bgClass={themeConfig.recentlyViewed.bgClass}
         >
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-            {products.map((product) => (
-              <div key={product.id} className="relative group/card flex-shrink-0 w-16 sm:w-20">
-                <ProductCard product={product} mini />
-                {/* Delete button - shows on card hover */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    removeItem(String(product.id));
-                  }}
-                  className={`absolute -top-1 -right-1 z-30 w-5 h-5 ${themeConfig.recentlyViewed.deleteButtonBgClass} hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity shadow-lg`}
-                  aria-label={t.removeFromHistory}
-                >
-                  <X className="w-3 h-3 text-white" />
-                </button>
-              </div>
-            ))}
-          </div>
+          {renderContent()}
         </AccordionSection>
       </div>
     </section>

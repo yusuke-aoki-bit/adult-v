@@ -1,13 +1,12 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { providerMeta } from '@/lib/providers';
-import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
+import '@/lib/providers';
+import '@/lib/constants/filters';
 
 interface Tag {
   id: number;
   name: string;
-  count: number;
 }
 
 interface AspCount {
@@ -39,7 +38,7 @@ interface ActressProductFilterProps {
 
 export default function ActressProductFilter({
   genreTags,
-  productCountByAsp,
+  productCountByAsp: _productCountByAsp,
   translations: t,
 }: ActressProductFilterProps) {
   const router = useRouter();
@@ -107,11 +106,11 @@ export default function ActressProductFilter({
     updateFilter('exclude', tagId, true, excludeTags);
   };
 
-  const handleAspChange = (aspName: string) => {
+  const _handleAspChange = (aspName: string) => {
     updateFilter('asp', aspName, true, includeAsps);
   };
 
-  const handleExcludeAspChange = (aspName: string) => {
+  const _handleExcludeAspChange = (aspName: string) => {
     updateFilter('excludeAsp', aspName, true, excludeAsps);
   };
 
@@ -248,7 +247,7 @@ export default function ActressProductFilter({
                         onChange={() => handleIncludeTagChange(String(tag.id))}
                         className="w-5 h-5 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
                       />
-                      <span className="text-base sm:text-sm text-gray-700">{tag.name} <span className="text-gray-500">({tag.count})</span></span>
+                      <span className="text-base sm:text-sm text-gray-700">{tag.name}</span>
                     </label>
                   ))}
                 </div>
@@ -272,7 +271,7 @@ export default function ActressProductFilter({
                         onChange={() => handleExcludeTagChange(String(tag.id))}
                         className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
                       />
-                      <span className="text-base sm:text-sm text-gray-700">{tag.name} <span className="text-gray-500">({tag.count})</span></span>
+                      <span className="text-base sm:text-sm text-gray-700">{tag.name}</span>
                     </label>
                   ))}
                 </div>

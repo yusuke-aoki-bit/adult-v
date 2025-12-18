@@ -324,5 +324,12 @@
     "addedToDiary": "시청 일기에 추가됨",
     "removedFromDiary": "시청 일기에서 삭제됨",
     "viewCount": "{count}회 시청"
+  },
+  "actressCard": {
+    "releaseCount": "출연수",
+    "trend": "트렌드",
+    "fanScore": "지지율",
+    "videos": "편",
+    "viewWorks": "작품 보기"
   }
 }

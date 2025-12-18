@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode, type ComponentType } from 'react';
+import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 import { Sparkles } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import AccordionSection from '../AccordionSection';
@@ -26,7 +26,6 @@ interface UseRecentlyViewedReturn {
 interface ProductCardProps<T extends BaseProduct> {
   product: T;
   compact?: boolean;
-  mini?: boolean;
 }
 
 interface RecommendationMeta {
@@ -68,8 +67,21 @@ export function ForYouRecommendationsSection<T extends BaseProduct>({
 
   const [products, setProducts] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  // 遅延フェッチ用: 一度でも展開されたかどうか
+  const [hasExpanded, setHasExpanded] = useState(false);
 
+  // 展開時にフェッチをトリガー
+  const handleToggle = useCallback((isOpen: boolean) => {
+    if (isOpen && !hasExpanded) {
+      setHasExpanded(true);
+    }
+  }, [hasExpanded]);
+
+  // Fetch recommendations (only when expanded)
   useEffect(() => {
+    // 展開されていない場合はフェッチしない（パフォーマンス優先）
+    if (!hasExpanded) return;
+
     const doFetch = async () => {
       if (viewedItems.length < 2) {
         setProducts([]);
@@ -146,36 +158,41 @@ export function ForYouRecommendationsSection<T extends BaseProduct>({
     if (!isViewedLoading) {
       doFetch();
     }
-  }, [viewedItems, isViewedLoading, fetchRecommendations, fetchProducts]);
+  }, [viewedItems, isViewedLoading, fetchRecommendations, fetchProducts, hasExpanded]);
 
   // Don't render if no viewing history or still loading
   if (isViewedLoading || viewedItems.length < 2) {
     return null;
   }
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <AccordionSection
-            icon={<Sparkles className="w-5 h-5" />}
-            title={t.title}
-            defaultOpen={false}
-            iconColorClass={themeConfig.forYouRecommendations.iconColorClass}
-            bgClass={themeConfig.forYouRecommendations.bgClass}
-          >
-            <ProductSkeleton count={8} />
-          </AccordionSection>
-        </div>
-      </section>
-    );
-  }
+  // コンテンツの決定：未展開→空、ロード中→スケルトン、ロード完了→商品リスト
+  const renderContent = () => {
+    if (!hasExpanded) {
+      // まだ展開されていない場合は空のプレースホルダー
+      return <div className="h-24 flex items-center justify-center text-sm theme-text-muted">クリックして表示</div>;
+    }
 
-  // No recommendations
-  if (products.length === 0) {
-    return null;
-  }
+    if (isLoading) {
+      return <ProductSkeleton count={8} />;
+    }
+
+    if (products.length === 0) {
+      return <div className="h-24 flex items-center justify-center text-sm theme-text-muted">おすすめが見つかりませんでした</div>;
+    }
+
+    return (
+      <>
+        <p className={`text-xs ${themeConfig.forYouRecommendations.subtitleClass} mb-3`}>{t.basedOn}</p>
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+          {products.map((product) => (
+            <div key={product.id}>
+              <ProductCard product={product} compact />
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  };
 
   return (
     <section className="py-3 sm:py-4">
@@ -183,19 +200,13 @@ export function ForYouRecommendationsSection<T extends BaseProduct>({
         <AccordionSection
           icon={<Sparkles className="w-5 h-5" />}
           title={t.title}
-          itemCount={products.length}
+          itemCount={hasExpanded && products.length > 0 ? products.length : undefined}
           defaultOpen={false}
+          onToggle={handleToggle}
           iconColorClass={themeConfig.forYouRecommendations.iconColorClass}
           bgClass={themeConfig.forYouRecommendations.bgClass}
         >
-          <p className={`text-xs ${themeConfig.forYouRecommendations.subtitleClass} mb-3`}>{t.basedOn}</p>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-            {products.map((product) => (
-              <div key={product.id} className="flex-shrink-0 w-16 sm:w-20">
-                <ProductCard product={product} mini />
-              </div>
-            ))}
-          </div>
+          {renderContent()}
         </AccordionSection>
       </div>
     </section>

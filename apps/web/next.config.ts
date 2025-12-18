@@ -221,8 +221,8 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://pic.duga.jp https://img.duga.jp https://ad.duga.jp https://*.mgstage.com https://image.mgstage.com https://static.mgstage.com https://img.sokmil.com https://*.sokmil.com https://sokmil-ad.com https://*.japanska-xxx.com https://wimg2.golden-gateway.com https://*.fc2.com https://*.contents.fc2.com https://ads.b10f.jp https://b10f.jp https://www.heyzo.com https://*.caribbeancompr.com https://*.1pondo.tv https://www.nyoshin.com https://www.unkotare.com https://www.caribbeancom.com https://www.10musume.com https://www.pacopacomama.com https://www.hitozuma-giri.com https://www.av-e-body.com https://www.av-4610.com https://www.av-0230.com https://www.kin8tengoku.com https://www.nozox.com https://www.3d-eros.net https://www.pikkur.com https://www.javholic.com https://smovie.1pondo.tv https://awsimgsrc.dmm.co.jp https://placehold.co https://pixelarchivenow.com https://www.googletagmanager.com https://www.google-analytics.com",
       // フォント
       "font-src 'self' data:",
-      // 接続先: API, Google Analytics
-      "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com",
+      // 接続先: API, Google Analytics, Firebase
+      "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com https://firebase.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseremoteconfig.googleapis.com https://firebaselogging-pa.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
       // フレーム: 動画埋め込み用
       "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.dmm.co.jp https://*.dmm.com https://*.mgstage.com",
       // メディア: 動画/音声

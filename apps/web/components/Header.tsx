@@ -208,58 +208,60 @@ export default function Header() {
 
         {/* モバイルメニュー（検索バー・ナビ・ASP統計を格納） */}
         {isMobileMenuOpen && (
-          <nav className={`md:hidden py-4 space-y-4 border-t ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'} max-h-[calc(100vh-120px)] overflow-y-auto`}>
+          <nav className={`md:hidden py-3 space-y-1 border-t ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'} max-h-[calc(100dvh-100px)] overflow-y-auto`}>
             {/* 検索バー */}
             <div className="pb-2">
               <SearchBar />
             </div>
 
-            {/* ナビゲーションリンク */}
-            <Link
-              href={localizedHref('/products', locale)}
-              className="block py-2 hover:text-purple-300 transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t.products}
-            </Link>
-            <Link
-              href={localizedHref('/', locale)}
-              className="block py-2 hover:text-pink-300 transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t.actresses}
-            </Link>
-            <div className="py-2">
-              <NotificationSubscriber />
+            {/* ナビゲーションリンク - コンパクトに */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              <Link
+                href={localizedHref('/products', locale)}
+                className="py-1.5 hover:text-purple-300 transition-colors text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t.products}
+              </Link>
+              <Link
+                href={localizedHref('/', locale)}
+                className="py-1.5 hover:text-pink-300 transition-colors text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t.actresses}
+              </Link>
+              <Link
+                href={localizedHref('/diary', locale)}
+                className="py-1.5 hover:text-green-300 transition-colors text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t.diary}
+              </Link>
+              <Link
+                href={localizedHref('/profile', locale)}
+                className="py-1.5 hover:text-cyan-300 transition-colors text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t.profile}
+              </Link>
+              <Link
+                href={localizedHref('/favorites', locale)}
+                className="py-1.5 hover:text-rose-300 transition-colors text-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {t.favorites}
+              </Link>
             </div>
-            <Link
-              href={localizedHref('/diary', locale)}
-              className="block py-2 hover:text-green-300 transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t.diary}
-            </Link>
-            <Link
-              href={localizedHref('/profile', locale)}
-              className="block py-2 hover:text-cyan-300 transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t.profile}
-            </Link>
-            <Link
-              href={localizedHref('/favorites', locale)}
-              className="block py-2 hover:text-rose-300 transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {t.favorites}
-            </Link>
-            <div className="py-2">
+
+            {/* 通知と言語切り替え */}
+            <div className="flex items-center gap-4 py-2">
+              <NotificationSubscriber />
               <LanguageSwitcher />
             </div>
 
             {/* ASP統計バッジ（モバイル用） */}
             <div className={`pt-2 border-t ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'}`}>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 {/* セールバッジ */}
                 {saleStats === null ? (
                   <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[100px] animate-pulse flex-shrink-0" />

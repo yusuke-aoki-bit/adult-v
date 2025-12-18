@@ -2,10 +2,19 @@
 export * from './ab-testing';
 export * from './affiliate';
 export * from './api-utils';
+export * from './bot-detection';
 export * from './cache';
+export * from './categories';
 export * from './firebase';
+export * from './image-utils';
+export * from './localization';
 export * from './seo';
 // Note: seo-utils has generateBreadcrumbSchema which conflicts with seo.ts
 // Import directly from './seo-utils' if needed
 export * from './theme';
 export * from './translate';
+export * from './cron-auth';
+export * from './performer-validation';
+export * from './crawler-utils';
+// Note: google-apis has translateBatch/translateText which conflicts with translate.ts
+// Import directly from '@adult-v/shared/lib/google-apis' if needed

@@ -1,0 +1,979 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - paragraph [ref=e5]: ※このページは成人向けコンテンツを含みます。表示価格は税込みです。販売サイトにより価格が異なる場合がありますので、購入前に各サイトで最新価格をご確認ください。
+    - generic [ref=e7]:
+      - link "ADULTVIEWER LAB heavy user guide" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e9]: ADULTVIEWER LAB
+        - generic [ref=e10]: heavy user guide
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - textbox "女優名・プロフィールで検索..." [ref=e14]
+          - generic:
+            - generic: /
+          - img [ref=e15]
+        - generic [ref=e17]:
+          - textbox "作品名・作品ID・説明文で検索..." [ref=e18]
+          - img [ref=e19]
+      - navigation [ref=e21]:
+        - link "作品一覧" [ref=e22] [cursor=pointer]:
+          - /url: /products
+          - img [ref=e23]
+          - text: 作品一覧
+        - link "女優一覧" [ref=e25] [cursor=pointer]:
+          - /url: /
+          - img [ref=e26]
+          - text: 女優一覧
+        - button "新着通知" [ref=e28]:
+          - img [ref=e29]
+          - generic [ref=e32]: 新着通知
+        - link "視聴日記" [ref=e33] [cursor=pointer]:
+          - /url: /diary
+          - img [ref=e34]
+          - text: 視聴日記
+        - link "DNA分析" [ref=e36] [cursor=pointer]:
+          - /url: /profile
+          - img [ref=e37]
+          - text: DNA分析
+        - link "お気に入り" [ref=e39] [cursor=pointer]:
+          - /url: /favorites
+          - img [ref=e40]
+          - text: お気に入り
+        - generic [ref=e42]:
+          - combobox "Select language" [ref=e43] [cursor=pointer]:
+            - option "日本語" [selected]
+            - option "English"
+            - option "简体中文"
+            - option "繁體中文"
+            - option "한국어"
+          - generic:
+            - img
+    - link "SALE 1,363" [ref=e47] [cursor=pointer]:
+      - /url: /products?onSale=true
+      - generic [ref=e48]: SALE
+      - generic [ref=e49]: 1,363
+  - main [ref=e58]:
+    - generic [ref=e61]:
+      - navigation "Breadcrumb" [ref=e62]:
+        - link "ホーム" [ref=e64] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e65]:
+          - img [ref=e66]
+          - generic [ref=e68]: 全作品一覧
+      - generic [ref=e69]:
+        - heading "全作品一覧" [level=1] [ref=e70]
+        - paragraph [ref=e71]: 231,245件の作品を掲載中
+      - group [ref=e72]:
+        - generic "フィルター設定" [ref=e73] [cursor=pointer]:
+          - generic [ref=e74]:
+            - img [ref=e75]
+            - generic [ref=e77]: フィルター設定
+      - generic [ref=e79]:
+        - generic [ref=e80]: "並び順:"
+        - combobox "並び順:" [ref=e81]:
+          - option "新しい順" [selected]
+          - option "古い順"
+          - option "価格が安い順"
+          - option "価格が高い順"
+          - option "評価が高い順"
+          - option "レビュー数順"
+          - option "再生時間が長い順"
+          - option "再生時間が短い順"
+          - option "タイトル順"
+          - option "ランダム"
+      - navigation [ref=e82]:
+        - generic [ref=e83]:
+          - link "最初" [disabled]:
+            - /url: /products
+          - link "-10" [disabled]:
+            - /url: /products
+          - link "前へ" [disabled]:
+            - /url: /products
+          - generic [ref=e84]:
+            - link "1" [ref=e85] [cursor=pointer]:
+              - /url: /products
+            - link "2" [ref=e86] [cursor=pointer]:
+              - /url: /products?page=2
+            - link "3" [ref=e87] [cursor=pointer]:
+              - /url: /products?page=3
+            - generic [ref=e88]: ...
+            - link "9636" [ref=e89] [cursor=pointer]:
+              - /url: /products?page=9636
+          - link "次へ" [ref=e90] [cursor=pointer]:
+            - /url: /products?page=2
+          - link "+10" [ref=e91] [cursor=pointer]:
+            - /url: /products?page=11
+          - link "最後" [ref=e92] [cursor=pointer]:
+            - /url: /products?page=9636
+        - generic [ref=e93]:
+          - generic [ref=e94]:
+            - generic [ref=e95]: 1 - 24 / 231,245 件
+            - generic [ref=e96]: 1 / 9636
+          - generic [ref=e97]:
+            - spinbutton "ページへ移動" [ref=e98]
+            - button "移動" [disabled] [ref=e99]
+      - generic [ref=e100]:
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - generic [ref=e103]:
+              - button "画像を拡大表示" [ref=e104]
+              - img "俺に沼ってる最高の女。-男本位の避妊なし中出しSEX- 鈴村あいり【限定特典映像10分付き】 | 鈴村あいり | MGS・フルハイビジョン(FHD) | 2026-01-01 | abf-304" [ref=e105]
+              - generic:
+                - img
+            - generic [ref=e106]: 発売予定
+            - generic [ref=e107]: DVD
+            - generic [ref=e108]:
+              - button "お気に入りに追加" [ref=e110]:
+                - img [ref=e111]
+              - button "視聴済み" [ref=e113]:
+                - img [ref=e114]
+            - generic [ref=e117]: ¥2,950
+          - generic [ref=e118]:
+            - generic [ref=e119]:
+              - generic [ref=e120]:
+                - link "鈴村あいり" [ref=e121] [cursor=pointer]:
+                  - /url: /ja/actress/190985
+                - generic [ref=e122]: "|"
+                - generic [ref=e123]: 2026-01-01
+              - link "abf-304 俺に沼ってる最高の女。-男本位の避妊なし中出しSEX- 鈴村あいり【限定特典映像10分付き】" [ref=e124] [cursor=pointer]:
+                - /url: /ja/products/974284
+                - paragraph [ref=e125]: abf-304
+                - heading "俺に沼ってる最高の女。-男本位の避妊なし中出しSEX- 鈴村あいり【限定特典映像10分付き】" [level=3] [ref=e126]
+            - generic [ref=e127]:
+              - link "MGS" [ref=e128] [cursor=pointer]:
+                - /url: /ja/products?include=MGS
+              - link "フルハイビジョン(FHD)" [ref=e129] [cursor=pointer]:
+                - /url: /ja/products?include=%E3%83%95%E3%83%AB%E3%83%8F%E3%82%A4%E3%83%93%E3%82%B8%E3%83%A7%E3%83%B3%28FHD%29
+              - link "美尻" [ref=e130] [cursor=pointer]:
+                - /url: /ja/products?include=%E7%BE%8E%E5%B0%BB
+            - generic [ref=e131]:
+              - paragraph [ref=e132]: ¥2,950
+              - link "MGS動画で購入（外部リンク）" [ref=e133] [cursor=pointer]:
+                - /url: https://www.mgstage.com/product/product_detail/ABF-304/?aff=6CS5PGEBQDUYPZLHYEM33TBZFJ
+                - img [ref=e134]
+                - generic [ref=e136]: MGS動画をチェック
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - generic [ref=e139]:
+              - button "画像を拡大表示" [ref=e140]
+              - img "【特価】口腔観察VOL.2 4名55分お買い得セット | 口腔 | 2025-12-31 | duga-machikado-0116" [ref=e141]
+              - button "サンプル動画を再生" [ref=e142]:
+                - img [ref=e143]
+              - generic:
+                - img
+            - generic [ref=e145]: 発売予定
+            - generic [ref=e146]:
+              - button "お気に入りに追加" [ref=e148]:
+                - img [ref=e149]
+              - button "視聴済み" [ref=e151]:
+                - img [ref=e152]
+          - generic [ref=e155]:
+            - generic [ref=e156]:
+              - generic [ref=e157]:
+                - generic [ref=e158]: 出演者情報
+                - generic [ref=e159]: "|"
+                - generic [ref=e160]: 2025-12-31
+              - link "duga-machikado-0116 【特価】口腔観察VOL.2 4名55分お買い得セット" [ref=e161] [cursor=pointer]:
+                - /url: /ja/products/669188
+                - paragraph [ref=e162]: duga-machikado-0116
+                - heading "【特価】口腔観察VOL.2 4名55分お買い得セット" [level=3] [ref=e163]
+            - link "口腔" [ref=e165] [cursor=pointer]:
+              - /url: /ja/products?include=%E5%8F%A3%E8%85%94
+            - generic [ref=e167]: ・55分
+            - link "DUGAで購入（外部リンク）" [ref=e169] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/machikado-0116/48611-01
+              - img [ref=e170]
+              - generic [ref=e172]: DUGAをチェック
+        - generic [ref=e173]:
+          - generic [ref=e174]:
+            - generic [ref=e175]:
+              - button "画像を拡大表示" [ref=e176]
+              - img "「個撮ナンパ」清楚系ビッチ！美女と生中だし2回戦！！ | 素人 | 2025-12-31 | duga-catch-0184" [ref=e177]
+              - button "サンプル動画を再生" [ref=e178]:
+                - img [ref=e179]
+              - generic:
+                - img
+            - generic [ref=e181]: 発売予定
+            - generic [ref=e182]:
+              - button "お気に入りに追加" [ref=e184]:
+                - img [ref=e185]
+              - button "視聴済み" [ref=e187]:
+                - img [ref=e188]
+          - generic [ref=e191]:
+            - generic [ref=e192]:
+              - generic [ref=e193]:
+                - generic [ref=e194]: 出演者情報
+                - generic [ref=e195]: "|"
+                - generic [ref=e196]: 2025-12-31
+              - link "duga-catch-0184 「個撮ナンパ」清楚系ビッチ！美女と生中だし2回戦！！" [ref=e197] [cursor=pointer]:
+                - /url: /ja/products/669183
+                - paragraph [ref=e198]: duga-catch-0184
+                - heading "「個撮ナンパ」清楚系ビッチ！美女と生中だし2回戦！！" [level=3] [ref=e199]
+            - link "素人" [ref=e201] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%B4%A0%E4%BA%BA
+            - generic [ref=e203]: ・65分
+            - link "DUGAで購入（外部リンク）" [ref=e205] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/catch-0184/48611-01
+              - img [ref=e206]
+              - generic [ref=e208]: DUGAをチェック
+        - generic [ref=e209]:
+          - generic [ref=e210]:
+            - generic [ref=e211]:
+              - button "画像を拡大表示" [ref=e212]
+              - img "熟女専門AVプロダクション流出 社外秘面接File.06 | 熟女 | 2025-12-31 | duga-angurahonpo-0023" [ref=e213]
+              - button "サンプル動画を再生" [ref=e214]:
+                - img [ref=e215]
+              - generic:
+                - img
+            - generic [ref=e217]: 発売予定
+            - generic [ref=e218]:
+              - button "お気に入りに追加" [ref=e220]:
+                - img [ref=e221]
+              - button "視聴済み" [ref=e223]:
+                - img [ref=e224]
+          - generic [ref=e227]:
+            - generic [ref=e228]:
+              - generic [ref=e229]:
+                - generic [ref=e230]: 出演者情報
+                - generic [ref=e231]: "|"
+                - generic [ref=e232]: 2025-12-31
+              - link "duga-angurahonpo-0023 熟女専門AVプロダクション流出 社外秘面接File.06" [ref=e233] [cursor=pointer]:
+                - /url: /ja/products/669196
+                - paragraph [ref=e234]: duga-angurahonpo-0023
+                - heading "熟女専門AVプロダクション流出 社外秘面接File.06" [level=3] [ref=e235]
+            - link "熟女" [ref=e237] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%86%9F%E5%A5%B3
+            - generic [ref=e239]: ・61分
+            - link "DUGAで購入（外部リンク）" [ref=e241] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/angurahonpo-0023/48611-01
+              - img [ref=e242]
+              - generic [ref=e244]: DUGAをチェック
+        - generic [ref=e245]:
+          - generic [ref=e246]:
+            - generic [ref=e247]:
+              - button "画像を拡大表示" [ref=e248]
+              - img "真昼の恋人 ひかる | 素人 | 2025-12-30 | duga-mahiru-0051" [ref=e249]
+              - button "サンプル動画を再生" [ref=e250]:
+                - img [ref=e251]
+              - generic:
+                - img
+            - generic [ref=e253]: 発売予定
+            - generic [ref=e254]:
+              - button "お気に入りに追加" [ref=e256]:
+                - img [ref=e257]
+              - button "視聴済み" [ref=e259]:
+                - img [ref=e260]
+          - generic [ref=e263]:
+            - generic [ref=e264]:
+              - generic [ref=e265]:
+                - generic [ref=e266]: 出演者情報
+                - generic [ref=e267]: "|"
+                - generic [ref=e268]: 2025-12-30
+              - link "duga-mahiru-0051 真昼の恋人 ひかる" [ref=e269] [cursor=pointer]:
+                - /url: /ja/products/669202
+                - paragraph [ref=e270]: duga-mahiru-0051
+                - heading "真昼の恋人 ひかる" [level=3] [ref=e271]
+            - link "素人" [ref=e273] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%B4%A0%E4%BA%BA
+            - generic [ref=e275]: ・50分
+            - link "DUGAで購入（外部リンク）" [ref=e277] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/mahiru-0051/48611-01
+              - img [ref=e278]
+              - generic [ref=e280]: DUGAをチェック
+        - generic [ref=e281]:
+          - generic [ref=e282]:
+            - generic [ref=e283]:
+              - button "画像を拡大表示" [ref=e284]
+              - img "街角で声をかけてくすぐりさせてもらう まいなちゃん | くすぐり | 2025-12-30 | duga-machikado-0115" [ref=e285]
+              - button "サンプル動画を再生" [ref=e286]:
+                - img [ref=e287]
+              - generic:
+                - img
+            - generic [ref=e289]: 発売予定
+            - generic [ref=e290]:
+              - button "お気に入りに追加" [ref=e292]:
+                - img [ref=e293]
+              - button "視聴済み" [ref=e295]:
+                - img [ref=e296]
+          - generic [ref=e299]:
+            - generic [ref=e300]:
+              - generic [ref=e301]:
+                - generic [ref=e302]: 出演者情報
+                - generic [ref=e303]: "|"
+                - generic [ref=e304]: 2025-12-30
+              - link "duga-machikado-0115 街角で声をかけてくすぐりさせてもらう まいなちゃん" [ref=e305] [cursor=pointer]:
+                - /url: /ja/products/669225
+                - paragraph [ref=e306]: duga-machikado-0115
+                - heading "街角で声をかけてくすぐりさせてもらう まいなちゃん" [level=3] [ref=e307]
+            - link "くすぐり" [ref=e309] [cursor=pointer]:
+              - /url: /ja/products?include=%E3%81%8F%E3%81%99%E3%81%90%E3%82%8A
+            - generic [ref=e311]: ・10分
+            - link "DUGAで購入（外部リンク）" [ref=e313] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/machikado-0115/48611-01
+              - img [ref=e314]
+              - generic [ref=e316]: DUGAをチェック
+        - generic [ref=e317]:
+          - generic [ref=e318]:
+            - generic [ref=e319]:
+              - button "画像を拡大表示" [ref=e320]
+              - img "M男が街中で女性に声をかけてキスさせてもらう はるの | フェチ | 2025-12-30 | duga-machikado-0114" [ref=e321]
+              - button "サンプル動画を再生" [ref=e322]:
+                - img [ref=e323]
+              - generic:
+                - img
+            - generic [ref=e325]: 発売予定
+            - generic [ref=e326]:
+              - button "お気に入りに追加" [ref=e328]:
+                - img [ref=e329]
+              - button "視聴済み" [ref=e331]:
+                - img [ref=e332]
+          - generic [ref=e335]:
+            - generic [ref=e336]:
+              - generic [ref=e337]:
+                - generic [ref=e338]: 出演者情報
+                - generic [ref=e339]: "|"
+                - generic [ref=e340]: 2025-12-30
+              - link "duga-machikado-0114 M男が街中で女性に声をかけてキスさせてもらう はるの" [ref=e341] [cursor=pointer]:
+                - /url: /ja/products/669214
+                - paragraph [ref=e342]: duga-machikado-0114
+                - heading "M男が街中で女性に声をかけてキスさせてもらう はるの" [level=3] [ref=e343]
+            - link "フェチ" [ref=e345] [cursor=pointer]:
+              - /url: /ja/products?include=%E3%83%95%E3%82%A7%E3%83%81
+            - generic [ref=e347]: ・14分
+            - link "DUGAで購入（外部リンク）" [ref=e349] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/machikado-0114/48611-01
+              - img [ref=e350]
+              - generic [ref=e352]: DUGAをチェック
+        - generic [ref=e353]:
+          - generic [ref=e354]:
+            - generic [ref=e355]:
+              - button "画像を拡大表示" [ref=e356]
+              - img "H爆乳＆爆尻ムチ美脚のお姉さんの絶倫マ●コ | 小梅えな | 素人 | 2025-12-30 | duga-jfc-0268" [ref=e357]
+              - button "サンプル動画を再生" [ref=e358]:
+                - img [ref=e359]
+              - generic:
+                - img
+            - generic [ref=e361]: 発売予定
+            - generic [ref=e362]:
+              - button "お気に入りに追加" [ref=e364]:
+                - img [ref=e365]
+              - button "視聴済み" [ref=e367]:
+                - img [ref=e368]
+          - generic [ref=e371]:
+            - generic [ref=e372]:
+              - generic [ref=e373]:
+                - link "小梅えな" [ref=e374] [cursor=pointer]:
+                  - /url: /ja/actress/191393
+                - generic [ref=e375]: "|"
+                - generic [ref=e376]: 2025-12-30
+              - link "duga-jfc-0268 H爆乳＆爆尻ムチ美脚のお姉さんの絶倫マ●コ" [ref=e377] [cursor=pointer]:
+                - /url: /ja/products/669220
+                - paragraph [ref=e378]: duga-jfc-0268
+                - heading "H爆乳＆爆尻ムチ美脚のお姉さんの絶倫マ●コ" [level=3] [ref=e379]
+            - link "素人" [ref=e381] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%B4%A0%E4%BA%BA
+            - generic [ref=e383]: ・119分
+            - link "DUGAで購入（外部リンク）" [ref=e385] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/jfc-0268/48611-01
+              - img [ref=e386]
+              - generic [ref=e388]: DUGAをチェック
+        - generic [ref=e389]:
+          - generic [ref=e390]:
+            - generic [ref=e391]:
+              - button "画像を拡大表示" [ref=e392]
+              - img "淑やかな色気を醸し出す可愛いお姉さんが意外にエロ過ぎ | 長瀬麻美 | 素人 | 2025-12-30 | duga-jfc-0267" [ref=e393]
+              - button "サンプル動画を再生" [ref=e394]:
+                - img [ref=e395]
+              - generic:
+                - img
+            - generic [ref=e397]: 発売予定
+            - generic [ref=e398]:
+              - button "お気に入りに追加" [ref=e400]:
+                - img [ref=e401]
+              - button "視聴済み" [ref=e403]:
+                - img [ref=e404]
+          - generic [ref=e407]:
+            - generic [ref=e408]:
+              - generic [ref=e409]:
+                - link "長瀬麻美" [ref=e410] [cursor=pointer]:
+                  - /url: /ja/actress/191492
+                - generic [ref=e411]: "|"
+                - generic [ref=e412]: 2025-12-30
+              - link "duga-jfc-0267 淑やかな色気を醸し出す可愛いお姉さんが意外にエロ過ぎ" [ref=e413] [cursor=pointer]:
+                - /url: /ja/products/669208
+                - paragraph [ref=e414]: duga-jfc-0267
+                - heading "淑やかな色気を醸し出す可愛いお姉さんが意外にエロ過ぎ" [level=3] [ref=e415]
+            - link "素人" [ref=e417] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%B4%A0%E4%BA%BA
+            - generic [ref=e419]: ・120分
+            - link "DUGAで購入（外部リンク）" [ref=e421] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/jfc-0267/48611-01
+              - img [ref=e422]
+              - generic [ref=e424]: DUGAをチェック
+        - generic [ref=e425]:
+          - generic [ref=e426]:
+            - generic [ref=e427]:
+              - button "画像を拡大表示" [ref=e428]
+              - img "近親相○ 亡き妻に似てきた娘の誘惑 | 近親相○ | 2025-12-30 | duga-gojigen-0082" [ref=e429]
+              - button "サンプル動画を再生" [ref=e430]:
+                - img [ref=e431]
+              - generic:
+                - img
+            - generic [ref=e433]: 発売予定
+            - generic [ref=e434]:
+              - button "お気に入りに追加" [ref=e436]:
+                - img [ref=e437]
+              - button "視聴済み" [ref=e439]:
+                - img [ref=e440]
+          - generic [ref=e443]:
+            - generic [ref=e444]:
+              - generic [ref=e445]:
+                - generic [ref=e446]: 出演者情報
+                - generic [ref=e447]: "|"
+                - generic [ref=e448]: 2025-12-30
+              - link "duga-gojigen-0082 近親相○ 亡き妻に似てきた娘の誘惑" [ref=e449] [cursor=pointer]:
+                - /url: /ja/products/669241
+                - paragraph [ref=e450]: duga-gojigen-0082
+                - heading "近親相○ 亡き妻に似てきた娘の誘惑" [level=3] [ref=e451]
+            - link "近親相○" [ref=e453] [cursor=pointer]:
+              - /url: /ja/products?include=%E8%BF%91%E8%A6%AA%E7%9B%B8%E2%97%8B
+            - generic [ref=e455]: ・232分
+            - link "DUGAで購入（外部リンク）" [ref=e457] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/gojigen-0082/48611-01
+              - img [ref=e458]
+              - generic [ref=e460]: DUGAをチェック
+        - generic [ref=e461]:
+          - generic [ref=e462]:
+            - generic [ref=e463]:
+              - button "画像を拡大表示" [ref=e464]
+              - img "部下を送った夜、奥さんのノーブラ姿に理性が奪われた | 熟女 | 2025-12-30 | duga-gojigen-0081" [ref=e465]
+              - button "サンプル動画を再生" [ref=e466]:
+                - img [ref=e467]
+              - generic:
+                - img
+            - generic [ref=e469]: 発売予定
+            - generic [ref=e470]:
+              - button "お気に入りに追加" [ref=e472]:
+                - img [ref=e473]
+              - button "視聴済み" [ref=e475]:
+                - img [ref=e476]
+          - generic [ref=e479]:
+            - generic [ref=e480]:
+              - generic [ref=e481]:
+                - generic [ref=e482]: 出演者情報
+                - generic [ref=e483]: "|"
+                - generic [ref=e484]: 2025-12-30
+              - link "duga-gojigen-0081 部下を送った夜、奥さんのノーブラ姿に理性が奪われた" [ref=e485] [cursor=pointer]:
+                - /url: /ja/products/669235
+                - paragraph [ref=e486]: duga-gojigen-0081
+                - heading "部下を送った夜、奥さんのノーブラ姿に理性が奪われた" [level=3] [ref=e487]
+            - link "熟女" [ref=e489] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%86%9F%E5%A5%B3
+            - generic [ref=e491]: ・230分
+            - link "DUGAで購入（外部リンク）" [ref=e493] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/gojigen-0081/48611-01
+              - img [ref=e494]
+              - generic [ref=e496]: DUGAをチェック
+        - generic [ref=e497]:
+          - generic [ref=e498]:
+            - generic [ref=e499]:
+              - button "画像を拡大表示" [ref=e500]
+              - img "完全密着！巷でうわさの裸族のヨガインストラクター！ | 熟女 | 2025-12-30 | duga-gojigen-0080" [ref=e501]
+              - button "サンプル動画を再生" [ref=e502]:
+                - img [ref=e503]
+              - generic:
+                - img
+            - generic [ref=e505]: 発売予定
+            - generic [ref=e506]:
+              - button "お気に入りに追加" [ref=e508]:
+                - img [ref=e509]
+              - button "視聴済み" [ref=e511]:
+                - img [ref=e512]
+          - generic [ref=e515]:
+            - generic [ref=e516]:
+              - generic [ref=e517]:
+                - generic [ref=e518]: 出演者情報
+                - generic [ref=e519]: "|"
+                - generic [ref=e520]: 2025-12-30
+              - link "duga-gojigen-0080 完全密着！巷でうわさの裸族のヨガインストラクター！" [ref=e521] [cursor=pointer]:
+                - /url: /ja/products/669230
+                - paragraph [ref=e522]: duga-gojigen-0080
+                - heading "完全密着！巷でうわさの裸族のヨガインストラクター！" [level=3] [ref=e523]
+            - link "熟女" [ref=e525] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%86%9F%E5%A5%B3
+            - generic [ref=e527]: ・225分
+            - link "DUGAで購入（外部リンク）" [ref=e529] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/gojigen-0080/48611-01
+              - img [ref=e530]
+              - generic [ref=e532]: DUGAをチェック
+        - generic [ref=e533]:
+          - generic [ref=e534]:
+            - generic [ref=e535]:
+              - button "画像を拡大表示" [ref=e536]
+              - img "「個撮ナンパ」魔美女！イラマで涎垂らしながらのアヘ顔 | 素人 | 2025-12-29 | duga-catch-0183" [ref=e537]
+              - generic:
+                - img
+            - generic [ref=e538]: 発売予定
+            - generic [ref=e539]:
+              - button "お気に入りに追加" [ref=e541]:
+                - img [ref=e542]
+              - button "視聴済み" [ref=e544]:
+                - img [ref=e545]
+          - generic [ref=e548]:
+            - generic [ref=e549]:
+              - generic [ref=e550]:
+                - generic [ref=e551]: 出演者情報
+                - generic [ref=e552]: "|"
+                - generic [ref=e553]: 2025-12-29
+              - link "duga-catch-0183 「個撮ナンパ」魔美女！イラマで涎垂らしながらのアヘ顔" [ref=e554] [cursor=pointer]:
+                - /url: /ja/products/669244
+                - paragraph [ref=e555]: duga-catch-0183
+                - heading "「個撮ナンパ」魔美女！イラマで涎垂らしながらのアヘ顔" [level=3] [ref=e556]
+            - link "素人" [ref=e558] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%B4%A0%E4%BA%BA
+            - generic [ref=e560]: ・62分
+            - link "DUGAで購入（外部リンク）" [ref=e562] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/catch-0183/48611-01
+              - img [ref=e563]
+              - generic [ref=e565]: DUGAをチェック
+        - generic [ref=e566]:
+          - generic [ref=e567]:
+            - generic [ref=e568]:
+              - button "画像を拡大表示" [ref=e569]
+              - img "苦悶の科学ドM女の図鑑NEO 7 | 素人 | 2025-12-29 | duga-bravo-0139" [ref=e570]
+              - generic:
+                - img
+            - generic [ref=e571]: 発売予定
+            - generic [ref=e572]:
+              - button "お気に入りに追加" [ref=e574]:
+                - img [ref=e575]
+              - button "視聴済み" [ref=e577]:
+                - img [ref=e578]
+          - generic [ref=e581]:
+            - generic [ref=e582]:
+              - generic [ref=e583]:
+                - generic [ref=e584]: 出演者情報
+                - generic [ref=e585]: "|"
+                - generic [ref=e586]: 2025-12-29
+              - link "duga-bravo-0139 苦悶の科学ドM女の図鑑NEO 7" [ref=e587] [cursor=pointer]:
+                - /url: /ja/products/669249
+                - paragraph [ref=e588]: duga-bravo-0139
+                - heading "苦悶の科学ドM女の図鑑NEO 7" [level=3] [ref=e589]
+            - link "素人" [ref=e591] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%B4%A0%E4%BA%BA
+            - generic [ref=e593]: ・117分
+            - link "DUGAで購入（外部リンク）" [ref=e595] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/bravo-0139/48611-01
+              - img [ref=e596]
+              - generic [ref=e598]: DUGAをチェック
+        - generic [ref=e599]:
+          - generic [ref=e600]:
+            - generic [ref=e601]:
+              - button "画像を拡大表示" [ref=e602]
+              - img "韓国美女と現地セックス！！ 2本番 2名出演 | 外国人 | 2025-12-27 | duga-patsukin-0087" [ref=e603]
+              - generic:
+                - img
+            - generic [ref=e604]: 発売予定
+            - generic [ref=e605]:
+              - button "お気に入りに追加" [ref=e607]:
+                - img [ref=e608]
+              - button "視聴済み" [ref=e610]:
+                - img [ref=e611]
+          - generic [ref=e614]:
+            - generic [ref=e615]:
+              - generic [ref=e616]:
+                - generic [ref=e617]: 出演者情報
+                - generic [ref=e618]: "|"
+                - generic [ref=e619]: 2025-12-27
+              - link "duga-patsukin-0087 韓国美女と現地セックス！！ 2本番 2名出演" [ref=e620] [cursor=pointer]:
+                - /url: /ja/products/669255
+                - paragraph [ref=e621]: duga-patsukin-0087
+                - heading "韓国美女と現地セックス！！ 2本番 2名出演" [level=3] [ref=e622]
+            - link "外国人" [ref=e624] [cursor=pointer]:
+              - /url: /ja/products?include=%E5%A4%96%E5%9B%BD%E4%BA%BA
+            - generic [ref=e626]: ・99分
+            - link "DUGAで購入（外部リンク）" [ref=e628] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/patsukin-0087/48611-01
+              - img [ref=e629]
+              - generic [ref=e631]: DUGAをチェック
+        - generic [ref=e632]:
+          - generic [ref=e633]:
+            - generic [ref=e634]:
+              - button "画像を拡大表示" [ref=e635]
+              - img "真昼の恋人 ゆいな | 素人 | 2025-12-27 | duga-mahiru-0050" [ref=e636]
+              - generic:
+                - img
+            - generic [ref=e637]: 発売予定
+            - generic [ref=e638]:
+              - button "お気に入りに追加" [ref=e640]:
+                - img [ref=e641]
+              - button "視聴済み" [ref=e643]:
+                - img [ref=e644]
+          - generic [ref=e647]:
+            - generic [ref=e648]:
+              - generic [ref=e649]:
+                - generic [ref=e650]: 出演者情報
+                - generic [ref=e651]: "|"
+                - generic [ref=e652]: 2025-12-27
+              - link "duga-mahiru-0050 真昼の恋人 ゆいな" [ref=e653] [cursor=pointer]:
+                - /url: /ja/products/669259
+                - paragraph [ref=e654]: duga-mahiru-0050
+                - heading "真昼の恋人 ゆいな" [level=3] [ref=e655]
+            - link "素人" [ref=e657] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%B4%A0%E4%BA%BA
+            - generic [ref=e659]: ・49分
+            - link "DUGAで購入（外部リンク）" [ref=e661] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/mahiru-0050/48611-01
+              - img [ref=e662]
+              - generic [ref=e664]: DUGAをチェック
+        - generic [ref=e665]:
+          - generic [ref=e666]:
+            - generic [ref=e667]:
+              - button "画像を拡大表示" [ref=e668]
+              - img "藤田ゆず ／ わがままシスター ボクの妹 | 藤田ゆず | アイドル | 2025-12-27 | duga-grace-0033" [ref=e669]
+              - generic:
+                - img
+            - generic [ref=e670]: 発売予定
+            - generic [ref=e671]:
+              - button "お気に入りに追加" [ref=e673]:
+                - img [ref=e674]
+              - button "視聴済み" [ref=e676]:
+                - img [ref=e677]
+          - generic [ref=e680]:
+            - generic [ref=e681]:
+              - generic [ref=e682]:
+                - link "藤田ゆず" [ref=e683] [cursor=pointer]:
+                  - /url: /ja/actress/193102
+                - generic [ref=e684]: "|"
+                - generic [ref=e685]: 2025-12-27
+              - link "duga-grace-0033 藤田ゆず ／ わがままシスター ボクの妹" [ref=e686] [cursor=pointer]:
+                - /url: /ja/products/669263
+                - paragraph [ref=e687]: duga-grace-0033
+                - heading "藤田ゆず ／ わがままシスター ボクの妹" [level=3] [ref=e688]
+            - link "アイドル" [ref=e690] [cursor=pointer]:
+              - /url: /ja/products?include=%E3%82%A2%E3%82%A4%E3%83%89%E3%83%AB
+            - generic [ref=e692]: ・120分
+            - link "DUGAで購入（外部リンク）" [ref=e694] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/grace-0033/48611-01
+              - img [ref=e695]
+              - generic [ref=e697]: DUGAをチェック
+        - generic [ref=e698]:
+          - generic [ref=e699]:
+            - generic [ref=e700]:
+              - button "画像を拡大表示" [ref=e701]
+              - img "美女子弄び個撮ハメ撮り はるちゃん 専門学生 | 菊池はる | 素人 | 2025-12-27 | duga-chc-0027" [ref=e702]
+              - generic:
+                - img
+            - generic [ref=e703]: 発売予定
+            - generic [ref=e704]:
+              - button "お気に入りに追加" [ref=e706]:
+                - img [ref=e707]
+              - button "視聴済み" [ref=e709]:
+                - img [ref=e710]
+          - generic [ref=e713]:
+            - generic [ref=e714]:
+              - generic [ref=e715]:
+                - link "菊池はる" [ref=e716] [cursor=pointer]:
+                  - /url: /ja/actress/191389
+                - generic [ref=e717]: "|"
+                - generic [ref=e718]: 2025-12-27
+              - link "duga-chc-0027 美女子弄び個撮ハメ撮り はるちゃん 専門学生" [ref=e719] [cursor=pointer]:
+                - /url: /ja/products/669270
+                - paragraph [ref=e720]: duga-chc-0027
+                - heading "美女子弄び個撮ハメ撮り はるちゃん 専門学生" [level=3] [ref=e721]
+            - link "素人" [ref=e723] [cursor=pointer]:
+              - /url: /ja/products?include=%E7%B4%A0%E4%BA%BA
+            - generic [ref=e725]: ・104分
+            - link "DUGAで購入（外部リンク）" [ref=e727] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/chc-0027/48611-01
+              - img [ref=e728]
+              - generic [ref=e730]: DUGAをチェック
+        - generic [ref=e731]:
+          - generic [ref=e732]:
+            - generic [ref=e733]:
+              - button "画像を拡大表示" [ref=e734]
+              - img "韓国素人 ジューヒー／ユリ／ギョウル | ギョウル | 外国人 | 2025-12-27 | duga-bigmorkal-3687" [ref=e735]
+              - generic:
+                - img
+            - generic [ref=e736]: 発売予定
+            - generic [ref=e737]:
+              - button "お気に入りに追加" [ref=e739]:
+                - img [ref=e740]
+              - button "視聴済み" [ref=e742]:
+                - img [ref=e743]
+          - generic [ref=e746]:
+            - generic [ref=e747]:
+              - generic [ref=e748]:
+                - link "ギョウル" [ref=e749] [cursor=pointer]:
+                  - /url: /ja/actress/194999
+                - generic [ref=e750]: "|"
+                - generic [ref=e751]: 2025-12-27
+              - link "duga-bigmorkal-3687 韓国素人 ジューヒー／ユリ／ギョウル" [ref=e752] [cursor=pointer]:
+                - /url: /ja/products/669273
+                - paragraph [ref=e753]: duga-bigmorkal-3687
+                - heading "韓国素人 ジューヒー／ユリ／ギョウル" [level=3] [ref=e754]
+            - link "外国人" [ref=e756] [cursor=pointer]:
+              - /url: /ja/products?include=%E5%A4%96%E5%9B%BD%E4%BA%BA
+            - generic [ref=e758]: ・79分
+            - link "DUGAで購入（外部リンク）" [ref=e760] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/bigmorkal-3687/48611-01
+              - img [ref=e761]
+              - generic [ref=e763]: DUGAをチェック
+        - generic [ref=e764]:
+          - generic [ref=e765]:
+            - generic [ref=e766]:
+              - button "画像を拡大表示" [ref=e767]
+              - img "韓国素人 ソア／ジオン／アリ | 外国人 | 2025-12-27 | duga-bigmorkal-3686" [ref=e768]
+              - button "サンプル動画を再生" [ref=e769]:
+                - img [ref=e770]
+              - generic:
+                - img
+            - generic [ref=e772]: 発売予定
+            - generic [ref=e773]:
+              - button "お気に入りに追加" [ref=e775]:
+                - img [ref=e776]
+              - button "視聴済み" [ref=e778]:
+                - img [ref=e779]
+          - generic [ref=e782]:
+            - generic [ref=e783]:
+              - generic [ref=e784]:
+                - generic [ref=e785]: 出演者情報
+                - generic [ref=e786]: "|"
+                - generic [ref=e787]: 2025-12-27
+              - link "duga-bigmorkal-3686 韓国素人 ソア／ジオン／アリ" [ref=e788] [cursor=pointer]:
+                - /url: /ja/products/669278
+                - paragraph [ref=e789]: duga-bigmorkal-3686
+                - heading "韓国素人 ソア／ジオン／アリ" [level=3] [ref=e790]
+            - link "外国人" [ref=e792] [cursor=pointer]:
+              - /url: /ja/products?include=%E5%A4%96%E5%9B%BD%E4%BA%BA
+            - generic [ref=e794]: ・83分
+            - link "DUGAで購入（外部リンク）" [ref=e796] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/bigmorkal-3686/48611-01
+              - img [ref=e797]
+              - generic [ref=e799]: DUGAをチェック
+        - generic [ref=e800]:
+          - generic [ref=e801]:
+            - generic [ref=e802]:
+              - button "画像を拡大表示" [ref=e803]
+              - img "韓国素人 ソンフィ／シゥオン／エラ | 外国人 | 2025-12-27 | duga-bigmorkal-3685" [ref=e804]
+              - generic:
+                - img
+            - generic [ref=e805]: 発売予定
+            - generic [ref=e806]:
+              - button "お気に入りに追加" [ref=e808]:
+                - img [ref=e809]
+              - button "視聴済み" [ref=e811]:
+                - img [ref=e812]
+          - generic [ref=e815]:
+            - generic [ref=e816]:
+              - generic [ref=e817]:
+                - generic [ref=e818]: 出演者情報
+                - generic [ref=e819]: "|"
+                - generic [ref=e820]: 2025-12-27
+              - link "duga-bigmorkal-3685 韓国素人 ソンフィ／シゥオン／エラ" [ref=e821] [cursor=pointer]:
+                - /url: /ja/products/669281
+                - paragraph [ref=e822]: duga-bigmorkal-3685
+                - heading "韓国素人 ソンフィ／シゥオン／エラ" [level=3] [ref=e823]
+            - link "外国人" [ref=e825] [cursor=pointer]:
+              - /url: /ja/products?include=%E5%A4%96%E5%9B%BD%E4%BA%BA
+            - generic [ref=e827]: ・75分
+            - link "DUGAで購入（外部リンク）" [ref=e829] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/bigmorkal-3685/48611-01
+              - img [ref=e830]
+              - generic [ref=e832]: DUGAをチェック
+        - generic [ref=e833]:
+          - generic [ref=e834]:
+            - generic [ref=e835]:
+              - button "画像を拡大表示" [ref=e836]
+              - img "癒し系おっぱい タダマン天使のイチャラブせっくちゅ | 高瀬りな | おっぱい | 2025-12-27 | duga-bigmorkal-3684" [ref=e837]
+              - generic:
+                - img
+            - generic [ref=e838]: 発売予定
+            - generic [ref=e839]:
+              - button "お気に入りに追加" [ref=e841]:
+                - img [ref=e842]
+              - button "視聴済み" [ref=e844]:
+                - img [ref=e845]
+          - generic [ref=e848]:
+            - generic [ref=e849]:
+              - generic [ref=e850]:
+                - link "高瀬りな" [ref=e851] [cursor=pointer]:
+                  - /url: /ja/actress/192109
+                - generic [ref=e852]: "|"
+                - generic [ref=e853]: 2025-12-27
+              - link "duga-bigmorkal-3684 癒し系おっぱい タダマン天使のイチャラブせっくちゅ" [ref=e854] [cursor=pointer]:
+                - /url: /ja/products/669284
+                - paragraph [ref=e855]: duga-bigmorkal-3684
+                - heading "癒し系おっぱい タダマン天使のイチャラブせっくちゅ" [level=3] [ref=e856]
+            - link "おっぱい" [ref=e858] [cursor=pointer]:
+              - /url: /ja/products?include=%E3%81%8A%E3%81%A3%E3%81%B1%E3%81%84
+            - generic [ref=e860]: ・158分
+            - link "DUGAで購入（外部リンク）" [ref=e862] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/bigmorkal-3684/48611-01
+              - img [ref=e863]
+              - generic [ref=e865]: DUGAをチェック
+        - generic [ref=e866]:
+          - generic [ref=e867]:
+            - generic [ref=e868]:
+              - button "画像を拡大表示" [ref=e869]
+              - img "性●・三岳ゆうな 究極コンプリートSEX 563分 | 三岳ゆうな | 女優 | 2025-12-27 | duga-bigmorkal-3683" [ref=e870]
+              - generic:
+                - img
+            - generic [ref=e871]: 発売予定
+            - generic [ref=e872]:
+              - button "お気に入りに追加" [ref=e874]:
+                - img [ref=e875]
+              - button "視聴済み" [ref=e877]:
+                - img [ref=e878]
+          - generic [ref=e881]:
+            - generic [ref=e882]:
+              - generic [ref=e883]:
+                - link "三岳ゆうな" [ref=e884] [cursor=pointer]:
+                  - /url: /ja/actress/190913
+                - generic [ref=e885]: "|"
+                - generic [ref=e886]: 2025-12-27
+              - link "duga-bigmorkal-3683 性●・三岳ゆうな 究極コンプリートSEX 563分" [ref=e887] [cursor=pointer]:
+                - /url: /ja/products/669289
+                - paragraph [ref=e888]: duga-bigmorkal-3683
+                - heading "性●・三岳ゆうな 究極コンプリートSEX 563分" [level=3] [ref=e889]
+            - link "女優" [ref=e891] [cursor=pointer]:
+              - /url: /ja/products?include=%E5%A5%B3%E5%84%AA
+            - generic [ref=e893]: ・564分
+            - link "DUGAで購入（外部リンク）" [ref=e895] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/bigmorkal-3683/48611-01
+              - img [ref=e896]
+              - generic [ref=e898]: DUGAをチェック
+        - generic [ref=e899]:
+          - generic [ref=e900]:
+            - generic [ref=e901]:
+              - button "画像を拡大表示" [ref=e902]
+              - img "【VIXEN】SEXY AND BEAUTIFUL VOL.11 | 外国人 | 2025-12-27 | duga-bigmorkal-3682" [ref=e903]
+              - generic:
+                - img
+            - generic [ref=e904]: 発売予定
+            - generic [ref=e905]:
+              - button "お気に入りに追加" [ref=e907]:
+                - img [ref=e908]
+              - button "視聴済み" [ref=e910]:
+                - img [ref=e911]
+          - generic [ref=e914]:
+            - generic [ref=e915]:
+              - generic [ref=e916]:
+                - generic [ref=e917]: 出演者情報
+                - generic [ref=e918]: "|"
+                - generic [ref=e919]: 2025-12-27
+              - link "duga-bigmorkal-3682 【VIXEN】SEXY AND BEAUTIFUL VOL.11" [ref=e920] [cursor=pointer]:
+                - /url: /ja/products/669292
+                - paragraph [ref=e921]: duga-bigmorkal-3682
+                - heading "【VIXEN】SEXY AND BEAUTIFUL VOL.11" [level=3] [ref=e922]
+            - link "外国人" [ref=e924] [cursor=pointer]:
+              - /url: /ja/products?include=%E5%A4%96%E5%9B%BD%E4%BA%BA
+            - generic [ref=e926]: ・166分
+            - link "DUGAで購入（外部リンク）" [ref=e928] [cursor=pointer]:
+              - /url: https://click.duga.jp/ppv/bigmorkal-3682/48611-01
+              - img [ref=e929]
+              - generic [ref=e931]: DUGAをチェック
+      - navigation [ref=e932]:
+        - generic [ref=e933]:
+          - link "最初" [disabled]:
+            - /url: /products
+          - link "-10" [disabled]:
+            - /url: /products
+          - link "前へ" [disabled]:
+            - /url: /products
+          - generic [ref=e934]:
+            - link "1" [ref=e935] [cursor=pointer]:
+              - /url: /products
+            - link "2" [ref=e936] [cursor=pointer]:
+              - /url: /products?page=2
+            - link "3" [ref=e937] [cursor=pointer]:
+              - /url: /products?page=3
+            - generic [ref=e938]: ...
+            - link "9636" [ref=e939] [cursor=pointer]:
+              - /url: /products?page=9636
+          - link "次へ" [ref=e940] [cursor=pointer]:
+            - /url: /products?page=2
+          - link "+10" [ref=e941] [cursor=pointer]:
+            - /url: /products?page=11
+          - link "最後" [ref=e942] [cursor=pointer]:
+            - /url: /products?page=9636
+        - generic [ref=e943]:
+          - generic [ref=e944]:
+            - generic [ref=e945]: 1 - 24 / 231,245 件
+            - generic [ref=e946]: 1 / 9636
+          - generic [ref=e947]:
+            - spinbutton "ページへ移動" [ref=e948]
+            - button "移動" [disabled] [ref=e949]
+      - link "👩 女優一覧 女優から作品を探す" [ref=e951] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e952]:
+          - generic [ref=e953]: 👩
+          - generic [ref=e954]:
+            - text: 女優一覧
+            - paragraph [ref=e955]: 女優から作品を探す
+        - img [ref=e956]
+  - contentinfo [ref=e958]:
+    - generic [ref=e959]:
+      - generic [ref=e960]:
+        - generic [ref=e961]:
+          - heading "ADULT VIEWER LAB" [level=2] [ref=e962]
+          - paragraph [ref=e963]: 複数のプラットフォームを横断し、ヘビー視聴者が欲しい女優ベースの情報を整理しています。
+        - generic [ref=e964]:
+          - heading "サイトポリシー" [level=3] [ref=e965]
+          - list [ref=e966]:
+            - listitem [ref=e967]:
+              - link "プライバシーポリシー" [ref=e968] [cursor=pointer]:
+                - /url: /ja/privacy
+            - listitem [ref=e969]:
+              - link "利用規約" [ref=e970] [cursor=pointer]:
+                - /url: /ja/terms
+        - generic [ref=e971]:
+          - heading "お問い合わせ" [level=3] [ref=e972]
+          - paragraph [ref=e973]: ご質問・ご要望はメールにてお問い合わせください。
+          - link "adult.vvvv@gmail.com" [ref=e974] [cursor=pointer]:
+            - /url: mailto:adult.vvvv@gmail.com
+      - generic [ref=e975]:
+        - paragraph [ref=e976]: 当サイトはDUGA、MGS、ソクミル、DTI、B10F.jp、FC2、Japanskaなどのアフィリエイトプログラムに参加しています。商品リンクから購入された場合、紹介料が発生することがあります。
+        - paragraph [ref=e977]: "18 U.S.C. § 2257 免責: 当サイトはコンテンツの制作者ではありません。すべてのコンテンツは第三者のプラットフォームから提供されており、各プラットフォームが記録保持の責任を負います。"
+      - generic [ref=e979]:
+        - link "DUGAウェブサービス" [ref=e981] [cursor=pointer]:
+          - /url: https://click.duga.jp/aff/api/48611-01
+          - img "DUGAウェブサービス" [ref=e982]
+        - link "WEB SERVICE BY SOKMIL" [ref=e984] [cursor=pointer]:
+          - /url: https://sokmil-ad.com/
+          - img "WEB SERVICE BY SOKMIL" [ref=e985]
+        - link "MGS動画" [ref=e987] [cursor=pointer]:
+          - /url: https://www.mgstage.com/ppv/?aff_id=6CS5PGEBQDUYPZLHYEM33TBZFJ
+        - link "カリビアンコム" [ref=e989] [cursor=pointer]:
+          - /url: https://clear-tv.com/Click190/1006200-6-239360
+          - img "カリビアンコム" [ref=e990]
+        - link "B10F.jp" [ref=e992] [cursor=pointer]:
+          - /url: https://b10f.jp/create_account_2.php?all=1&atv=12556_UClTcALL_12_9
+          - img "B10F.jp" [ref=e993]
+        - link "FC2動画" [ref=e995] [cursor=pointer]:
+          - /url: https://cnt.affiliate.fc2.com/cgi-bin/click.cgi?aff_userid=355464&aff_siteid=347884&aff_shopid=146
+          - img "FC2動画" [ref=e996]
+        - link "JAPANSKA-ヤパンスカ" [ref=e998] [cursor=pointer]:
+          - /url: https://wlink.golden-gateway.com/id/9094-10035-001-1d55/
+          - img "無修正アダルト動画 JAPANSKA-ヤパンスカ" [ref=e999]
+      - generic [ref=e1000]:
+        - link "管理ページ" [ref=e1001] [cursor=pointer]:
+          - /url: /admin/stats
+        - generic [ref=e1002]: "|"
+        - paragraph [ref=e1003]: © 2025 Adult Viewer Lab. All rights reserved.
+  - generic [ref=e1008] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e1009]:
+      - img [ref=e1010]
+    - generic [ref=e1013]:
+      - button "Open issues overlay" [ref=e1014]:
+        - generic [ref=e1015]:
+          - generic [ref=e1016]: "0"
+          - generic [ref=e1017]: "1"
+        - generic [ref=e1018]: Issue
+      - button "Collapse issues badge" [ref=e1019]:
+        - img [ref=e1020]
+  - alert [ref=e1022]
+```

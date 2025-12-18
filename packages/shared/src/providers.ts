@@ -139,24 +139,80 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
 };
 
 /**
+ * サブスクリプション型（月額制）プロバイダーのリスト
+ */
+export const SUBSCRIPTION_PROVIDERS = [
+  'dti',
+  'caribbeancom',
+  'caribbeancompr',
+  '1pondo',
+  'heyzo',
+  '10musume',
+  'pacopacomama',
+  'muramura',
+  'tokyohot',
+  'japanska',
+] as const;
+
+/**
  * サブスクリプション型（月額制）プロバイダーかどうか判定
  * DTI系サービスとJapanskaが該当
  */
 export function isSubscriptionProvider(aspName: string): boolean {
   const name = aspName.toLowerCase();
-  // DTI系サービス（サブスクリプション型）
-  const dtiServices = [
-    'dti',
-    'caribbeancom',
-    'caribbeancompr',
-    '1pondo',
-    'heyzo',
-    '10musume',
-    'pacopacomama',
-    'muramura',
-    'tokyohot',
-  ];
-  return dtiServices.includes(name) || name === 'japanska';
+  return SUBSCRIPTION_PROVIDERS.includes(name as typeof SUBSCRIPTION_PROVIDERS[number]);
+}
+
+/**
+ * サブスクリプションプロバイダーの説明テキストを取得
+ */
+export function getSubscriptionDescription(aspName: string): string | null {
+  if (!isSubscriptionProvider(aspName)) return null;
+
+  const normalized = aspName.toLowerCase();
+  switch (normalized) {
+    case 'dti':
+      return '月額見放題サービス';
+    case 'japanska':
+      return '月額ストリーミングサービス';
+    default:
+      return '月額制サービス';
+  }
+}
+
+/**
+ * 価格をフォーマット（通貨対応）
+ *
+ * USDはセント単位で保存されているため100で割って表示
+ * JPYはそのまま表示
+ */
+export function formatPrice(price: number, currency: string = 'JPY'): string {
+  if (currency === 'USD') {
+    const dollars = price / 100;
+    return `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  return `¥${price.toLocaleString()}`;
+}
+
+/**
+ * 価格表示用のフォーマット
+ * サブスクリプションプロバイダーの場合は「月額」を付加
+ */
+export function formatPriceWithSubscription(aspName: string, price: number | null): string {
+  if (price === null || price === 0) {
+    if (isSubscriptionProvider(aspName)) {
+      return '月額制';
+    }
+    return '価格未設定';
+  }
+
+  const formattedPrice = `¥${price.toLocaleString()}`;
+
+  if (isSubscriptionProvider(aspName)) {
+    return `${formattedPrice}/月`;
+  }
+
+  return formattedPrice;
 }
 
 /**

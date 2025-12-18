@@ -3,7 +3,7 @@ import { getDb } from '../lib/db';
 import { sql } from 'drizzle-orm';
 import { validateProductData } from '../lib/crawler-utils';
 import { scrapeDugaProductPage, DugaPageData } from '../lib/providers/duga-page-scraper';
-import { generateProductDescription, extractProductTags, GeneratedDescription, translateProduct } from '../lib/google-apis';
+import { getAIHelper } from '../lib/crawler';
 import { saveSaleInfo } from '../lib/sale-helper';
 import {
   getFirstRow,
@@ -659,7 +659,7 @@ async function main() {
           }
         }
 
-        // 10. AI機能: 説明文生成とタグ抽出
+        // 10. AI機能: 説明文生成、タグ抽出、翻訳（CrawlerAIHelper使用）
         if (enableAI) {
           try {
             console.log(`  🤖 AI機能を実行中...`);
@@ -668,75 +668,86 @@ async function main() {
             const performerNames = item.performers?.map((p: { name: string }) => p.name) || [];
             const categoryNames = item.categories?.map((c: { name: string }) => c.name) || [];
 
-            // AI説明文生成
-            const aiResult = await generateProductDescription({
-              title: item.title,
-              originalDescription: item.description,
-              performers: performerNames.length > 0 ? performerNames : undefined,
-              genres: categoryNames.length > 0 ? categoryNames : undefined,
-            });
+            // CrawlerAIHelperを使用して全AI処理を並列実行
+            const aiHelper = getAIHelper();
+            const aiResult = await aiHelper.processProduct(
+              {
+                title: item.title,
+                description: item.description,
+                performers: performerNames.length > 0 ? performerNames : undefined,
+                genres: categoryNames.length > 0 ? categoryNames : undefined,
+              },
+              {
+                extractTags: true,
+                translate: true,
+                generateDescription: true,
+              }
+            );
 
-            if (aiResult) {
+            // エラーがあれば警告
+            if (aiResult.errors.length > 0) {
+              console.log(`    ⚠️ AI処理で一部エラー: ${aiResult.errors.join(', ')}`);
+            }
+
+            // AI説明文を保存
+            if (aiResult.description) {
               console.log(`    ✅ AI説明文生成完了`);
-              console.log(`       キャッチコピー: ${aiResult.catchphrase}`);
+              console.log(`       キャッチコピー: ${aiResult.description.catchphrase}`);
 
-              // DBに保存
               try {
                 await db.execute(sql`
                   UPDATE products
                   SET
-                    ai_description = ${JSON.stringify(aiResult)}::jsonb,
-                    ai_catchphrase = ${aiResult.catchphrase},
-                    ai_short_description = ${aiResult.shortDescription},
+                    ai_description = ${JSON.stringify(aiResult.description)}::jsonb,
+                    ai_catchphrase = ${aiResult.description.catchphrase},
+                    ai_short_description = ${aiResult.description.shortDescription},
                     updated_at = NOW()
                   WHERE id = ${productId}
                 `);
                 console.log(`    💾 AI生成データを保存しました`);
                 stats.aiGenerated++;
-              } catch (saveError) {
+              } catch {
                 console.log(`    ⚠️ AI生成データの保存をスキップ（カラム未作成の可能性）`);
               }
             }
 
-            // AIタグ抽出
-            const aiTags = await extractProductTags(item.title, item.description);
-            if (aiTags.genres.length > 0 || aiTags.attributes.length > 0) {
+            // AIタグを保存
+            if (aiResult.tags && (aiResult.tags.genres.length > 0 || aiResult.tags.attributes.length > 0)) {
               console.log(`    ✅ AIタグ抽出完了`);
-              console.log(`       ジャンル: ${aiTags.genres.join(', ') || 'なし'}`);
+              console.log(`       ジャンル: ${aiResult.tags.genres.join(', ') || 'なし'}`);
 
               try {
                 await db.execute(sql`
                   UPDATE products
-                  SET ai_tags = ${JSON.stringify(aiTags)}::jsonb
+                  SET ai_tags = ${JSON.stringify(aiResult.tags)}::jsonb
                   WHERE id = ${productId}
                 `);
-              } catch (saveError) {
+              } catch {
                 // スキップ
               }
             }
 
-            // 翻訳機能: タイトルと説明を多言語翻訳
-            console.log(`  🌐 翻訳処理を実行中...`);
-            const translation = await translateProduct(item.title, item.description);
-            if (translation) {
+            // 翻訳を保存
+            if (aiResult.translations) {
+              console.log(`  🌐 翻訳処理完了`);
               try {
                 await db.execute(sql`
                   UPDATE products
                   SET
-                    title_en = ${translation.en?.title || null},
-                    title_zh = ${translation.zh?.title || null},
-                    title_ko = ${translation.ko?.title || null},
-                    description_en = ${translation.en?.description || null},
-                    description_zh = ${translation.zh?.description || null},
-                    description_ko = ${translation.ko?.description || null},
+                    title_en = ${aiResult.translations.en?.title || null},
+                    title_zh = ${aiResult.translations.zh?.title || null},
+                    title_ko = ${aiResult.translations.ko?.title || null},
+                    description_en = ${aiResult.translations.en?.description || null},
+                    description_zh = ${aiResult.translations.zh?.description || null},
+                    description_ko = ${aiResult.translations.ko?.description || null},
                     updated_at = NOW()
                   WHERE id = ${productId}
                 `);
-                console.log(`    ✅ 翻訳完了`);
-                if (translation.en?.title) {
-                  console.log(`       EN: ${translation.en.title.slice(0, 50)}...`);
+                console.log(`    ✅ 翻訳保存完了`);
+                if (aiResult.translations.en?.title) {
+                  console.log(`       EN: ${aiResult.translations.en.title.slice(0, 50)}...`);
                 }
-              } catch (saveError) {
+              } catch {
                 // カラム未作成の場合はスキップ
               }
             }

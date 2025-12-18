@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import nextDynamic from 'next/dynamic';
 import { JsonLD } from '@/components/JsonLD';
 import ProductImageGallery from '@/components/ProductImageGallery';
 import ProductVideoPlayer from '@/components/ProductVideoPlayer';
@@ -15,8 +16,6 @@ import {
 import AffiliateButton from '@/components/AffiliateButton';
 import StickyCta from '@/components/StickyCta';
 import { getProductById, searchProductByProductId, getProductSources, getActressAvgPricePerMin, getProductSourcesWithSales } from '@/lib/db/queries';
-import SceneTimeline from '@/components/SceneTimeline';
-import EnhancedAiReview from '@/components/EnhancedAiReview';
 import { isSubscriptionSite } from '@/lib/image-utils';
 import { getRelatedProducts } from '@/lib/db/recommendations';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema } from '@/lib/seo';
@@ -25,6 +24,14 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
+
+// Dynamic imports for heavy components (494 + 469 lines) to reduce initial bundle size
+const SceneTimeline = nextDynamic(() => import('@/components/SceneTimeline'), {
+  loading: () => <div className="h-32 bg-gray-800 rounded-lg animate-pulse" />,
+});
+const EnhancedAiReview = nextDynamic(() => import('@/components/EnhancedAiReview'), {
+  loading: () => <div className="h-48 bg-gray-800 rounded-lg animate-pulse" />,
+});
 
 interface PageProps {
   params: Promise<{ id: string; locale: string }>;

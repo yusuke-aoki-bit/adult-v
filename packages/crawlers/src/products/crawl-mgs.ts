@@ -15,7 +15,8 @@ import { rawHtmlData, productSources, products, performers, productPerformers, t
 import { eq, and } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
 import { validateProductData, isTopPageHtml } from '../lib/crawler-utils';
-import { generateProductDescription, analyzeReviews, extractProductTags, analyzeImage, GeneratedDescription } from '../lib/google-apis';
+import { getAIHelper, type AIProcessingResult } from '../lib/crawler';
+import type { GeneratedDescription } from '../lib/google-apis';
 import { translateProductLingva, ProductTranslation } from '../lib/translate';
 import { saveRawHtml, calculateHash } from '../lib/gcs-crawler-helper';
 import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
@@ -1032,7 +1033,7 @@ async function saveProductReviews(
 }
 
 /**
- * AI機能を使って説明文とタグを生成
+ * AI機能を使って説明文とタグを生成（CrawlerAIHelper使用）
  */
 async function generateAIContent(
   mgsProduct: MgsProduct,
@@ -1044,41 +1045,42 @@ async function generateAIContent(
 
   console.log('  🤖 AI機能を実行中...');
 
-  // AI説明文生成
-  let aiDescription: GeneratedDescription | undefined;
-  try {
-    const result = await generateProductDescription({
+  const aiHelper = getAIHelper();
+  const result = await aiHelper.processProduct(
+    {
       title: mgsProduct.title,
-      originalDescription: mgsProduct.description,
+      description: mgsProduct.description,
       performers: mgsProduct.performerNames,
       genres: mgsProduct.genres,
-      reviews: mgsProduct.reviews?.map(r => ({
-        rating: r.rating,
-        comment: r.content,
-      })),
-    });
-
-    if (result) {
-      aiDescription = result;
-      console.log(`    ✅ AI説明文生成完了`);
-      console.log(`       キャッチコピー: ${result.catchphrase}`);
+    },
+    {
+      extractTags: true,
+      translate: false, // MGSはLingva翻訳を使うため
+      generateDescription: true,
     }
-  } catch (error) {
-    console.error('    ❌ AI説明文生成エラー:', error);
+  );
+
+  // エラーがあれば警告
+  if (result.errors.length > 0) {
+    console.log(`    ⚠️ AI処理で一部エラー: ${result.errors.join(', ')}`);
   }
 
-  // AIタグ抽出
+  let aiDescription: GeneratedDescription | undefined;
   let aiTags: MgsProduct['aiTags'];
-  try {
-    const tags = await extractProductTags(mgsProduct.title, mgsProduct.description);
-    if (tags.genres.length > 0 || tags.attributes.length > 0 || tags.plays.length > 0 || tags.situations.length > 0) {
-      aiTags = tags;
-      console.log(`    ✅ AIタグ抽出完了`);
-      console.log(`       ジャンル: ${tags.genres.join(', ') || 'なし'}`);
-      console.log(`       属性: ${tags.attributes.join(', ') || 'なし'}`);
-    }
-  } catch (error) {
-    console.error('    ❌ AIタグ抽出エラー:', error);
+
+  // AI説明文
+  if (result.description) {
+    aiDescription = result.description;
+    console.log(`    ✅ AI説明文生成完了`);
+    console.log(`       キャッチコピー: ${result.description.catchphrase}`);
+  }
+
+  // AIタグ
+  if (result.tags && (result.tags.genres.length > 0 || result.tags.attributes.length > 0 || result.tags.plays.length > 0 || result.tags.situations.length > 0)) {
+    aiTags = result.tags;
+    console.log(`    ✅ AIタグ抽出完了`);
+    console.log(`       ジャンル: ${result.tags.genres.join(', ') || 'なし'}`);
+    console.log(`       属性: ${result.tags.attributes.join(', ') || 'なし'}`);
   }
 
   return { aiDescription, aiTags };

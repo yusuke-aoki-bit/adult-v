@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -12,7 +12,6 @@ import {
   Clock,
   Sparkles,
   ShoppingCart,
-  Calendar,
 } from 'lucide-react';
 import { useBudget, useWatchlistAnalysis } from '@/hooks';
 import type { EnrichedProduct } from '@adult-v/shared/hooks';
@@ -178,7 +177,7 @@ export default function BudgetPage() {
     return categories;
   }, [products]);
 
-  const getPriorityLabel = (category: PriorityCategory) => {
+  const _getPriorityLabel = (category: PriorityCategory) => {
     switch (category) {
       case 'urgent':
         return t.saleSoon;

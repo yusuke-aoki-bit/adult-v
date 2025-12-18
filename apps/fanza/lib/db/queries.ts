@@ -9,6 +9,19 @@ import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@/lib/localization';
 import { unstable_cache } from 'next/cache';
 
+// Next.js unstable_cache設定
+const CACHE_REVALIDATE_SECONDS = 300; // 5分
+
+// unstable_cacheラッパー - インスタンス間で共有されるキャッシュ
+function createCachedFunction<TArgs extends unknown[], TResult>(
+  fn: (...args: TArgs) => Promise<TResult>,
+  keyParts: string[],
+  tags: string[] = [],
+  revalidate: number = CACHE_REVALIDATE_SECONDS
+) {
+  return unstable_cache(fn, keyParts, { revalidate, tags });
+}
+
 // メモリ内キャッシュ（dev環境でのメモリリーク対策）
 const memoryCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5分
@@ -482,15 +495,6 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     const db = getDb();
     const conditions = [];
 
-    // nyoshin/unkotareの商品を除外（画像リンク切れ）
-    // normalized_product_idで判定
-    conditions.push(
-      sql`NOT (
-        ${products.normalizedProductId} LIKE '女体のしんぴ%'
-        OR ${products.normalizedProductId} LIKE 'うんこたれ%'
-      )`
-    );
-
     // FANZAサイトではFANZA商品のみを表示（規約により他ASP商品は表示禁止）
     conditions.push(
       sql`EXISTS (
@@ -856,14 +860,6 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
     const db = getDb();
     const conditions = [];
 
-    // nyoshin/unkotareの商品を除外
-    conditions.push(
-      sql`NOT (
-        ${products.normalizedProductId} LIKE '女体のしんぴ%'
-        OR ${products.normalizedProductId} LIKE 'うんこたれ%'
-      )`
-    );
-
     // プロバイダー（ASP）でフィルタ（単一）
     if (options?.provider) {
       const aspMapping: Record<string, string[]> = {
@@ -1092,7 +1088,6 @@ export async function getActresses(options?: {
     const conditions = [];
 
     // 作品と紐付いている女優のみ表示（出演数0の女優を除外）
-    // nyoshin/unkotare専用女優も除外（それ以外の商品に出演していない女優）
     // FANZAサイトではFANZA商品に出演している女優のみ表示（規約により他ASP専用女優は表示禁止）
     conditions.push(
       sql`EXISTS (
@@ -1100,10 +1095,6 @@ export async function getActresses(options?: {
         INNER JOIN products p2 ON pp.product_id = p2.id
         INNER JOIN product_sources ps_fanza ON p2.id = ps_fanza.product_id AND ps_fanza.asp_name = 'FANZA'
         WHERE pp.performer_id = ${performers.id}
-        AND NOT (
-          p2.normalized_product_id LIKE '女体のしんぴ%'
-          OR p2.normalized_product_id LIKE 'うんこたれ%'
-        )
       )`
     );
 
@@ -1346,30 +1337,25 @@ export async function getActresses(options?: {
 
     if (sortBy === 'productCountDesc' || sortBy === 'productCountAsc') {
       try {
-        // 作品数順の場合は、LEFT JOINして作品数でソート
+        // 作品数順の場合は、事前計算済みのrelease_countを使用
+        // JOINなしで高速にソート可能
         // 同じ作品数の場合はperformer.idでソートして順序を安定させる
         const results = await db
-          .select({
-            performer: performers,
-            productCount: sql<number>`COALESCE(COUNT(${productPerformers.productId}), 0)`,
-          })
+          .select()
           .from(performers)
-          .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
           .where(whereClause)
-          .groupBy(performers.id)
           .orderBy(
             sortBy === 'productCountDesc'
-              ? desc(sql`COALESCE(COUNT(${productPerformers.productId}), 0)`)
-              : asc(sql`COALESCE(COUNT(${productPerformers.productId}), 0)`),
+              ? desc(sql`COALESCE(${performers.releaseCount}, 0)`)
+              : asc(sql`COALESCE(${performers.releaseCount}, 0)`),
             desc(performers.id)
           )
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
 
-        // バッチで作品数、サムネイル、ASPサービス、別名を取得
-        const performerIds = results.map(r => r.performer.id);
-        const [productCounts, thumbnails, servicesMap, aliasesMap] = await Promise.all([
-          batchGetPerformerProductCounts(db, performerIds),
+        // バッチでサムネイル、ASPサービス、別名を取得（作品数は事前計算済み）
+        const performerIds = results.map(p => p.id);
+        const [thumbnails, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerThumbnails(db, performerIds),
           batchGetPerformerServices(db, performerIds),
           batchGetPerformerAliases(db, performerIds),
@@ -1377,12 +1363,12 @@ export async function getActresses(options?: {
 
         const locale = options?.locale || 'ja';
         const actresses = results
-          .map(r => mapPerformerToActressTypeSync(
-            r.performer,
-            productCounts.get(r.performer.id) || 0,
-            thumbnails.get(r.performer.id),
-            servicesMap.get(r.performer.id),
-            aliasesMap.get(r.performer.id),
+          .map(performer => mapPerformerToActressTypeSync(
+            performer,
+            performer.releaseCount || 0,
+            thumbnails.get(performer.id),
+            servicesMap.get(performer.id),
+            aliasesMap.get(performer.id),
             locale
           ));
 
@@ -1393,27 +1379,21 @@ export async function getActresses(options?: {
       }
     } else if (sortBy === 'recent') {
       try {
-        // 新着順の場合は、作品のリリース日でソート（最新の作品が出ている女優を先に表示）
-        // release_dateがNULLの場合は最低優先順位（NULLS LAST）
+        // 新着順の場合は、事前計算済みのlatest_release_dateを使用
+        // JOINなしで高速にソート可能
+        // latest_release_dateがNULLの場合は最低優先順位（NULLS LAST）
         // 同じ日付の場合はperformer.idでソートして順序を安定させる
         const results = await db
-          .select({
-            performer: performers,
-            latestDate: sql<Date>`MAX(${products.releaseDate})`,
-          })
+          .select()
           .from(performers)
-          .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
-          .leftJoin(products, eq(productPerformers.productId, products.id))
           .where(whereClause)
-          .groupBy(performers.id)
-          .orderBy(sql`MAX(${products.releaseDate}) DESC NULLS LAST`, desc(performers.id))
+          .orderBy(sql`${performers.latestReleaseDate} DESC NULLS LAST`, desc(performers.id))
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
 
-        // バッチで作品数、サムネイル、ASPサービス、別名を取得
-        const performerIds = results.map(r => r.performer.id);
-        const [productCounts, thumbnails, servicesMap, aliasesMap] = await Promise.all([
-          batchGetPerformerProductCounts(db, performerIds),
+        // バッチでサムネイル、ASPサービス、別名を取得（作品数は事前計算済み）
+        const performerIds = results.map(p => p.id);
+        const [thumbnails, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerThumbnails(db, performerIds),
           batchGetPerformerServices(db, performerIds),
           batchGetPerformerAliases(db, performerIds),
@@ -1421,12 +1401,12 @@ export async function getActresses(options?: {
 
         const locale = options?.locale || 'ja';
         const actresses = results
-          .map(r => mapPerformerToActressTypeSync(
-            r.performer,
-            productCounts.get(r.performer.id) || 0,
-            thumbnails.get(r.performer.id),
-            servicesMap.get(r.performer.id),
-            aliasesMap.get(r.performer.id),
+          .map(performer => mapPerformerToActressTypeSync(
+            performer,
+            performer.releaseCount || 0,
+            thumbnails.get(performer.id),
+            servicesMap.get(performer.id),
+            aliasesMap.get(performer.id),
             locale
           ));
 
@@ -1464,10 +1444,9 @@ export async function getActresses(options?: {
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
 
-        // バッチで作品数、サムネイル、ASPサービス、別名を取得
+        // バッチでサムネイル、ASPサービス、別名を取得（作品数は事前計算済み）
         const performerIds = results.map(p => p.id);
-        const [productCounts, thumbnails, servicesMap, aliasesMap] = await Promise.all([
-          batchGetPerformerProductCounts(db, performerIds),
+        const [thumbnails, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerThumbnails(db, performerIds),
           batchGetPerformerServices(db, performerIds),
           batchGetPerformerAliases(db, performerIds),
@@ -1477,7 +1456,7 @@ export async function getActresses(options?: {
         const actresses = results
           .map(performer => mapPerformerToActressTypeSync(
             performer,
-            productCounts.get(performer.id) || 0,
+            performer.releaseCount || 0,
             thumbnails.get(performer.id),
             servicesMap.get(performer.id),
             aliasesMap.get(performer.id),
@@ -1526,35 +1505,27 @@ async function batchGetPerformerProductCounts(db: ReturnType<typeof getDb>, perf
 
 /**
  * バッチで複数女優のサムネイル画像を取得（最新作品のサムネイルを使用）
- * ROW_NUMBER()を使って各女優につき1件だけ取得する
+ * DISTINCT ON を使用して各女優につき1件だけ取得（ROW_NUMBERより高速）
  */
 async function batchGetPerformerThumbnails(db: ReturnType<typeof getDb>, performerIds: number[]): Promise<Map<number, string>> {
   if (performerIds.length === 0) return new Map();
 
   // 各女優のサムネイルURLを取得（DTI以外を優先、各女優につき1件のみ）
-  // ROW_NUMBER() OVER (PARTITION BY performer_id ORDER BY ...) を使用
+  // DISTINCT ON を使用（PostgreSQL固有だがROW_NUMBER()より高速）
   const results = await db.execute<{ performer_id: number; thumbnail_url: string }>(sql`
-    WITH ranked_thumbnails AS (
-      SELECT
-        pp.performer_id,
-        p.default_thumbnail_url as thumbnail_url,
-        ps.asp_name,
-        ROW_NUMBER() OVER (
-          PARTITION BY pp.performer_id
-          ORDER BY
-            CASE WHEN ps.asp_name != 'DTI' THEN 0 ELSE 1 END,
-            p.created_at DESC
-        ) as rn
-      FROM product_performers pp
-      INNER JOIN products p ON pp.product_id = p.id
-      INNER JOIN product_sources ps ON pp.product_id = ps.product_id
-      WHERE pp.performer_id IN (${sql.join(performerIds.map(id => sql`${id}`), sql`, `)})
-        AND p.default_thumbnail_url IS NOT NULL
-        AND p.default_thumbnail_url != ''
-    )
-    SELECT performer_id, thumbnail_url
-    FROM ranked_thumbnails
-    WHERE rn = 1
+    SELECT DISTINCT ON (pp.performer_id)
+      pp.performer_id,
+      p.default_thumbnail_url as thumbnail_url
+    FROM product_performers pp
+    INNER JOIN products p ON pp.product_id = p.id
+    INNER JOIN product_sources ps ON pp.product_id = ps.product_id
+    WHERE pp.performer_id IN (${sql.join(performerIds.map(id => sql`${id}`), sql`, `)})
+      AND p.default_thumbnail_url IS NOT NULL
+      AND p.default_thumbnail_url != ''
+    ORDER BY
+      pp.performer_id,
+      CASE WHEN ps.asp_name != 'DTI' THEN 0 ELSE 1 END,
+      p.created_at DESC
   `);
 
   const map = new Map<number, string>();
@@ -1643,59 +1614,47 @@ async function batchGetPerformerAliases(db: ReturnType<typeof getDb>, performerI
 }
 
 /**
- * タグ一覧を取得（カテゴリ別） - 内部実装
+ * タグ一覧を取得（カテゴリ別） - シンプルなクエリ（JOINなし）
+ * unstable_cacheでインスタンス間キャッシュを実現
  */
-async function getTagsInternal(category?: string): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
-  const db = getDb();
-
-  // タグとその使用数を取得
-  const results = await db
-    .select({
-      id: tags.id,
-      name: tags.name,
-      category: tags.category,
-      count: sql<number>`count(${productTags.productId})`,
-    })
-    .from(tags)
-    .leftJoin(productTags, eq(tags.id, productTags.tagId))
-    .where(category ? eq(tags.category, category) : undefined)
-    .groupBy(tags.id, tags.name, tags.category)
-    .orderBy(desc(sql`count(${productTags.productId})`));
-
-  return results.map(r => ({
-    id: r.id,
-    name: r.name,
-    category: r.category,
-    count: Number(r.count),
-  }));
-}
-
-/**
- * タグ一覧を取得（カテゴリ別） - キャッシュ付き
- */
-export async function getTags(category?: string): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
-  const cacheKey = `tags:${category || 'all'}`;
-
-  // メモリキャッシュをチェック
-  const cached = getFromMemoryCache<Array<{ id: number; name: string; category: string | null; count: number }>>(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
+async function getTagsInternal(category?: string): Promise<Array<{ id: number; name: string; category: string | null }>> {
   try {
-    const result = await getTagsInternal(category);
-    setToMemoryCache(cacheKey, result);
-    return result;
+    const db = getDb();
+
+    // タグ一覧のみ取得（JOINなし）
+    const results = await db
+      .select({
+        id: tags.id,
+        name: tags.name,
+        category: tags.category,
+      })
+      .from(tags)
+      .where(category ? eq(tags.category, category) : undefined)
+      .orderBy(tags.name);
+
+    return results;
   } catch (error) {
     console.error('Error fetching tags:', error);
     throw error;
   }
 }
 
+// unstable_cacheでラップ（カテゴリ別にキャッシュ）
+const getCachedTags = createCachedFunction(
+  getTagsInternal,
+  ['tags-fanza'],
+  ['tags'],
+  CACHE_REVALIDATE_SECONDS
+);
+
+export async function getTags(category?: string): Promise<Array<{ id: number; name: string; category: string | null }>> {
+  return getCachedTags(category);
+}
+
 /**
  * 女優の作品に絞ったタグ一覧を取得（カテゴリ別）
  */
-export async function getTagsForActress(actressId: string, category?: string): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
+export async function getTagsForActress(actressId: string, category?: string): Promise<Array<{ id: number; name: string; category: string | null }>> {
   try {
     const db = getDb();
     const performerId = parseInt(actressId);
@@ -1716,13 +1675,12 @@ export async function getTagsForActress(actressId: string, category?: string): P
 
     const productIdList = actressProductIds.map(p => p.productId);
 
-    // タグとその使用数を取得（女優の作品に絞る）
+    // 女優の作品に含まれるタグを取得（件数カウントなし）
     const results = await db
-      .select({
+      .selectDistinct({
         id: tags.id,
         name: tags.name,
         category: tags.category,
-        count: sql<number>`count(${productTags.productId})`,
       })
       .from(tags)
       .innerJoin(productTags, eq(tags.id, productTags.tagId))
@@ -1732,15 +1690,9 @@ export async function getTagsForActress(actressId: string, category?: string): P
           inArray(productTags.productId, productIdList)
         )
       )
-      .groupBy(tags.id, tags.name, tags.category)
-      .orderBy(desc(sql`count(${productTags.productId})`));
+      .orderBy(tags.name);
 
-    return results.map(r => ({
-      id: r.id,
-      name: r.name,
-      category: r.category,
-      count: Number(r.count),
-    }));
+    return results;
   } catch (error) {
     console.error('Error fetching tags for actress:', error);
     throw error;
@@ -1766,13 +1718,25 @@ export async function getActressesCount(options?: {
   heightMax?: number; // 身長最大値（cm）
   bloodTypes?: string[]; // 血液型（複数選択可）
 }): Promise<number> {
+  // TOPページ（フィルターなし）の場合はキャッシュを使用
+  const hasFilters = options?.query || options?.includeTags?.length || options?.excludeTags?.length ||
+    options?.excludeInitials || options?.includeAsps?.length || options?.excludeAsps?.length ||
+    options?.hasVideo || options?.hasImage || options?.hasReview ||
+    options?.cupSizes?.length || options?.heightMin || options?.heightMax || options?.bloodTypes?.length;
+
+  if (!hasFilters) {
+    const cached = getFromMemoryCache<number>('actressesCount:fanza:base');
+    if (cached !== null) {
+      return cached;
+    }
+  }
+
   try {
     const db = getDb();
 
     const conditions = [];
 
     // 作品と紐付いている女優のみカウント（出演数0の女優を除外）
-    // nyoshin/unkotare専用女優も除外（それ以外の商品に出演していない女優）
     // FANZAサイトではFANZA商品に出演している女優のみカウント（規約により他ASP専用女優は表示禁止）
     conditions.push(
       sql`EXISTS (
@@ -1780,10 +1744,6 @@ export async function getActressesCount(options?: {
         INNER JOIN products p2 ON pp.product_id = p2.id
         INNER JOIN product_sources ps_fanza ON p2.id = ps_fanza.product_id AND ps_fanza.asp_name = 'FANZA'
         WHERE pp.performer_id = ${performers.id}
-        AND NOT (
-          p2.normalized_product_id LIKE '女体のしんぴ%'
-          OR p2.normalized_product_id LIKE 'うんこたれ%'
-        )
       )`
     );
 
@@ -1984,7 +1944,14 @@ export async function getActressesCount(options?: {
       .from(performers)
       .where(whereClause);
 
-    return Number(result[0]?.count || 0);
+    const count = Number(result[0]?.count || 0);
+
+    // フィルターなしの場合はキャッシュに保存
+    if (!hasFilters) {
+      setToMemoryCache('actressesCount:fanza:base', count);
+    }
+
+    return count;
   } catch (error) {
     console.error('Error counting actresses:', error);
     throw error;
@@ -2907,6 +2874,13 @@ export async function getUncategorizedProductsCount(options?: {
     const hasVideo = options?.hasVideo || false;
     const hasImage = options?.hasImage || false;
 
+    // フィルタなしの場合はキャッシュをチェック
+    const hasFilters = pattern || initial || includeAsp.length > 0 || excludeAsp.length > 0 || hasVideo || hasImage;
+    if (!hasFilters) {
+      const cached = getFromMemoryCache<number>('uncategorizedCount:fanza:base');
+      if (cached !== null) return cached;
+    }
+
     // 品番パターンフィルター条件
     let patternCondition = sql`TRUE`;
     if (pattern === 'SIRO') {
@@ -2987,7 +2961,14 @@ export async function getUncategorizedProductsCount(options?: {
     `;
 
     const result = await db.execute(query);
-    return Number((result.rows[0] as any).count);
+    const count = Number((result.rows[0] as any).count);
+
+    // フィルタなしの場合はキャッシュに保存
+    if (!hasFilters) {
+      setToMemoryCache('uncategorizedCount:fanza:base', count);
+    }
+
+    return count;
   } catch (error) {
     console.error('Error getting uncategorized products count:', error);
     throw error;
@@ -3216,25 +3197,24 @@ async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCo
 }
 
 /**
- * ASP別商品数統計を取得 - キャッシュ付き
+ * ASP別商品数統計を取得 - unstable_cacheでインスタンス間キャッシュ
  */
+const getCachedAspStats = createCachedFunction(
+  async () => {
+    try {
+      return await getAspStatsInternal();
+    } catch (error) {
+      console.error('Error getting ASP stats:', error);
+      return [];
+    }
+  },
+  ['aspStats-fanza'],
+  ['asp-stats'],
+  CACHE_REVALIDATE_SECONDS
+);
+
 export async function getAspStats(): Promise<Array<{ aspName: string; productCount: number; actressCount: number }>> {
-  const cacheKey = 'aspStats';
-
-  // メモリキャッシュをチェック
-  const cached = getFromMemoryCache<Array<{ aspName: string; productCount: number; actressCount: number }>>(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
-  try {
-    const result = await getAspStatsInternal();
-    setToMemoryCache(cacheKey, result);
-    return result;
-  } catch (error) {
-    console.error('Error getting ASP stats:', error);
-    return [];
-  }
+  return getCachedAspStats();
 }
 
 /**
@@ -3793,6 +3773,11 @@ export async function getSaleProducts(options?: {
     const db = getDb();
     const limit = options?.limit || 20;
 
+    // キャッシュキー生成
+    const cacheKey = `saleProducts:fanza:${limit}:${options?.aspName || ''}:${options?.minDiscount || 0}`;
+    const cached = getFromMemoryCache<SaleProduct[]>(cacheKey);
+    if (cached) return cached;
+
     const conditions = [
       eq(productSales.isActive, true),
       sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
@@ -3850,7 +3835,7 @@ export async function getSaleProducts(options?: {
       performersByProduct.set(p.productId, arr);
     }
 
-    return results.map(r => ({
+    const saleProducts = results.map(r => ({
       productId: r.productId,
       normalizedProductId: r.normalizedProductId,
       title: r.title,
@@ -3865,6 +3850,10 @@ export async function getSaleProducts(options?: {
       endAt: r.endAt,
       performers: performersByProduct.get(r.productId) || [],
     }));
+
+    // キャッシュに保存
+    setToMemoryCache(cacheKey, saleProducts);
+    return saleProducts;
   } catch (error) {
     console.error('Error fetching sale products:', error);
     return [];
