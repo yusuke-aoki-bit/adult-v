@@ -13,6 +13,7 @@
     "crawl:b10f": "tsx src/products/crawl-b10f-csv.ts",
     "crawl:fanza": "tsx src/products/crawl-fanza.ts",
     "fetch:gsc": "tsx src/seo/fetch-gsc-data.ts",
+    "check:pagespeed": "tsx src/seo/check-pagespeed.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
