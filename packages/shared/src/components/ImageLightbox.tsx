@@ -186,7 +186,7 @@ export default function ImageLightbox({
           <img
             src={imageError ? currentImage : fullSizeImage}
             alt={alt}
-            className={`max-w-full max-h-[85vh] object-contain ${isUncensored ? 'blur-[3px]' : ''}`}
+            className={`max-w-full max-h-[85vh] object-contain ${isUncensored ? 'blur-[1px]' : ''}`}
             onError={() => {
               if (!imageError) {
                 setImageError(true);

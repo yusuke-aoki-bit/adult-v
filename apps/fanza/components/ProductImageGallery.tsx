@@ -147,7 +147,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
               src={imageError ? PLACEHOLDER_IMAGE : fullSizeImage}
               alt={productTitle}
               fill
-              className={`object-cover transition-transform group-hover:scale-105 ${isUncensored ? 'blur-[3px]' : ''}`}
+              className={`object-cover transition-transform group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
               onError={handleImageError}
@@ -202,7 +202,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
                   src={imgUrl}
                   alt={`${productTitle} - ${t('sampleImageAlt')} ${idx + 1}`}
                   fill
-                  className={`object-cover ${isUncensored ? 'blur-[3px]' : ''}`}
+                  className={`object-cover ${isUncensored ? 'blur-[1px]' : ''}`}
                   sizes="(max-width: 768px) 20vw, (max-width: 1024px) 16vw, 10vw"
                 />
               </button>
