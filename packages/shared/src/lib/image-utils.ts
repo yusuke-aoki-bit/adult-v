@@ -69,10 +69,18 @@ export function normalizeImageUrl(url: string | null | undefined): string {
 
   // Convert protocol-relative URLs (//domain.com/path) to absolute URLs (https://domain.com/path)
   if (processedUrl.startsWith('//')) {
-    return `https:${processedUrl}`;
+    processedUrl = `https:${processedUrl}`;
   }
 
-  // Return URL as-is if already absolute
+  // Convert awsimgsrc.dmm.co.jp to pics.dmm.co.jp
+  // awsimgsrc.dmm.co.jp returns 405 for HEAD requests and causes Next.js image optimization issues
+  // pics.dmm.co.jp properly handles HEAD requests and redirects deleted images to now_printing.jpg
+  if (processedUrl.includes('awsimgsrc.dmm.co.jp')) {
+    processedUrl = processedUrl
+      .replace('awsimgsrc.dmm.co.jp/pics_dig/', 'pics.dmm.co.jp/')
+      .replace('awsimgsrc.dmm.co.jp/pics/', 'pics.dmm.co.jp/');
+  }
+
   return processedUrl;
 }
 
