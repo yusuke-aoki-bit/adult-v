@@ -58,19 +58,22 @@ export function useSaleStats(): UseSaleStatsResult {
 
     if (cachedSales) {
       setSaleStats(cachedSales);
+      return; // キャッシュがあれば終了
     }
 
-    if (!cachedSales) {
-      fetch('/api/stats/sales')
-        .then(res => res.json())
-        .then(data => {
-          setSaleStats(data);
-          setCachedData(CACHE_KEY_SALES, data);
-        })
-        .catch(() => {
-          setSaleStats(null);
-        });
-    }
+    // キャッシュがない場合はAPIからフェッチ
+    fetch('/api/stats/sales')
+      .then(res => res.json())
+      .then(data => {
+        // APIレスポンスにtotalSalesがあることを確認
+        if (data && typeof data.totalSales === 'number') {
+          setSaleStats({ totalSales: data.totalSales });
+          setCachedData(CACHE_KEY_SALES, { totalSales: data.totalSales });
+        }
+      })
+      .catch(() => {
+        // エラー時は空の状態を設定（スケルトン表示のまま）
+      });
   }, []);
 
   return { saleStats };
