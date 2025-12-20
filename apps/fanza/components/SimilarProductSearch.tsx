@@ -182,7 +182,7 @@ export default function SimilarProductSearch({
                 href={`/${locale}/products/${product.id}`}
                 className="group block"
               >
-                <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-100 mb-2">
+                <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-2" style={{ aspectRatio: '2/3' }}>
                   {product.imageUrl ? (
                     <img
                       src={product.imageUrl}

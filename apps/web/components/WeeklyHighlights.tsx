@@ -167,7 +167,7 @@ export default function WeeklyHighlights({ locale: propLocale }: WeeklyHighlight
                       <div className="grid grid-cols-3 gap-2">
                         {[1, 2, 3].map((j) => (
                           <div key={j} className="bg-gray-800 rounded-lg overflow-hidden animate-pulse">
-                            <div className="aspect-[3/4] bg-gray-700" />
+                            <div className="bg-gray-700" style={{ aspectRatio: '3/4' }} />
                             <div className="p-2 space-y-1">
                               <div className="h-3 bg-gray-700 rounded w-3/4" />
                             </div>

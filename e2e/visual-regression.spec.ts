@@ -161,6 +161,52 @@ test.describe('Visual Regression Tests', () => {
         });
       }
     });
+
+    test('Product card with image screenshot on /products', async ({ page }) => {
+      await page.goto('/products');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(3000); // 画像読み込み待ち
+
+      // ProductCard（rounded-2xl shadow-lgを持つdiv）を取得
+      const productCard = page.locator('div[class*="rounded-2xl"][class*="shadow-lg"]').first();
+
+      if (await productCard.isVisible({ timeout: 5000 }).catch(() => false)) {
+        // カード全体のスクリーンショット
+        await expect(productCard).toHaveScreenshot('product-card-with-image.png', {
+          maxDiffPixels: 100,
+          threshold: 0.3,
+        });
+
+        // 画像が正しく表示されていることを確認
+        const img = productCard.locator('img').first();
+        const box = await img.boundingBox();
+
+        if (box) {
+          expect(box.height).toBeGreaterThan(100); // 画像が表示されている
+          expect(box.width).toBeGreaterThan(100);
+          console.log(`ProductCard image size: ${Math.round(box.width)}x${Math.round(box.height)}`);
+        }
+      }
+    });
+
+    test('ActressCard with image screenshot on homepage', async ({ page }) => {
+      await page.goto('/');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(3000);
+
+      // ActressCard（aspect-ratio スタイルを持つコンテナ内）を取得
+      const actressCard = page.locator('div[style*="aspect-ratio"] img').first();
+
+      if (await actressCard.isVisible({ timeout: 5000 }).catch(() => false)) {
+        const box = await actressCard.boundingBox();
+
+        if (box) {
+          expect(box.height).toBeGreaterThan(50); // 画像が表示されている
+          expect(box.width).toBeGreaterThan(50);
+          console.log(`ActressCard image size: ${Math.round(box.width)}x${Math.round(box.height)}`);
+        }
+      }
+    });
   });
 
   test.describe('Dark/Light Theme', () => {

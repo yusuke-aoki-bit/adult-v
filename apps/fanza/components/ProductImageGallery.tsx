@@ -130,7 +130,8 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
       <div className="space-y-4">
         {/* メイン画像 */}
         <div
-          className="relative aspect-[3/4] w-full bg-gray-100 rounded-lg overflow-hidden cursor-pointer group select-none"
+          className="relative w-full bg-gray-100 rounded-lg overflow-hidden cursor-pointer group select-none"
+          style={{ aspectRatio: '3/4' }}
           onClick={() => setLightboxOpen(true)}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -192,11 +193,12 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
               <button
                 key={imgUrl}
                 onClick={() => setSelectedIndex(idx)}
-                className={`relative aspect-[3/4] rounded overflow-hidden border-2 transition-all ${
+                className={`relative rounded overflow-hidden border-2 transition-all ${
                   selectedIndex === idx
                     ? 'border-rose-700 ring-2 ring-rose-700/50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
+                style={{ aspectRatio: '3/4' }}
               >
                 <Image
                   src={imgUrl}

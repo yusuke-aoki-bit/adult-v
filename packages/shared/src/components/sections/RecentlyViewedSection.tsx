@@ -226,7 +226,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
             {isActressLoading ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="aspect-[3/4] bg-gray-700/50 rounded-lg animate-pulse" />
+                  <div key={i} className="bg-gray-700/50 rounded-lg animate-pulse" style={{ aspectRatio: '3/4' }} />
                 ))}
               </div>
             ) : (

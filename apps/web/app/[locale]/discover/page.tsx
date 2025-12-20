@@ -264,7 +264,7 @@ export default function DiscoverPage() {
               }`}
             >
               {/* Image Gallery */}
-              <div className="relative aspect-[3/4] bg-gray-900">
+              <div className="relative bg-gray-900" style={{ aspectRatio: '3/4' }}>
                 <Image
                   src={images[currentImageIndex] || product.imageUrl}
                   alt={product.title}

@@ -109,7 +109,7 @@ export default function ViewingPatterns({
           <div className="h-5 w-48 bg-gray-200 rounded mb-4" />
           <div className="grid grid-cols-3 gap-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-gray-200 rounded" />
+              <div key={i} className="bg-gray-200 rounded" style={{ aspectRatio: '2/3' }} />
             ))}
           </div>
         </div>

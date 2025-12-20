@@ -221,7 +221,7 @@ export function WeeklyHighlightsSection({
                             href={`/${locale}/products/${product.id}`}
                             className={`group ${styles.cardBgClass} rounded-lg overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all`}
                           >
-                            <div className={`aspect-[2/3] relative ${placeholderBgClass}`}>
+                            <div className={`relative ${placeholderBgClass}`} style={{ aspectRatio: '2/3' }}>
                               {product.imageUrl ? (
                                 <Image
                                   src={product.imageUrl}
@@ -267,7 +267,7 @@ export function WeeklyHighlightsSection({
                             href={`/${locale}/products/${product.id}`}
                             className={`group ${styles.cardBgClass} rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-500/50 transition-all`}
                           >
-                            <div className={`aspect-[2/3] relative ${placeholderBgClass}`}>
+                            <div className={`relative ${placeholderBgClass}`} style={{ aspectRatio: '2/3' }}>
                               {product.imageUrl ? (
                                 <Image
                                   src={product.imageUrl}

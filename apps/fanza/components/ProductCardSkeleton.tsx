@@ -4,7 +4,7 @@ export default function ProductCardSkeleton() {
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse border border-gray-200">
       {/* 画像プレースホルダー */}
-      <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-200 to-gray-100" />
+      <div className="relative bg-gradient-to-br from-gray-200 to-gray-100" style={{ aspectRatio: '3/4' }} />
 
       {/* テキストプレースホルダー */}
       <div className="p-4 space-y-3">

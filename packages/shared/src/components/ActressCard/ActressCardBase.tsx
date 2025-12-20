@@ -135,7 +135,8 @@ export function ActressCardBase({
                 handleImageClick(e as unknown as React.MouseEvent);
               }
             }}
-            className={`relative aspect-[3/4] w-full block ${fetchProductImages ? 'cursor-pointer' : ''} group`}
+            className={`relative w-full block ${fetchProductImages ? 'cursor-pointer' : ''} group`}
+            style={{ aspectRatio: '3/4' }}
           >
             <Image
               src={imgSrc}

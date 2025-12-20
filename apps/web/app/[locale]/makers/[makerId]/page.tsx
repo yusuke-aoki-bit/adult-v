@@ -250,7 +250,7 @@ export default function MakerDetailPage() {
                       href={`/${locale}/products/${product.id}`}
                       className="group"
                     >
-                      <div className="aspect-[2/3] relative rounded-lg overflow-hidden bg-gray-700">
+                      <div className="relative rounded-lg overflow-hidden bg-gray-700" style={{ aspectRatio: '2/3' }}>
                         {product.imageUrl ? (
                           <Image
                             src={product.imageUrl}

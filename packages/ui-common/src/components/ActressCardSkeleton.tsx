@@ -4,7 +4,7 @@ export default function ActressCardSkeleton({ compact = false }: { compact?: boo
   if (compact) {
     return (
       <div className="theme-card rounded-lg overflow-hidden animate-pulse">
-        <div className="relative aspect-[3/4] theme-skeleton" />
+        <div className="relative theme-skeleton" style={{ aspectRatio: '3/4' }} />
         <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2 min-h-[52px] sm:min-h-[60px]">
           <div className="flex items-center justify-between">
             <div className="h-3 theme-skeleton rounded w-16" />
@@ -21,7 +21,7 @@ export default function ActressCardSkeleton({ compact = false }: { compact?: boo
 
   return (
     <div className="theme-card rounded-2xl overflow-hidden animate-pulse">
-      <div className="relative aspect-[4/5] theme-skeleton" />
+      <div className="relative theme-skeleton" style={{ aspectRatio: '4/5' }} />
       <div className="p-6 space-y-4">
         <div className="space-y-2">
           <div className="h-5 theme-skeleton rounded w-full" />

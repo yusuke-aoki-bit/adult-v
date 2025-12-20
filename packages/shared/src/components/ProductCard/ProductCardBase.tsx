@@ -180,7 +180,7 @@ function ProductCardBase({
       <>
         <div className={`relative block ${themeConfig.cardBg} rounded-lg overflow-hidden hover:ring-2 ${themeConfig.cardHoverRing} transition-all group`}>
           <Link href={`/${locale}/products/${product.id}`}>
-            <div className={`relative aspect-[2/3] bg-gradient-to-br ${themeConfig.gradient}`}>
+            <div className={`relative bg-gradient-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
               <Image
                 src={imgSrc}
                 alt={product.title}
@@ -272,7 +272,7 @@ function ProductCardBase({
   // Full mode
   return (
     <div className={`${themeConfig.cardBg} rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300 border ${themeConfig.cardBorder}`}>
-      <div className={`relative h-72 bg-gradient-to-br ${themeConfig.gradient}`}>
+      <div className={`relative bg-gradient-to-br ${themeConfig.gradient}`} style={{ height: '18rem' }}>
         <div className="relative block h-full group">
           <button
             type="button"
