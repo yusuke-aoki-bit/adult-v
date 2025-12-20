@@ -274,6 +274,25 @@ function ProductCardBase({
     <div className={`${themeConfig.cardBg} rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300 border ${themeConfig.cardBorder}`}>
       <div className={`relative bg-gradient-to-br ${themeConfig.gradient}`} style={{ height: '18rem' }}>
         <div className="relative block h-full group">
+          {/* Action buttons - positioned at top right of image container */}
+          <div className="absolute top-4 right-4 flex flex-col gap-1.5 z-20">
+            <div className={`${themeConfig.favoriteButtonBg} rounded-full shadow-md`}>
+              <FavoriteButton type="product" id={product.id} />
+            </div>
+            <ViewedButton
+              productId={product.id}
+              title={product.title}
+              imageUrl={product.imageUrl ?? null}
+              aspName={product.providerLabel ?? product.provider ?? 'unknown'}
+              performerName={product.actressName ?? product.performers?.[0]?.name}
+              performerId={product.actressId ?? product.performers?.[0]?.id}
+              tags={product.tags}
+              duration={product.duration}
+              size="sm"
+              iconOnly
+              className="shadow-md"
+            />
+          </div>
           <button
             type="button"
             onClick={handleImageClick}
@@ -349,24 +368,6 @@ function ProductCardBase({
             </span>
           </div>
         )}
-        <div className="absolute top-4 right-4 flex flex-col gap-1.5 z-20">
-          <div className={`${themeConfig.favoriteButtonBg} rounded-full shadow-md`}>
-            <FavoriteButton type="product" id={product.id} />
-          </div>
-          <ViewedButton
-            productId={product.id}
-            title={product.title}
-            imageUrl={product.imageUrl ?? null}
-            aspName={product.providerLabel ?? product.provider ?? 'unknown'}
-            performerName={product.actressName ?? product.performers?.[0]?.name}
-            performerId={product.actressId ?? product.performers?.[0]?.id}
-            tags={product.tags}
-            duration={product.duration}
-            size="sm"
-            iconOnly
-            className="shadow-md"
-          />
-        </div>
         {rankPosition && rankPosition <= 10 && (
           <div className="absolute top-14 right-4 z-20">
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full shadow-lg ${
