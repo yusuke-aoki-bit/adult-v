@@ -47,8 +47,22 @@ export const ALPHABET = [
 /**
  * ASP表示順序（ヘッダーとフィルターで統一）
  * この順番でUIに表示される
+ * すべての配信サイトを個別に表示
  */
-export const ASP_DISPLAY_ORDER = ['DUGA', 'MGS', 'SOKMIL', 'DTI'] as const;
+export const ASP_DISPLAY_ORDER = [
+  // 主要ASP
+  'DUGA',
+  'MGS',
+  'SOKMIL',
+  // DTI系（個別サイト）
+  'カリビアンコム',
+  '一本道',
+  'HEYZO',
+  '天然むすめ',
+  'パコパコママ',
+  // その他
+  'FC2',
+] as const;
 
 /**
  * ASP名をProviderId型に変換するマッピング
