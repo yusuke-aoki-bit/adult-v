@@ -45,6 +45,12 @@ export const ALPHABET = [
 // ============================================================
 
 /**
+ * ASP表示順序（ヘッダーとフィルターで統一）
+ * この順番でUIに表示される
+ */
+export const ASP_DISPLAY_ORDER = ['DUGA', 'MGS', 'SOKMIL', 'DTI'] as const;
+
+/**
  * ASP名をProviderId型に変換するマッピング
  * 大文字小文字両方に対応
  */

@@ -11,14 +11,13 @@ import { useSite } from '@/lib/contexts/SiteContext';
 import { useSaleStats, headerTranslations } from '@/lib/hooks/useHeaderStats';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { locales, defaultLocale, type Locale } from '@/i18n';
+import { ASP_DISPLAY_ORDER, ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 
-// 静的ASPリスト（件数なし - パフォーマンス改善のためAPIコールを廃止）
-const STATIC_ASP_LIST = [
-  { aspName: 'DUGA', providerId: 'duga' as const },
-  { aspName: 'MGS', providerId: 'mgs' as const },
-  { aspName: 'SOKMIL', providerId: 'sokmil' as const },
-  { aspName: 'DTI', providerId: 'dti' as const },
-];
+// 静的ASPリスト（ASP_DISPLAY_ORDERに基づく統一された順序）
+const STATIC_ASP_LIST = ASP_DISPLAY_ORDER.map(aspName => ({
+  aspName,
+  providerId: ASP_TO_PROVIDER_ID[aspName] ?? 'duga',
+}));
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

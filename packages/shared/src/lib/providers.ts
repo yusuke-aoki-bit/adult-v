@@ -7,37 +7,39 @@ export type { ProviderId, ProviderMeta };
  * プロバイダーメタデータ（クライアントサイドでも使用可能）
  */
 export const providerMeta: Record<ProviderId, ProviderMeta> = {
+  // 主要ASP（ASP_DISPLAY_ORDERと同じ順序: DUGA, MGS, SOKMIL, DTI）
+  // 色は統一的なトーンで区別しやすい配色
   duga: {
     id: 'duga',
     label: 'DUGA',
-    accentClass: 'from-emerald-500 to-teal-500',
+    accentClass: 'from-emerald-600 to-emerald-500',
     textClass: 'text-emerald-300',
     description: '専属女優に強い高画質レーベル。女優別特集が豊富',
     siteUrl: 'https://duga.jp/',
   },
+  mgs: {
+    id: 'mgs',
+    label: 'MGS動画',
+    accentClass: 'from-sky-600 to-sky-500',
+    textClass: 'text-sky-300',
+    description: 'シロウトTV等の素人系に強いプラットフォーム',
+    siteUrl: 'https://www.mgstage.com/',
+  },
   sokmil: {
     id: 'sokmil',
     label: 'SOKMIL',
-    accentClass: 'from-purple-600 to-blue-600',
-    textClass: 'text-purple-300',
+    accentClass: 'from-violet-600 to-violet-500',
+    textClass: 'text-violet-300',
     description: '熟女・マニアック系が充実。独占レンタルも多い',
     siteUrl: 'https://www.sokmil.com/',
   },
   dti: {
     id: 'dti',
     label: 'DTI',
-    accentClass: 'from-red-600 to-rose-500',
+    accentClass: 'from-rose-600 to-rose-500',
     textClass: 'text-rose-300',
     description: '一本道・カリビアンコム等の無修正サイト',
     siteUrl: 'https://www.dti.ne.jp/',
-  },
-  mgs: {
-    id: 'mgs',
-    label: 'MGS動画',
-    accentClass: 'from-blue-500 to-cyan-500',
-    textClass: 'text-blue-300',
-    description: 'シロウトTV等の素人系に強いプラットフォーム',
-    siteUrl: 'https://www.mgstage.com/',
   },
   b10f: {
     id: 'b10f',

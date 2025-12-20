@@ -6,6 +6,7 @@ import { providerMeta } from '@/lib/providers';
 import {
   HIRAGANA_GROUPS,
   ALPHABET,
+  ASP_DISPLAY_ORDER,
   ASP_TO_PROVIDER_ID,
 } from '@/lib/constants/filters';
 import { useSite } from '@/lib/contexts/SiteContext';
@@ -191,7 +192,17 @@ export default function ProductListFilter({
   const shouldShowAspFilter = showAspFilter && !isFanzaSite;
 
   // FANZA以外のASP統計のみ表示（FANZAは規約により除外）
-  const filteredAspStats = aspStats.filter(asp => asp.aspName !== 'FANZA');
+  // ASP_DISPLAY_ORDERの順序に従ってソート
+  const filteredAspStats = aspStats
+    .filter(asp => asp.aspName !== 'FANZA')
+    .sort((a, b) => {
+      const aIndex = ASP_DISPLAY_ORDER.indexOf(a.aspName as typeof ASP_DISPLAY_ORDER[number]);
+      const bIndex = ASP_DISPLAY_ORDER.indexOf(b.aspName as typeof ASP_DISPLAY_ORDER[number]);
+      // 順序リストにないものは末尾に
+      const aOrder = aIndex === -1 ? 999 : aIndex;
+      const bOrder = bIndex === -1 ? 999 : bIndex;
+      return aOrder - bOrder;
+    });
 
   // 現在のフィルター状態を取得
   const hasVideo = searchParams.get('hasVideo') === 'true';

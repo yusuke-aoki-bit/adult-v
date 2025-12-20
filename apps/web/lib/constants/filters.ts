@@ -11,6 +11,7 @@ export {
   HIRAGANA_KEYS,
   ALPHABET,
   // ASP/Provider マッピング
+  ASP_DISPLAY_ORDER,
   ASP_TO_PROVIDER_ID,
   getProviderId,
   // ソートオプション
