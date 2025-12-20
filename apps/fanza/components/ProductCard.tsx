@@ -1,7 +1,7 @@
 'use client';
 
 import { memo } from 'react';
-import { ProductCardBase } from '@adult-v/shared/components/ProductCard';
+import { ProductCardBase, type ProductCardSize } from '@adult-v/shared/components/ProductCard';
 import type { Product } from '@/types/product';
 import FavoriteButton from './FavoriteButton';
 import ViewedButton from './ViewedButton';
@@ -21,17 +21,20 @@ interface ProductCardProps {
   product: Product;
   /** Ranking position (1-10 shows badge) */
   rankPosition?: number;
-  /** Compact mode for grid display */
+  /** @deprecated Use size prop instead */
   compact?: boolean;
+  /** Card size: 'full', 'compact', or 'mini' */
+  size?: ProductCardSize;
 }
 
-function ProductCard({ product, rankPosition, compact = false }: ProductCardProps) {
+function ProductCard({ product, rankPosition, compact = false, size }: ProductCardProps) {
   return (
     <ProductCardBase
       product={product}
       theme="light"
       rankPosition={rankPosition}
       compact={compact}
+      size={size}
       placeholderImage={PLACEHOLDER_IMAGE}
       FavoriteButton={FavoriteButton}
       ViewedButton={ViewedButton}
@@ -50,6 +53,7 @@ export default memo(ProductCard, (prevProps, nextProps) => {
   return (
     prevProps.product.id === nextProps.product.id &&
     prevProps.rankPosition === nextProps.rankPosition &&
-    prevProps.compact === nextProps.compact
+    prevProps.compact === nextProps.compact &&
+    prevProps.size === nextProps.size
   );
 });

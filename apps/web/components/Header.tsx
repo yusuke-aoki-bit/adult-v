@@ -63,14 +63,14 @@ export default function Header() {
 
   return (
     <header
-      className={`${isFanzaSite ? 'bg-pink-950' : 'bg-gray-950'} text-white border-b ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'} sticky top-0 z-50 transition-transform duration-300 ${
+      className={`theme-header border-b sticky top-0 z-50 transition-transform duration-300 ${
         isHidden ? '-translate-y-full' : 'translate-y-0'
       }`}
     >
       {/* 成人向けコンテンツ注意文 */}
-      <div className={`${isFanzaSite ? 'bg-pink-900/60' : 'bg-gray-800/80'} border-b ${isFanzaSite ? 'border-pink-500/10' : 'border-white/5'}`}>
+      <div className="theme-header-notice border-b">
         <div className="container mx-auto px-3 sm:px-4 py-1">
-          <p className="text-[10px] sm:text-xs text-gray-300 text-center leading-tight">
+          <p className="text-[10px] sm:text-xs theme-header-notice-text text-center leading-tight">
             {t.adultNotice}
           </p>
         </div>
@@ -81,16 +81,16 @@ export default function Header() {
           <Link href={localizedHref('/', locale)} className="flex items-center space-x-2 flex-shrink-0">
             {isFanzaSite ? (
               <div className="text-2xl font-bold tracking-tight">
-                <span className="text-pink-400">FANZA</span>
-                <span className="text-white"> Reviews</span>
+                <span className="theme-logo-primary">FANZA</span>
+                <span className="theme-logo-secondary"> Reviews</span>
               </div>
             ) : (
               <>
                 <div className="text-2xl font-bold tracking-tight">
-                  <span className="text-rose-400">ADULT</span>
-                  <span className="text-white">VIEWER LAB</span>
+                  <span className="theme-logo-primary">ADULT</span>
+                  <span className="theme-logo-secondary">VIEWER LAB</span>
                 </div>
-                <span className="text-xs uppercase tracking-widest text-white/70 hidden sm:inline">
+                <span className="text-xs uppercase tracking-widest theme-logo-subtitle hidden sm:inline">
                   {t.subtitle}
                 </span>
               </>
@@ -103,10 +103,10 @@ export default function Header() {
           </div>
 
           {/* デスクトップナビゲーション */}
-          <nav className="hidden md:flex items-center space-x-3 flex-shrink-0">
+          <nav className="hidden md:flex items-center space-x-3 flex-shrink-0 theme-nav">
             <Link
               href={localizedHref('/products', locale)}
-              className="hover:text-purple-300 transition-colors font-medium flex items-center gap-1 text-sm"
+              className="theme-nav-products transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -120,7 +120,7 @@ export default function Header() {
             </Link>
             <Link
               href={localizedHref('/', locale)}
-              className="hover:text-pink-300 transition-colors font-medium flex items-center gap-1 text-sm"
+              className="theme-nav-actresses transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -135,7 +135,7 @@ export default function Header() {
             <NotificationSubscriber />
             <Link
               href={localizedHref('/diary', locale)}
-              className="hover:text-green-300 transition-colors font-medium flex items-center gap-1 text-sm"
+              className="theme-nav-diary transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -149,7 +149,7 @@ export default function Header() {
             </Link>
             <Link
               href={localizedHref('/profile', locale)}
-              className="hover:text-cyan-300 transition-colors font-medium flex items-center gap-1 text-sm"
+              className="theme-nav-profile transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -163,7 +163,7 @@ export default function Header() {
             </Link>
             <Link
               href={localizedHref('/favorites', locale)}
-              className="hover:text-rose-300 transition-colors font-medium flex items-center gap-1 text-sm"
+              className="theme-nav-favorites transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -215,45 +215,45 @@ export default function Header() {
 
         {/* モバイルメニュー（検索バー・ナビ・ASP統計を格納） */}
         {isMobileMenuOpen && (
-          <nav className={`md:hidden py-3 space-y-1 border-t ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'} max-h-[calc(100dvh-100px)] overflow-y-auto`}>
+          <nav className="md:hidden py-3 space-y-1 border-t theme-border max-h-[calc(100dvh-100px)] overflow-y-auto">
             {/* 検索バー */}
             <div className="pb-2">
               <SearchBar />
             </div>
 
             {/* ナビゲーションリンク - コンパクトに */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 theme-nav">
               <Link
                 href={localizedHref('/products', locale)}
-                className="py-1.5 hover:text-purple-300 transition-colors text-sm"
+                className="py-1.5 theme-nav-products transition-colors text-sm"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {t.products}
               </Link>
               <Link
                 href={localizedHref('/', locale)}
-                className="py-1.5 hover:text-pink-300 transition-colors text-sm"
+                className="py-1.5 theme-nav-actresses transition-colors text-sm"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {t.actresses}
               </Link>
               <Link
                 href={localizedHref('/diary', locale)}
-                className="py-1.5 hover:text-green-300 transition-colors text-sm"
+                className="py-1.5 theme-nav-diary transition-colors text-sm"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {t.diary}
               </Link>
               <Link
                 href={localizedHref('/profile', locale)}
-                className="py-1.5 hover:text-cyan-300 transition-colors text-sm"
+                className="py-1.5 theme-nav-profile transition-colors text-sm"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {t.profile}
               </Link>
               <Link
                 href={localizedHref('/favorites', locale)}
-                className="py-1.5 hover:text-rose-300 transition-colors text-sm"
+                className="py-1.5 theme-nav-favorites transition-colors text-sm"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {t.favorites}
@@ -267,15 +267,15 @@ export default function Header() {
             </div>
 
             {/* ASPリンク（モバイル用） */}
-            <div className={`pt-2 border-t ${isFanzaSite ? 'border-pink-500/20' : 'border-white/10'}`}>
+            <div className="pt-2 border-t theme-border">
               <div className="flex items-center gap-1.5 flex-wrap">
                 {/* セールバッジ */}
                 {saleStats === null ? (
-                  <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[80px] animate-pulse flex-shrink-0" />
+                  <div className="px-2 py-1 rounded theme-skeleton text-transparent text-[11px] font-medium h-[24px] w-[80px] animate-pulse shrink-0" />
                 ) : saleStats.totalSales > 0 ? (
                   <Link
                     href={localizedHref('/products?onSale=true', locale)}
-                    className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0 animate-pulse"
+                    className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center shrink-0 animate-pulse"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <span className="font-bold">{t.sale}</span>
@@ -289,7 +289,7 @@ export default function Header() {
                     <Link
                       key={asp.aspName}
                       href={localizedHref(`/products?includeAsp=${asp.aspName}`, locale)}
-                      className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
+                      className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center shrink-0`}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <span className="font-bold">{meta?.label || asp.aspName}</span>
@@ -303,16 +303,16 @@ export default function Header() {
       </div>
 
       {/* ASPリンクバー - デスクトップのみ表示 */}
-      <div className={`hidden md:block ${isFanzaSite ? 'bg-pink-900/50' : 'bg-gray-900/80'} border-t ${isFanzaSite ? 'border-pink-500/10' : 'border-white/5'}`}>
+      <div className="hidden md:block theme-asp-bar border-t">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-2 py-1.5 flex-wrap min-h-[36px]">
             {/* セールバッジ */}
             {saleStats === null ? (
-              <div className="px-2 py-1 rounded bg-gray-700 text-transparent text-[11px] font-medium h-[24px] w-[80px] animate-pulse flex-shrink-0" />
+              <div className="px-2 py-1 rounded theme-skeleton text-transparent text-[11px] font-medium h-[24px] w-[80px] animate-pulse shrink-0" />
             ) : saleStats.totalSales > 0 ? (
               <Link
                 href={localizedHref('/products?onSale=true', locale)}
-                className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0 animate-pulse"
+                className="px-2 py-1 rounded bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center shrink-0 animate-pulse"
               >
                 <span className="font-bold">{t.sale}</span>
                 <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
@@ -325,7 +325,7 @@ export default function Header() {
                 <Link
                   key={asp.aspName}
                   href={localizedHref(`/products?includeAsp=${asp.aspName}`, locale)}
-                  className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center flex-shrink-0`}
+                  className={`px-2 py-1 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white text-[11px] font-medium hover:opacity-90 transition-opacity h-[24px] flex items-center shrink-0`}
                 >
                   <span className="font-bold">{meta?.label || asp.aspName}</span>
                 </Link>

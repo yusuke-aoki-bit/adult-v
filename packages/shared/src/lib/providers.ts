@@ -5,57 +5,41 @@ export type { ProviderId, ProviderMeta };
 
 /**
  * プロバイダーメタデータ（クライアントサイドでも使用可能）
+ * ASP_DISPLAY_ORDER順に色相環で区別しやすい配色
+ * 1. SOKMIL - 紫 (violet)
+ * 2. DUGA - 緑 (emerald)
+ * 3. FANZA - ピンク〜赤 (pink-red)
+ * 4. b10f.jp - オレンジ (orange)
+ * 5. MGS動画 - 空色 (sky)
+ * 6. カリビアンコムPR - 赤〜ローズ (red-rose)
+ * 7. HEYZO - 黄色 (yellow)
+ * 8. FC2 - インディゴ (indigo)
+ * 9. 一本道 - 青 (blue)
+ * 10. CARIBBEANCOM - 赤〜オレンジ (red-orange)
+ * 11. HEYDOUGA - シアン (cyan)
+ * 12. X1X - フクシア (fuchsia)
+ * 13. Japanska - ローズ (rose)
+ * 14. ENKOU55 - ライム (lime)
+ * 15. UREKKO - アンバー (amber)
+ * 16. TOKYOHOT - スレート (slate)
  */
 export const providerMeta: Record<ProviderId, ProviderMeta> = {
-  // 主要ASP（ASP_DISPLAY_ORDERと同じ順序: DUGA, MGS, SOKMIL, DTI）
-  // 色は統一的なトーンで区別しやすい配色
-  duga: {
-    id: 'duga',
-    label: 'DUGA',
-    accentClass: 'from-emerald-600 to-emerald-500',
-    textClass: 'text-emerald-300',
-    description: '専属女優に強い高画質レーベル。女優別特集が豊富',
-    siteUrl: 'https://duga.jp/',
-  },
-  mgs: {
-    id: 'mgs',
-    label: 'MGS動画',
-    accentClass: 'from-sky-600 to-sky-500',
-    textClass: 'text-sky-300',
-    description: 'シロウトTV等の素人系に強いプラットフォーム',
-    siteUrl: 'https://www.mgstage.com/',
-  },
+  // ===== 主要ASP =====
   sokmil: {
     id: 'sokmil',
     label: 'SOKMIL',
-    accentClass: 'from-violet-600 to-violet-500',
+    accentClass: 'from-violet-600 to-purple-500',
     textClass: 'text-violet-300',
     description: '熟女・マニアック系が充実。独占レンタルも多い',
     siteUrl: 'https://www.sokmil.com/',
   },
-  dti: {
-    id: 'dti',
-    label: 'DTI',
-    accentClass: 'from-rose-600 to-rose-500',
-    textClass: 'text-rose-300',
-    description: '一本道・カリビアンコム等の無修正サイト',
-    siteUrl: 'https://www.dti.ne.jp/',
-  },
-  b10f: {
-    id: 'b10f',
-    label: 'b10f.jp',
-    accentClass: 'from-orange-500 to-amber-500',
-    textClass: 'text-orange-300',
-    description: 'VR・高画質作品が豊富なプラットフォーム',
-    siteUrl: 'https://b10f.jp/',
-  },
-  japanska: {
-    id: 'japanska',
-    label: 'Japanska',
-    accentClass: 'from-pink-500 to-rose-500',
-    textClass: 'text-pink-300',
-    description: '海外向け日本作品配信サイト',
-    siteUrl: 'https://www.japanska-xxx.com/',
+  duga: {
+    id: 'duga',
+    label: 'DUGA',
+    accentClass: 'from-emerald-600 to-green-500',
+    textClass: 'text-emerald-300',
+    description: '専属女優に強い高画質レーベル。女優別特集が豊富',
+    siteUrl: 'https://duga.jp/',
   },
   fanza: {
     id: 'fanza',
@@ -65,51 +49,124 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
     description: '国内最大級のアダルト動画配信サイト',
     siteUrl: 'https://www.dmm.co.jp/digital/videoa/',
   },
-  fc2: {
-    id: 'fc2',
-    label: 'FC2',
-    accentClass: 'from-indigo-500 to-violet-500',
-    textClass: 'text-indigo-300',
-    description: '素人投稿動画プラットフォーム',
-    siteUrl: 'https://adult.contents.fc2.com/',
+  b10f: {
+    id: 'b10f',
+    label: 'b10f.jp',
+    accentClass: 'from-orange-600 to-amber-500',
+    textClass: 'text-orange-300',
+    description: 'VR・高画質作品が豊富なプラットフォーム',
+    siteUrl: 'https://b10f.jp/',
   },
-  // DTI個別サービス
-  caribbeancom: {
-    id: 'caribbeancom',
-    label: 'カリビアンコム',
-    accentClass: 'from-red-600 to-orange-500',
-    textClass: 'text-red-300',
-    description: '日本最大級の無修正動画サイト',
-    siteUrl: 'https://www.caribbeancom.com/',
+  mgs: {
+    id: 'mgs',
+    label: 'MGS動画',
+    accentClass: 'from-sky-600 to-blue-500',
+    textClass: 'text-sky-300',
+    description: 'シロウトTV等の素人系に強いプラットフォーム',
+    siteUrl: 'https://www.mgstage.com/',
   },
+  // ===== DTI個別サービス =====
   caribbeancompr: {
     id: 'caribbeancompr',
     label: 'カリビアンコムPR',
-    accentClass: 'from-red-700 to-rose-500',
+    accentClass: 'from-red-600 to-rose-500',
     textClass: 'text-red-300',
     description: 'カリビアンコムプレミアム',
     siteUrl: 'https://www.caribbeancompr.com/',
   },
-  '1pondo': {
-    id: '1pondo',
-    label: '一本道',
-    accentClass: 'from-blue-600 to-indigo-500',
-    textClass: 'text-blue-300',
-    description: '厳選された無修正動画',
-    siteUrl: 'https://www.1pondo.tv/',
-  },
   heyzo: {
     id: 'heyzo',
     label: 'HEYZO',
-    accentClass: 'from-yellow-500 to-amber-500',
+    accentClass: 'from-yellow-500 to-orange-400',
     textClass: 'text-yellow-300',
     description: 'オリジナル無修正動画',
     siteUrl: 'https://www.heyzo.com/',
   },
+  fc2: {
+    id: 'fc2',
+    label: 'FC2',
+    accentClass: 'from-indigo-600 to-blue-500',
+    textClass: 'text-indigo-300',
+    description: '素人投稿動画プラットフォーム',
+    siteUrl: 'https://adult.contents.fc2.com/',
+  },
+  '1pondo': {
+    id: '1pondo',
+    label: '一本道',
+    accentClass: 'from-blue-700 to-indigo-500',
+    textClass: 'text-blue-300',
+    description: '厳選された無修正動画',
+    siteUrl: 'https://www.1pondo.tv/',
+  },
+  caribbeancom: {
+    id: 'caribbeancom',
+    label: 'カリビアンコム',
+    accentClass: 'from-red-700 to-orange-500',
+    textClass: 'text-red-300',
+    description: '日本最大級の無修正動画サイト',
+    siteUrl: 'https://www.caribbeancom.com/',
+  },
+  heydouga: {
+    id: 'heydouga',
+    label: 'HEYDOUGA',
+    accentClass: 'from-cyan-600 to-teal-500',
+    textClass: 'text-cyan-300',
+    description: 'オリジナル無修正動画配信',
+    siteUrl: 'https://www.heydouga.com/',
+  },
+  x1x: {
+    id: 'x1x',
+    label: 'X1X',
+    accentClass: 'from-fuchsia-600 to-purple-500',
+    textClass: 'text-fuchsia-300',
+    description: '無修正動画配信サイト',
+    siteUrl: 'https://x1x.com/',
+  },
+  japanska: {
+    id: 'japanska',
+    label: 'Japanska',
+    accentClass: 'from-rose-600 to-pink-500',
+    textClass: 'text-rose-300',
+    description: '海外向け日本作品配信サイト',
+    siteUrl: 'https://www.japanska-xxx.com/',
+  },
+  enkou55: {
+    id: 'enkou55',
+    label: 'ENKOU55',
+    accentClass: 'from-lime-600 to-green-500',
+    textClass: 'text-lime-300',
+    description: '素人系動画配信',
+    siteUrl: 'https://enkou55.com/',
+  },
+  urekko: {
+    id: 'urekko',
+    label: 'UREKKO',
+    accentClass: 'from-amber-600 to-yellow-500',
+    textClass: 'text-amber-300',
+    description: '人気動画配信サイト',
+    siteUrl: 'https://urekko.com/',
+  },
+  tokyohot: {
+    id: 'tokyohot',
+    label: 'TOKYOHOT',
+    accentClass: 'from-slate-600 to-gray-500',
+    textClass: 'text-slate-300',
+    description: '過激な無修正動画',
+    siteUrl: 'https://www.tokyo-hot.com/',
+  },
+  // ===== その他DTI系 =====
+  dti: {
+    id: 'dti',
+    label: 'DTI',
+    accentClass: 'from-rose-700 to-red-500',
+    textClass: 'text-rose-300',
+    description: '一本道・カリビアンコム等の無修正サイト',
+    siteUrl: 'https://www.dti.ne.jp/',
+  },
   '10musume': {
     id: '10musume',
     label: '天然むすめ',
-    accentClass: 'from-pink-500 to-fuchsia-500',
+    accentClass: 'from-pink-500 to-fuchsia-400',
     textClass: 'text-pink-300',
     description: '素人系無修正動画',
     siteUrl: 'https://www.10musume.com/',
@@ -117,7 +174,7 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
   pacopacomama: {
     id: 'pacopacomama',
     label: 'パコパコママ',
-    accentClass: 'from-rose-500 to-pink-500',
+    accentClass: 'from-rose-500 to-pink-400',
     textClass: 'text-rose-300',
     description: '熟女系無修正動画',
     siteUrl: 'https://www.pacopacomama.com/',
@@ -125,18 +182,10 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
   muramura: {
     id: 'muramura',
     label: 'ムラムラ',
-    accentClass: 'from-purple-500 to-violet-500',
+    accentClass: 'from-purple-600 to-violet-500',
     textClass: 'text-purple-300',
     description: '素人系無修正動画',
     siteUrl: 'https://muramura.tv/',
-  },
-  tokyohot: {
-    id: 'tokyohot',
-    label: 'Tokyo-Hot',
-    accentClass: 'from-gray-600 to-slate-500',
-    textClass: 'text-gray-300',
-    description: '過激な無修正動画',
-    siteUrl: 'https://www.tokyo-hot.com/',
   },
 };
 

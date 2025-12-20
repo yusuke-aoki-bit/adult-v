@@ -370,6 +370,36 @@ export class SokmilApiClient {
       sampleVideoUrl = data.sample_movie_url;
     }
 
+    // サンプル画像URLを取得（複数のパターンを試行）
+    // SOKMIL APIの可能なレスポンス構造:
+    // - sampleImageURL: { image: string[] }
+    // - sampleImageURL: string[]
+    // - sample_image_url: { image: string[] }
+    // - sample_image_url: string[]
+    let sampleImages: string[] = [];
+    if (data.sampleImageURL) {
+      if (Array.isArray(data.sampleImageURL)) {
+        sampleImages = data.sampleImageURL;
+      } else if (data.sampleImageURL.image && Array.isArray(data.sampleImageURL.image)) {
+        sampleImages = data.sampleImageURL.image;
+      } else if (typeof data.sampleImageURL === 'object') {
+        // オブジェクト内の配列を探す
+        const values = Object.values(data.sampleImageURL);
+        for (const val of values) {
+          if (Array.isArray(val)) {
+            sampleImages = val as string[];
+            break;
+          }
+        }
+      }
+    } else if (data.sample_image_url) {
+      if (Array.isArray(data.sample_image_url)) {
+        sampleImages = data.sample_image_url;
+      } else if (data.sample_image_url.image && Array.isArray(data.sample_image_url.image)) {
+        sampleImages = data.sample_image_url.image;
+      }
+    }
+
     return {
       itemId: data.id || '',
       itemName: data.title || '',
@@ -379,7 +409,7 @@ export class SokmilApiClient {
       // APIレスポンス: imageURL.large > imageURL.list > imageURL.small
       thumbnailUrl: data.imageURL?.large || data.imageURL?.list || data.imageURL?.small,
       packageImageUrl: data.imageURL?.large,
-      sampleImages: data.sampleImageURL?.image || [],
+      sampleImages,
       sampleVideoUrl,
       price: data.prices?.price ? parseInt(data.prices.price.replace(/[^0-9]/g, ''), 10) : undefined,
       releaseDate: data.date,

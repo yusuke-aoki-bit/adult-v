@@ -68,8 +68,11 @@
   --logo-subtitle: rgba(255, 255, 255, 0.7);
 
   /* Navigation */
+  --nav-text: #ffffff;
   --nav-hover-products: #d8b4fe; /* purple-300 */
   --nav-hover-actresses: #f9a8d4; /* pink-300 */
+  --nav-hover-diary: #86efac; /* green-300 */
+  --nav-hover-profile: #67e8f9; /* cyan-300 */
   --nav-hover-favorites: #fda4af; /* rose-300 */
 
   /* ASP Stats Bar */
@@ -131,8 +134,11 @@
   --logo-subtitle: #6E6E6E; /* FANZA公式 */
 
   /* Navigation */
+  --nav-text: #374151; /* gray-700 */
   --nav-hover-products: #B42F5A; /* rose-700相当 */
   --nav-hover-actresses: #B42F5A; /* rose-700相当 */
+  --nav-hover-diary: #B42F5A; /* rose-700相当 */
+  --nav-hover-profile: #B42F5A; /* rose-700相当 */
   --nav-hover-favorites: #B42F5A; /* rose-700相当 */
 
   /* ASP Stats Bar */
@@ -179,12 +185,24 @@
   color: var(--logo-subtitle);
 }
 
+.theme-nav {
+  color: var(--nav-text);
+}
+
 .theme-nav-products:hover {
   color: var(--nav-hover-products);
 }
 
 .theme-nav-actresses:hover {
   color: var(--nav-hover-actresses);
+}
+
+.theme-nav-diary:hover {
+  color: var(--nav-hover-diary);
+}
+
+.theme-nav-profile:hover {
+  color: var(--nav-hover-profile);
 }
 
 .theme-nav-favorites:hover {

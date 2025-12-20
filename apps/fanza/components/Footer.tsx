@@ -31,6 +31,11 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
                   {t.terms}
                 </Link>
               </li>
+              <li>
+                <Link href={`/${locale}/legal-compliance`} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? '法的コンプライアンス' : 'Legal Compliance'}
+                </Link>
+              </li>
             </ul>
           </div>
 

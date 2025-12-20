@@ -308,6 +308,8 @@
   },
   "imageLightbox": {
     "close": "Close",
+    "previous": "Prev",
+    "next": "Next",
     "clickToCloseEsc": "← Prev | Center to close | Next →",
     "previousImage": "Previous image",
     "nextImage": "Next image",

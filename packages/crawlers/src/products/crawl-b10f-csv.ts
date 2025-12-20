@@ -541,9 +541,10 @@ async function main() {
           console.log(`  ✓ サンプル画像保存完了`);
         }
 
-        // 10. パッケージ画像を保存
+        // 10. パッケージ画像を保存（大サイズのみ）
         if (item.imageUrl) {
-          // 小サイズ (1s.jpg) と 大サイズ (1.jpg) の両方を保存
+          // 大サイズのみ保存（1s.jpg → 1.jpg に変換）
+          // 1s.jpg は約40KB、1.jpg は約200KB
           const baseImageUrl = item.imageUrl.replace(/\/1s\.jpg$/, '');
           const largeImageUrl = `${baseImageUrl}/1.jpg`;
 
@@ -556,8 +557,7 @@ async function main() {
               display_order
             )
             VALUES
-              (${productId}, 'b10f', ${item.imageUrl}, 'package', 0),
-              (${productId}, 'b10f', ${largeImageUrl}, 'package', 1)
+              (${productId}, 'b10f', ${largeImageUrl}, 'package', 0)
             ON CONFLICT DO NOTHING
           `);
 

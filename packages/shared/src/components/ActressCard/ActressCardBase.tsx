@@ -43,13 +43,18 @@ interface FavoriteButtonProps {
   id: string;
 }
 
+export type ActressCardSize = 'full' | 'compact' | 'mini';
+
 export interface ActressCardBaseProps {
   actress: Actress;
+  /** @deprecated Use size prop instead */
   compact?: boolean;
+  /** Card size: 'full', 'compact', or 'mini' */
+  size?: ActressCardSize;
   priority?: boolean;
   theme: ActressCardTheme;
   /** FavoriteButton component from the app */
-  FavoriteButton: ComponentType<FavoriteButtonProps>;
+  FavoriteButton?: ComponentType<FavoriteButtonProps>;
   /** Whether this is FANZA site (to filter services) */
   isFanzaSite?: boolean;
   /** Function to fetch product images for lightbox */
@@ -63,6 +68,7 @@ export interface ActressCardBaseProps {
 export function ActressCardBase({
   actress,
   compact = false,
+  size,
   priority = false,
   theme,
   FavoriteButton,
@@ -73,6 +79,9 @@ export function ActressCardBase({
   const locale = (params?.locale as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const themeConfig = getActressCardThemeConfig(theme);
+
+  // Resolve size from either new size prop or deprecated compact prop
+  const resolvedSize: ActressCardSize = size ?? (compact ? 'compact' : 'full');
 
   // Filter services based on site
   const displayServices = filterServicesForSite(actress.services, isFanzaSite);
@@ -121,7 +130,52 @@ export function ActressCardBase({
     setShowLightbox(false);
   }, []);
 
-  if (compact) {
+  // Mini size - simplest card for WeeklyHighlights, etc.
+  if (resolvedSize === 'mini') {
+    return (
+      <Link
+        href={`/${locale}/actress/${actress.id}`}
+        className={`group ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-amber-500/50 transition-all`}
+      >
+        <div className={`aspect-square relative ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
+          {actress.heroImage || actress.thumbnail ? (
+            <Image
+              src={imgSrc}
+              alt={actress.name}
+              fill
+              sizes="(max-width: 768px) 33vw, 10vw"
+              className={`object-cover group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
+              loading={priority ? undefined : "lazy"}
+              priority={priority}
+              onError={handleImageError}
+              unoptimized
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <svg className={`h-8 w-8 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+          )}
+          {actress.metrics?.trendingScore && actress.metrics.trendingScore > 0 && (
+            <div className="absolute top-1 right-1 bg-green-600 text-white text-[10px] font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
+              <svg className="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              {actress.metrics.trendingScore}%
+            </div>
+          )}
+        </div>
+        <div className="p-1.5">
+          <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-amber-300' : 'text-gray-800 group-hover:text-amber-600'} text-xs font-medium truncate transition-colors`}>
+            {actress.name}
+          </p>
+        </div>
+      </Link>
+    );
+  }
+
+  if (resolvedSize === 'compact') {
     return (
       <>
         <div className="theme-card theme-text rounded-lg overflow-hidden hover:shadow-xl transition-all duration-200">
@@ -153,12 +207,14 @@ export function ActressCardBase({
               unoptimized
             />
             {/* Favorite button */}
-            <div
-              className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-white rounded-full shadow-md scale-90 sm:scale-100 z-10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <FavoriteButton type="actress" id={actress.id} />
-            </div>
+            {FavoriteButton && (
+              <div
+                className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-white rounded-full shadow-md scale-90 sm:scale-100 z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <FavoriteButton type="actress" id={actress.id} />
+              </div>
+            )}
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
           </div>
@@ -232,9 +288,11 @@ export function ActressCardBase({
           unoptimized
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-        <div className="absolute top-4 right-4 bg-white rounded-full shadow-md">
-          <FavoriteButton type="actress" id={actress.id} />
-        </div>
+        {FavoriteButton && (
+          <div className="absolute top-4 right-4 bg-white rounded-full shadow-md">
+            <FavoriteButton type="actress" id={actress.id} />
+          </div>
+        )}
         <div className="absolute bottom-4 left-4 text-white">
           <p className="text-sm uppercase tracking-widest text-white/70">
             {actress.catchcopy}

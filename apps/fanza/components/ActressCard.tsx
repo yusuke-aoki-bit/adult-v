@@ -1,6 +1,6 @@
 'use client';
 
-import { ActressCardBase } from '@adult-v/shared/components';
+import { ActressCardBase, type ActressCardSize } from '@adult-v/shared/components';
 import { Actress } from '@/types/product';
 import { normalizeImageUrl } from '@/lib/image-utils';
 import FavoriteButton from './FavoriteButton';
@@ -8,7 +8,10 @@ import { useSite } from '@/lib/contexts/SiteContext';
 
 interface Props {
   actress: Actress;
+  /** @deprecated Use size prop instead */
   compact?: boolean;
+  /** Card size: 'full', 'compact', or 'mini' */
+  size?: ActressCardSize;
   priority?: boolean;
 }
 
@@ -28,13 +31,14 @@ async function fetchProductImages(actressId: string): Promise<string[]> {
   }
 }
 
-export default function ActressCard({ actress, compact = false, priority = false }: Props) {
+export default function ActressCard({ actress, compact = false, size, priority = false }: Props) {
   const { isFanzaSite } = useSite();
 
   return (
     <ActressCardBase
       actress={actress}
       compact={compact}
+      size={size}
       priority={priority}
       theme="light"
       FavoriteButton={FavoriteButton}

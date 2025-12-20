@@ -60,26 +60,26 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
   const actresses = useFooterActresses();
 
   return (
-    <footer className="bg-gray-900 text-gray-300 mt-auto">
+    <footer className="theme-footer mt-auto">
       <div className="container mx-auto px-4 py-8">
         {/* サイト情報 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h2 className="text-white font-bold text-lg mb-2">{t.siteName}</h2>
-            <p className="text-sm text-gray-400">
+            <h2 className="theme-footer-heading font-bold text-lg mb-2">{t.siteName}</h2>
+            <p className="text-sm theme-text-muted">
               {t.description}
             </p>
           </div>
 
           {/* 人気女優リンク（SEO用内部リンク強化・GSCデータで動的更新） */}
           <div>
-            <h3 className="text-white font-semibold mb-3">{t.popularActresses || '人気女優'}</h3>
+            <h3 className="theme-footer-heading font-semibold mb-3">{t.popularActresses || '人気女優'}</h3>
             <ul className="space-y-1.5 text-sm">
               {actresses.slice(0, 8).map((actress) => (
                 <li key={actress.id}>
                   <Link
                     href={`/${locale}/actress/${actress.id}`}
-                    className="text-gray-400 hover:text-pink-400 transition-colors"
+                    className="theme-footer-link transition-colors"
                   >
                     {actress.name}
                   </Link>
@@ -90,20 +90,20 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
 
           {/* 法的ページリンク */}
           <div>
-            <h3 className="text-white font-semibold mb-3">{t.legal}</h3>
+            <h3 className="theme-footer-heading font-semibold mb-3">{t.legal}</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href={`/${locale}/privacy`} className="text-gray-400 hover:text-white transition-colors">
+                <Link href={`/${locale}/privacy`} className="theme-footer-link transition-colors">
                   {t.privacy}
                 </Link>
               </li>
               <li>
-                <Link href={`/${locale}/terms`} className="text-gray-400 hover:text-white transition-colors">
+                <Link href={`/${locale}/terms`} className="theme-footer-link transition-colors">
                   {t.terms}
                 </Link>
               </li>
               <li>
-                <Link href={`/${locale}/legal-compliance`} className="text-gray-400 hover:text-white transition-colors">
+                <Link href={`/${locale}/legal-compliance`} className="theme-footer-link transition-colors">
                   {locale === 'ja' ? '法的コンプライアンス' : 'Legal Compliance'}
                 </Link>
               </li>
@@ -112,13 +112,13 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
 
           {/* お問い合わせ */}
           <div>
-            <h3 className="text-white font-semibold mb-3">{t.contact}</h3>
-            <p className="text-sm text-gray-400">
+            <h3 className="theme-footer-heading font-semibold mb-3">{t.contact}</h3>
+            <p className="text-sm theme-text-muted">
               {t.contactDescription}
             </p>
             <a
               href="mailto:adult.vvvv@gmail.com"
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              className="text-sm theme-footer-email transition-colors"
             >
               adult.vvvv@gmail.com
             </a>
@@ -126,7 +126,7 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
         </div>
 
         {/* アフィリエイト開示 & 2257免責 */}
-        <div className="border-t border-gray-800 mt-8 pt-6 text-xs text-gray-400 space-y-3">
+        <div className="border-t theme-footer-border mt-8 pt-6 text-xs theme-text-muted space-y-3">
           <p className="leading-relaxed">
             {t.affiliateNotice}
           </p>
@@ -136,7 +136,7 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
         </div>
 
         {/* パートナーバナー表示 - グリッドレイアウトで固定サイズ (180x50) */}
-        <div className="border-t border-gray-800 mt-6 pt-6">
+        <div className="border-t theme-footer-border mt-6 pt-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 justify-items-center">
             <div className="w-[180px] h-[50px] flex items-center justify-center">
               <DugaCredit />
@@ -163,10 +163,10 @@ export default function Footer({ locale = 'ja' }: { locale?: string }) {
         </div>
 
         {/* 管理ページ・コピーライト */}
-        <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-gray-400">
+        <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 text-sm theme-text-muted">
           <Link
             href="/admin/stats"
-            className="text-gray-400 hover:text-gray-300 transition-colors"
+            className="theme-footer-link transition-colors"
           >
             {t.admin}
           </Link>

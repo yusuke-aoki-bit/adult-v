@@ -46,22 +46,27 @@ export const ALPHABET = [
 
 /**
  * ASP表示順序（ヘッダーとフィルターで統一）
- * この順番でUIに表示される
+ * この順番でUIに表示される（作品数順）
  * すべての配信サイトを個別に表示
  */
 export const ASP_DISPLAY_ORDER = [
-  // 主要ASP
-  'DUGA',
-  'MGS',
+  // 作品数順
   'SOKMIL',
-  // DTI系（個別サイト）
-  'カリビアンコム',
-  '一本道',
+  'DUGA',
+  'FANZA',
+  'b10f.jp',
+  'MGS動画',
+  'カリビアンコムPR',
   'HEYZO',
-  '天然むすめ',
-  'パコパコママ',
-  // その他
   'FC2',
+  '一本道',
+  'CARIBBEANCOM',
+  'HEYDOUGA',
+  'X1X',
+  'Japanska',
+  'ENKOU55',
+  'UREKKO',
+  'TOKYOHOT',
 ] as const;
 
 /**
@@ -83,6 +88,7 @@ export const ASP_TO_PROVIDER_ID: Record<string, ProviderId | undefined> = {
   'MGS動画': 'mgs',
   'b10f': 'b10f',
   'B10F': 'b10f',
+  'b10f.jp': 'b10f',
   'FC2': 'fc2',
   'fc2': 'fc2',
   'Japanska': 'japanska',
@@ -93,15 +99,26 @@ export const ASP_TO_PROVIDER_ID: Record<string, ProviderId | undefined> = {
   // DTI個別サービス（英語キー）
   'caribbeancom': 'caribbeancom',
   'caribbeancompr': 'caribbeancompr',
+  'CARIBBEANCOM': 'caribbeancom',
   '1pondo': '1pondo',
   'heyzo': 'heyzo',
   '10musume': '10musume',
   'pacopacomama': 'pacopacomama',
   'muramura': 'muramura',
   'tokyohot': 'tokyohot',
+  'TOKYOHOT': 'tokyohot',
+  'HEYDOUGA': 'heydouga',
+  'heydouga': 'heydouga',
+  'X1X': 'x1x',
+  'x1x': 'x1x',
+  'ENKOU55': 'enkou55',
+  'enkou55': 'enkou55',
+  'UREKKO': 'urekko',
+  'urekko': 'urekko',
   // DTI個別サービス（日本語キー - DB保存名）
   'カリビアンコム': 'caribbeancom',
   'カリビアンコムプレミアム': 'caribbeancompr',
+  'カリビアンコムPR': 'caribbeancompr',
   '一本道': '1pondo',
   'HEYZO': 'heyzo',
   '天然むすめ': '10musume',
@@ -130,6 +147,8 @@ export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'releaseDateAsc', label: 'リリース日（古い順）' },
   { value: 'priceAsc', label: '価格（安い順）' },
   { value: 'priceDesc', label: '価格（高い順）' },
+  { value: 'ratingDesc', label: '評価（高い順）' },
+  { value: 'reviewCountDesc', label: 'レビュー数（多い順）' },
   { value: 'nameAsc', label: 'タイトル（A-Z）' },
   { value: 'nameDesc', label: 'タイトル（Z-A）' },
   { value: 'viewsDesc', label: '閲覧数（多い順）' },

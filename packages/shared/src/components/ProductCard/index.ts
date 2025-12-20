@@ -8,6 +8,6 @@
  */
 
 export { default as ProductCardBase } from './ProductCardBase';
-export type { ProductCardBaseProps } from './ProductCardBase';
+export type { ProductCardBaseProps, ProductCardSize } from './ProductCardBase';
 export * from './themes';
 export * from './helpers';

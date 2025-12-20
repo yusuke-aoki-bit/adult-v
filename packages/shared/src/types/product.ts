@@ -17,7 +17,11 @@ export type ProviderId =
   | '10musume'          // 天然むすめ
   | 'pacopacomama'      // パコパコママ
   | 'muramura'          // ムラムラってくる素人
-  | 'tokyohot';         // Tokyo-Hot
+  | 'tokyohot'          // Tokyo-Hot
+  | 'heydouga'          // HEYDOUGA
+  | 'x1x'               // X1X
+  | 'enkou55'           // ENKOU55
+  | 'urekko';           // UREKKO
 
 // 商品カテゴリ（ジャンル）の定義
 export type ProductCategory =
@@ -38,14 +42,14 @@ export interface Product {
   normalizedProductId?: string; // 正規化された商品ID
   originalProductId?: string; // メーカー品番（ASPごと）
   title: string;
-  description: string;
+  description?: string;
   price: number;
   currency?: CurrencyCode; // 通貨 (デフォルト: JPY)
-  category: ProductCategory;
-  imageUrl: string;
-  affiliateUrl: string;
-  provider: ProviderId;
-  providerLabel: string;
+  category?: ProductCategory;
+  imageUrl?: string;
+  affiliateUrl?: string;
+  provider?: ProviderId;
+  providerLabel?: string;
   actressId?: string;
   actressName?: string;
   // Multiple performers support
@@ -100,19 +104,19 @@ export interface ActressAiReview {
 export interface Actress {
   id: string;
   name: string;
-  catchcopy: string;
-  description: string;
-  heroImage: string;
-  thumbnail: string;
-  primaryGenres: ProductCategory[];
-  services: ProviderId[];
-  metrics: {
+  catchcopy?: string;
+  description?: string;
+  heroImage?: string;
+  thumbnail?: string;
+  primaryGenres?: ProductCategory[];
+  services?: ProviderId[];
+  metrics?: {
     releaseCount: number;
     trendingScore: number;
     fanScore: number;
   };
-  highlightWorks: string[];
-  tags: string[];
+  highlightWorks?: string[];
+  tags?: string[];
   aliases?: string[]; // 別名リスト
   aiReview?: ActressAiReview; // AI生成レビュー
   aiReviewUpdatedAt?: string; // AI生成レビュー更新日時
@@ -158,6 +162,7 @@ export type SortOption =
   | 'priceAsc'           // 価格（安い順）
   | 'ratingDesc'         // 評価（高い順）
   | 'ratingAsc'          // 評価（低い順）
+  | 'reviewCountDesc'    // レビュー数（多い順）
   | 'titleAsc'           // タイトル（あいうえお順）
   | 'nameAsc'            // タイトル（A-Z）
   | 'nameDesc'           // タイトル（Z-A）

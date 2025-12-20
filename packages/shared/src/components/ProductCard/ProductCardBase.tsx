@@ -14,20 +14,24 @@ import { getAffiliateUrl, type GetAffiliateUrlOptions } from './helpers';
 // Blur placeholder for images
 const BLUR_DATA_URL = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==';
 
+export type ProductCardSize = 'full' | 'compact' | 'mini';
+
 export interface ProductCardBaseProps {
   product: Product;
   /** Theme: 'dark' for adult-v, 'light' for fanza */
   theme: ProductCardTheme;
   /** Ranking position (1-10 shows badge) */
   rankPosition?: number;
-  /** Compact mode for grid display */
+  /** @deprecated Use size prop instead */
   compact?: boolean;
+  /** Card size: 'full', 'compact', or 'mini' */
+  size?: ProductCardSize;
   /** Placeholder image URL */
-  placeholderImage: string;
+  placeholderImage?: string;
   /** FavoriteButton component from app */
-  FavoriteButton: ComponentType<{ type: 'product'; id: string | number; size?: string }>;
+  FavoriteButton?: ComponentType<{ type: 'product'; id: string | number; size?: string }>;
   /** ViewedButton component from app */
-  ViewedButton: ComponentType<{
+  ViewedButton?: ComponentType<{
     productId: string;
     title: string;
     imageUrl: string | null;
@@ -41,7 +45,7 @@ export interface ProductCardBaseProps {
     className?: string;
   }>;
   /** ImageLightbox component from app */
-  ImageLightbox: ComponentType<{
+  ImageLightbox?: ComponentType<{
     images: string[];
     initialIndex?: number;
     isOpen: boolean;
@@ -50,29 +54,34 @@ export interface ProductCardBaseProps {
     detailsUrl?: string;
   }>;
   /** StarRating component from app */
-  StarRating: ComponentType<{
+  StarRating?: ComponentType<{
     rating: number;
     reviewCount?: number;
     size?: string;
     showCount?: boolean;
   }>;
   /** Format price function */
-  formatPrice: (price: number, currency?: string) => string;
+  formatPrice?: (price: number, currency?: string) => string;
   /** Get A/B test variant */
-  getVariant: (testName: string) => string;
+  getVariant?: (testName: string) => string;
   /** Track CTA click */
-  trackCtaClick: (testName: string, productId: string | number, params: Record<string, unknown>) => void;
+  trackCtaClick?: (testName: string, productId: string | number, params: Record<string, unknown>) => void;
   /** Affiliate URL options */
   affiliateUrlOptions?: GetAffiliateUrlOptions;
   /** Whether to hide FANZA purchase links (for adult-v site) */
   hideFanzaPurchaseLinks?: boolean;
 }
 
+// Default placeholder images
+const DEFAULT_PLACEHOLDER_DARK = 'https://placehold.co/400x560/374151/6b7280?text=NO+IMAGE';
+const DEFAULT_PLACEHOLDER_LIGHT = 'https://placehold.co/400x560/f3f4f6/9ca3af?text=NO+IMAGE';
+
 function ProductCardBase({
   product,
   theme,
   rankPosition,
   compact = false,
+  size,
   placeholderImage,
   FavoriteButton,
   ViewedButton,
@@ -91,8 +100,25 @@ function ProductCardBase({
   const searchParams = useSearchParams();
   const themeConfig = getThemeConfig(theme);
 
+  // Resolve size from either new size prop or deprecated compact prop
+  const resolvedSize: ProductCardSize = size ?? (compact ? 'compact' : 'full');
+
+  // Use default placeholder based on theme if not provided
+  const resolvedPlaceholder = placeholderImage ?? (theme === 'dark' ? DEFAULT_PLACEHOLDER_DARK : DEFAULT_PLACEHOLDER_LIGHT);
+
+  // Default formatPrice if not provided
+  const resolvedFormatPrice = formatPrice ?? ((price: number, currency?: string) =>
+    currency === 'USD' ? `$${price.toLocaleString()}` : `¥${price.toLocaleString()}`
+  );
+
+  // Default getVariant if not provided
+  const resolvedGetVariant = getVariant ?? (() => 'default');
+
+  // Default trackCtaClick if not provided
+  const resolvedTrackCtaClick = trackCtaClick ?? (() => {});
+
   const hasValidImageUrl = product.imageUrl && product.imageUrl.trim() !== '';
-  const [imgSrc, setImgSrc] = useState(hasValidImageUrl ? normalizeImageUrl(product.imageUrl) : placeholderImage);
+  const [imgSrc, setImgSrc] = useState(hasValidImageUrl ? normalizeImageUrl(product.imageUrl) : resolvedPlaceholder);
   const [hasError, setHasError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
@@ -143,7 +169,7 @@ function ProductCardBase({
   const handleImageError = () => {
     if (!hasError) {
       setHasError(true);
-      setImgSrc(placeholderImage);
+      setImgSrc(resolvedPlaceholder);
     }
   };
 
@@ -152,10 +178,10 @@ function ProductCardBase({
   const handleImageClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (imgSrc !== placeholderImage && hasValidImageUrl && !hasError) {
+    if (imgSrc !== resolvedPlaceholder && hasValidImageUrl && !hasError) {
       setShowModal(true);
     }
-  }, [imgSrc, hasValidImageUrl, hasError, placeholderImage]);
+  }, [imgSrc, hasValidImageUrl, hasError, resolvedPlaceholder]);
 
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
@@ -174,8 +200,51 @@ function ProductCardBase({
     setShowVideoModal(false);
   }, []);
 
+  // Mini size - simplest card for WeeklyHighlights, etc.
+  if (resolvedSize === 'mini') {
+    return (
+      <Link
+        href={`/${locale}/products/${product.id}`}
+        className={`group ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all`}
+      >
+        <div className={`relative ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`} style={{ aspectRatio: '2/3' }}>
+          {hasValidImageUrl ? (
+            <Image
+              src={imgSrc}
+              alt={product.title}
+              fill
+              sizes="(max-width: 768px) 33vw, 10vw"
+              className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isUncensored ? 'blur-[1px]' : ''}`}
+              loading="lazy"
+              onError={handleImageError}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <svg className={`h-8 w-8 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+              </svg>
+            </div>
+          )}
+          {product.rating && product.rating > 0 && (
+            <div className="absolute top-1 right-1 bg-yellow-500 text-black text-[10px] font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
+              <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              {product.rating.toFixed(1)}
+            </div>
+          )}
+        </div>
+        <div className="p-1.5">
+          <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-orange-300' : 'text-gray-800 group-hover:text-orange-600'} text-xs font-medium line-clamp-2 transition-colors`}>
+            {product.title}
+          </p>
+        </div>
+      </Link>
+    );
+  }
+
   // Compact mode
-  if (compact) {
+  if (resolvedSize === 'compact') {
     return (
       <>
         <div className={`relative block ${themeConfig.cardBg} rounded-lg overflow-hidden hover:ring-2 ${themeConfig.cardHoverRing} transition-all group`}>
@@ -217,21 +286,25 @@ function ProductCardBase({
             </button>
           )}
 
-          <div className="absolute top-1 right-1 flex gap-0.5 z-20">
-            <FavoriteButton type="product" id={product.id} size="xs" />
-            <ViewedButton
-              productId={String(product.id)}
-              title={product.title}
-              imageUrl={product.imageUrl ?? null}
-              aspName={product.providerLabel ?? product.provider ?? 'unknown'}
-              performerName={product.actressName ?? product.performers?.[0]?.name}
-              performerId={product.actressId ?? product.performers?.[0]?.id}
-              tags={product.tags}
-              duration={product.duration}
-              size="xs"
-              iconOnly
-            />
-          </div>
+          {(FavoriteButton || ViewedButton) && (
+            <div className="absolute top-1 right-1 flex gap-0.5 z-20">
+              {FavoriteButton && <FavoriteButton type="product" id={product.id} size="xs" />}
+              {ViewedButton && (
+                <ViewedButton
+                  productId={String(product.id)}
+                  title={product.title}
+                  imageUrl={product.imageUrl ?? null}
+                  aspName={product.providerLabel ?? product.provider ?? 'unknown'}
+                  performerName={product.actressName ?? product.performers?.[0]?.name}
+                  performerId={product.actressId ?? product.performers?.[0]?.id}
+                  tags={product.tags}
+                  duration={product.duration}
+                  size="xs"
+                  iconOnly
+                />
+              )}
+            </div>
+          )}
         </div>
 
         {showVideoModal && primaryVideo && (
@@ -275,24 +348,30 @@ function ProductCardBase({
       <div className={`relative bg-gradient-to-br ${themeConfig.gradient}`} style={{ height: '18rem' }}>
         <div className="relative block h-full group">
           {/* Action buttons - positioned at top right of image container */}
-          <div className="absolute top-4 right-4 flex flex-col gap-1.5 z-20">
-            <div className={`${themeConfig.favoriteButtonBg} rounded-full shadow-md`}>
-              <FavoriteButton type="product" id={product.id} />
+          {(FavoriteButton || ViewedButton) && (
+            <div className="absolute top-4 right-4 flex flex-col gap-1.5 z-20">
+              {FavoriteButton && (
+                <div className={`${themeConfig.favoriteButtonBg} rounded-full shadow-md`}>
+                  <FavoriteButton type="product" id={product.id} />
+                </div>
+              )}
+              {ViewedButton && (
+                <ViewedButton
+                  productId={product.id}
+                  title={product.title}
+                  imageUrl={product.imageUrl ?? null}
+                  aspName={product.providerLabel ?? product.provider ?? 'unknown'}
+                  performerName={product.actressName ?? product.performers?.[0]?.name}
+                  performerId={product.actressId ?? product.performers?.[0]?.id}
+                  tags={product.tags}
+                  duration={product.duration}
+                  size="sm"
+                  iconOnly
+                  className="shadow-md"
+                />
+              )}
             </div>
-            <ViewedButton
-              productId={product.id}
-              title={product.title}
-              imageUrl={product.imageUrl ?? null}
-              aspName={product.providerLabel ?? product.provider ?? 'unknown'}
-              performerName={product.actressName ?? product.performers?.[0]?.name}
-              performerId={product.actressId ?? product.performers?.[0]?.id}
-              tags={product.tags}
-              duration={product.duration}
-              size="sm"
-              iconOnly
-              className="shadow-md"
-            />
-          </div>
+          )}
           <button
             type="button"
             onClick={handleImageClick}
@@ -324,14 +403,14 @@ function ProductCardBase({
               </svg>
             </button>
           )}
-          {hasValidImageUrl && !hasError && imgSrc !== placeholderImage && (
+          {hasValidImageUrl && !hasError && imgSrc !== resolvedPlaceholder && (
             <div className="absolute bottom-2 right-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
               </svg>
             </div>
           )}
-          {(hasError || imgSrc === placeholderImage || !hasValidImageUrl) && (
+          {(hasError || imgSrc === resolvedPlaceholder || !hasValidImageUrl) && (
             <div className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br ${themeConfig.noImageGradient}`}>
               <div className={`text-7xl mb-3 ${themeConfig.noImageEmoji}`}>📷</div>
               <span className={`inline-block px-4 py-1.5 ${themeConfig.noImageBadgeBg} ${themeConfig.noImageBadgeText} text-xs font-bold rounded-full shadow-md`}>
@@ -386,9 +465,9 @@ function ProductCardBase({
           </span>
         )}
         {(product.salePrice || product.price > 0) && (() => {
-          const priceVariant = getVariant('priceDisplayStyle');
+          const priceVariant = resolvedGetVariant('priceDisplayStyle');
           const isEmphasized = priceVariant === 'emphasized';
-          const countdownVariant = getVariant('saleCountdownStyle');
+          const countdownVariant = resolvedGetVariant('saleCountdownStyle');
           const isAnimated = countdownVariant === 'animated';
 
           return (
@@ -397,7 +476,7 @@ function ProductCardBase({
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5">
                     <span className={`font-bold ${themeConfig.salePriceColor} ${isEmphasized ? 'text-base' : 'text-sm'}`}>
-                      {formatPrice(product.salePrice, product.currency)}
+                      {resolvedFormatPrice(product.salePrice, product.currency)}
                     </span>
                     {product.discount && (
                       <span className={`font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} px-1 py-0.5 rounded ${isEmphasized ? 'text-xs' : 'text-[10px]'}`}>
@@ -423,7 +502,7 @@ function ProductCardBase({
                 </div>
               ) : (
                 <span className={`font-bold ${themeConfig.regularPriceColor} ${isEmphasized ? 'text-base' : 'text-sm'}`}>
-                  {formatPrice(product.price, product.currency)}
+                  {resolvedFormatPrice(product.price, product.currency)}
                 </span>
               )}
             </div>
@@ -490,7 +569,7 @@ function ProductCardBase({
 
         {(product.rating || product.duration) && (
           <div className={`flex items-center gap-1.5 text-[10px] sm:text-xs ${themeConfig.textSecondary}`}>
-            {product.rating && (
+            {product.rating && StarRating && (
               <StarRating
                 rating={product.rating}
                 reviewCount={product.reviewCount}
@@ -507,10 +586,10 @@ function ProductCardBase({
             <div>
               <div className="flex items-baseline gap-1.5 flex-wrap">
                 <p className={`text-base sm:text-lg font-semibold ${themeConfig.salePriceColor}`}>
-                  {formatPrice(product.salePrice, product.currency)}
+                  {resolvedFormatPrice(product.salePrice, product.currency)}
                 </p>
                 <p className={`text-[10px] sm:text-xs ${themeConfig.textMuted} line-through`}>
-                  {formatPrice(product.regularPrice, product.currency)}
+                  {resolvedFormatPrice(product.regularPrice, product.currency)}
                 </p>
                 {product.discount && (
                   <span className={`text-[10px] font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} px-1 py-0.5 rounded`}>
@@ -521,7 +600,7 @@ function ProductCardBase({
             </div>
           ) : product.price > 0 ? (
             <p className={`text-base sm:text-lg font-semibold ${themeConfig.regularPriceColor}`}>
-              {formatPrice(product.price, product.currency)}
+              {resolvedFormatPrice(product.price, product.currency)}
             </p>
           ) : isSubscriptionSite(product.provider) ? (
             <p className={`text-sm font-semibold ${themeConfig.subscriptionColor}`}>
@@ -535,7 +614,7 @@ function ProductCardBase({
             if (hideFanzaPurchaseLinks && product.provider === 'fanza') return null;
             const isSale = !!product.salePrice;
 
-            const ctaVariant = getVariant('ctaButtonText');
+            const ctaVariant = resolvedGetVariant('ctaButtonText');
             const getCtaText = () => {
               const provider = product.providerLabel;
               if (isSale) {
@@ -554,7 +633,7 @@ function ProductCardBase({
             };
 
             const handleCtaClick = () => {
-              trackCtaClick('ctaButtonText', product.id, {
+              resolvedTrackCtaClick('ctaButtonText', product.id, {
                 is_sale: isSale,
                 provider: product.provider,
               });
@@ -586,14 +665,16 @@ function ProductCardBase({
         </div>
       </div>
 
-      <ImageLightbox
-        images={allImages}
-        initialIndex={modalImageIndex}
-        isOpen={showModal}
-        onClose={handleCloseModal}
-        alt={generateAltText(product)}
-        detailsUrl={`/${locale}/products/${product.id}`}
-      />
+      {ImageLightbox && (
+        <ImageLightbox
+          images={allImages}
+          initialIndex={modalImageIndex}
+          isOpen={showModal}
+          onClose={handleCloseModal}
+          alt={generateAltText(product)}
+          detailsUrl={`/${locale}/products/${product.id}`}
+        />
+      )}
 
       {showVideoModal && primaryVideo && (
         <div

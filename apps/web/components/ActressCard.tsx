@@ -1,14 +1,17 @@
 'use client';
 
 import { memo } from 'react';
-import { ActressCardBase } from '@adult-v/shared/components';
+import { ActressCardBase, type ActressCardSize } from '@adult-v/shared/components';
 import { Actress } from '@/types/product';
 import { normalizeImageUrl } from '@/lib/image-utils';
 import FavoriteButton from './FavoriteButton';
 
 interface Props {
   actress: Actress;
+  /** @deprecated Use size prop instead */
   compact?: boolean;
+  /** Card size: 'full', 'compact', or 'mini' */
+  size?: ActressCardSize;
   priority?: boolean;
 }
 
@@ -28,11 +31,12 @@ async function fetchProductImages(actressId: string): Promise<string[]> {
   }
 }
 
-function ActressCard({ actress, compact = false, priority = false }: Props) {
+function ActressCard({ actress, compact = false, size, priority = false }: Props) {
   return (
     <ActressCardBase
       actress={actress}
       compact={compact}
+      size={size}
       priority={priority}
       theme="dark"
       FavoriteButton={FavoriteButton}
@@ -47,6 +51,7 @@ export default memo(ActressCard, (prevProps, nextProps) => {
   return (
     prevProps.actress.id === nextProps.actress.id &&
     prevProps.compact === nextProps.compact &&
+    prevProps.size === nextProps.size &&
     prevProps.priority === nextProps.priority
   );
 });

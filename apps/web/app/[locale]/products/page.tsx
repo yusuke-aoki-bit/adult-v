@@ -71,7 +71,8 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const ITEMS_PER_PAGE = 24;
+const DEFAULT_ITEMS_PER_PAGE = 24;
+const ALLOWED_PER_PAGE = [12, 24, 48, 96] as const;
 
 export default async function ProductsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -80,6 +81,10 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
 
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
+
+  // 表示件数をURLパラメータから取得（許可リスト内のみ有効）
+  const limitParam = Number(searchParamsData.limit) || DEFAULT_ITEMS_PER_PAGE;
+  const perPage = (ALLOWED_PER_PAGE as readonly number[]).includes(limitParam) ? limitParam : DEFAULT_ITEMS_PER_PAGE;
 
   // FANZAサイトかどうかを判定
   const [serverAspFilter, isFanzaSite] = await Promise.all([
@@ -128,7 +133,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     ? searchParamsData.exclude.split(',').filter(Boolean)
     : [];
   const sortBy = typeof searchParamsData.sort === 'string' ? searchParamsData.sort : 'releaseDateDesc';
-  const offset = (page - 1) * ITEMS_PER_PAGE;
+  const offset = (page - 1) * perPage;
 
   // フィルタオプションを共通化
   const filterOptions = {
@@ -155,8 +160,8 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   const products = await getProducts({
     ...filterOptions,
     offset,
-    limit: ITEMS_PER_PAGE,
-    sortBy: sortBy as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'titleAsc',
+    limit: perPage,
+    sortBy: sortBy as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'ratingDesc' | 'reviewCountDesc' | 'titleAsc',
     locale,
   });
 
@@ -265,7 +270,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
               <Pagination
                 total={totalCount}
                 page={page}
-                perPage={ITEMS_PER_PAGE}
+                perPage={perPage}
                 basePath={basePath}
                 position="top"
                 queryParams={queryParams}
@@ -281,7 +286,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
               <Pagination
                 total={totalCount}
                 page={page}
-                perPage={ITEMS_PER_PAGE}
+                perPage={perPage}
                 basePath={basePath}
                 position="bottom"
                 queryParams={queryParams}

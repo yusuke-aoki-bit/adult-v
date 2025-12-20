@@ -19,6 +19,7 @@ export { default as ImageLightbox } from './ImageLightbox';
 export { default as AdultContentNotice } from './AdultContentNotice';
 export { default as AgeVerification } from './AgeVerification';
 export { default as CampaignCard } from './CampaignCard';
+export type { CampaignCardTheme } from './CampaignCard';
 
 // Layout components
 export { ConditionalLayout } from './ConditionalLayout';
@@ -43,10 +44,16 @@ export { default as StructuredData } from './StructuredData';
 export { default as NavigationProgress } from './NavigationProgress';
 export { default as ScrollToTop } from './ScrollToTop';
 export { default as PreferenceChart, PreferenceBarChart } from './PreferenceChart';
+export type { PreferenceChartTheme } from './PreferenceChart';
 export { default as StarRating } from './StarRating';
+export { default as SortDropdown } from './SortDropdown';
+export type { SortDropdownTheme, SortByValue } from './SortDropdown';
+export { default as NotificationSubscriber } from './NotificationSubscriber';
+export type { NotificationSubscriberTheme } from './NotificationSubscriber';
 
 // E-commerce components
 export { default as PriceComparison } from './PriceComparison';
+export type { PriceComparisonTheme } from './PriceComparison';
 export { default as ProductIdSearch } from './ProductIdSearch';
 
 // Toast notification
@@ -123,6 +130,8 @@ export type {
 // Actress career components
 export { ActressCareerTimeline } from './ActressCareerTimeline';
 export { RetirementAlert } from './RetirementAlert';
+export { default as ActressAiReview } from './ActressAiReview';
+export type { ActressAiReviewTheme } from './ActressAiReview';
 
 // ActressCard utilities (themes and helpers) and base component
 export {
@@ -140,3 +149,7 @@ export type {
 // Cloud sync settings
 export { CloudSyncSettings, cloudSyncTranslations } from './CloudSyncSettings';
 export type { CloudSyncSettingsProps } from './CloudSyncSettings';
+
+// FilterSortBar (shared between apps)
+export { FilterSortBarBase } from './FilterSortBar';
+export type { FilterSortBarBaseProps, FilterSortBarTheme, SortOption } from './FilterSortBar';

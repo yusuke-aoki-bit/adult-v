@@ -90,7 +90,7 @@ export default function Header() {
           </div>
 
           {/* デスクトップナビゲーション */}
-          <nav className="hidden md:flex items-center space-x-3 shrink-0">
+          <nav className="hidden md:flex items-center space-x-3 shrink-0 theme-nav">
             <Link
               href={`/${locale}/products`}
               className="theme-nav-products transition-colors font-medium flex items-center gap-1 text-sm"
@@ -122,7 +122,7 @@ export default function Header() {
             <NotificationSubscriber />
             <Link
               href={`/${locale}/diary`}
-              className="hover:text-green-300 transition-colors font-medium flex items-center gap-1 text-sm"
+              className="theme-nav-diary transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -136,7 +136,7 @@ export default function Header() {
             </Link>
             <Link
               href={`/${locale}/profile`}
-              className="hover:text-cyan-300 transition-colors font-medium flex items-center gap-1 text-sm"
+              className="theme-nav-profile transition-colors font-medium flex items-center gap-1 text-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -202,7 +202,7 @@ export default function Header() {
 
         {/* モバイルメニュー（検索バー・ナビ・ASP統計を格納） */}
         {isMobileMenuOpen && (
-          <nav className="md:hidden py-4 space-y-4 border-t theme-footer-border max-h-[calc(100vh-120px)] overflow-y-auto">
+          <nav className="md:hidden py-4 space-y-4 border-t theme-footer-border max-h-[calc(100vh-120px)] overflow-y-auto theme-nav">
             {/* 検索バー */}
             <div className="pb-2">
               <SearchBar />
@@ -228,14 +228,14 @@ export default function Header() {
             </div>
             <Link
               href={`/${locale}/diary`}
-              className="block py-2 hover:text-green-300 transition-colors"
+              className="block py-2 theme-nav-diary transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               {t.diary}
             </Link>
             <Link
               href={`/${locale}/profile`}
-              className="block py-2 hover:text-cyan-300 transition-colors"
+              className="block py-2 theme-nav-profile transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               {t.profile}

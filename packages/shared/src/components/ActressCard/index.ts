@@ -10,4 +10,4 @@
 
 export * from './themes';
 export { ActressCardBase } from './ActressCardBase';
-export type { ActressCardBaseProps } from './ActressCardBase';
+export type { ActressCardBaseProps, ActressCardSize } from './ActressCardBase';

@@ -296,6 +296,8 @@
   },
   "imageLightbox": {
     "close": "閉じる",
+    "previous": "戻る",
+    "next": "次へ",
     "clickToCloseEsc": "← 前 | 中央で閉じる | 次 →",
     "previousImage": "前の画像",
     "nextImage": "次の画像",

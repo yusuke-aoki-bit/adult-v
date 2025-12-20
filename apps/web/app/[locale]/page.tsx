@@ -85,7 +85,8 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const ITEMS_PER_PAGE = 16;
+const DEFAULT_ITEMS_PER_PAGE = 16;
+const ALLOWED_PER_PAGE = [12, 16, 24, 48, 96] as const;
 
 export default async function Home({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -96,6 +97,10 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
+
+  // 表示件数をURLパラメータから取得（許可リスト内のみ有効）
+  const limitParam = Number(searchParamsData.limit) || DEFAULT_ITEMS_PER_PAGE;
+  const perPage = (ALLOWED_PER_PAGE as readonly number[]).includes(limitParam) ? limitParam : DEFAULT_ITEMS_PER_PAGE;
 
   // FANZAサイトかどうかを判定
   const [serverAspFilter, isFanzaSite] = await Promise.all([
@@ -139,7 +144,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   const hasImage = searchParamsData.hasImage === 'true';
   const hasReview = searchParamsData.hasReview === 'true';
 
-  const offset = (page - 1) * ITEMS_PER_PAGE;
+  const offset = (page - 1) * perPage;
 
   // "etc"の場合は特別処理（50音・アルファベット以外）
   const isEtcFilter = initialFilter === 'etc';
@@ -173,7 +178,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     }) : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
     getActresses({
       ...actressQueryOptions,
-      limit: ITEMS_PER_PAGE,
+      limit: perPage,
       offset,
       locale,
     }),
@@ -334,7 +339,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           <Pagination
             total={totalCount}
             page={page}
-            perPage={ITEMS_PER_PAGE}
+            perPage={perPage}
             basePath={`/${locale}`}
             position="top"
             queryParams={{
@@ -361,7 +366,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           <Pagination
             total={totalCount}
             page={page}
-            perPage={ITEMS_PER_PAGE}
+            perPage={perPage}
             basePath={`/${locale}`}
             position="bottom"
             queryParams={{

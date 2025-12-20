@@ -137,7 +137,7 @@ export default function ImageLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer select-none lightbox-backdrop"
+      className="fixed inset-0 z-50 flex flex-col cursor-pointer select-none lightbox-backdrop"
       onClick={handleZoneClick}
       style={{
         backgroundColor: '#000000',
@@ -146,47 +146,76 @@ export default function ImageLightbox({
         WebkitTouchCallout: 'none'
       }}
     >
-      {/* 閉じるボタン */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); onClose(); }}
-        className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-10"
-        aria-label={t('close')}
-      >
-        <X className="w-8 h-8" />
-      </button>
-
-      {/* 画像カウンター */}
-      {hasMultipleImages && (
-        <div className="absolute top-4 left-4 px-3 py-1 bg-black/60 rounded text-white text-lg z-10">
-          {currentIndex + 1} / {images.length}
+      {/* ナビゲーションバー - 最上部に固定配置 */}
+      {hasMultipleImages ? (
+        <div className="shrink-0 flex items-center justify-center py-3 bg-black/90 z-20" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-2 bg-black/60 rounded-xl px-2 py-1.5">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
+              className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-white text-sm font-medium transition-colors flex items-center gap-1"
+              aria-label={t('previousImage')}
+            >
+              <ChevronLeft className="w-5 h-5" />
+              {t('previous')}
+            </button>
+            <span className="px-2 py-1 text-white/80 text-sm">
+              {currentIndex + 1} / {images.length}
+            </span>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-white text-sm font-medium transition-colors"
+            >
+              {t('close')}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); goToNext(); }}
+              className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-white text-sm font-medium transition-colors flex items-center gap-1"
+              aria-label={t('nextImage')}
+            >
+              {t('next')}
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-black/90 z-20" onClick={(e) => e.stopPropagation()}>
+          <div className="px-3 py-1 bg-black/60 rounded text-white/70 text-xs">
+            {t('clickToCloseEsc')}
+          </div>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+            aria-label={t('close')}
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
       )}
 
-      {/* クリックで閉じるヒント */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 rounded text-white/70 text-sm pointer-events-none z-10">
-        {t('clickToCloseEsc')}
-      </div>
-
-      {/* メイン画像 - スワイプ対応 */}
+      {/* メイン画像エリア - 残りのスペースを使用 */}
       <div
-        className="relative max-w-5xl max-h-[85vh] mx-4 overflow-hidden"
+        className="flex-1 flex items-center justify-center overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div
-          className="relative flex items-center justify-center"
+          className="relative max-w-5xl mx-4 flex items-center justify-center"
           style={{
             transform: `translateX(${swipeOffset}px)`,
             transition: isTransitioning ? 'transform 0.3s ease-out' : 'none',
+            maxHeight: '100%',
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageError ? currentImage : fullSizeImage}
             alt={alt}
-            className={`max-w-full max-h-[85vh] object-contain ${isUncensored ? 'blur-[1px]' : ''}`}
+            className={`max-w-full max-h-full object-contain ${isUncensored ? 'blur-[1px]' : ''}`}
             onError={() => {
               if (!imageError) {
                 setImageError(true);
@@ -196,28 +225,6 @@ export default function ImageLightbox({
           />
         </div>
       </div>
-
-      {/* ナビゲーションボタン */}
-      {hasMultipleImages && (
-        <>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
-            aria-label={t('previousImage')}
-          >
-            <ChevronLeft className="w-8 h-8" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); goToNext(); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
-            aria-label={t('nextImage')}
-          >
-            <ChevronRight className="w-8 h-8" />
-          </button>
-        </>
-      )}
 
       {/* 下部コンテンツエリア */}
       <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-3 z-10 pointer-events-none">

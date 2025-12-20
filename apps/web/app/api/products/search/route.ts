@@ -11,6 +11,7 @@ const VALID_SORT_OPTIONS: SortOption[] = [
   'priceDesc',
   'ratingDesc',
   'ratingAsc',
+  'reviewCountDesc',
   'titleAsc',
 ];
 

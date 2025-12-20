@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation';
 import { Campaign } from '../types/product';
 import { providerMeta } from '../lib/providers';
 
+export type CampaignCardTheme = 'dark' | 'light';
+
 // Client-side translations (outside NextIntlClientProvider)
 const translations = {
   ja: {
@@ -25,51 +27,77 @@ const translations = {
   },
 } as const;
 
+// Theme configuration
+const themeConfig = {
+  dark: {
+    container: 'bg-gray-800 rounded-2xl shadow-lg border border-gray-700 flex flex-col',
+    description: 'text-gray-200',
+    highlight: 'text-sm text-gray-400',
+    badgeBg: 'bg-white text-gray-900',
+    genreBg: 'bg-gray-700 text-gray-300',
+    expiresText: 'text-sm text-gray-400',
+    providerLabel: 'font-medium text-gray-300',
+    ctaButton: 'inline-flex items-center justify-center w-full rounded-xl border border-white text-white font-semibold py-3 hover:bg-white hover:text-gray-900 transition-colors',
+  },
+  light: {
+    container: 'bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col',
+    description: 'text-gray-700',
+    highlight: 'text-sm text-gray-500',
+    badgeBg: 'bg-gray-900 text-white',
+    genreBg: 'bg-gray-100 text-gray-600',
+    expiresText: 'text-sm text-gray-500',
+    providerLabel: 'font-medium text-gray-700',
+    ctaButton: 'inline-flex items-center justify-center w-full rounded-xl border border-gray-900 text-gray-900 font-semibold py-3 hover:bg-gray-900 hover:text-white transition-colors',
+  },
+} as const;
+
 interface Props {
   campaign: Campaign;
+  theme?: CampaignCardTheme;
 }
 
-export default function CampaignCard({ campaign }: Props) {
+export default function CampaignCard({ campaign, theme = 'light' }: Props) {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const provider = providerMeta[campaign.provider];
+  const colors = themeConfig[theme];
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col">
+    <div className={colors.container}>
       <div className={`p-4 rounded-t-2xl text-white bg-gradient-to-r ${provider.accentClass}`}>
         <p className="text-sm uppercase tracking-wide text-white/80">{provider.label}</p>
         <h3 className="text-xl font-semibold">{campaign.title}</h3>
       </div>
       <div className="p-6 flex-1 flex flex-col gap-4">
-        <p className="text-gray-700">{campaign.description}</p>
-        <p className="text-sm text-gray-500">{campaign.highlight}</p>
+        <p className={colors.description}>{campaign.description}</p>
+        <p className={colors.highlight}>{campaign.highlight}</p>
 
         <div className="flex flex-wrap gap-2">
           {campaign.badge && (
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-gray-900 text-white">
+            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${colors.badgeBg}`}>
               {campaign.badge}
             </span>
           )}
           {campaign.genres?.map((genre) => (
             <span
               key={genre}
-              className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-600"
+              className={`text-xs font-medium px-2.5 py-1 rounded-full ${colors.genreBg}`}
             >
               #{genre.toUpperCase()}
             </span>
           ))}
         </div>
 
-        <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className={`flex items-center justify-between ${colors.expiresText}`}>
           <span>{t.expiresAt} {campaign.expiresAt}</span>
-          <span className="font-medium text-gray-700">{provider.label}</span>
+          <span className={colors.providerLabel}>{provider.label}</span>
         </div>
 
         <Link
           href={campaign.ctaUrl}
           target="_blank"
-          className="inline-flex items-center justify-center w-full rounded-xl border border-gray-900 text-gray-900 font-semibold py-3 hover:bg-gray-900 hover:text-white transition-colors"
+          className={colors.ctaButton}
         >
           {t.viewDetails}
         </Link>

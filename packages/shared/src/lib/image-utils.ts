@@ -105,17 +105,26 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
   // ========== DUGA ==========
   // e.g., https://pic.duga.jp/unsecure/xxx-t.jpg -> https://pic.duga.jp/unsecure/xxx-l.jpg
   // sample -> scap 変換を行う（sampleフォルダが404になる商品が多いため）
+  // ただし、/scap/ が既に含まれている場合はそのまま使用（二重変換防止）
   // e.g., https://pic.duga.jp/unsecure/mbm/1360/noauth/240x180.jpg -> 480x360.jpg (2x) or 640x480.jpg
   if (thumbnailUrl.includes('duga.jp')) {
-    return thumbnailUrl
-      .replace(/\/sample\//, '/scap/')  // sample -> scap（404対策）
-      .replace(/\/240x180\.jpg$/, '/640x480.jpg')  // サムネイル → 大きいサイズ
-      .replace(/\/noauth\/240x180\.jpg/, '/noauth/640x480.jpg')  // noauthパス含む場合
+    // サイズ変換は共通で行う
+    let result = thumbnailUrl
+      .replace(/\/240x180\.jpg$/, '/480x360.jpg')  // サムネイル → 2倍サイズ
+      .replace(/\/noauth\/240x180\.jpg/, '/noauth/480x360.jpg')  // noauthパス含む場合
       .replace(/-t\./, '-l.')
       .replace(/_t\./, '_l.')
       .replace(/\/t\//, '/l/')
       .replace(/-s\./, '-l.')
       .replace(/_s\./, '_l.');
+
+    // sample -> scap 変換（sampleが404になる商品が多いため）
+    // DBに /sample/ で保存されている場合、/scap/ に変換して表示
+    if (result.includes('/sample/') && !result.includes('/scap/')) {
+      result = result.replace(/\/sample\//, '/scap/');
+    }
+
+    return result;
   }
 
   // ========== MGS動画 ==========

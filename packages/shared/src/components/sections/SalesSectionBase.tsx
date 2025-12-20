@@ -39,12 +39,12 @@ interface SaleProductMeta {
 
 interface ProductCardProps<T extends BaseProduct> {
   product: T;
-  compact?: boolean;
+  size?: 'full' | 'compact' | 'mini';
 }
 
 interface ActressCardProps<A extends BaseActress> {
   actress: A;
-  compact?: boolean;
+  size?: 'full' | 'compact' | 'mini';
 }
 
 interface SalesSectionBaseProps<T extends BaseProduct, A extends BaseActress = BaseActress> {
@@ -244,7 +244,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {actresses.map((actress) => (
-                  <ActressCard key={actress.id} actress={actress} compact />
+                  <ActressCard key={actress.id} actress={actress} size="mini" />
                 ))}
               </div>
             )}
@@ -260,7 +260,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
           )}
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} compact />
+              <ProductCard key={product.id} product={product} size="mini" />
             ))}
           </div>
         </div>

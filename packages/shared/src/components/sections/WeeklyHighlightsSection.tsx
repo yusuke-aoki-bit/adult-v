@@ -2,10 +2,11 @@
 
 import { useState, useEffect, type ReactNode } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { TrendingUp, Sparkles, Clock, User, Film, ChevronDown, ChevronUp, Star } from 'lucide-react';
+import { TrendingUp, Sparkles, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { getThemeConfig, type SectionTheme } from './theme';
 import { weeklyHighlightsTranslations, getTranslation } from './translations';
+import { ActressCardBase } from '../ActressCard';
+import { ProductCardBase } from '../ProductCard';
 
 interface TrendingActress {
   id: number;
@@ -109,10 +110,8 @@ export function WeeklyHighlightsSection({
     return null;
   }
 
-  // Determine placeholder icon color based on theme
-  // Light テーマでは bg-white にして、amber/orange 系の背景と被らないようにする
-  const placeholderIconClass = theme === 'dark' ? 'text-gray-600' : 'text-gray-400';
-  const placeholderBgClass = theme === 'dark' ? 'bg-gray-700' : 'bg-white';
+  // Convert theme for card components
+  const cardTheme = theme === 'dark' ? 'dark' : 'light';
 
   return (
     <section className="py-3 sm:py-4">
@@ -170,38 +169,22 @@ export function WeeklyHighlightsSection({
                       </h3>
                       <div className="grid grid-cols-3 gap-2">
                         {data.trendingActresses.slice(0, 3).map((actress) => (
-                          <Link
+                          <ActressCardBase
                             key={actress.id}
-                            href={`/${locale}/actress/${actress.id}`}
-                            className={`group ${styles.cardBgClass} rounded-lg overflow-hidden hover:ring-2 hover:ring-amber-500/50 transition-all`}
-                          >
-                            <div className={`aspect-square relative ${placeholderBgClass}`}>
-                              {actress.heroImageUrl || actress.thumbnailUrl ? (
-                                <Image
-                                  src={actress.heroImageUrl || actress.thumbnailUrl || ''}
-                                  alt={actress.name}
-                                  fill
-                                  sizes="(max-width: 768px) 33vw, 10vw"
-                                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
-                              ) : (
-                                <div className="flex items-center justify-center h-full">
-                                  <User className={`h-8 w-8 ${placeholderIconClass}`} />
-                                </div>
-                              )}
-                              {actress.growthRate > 0 && (
-                                <div className="absolute top-1 right-1 bg-green-600 text-white text-[10px] font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
-                                  <TrendingUp className="h-2.5 w-2.5" />
-                                  {actress.growthRate}%
-                                </div>
-                              )}
-                            </div>
-                            <div className="p-1.5">
-                              <p className={`${styles.cardTextClass} text-xs font-medium truncate ${styles.cardHoverTextClass} transition-colors`}>
-                                {actress.name}
-                              </p>
-                            </div>
-                          </Link>
+                            actress={{
+                              id: String(actress.id),
+                              name: actress.name,
+                              thumbnail: actress.thumbnailUrl ?? undefined,
+                              heroImage: actress.heroImageUrl ?? undefined,
+                              metrics: {
+                                releaseCount: actress.productCount,
+                                trendingScore: actress.growthRate,
+                                fanScore: 0,
+                              },
+                            }}
+                            size="mini"
+                            theme={cardTheme}
+                          />
                         ))}
                       </div>
                     </div>
@@ -216,38 +199,19 @@ export function WeeklyHighlightsSection({
                       </h3>
                       <div className="grid grid-cols-3 gap-2">
                         {data.hotNewReleases.slice(0, 3).map((product) => (
-                          <Link
+                          <ProductCardBase
                             key={product.id}
-                            href={`/${locale}/products/${product.id}`}
-                            className={`group ${styles.cardBgClass} rounded-lg overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all`}
-                          >
-                            <div className={`relative ${placeholderBgClass}`} style={{ aspectRatio: '2/3' }}>
-                              {product.imageUrl ? (
-                                <Image
-                                  src={product.imageUrl}
-                                  alt={product.title}
-                                  fill
-                                  sizes="(max-width: 768px) 33vw, 10vw"
-                                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
-                              ) : (
-                                <div className="flex items-center justify-center h-full">
-                                  <Film className={`h-8 w-8 ${placeholderIconClass}`} />
-                                </div>
-                              )}
-                              {product.rating && product.rating > 0 && (
-                                <div className="absolute top-1 right-1 bg-yellow-500 text-black text-[10px] font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
-                                  <Star className="h-2.5 w-2.5 fill-current" />
-                                  {product.rating.toFixed(1)}
-                                </div>
-                              )}
-                            </div>
-                            <div className="p-1.5">
-                              <p className={`${styles.cardTextClass} text-xs font-medium line-clamp-2 group-hover:text-orange-${theme === 'dark' ? '300' : '600'} transition-colors`}>
-                                {product.title}
-                              </p>
-                            </div>
-                          </Link>
+                            product={{
+                              id: String(product.id),
+                              title: product.title,
+                              imageUrl: product.imageUrl ?? undefined,
+                              releaseDate: product.releaseDate ?? undefined,
+                              rating: product.rating ?? undefined,
+                              price: 0,
+                            }}
+                            size="mini"
+                            theme={cardTheme}
+                          />
                         ))}
                       </div>
                     </div>
@@ -262,35 +226,23 @@ export function WeeklyHighlightsSection({
                       </h3>
                       <div className="grid grid-cols-3 gap-2">
                         {data.rediscoveredClassics.slice(0, 3).map((product) => (
-                          <Link
-                            key={product.id}
-                            href={`/${locale}/products/${product.id}`}
-                            className={`group ${styles.cardBgClass} rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-500/50 transition-all`}
-                          >
-                            <div className={`relative ${placeholderBgClass}`} style={{ aspectRatio: '2/3' }}>
-                              {product.imageUrl ? (
-                                <Image
-                                  src={product.imageUrl}
-                                  alt={product.title}
-                                  fill
-                                  sizes="(max-width: 768px) 33vw, 10vw"
-                                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
-                              ) : (
-                                <div className="flex items-center justify-center h-full">
-                                  <Film className={`h-8 w-8 ${placeholderIconClass}`} />
-                                </div>
-                              )}
-                              <div className="absolute top-1 right-1 bg-rose-600 text-white text-[10px] font-bold px-1 py-0.5 rounded">
-                                {Math.floor(product.daysSinceRelease / 365)}{t.yearsAgo}
-                              </div>
+                          <div key={product.id} className="relative">
+                            <ProductCardBase
+                              product={{
+                                id: String(product.id),
+                                title: product.title,
+                                imageUrl: product.imageUrl ?? undefined,
+                                releaseDate: product.releaseDate ?? undefined,
+                                price: 0,
+                              }}
+                              size="mini"
+                              theme={cardTheme}
+                            />
+                            {/* Years ago badge overlay */}
+                            <div className="absolute top-1 right-1 bg-rose-600 text-white text-[10px] font-bold px-1 py-0.5 rounded z-10">
+                              {Math.floor(product.daysSinceRelease / 365)}{t.yearsAgo}
                             </div>
-                            <div className="p-1.5">
-                              <p className={`${styles.cardTextClass} text-xs font-medium line-clamp-2 group-hover:text-rose-${theme === 'dark' ? '300' : '600'} transition-colors`}>
-                                {product.title}
-                              </p>
-                            </div>
-                          </Link>
+                          </div>
                         ))}
                       </div>
                     </div>

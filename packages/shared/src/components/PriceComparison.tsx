@@ -12,9 +12,46 @@ interface PriceOption {
   inStock: boolean;
 }
 
+export type PriceComparisonTheme = 'dark' | 'light';
+
 interface PriceComparisonProps {
   productId: string;
+  theme?: PriceComparisonTheme;
 }
+
+// Theme configuration
+const themeConfig = {
+  dark: {
+    container: 'bg-gray-800 rounded-xl p-6 shadow-lg',
+    title: 'text-lg font-semibold text-gray-100 mb-4',
+    skeletonBg: 'bg-gray-700',
+    rowBest: 'border-green-500 bg-green-900/30',
+    rowDefault: 'border-gray-600 bg-gray-700',
+    aspLabel: 'font-semibold text-gray-100',
+    price: 'text-2xl font-bold text-gray-100',
+    subscriptionPrice: 'text-lg font-bold text-rose-400',
+    lowestBadge: 'px-3 py-1 bg-rose-500 text-white text-xs font-semibold rounded-full',
+    outOfStockBadge: 'px-3 py-1 bg-gray-500 text-white text-xs font-semibold rounded-full',
+    buyButtonActive: 'bg-gray-100 hover:bg-white text-gray-900',
+    buyButtonDisabled: 'bg-gray-600 cursor-not-allowed text-gray-400',
+    disclaimer: 'text-xs text-gray-400 mt-4',
+  },
+  light: {
+    container: 'bg-white rounded-xl p-6 shadow-lg',
+    title: 'text-lg font-semibold text-gray-900 mb-4',
+    skeletonBg: 'bg-gray-200',
+    rowBest: 'border-green-500 bg-green-50',
+    rowDefault: 'border-gray-200 bg-gray-50',
+    aspLabel: 'font-semibold text-gray-900',
+    price: 'text-2xl font-bold text-gray-900',
+    subscriptionPrice: 'text-lg font-bold text-rose-600',
+    lowestBadge: 'px-3 py-1 bg-rose-600 text-white text-xs font-semibold rounded-full',
+    outOfStockBadge: 'px-3 py-1 bg-gray-400 text-white text-xs font-semibold rounded-full',
+    buyButtonActive: 'bg-gray-900 hover:bg-gray-800 text-white',
+    buyButtonDisabled: 'bg-gray-400 cursor-not-allowed text-white',
+    disclaimer: 'text-xs text-gray-500 mt-4',
+  },
+} as const;
 
 /**
  * MGS商品IDを正規化（ハイフンがない場合は適切な位置に挿入）
@@ -73,8 +110,9 @@ function normalizeAffiliateUrl(url: string): string {
  * 価格比較コンポーネント
  * 複数ASPの価格を比較表示
  */
-export default function PriceComparison({ productId }: PriceComparisonProps) {
+export default function PriceComparison({ productId, theme = 'light' }: PriceComparisonProps) {
   const t = useTranslations('priceComparison');
+  const colors = themeConfig[theme];
   const [prices, setPrices] = useState<PriceOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,11 +138,11 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl p-6 shadow-lg">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('title')}</h3>
+      <div className={colors.container}>
+        <h3 className={colors.title}>{t('title')}</h3>
         <div className="animate-pulse space-y-3">
-          <div className="h-16 bg-gray-200 rounded"></div>
-          <div className="h-16 bg-gray-200 rounded"></div>
+          <div className={`h-16 ${colors.skeletonBg} rounded`}></div>
+          <div className={`h-16 ${colors.skeletonBg} rounded`}></div>
         </div>
       </div>
     );
@@ -119,36 +157,36 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
   const lowestPrice = pricedOptions.length > 0 ? Math.min(...pricedOptions.map(p => p.price)) : 0;
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-lg">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('title')}</h3>
+    <div className={colors.container}>
+      <h3 className={colors.title}>{t('title')}</h3>
       <div className="space-y-3">
         {prices.map((option) => (
           <div
             key={`${option.asp}-${option.affiliateUrl}`}
             className={`flex items-center justify-between p-4 rounded-lg border-2 ${
               option.inStock && option.price > 0 && option.price === lowestPrice
-                ? 'border-green-500 bg-green-50'
-                : 'border-gray-200 bg-gray-50'
+                ? colors.rowBest
+                : colors.rowDefault
             }`}
           >
             <div className="flex items-center gap-3">
               <div>
-                <p className="font-semibold text-gray-900">{option.aspLabel}</p>
+                <p className={colors.aspLabel}>{option.aspLabel}</p>
                 {option.price > 0 ? (
-                  <p className="text-2xl font-bold text-gray-900">¥{option.price.toLocaleString()}</p>
+                  <p className={colors.price}>¥{option.price.toLocaleString()}</p>
                 ) : isSubscriptionProvider(option.asp) ? (
-                  <p className="text-lg font-bold text-rose-600">{t('subscriptionOnly')}</p>
+                  <p className={colors.subscriptionPrice}>{t('subscriptionOnly')}</p>
                 ) : (
-                  <p className="text-2xl font-bold text-gray-900">¥{option.price.toLocaleString()}</p>
+                  <p className={colors.price}>¥{option.price.toLocaleString()}</p>
                 )}
               </div>
               {option.inStock && option.price > 0 && option.price === lowestPrice && (
-                <span className="px-3 py-1 bg-rose-600 text-white text-xs font-semibold rounded-full">
+                <span className={colors.lowestBadge}>
                   {t('lowestPrice')}
                 </span>
               )}
               {!option.inStock && (
-                <span className="px-3 py-1 bg-gray-400 text-white text-xs font-semibold rounded-full">
+                <span className={colors.outOfStockBadge}>
                   {t('outOfStock')}
                 </span>
               )}
@@ -157,10 +195,10 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
               href={normalizeAffiliateUrl(option.affiliateUrl)}
               target="_blank"
               rel="noopener noreferrer sponsored"
-              className={`inline-flex items-center gap-2 px-6 py-2 rounded-lg font-semibold text-white ${
+              className={`inline-flex items-center gap-2 px-6 py-2 rounded-lg font-semibold ${
                 option.inStock
-                  ? 'bg-gray-900 hover:bg-gray-800'
-                  : 'bg-gray-400 cursor-not-allowed'
+                  ? colors.buyButtonActive
+                  : colors.buyButtonDisabled
               }`}
               onClick={(e) => {
                 if (!option.inStock) {
@@ -182,7 +220,7 @@ export default function PriceComparison({ productId }: PriceComparisonProps) {
           </div>
         ))}
       </div>
-      <p className="text-xs text-gray-500 mt-4">
+      <p className={colors.disclaimer}>
         {t('priceDisclaimer')}
       </p>
     </div>

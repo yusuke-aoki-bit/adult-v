@@ -34,12 +34,12 @@ interface UseRecentlyViewedReturn {
 
 interface ProductCardProps<T extends BaseProduct> {
   product: T;
-  compact?: boolean;
+  size?: 'full' | 'compact' | 'mini';
 }
 
 interface ActressCardProps<A extends BaseActress> {
   actress: A;
-  compact?: boolean;
+  size?: 'full' | 'compact' | 'mini';
 }
 
 interface RecentlyViewedSectionProps<T extends BaseProduct, A extends BaseActress = BaseActress> {
@@ -232,7 +232,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {actresses.map((actress) => (
-                  <ActressCard key={actress.id} actress={actress} compact />
+                  <ActressCard key={actress.id} actress={actress} size="mini" />
                 ))}
               </div>
             )}
@@ -249,7 +249,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
             {products.map((product) => (
               <div key={product.id} className="relative group/card">
-                <ProductCard product={product} compact />
+                <ProductCard product={product} size="mini" />
                 {/* Delete button - shows on card hover */}
                 <button
                   type="button"

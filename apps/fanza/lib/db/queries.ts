@@ -775,7 +775,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     // 評価/レビュー数ソートの場合は特別な処理が必要（productRatingSummaryとJOIN）
     if (options?.sortBy === 'ratingDesc' || options?.sortBy === 'ratingAsc' || options?.sortBy === 'reviewCountDesc') {
       const results = await db
-        .selectDistinct({
+        .select({
           product: products,
           avgRating: productRatingSummary.averageRating,
           totalReviews: productRatingSummary.totalReviews,

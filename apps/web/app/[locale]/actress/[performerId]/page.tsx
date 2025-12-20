@@ -110,11 +110,11 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     }
 
     // 通常のメタデータ
-    const title = t('metaTitle', { name: actress.name, count: actress.metrics.releaseCount });
+    const title = t('metaTitle', { name: actress.name, count: actress.metrics?.releaseCount ?? 0 });
 
     const metadata = generateBaseMetadata(
       title,
-      t('metaDescription', { name: actress.name, count: actress.metrics.releaseCount }),
+      t('metaDescription', { name: actress.name, count: actress.metrics?.releaseCount ?? 0 }),
       actress.heroImage || actress.thumbnail,
       `/${locale}/actress/${actress.id}`,
       undefined,
@@ -231,7 +231,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const personSchema = generatePersonSchema(
     actress.name,
     aiReviewText,
-    actress.heroImage || actress.thumbnail,
+    actress.heroImage || actress.thumbnail || '',
     basePath,
     {
       workCount: total,

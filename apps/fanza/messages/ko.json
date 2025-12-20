@@ -286,6 +286,8 @@
   },
   "imageLightbox": {
     "close": "닫기",
+    "previous": "이전",
+    "next": "다음",
     "clickToCloseEsc": "← 이전 | 중앙 클릭하여 닫기 | 다음 →",
     "previousImage": "이전 이미지",
     "nextImage": "다음 이미지",
