@@ -11,8 +11,8 @@ import { eq, sql } from 'drizzle-orm';
 const db = getDb();
 const BASE_URL = 'https://www.minnano-av.com';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
-const DELAY_MS = 1500;
-const BATCH_SIZE = 500;
+const DELAY_MS = 1000;
+const BATCH_SIZE = 100;
 
 async function fetchPage(url: string): Promise<string> {
   const response = await fetch(url, {
