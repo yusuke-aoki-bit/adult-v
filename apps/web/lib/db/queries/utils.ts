@@ -321,12 +321,33 @@ const ACTRESS_PLACEHOLDER = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+
  * データベースの商品をProduct型に変換
  * @param locale - ロケール（'ja' | 'en' | 'zh' | 'ko'）。指定された言語のタイトル/説明を使用
  */
+// Type for source data from product_sources table
+interface SourceData {
+  aspName?: string;
+  originalProductId?: string;
+  affiliateUrl?: string;
+  price?: number | null;
+  currency?: string | null;
+  productType?: string | null;
+}
+
+// Type for cache/stats data
+interface CacheData {
+  viewCount?: number;
+  clickCount?: number;
+  favoriteCount?: number;
+  price?: number;
+  thumbnailUrl?: string;
+  affiliateUrl?: string;
+  sampleImages?: string[];
+}
+
 export function mapProductToType(
   product: DbProduct,
   performerData: Array<{ id: number; name: string; nameKana: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
   tagData: Array<{ id: number; name: string; category: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
-  source?: any,
-  cache?: any,
+  source?: SourceData | null,
+  cache?: CacheData | null,
   imagesData?: Array<{ imageUrl: string; imageType: string; displayOrder: number | null }>,
   videosData?: Array<{ videoUrl: string; videoType: string | null; quality: string | null; duration: number | null }>,
   locale: string = 'ja',
@@ -357,7 +378,7 @@ export function mapProductToType(
   const providerLabel = providerLabelMap[aspName.toUpperCase()] || providerLabelMap[aspName] || aspName;
 
   const price = cache?.price || source?.price || 0;
-  const currency = source?.currency || 'JPY';
+  const currency = (source?.currency as 'JPY' | 'USD') || 'JPY';
 
   let imageUrl = cache?.thumbnailUrl || product.defaultThumbnailUrl;
   if (!imageUrl && imagesData && imagesData.length > 0) {
@@ -489,8 +510,7 @@ export function mapPerformerToActressTypeSync(
     imageUrl,
     aliases: aliases || [],
     releaseCount,
-    services: services || [],
-    providerIds: providerIds.length > 0 ? providerIds : undefined,
+    services: providerIds.length > 0 ? providerIds : undefined,
     // 将来のフィールド用のプレースホルダー
     age: undefined,
     birthDate: undefined,

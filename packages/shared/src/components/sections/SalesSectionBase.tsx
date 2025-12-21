@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { Flame, Users } from 'lucide-react';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
@@ -50,6 +49,8 @@ interface ActressCardProps<A extends BaseActress> {
 interface SalesSectionBaseProps<T extends BaseProduct, A extends BaseActress = BaseActress> {
   /** Theme for styling: 'dark' for apps/web, 'light' for apps/fanza */
   theme: SectionTheme;
+  /** Locale for translations */
+  locale?: string;
   /** ProductCard component from the app */
   ProductCard: ComponentType<ProductCardProps<T>>;
   /** ActressCard component from the app (optional) */
@@ -72,6 +73,7 @@ interface SalesSectionBaseProps<T extends BaseProduct, A extends BaseActress = B
  */
 export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = BaseActress>({
   theme,
+  locale: propLocale,
   ProductCard,
   ActressCard,
   saleProducts,
@@ -80,8 +82,8 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
   fetchActresses,
   toActressType,
 }: SalesSectionBaseProps<T, A>): ReactNode {
-  const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  // Use prop locale if provided, otherwise default to 'ja'
+  const locale = propLocale || 'ja';
   const t = getTranslation(salesTranslations, locale);
   const themeConfig = getThemeConfig(theme);
 
@@ -95,6 +97,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
   // 展開時にフェッチをトリガー
   const handleToggle = useCallback((isOpen: boolean) => {
     if (isOpen && !hasExpanded) {
+      setIsLoading(true);
       setHasExpanded(true);
     }
   }, [hasExpanded]);
@@ -214,14 +217,10 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
     return null;
   }
 
-  // コンテンツの決定：未展開→空、ロード中→スケルトン、ロード完了→商品リスト
+  // コンテンツの決定：未展開/ロード中→スケルトン、ロード完了→商品リスト
   const renderContent = () => {
-    if (!hasExpanded) {
-      // まだ展開されていない場合は空のプレースホルダー
-      return <div className="h-24 flex items-center justify-center text-sm theme-text-muted">クリックして表示</div>;
-    }
-
-    if (isLoading) {
+    // 未展開またはロード中はスケルトンを表示（高さを一定に保つ）
+    if (!hasExpanded || isLoading) {
       return <ProductSkeleton count={Math.min(saleProducts.length, 8)} />;
     }
 
@@ -236,13 +235,13 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
               {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">読み込み中...</span>}
             </h4>
             {isActressLoading ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {[1, 2, 3].map((i) => (
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="bg-gray-700/50 rounded-lg animate-pulse" style={{ aspectRatio: '3/4' }} />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                 {actresses.map((actress) => (
                   <ActressCard key={actress.id} actress={actress} size="mini" />
                 ))}
@@ -258,7 +257,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
               セール作品
             </h4>
           )}
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} size="mini" />
             ))}

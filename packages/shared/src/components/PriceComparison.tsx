@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { isSubscriptionProvider } from '../lib/providers';
 import { useTranslations } from 'next-intl';
 
@@ -110,7 +110,7 @@ function normalizeAffiliateUrl(url: string): string {
  * 価格比較コンポーネント
  * 複数ASPの価格を比較表示
  */
-export default function PriceComparison({ productId, theme = 'light' }: PriceComparisonProps) {
+function PriceComparison({ productId, theme = 'light' }: PriceComparisonProps) {
   const t = useTranslations('priceComparison');
   const colors = themeConfig[theme];
   const [prices, setPrices] = useState<PriceOption[]>([]);
@@ -148,13 +148,15 @@ export default function PriceComparison({ productId, theme = 'light' }: PriceCom
     );
   }
 
+  // 最安値を計算（月額会員限定の価格0は除外）- useMemoで再計算を最小化
+  const lowestPrice = useMemo(() => {
+    const pricedOptions = prices.filter(p => p.inStock && p.price > 0);
+    return pricedOptions.length > 0 ? Math.min(...pricedOptions.map(p => p.price)) : 0;
+  }, [prices]);
+
   if (error || prices.length === 0) {
     return null;
   }
-
-  // 最安値を計算（月額会員限定の価格0は除外）
-  const pricedOptions = prices.filter(p => p.inStock && p.price > 0);
-  const lowestPrice = pricedOptions.length > 0 ? Math.min(...pricedOptions.map(p => p.price)) : 0;
 
   return (
     <div className={colors.container}>
@@ -226,3 +228,5 @@ export default function PriceComparison({ productId, theme = 'light' }: PriceCom
     </div>
   );
 }
+
+export default memo(PriceComparison);

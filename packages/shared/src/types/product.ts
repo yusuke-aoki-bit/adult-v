@@ -104,6 +104,9 @@ export interface ActressAiReview {
 export interface Actress {
   id: string;
   name: string;
+  nameKana?: string; // ふりがな
+  bio?: string; // 自己紹介・プロフィール
+  imageUrl?: string; // プロフィール画像URL
   catchcopy?: string;
   description?: string;
   heroImage?: string;
@@ -118,8 +121,17 @@ export interface Actress {
   highlightWorks?: string[];
   tags?: string[];
   aliases?: string[]; // 別名リスト
+  releaseCount?: number; // 作品数
   aiReview?: ActressAiReview; // AI生成レビュー
   aiReviewUpdatedAt?: string; // AI生成レビュー更新日時
+  // 詳細プロフィール（オプション）
+  age?: number;
+  birthDate?: string;
+  height?: number;
+  bust?: number;
+  waist?: number;
+  hip?: number;
+  cupSize?: string;
 }
 
 // キャンペーン情報
@@ -143,6 +155,8 @@ export interface ProviderMeta {
   textClass: string;
   description: string;
   siteUrl: string;
+  /** Gradient colors for inline styles (avoids long Tailwind class names) */
+  gradientColors?: { from: string; to: string };
 }
 
 // ランキング表示用
@@ -167,3 +181,6 @@ export type SortOption =
   | 'nameAsc'            // タイトル（A-Z）
   | 'nameDesc'           // タイトル（Z-A）
   | 'viewsDesc';         // 閲覧数（多い順）
+
+// 出演者タイプ
+export type PerformerType = 'solo' | 'multi';

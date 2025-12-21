@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { getThemeMode, getPrimaryColor } from '../lib/theme';
 
 // Client-side translations (outside NextIntlClientProvider)
@@ -100,8 +100,8 @@ export default function Pagination({
   const mode = getThemeMode();
   const primaryColor = getPrimaryColor();
 
-  // テーマに応じたスタイル
-  const styles = mode === 'dark' ? {
+  // テーマに応じたスタイルをメモ化
+  const styles = useMemo(() => mode === 'dark' ? {
     button: 'bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 active:bg-gray-600',
     buttonActive: `bg-${primaryColor}-600 text-white`,
     buttonDisabled: 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50',
@@ -123,7 +123,7 @@ export default function Pagination({
     select: `border-gray-300 text-gray-900 bg-white focus:ring-${primaryColor}-500 focus:border-${primaryColor}-500`,
     pageInfo: 'text-gray-500',
     dots: 'text-gray-500',
-  };
+  }, [mode, primaryColor]);
 
   // クエリパラメータを保持
   // 注意: queryParams（サーバーサイドから渡される正確な値）を優先し、
@@ -187,10 +187,11 @@ export default function Pagination({
 
   const showJumpButtons = totalPages > 10;
 
-  const getVisiblePages = () => {
+  // ページ番号配列をメモ化（page/totalPagesが変わらない限り再計算しない）
+  const visiblePages = useMemo(() => {
     const delta = 2;
-    const range = [];
-    const rangeWithDots = [];
+    const range: number[] = [];
+    const rangeWithDots: (number | string)[] = [];
 
     for (
       let i = Math.max(2, page - delta);
@@ -215,7 +216,7 @@ export default function Pagination({
     }
 
     return rangeWithDots;
-  };
+  }, [page, totalPages]);
 
   return (
     <nav className={`flex flex-col items-center gap-2 sm:gap-3 ${position === 'top' ? 'mb-4 sm:mb-6' : 'mt-6 sm:mt-8'}`}>
@@ -260,7 +261,7 @@ export default function Pagination({
         {/* ページ番号 */}
         {totalPages > 1 && (
           <div className="flex items-center gap-0.5 sm:gap-1">
-            {getVisiblePages().map((pageNum, index) => {
+            {visiblePages.map((pageNum, index) => {
               if (pageNum === '...') {
                 return (
                   <span key={`dots-${index}`} className={`hidden sm:inline px-2 sm:px-3 py-2 text-sm ${styles.dots}`}>

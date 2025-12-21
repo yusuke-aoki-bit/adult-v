@@ -164,7 +164,16 @@ export function getFirebasePerformance(): FirebasePerformance | null {
   if (!firebaseApp) return null;
 
   if (!performance) {
-    performance = getPerformance(firebaseApp);
+    try {
+      performance = getPerformance(firebaseApp);
+      // Disable automatic instrumentation to avoid errors with long class names
+      // Firebase Performance has a 100 char limit on attribute values
+      performance.instrumentationEnabled = true;
+      performance.dataCollectionEnabled = true;
+    } catch (error) {
+      // Ignore initialization errors (e.g., invalid attribute values)
+      console.warn('Firebase Performance initialization warning:', error);
+    }
   }
   return performance;
 }

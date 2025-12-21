@@ -27,7 +27,6 @@ export async function searchPerformerByMakerAndTitle(
   title: string
 ): Promise<WikiPerformerSearchResult[]> {
   const normalizedMaker = maker.toLowerCase().replace(/[-_\s]/g, '');
-  const normalizedTitle = title.toLowerCase();
 
   // タイトルから出演者名を抽出する処理
   // 例: "G-AREA まゆみ" → "まゆみ"
@@ -71,8 +70,6 @@ export async function searchPerformerByMakerAndTitle(
 export async function searchPerformerByName(
   name: string
 ): Promise<WikiPerformerSearchResult[]> {
-  const normalizedName = name.toLowerCase();
-
   const results = await db
     .select()
     .from(wikiPerformerIndex)

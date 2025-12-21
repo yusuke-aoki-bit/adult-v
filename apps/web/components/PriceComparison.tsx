@@ -1,14 +1,16 @@
 'use client';
 
 import { PriceComparison as BasePriceComparison } from '@adult-v/shared/components';
+import { useSiteTheme } from '@/lib/contexts/SiteContext';
 
 interface PriceComparisonProps {
   productId: string;
 }
 
 /**
- * PriceComparison wrapper for apps/web (dark theme)
+ * PriceComparison wrapper - テーマはSiteContextから自動取得
  */
 export default function PriceComparison({ productId }: PriceComparisonProps) {
-  return <BasePriceComparison productId={productId} theme="dark" />;
+  const theme = useSiteTheme();
+  return <BasePriceComparison productId={productId} theme={theme} />;
 }

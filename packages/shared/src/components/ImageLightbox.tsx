@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef, TouchEvent, ReactNode } from 'react';
+import { useState, useCallback, useEffect, useRef, memo, TouchEvent, ReactNode } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getFullSizeImageUrl, isDtiUncensoredSite } from '../lib/image-utils';
 import { useTranslations } from 'next-intl';
@@ -16,7 +16,7 @@ interface ImageLightboxProps {
   children?: ReactNode; // 追加のコンテンツ
 }
 
-export default function ImageLightbox({
+function ImageLightbox({
   images,
   initialIndex = 0,
   isOpen,
@@ -109,6 +109,32 @@ export default function ImageLightbox({
     }
   }, [hasMultipleImages, goToPrevious, goToNext, onClose]);
 
+  // Memoized click handlers to avoid recreating on each render
+  const stopPropagation = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const handlePreviousClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    goToPrevious();
+  }, [goToPrevious]);
+
+  const handleNextClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    goToNext();
+  }, [goToNext]);
+
+  const handleCloseClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClose();
+  }, [onClose]);
+
+  const handleThumbnailClick = useCallback((idx: number) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex(idx);
+    setImageError(false);
+  }, []);
+
   // キーボードナビゲーション & スクロール無効化
   useEffect(() => {
     if (!isOpen) return;
@@ -148,11 +174,11 @@ export default function ImageLightbox({
     >
       {/* ナビゲーションバー - 最上部に固定配置 */}
       {hasMultipleImages ? (
-        <div className="shrink-0 flex items-center justify-center py-3 bg-black/90 z-20" onClick={(e) => e.stopPropagation()}>
+        <div className="shrink-0 flex items-center justify-center py-3 bg-black/90 z-20" onClick={stopPropagation}>
           <div className="flex items-center gap-2 bg-black/60 rounded-xl px-2 py-1.5">
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
+              onClick={handlePreviousClick}
               className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-white text-sm font-medium transition-colors flex items-center gap-1"
               aria-label={t('previousImage')}
             >
@@ -164,14 +190,14 @@ export default function ImageLightbox({
             </span>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              onClick={handleCloseClick}
               className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-white text-sm font-medium transition-colors"
             >
               {t('close')}
             </button>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); goToNext(); }}
+              onClick={handleNextClick}
               className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-white text-sm font-medium transition-colors flex items-center gap-1"
               aria-label={t('nextImage')}
             >
@@ -181,13 +207,13 @@ export default function ImageLightbox({
           </div>
         </div>
       ) : (
-        <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-black/90 z-20" onClick={(e) => e.stopPropagation()}>
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-black/90 z-20" onClick={stopPropagation}>
           <div className="px-3 py-1 bg-black/60 rounded text-white/70 text-xs">
             {t('clickToCloseEsc')}
           </div>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            onClick={handleCloseClick}
             className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
             aria-label={t('close')}
           >
@@ -234,7 +260,7 @@ export default function ImageLightbox({
             href={detailsUrl}
             className="px-6 py-3 rounded-lg text-white font-semibold transition-colors pointer-events-auto flex items-center gap-2 whitespace-nowrap"
             style={{ backgroundColor: '#e11d48' }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={stopPropagation}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#be123c'; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#e11d48'; }}
           >
@@ -250,13 +276,13 @@ export default function ImageLightbox({
           <div
             className="flex gap-2 p-2 rounded-lg max-w-[90vw] overflow-x-auto pointer-events-auto"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={stopPropagation}
           >
             {images.map((imgUrl, idx) => (
               <button
                 key={`thumb-${idx}`}
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); setImageError(false); }}
+                onClick={handleThumbnailClick(idx)}
                 className={`relative w-16 h-12 shrink-0 rounded overflow-hidden border-2 transition-all ${
                   currentIndex === idx
                     ? 'border-rose-600'
@@ -289,3 +315,5 @@ export default function ImageLightbox({
     </div>
   );
 }
+
+export default memo(ImageLightbox);

@@ -25,6 +25,7 @@ import '@/lib/providers';
 import ActressProductFilter from '@/components/ActressProductFilter';
 import '@/lib/constants/filters';
 import ActressFavoriteButton from '@/components/ActressFavoriteButton';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,7 +89,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
             t('metaTitleWithGenre', { name: actress.name, genre: tagName }),
             t('metaDescriptionWithGenre', { name: actress.name, genre: tagName }),
             actress.heroImage || actress.thumbnail,
-            `/${locale}/actress/${actress.id}`,
+            localizedHref(`/actress/${actress.id}`, locale),
             undefined,
             locale,
           );
@@ -106,26 +107,41 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     }
 
     // 通常のメタデータ
-    const title = t('metaTitle', { name: actress.name, count: actress.metrics.releaseCount });
+    const releaseCount = actress.metrics?.releaseCount ?? actress.releaseCount ?? 0;
+    const title = t('metaTitle', { name: actress.name, count: releaseCount });
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
     const metadata = generateBaseMetadata(
       title,
-      t('metaDescription', { name: actress.name, count: actress.metrics.releaseCount }),
+      t('metaDescription', { name: actress.name, count: releaseCount }),
       actress.heroImage || actress.thumbnail,
-      `/${locale}/actress/${actress.id}`,
+      localizedHref(`/actress/${actress.id}`, locale),
       undefined,
       locale,
     );
+
+    // hreflang/canonical設定
+    const alternates = {
+      canonical: `${baseUrl}/actress/${actress.id}?hl=${locale}`,
+      languages: {
+        'ja': `${baseUrl}/actress/${actress.id}?hl=ja`,
+        'en': `${baseUrl}/actress/${actress.id}?hl=en`,
+        'zh': `${baseUrl}/actress/${actress.id}?hl=zh`,
+        'ko': `${baseUrl}/actress/${actress.id}?hl=ko`,
+        'x-default': `${baseUrl}/actress/${actress.id}?hl=ja`,
+      },
+    };
 
     // フィルター/ページネーション時はnoindex（重複コンテンツ防止）
     if (hasFilters || hasPageParam) {
       return {
         ...metadata,
+        alternates,
         robots: { index: false, follow: true },
       };
     }
 
-    return metadata;
+    return { ...metadata, alternates };
   } catch {
     return {};
   }
@@ -205,7 +221,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const total = allWorks.length;
   const works = allWorks.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const basePath = `/${locale}/actress/${actress.id}`;
+  const basePath = localizedHref(`/actress/${actress.id}`, locale);
 
   // Structured data with enhanced Person Schema
   // aiReviewがオブジェクト型の場合は空文字列を使用
@@ -213,7 +229,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const personSchema = generatePersonSchema(
     actress.name,
     aiReviewText,
-    actress.heroImage || actress.thumbnail,
+    actress.heroImage || actress.thumbnail || '',
     basePath,
     {
       workCount: total,
@@ -222,11 +238,11 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     }
   );
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: tNav('home'), url: `/${locale}` },
+    { name: tNav('home'), url: localizedHref('/', locale) },
     { name: actress.name, url: basePath },
   ]);
   const worksSchema = works.length > 0 ? generateItemListSchema(
-    works.map((w) => ({ name: w.title, url: `/${locale}/product/${w.id}` })),
+    works.map((w) => ({ name: w.title, url: localizedHref(`/product/${w.id}`, locale) })),
     t('filmography'),
   ) : null;
 
@@ -241,7 +257,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* Breadcrumb */}
           <Breadcrumb
             items={[
-              { label: tNav('home'), href: `/${locale}` },
+              { label: tNav('home'), href: localizedHref('/', locale) },
               { label: actress.name },
             ]}
             className="mb-6"

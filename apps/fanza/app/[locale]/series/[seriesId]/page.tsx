@@ -10,6 +10,7 @@ import { getTranslations } from 'next-intl/server';
 import { Library, Clock, Film, Star, User, Trophy } from 'lucide-react';
 import SeriesProgressTracker from '@/components/SeriesProgressTracker';
 import { Product } from '@/types/product';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 /**
  * SeriesProduct を ProductCard が期待する Product 型に変換
@@ -60,6 +61,7 @@ const translations = {
     latestRelease: '最新作',
     recommended: 'おすすめ',
     backToList: 'シリーズ一覧に戻る',
+    noProducts: '作品が見つかりませんでした',
   },
   en: {
     completionGuide: 'Completion Guide',
@@ -79,6 +81,7 @@ const translations = {
     latestRelease: 'Latest',
     recommended: 'Recommended',
     backToList: 'Back to Series List',
+    noProducts: 'No products found',
   },
   zh: {
     completionGuide: '完成指南',
@@ -98,6 +101,7 @@ const translations = {
     latestRelease: '最新作',
     recommended: '推荐',
     backToList: '返回系列列表',
+    noProducts: '未找到作品',
   },
   ko: {
     completionGuide: '정복 가이드',
@@ -117,6 +121,7 @@ const translations = {
     latestRelease: '최신작',
     recommended: '추천',
     backToList: '시리즈 목록으로',
+    noProducts: '작품을 찾을 수 없습니다',
   },
 } as const;
 
@@ -131,14 +136,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     : locale === 'ko' && seriesInfo.nameKo ? seriesInfo.nameKo
     : seriesInfo.name;
 
-  return generateBaseMetadata(
-    `${name} - ${t.completionGuide}`,
-    t.totalProducts.replace('{count}', String(seriesInfo.totalProducts)),
-    undefined,
-    `/${locale}/series/${seriesId}`,
-    undefined,
-    locale
-  );
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+
+  return {
+    ...generateBaseMetadata(
+      `${name} - ${t.completionGuide}`,
+      t.totalProducts.replace('{count}', String(seriesInfo.totalProducts)),
+      undefined,
+      localizedHref(`/series/${seriesId}`, locale),
+      undefined,
+      locale
+    ),
+    alternates: {
+      canonical: `${baseUrl}/series/${seriesId}?hl=${locale}`,
+      languages: {
+        'ja': `${baseUrl}/series/${seriesId}?hl=ja`,
+        'en': `${baseUrl}/series/${seriesId}?hl=en`,
+        'zh': `${baseUrl}/series/${seriesId}?hl=zh`,
+        'ko': `${baseUrl}/series/${seriesId}?hl=ko`,
+        'x-default': `${baseUrl}/series/${seriesId}?hl=ja`,
+      },
+    },
+  };
 }
 
 export default async function SeriesDetailPage({ params, searchParams }: PageProps) {
@@ -165,9 +184,9 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
   const totalMinutes = seriesInfo.totalDuration % 60;
 
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: tNav('home'), url: `/${locale}` },
-    { name: t.completionGuide.replace('{name}', ''), url: `/${locale}/series` },
-    { name: name, url: `/${locale}/series/${seriesId}` },
+    { name: tNav('home'), url: localizedHref('/', locale) },
+    { name: t.completionGuide.replace('{name}', ''), url: localizedHref('/series', locale) },
+    { name: name, url: localizedHref(`/series/${seriesId}`, locale) },
   ]);
 
   return (
@@ -177,8 +196,8 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb
             items={[
-              { label: tNav('home'), href: `/${locale}` },
-              { label: t.backToList.split(' ')[0], href: `/${locale}/series` },
+              { label: tNav('home'), href: localizedHref('/', locale) },
+              { label: t.backToList.split(' ')[0], href: localizedHref('/series', locale) },
               { label: name },
             ]}
             className="mb-6"
@@ -254,7 +273,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
                   {seriesInfo.topPerformers.map((p) => (
                     <Link
                       key={p.id}
-                      href={`/${locale}/actress/${p.id}`}
+                      href={localizedHref(`/actress/${p.id}`, locale)}
                       className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full text-sm text-gray-700 transition-colors"
                     >
                       {p.name} ({p.count})
@@ -272,7 +291,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
             </p>
             <div className="flex gap-2">
               <Link
-                href={`/${locale}/series/${seriesId}`}
+                href={localizedHref(`/series/${seriesId}`, locale)}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   !sort || sort === 'release'
                     ? 'bg-purple-500 text-white'
@@ -282,7 +301,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
                 {t.sortByRelease}
               </Link>
               <Link
-                href={`/${locale}/series/${seriesId}?sort=newest`}
+                href={`${localizedHref(`/series/${seriesId}`, locale)}&sort=newest`}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   sort === 'newest'
                     ? 'bg-purple-500 text-white'
@@ -292,7 +311,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
                 {t.sortByReleaseDesc}
               </Link>
               <Link
-                href={`/${locale}/series/${seriesId}?sort=rating`}
+                href={`${localizedHref(`/series/${seriesId}`, locale)}&sort=rating`}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   sort === 'rating'
                     ? 'bg-purple-500 text-white'
@@ -326,14 +345,14 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
 
           {products.length === 0 && (
             <p className="text-center text-gray-500 py-12">
-              No products found
+              {t.noProducts}
             </p>
           )}
 
           {/* Back link */}
           <div className="mt-8 text-center">
             <Link
-              href={`/${locale}/series`}
+              href={localizedHref('/series', locale)}
               className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-500 transition-colors"
             >
               &larr; {t.backToList}

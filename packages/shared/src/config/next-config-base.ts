@@ -35,8 +35,16 @@ export const optimizePackageImports = [
   'zod',
 ];
 
+// Remote pattern type from Next.js
+type RemotePattern = {
+  protocol?: 'http' | 'https';
+  hostname: string;
+  port?: string;
+  pathname?: string;
+};
+
 // 共通の画像リモートパターン
-export const remotePatterns: NextConfig['images'] extends { remotePatterns: infer R } ? R : never = [
+export const remotePatterns: RemotePattern[] = [
   // Placeholder
   { protocol: 'https', hostname: 'placehold.co' },
   // DMM/FANZA
@@ -90,6 +98,9 @@ export const remotePatterns: NextConfig['images'] extends { remotePatterns: infe
   { protocol: 'https', hostname: 'www.3d-eros.net' },
   { protocol: 'https', hostname: 'www.pikkur.com' },
   { protocol: 'https', hostname: 'www.javholic.com' },
+  // Tokyo Hot
+  { protocol: 'https', hostname: 'my.cdn.tokyo-hot.com' },
+  { protocol: 'https', hostname: '*.tokyo-hot.com' },
 ];
 
 // 共通の画像設定
@@ -113,7 +124,7 @@ export const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://pic.duga.jp https://img.duga.jp https://ad.duga.jp https://*.mgstage.com https://image.mgstage.com https://static.mgstage.com https://img.sokmil.com https://*.sokmil.com https://sokmil-ad.com https://*.japanska-xxx.com https://wimg2.golden-gateway.com https://*.fc2.com https://*.contents.fc2.com https://ads.b10f.jp https://b10f.jp https://www.heyzo.com https://*.caribbeancompr.com https://*.1pondo.tv https://www.nyoshin.com https://www.unkotare.com https://www.caribbeancom.com https://www.10musume.com https://www.pacopacomama.com https://www.hitozuma-giri.com https://www.av-e-body.com https://www.av-4610.com https://www.av-0230.com https://www.kin8tengoku.com https://www.nozox.com https://www.3d-eros.net https://www.pikkur.com https://www.javholic.com https://smovie.1pondo.tv https://awsimgsrc.dmm.co.jp https://placehold.co https://pixelarchivenow.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://pic.duga.jp https://img.duga.jp https://ad.duga.jp https://*.mgstage.com https://image.mgstage.com https://static.mgstage.com https://img.sokmil.com https://*.sokmil.com https://sokmil-ad.com https://*.japanska-xxx.com https://wimg2.golden-gateway.com https://*.fc2.com https://*.contents.fc2.com https://ads.b10f.jp https://b10f.jp https://www.heyzo.com https://*.caribbeancompr.com https://*.1pondo.tv https://www.nyoshin.com https://www.unkotare.com https://www.caribbeancom.com https://www.10musume.com https://www.pacopacomama.com https://www.hitozuma-giri.com https://www.av-e-body.com https://www.av-4610.com https://www.av-0230.com https://www.kin8tengoku.com https://www.nozox.com https://www.3d-eros.net https://www.pikkur.com https://www.javholic.com https://smovie.1pondo.tv https://awsimgsrc.dmm.co.jp https://placehold.co https://pixelarchivenow.com https://www.googletagmanager.com https://www.google-analytics.com https://*.tokyo-hot.com https://my.cdn.tokyo-hot.com",
   "font-src 'self' data:",
   "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com https://firebase.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseremoteconfig.googleapis.com https://firebaselogging-pa.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.dmm.co.jp https://*.dmm.com https://*.mgstage.com",
@@ -229,5 +240,7 @@ export function createBaseNextConfig(monorepoRoot: string): NextConfig {
     typescript: {
       ignoreBuildErrors: true,
     },
+    // 共有パッケージをトランスパイル対象に含めて、同じReactインスタンスを使用
+    transpilePackages: ['@adult-v/shared'],
   };
 }

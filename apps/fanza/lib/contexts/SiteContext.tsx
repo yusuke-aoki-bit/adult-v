@@ -4,9 +4,12 @@ import { createContext, useContext, ReactNode } from 'react';
 import type { SiteConfig, SiteMode } from '@/lib/site-config';
 import { siteConfigs } from '@/lib/site-config';
 
+export type SiteTheme = 'dark' | 'light';
+
 interface SiteContextValue {
   config: SiteConfig;
   mode: SiteMode;
+  theme: SiteTheme;
   isFanzaSite: boolean;
   isMainSite: boolean;
 }
@@ -20,10 +23,13 @@ interface SiteProviderProps {
 
 export function SiteProvider({ children, mode }: SiteProviderProps) {
   const config = siteConfigs[mode];
+  // apps/fanza: light theme, apps/web: dark theme
+  const theme: SiteTheme = mode === 'fanza' ? 'light' : 'dark';
 
   const value: SiteContextValue = {
     config,
     mode,
+    theme,
     isFanzaSite: mode === 'fanza',
     isMainSite: mode === 'adult-v',
   };
@@ -42,11 +48,19 @@ export function useSite(): SiteContextValue {
     return {
       config: siteConfigs['fanza'],
       mode: 'fanza',
+      theme: 'light',
       isFanzaSite: true,
       isMainSite: false,
     };
   }
   return context;
+}
+
+/**
+ * テーマのみを取得するショートカット
+ */
+export function useSiteTheme(): SiteTheme {
+  return useSite().theme;
 }
 
 /**

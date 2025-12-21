@@ -144,6 +144,7 @@ export type {
   ActressCardTheme,
   ActressCardThemeConfig,
   ActressCardBaseProps,
+  ActressCardSize,
 } from './ActressCard';
 
 // Cloud sync settings
@@ -153,3 +154,45 @@ export type { CloudSyncSettingsProps } from './CloudSyncSettings';
 // FilterSortBar (shared between apps)
 export { FilterSortBarBase } from './FilterSortBar';
 export type { FilterSortBarBaseProps, FilterSortBarTheme, SortOption } from './FilterSortBar';
+
+// SearchBar (shared between apps)
+export { SearchBarBase, searchBarTranslations } from './SearchBar';
+export type { SearchBarTheme, SearchBarBaseProps } from './SearchBar';
+
+// OptimizedImage (shared between apps)
+export { OptimizedImageBase } from './OptimizedImage';
+export type { OptimizedImageTheme, OptimizedImageBaseProps } from './OptimizedImage';
+
+// LanguageSwitcher (shared between apps)
+export {
+  LanguageSwitcherBase,
+  locales,
+  localeNames,
+  defaultLocale,
+} from './LanguageSwitcher';
+export type {
+  LanguageSwitcherTheme,
+  LanguageSwitcherBaseProps,
+  Locale,
+} from './LanguageSwitcher';
+
+// Header (shared between apps)
+export { HeaderBase } from './Header';
+export type { HeaderBaseProps } from './Header';
+
+// Footer (shared between apps)
+export { FooterBase } from './Footer';
+export type { FooterBaseProps, FooterTranslation } from './Footer';
+
+// SearchFilters (shared between apps)
+export { SearchFiltersBase, searchFiltersTranslations, SORT_OPTIONS, PROVIDERS } from './SearchFilters';
+export type { SearchFiltersTheme, SearchFiltersBaseProps, SearchFilterOptions } from './SearchFilters';
+
+// BudgetManager (shared between apps)
+export {
+  BudgetManagerBase,
+  budgetManagerTranslations,
+  statusColors as budgetStatusColors,
+  progressColors as budgetProgressColors,
+} from './BudgetManager';
+export type { BudgetManagerTheme, BudgetManagerBaseProps, BudgetStatus } from './BudgetManager';

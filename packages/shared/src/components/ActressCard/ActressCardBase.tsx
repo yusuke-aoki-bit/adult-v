@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useCallback, type ReactNode, type ComponentType } from 'react';
+import { useState, useCallback, useMemo, memo, type ReactNode, type ComponentType } from 'react';
 import { useParams } from 'next/navigation';
 import type { Actress, ProviderId } from '../../types/product';
 import { providerMeta } from '../../providers';
@@ -65,7 +65,7 @@ export interface ActressCardBaseProps {
  * Shared ActressCard component
  * Used by both apps/web and apps/fanza
  */
-export function ActressCardBase({
+function ActressCardBaseComponent({
   actress,
   compact = false,
   size,
@@ -83,8 +83,11 @@ export function ActressCardBase({
   // Resolve size from either new size prop or deprecated compact prop
   const resolvedSize: ActressCardSize = size ?? (compact ? 'compact' : 'full');
 
-  // Filter services based on site
-  const displayServices = filterServicesForSite(actress.services, isFanzaSite);
+  // Filter services based on site - memoized to avoid recalculation
+  const displayServices = useMemo(
+    () => filterServicesForSite(actress.services, isFanzaSite),
+    [actress.services, isFanzaSite]
+  );
 
   // Image handling
   const rawImageUrl = compact
@@ -356,6 +359,9 @@ export function ActressCardBase({
     </div>
   );
 }
+
+// Memoize to prevent re-renders in list views
+export const ActressCardBase = memo(ActressCardBaseComponent);
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import { TrendingUp, Sparkles, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { getThemeConfig, type SectionTheme } from './theme';
@@ -113,14 +113,28 @@ export function WeeklyHighlightsSection({
   // Convert theme for card components
   const cardTheme = theme === 'dark' ? 'dark' : 'light';
 
+  // Toggle handler memoized with useCallback
+  const handleToggle = useCallback(() => {
+    setIsExpanded(prev => !prev);
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      setIsExpanded(prev => !prev);
+    }
+  }, []);
+
   return (
     <section className="py-3 sm:py-4">
       <div className="container mx-auto px-3 sm:px-4">
         <div className={styles.containerClass}>
-          {/* Header */}
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full flex items-center justify-between mb-4"
+          {/* Header - div with role="button" to avoid nested button issues */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={handleToggle}
+            onKeyDown={handleKeyDown}
+            className="w-full flex items-center justify-between mb-4 cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className={`p-2 ${styles.iconBgClass} rounded-lg`}>
@@ -136,11 +150,11 @@ export function WeeklyHighlightsSection({
             ) : (
               <ChevronDown className={`h-5 w-5 ${styles.chevronClass}`} />
             )}
-          </button>
+          </div>
 
           {isExpanded && (
             <>
-              {isLoading ? (
+              {(isLoading || !hasData) ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="space-y-3">
@@ -239,7 +253,7 @@ export function WeeklyHighlightsSection({
                               theme={cardTheme}
                             />
                             {/* Years ago badge overlay */}
-                            <div className="absolute top-1 right-1 bg-rose-600 text-white text-[10px] font-bold px-1 py-0.5 rounded z-10">
+                            <div className="absolute top-1 left-1 bg-rose-600 text-white text-[10px] font-bold px-1 py-0.5 rounded z-10">
                               {Math.floor(product.daysSinceRelease / 365)}{t.yearsAgo}
                             </div>
                           </div>

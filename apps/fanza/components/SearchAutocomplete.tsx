@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Search, X } from 'lucide-react';
 import { useDebounce } from '@adult-v/ui-common/hooks';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 // Client-side translations
 const translations = {
@@ -156,13 +157,13 @@ export default function SearchAutocomplete({
       switch (result.type) {
         case 'product':
         case 'product_id':
-          router.push(`/${locale}/products/${result.id}`);
+          router.push(localizedHref(`/products/${result.id}`, locale));
           break;
         case 'actress':
-          router.push(`/${locale}/actress/${result.id}`);
+          router.push(localizedHref(`/actress/${result.id}`, locale));
           break;
         case 'tag':
-          router.push(`/${locale}/search?tags=${result.id}`);
+          router.push(localizedHref(`/search?tags=${result.id}`, locale));
           break;
       }
     },
@@ -173,7 +174,7 @@ export default function SearchAutocomplete({
     if (!isOpen || results.length === 0) {
       if (e.key === 'Enter' && query) {
         // Direct search on Enter without selection
-        router.push(`/${locale}/search?q=${encodeURIComponent(query)}`);
+        router.push(localizedHref(`/search?q=${encodeURIComponent(query)}`, locale));
         setIsOpen(false);
       }
       return;
@@ -193,7 +194,7 @@ export default function SearchAutocomplete({
         if (selectedIndex >= 0) {
           handleResultClick(results[selectedIndex]);
         } else if (query) {
-          router.push(`/${locale}/search?q=${encodeURIComponent(query)}`);
+          router.push(localizedHref(`/search?q=${encodeURIComponent(query)}`, locale));
           setIsOpen(false);
         }
         break;

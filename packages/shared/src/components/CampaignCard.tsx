@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { memo, useMemo } from 'react';
 import { Campaign } from '../types/product';
 import { providerMeta } from '../lib/providers';
 
@@ -56,10 +57,14 @@ interface Props {
   theme?: CampaignCardTheme;
 }
 
-export default function CampaignCard({ campaign, theme = 'light' }: Props) {
+function CampaignCardComponent({ campaign, theme = 'light' }: Props) {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  // Memoize translation object to prevent recreation on each render
+  const t = useMemo(
+    () => translations[locale as keyof typeof translations] || translations.ja,
+    [locale]
+  );
   const provider = providerMeta[campaign.provider];
   const colors = themeConfig[theme];
 
@@ -105,4 +110,8 @@ export default function CampaignCard({ campaign, theme = 'light' }: Props) {
     </div>
   );
 }
+
+// Memoize to prevent re-renders in campaign list
+const CampaignCard = memo(CampaignCardComponent);
+export default CampaignCard;
 

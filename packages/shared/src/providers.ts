@@ -136,6 +136,38 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
     description: '過激な無修正動画',
     siteUrl: 'https://www.tokyo-hot.com/',
   },
+  heydouga: {
+    id: 'heydouga',
+    label: 'HEYDOUGA',
+    accentClass: 'from-teal-500 to-cyan-500',
+    textClass: 'text-teal-300',
+    description: 'アマチュア動画配信',
+    siteUrl: 'https://www.heydouga.com/',
+  },
+  x1x: {
+    id: 'x1x',
+    label: 'X1X',
+    accentClass: 'from-red-500 to-pink-500',
+    textClass: 'text-red-300',
+    description: '無修正動画サイト',
+    siteUrl: 'https://www.x1x.com/',
+  },
+  enkou55: {
+    id: 'enkou55',
+    label: 'ENKOU55',
+    accentClass: 'from-amber-500 to-yellow-500',
+    textClass: 'text-amber-300',
+    description: '援交系動画サイト',
+    siteUrl: 'https://www.enkou55.com/',
+  },
+  urekko: {
+    id: 'urekko',
+    label: 'UREKKO',
+    accentClass: 'from-green-500 to-emerald-500',
+    textClass: 'text-green-300',
+    description: '人気動画サイト',
+    siteUrl: 'https://www.urekko.net/',
+  },
 };
 
 /**

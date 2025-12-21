@@ -41,6 +41,8 @@ export async function generateMetadata({
   // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
   const hasNonDefaultSort = !!searchParamsData.sort && searchParamsData.sort !== 'releaseDate';
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+
   const metadata = generateBaseMetadata(
     t('title'),
     t('metaDescription'),
@@ -50,10 +52,23 @@ export async function generateMetadata({
     locale,
   );
 
+  // hreflang/canonical設定
+  const alternates = {
+    canonical: `${baseUrl}/${locale}/products`,
+    languages: {
+      'ja': `${baseUrl}/ja/products`,
+      'en': `${baseUrl}/en/products`,
+      'zh': `${baseUrl}/zh/products`,
+      'ko': `${baseUrl}/ko/products`,
+      'x-default': `${baseUrl}/ja/products`,
+    },
+  };
+
   // 検索/フィルター結果・2ページ目以降・非デフォルトソートはnoindex（重複コンテンツ防止）
   if (hasQuery || hasFilters || hasPageParam || hasNonDefaultSort) {
     return {
       ...metadata,
+      alternates,
       robots: {
         index: false,
         follow: true,
@@ -61,7 +76,7 @@ export async function generateMetadata({
     };
   }
 
-  return metadata;
+  return { ...metadata, alternates };
 }
 
 export const dynamic = 'force-dynamic';

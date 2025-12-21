@@ -39,14 +39,19 @@ async function fetchActresses(ids: (string | number)[]): Promise<Actress[]> {
   }
 }
 
+interface ForYouRecommendationsProps {
+  locale?: string;
+}
+
 /**
  * あなたへのおすすめセクション
  * 共有コンポーネントを使用
  */
-export default function ForYouRecommendations() {
+export default function ForYouRecommendations({ locale }: ForYouRecommendationsProps) {
   return (
     <ForYouRecommendationsSection<Product, Actress>
       theme="dark"
+      locale={locale}
       ProductCard={ProductCard}
       ActressCard={ActressCard}
       useRecentlyViewed={useRecentlyViewed}

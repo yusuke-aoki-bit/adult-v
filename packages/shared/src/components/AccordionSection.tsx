@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState, useCallback, memo, ReactNode } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 
 interface AccordionSectionProps {
@@ -35,7 +35,7 @@ interface AccordionSectionProps {
  * TOPページのセール、最近見た作品、あなたへのおすすめで使用
  * テーマはCSSクラス変数（theme-*）で制御
  */
-export default function AccordionSection({
+function AccordionSection({
   icon,
   title,
   itemCount,
@@ -51,18 +51,26 @@ export default function AccordionSection({
 }: AccordionSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
-  const handleToggle = () => {
-    const newState = !isOpen;
-    setIsOpen(newState);
-    onToggle?.(newState);
-  };
+  const handleToggle = useCallback(() => {
+    setIsOpen(prev => {
+      const newState = !prev;
+      onToggle?.(newState);
+      return newState;
+    });
+  }, [onToggle]);
 
-  const handleClear = (e: React.MouseEvent) => {
+  const handleClear = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (onClear && window.confirm('すべてクリアしますか？')) {
       onClear();
     }
-  };
+  }, [onClear]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleToggle();
+    }
+  }, [handleToggle]);
 
   // デフォルトの背景クラス（テーマ対応）
   const defaultBgClass = bgClass || 'theme-accordion-bg';
@@ -70,10 +78,12 @@ export default function AccordionSection({
   return (
     <div className={`${defaultBgClass} rounded-lg theme-accordion-border ${className}`}>
       {/* アコーディオンヘッダー */}
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={handleToggle}
-        className="w-full flex items-center justify-between py-3 px-4 theme-accordion-hover rounded-lg transition-colors"
+        onKeyDown={handleKeyDown}
+        className="w-full flex items-center justify-between py-3 px-4 theme-accordion-hover rounded-lg transition-colors cursor-pointer"
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-2">
@@ -100,14 +110,16 @@ export default function AccordionSection({
             <ChevronDown className="w-5 h-5 theme-text-muted" />
           )}
         </div>
-      </button>
+      </div>
 
       {/* アコーディオンコンテンツ */}
       {isOpen && (
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-4 animate-fade-in">
           {children}
         </div>
       )}
     </div>
   );
 }
+
+export default memo(AccordionSection);

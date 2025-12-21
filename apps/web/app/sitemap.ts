@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 import { getDb } from '@/lib/db';
-import { products, performers } from '@/lib/db/schema';
-import { desc, sql } from 'drizzle-orm';
+import { products, performers, tags, productTags } from '@/lib/db/schema';
+import { desc, sql, eq } from 'drizzle-orm';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
@@ -121,7 +121,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   }));
 
-    return [...staticPages, ...productPages, ...performerPages];
+  // Top tags/genres (500 items) - Prioritize tags with most products
+  const topTags = await db
+    .select({
+      id: tags.id,
+      productCount: sql<number>`COUNT(DISTINCT ${productTags.productId})`.as('product_count'),
+    })
+    .from(tags)
+    .leftJoin(productTags, eq(tags.id, productTags.tagId))
+    .where(eq(tags.category, 'genre'))
+    .groupBy(tags.id)
+    .orderBy(desc(sql`product_count`))
+    .limit(500);
+
+  // タグページ - canonical URLは/ja/tags/..., alternatesで各言語を指定
+  const tagPages: MetadataRoute.Sitemap = topTags.map((tag) => ({
+    url: `${BASE_URL}/ja/tags/${tag.id}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+    alternates: {
+      languages: getLanguageAlternates(`/tags/${tag.id}`),
+    },
+  }));
+
+    return [...staticPages, ...productPages, ...performerPages, ...tagPages];
   } catch (error) {
     console.error('Error generating sitemap:', error);
     // Return static pages only on error

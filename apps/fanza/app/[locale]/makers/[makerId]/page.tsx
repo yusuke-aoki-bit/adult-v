@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Building2, Tag, Users, Film, Star, TrendingUp, Calendar } from 'lucide-react';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface MakerInfo {
   id: number;
@@ -138,7 +139,7 @@ export default function MakerDetailPage() {
           <Building2 className="w-16 h-16 text-gray-600 mx-auto" />
           <p className="text-gray-400 mt-4">{t.notFound}</p>
           <Link
-            href={`/${locale}/makers`}
+            href={localizedHref('/makers', locale)}
             className="mt-4 inline-block text-rose-400 hover:text-rose-300"
           >
             {t.backToList}
@@ -155,7 +156,7 @@ export default function MakerDetailPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Back Link */}
         <Link
-          href={`/${locale}/makers`}
+          href={localizedHref('/makers', locale)}
           className="text-rose-400 hover:text-rose-300 text-sm mb-4 inline-block"
         >
           ← {t.backToList}
@@ -237,7 +238,7 @@ export default function MakerDetailPage() {
                     {t.recentProducts}
                   </h2>
                   <Link
-                    href={`/${locale}/products?maker=${maker.id}`}
+                    href={localizedHref(`/products?maker=${maker.id}`, locale)}
                     className="text-rose-400 hover:text-rose-300 text-sm"
                   >
                     {t.viewAll} →
@@ -247,7 +248,7 @@ export default function MakerDetailPage() {
                   {maker.recentProducts.map((product) => (
                     <Link
                       key={product.id}
-                      href={`/${locale}/products/${product.id}`}
+                      href={localizedHref(`/products/${product.id}`, locale)}
                       className="group"
                     >
                       <div className="relative rounded-lg overflow-hidden bg-gray-700" style={{ aspectRatio: '2/3' }}>
@@ -287,7 +288,7 @@ export default function MakerDetailPage() {
                   {maker.topPerformers.map((performer, index) => (
                     <Link
                       key={performer.id}
-                      href={`/${locale}/actress/${performer.id}`}
+                      href={localizedHref(`/actress/${performer.id}`, locale)}
                       className="flex items-center justify-between hover:bg-gray-700 p-2 rounded-lg transition-colors"
                     >
                       <div className="flex items-center gap-2">
@@ -321,7 +322,7 @@ export default function MakerDetailPage() {
                   {maker.topGenres.map((genre) => (
                     <Link
                       key={genre.id}
-                      href={`/${locale}/products?include=${genre.id}`}
+                      href={localizedHref(`/products?include=${genre.id}`, locale)}
                       className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-full text-sm text-gray-300 hover:text-white transition-colors"
                     >
                       {genre.name}
@@ -334,7 +335,7 @@ export default function MakerDetailPage() {
 
             {/* View All Products Button */}
             <Link
-              href={`/${locale}/products?maker=${maker.id}`}
+              href={localizedHref(`/products?maker=${maker.id}`, locale)}
               className="block w-full py-3 bg-rose-600 hover:bg-rose-500 text-white text-center rounded-xl font-semibold transition-colors"
             >
               {t.viewProducts} ({maker.productCount})

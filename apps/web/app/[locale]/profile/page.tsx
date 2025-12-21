@@ -12,7 +12,7 @@ import {
   Star,
   ChevronRight,
 } from 'lucide-react';
-import PreferenceChart, { PreferenceBarChart } from '@/components/PreferenceChart';
+import { PreferenceChart, PreferenceBarChart } from '@adult-v/shared/components';
 import DiscoveryBadges from '@/components/DiscoveryBadges';
 import { usePreferenceAnalysis, profileTranslations, useViewingDiary } from '@/hooks';
 import { CloudSyncSettings, cloudSyncTranslations } from '@adult-v/shared/components';
@@ -101,9 +101,9 @@ export default function ProfilePage() {
             {/* レーダーチャート */}
             <div className="flex-shrink-0">
               {analysis.radarData.length >= 3 ? (
-                <PreferenceChart data={analysis.radarData} size={280} />
+                <PreferenceChart data={analysis.radarData} size={280} theme="dark" />
               ) : (
-                <PreferenceBarChart data={analysis.radarData} className="w-full max-w-xs" />
+                <PreferenceBarChart data={analysis.radarData} className="w-full max-w-xs" theme="dark" />
               )}
             </div>
 

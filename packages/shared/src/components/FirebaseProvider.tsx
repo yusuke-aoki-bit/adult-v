@@ -17,11 +17,32 @@ export function FirebaseProvider({ children }: FirebaseProviderProps) {
 
   // Initialize Firebase services on mount
   useEffect(() => {
+    // Suppress Firebase Performance errors for long class names
+    // Firebase has a 100 char limit on attribute values (e.g., Tailwind class strings)
+    const originalConsoleError = console.error;
+    console.error = (...args: unknown[]) => {
+      const message = args[0];
+      if (
+        typeof message === 'string' &&
+        message.includes('Performance') &&
+        message.includes('invalid attribute value')
+      ) {
+        // Silently ignore this specific error
+        return;
+      }
+      originalConsoleError.apply(console, args);
+    };
+
     // Initialize Performance Monitoring (just accessing it initializes it)
     getFirebasePerformance();
 
     // Fetch remote config on initial load
     fetchRemoteConfig();
+
+    // Cleanup: restore original console.error
+    return () => {
+      console.error = originalConsoleError;
+    };
   }, []);
 
   // Track page views on route change

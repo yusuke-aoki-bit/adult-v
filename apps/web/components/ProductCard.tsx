@@ -10,6 +10,7 @@ import ImageLightbox from './ImageLightbox';
 import StarRating from './StarRating';
 import { formatPrice } from '@/lib/utils/subscription';
 import { getVariant, trackCtaClick } from '@/lib/ab-testing';
+import { useSiteTheme } from '@/lib/contexts/SiteContext';
 
 // Initialize theme for dark mode (Adult Viewer Lab)
 import { setThemeConfig } from '@adult-v/shared/lib/theme';
@@ -26,10 +27,11 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, rankPosition, compact = false, size }: ProductCardProps) {
+  const theme = useSiteTheme();
   return (
     <ProductCardBase
       product={product}
-      theme="dark"
+      theme={theme}
       rankPosition={rankPosition}
       compact={compact}
       size={size}

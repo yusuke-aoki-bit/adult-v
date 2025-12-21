@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 
 export interface ASPTotal {
   asp: string;
-  apiTotal?: number;
+  apiTotal: number | null;
+  source?: string;
+  error?: string;
 }
 
 export interface ASPStat {
@@ -13,7 +15,7 @@ export interface ASPStat {
 
 export interface StatsAspHandlerDeps {
   getAspStats: () => Promise<ASPStat[]>;
-  getAllASPTotals: () => Promise<ASPTotal[]>;
+  getAllASPTotals: (forceRefresh?: boolean) => Promise<ASPTotal[]>;
 }
 
 export interface StatsAspHandlerOptions {

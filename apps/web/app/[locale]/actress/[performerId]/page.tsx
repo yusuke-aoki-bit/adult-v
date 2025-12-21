@@ -5,8 +5,8 @@ import {
   Pagination,
   FanzaSiteLink,
   CrossAspInfo,
+  ActressAiReview,
 } from '@adult-v/shared/components';
-import ActressAiReview from '@/components/ActressAiReview';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import RelatedActresses from '@/components/RelatedActresses';
@@ -341,6 +341,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 review={actress.aiReview}
                 updatedAt={actress.aiReviewUpdatedAt}
                 actressName={actress.name}
+                theme="dark"
               />
             </div>
           )}

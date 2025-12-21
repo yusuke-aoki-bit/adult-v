@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useCallback, memo } from 'react';
 
 export type SortDropdownTheme = 'dark' | 'light';
 
@@ -59,7 +60,7 @@ interface SortDropdownProps {
   theme?: SortDropdownTheme;
 }
 
-export default function SortDropdown({ sortBy, theme = 'dark' }: SortDropdownProps) {
+function SortDropdownComponent({ sortBy, theme = 'dark' }: SortDropdownProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
@@ -67,12 +68,12 @@ export default function SortDropdown({ sortBy, theme = 'dark' }: SortDropdownPro
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const colors = themeConfig[theme];
 
-  const handleSortChange = (newSort: string) => {
+  const handleSortChange = useCallback((newSort: string) => {
     const urlParams = new URLSearchParams(searchParams.toString());
     urlParams.set('sort', newSort);
     urlParams.delete('page'); // Reset to page 1 when sorting changes
     router.push(`/${locale}/?${urlParams.toString()}`);
-  };
+  }, [searchParams, router, locale]);
 
   return (
     <div className="flex items-center gap-2 h-[40px]">
@@ -95,3 +96,7 @@ export default function SortDropdown({ sortBy, theme = 'dark' }: SortDropdownPro
     </div>
   );
 }
+
+// Memoize to prevent re-renders when parent updates but sortBy unchanged
+const SortDropdown = memo(SortDropdownComponent);
+export default SortDropdown;

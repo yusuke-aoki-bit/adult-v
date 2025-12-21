@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, memo } from 'react';
 
 interface PreferenceData {
   label: string;
@@ -53,7 +53,7 @@ const themeConfig = {
  * SVGベースのレーダーチャート
  * 好みの傾向を視覚化
  */
-export default function PreferenceChart({
+function PreferenceChartComponent({
   data,
   size = 300,
   className = '',
@@ -206,6 +206,10 @@ export default function PreferenceChart({
   );
 }
 
+// Memoize to prevent re-renders when parent updates but data unchanged
+const PreferenceChart = memo(PreferenceChartComponent);
+export default PreferenceChart;
+
 interface PreferenceBarChartProps {
   data: PreferenceData[];
   className?: string;
@@ -215,7 +219,7 @@ interface PreferenceBarChartProps {
 /**
  * 棒グラフスタイルの好み表示
  */
-export function PreferenceBarChart({
+function PreferenceBarChartComponent({
   data,
   className = '',
   theme = 'dark',
@@ -224,8 +228,8 @@ export function PreferenceBarChart({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {data.map((item, index) => (
-        <div key={index}>
+      {data.map((item) => (
+        <div key={item.label}>
           <div className="flex justify-between text-sm mb-1">
             <span className={colors.barLabelClass}>{item.label}</span>
             <span className={`${colors.barValueClass} font-medium`}>{item.value}%</span>
@@ -241,3 +245,6 @@ export function PreferenceBarChart({
     </div>
   );
 }
+
+// Memoize to prevent re-renders when parent updates but data unchanged
+export const PreferenceBarChart = memo(PreferenceBarChartComponent);

@@ -9,7 +9,7 @@
  * - 本番環境ではOIDC認証のみを使用すべき
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -50,9 +50,6 @@ export function verifyCronRequest(request: NextRequest): boolean {
 /**
  * 認証エラーレスポンスを生成
  */
-export function unauthorizedResponse() {
-  return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-    status: 401,
-    headers: { 'Content-Type': 'application/json' },
-  });
+export function unauthorizedResponse(): NextResponse {
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }

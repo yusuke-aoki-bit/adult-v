@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { localizedHref } from '@adult-v/shared/i18n';
 import {
   Wallet,
   TrendingDown,
@@ -278,7 +279,7 @@ export default function BudgetPage() {
                   <Sparkles className="w-12 h-12 text-gray-600 mx-auto" />
                   <p className="text-gray-400 mt-4">{t.empty}</p>
                   <Link
-                    href={`/${locale}/products`}
+                    href={localizedHref('/products', locale)}
                     className="inline-block mt-4 px-6 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg"
                   >
                     {t.browseProducts}
@@ -423,9 +424,9 @@ function ProductRow({
   product,
   locale,
   category,
-  getPriorityColor,
+  getPriorityColor: _getPriorityColor,
   getDaysRemaining,
-  t,
+  t: _t,
 }: {
   product: EnrichedProduct;
   locale: string;
@@ -438,7 +439,7 @@ function ProductRow({
 
   return (
     <Link
-      href={`/${locale}/products/${product.id}`}
+      href={localizedHref(`/products/${product.id}`, locale)}
       className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors"
     >
       {/* Thumbnail */}

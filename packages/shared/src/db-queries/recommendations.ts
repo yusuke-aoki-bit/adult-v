@@ -338,11 +338,12 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
     return relatedProducts.slice(0, limit).map((p) => {
       // releaseDateはDate型または文字列の場合がある
       let releaseDateStr: string | null = null;
-      if (p.releaseDate) {
-        if (p.releaseDate instanceof Date) {
-          releaseDateStr = p.releaseDate.toISOString().split('T')[0];
-        } else if (typeof p.releaseDate === 'string') {
-          releaseDateStr = p.releaseDate.split('T')[0];
+      const releaseDate = p.releaseDate as Date | string | null;
+      if (releaseDate) {
+        if (releaseDate instanceof Date) {
+          releaseDateStr = releaseDate.toISOString().split('T')[0];
+        } else if (typeof releaseDate === 'string') {
+          releaseDateStr = releaseDate.split('T')[0];
         }
       }
       return {

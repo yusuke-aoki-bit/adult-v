@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
+import { localizedHref } from '@adult-v/shared/i18n';
 import {
   BookOpen,
   Calendar,
@@ -227,7 +228,7 @@ function DiaryEntryCard({
     <div className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors group">
       <div className="flex gap-4">
         {/* サムネイル */}
-        <Link href={`/${locale}/products/${entry.productId}`} className="flex-shrink-0">
+        <Link href={localizedHref(`/products/${entry.productId}`, locale)} className="flex-shrink-0">
           <div className="relative w-20 h-28 rounded overflow-hidden">
             <Image
               src={imageUrl}
@@ -241,7 +242,7 @@ function DiaryEntryCard({
 
         {/* 情報 */}
         <div className="flex-1 min-w-0">
-          <Link href={`/${locale}/products/${entry.productId}`}>
+          <Link href={localizedHref(`/products/${entry.productId}`, locale)}>
             <h3 className="text-white font-medium line-clamp-2 hover:text-rose-400 transition-colors">
               {entry.title}
             </h3>

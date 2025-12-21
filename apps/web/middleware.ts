@@ -2,7 +2,6 @@ import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 import { routing } from './routing';
 import {
-  locales,
   defaultLocale,
   getLocaleFromHlParam,
   getLocaleFromCookie,

@@ -29,7 +29,7 @@ export interface ProductCardBaseProps {
   /** Placeholder image URL */
   placeholderImage?: string;
   /** FavoriteButton component from app */
-  FavoriteButton?: ComponentType<{ type: 'product'; id: string | number; size?: string }>;
+  FavoriteButton?: ComponentType<{ type: 'product'; id: string | number; size?: 'xs' | 'sm' | 'md' | 'lg' }>;
   /** ViewedButton component from app */
   ViewedButton?: ComponentType<{
     productId: string;
@@ -40,7 +40,7 @@ export interface ProductCardBaseProps {
     performerId?: string | number;
     tags?: string[];
     duration?: number;
-    size?: string;
+    size?: 'xs' | 'sm' | 'md';
     iconOnly?: boolean;
     className?: string;
   }>;
@@ -57,7 +57,7 @@ export interface ProductCardBaseProps {
   StarRating?: ComponentType<{
     rating: number;
     reviewCount?: number;
-    size?: string;
+    size?: 'sm' | 'md' | 'lg';
     showCount?: boolean;
   }>;
   /** Format price function */
@@ -65,7 +65,7 @@ export interface ProductCardBaseProps {
   /** Get A/B test variant */
   getVariant?: (testName: string) => string;
   /** Track CTA click */
-  trackCtaClick?: (testName: string, productId: string | number, params: Record<string, unknown>) => void;
+  trackCtaClick?: (testName: string, productId: string | number, params?: Record<string, string | number | boolean>) => void;
   /** Affiliate URL options */
   affiliateUrlOptions?: GetAffiliateUrlOptions;
   /** Whether to hide FANZA purchase links (for adult-v site) */
@@ -106,16 +106,25 @@ function ProductCardBase({
   // Use default placeholder based on theme if not provided
   const resolvedPlaceholder = placeholderImage ?? (theme === 'dark' ? DEFAULT_PLACEHOLDER_DARK : DEFAULT_PLACEHOLDER_LIGHT);
 
-  // Default formatPrice if not provided
-  const resolvedFormatPrice = formatPrice ?? ((price: number, currency?: string) =>
-    currency === 'USD' ? `$${price.toLocaleString()}` : `¥${price.toLocaleString()}`
+  // Default formatPrice if not provided - memoize fallback
+  const resolvedFormatPrice = useMemo(() =>
+    formatPrice ?? ((price: number, currency?: string) =>
+      currency === 'USD' ? `$${price.toLocaleString()}` : `¥${price.toLocaleString()}`
+    ),
+    [formatPrice]
   );
 
-  // Default getVariant if not provided
-  const resolvedGetVariant = getVariant ?? (() => 'default');
+  // Default getVariant if not provided - memoize fallback
+  const resolvedGetVariant = useMemo(() =>
+    getVariant ?? (() => 'default'),
+    [getVariant]
+  );
 
-  // Default trackCtaClick if not provided
-  const resolvedTrackCtaClick = trackCtaClick ?? (() => {});
+  // Default trackCtaClick if not provided - memoize fallback
+  const resolvedTrackCtaClick = useMemo(() =>
+    trackCtaClick ?? (() => {}),
+    [trackCtaClick]
+  );
 
   const hasValidImageUrl = product.imageUrl && product.imageUrl.trim() !== '';
   const [imgSrc, setImgSrc] = useState(hasValidImageUrl ? normalizeImageUrl(product.imageUrl) : resolvedPlaceholder);
@@ -166,12 +175,12 @@ function ProductCardBase({
     return `/${locale}/products?${params.toString()}`;
   }, [isActressPage, pathname, searchParams, locale]);
 
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
     if (!hasError) {
       setHasError(true);
       setImgSrc(resolvedPlaceholder);
     }
-  };
+  }, [hasError, resolvedPlaceholder]);
 
   const isUncensored = isDtiUncensoredSite(imgSrc);
 
@@ -199,6 +208,14 @@ function ProductCardBase({
   const handleCloseVideoModal = useCallback(() => {
     setShowVideoModal(false);
   }, []);
+
+  // CTA click handler - memoized to avoid recreation on each render
+  const handleCtaClick = useCallback(() => {
+    resolvedTrackCtaClick('ctaButtonText', product.id, {
+      is_sale: !!product.salePrice,
+      provider: product.provider || '',
+    });
+  }, [resolvedTrackCtaClick, product.id, product.salePrice, product.provider]);
 
   // Mini size - simplest card for WeeklyHighlights, etc.
   if (resolvedSize === 'mini') {
@@ -260,6 +277,7 @@ function ProductCardBase({
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
                 onError={handleImageError}
+                quality={75}
               />
               {product.salePrice && (
                 <div className="absolute top-1 left-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded z-10">
@@ -602,7 +620,7 @@ function ProductCardBase({
             <p className={`text-base sm:text-lg font-semibold ${themeConfig.regularPriceColor}`}>
               {resolvedFormatPrice(product.price, product.currency)}
             </p>
-          ) : isSubscriptionSite(product.provider) ? (
+          ) : (product.provider && isSubscriptionSite(product.provider)) ? (
             <p className={`text-sm font-semibold ${themeConfig.subscriptionColor}`}>
               {t('subscriptionOnly')}
             </p>
@@ -630,13 +648,6 @@ function ProductCardBase({
                   default: return `${provider}で見る`;
                 }
               }
-            };
-
-            const handleCtaClick = () => {
-              resolvedTrackCtaClick('ctaButtonText', product.id, {
-                is_sale: isSale,
-                provider: product.provider,
-              });
             };
 
             return (
@@ -714,8 +725,13 @@ function ProductCardBase({
 export default memo(ProductCardBase, (prevProps, nextProps) => {
   return (
     prevProps.product.id === nextProps.product.id &&
+    prevProps.product.salePrice === nextProps.product.salePrice &&
+    prevProps.product.price === nextProps.product.price &&
     prevProps.rankPosition === nextProps.rankPosition &&
     prevProps.compact === nextProps.compact &&
-    prevProps.theme === nextProps.theme
+    prevProps.size === nextProps.size &&
+    prevProps.theme === nextProps.theme &&
+    prevProps.placeholderImage === nextProps.placeholderImage &&
+    prevProps.hideFanzaPurchaseLinks === nextProps.hideFanzaPurchaseLinks
   );
 });

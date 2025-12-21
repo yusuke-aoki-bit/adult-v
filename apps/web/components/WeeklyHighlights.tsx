@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { TrendingUp, Sparkles, Clock, ChevronDown, ChevronUp } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import ActressCard from './ActressCard';
 import ProductCard from './ProductCard';
 import type { Actress, Product } from '@/types/product';
@@ -73,7 +72,7 @@ function toProductType(product: HotNewRelease | RediscoveredClassic): Product {
     category: 'all',
     imageUrl: product.imageUrl || '',
     affiliateUrl: '',
-    provider: 'unknown' as const,
+    provider: undefined,
     providerLabel: '',
     releaseDate: product.releaseDate || undefined,
     rating: 'rating' in product ? product.rating || undefined : undefined,
@@ -89,8 +88,8 @@ interface WeeklyHighlightsProps {
  * ActressCardとProductCardのcompactモードを使用
  */
 export default function WeeklyHighlights({ locale: propLocale }: WeeklyHighlightsProps) {
-  const params = useParams();
-  const locale = (params?.locale as string) || propLocale || 'ja';
+  // Use prop locale if provided, otherwise default to 'ja'
+  const _locale = propLocale || 'ja';
 
   const [data, setData] = useState<WeeklyHighlightsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);

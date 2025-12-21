@@ -423,7 +423,7 @@ export async function get1PondoTotal(): Promise<ASPTotal> {
     }
 
     return { asp: '一本道', apiTotal: 3000, source: '1pondo.tv (推定値)' };
-  } catch (e) {
+  } catch {
     return { asp: '一本道', apiTotal: 3000, source: '1pondo.tv (推定値)' };
   }
 }

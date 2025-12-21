@@ -15,7 +15,7 @@ export interface AffiliateButtonBaseProps {
   /** A/Bテスト用のgetVariant関数 */
   getVariant: (testName: string) => string;
   /** A/Bテスト用のtrackCtaClick関数 */
-  trackCtaClick: (testName: string, productId: string | number, params: Record<string, unknown>) => void;
+  trackCtaClick: (testName: string, productId: string | number, params?: Record<string, string | number | boolean>) => void;
 }
 
 /**

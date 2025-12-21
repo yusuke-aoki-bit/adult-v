@@ -9,6 +9,7 @@ import ImageLightbox from './ImageLightbox';
 import StarRating from './StarRating';
 import { formatPrice } from '@/lib/utils/subscription';
 import { getVariant, trackCtaClick } from '@/lib/ab-testing';
+import { useSiteTheme } from '@/lib/contexts/SiteContext';
 
 // Initialize theme for light mode (FANZA)
 import { setThemeConfig } from '@adult-v/shared/lib/theme';
@@ -28,10 +29,11 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, rankPosition, compact = false, size }: ProductCardProps) {
+  const theme = useSiteTheme();
   return (
     <ProductCardBase
       product={product}
-      theme="light"
+      theme={theme}
       rankPosition={rankPosition}
       compact={compact}
       size={size}

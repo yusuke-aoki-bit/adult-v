@@ -13,6 +13,7 @@ import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 // LCP最適化用のシンプルな画像URL正規化
 function normalizeImageUrlForPreload(url: string | null | undefined): string | null {
@@ -53,6 +54,8 @@ export async function generateMetadata({
   // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
   const hasNonDefaultSort = !!searchParamsData.sort && searchParamsData.sort !== 'releaseCount';
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+
   const metadata = generateBaseMetadata(
     t('title'),
     t('description', { count: approximateCount }),
@@ -62,10 +65,24 @@ export async function generateMetadata({
     locale,
   );
 
+  // hreflang/canonical設定
+  const alternates = {
+    canonical: `${baseUrl}/`,
+    languages: {
+      'ja': `${baseUrl}/`,
+      'en': `${baseUrl}/?hl=en`,
+      'zh': `${baseUrl}/?hl=zh`,
+      'zh-TW': `${baseUrl}/?hl=zh-TW`,
+      'ko': `${baseUrl}/?hl=ko`,
+      'x-default': `${baseUrl}/`,
+    },
+  };
+
   // 検索・フィルター・2ページ目以降・非デフォルトソートはnoindex（重複コンテンツ防止）
   if (hasQuery || hasFilters || hasPageParam || hasNonDefaultSort) {
     return {
       ...metadata,
+      alternates,
       robots: {
         index: false,
         follow: true,
@@ -73,7 +90,7 @@ export async function generateMetadata({
     };
   }
 
-  return metadata;
+  return { ...metadata, alternates };
 }
 
 // ISR: 60秒ごとに再検証（searchParamsがあるため完全な静的生成は不可）
@@ -276,16 +293,16 @@ export default async function Home({ params, searchParams }: PageProps) {
             <SalesSection saleProducts={saleProducts.map(p => ({
               ...p,
               endAt: p.endAt ? p.endAt.toISOString() : null,
-            }))} />
+            }))} locale={locale} />
           </div>
         </section>
       )}
 
       {/* 最近見た作品 */}
-      <RecentlyViewed />
+      <RecentlyViewed locale={locale} />
 
       {/* あなたへのおすすめ（閲覧履歴に基づく） */}
-      <ForYouRecommendations />
+      <ForYouRecommendations locale={locale} />
 
       {/* 今週の注目（自動キュレーション） */}
       <WeeklyHighlights locale={locale} />
@@ -295,7 +312,7 @@ export default async function Home({ params, searchParams }: PageProps) {
         <section className="py-3 sm:py-6">
           <div className="container mx-auto px-3 sm:px-4">
             <Link
-              href={`/${locale}/products?uncategorized=true`}
+              href={localizedHref('/products?uncategorized=true', locale)}
               className="flex items-center justify-between p-3 sm:p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-yellow-600 transition-colors group gap-2"
             >
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -363,7 +380,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             total={totalCount}
             page={page}
             perPage={perPage}
-            basePath={`/${locale}`}
+            basePath={localizedHref('/', locale)}
             position="top"
             queryParams={{
               ...(query ? { q: query } : {}),
@@ -394,7 +411,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             total={totalCount}
             page={page}
             perPage={perPage}
-            basePath={`/${locale}`}
+            basePath={localizedHref('/', locale)}
             position="bottom"
             queryParams={{
               ...(query ? { q: query } : {}),
@@ -417,7 +434,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           {/* 商品一覧へのリンク */}
           <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t theme-section-border">
             <Link
-              href={`/${locale}/products`}
+              href={localizedHref('/products', locale)}
               className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-pink-500 transition-colors group"
             >
               <div className="flex items-center gap-3">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams, usePathname, useParams } from 'next/navigation';
 import { providerMeta, type ProviderId } from '../../lib/providers';
 import { ASP_DISPLAY_ORDER, ASP_TO_PROVIDER_ID } from '../../constants/filters';
@@ -154,7 +154,7 @@ export default function FilterSortBarBase({
   }, [searchParams]);
 
   // フィルター適用（即時実行）
-  const applyFilters = (
+  const applyFilters = useCallback((
     newSort: SortOption,
     providers: Set<string>,
     priceRanges: Set<string>
@@ -186,10 +186,10 @@ export default function FilterSortBarBase({
 
     const queryString = params.toString();
     router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
-  };
+  }, [searchParams, defaultSort, router, pathname]);
 
   // プロバイダーチェック切り替え
-  const toggleProvider = (providerId: string) => {
+  const toggleProvider = useCallback((providerId: string) => {
     const newProviders = new Set(selectedProviders);
     if (newProviders.has(providerId)) {
       newProviders.delete(providerId);
@@ -197,10 +197,10 @@ export default function FilterSortBarBase({
       newProviders.add(providerId);
     }
     applyFilters(sortBy, newProviders, selectedPriceRanges);
-  };
+  }, [selectedProviders, selectedPriceRanges, sortBy, applyFilters]);
 
   // 価格帯チェック切り替え
-  const togglePriceRange = (range: string) => {
+  const togglePriceRange = useCallback((range: string) => {
     const newRanges = new Set(selectedPriceRanges);
     if (newRanges.has(range)) {
       newRanges.delete(range);
@@ -208,19 +208,22 @@ export default function FilterSortBarBase({
       newRanges.add(range);
     }
     applyFilters(sortBy, selectedProviders, newRanges);
-  };
+  }, [selectedPriceRanges, selectedProviders, sortBy, applyFilters]);
 
   // ソート変更
-  const handleSortChange = (newSort: SortOption) => {
+  const handleSortChange = useCallback((newSort: SortOption) => {
     applyFilters(newSort, selectedProviders, selectedPriceRanges);
-  };
+  }, [selectedProviders, selectedPriceRanges, applyFilters]);
 
   // 全クリア
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     router.push(pathname);
-  };
+  }, [router, pathname]);
 
-  const hasActiveFilters = selectedProviders.size > 0 || selectedPriceRanges.size > 0 || sortBy !== defaultSort;
+  // Memoize hasActiveFilters to prevent recalculation
+  const hasActiveFilters = useMemo(() =>
+    selectedProviders.size > 0 || selectedPriceRanges.size > 0 || sortBy !== defaultSort
+  , [selectedProviders, selectedPriceRanges, sortBy, defaultSort]);
 
   // Memoize sort options to prevent recreation on every render
   const sortOptions = useMemo<{ value: SortOption; label: string }[]>(() => [

@@ -10,13 +10,15 @@ interface ActressHeroImageProps {
   alt: string;
   size?: number;
   className?: string;
+  priority?: boolean;
 }
 
 export default function ActressHeroImage({
   src,
   alt,
   size = 64,
-  className = ''
+  className = '',
+  priority = false,
 }: ActressHeroImageProps) {
   const [imgSrc, setImgSrc] = useState(src || PLACEHOLDER_IMAGE);
   const [hasError, setHasError] = useState(false);
@@ -28,6 +30,9 @@ export default function ActressHeroImage({
     }
   };
 
+  // External images (placeholder) need unoptimized, internal images can be optimized
+  const isExternal = imgSrc.includes('placehold.co');
+
   return (
     <Image
       src={imgSrc}
@@ -36,7 +41,10 @@ export default function ActressHeroImage({
       height={size}
       className={`rounded-full object-cover ${className}`}
       onError={handleImageError}
-      unoptimized
+      quality={75}
+      sizes={`${size}px`}
+      priority={priority}
+      unoptimized={isExternal}
     />
   );
 }

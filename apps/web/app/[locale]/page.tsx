@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import ActressCard from '@/components/ActressCard';
-import SortDropdown from '@/components/SortDropdown';
+import { SortDropdown } from '@adult-v/shared/components';
 import Pagination from '@/components/Pagination';
 import ActressListFilter from '@/components/ActressListFilter';
 import RecentlyViewed from '@/components/RecentlyViewed';
@@ -254,16 +254,16 @@ export default async function Home({ params, searchParams }: PageProps) {
             <SalesSection saleProducts={saleProducts.map(p => ({
               ...p,
               endAt: p.endAt ? p.endAt.toISOString() : null,
-            }))} />
+            }))} locale={locale} />
           </div>
         </section>
       )}
 
       {/* 最近見た作品 */}
-      <RecentlyViewed />
+      <RecentlyViewed locale={locale} />
 
       {/* あなたへのおすすめ（閲覧履歴に基づく） */}
-      <ForYouRecommendations />
+      <ForYouRecommendations locale={locale} />
 
       {/* 今週の注目（B4: 自動キュレーション） */}
       <WeeklyHighlights locale={locale} />
@@ -332,7 +332,7 @@ export default async function Home({ params, searchParams }: PageProps) {
 
           {/* 並び順 */}
           <div className="flex justify-end mb-2 sm:mb-4">
-            <SortDropdown sortBy={sortBy} />
+            <SortDropdown sortBy={sortBy} theme="dark" />
           </div>
 
           {/* ページネーション（上部） */}

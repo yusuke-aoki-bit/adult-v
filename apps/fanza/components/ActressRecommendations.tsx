@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Sparkles, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface RecommendedActress {
   id: number;
@@ -160,7 +161,7 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
                 {displayedRecommendations.map((actress) => (
                   <Link
                     key={actress.id}
-                    href={`/${locale}/actress/${actress.id}`}
+                    href={localizedHref(`/actress/${actress.id}`, locale)}
                     className="group bg-white rounded-lg overflow-hidden hover:ring-2 hover:ring-pink-400 transition-all border border-gray-100 hover:shadow-md"
                   >
                     {/* Thumbnail */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
+import { useState, useEffect, useCallback, useMemo, useSyncExternalStore } from 'react';
 import { useParams } from 'next/navigation';
 import { Bell, BellOff } from 'lucide-react';
 
@@ -79,7 +79,11 @@ export default function NotificationSubscriber({ theme = 'dark' }: NotificationS
   const isSupported = useNotificationSupport();
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  // Memoize translation object to prevent recreation on each render
+  const t = useMemo(
+    () => translations[locale as keyof typeof translations] || translations.ja,
+    [locale]
+  );
   const colors = themeConfig[theme];
 
   const checkSubscriptionStatus = useCallback(async () => {
@@ -101,7 +105,8 @@ export default function NotificationSubscriber({ theme = 'dark' }: NotificationS
     }
   }, [isSupported, checkSubscriptionStatus]);
 
-  const urlBase64ToUint8Array = (base64String: string) => {
+  // Memoize utility function to prevent recreation
+  const urlBase64ToUint8Array = useCallback((base64String: string) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
 
@@ -112,9 +117,9 @@ export default function NotificationSubscriber({ theme = 'dark' }: NotificationS
       outputArray[i] = rawData.charCodeAt(i);
     }
     return outputArray;
-  };
+  }, []);
 
-  const subscribeToNotifications = async () => {
+  const subscribeToNotifications = useCallback(async () => {
     try {
       // Request permission
       const permission = await Notification.requestPermission();
@@ -159,9 +164,9 @@ export default function NotificationSubscriber({ theme = 'dark' }: NotificationS
       console.error('Failed to subscribe:', error);
       alert(t.subscribeFailed);
     }
-  };
+  }, [t.permissionDenied, t.subscribeFailed, urlBase64ToUint8Array]);
 
-  const unsubscribeFromNotifications = async () => {
+  const unsubscribeFromNotifications = useCallback(async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
@@ -185,15 +190,15 @@ export default function NotificationSubscriber({ theme = 'dark' }: NotificationS
       console.error('Failed to unsubscribe:', error);
       alert(t.unsubscribeFailed);
     }
-  };
+  }, [t.unsubscribeFailed]);
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     if (isSubscribed) {
       unsubscribeFromNotifications();
     } else {
       subscribeToNotifications();
     }
-  };
+  }, [isSubscribed, subscribeToNotifications, unsubscribeFromNotifications]);
 
   if (!isSupported) {
     return null;

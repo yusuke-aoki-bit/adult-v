@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname, useParams } from 'next/navigation';
-import { useTransition } from 'react';
+import { useTransition, useMemo } from 'react';
 import { providerMeta } from '@/lib/providers';
 import {
   HIRAGANA_GROUPS,
@@ -10,6 +10,31 @@ import {
   ASP_TO_PROVIDER_ID,
 } from '@/lib/constants/filters';
 import { useSite } from '@/lib/contexts/SiteContext';
+
+// Static accent color mappings - moved outside component to prevent re-creation on each render
+const accentClasses = {
+  rose: {
+    bg: 'bg-rose-600',
+    bgLight: 'bg-rose-600/30',
+    ring: 'ring-rose-500',
+    text: 'text-rose-500',
+    border: 'border-rose-500/50',
+  },
+  yellow: {
+    bg: 'bg-yellow-600',
+    bgLight: 'bg-yellow-600/30',
+    ring: 'ring-yellow-400',
+    text: 'text-yellow-500',
+    border: 'border-yellow-500/50',
+  },
+  blue: {
+    bg: 'bg-blue-600',
+    bgLight: 'bg-blue-600/30',
+    ring: 'ring-blue-500',
+    text: 'text-blue-500',
+    border: 'border-blue-500/50',
+  },
+} as const;
 
 // Client-side translations (ConditionalLayout is outside NextIntlClientProvider)
 const translations = {
@@ -213,36 +238,17 @@ export default function ProductListFilter({
   const performerType = searchParams.get('performerType') as 'solo' | 'multi' | null;
   const selectedPattern = searchParams.get('pattern') || '';
   const initialFilter = searchParams.get('initial') || '';
-  const includeAsps = searchParams.get('includeAsp')?.split(',').filter(Boolean) || [];
-  const excludeAsps = searchParams.get('excludeAsp')?.split(',').filter(Boolean) || [];
-  const includeTags = searchParams.get('include')?.split(',').filter(Boolean) || [];
-  const excludeTags = searchParams.get('exclude')?.split(',').filter(Boolean) || [];
   const mgsProductType = searchParams.get('mgsProductType') as 'haishin' | 'dvd' | 'monthly' | null;
 
+  // 配列パースをuseMemoで最適化
+  const { includeAsps, excludeAsps, includeTags, excludeTags } = useMemo(() => ({
+    includeAsps: searchParams.get('includeAsp')?.split(',').filter(Boolean) || [],
+    excludeAsps: searchParams.get('excludeAsp')?.split(',').filter(Boolean) || [],
+    includeTags: searchParams.get('include')?.split(',').filter(Boolean) || [],
+    excludeTags: searchParams.get('exclude')?.split(',').filter(Boolean) || [],
+  }), [searchParams]);
+
   // アクセントカラー
-  const accentClasses = {
-    rose: {
-      bg: 'bg-rose-600',
-      bgLight: 'bg-rose-600/30',
-      ring: 'ring-rose-500',
-      text: 'text-rose-500',
-      border: 'border-rose-500/50',
-    },
-    yellow: {
-      bg: 'bg-yellow-600',
-      bgLight: 'bg-yellow-600/30',
-      ring: 'ring-yellow-400',
-      text: 'text-yellow-500',
-      border: 'border-yellow-500/50',
-    },
-    blue: {
-      bg: 'bg-blue-600',
-      bgLight: 'bg-blue-600/30',
-      ring: 'ring-blue-500',
-      text: 'text-blue-500',
-      border: 'border-blue-500/50',
-    },
-  };
   const accent = accentClasses[accentColor];
 
   // フィルター更新関数

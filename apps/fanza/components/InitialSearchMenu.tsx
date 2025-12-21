@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import Link from 'next/link';
 
 // Client-side translations (outside NextIntlClientProvider)
@@ -41,7 +41,7 @@ const HIRAGANA_GROUPS = {
   'わ': ['わ', 'を', 'ん'],
 };
 
-export default function InitialSearchMenu({
+function InitialSearchMenu({
   locale,
   initialFilter,
   sortBy,
@@ -51,14 +51,14 @@ export default function InitialSearchMenu({
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
-  const buildUrl = (initial: string) => {
+  const buildUrl = useCallback((initial: string) => {
     const params = new URLSearchParams();
     params.set('initial', initial);
     if (sortBy !== 'nameAsc') params.set('sort', sortBy);
     if (includeTags.length > 0) params.set('include', includeTags.join(','));
     if (excludeTags.length > 0) params.set('exclude', excludeTags.join(','));
     return `/${locale}?${params.toString()}`;
-  };
+  }, [locale, sortBy, includeTags, excludeTags]);
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -136,3 +136,5 @@ export default function InitialSearchMenu({
     </div>
   );
 }
+
+export default memo(InitialSearchMenu);

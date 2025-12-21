@@ -67,7 +67,7 @@ export function isRetryableError(error: Error): boolean {
 
   // HTTPエラー
   if (error.name === 'HTTPError' && 'status' in error) {
-    return isRetryableStatus((error as any).status);
+    return isRetryableStatus((error as { status: number }).status);
   }
 
   return false;
@@ -182,7 +182,7 @@ export async function fetchWithRetry(
           status: number;
         };
         error.name = 'HTTPError';
-        (error as any).status = response.status;
+        error.status = response.status;
         throw error;
       }
 

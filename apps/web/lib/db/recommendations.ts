@@ -159,7 +159,7 @@ export async function getRecommendationsFromFavorites(
     id: number;
     title: string | null;
     normalizedProductId: string | null;
-    releaseDate: Date | null;
+    releaseDate: string | null;
     imageUrl: string | null;
     matchScore: number;
     matchType: 'favorite_performer' | 'favorite_tag';

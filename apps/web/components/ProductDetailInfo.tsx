@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { useParams } from 'next/navigation';
 import { isSubscriptionProvider } from '@/lib/providers';
 import { formatPrice } from '@/lib/utils/subscription';
@@ -130,7 +131,7 @@ interface ProductDetailInfoProps {
   tagCount: number;
 }
 
-export default function ProductDetailInfo({
+const ProductDetailInfo = memo(function ProductDetailInfo({
   duration,
   releaseDate,
   sources,
@@ -250,4 +251,6 @@ export default function ProductDetailInfo({
       </p>
     </div>
   );
-}
+});
+
+export default ProductDetailInfo;

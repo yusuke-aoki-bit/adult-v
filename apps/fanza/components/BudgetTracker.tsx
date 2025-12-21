@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Wallet,
@@ -15,6 +15,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useBudgetTracker } from '@/hooks';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const translations = {
   ja: {
@@ -122,21 +123,39 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
   const [budgetInput, setBudgetInput] = useState(String(stats.monthlyBudget));
   const [showAllPurchases, setShowAllPurchases] = useState(false);
 
-  const handleSaveBudget = () => {
+  const handleSaveBudget = useCallback(() => {
     const amount = parseInt(budgetInput, 10);
     if (!isNaN(amount) && amount >= 0) {
       setMonthlyBudget(amount);
     }
     setIsEditing(false);
-  };
+  }, [budgetInput, setMonthlyBudget]);
 
-  const formatPrice = (price: number) => {
+  const handleToggleEdit = useCallback(() => {
+    setBudgetInput(String(stats.monthlyBudget));
+    setIsEditing((prev) => !prev);
+  }, [stats.monthlyBudget]);
+
+  const handleCancelEdit = useCallback(() => {
+    setIsEditing(false);
+  }, []);
+
+  const handleTogglePurchases = useCallback(() => {
+    setShowAllPurchases((prev) => !prev);
+  }, []);
+
+  const formatPrice = useCallback((price: number) => {
     return new Intl.NumberFormat(locale === 'ja' ? 'ja-JP' : locale === 'zh' ? 'zh-CN' : locale === 'ko' ? 'ko-KR' : 'en-US', {
       style: 'currency',
       currency: 'JPY',
       maximumFractionDigits: 0,
     }).format(price);
-  };
+  }, [locale]);
+
+  const displayedPurchases = useMemo(
+    () => showAllPurchases ? stats.purchases : stats.purchases.slice(-3),
+    [showAllPurchases, stats.purchases]
+  );
 
   if (isLoading) {
     return (
@@ -156,8 +175,6 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
       ? 'from-yellow-500 to-yellow-400'
       : 'from-green-500 to-green-400';
 
-  const displayedPurchases = showAllPurchases ? stats.purchases : stats.purchases.slice(-3);
-
   return (
     <div className={`bg-white rounded-lg p-6 shadow ${className}`}>
       <div className="flex items-center justify-between mb-4">
@@ -166,10 +183,7 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
           {t.title}
         </h3>
         <button
-          onClick={() => {
-            setBudgetInput(String(stats.monthlyBudget));
-            setIsEditing(!isEditing);
-          }}
+          onClick={handleToggleEdit}
           className="text-gray-400 hover:text-gray-600 transition-colors p-1"
           aria-label={t.editBudget}
         >
@@ -197,7 +211,7 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
               {t.save}
             </button>
             <button
-              onClick={() => setIsEditing(false)}
+              onClick={handleCancelEdit}
               className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
             >
               {t.cancel}
@@ -293,7 +307,7 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
                 >
                   <div className="flex-1 min-w-0">
                     <Link
-                      href={`/${locale}/products/${purchase.productId}`}
+                      href={localizedHref(`/products/${purchase.productId}`, locale)}
                       className="text-sm text-gray-700 hover:text-rose-600 truncate block transition-colors"
                     >
                       {purchase.title}
@@ -320,7 +334,7 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
 
             {stats.purchases.length > 3 && (
               <button
-                onClick={() => setShowAllPurchases(!showAllPurchases)}
+                onClick={handleTogglePurchases}
                 className="w-full mt-2 py-1 text-sm text-gray-500 hover:text-gray-700 flex items-center justify-center gap-1 transition-colors"
               >
                 {showAllPurchases ? (
@@ -344,14 +358,14 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
           <h4 className="text-sm font-medium text-gray-500 mb-2">{t.tips}</h4>
           <div className="space-y-2">
             <Link
-              href={`/${locale}/products?sale=true`}
+              href={localizedHref('/products?sale=true', locale)}
               className="flex items-center gap-2 text-sm text-gray-600 hover:text-green-600 transition-colors"
             >
               <span className="text-green-500">•</span>
               {t.waitForSale}
             </Link>
             <Link
-              href={`/${locale}/products?sort=cost-performance`}
+              href={localizedHref('/products?sort=cost-performance', locale)}
               className="flex items-center gap-2 text-sm text-gray-600 hover:text-green-600 transition-colors"
             >
               <span className="text-green-500">•</span>

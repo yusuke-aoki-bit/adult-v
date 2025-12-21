@@ -231,13 +231,14 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
       const thumbEl = document.querySelector('meta[property="og:image"], .video_main img, #video_player img') as HTMLMetaElement | HTMLImageElement | null;
       const thumbnailUrl = (thumbEl as HTMLMetaElement)?.content || (thumbEl as HTMLImageElement)?.src || null;
 
-      // 再生時間
+      // 再生時間（分単位で保存）
       const durationEl = document.querySelector('.video_info .duration, .time');
       let duration: number | null = null;
       if (durationEl) {
         const match = durationEl.textContent?.match(/(\d+):(\d+)/);
         if (match) {
-          duration = parseInt(match[1]) * 60 + parseInt(match[2]);
+          // 分:秒 形式なので、分部分のみ取得（products.durationは分単位）
+          duration = parseInt(match[1]);
         }
       }
 

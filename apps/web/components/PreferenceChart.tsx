@@ -1,7 +1,8 @@
 'use client';
 
+import { memo } from 'react';
 import { PreferenceChart as BasePreferenceChart, PreferenceBarChart as BasePreferenceBarChart } from '@adult-v/shared/components';
-import type { PreferenceChartTheme } from '@adult-v/shared/components';
+import { useSiteTheme } from '@/lib/contexts/SiteContext';
 
 interface PreferenceData {
   label: string;
@@ -16,15 +17,19 @@ interface PreferenceChartProps {
 }
 
 /**
- * PreferenceChart wrapper for apps/web (dark theme)
+ * PreferenceChart wrapper - テーマはSiteContextから自動取得
  */
-export default function PreferenceChart(props: PreferenceChartProps) {
-  return <BasePreferenceChart {...props} theme="dark" />;
-}
+const PreferenceChart = memo(function PreferenceChart(props: PreferenceChartProps) {
+  const theme = useSiteTheme();
+  return <BasePreferenceChart {...props} theme={theme} />;
+});
+
+export default PreferenceChart;
 
 /**
- * PreferenceBarChart wrapper for apps/web (dark theme)
+ * PreferenceBarChart wrapper - テーマはSiteContextから自動取得
  */
-export function PreferenceBarChart(props: { data: PreferenceData[]; className?: string }) {
-  return <BasePreferenceBarChart {...props} theme="dark" />;
-}
+export const PreferenceBarChart = memo(function PreferenceBarChart(props: { data: PreferenceData[]; className?: string }) {
+  const theme = useSiteTheme();
+  return <BasePreferenceBarChart {...props} theme={theme} />;
+});

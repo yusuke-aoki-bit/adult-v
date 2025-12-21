@@ -61,6 +61,7 @@ const translations = {
     latestRelease: '最新作',
     recommended: 'おすすめ',
     backToList: 'シリーズ一覧に戻る',
+    noProducts: '作品が見つかりませんでした',
   },
   en: {
     completionGuide: 'Completion Guide',
@@ -80,6 +81,7 @@ const translations = {
     latestRelease: 'Latest',
     recommended: 'Recommended',
     backToList: 'Back to Series List',
+    noProducts: 'No products found',
   },
   zh: {
     completionGuide: '完成指南',
@@ -99,6 +101,7 @@ const translations = {
     latestRelease: '最新作',
     recommended: '推荐',
     backToList: '返回系列列表',
+    noProducts: '未找到作品',
   },
   ko: {
     completionGuide: '정복 가이드',
@@ -118,6 +121,7 @@ const translations = {
     latestRelease: '최신작',
     recommended: '추천',
     backToList: '시리즈 목록으로',
+    noProducts: '작품을 찾을 수 없습니다',
   },
 } as const;
 
@@ -132,14 +136,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     : locale === 'ko' && seriesInfo.nameKo ? seriesInfo.nameKo
     : seriesInfo.name;
 
-  return generateBaseMetadata(
-    `${name} - ${t.completionGuide}`,
-    t.totalProducts.replace('{count}', String(seriesInfo.totalProducts)),
-    undefined,
-    `/${locale}/series/${seriesId}`,
-    undefined,
-    locale
-  );
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+
+  return {
+    ...generateBaseMetadata(
+      `${name} - ${t.completionGuide}`,
+      t.totalProducts.replace('{count}', String(seriesInfo.totalProducts)),
+      undefined,
+      `/${locale}/series/${seriesId}`,
+      undefined,
+      locale
+    ),
+    alternates: {
+      canonical: `${baseUrl}/${locale}/series/${seriesId}`,
+      languages: {
+        'ja': `${baseUrl}/ja/series/${seriesId}`,
+        'en': `${baseUrl}/en/series/${seriesId}`,
+        'zh': `${baseUrl}/zh/series/${seriesId}`,
+        'ko': `${baseUrl}/ko/series/${seriesId}`,
+        'x-default': `${baseUrl}/ja/series/${seriesId}`,
+      },
+    },
+  };
 }
 
 export default async function SeriesDetailPage({ params, searchParams }: PageProps) {
@@ -329,7 +347,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
 
           {products.length === 0 && (
             <p className="text-center theme-text-muted py-12">
-              No products found
+              {t.noProducts}
             </p>
           )}
 

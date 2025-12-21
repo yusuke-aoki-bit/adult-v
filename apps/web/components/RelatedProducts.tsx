@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import ProductCard from './ProductCard';
@@ -61,16 +62,19 @@ function convertToProduct(product: RelatedProduct): Product {
   };
 }
 
-export default function RelatedProducts({ products, title }: RelatedProductsProps) {
+const RelatedProducts = memo(function RelatedProducts({ products, title }: RelatedProductsProps) {
   const params = useParams();
   const _locale = (params?.locale as string) || 'ja';
   const t = useTranslations('relatedProducts');
 
+  const convertedProducts = useMemo(
+    () => products.map(convertToProduct),
+    [products]
+  );
+
   if (products.length === 0) {
     return null;
   }
-
-  const convertedProducts = products.map(convertToProduct);
 
   return (
     <div className="mt-12">
@@ -82,4 +86,6 @@ export default function RelatedProducts({ products, title }: RelatedProductsProp
       </div>
     </div>
   );
-}
+});
+
+export default RelatedProducts;

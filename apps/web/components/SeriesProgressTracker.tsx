@@ -14,10 +14,10 @@ interface SeriesProgressTrackerProps {
 }
 
 export default function SeriesProgressTracker({
-  seriesId,
+  seriesId: _seriesId,
   totalProducts,
   productIds,
-  translations,
+  translations: _translations,
 }: SeriesProgressTrackerProps) {
   const { items: viewedItems, isLoading } = useRecentlyViewed();
   const [watchedCount, setWatchedCount] = useState(0);

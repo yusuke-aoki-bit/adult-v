@@ -26,8 +26,11 @@ export async function getRandomProduct(params: {
     conditions.push(sql`p.id NOT IN (${sql.join(excludeIds.map(id => sql`${id}`), sql`, `)})`);
   }
 
-  // Products with sample images only
-  conditions.push(sql`p.sample_images IS NOT NULL AND jsonb_array_length(p.sample_images) > 0`);
+  // Products with sample images only (check product_images table)
+  conditions.push(sql`EXISTS (
+    SELECT 1 FROM product_images pi
+    WHERE pi.product_id = p.id AND pi.image_type = 'sample'
+  )`);
 
   // FANZA products only (for fanza site)
   conditions.push(sql`EXISTS (
@@ -49,8 +52,10 @@ export async function getRandomProduct(params: {
     SELECT
       p.id,
       ${titleColumn} as title,
-      p.image_url,
-      p.sample_images,
+      p.default_thumbnail_url as image_url,
+      (SELECT array_agg(pi.image_url ORDER BY pi.display_order)
+       FROM product_images pi
+       WHERE pi.product_id = p.id AND pi.image_type = 'sample') as sample_images,
       p.release_date,
       p.duration,
       ps.price,
@@ -67,7 +72,7 @@ export async function getRandomProduct(params: {
     LEFT JOIN product_performers pp ON p.id = pp.product_id
     LEFT JOIN performers perf ON pp.performer_id = perf.id
     ${whereClause}
-    GROUP BY p.id, p.title, p.title_en, p.title_zh, p.title_ko, p.image_url, p.sample_images, p.release_date, p.duration, ps.price, ps.asp_name, ps.affiliate_url
+    GROUP BY p.id, p.title, p.title_en, p.title_zh, p.title_ko, p.default_thumbnail_url, p.release_date, p.duration, ps.price, ps.asp_name, ps.affiliate_url
     ORDER BY RANDOM()
     LIMIT 1
   `);

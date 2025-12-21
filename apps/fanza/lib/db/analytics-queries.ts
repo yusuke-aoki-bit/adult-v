@@ -55,7 +55,7 @@ export async function getAnalyticsData(daysBack: number): Promise<AnalyticsData>
     ORDER BY views DESC
     LIMIT 5
   `);
-  const topProducts = topProductsResult.rows.map((row: any) => ({
+  const topProducts = (topProductsResult.rows as unknown as { id: number; title: string; views: string | number }[]).map((row) => ({
     id: row.id,
     title: row.title,
     views: Number(row.views),
@@ -75,7 +75,7 @@ export async function getAnalyticsData(daysBack: number): Promise<AnalyticsData>
     ORDER BY views DESC
     LIMIT 5
   `);
-  const topPerformers = topPerformersResult.rows.map((row: any) => ({
+  const topPerformers = (topPerformersResult.rows as unknown as { id: number; name: string; views: string | number }[]).map((row) => ({
     id: row.id,
     name: row.name,
     views: Number(row.views),

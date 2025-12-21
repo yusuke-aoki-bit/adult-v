@@ -15,7 +15,6 @@ import {
   useSceneInfo,
   formatTimestamp,
   parseTimestamp,
-  hasVoted,
   type SceneMarker,
 } from '@adult-v/shared/hooks/useSceneInfo';
 
@@ -389,7 +388,7 @@ export default function SceneTimeline({
 // Scene Card Component
 function SceneCard({
   scene,
-  index,
+  index: _index,
   bestScene,
   onVote,
   onRemove,

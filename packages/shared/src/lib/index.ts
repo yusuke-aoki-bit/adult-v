@@ -21,3 +21,6 @@ export * from './performer-validation';
 export * from './crawler-utils';
 // Note: google-apis has translateBatch/translateText which conflicts with translate.ts
 // Import directly from '@adult-v/shared/lib/google-apis' if needed
+
+// Hooks
+export * from './hooks/useHeaderStats';

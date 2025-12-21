@@ -19,7 +19,6 @@ import {
 import { eq, and, sql } from 'drizzle-orm';
 import { generateDTILink } from '../affiliate';
 import {
-  isValidPerformerName,
   normalizePerformerName,
   isValidPerformerForProduct,
 } from '../performer-validation';
@@ -29,7 +28,6 @@ import {
   extractProductTags,
   translateProduct,
 } from '../google-apis';
-import { calculateHash } from '../gcs-crawler-helper';
 import { saveSaleInfo, SaleInfo } from '../sale-helper';
 import {
   upsertRawHtmlDataWithGcs,
@@ -161,7 +159,7 @@ export function decodeHtml(
     }
     // Use iconv-lite for other encodings
     return iconv.decode(buffer, normalizedEncoding);
-  } catch (error) {
+  } catch {
     console.warn(
       `Failed to decode with ${normalizedEncoding}, falling back to UTF-8`
     );
@@ -295,7 +293,7 @@ export function generateDtiImageUrlFallback(
  */
 export async function fetchGalleryZip(
   galleryZipUrl: string,
-  productId: string
+  _productId: string
 ): Promise<string[]> {
   const sampleImages: string[] = [];
 
@@ -753,7 +751,7 @@ export async function saveProductImages(
   productId: number,
   thumbnailUrl?: string,
   sampleImages?: string[],
-  siteName?: string
+  _siteName?: string
 ): Promise<void> {
   if (!thumbnailUrl && (!sampleImages || sampleImages.length === 0)) {
     return;
@@ -954,8 +952,8 @@ export async function saveProduct(
           if (saved) {
             console.log(`    💰 Saved sale info to database`);
           }
-        } catch (saleError: any) {
-          console.log(`    ⚠️ セール情報保存失敗: ${saleError.message}`);
+        } catch (saleError: unknown) {
+          console.log(`    ⚠️ セール情報保存失敗: ${saleError instanceof Error ? saleError.message : String(saleError)}`);
         }
       }
 
@@ -1201,8 +1199,6 @@ export abstract class DTIBaseCrawler {
     htmlContent: string,
     forceReprocess: boolean = false
   ): Promise<UpsertRawDataResult> {
-    const siteKey = this.config.siteName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-
     // Use the unified upsert function with GCS support
     const result = await upsertRawHtmlDataWithGcs(
       this.config.siteName,

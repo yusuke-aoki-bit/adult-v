@@ -10,6 +10,7 @@ import '@adult-v/shared/components';
 import '@/hooks';
 import FavoriteButton from '@/components/FavoriteButton';
 import ActressRecommendations from '@/components/ActressRecommendations';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const translations = {
   ja: {
@@ -256,8 +257,8 @@ export default function FavoritesPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filteredFavorites.map((item) => {
             const href = item.type === 'product'
-              ? `/${locale}/products/${item.id}`
-              : `/${locale}/actress/${item.id}`;
+              ? localizedHref(`/products/${item.id}`, locale)
+              : localizedHref(`/actress/${item.id}`, locale);
 
             return (
               <div

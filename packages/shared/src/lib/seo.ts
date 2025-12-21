@@ -356,7 +356,7 @@ export function generatePersonSchema(
 export function generateProductSchema(
   name: string,
   description: string,
-  image: string,
+  image: string | undefined,
   url: string,
   price?: number,
   brand?: string,
@@ -373,9 +373,12 @@ export function generateProductSchema(
     '@type': 'Product',
     name,
     description,
-    image,
     url: `${siteUrl}${url}`,
   };
+
+  if (image) {
+    schema.image = image;
+  }
 
   if (sku) {
     schema.sku = sku;
@@ -426,7 +429,7 @@ export function generateProductSchema(
 export function generateVideoObjectSchema(
   name: string,
   description: string,
-  thumbnailUrl: string,
+  thumbnailUrl: string | undefined,
   url: string,
   duration?: number,
   uploadDate?: string,
@@ -436,10 +439,13 @@ export function generateVideoObjectSchema(
     '@type': 'VideoObject',
     name,
     description,
-    thumbnailUrl,
     contentUrl: url,
     embedUrl: url,
   };
+
+  if (thumbnailUrl) {
+    schema.thumbnailUrl = thumbnailUrl;
+  }
 
   if (duration) {
     schema.duration = `PT${Math.round(duration)}M`;

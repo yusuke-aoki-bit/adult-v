@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 export default function ProductIdSearch() {
   const [productId, setProductId] = useState('');
@@ -30,7 +31,7 @@ export default function ProductIdSearch() {
 
       if (response.ok && data.product) {
         // Redirect to product page
-        router.push(`/${locale}/products/${data.product.id}`);
+        router.push(localizedHref(`/products/${data.product.id}`, locale));
       } else {
         setError(data.error || t('errorNotFound'));
       }

@@ -15,7 +15,7 @@ import {
   rawHtmlData,
 } from '../db/schema';
 import { eq, and, count, isNull } from 'drizzle-orm';
-import { saveRawHtml, saveRawJson, isGcsEnabled } from '../gcs-crawler-helper';
+import { saveRawHtml, saveRawJson } from '../gcs-crawler-helper';
 
 // ============================================================
 // Types

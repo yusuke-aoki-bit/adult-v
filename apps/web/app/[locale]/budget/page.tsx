@@ -423,9 +423,9 @@ function ProductRow({
   product,
   locale,
   category,
-  getPriorityColor,
+  getPriorityColor: _getPriorityColor,
   getDaysRemaining,
-  t,
+  t: _t,
 }: {
   product: EnrichedProduct;
   locale: string;

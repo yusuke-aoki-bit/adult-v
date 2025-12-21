@@ -39,7 +39,7 @@ interface SeoEnhanceHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
   getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
-  requestIndexing: (url: string, type: string) => Promise<IndexingResult>;
+  requestIndexing: (url: string, type?: 'URL_UPDATED' | 'URL_DELETED') => Promise<IndexingResult>;
   getAnalyticsReport: (
     propertyId: string,
     dimensions: string[],
@@ -385,7 +385,6 @@ export function createSeoEnhanceHandler(deps: SeoEnhanceHandlerDeps) {
       const reportType = url.searchParams.get('report') || 'top-pages';
 
       const apiConfig = deps.checkGoogleApiConfig();
-      console.log(`[seo-enhance] API Config:`, apiConfig);
 
       let result: { stats: Stats; results: any; warning?: string };
 

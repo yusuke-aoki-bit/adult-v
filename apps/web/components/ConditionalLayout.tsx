@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { usePathname, useParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
 import FilterPersistence from './FilterPersistence';
@@ -28,10 +28,19 @@ function HeaderSkeleton() {
   );
 }
 
+// Footer skeleton for Suspense fallback
+function FooterSkeleton() {
+  return (
+    <footer className="bg-gray-950 border-t border-white/10 mt-auto">
+      <div className="container mx-auto px-4 py-8">
+        <div className="h-32" />
+      </div>
+    </footer>
+  );
+}
+
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
 
   const isAgeVerificationPage = pathname === '/age-verification' ||
                                  pathname?.includes('/age-verification');
@@ -50,7 +59,9 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
         <Header />
       </Suspense>
       <main className="flex-1">{children}</main>
-      <Footer locale={locale} />
+      <Suspense fallback={<FooterSkeleton />}>
+        <Footer />
+      </Suspense>
     </>
   );
 }

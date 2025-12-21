@@ -4,7 +4,10 @@
  * UIコンポーネント間で共有される定数を一元管理
  */
 
-import type { ProviderId, SortOption } from '../types/product.js';
+import type { ProviderId, SortOption, PerformerType } from '../types/product.js';
+
+// Re-export types for convenience
+export type { SortOption, PerformerType };
 
 // ============================================================
 // ひらがな・アルファベット定数
@@ -48,25 +51,28 @@ export const ALPHABET = [
  * ASP表示順序（ヘッダーとフィルターで統一）
  * この順番でUIに表示される（作品数順）
  * すべての配信サイトを個別に表示
+ *
+ * 重要: これらの名前はDBのasp_nameカラムに保存されている値と一致させる必要がある
+ * クエリパラメータ includeAsp=XXX で使用され、DBのasp_nameと比較される
  */
 export const ASP_DISPLAY_ORDER = [
-  // 作品数順
+  // 作品数順（DB保存名を使用）
   'SOKMIL',
   'DUGA',
   'FANZA',
-  'b10f.jp',
-  'MGS動画',
-  'カリビアンコムPR',
-  'HEYZO',
+  'b10f',         // DB保存名（表示ラベルは providerMeta で 'b10f.jp'）
+  'MGS',          // DB保存名（表示ラベルは providerMeta で 'MGS動画'）
+  'caribbeancompr', // カリビアンコムPR (DTIサブサービス)
+  'heyzo',        // HEYZO (DTIサブサービス)
   'FC2',
-  '一本道',
-  'CARIBBEANCOM',
-  'HEYDOUGA',
-  'X1X',
+  '1pondo',       // 一本道 (DTIサブサービス)
+  'caribbeancom', // CARIBBEANCOM (DTIサブサービス)
+  'heydouga',     // HEYDOUGA (DTIサブサービス)
+  'x1x',          // X1X (DTIサブサービス)
   'Japanska',
-  'ENKOU55',
-  'UREKKO',
-  'TOKYOHOT',
+  'enkou55',      // ENKOU55 (DTIサブサービス)
+  'urekko',       // UREKKO (DTIサブサービス)
+  'tokyohot',     // TOKYOHOT (DTIサブサービス)
 ] as const;
 
 /**
@@ -180,11 +186,6 @@ export function parsePriceRange(value: string): { min?: number; max?: number } {
 // ============================================================
 // 出演者タイプ
 // ============================================================
-
-/**
- * 出演者タイプ
- */
-export type PerformerType = 'solo' | 'multi';
 
 /**
  * 出演者タイプのラベル

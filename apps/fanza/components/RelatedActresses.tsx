@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface RelatedActress {
   id: number;
@@ -52,7 +53,7 @@ export default function RelatedActresses({ actresses, currentActressName }: Rela
         {actresses.map((actress) => (
           <Link
             key={actress.id}
-            href={`/${locale}/actress/${actress.id}`}
+            href={localizedHref(`/actress/${actress.id}`, locale)}
             className="group text-center"
           >
             <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2 ring-2 ring-transparent group-hover:ring-rose-700 transition-all">

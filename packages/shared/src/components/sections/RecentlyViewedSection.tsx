@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo, type ReactNode, type ComponentType } from 'react';
 import { Clock, X, Users } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { getThemeConfig, type SectionTheme } from './theme';
@@ -45,6 +44,8 @@ interface ActressCardProps<A extends BaseActress> {
 interface RecentlyViewedSectionProps<T extends BaseProduct, A extends BaseActress = BaseActress> {
   /** Theme for styling: 'dark' for apps/web, 'light' for apps/fanza */
   theme: SectionTheme;
+  /** Locale for translations */
+  locale?: string;
   /** ProductCard component from the app */
   ProductCard: ComponentType<ProductCardProps<T>>;
   /** ActressCard component from the app (optional) */
@@ -66,6 +67,7 @@ interface RecentlyViewedSectionProps<T extends BaseProduct, A extends BaseActres
  */
 export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActress = BaseActress>({
   theme,
+  locale: propLocale,
   ProductCard,
   ActressCard,
   useRecentlyViewed,
@@ -73,8 +75,8 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
   fetchActresses,
   toActressType,
 }: RecentlyViewedSectionProps<T, A>): ReactNode {
-  const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  // Use prop locale if provided, otherwise default to 'ja'
+  const locale = propLocale || 'ja';
   const t = getTranslation(recentlyViewedTranslations, locale);
   const themeConfig = getThemeConfig(theme);
 
@@ -90,6 +92,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
   // 展開時にフェッチをトリガー
   const handleToggle = useCallback((isOpen: boolean) => {
     if (isOpen && !hasExpanded) {
+      setIsLoading(true);
       setHasExpanded(true);
     }
   }, [hasExpanded]);
@@ -192,6 +195,14 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
     }
   }, [items, isViewedLoading, fetchProducts, fetchActresses, toActressType, ActressCard, hasExpanded]);
 
+  // Memoized delete handler to avoid recreating function for each list item
+  // NOTE: This hook must be called before any conditional returns to follow Rules of Hooks
+  const handleRemoveItem = useCallback((e: React.MouseEvent, productId: string | number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    removeItem(String(productId));
+  }, [removeItem]);
+
   // Don't render if loading viewed items or no history
   if (isViewedLoading || items.length === 0) {
     return null;
@@ -202,14 +213,10 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
     return null;
   }
 
-  // コンテンツの決定：未展開→空、ロード中→スケルトン、ロード完了→商品リスト
+  // コンテンツの決定：未展開/ロード中→スケルトン、ロード完了→商品リスト
   const renderContent = () => {
-    if (!hasExpanded) {
-      // まだ展開されていない場合は空のプレースホルダー
-      return <div className="h-24 flex items-center justify-center text-sm theme-text-muted">クリックして表示</div>;
-    }
-
-    if (isLoading) {
+    // 未展開またはロード中はスケルトンを表示（高さを一定に保つ）
+    if (!hasExpanded || isLoading) {
       return <ProductSkeleton count={Math.min(items.length, 8)} />;
     }
 
@@ -224,13 +231,13 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
               {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">読み込み中...</span>}
             </h4>
             {isActressLoading ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {[1, 2, 3].map((i) => (
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="bg-gray-700/50 rounded-lg animate-pulse" style={{ aspectRatio: '3/4' }} />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                 {actresses.map((actress) => (
                   <ActressCard key={actress.id} actress={actress} size="mini" />
                 ))}
@@ -253,11 +260,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
                 {/* Delete button - shows on card hover */}
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    removeItem(String(product.id));
-                  }}
+                  onClick={(e) => handleRemoveItem(e, product.id)}
                   className={`absolute -top-1 -right-1 z-30 w-5 h-5 ${themeConfig.recentlyViewed.deleteButtonBgClass} hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity shadow-lg`}
                   aria-label={t.removeFromHistory}
                 >

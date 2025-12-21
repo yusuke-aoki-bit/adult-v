@@ -8,6 +8,7 @@ import { getDtiServiceFromUrl } from '@/lib/image-utils';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@/lib/localization';
 import { unstable_cache } from 'next/cache';
+// Note: generateActressId is exported from ./queries/utils.ts
 
 // Next.js unstable_cache設定
 const CACHE_REVALIDATE_SECONDS = 300; // 5分
@@ -47,6 +48,50 @@ function setToMemoryCache<T>(key: string, data: T): void {
 type DbProduct = InferSelectModel<typeof products>;
 type DbPerformer = InferSelectModel<typeof performers>;
 
+// Source/Cache types for mapProductToType
+interface SourceData {
+  aspName?: string;
+  price?: number | null;
+  currency?: string | null;
+  affiliateUrl?: string;
+  originalProductId?: string;
+  productType?: string | null;
+}
+
+interface CacheData {
+  price?: number;
+  thumbnailUrl?: string;
+  affiliateUrl?: string;
+  sampleImages?: string[];
+}
+
+// Raw product row from SQL query
+interface RawProductRow {
+  id: number;
+  title: string | null;
+  title_en?: string | null;
+  title_zh?: string | null;
+  title_zh_tw?: string | null;
+  title_ko?: string | null;
+  description?: string | null;
+  description_en?: string | null;
+  description_zh?: string | null;
+  description_zh_tw?: string | null;
+  description_ko?: string | null;
+  normalized_product_id?: string | null;
+  default_thumbnail_url?: string | null;
+  release_date?: Date | null;
+  duration?: number | null;
+  ai_description?: string | null;
+  ai_catchphrase?: string | null;
+  ai_short_description?: string | null;
+  ai_tags?: string | null;
+  ai_review?: string | null;
+  ai_review_updated_at?: Date | null;
+  created_at?: Date | null;
+  updated_at?: Date | null;
+}
+
 /**
  * 無効な演者データをフィルタリングするヘルパー関数
  * クローリング時のパース エラーにより生成された無効なデータを除外
@@ -67,15 +112,6 @@ function isValidPerformer(performer: { name: string }): boolean {
   return true;
 }
 
-/**
- * 女優名からIDを生成（プロバイダープレフィックスなし）
- */
-export function generateActressId(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^\w\u3040-\u30ff\u4e00-\u9faf]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
 
 
 // ============================================================
@@ -205,14 +241,12 @@ async function batchFetchProductRelatedData(
   }
 
   // FANZAソースを優先的に選択
-  let fanzaCount = 0;
   let fallbackCount = 0;
   for (const [productId, sources] of sourcesByProduct) {
     // FANZAソースを探す
     const fanzaSource = sources.find(s => s.aspName.toUpperCase() === 'FANZA');
     if (fanzaSource) {
       sourcesMap.set(productId, fanzaSource);
-      fanzaCount++;
     } else {
       // FANZAソースがない場合は最初のソースを使用（通常はFANZA商品のみなので発生しないはず）
       sourcesMap.set(productId, sources[0]);
@@ -561,6 +595,10 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
                   WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
                   WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
                   WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  WHEN p2.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+                  WHEN p2.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+                  WHEN p2.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+                  WHEN p2.default_thumbnail_url LIKE '%urekko.com%' THEN 'urekko'
                   ELSE 'dti'
                 END
               ELSE ps.asp_name
@@ -591,6 +629,10 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
                   WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
                   WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
                   WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  WHEN p2.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+                  WHEN p2.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+                  WHEN p2.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+                  WHEN p2.default_thumbnail_url LIKE '%urekko.com%' THEN 'urekko'
                   ELSE 'dti'
                 END
               ELSE ps.asp_name
@@ -910,6 +952,10 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
                   WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
                   WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
                   WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  WHEN p2.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+                  WHEN p2.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+                  WHEN p2.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+                  WHEN p2.default_thumbnail_url LIKE '%urekko.com%' THEN 'urekko'
                   ELSE 'dti'
                 END
               ELSE ps.asp_name
@@ -940,6 +986,10 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
                   WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
                   WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
                   WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  WHEN p2.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+                  WHEN p2.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+                  WHEN p2.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+                  WHEN p2.default_thumbnail_url LIKE '%urekko.com%' THEN 'urekko'
                   ELSE 'dti'
                 END
               ELSE ps.asp_name
@@ -1481,7 +1531,7 @@ export async function getActresses(options?: {
  * バッチで複数女優の作品数を取得
  * 注: FANZAサイトではFANZA商品のみをカウント（規約により他ASP商品は表示禁止）
  */
-async function batchGetPerformerProductCounts(db: ReturnType<typeof getDb>, performerIds: number[]): Promise<Map<number, number>> {
+async function _batchGetPerformerProductCounts(db: ReturnType<typeof getDb>, performerIds: number[]): Promise<Map<number, number>> {
   if (performerIds.length === 0) return new Map();
 
   // FANZAサイトではFANZA商品のみをカウント
@@ -2185,8 +2235,8 @@ function mapProductToType(
   product: DbProduct,
   performerData: Array<{ id: number; name: string; nameKana: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
   tagData: Array<{ id: number; name: string; category: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
-  source?: any,
-  cache?: any,
+  source?: SourceData,
+  cache?: CacheData,
   imagesData?: Array<{ imageUrl: string; imageType: string; displayOrder: number | null }>,
   videosData?: Array<{ videoUrl: string; videoType: string | null; quality: string | null; duration: number | null }>,
   locale: string = 'ja',
@@ -2222,7 +2272,7 @@ function mapProductToType(
   // キャッシュから価格・画像情報を取得
   const price = cache?.price || source?.price || 0;
   // 通貨情報を取得（デフォルトJPY）
-  const currency = source?.currency || 'JPY';
+  const currency = (source?.currency as 'JPY' | 'USD') || 'JPY';
 
   // サムネイル画像を取得（product.defaultThumbnailUrl → imagesDataのthumbnail → imagesDataの最初の画像）
   let imageUrl = cache?.thumbnailUrl || product.defaultThumbnailUrl;
@@ -2801,7 +2851,7 @@ export async function getUncategorizedProducts(options?: {
 
     // 関連データを並列で取得
     const productsWithData = await Promise.all(
-      (results.rows as any[]).map(async (product) => {
+      (results.rows as unknown as RawProductRow[]).map(async (product) => {
         const { tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product.id);
 
         // ローカライズ適用
@@ -2831,7 +2881,7 @@ export async function getUncategorizedProducts(options?: {
           price: sourceData?.price || 0,
           category: 'all' as const,
           affiliateUrl: sourceData?.affiliateUrl || '',
-          provider: (sourceData?.aspName?.toLowerCase() || 'duga') as any,
+          provider: (sourceData?.aspName?.toLowerCase() || 'duga') as ProviderId,
           providerLabel: sourceData?.aspName || '',
           performers: [],
           tags: tagData.map(t => getLocalizedTagName(t, locale)),
@@ -2961,7 +3011,7 @@ export async function getUncategorizedProductsCount(options?: {
     `;
 
     const result = await db.execute(query);
-    const count = Number((result.rows[0] as any).count);
+    const count = Number((result.rows[0] as { count: string | number }).count);
 
     // フィルタなしの場合はキャッシュに保存
     if (!hasFilters) {
@@ -3375,38 +3425,39 @@ export async function getProductsByCategory(
     const results = await db.execute(query);
 
     // フル情報を取得
-    const productIds = (results.rows as any[]).map(r => r.id);
+    const rows = results.rows as unknown as RawProductRow[];
+    const productIds = rows.map(r => r.id);
     if (productIds.length === 0) return [];
 
     const fullProducts = await Promise.all(
       productIds.map(async (productId) => {
         const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, productId);
-        const baseProduct = (results.rows as any[]).find(r => r.id === productId)!;
+        const baseProduct = rows.find(r => r.id === productId)!;
         return mapProductToType(
           {
             id: baseProduct.id,
-            normalizedProductId: baseProduct.normalized_product_id,
-            title: baseProduct.title,
-            releaseDate: baseProduct.release_date,
-            description: baseProduct.description,
-            duration: baseProduct.duration,
-            defaultThumbnailUrl: baseProduct.default_thumbnail_url,
-            titleEn: baseProduct.title_en,
-            titleZh: baseProduct.title_zh,
-            titleZhTw: baseProduct.title_zh_tw,
-            titleKo: baseProduct.title_ko,
-            descriptionEn: baseProduct.description_en,
-            descriptionZh: baseProduct.description_zh,
-            descriptionZhTw: baseProduct.description_zh_tw,
-            descriptionKo: baseProduct.description_ko,
-            aiDescription: baseProduct.ai_description || null,
-            aiCatchphrase: baseProduct.ai_catchphrase || null,
-            aiShortDescription: baseProduct.ai_short_description || null,
-            aiTags: baseProduct.ai_tags || null,
-            aiReview: baseProduct.ai_review || null,
-            aiReviewUpdatedAt: baseProduct.ai_review_updated_at || null,
-            createdAt: baseProduct.created_at,
-            updatedAt: baseProduct.updated_at,
+            normalizedProductId: baseProduct.normalized_product_id || '',
+            title: baseProduct.title || '',
+            releaseDate: baseProduct.release_date?.toISOString().split('T')[0] ?? null,
+            description: baseProduct.description ?? null,
+            duration: baseProduct.duration ?? null,
+            defaultThumbnailUrl: baseProduct.default_thumbnail_url ?? null,
+            titleEn: baseProduct.title_en ?? null,
+            titleZh: baseProduct.title_zh ?? null,
+            titleZhTw: baseProduct.title_zh_tw ?? null,
+            titleKo: baseProduct.title_ko ?? null,
+            descriptionEn: baseProduct.description_en ?? null,
+            descriptionZh: baseProduct.description_zh ?? null,
+            descriptionZhTw: baseProduct.description_zh_tw ?? null,
+            descriptionKo: baseProduct.description_ko ?? null,
+            aiDescription: baseProduct.ai_description ?? null,
+            aiCatchphrase: baseProduct.ai_catchphrase ?? null,
+            aiShortDescription: baseProduct.ai_short_description ?? null,
+            aiTags: baseProduct.ai_tags ?? null,
+            aiReview: baseProduct.ai_review ?? null,
+            aiReviewUpdatedAt: baseProduct.ai_review_updated_at ?? null,
+            createdAt: baseProduct.created_at ?? new Date(),
+            updatedAt: baseProduct.updated_at ?? new Date(),
           },
           performerData,
           tagData,
@@ -3943,6 +3994,7 @@ export async function getSaleStats(aspName?: string): Promise<{
  */
 export interface CareerAnalysis {
   debutYear: number | null;
+  latestYear: number | null;
   debutProduct: { id: number; title: string; releaseDate: string } | null;
   latestProduct: { id: number; title: string; releaseDate: string } | null;
   totalProducts: number;
@@ -4025,6 +4077,7 @@ export async function getActressCareerAnalysis(actressId: string): Promise<Caree
 
     return {
       debutYear: firstYear?.year || null,
+      latestYear: lastYear?.year || null,
       debutProduct,
       latestProduct,
       totalProducts,
@@ -4286,7 +4339,7 @@ export async function getPopularSeries(limit: number = 20): Promise<Array<{
 /**
  * 人気メーカー/レーベル一覧を取得
  */
-export async function getPopularMakers(options: {
+export async function getPopularMakers(options?: {
   category?: 'maker' | 'label' | 'both';
   limit?: number;
   locale?: string;
@@ -4297,7 +4350,7 @@ export async function getPopularMakers(options: {
   productCount: number;
 }>> {
   try {
-    const { category = 'both', limit = 20, locale = 'ja' } = options;
+    const { category = 'both', limit = 20, locale = 'ja' } = options || {};
     const db = getDb();
 
     const nameColumn = locale === 'en' ? sql`COALESCE(t.name_en, t.name)`

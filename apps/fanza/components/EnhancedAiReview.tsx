@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Bot, Star, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Sparkles, AlertCircle, Film, Mic, Theater } from 'lucide-react';
 
 const translations = {
@@ -238,6 +238,29 @@ function parseAiReview(review: string): ParsedReview {
   return result;
 }
 
+// Memoized list item components to prevent unnecessary re-renders
+const HighlightItem = memo(function HighlightItem({ text }: { text: string }) {
+  return (
+    <li className="text-sm text-gray-600 flex items-start gap-2">
+      <span className="text-green-500 mt-0.5">•</span>
+      {text}
+    </li>
+  );
+});
+
+const CautionItem = memo(function CautionItem({ text }: { text: string }) {
+  return (
+    <li className="text-sm text-gray-600 flex items-start gap-2">
+      <span className="text-yellow-500 mt-0.5">•</span>
+      {text}
+    </li>
+  );
+});
+
+const RecommendationItem = memo(function RecommendationItem({ text }: { text: string }) {
+  return <li>• {text}</li>;
+});
+
 function StarRating({ score, maxScore = 5, size = 'md' }: { score: number; maxScore?: number; size?: 'sm' | 'md' }) {
   const sizeClass = size === 'sm' ? 'w-3 h-3' : 'w-4 h-4';
   return (
@@ -389,10 +412,7 @@ export default function EnhancedAiReview({
               </h4>
               <ul className="space-y-1">
                 {parsed.highlights.map((highlight, index) => (
-                  <li key={index} className="text-sm text-gray-600 flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5">•</span>
-                    {highlight}
-                  </li>
+                  <HighlightItem key={index} text={highlight} />
                 ))}
               </ul>
             </div>
@@ -406,10 +426,7 @@ export default function EnhancedAiReview({
               </h4>
               <ul className="space-y-1">
                 {parsed.cautions.map((caution, index) => (
-                  <li key={index} className="text-sm text-gray-600 flex items-start gap-2">
-                    <span className="text-yellow-500 mt-0.5">•</span>
-                    {caution}
-                  </li>
+                  <CautionItem key={index} text={caution} />
                 ))}
               </ul>
             </div>
@@ -425,7 +442,7 @@ export default function EnhancedAiReview({
                 </h4>
                 <ul className="text-xs text-gray-600 space-y-0.5">
                   {parsed.recommendedFor.map((item, index) => (
-                    <li key={index}>• {item}</li>
+                    <RecommendationItem key={index} text={item} />
                   ))}
                 </ul>
               </div>
@@ -438,7 +455,7 @@ export default function EnhancedAiReview({
                 </h4>
                 <ul className="text-xs text-gray-600 space-y-0.5">
                   {parsed.notRecommendedFor.map((item, index) => (
-                    <li key={index}>• {item}</li>
+                    <RecommendationItem key={index} text={item} />
                   ))}
                 </ul>
               </div>

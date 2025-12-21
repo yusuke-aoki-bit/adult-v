@@ -20,6 +20,7 @@ import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, 
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,15 +69,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         product.title,
         optimizedDescription,
         product.imageUrl,
-        `/${locale}/products/${product.id}`,
+        localizedHref(`/products/${product.id}`, locale),
       ),
       alternates: {
+        canonical: `${baseUrl}/products/${product.id}`,
         languages: {
-          'ja': `${baseUrl}/ja/products/${product.id}`,
-          'en': `${baseUrl}/en/products/${product.id}`,
-          'zh': `${baseUrl}/zh/products/${product.id}`,
-          'ko': `${baseUrl}/ko/products/${product.id}`,
-          'x-default': `${baseUrl}/ja/products/${product.id}`,
+          'ja': `${baseUrl}/products/${product.id}`,
+          'en': `${baseUrl}/products/${product.id}?hl=en`,
+          'zh': `${baseUrl}/products/${product.id}?hl=zh`,
+          'zh-TW': `${baseUrl}/products/${product.id}?hl=zh-TW`,
+          'ko': `${baseUrl}/products/${product.id}?hl=ko`,
+          'x-default': `${baseUrl}/products/${product.id}`,
         },
       },
     };
@@ -85,10 +88,63 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+// Product detail translations
+const productDetailTranslations = {
+  ja: {
+    description: '説明',
+    price: '価格',
+    monthly: '月額',
+    releaseDate: '発売日',
+    tags: 'タグ',
+    relatedProducts: '関連作品',
+    sampleVideos: 'サンプル動画',
+    productId: '作品ID',
+    makerId: 'メーカー品番',
+    performers: '出演者',
+  },
+  en: {
+    description: 'Description',
+    price: 'Price',
+    monthly: 'Monthly',
+    releaseDate: 'Release Date',
+    tags: 'Tags',
+    relatedProducts: 'Related Products',
+    sampleVideos: 'Sample Videos',
+    productId: 'Product ID',
+    makerId: 'Maker ID',
+    performers: 'Performers',
+  },
+  zh: {
+    description: '描述',
+    price: '价格',
+    monthly: '月费',
+    releaseDate: '发售日期',
+    tags: '标签',
+    relatedProducts: '相关作品',
+    sampleVideos: '示例视频',
+    productId: '作品ID',
+    makerId: '制造商编号',
+    performers: '出演者',
+  },
+  ko: {
+    description: '설명',
+    price: '가격',
+    monthly: '월정액',
+    releaseDate: '발매일',
+    tags: '태그',
+    relatedProducts: '관련 작품',
+    sampleVideos: '샘플 동영상',
+    productId: '작품ID',
+    makerId: '메이커 번호',
+    performers: '출연자',
+  },
+} as const;
+
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id, locale } = await params;
   const tNav = await getTranslations('nav');
   const tCommon = await getTranslations('common');
+  const t = productDetailTranslations[locale as keyof typeof productDetailTranslations] || productDetailTranslations.ja;
 
   // Try to get product by normalized ID first, then by database ID
   let product = await searchProductByProductId(id, locale);
@@ -97,7 +153,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
   if (!product) notFound();
 
-  const basePath = `/${locale}/products/${product.id}`;
+  const basePath = localizedHref(`/products/${product.id}`, locale);
 
   // Structured data（評価情報を含む - リッチリザルト表示でCTR向上）
   const productSchema = generateProductSchema(
@@ -117,8 +173,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
   );
 
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: tNav('home'), url: `/${locale}` },
-    { name: product.title, url: basePath },
+    { name: tNav('home'), url: localizedHref('/', locale) },
+    { name: product.title, url: localizedHref(`/products/${product.id}`, locale) },
   ]);
 
   // VideoObject Schema（サンプル動画がある場合）
@@ -135,7 +191,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   // パンくずリスト用のアイテム作成
   const breadcrumbItems: BreadcrumbItem[] = [
-    { label: tNav('home'), href: `/${locale}` },
+    { label: tNav('home'), href: localizedHref('/', locale) },
   ];
 
   // 複数女優の場合、それぞれのパンくずリストを追加
@@ -143,13 +199,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
     product.performers.forEach((performer) => {
       breadcrumbItems.push({
         label: performer.name,
-        href: `/${locale}/actress/${performer.id}`,
+        href: localizedHref(`/actress/${performer.id}`, locale),
       });
     });
   } else if (product.actressName && product.actressId) {
     breadcrumbItems.push({
       label: product.actressName,
-      href: `/${locale}/actress/${product.actressId}`,
+      href: localizedHref(`/actress/${product.actressId}`, locale),
     });
   }
 
@@ -200,7 +256,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
               {/* Product Image Gallery */}
               <ProductImageGallery
-                mainImage={product.imageUrl}
+                mainImage={product.imageUrl ?? null}
                 sampleImages={product.sampleImages}
                 productTitle={product.title}
               />
@@ -229,13 +285,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.performers && product.performers.length > 0 ? (
                   <div>
                     <h2 className="text-sm font-semibold theme-text mb-2">
-                      {product.performers.length === 1 ? tCommon('actress') : '出演者'}
+                      {product.performers.length === 1 ? tCommon('actress') : t.performers}
                     </h2>
                     <div className="flex flex-wrap gap-2">
                       {product.performers.map((performer) => (
                         <Link
                           key={performer.id}
-                          href={`/${locale}/actress/${performer.id}`}
+                          href={localizedHref(`/actress/${performer.id}`, locale)}
                           className="text-rose-700 hover:text-rose-800 hover:underline"
                         >
                           {performer.name}
@@ -248,7 +304,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <h2 className="text-sm font-semibold theme-text mb-2">{tCommon('actress')}</h2>
                     {product.actressId ? (
                       <Link
-                        href={`/${locale}/actress/${product.actressId}`}
+                        href={localizedHref(`/actress/${product.actressId}`, locale)}
                         className="text-rose-700 hover:text-rose-800 hover:underline"
                       >
                         {product.actressName}
@@ -261,16 +317,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                 {product.description && (
                   <div>
-                    <h2 className="text-sm font-semibold theme-text mb-2">説明</h2>
+                    <h2 className="text-sm font-semibold theme-text mb-2">{t.description}</h2>
                     <p className="theme-text whitespace-pre-wrap">{product.description}</p>
                   </div>
                 )}
 
                 {product.price && (
                   <div>
-                    <h2 className="text-sm font-semibold theme-text mb-2">価格</h2>
+                    <h2 className="text-sm font-semibold theme-text mb-2">{t.price}</h2>
                     <p className="text-2xl font-bold theme-text">
-                      {isSubscriptionSite(product.provider) && <span className="text-base theme-text-muted mr-1">月額</span>}
+                      {product.provider && isSubscriptionSite(product.provider) && <span className="text-base theme-text-muted mr-1">{t.monthly}</span>}
                       ¥{product.price.toLocaleString()}
                     </p>
                   </div>
@@ -278,14 +334,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                 {product.releaseDate && (
                   <div>
-                    <h2 className="text-sm font-semibold theme-text mb-2">発売日</h2>
+                    <h2 className="text-sm font-semibold theme-text mb-2">{t.releaseDate}</h2>
                     <p className="theme-text">{product.releaseDate}</p>
                   </div>
                 )}
 
                 {product.tags && product.tags.length > 0 && (
                   <div>
-                    <h2 className="text-sm font-semibold theme-text mb-2">タグ</h2>
+                    <h2 className="text-sm font-semibold theme-text mb-2">{t.tags}</h2>
                     <div className="flex flex-wrap gap-2">
                       {product.tags.map((tag, index) => (
                         <span
@@ -302,7 +358,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.affiliateUrl && (
                   <AffiliateButton
                     affiliateUrl={product.affiliateUrl}
-                    providerLabel={product.providerLabel}
+                    providerLabel={product.providerLabel || ''}
                     price={product.regularPrice || product.price}
                     salePrice={product.salePrice}
                     discount={product.discount}
@@ -349,7 +405,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 関連作品セクション */}
           {relatedProducts.length > 0 && (
-            <RelatedProducts products={relatedProducts} title="関連作品" />
+            <RelatedProducts products={relatedProducts} title={t.relatedProducts} />
           )}
         </div>
       </div>
@@ -360,8 +416,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
         productData={{
           id: product.id,
           title: product.title,
-          imageUrl: product.imageUrl,
-          aspName: product.provider,
+          imageUrl: product.imageUrl ?? null,
+          aspName: product.provider || '',
         }}
       />
 
@@ -369,7 +425,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {product.affiliateUrl && (
         <StickyCta
           affiliateUrl={product.affiliateUrl}
-          providerLabel={product.providerLabel}
+          providerLabel={product.providerLabel || ''}
           price={product.regularPrice || product.price}
           salePrice={product.salePrice}
           discount={product.discount}

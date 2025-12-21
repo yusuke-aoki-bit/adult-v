@@ -611,6 +611,9 @@ export class SokmilApiClient {
   }
 }
 
+// Type alias for backward compatibility
+export type SokmilClient = SokmilApiClient;
+
 /**
  * ソクミルクライアントのシングルトンインスタンスを取得
  */

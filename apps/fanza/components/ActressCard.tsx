@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { ActressCardBase, type ActressCardSize } from '@adult-v/shared/components';
 import { Actress } from '@/types/product';
 import { normalizeImageUrl } from '@/lib/image-utils';
@@ -31,8 +32,8 @@ async function fetchProductImages(actressId: string): Promise<string[]> {
   }
 }
 
-export default function ActressCard({ actress, compact = false, size, priority = false }: Props) {
-  const { isFanzaSite } = useSite();
+function ActressCard({ actress, compact = false, size, priority = false }: Props) {
+  const { isFanzaSite, theme } = useSite();
 
   return (
     <ActressCardBase
@@ -40,10 +41,20 @@ export default function ActressCard({ actress, compact = false, size, priority =
       compact={compact}
       size={size}
       priority={priority}
-      theme="light"
+      theme={theme}
       FavoriteButton={FavoriteButton}
       isFanzaSite={isFanzaSite}
       fetchProductImages={fetchProductImages}
     />
   );
 }
+
+// Memo to prevent re-renders when parent updates but actress data unchanged
+export default memo(ActressCard, (prevProps, nextProps) => {
+  return (
+    prevProps.actress.id === nextProps.actress.id &&
+    prevProps.compact === nextProps.compact &&
+    prevProps.size === nextProps.size &&
+    prevProps.priority === nextProps.priority
+  );
+});

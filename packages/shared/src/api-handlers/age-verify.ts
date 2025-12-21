@@ -8,7 +8,7 @@ export interface AgeVerifyHandlerDeps {
   };
   getClientIP: (request: NextRequest) => string;
   RATE_LIMITS: { strict: { maxRequests: number; windowMs: number } };
-  detectBot: (request: NextRequest) => { isBot: boolean; reason: string; score: number };
+  detectBot: (request: NextRequest) => { isBot: boolean; reason?: string; score: number };
   validateSecurityHeaders: (request: NextRequest) => boolean;
 }
 

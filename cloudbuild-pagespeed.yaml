@@ -1,41 +1,4 @@
 steps:
-  # Build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/pagespeed-checker'
-      - '-f'
-      - 'Dockerfile.pagespeed'
-      - '.'
-
-  # Push the container image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/pagespeed-checker'
-
-  # Deploy to Cloud Run Jobs
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
-    args:
-      - 'run'
-      - 'jobs'
-      - 'update'
-      - 'pagespeed-checker'
-      - '--image'
-      - 'gcr.io/$PROJECT_ID/pagespeed-checker'
-      - '--region'
-      - 'asia-northeast1'
-      - '--set-secrets'
-      - 'PAGESPEED_API_KEY=pagespeed-api-key:latest'
-      - '--memory'
-      - '512Mi'
-      - '--task-timeout'
-      - '300s'
-
-images:
-  - 'gcr.io/$PROJECT_ID/pagespeed-checker'
-
-options:
-  logging: CLOUD_LOGGING_ONLY
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/adult-v/pagespeed-fetcher', '-f', 'Dockerfile.pagespeed', '.']
+images: ['gcr.io/adult-v/pagespeed-fetcher']

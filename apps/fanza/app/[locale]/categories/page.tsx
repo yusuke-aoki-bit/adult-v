@@ -5,6 +5,7 @@ import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageS
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import { getPopularTags } from '@/lib/db/queries';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,15 +17,31 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations('categories');
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
-  return generateBaseMetadata(
+  const metadata = generateBaseMetadata(
     t('metaTitle'),
     t('metaDescription'),
     undefined,
-    `/${locale}/categories`,
+    '/categories',
     undefined,
     locale,
   );
+
+  return {
+    ...metadata,
+    alternates: {
+      canonical: `${baseUrl}/categories`,
+      languages: {
+        'ja': `${baseUrl}/categories`,
+        'en': `${baseUrl}/categories?hl=en`,
+        'zh': `${baseUrl}/categories?hl=zh`,
+        'zh-TW': `${baseUrl}/categories?hl=zh-TW`,
+        'ko': `${baseUrl}/categories?hl=ko`,
+        'x-default': `${baseUrl}/categories`,
+      },
+    },
+  };
 }
 
 export default async function CategoriesPage({ params, searchParams }: PageProps) {
@@ -58,10 +75,10 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
     other: t('otherGenres'),
   };
 
-  // パンくずリスト
+  // パンくずリスト（?hl=形式のURL）
   const breadcrumbItems = [
-    { name: tCommon('products'), url: `/${locale}` },
-    { name: t('title'), url: `/${locale}/categories` },
+    { name: tCommon('products'), url: localizedHref('/', locale) },
+    { name: t('title'), url: localizedHref('/categories', locale) },
   ];
 
   // カテゴリページ用FAQ
@@ -70,7 +87,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
   // ItemListSchema用のタグデータ（上位30件）
   const itemListData = tags.slice(0, 30).map((tag) => ({
     name: tag.name,
-    url: `/${locale}/products?include=${tag.id}`,
+    url: localizedHref(`/products?include=${tag.id}`, locale),
   }));
 
   return (
@@ -81,7 +98,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
           generateCollectionPageSchema(
             t('title'),
             t('metaDescription'),
-            `/${locale}/categories`,
+            localizedHref('/categories', locale),
             locale,
           ),
           generateFAQSchema(categoryFAQs),
@@ -103,7 +120,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
         {/* カテゴリフィルター */}
         <div className="flex flex-wrap gap-2 mb-8">
           <Link
-            href={`/${locale}/categories`}
+            href={localizedHref('/categories', locale)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               !selectedCategory
                 ? 'bg-rose-600 text-white'
@@ -115,7 +132,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
           {categoryOrder.map((cat) => (
             <Link
               key={cat}
-              href={`/${locale}/categories?category=${cat}`}
+              href={localizedHref(`/categories?category=${cat}`, locale)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 selectedCategory === cat
                   ? 'bg-rose-600 text-white'
@@ -135,7 +152,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
             {tags.map((tag) => (
               <Link
                 key={tag.id}
-                href={`/${locale}/products?include=${tag.id}`}
+                href={localizedHref(`/products?include=${tag.id}`, locale)}
                 className="group bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors"
               >
                 <h3 className="text-white font-medium group-hover:text-rose-400 transition-colors mb-1">
@@ -159,7 +176,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-white">{categoryLabels[cat]}</h2>
                     <Link
-                      href={`/${locale}/categories?category=${cat}`}
+                      href={localizedHref(`/categories?category=${cat}`, locale)}
                       className="text-sm text-rose-400 hover:text-rose-300"
                     >
                       {t('viewProducts')} →
@@ -169,7 +186,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
                     {catTags.slice(0, 12).map((tag) => (
                       <Link
                         key={tag.id}
-                        href={`/${locale}/products?include=${tag.id}`}
+                        href={localizedHref(`/products?include=${tag.id}`, locale)}
                         className="group bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition-colors"
                       >
                         <h3 className="text-white text-sm font-medium group-hover:text-rose-400 transition-colors truncate">

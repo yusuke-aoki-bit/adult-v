@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { getPopularSeries } from '@/lib/db/queries';
 import Breadcrumb from '@/components/Breadcrumb';
-import { generateBaseMetadata } from '@/lib/seo';
+import { generateBaseMetadata, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { Library, Film, Calendar } from 'lucide-react';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { JsonLD } from '@/components/JsonLD';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,15 +48,28 @@ const translations = {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = translations[locale as keyof typeof translations] || translations.ja;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
-  return generateBaseMetadata(
-    t.title,
-    t.description,
-    undefined,
-    `/${locale}/series`,
-    undefined,
-    locale
-  );
+  return {
+    ...generateBaseMetadata(
+      t.title,
+      t.description,
+      undefined,
+      `/${locale}/series`,
+      undefined,
+      locale
+    ),
+    alternates: {
+      canonical: `${baseUrl}/${locale}/series`,
+      languages: {
+        'ja': `${baseUrl}/ja/series`,
+        'en': `${baseUrl}/en/series`,
+        'zh': `${baseUrl}/zh/series`,
+        'ko': `${baseUrl}/ko/series`,
+        'x-default': `${baseUrl}/ja/series`,
+      },
+    },
+  };
 }
 
 export default async function SeriesListPage({ params }: PageProps) {
@@ -72,8 +86,27 @@ export default async function SeriesListPage({ params }: PageProps) {
     return s.name;
   };
 
+  // Breadcrumb data for schema
+  const breadcrumbItems = [
+    { name: tNav('home'), url: localizedHref('/', locale) },
+    { name: t.title, url: localizedHref('/series', locale) },
+  ];
+
+  // ItemList data for schema (top 30 series)
+  const itemListData = series.slice(0, 30).map((s) => ({
+    name: getLocalizedName(s),
+    url: localizedHref(`/series/${s.id}`, locale),
+  }));
+
   return (
-    <div className="theme-body min-h-screen">
+    <>
+      <JsonLD
+        data={[
+          generateBreadcrumbSchema(breadcrumbItems),
+          generateItemListSchema(itemListData, t.title),
+        ]}
+      />
+      <div className="theme-body min-h-screen">
       <div className="container mx-auto px-4 py-8">
         <Breadcrumb
           items={[
@@ -127,5 +160,6 @@ export default async function SeriesListPage({ params }: PageProps) {
         )}
       </div>
     </div>
+    </>
   );
 }

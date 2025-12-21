@@ -53,7 +53,7 @@ export async function saveSaleInfo(
       return false;
     }
 
-    const productSourceId = (sourceResult.rows[0] as any).id;
+    const productSourceId = (sourceResult.rows[0] as { id: number }).id;
 
     // 既存のアクティブなセールをチェック
     const existingSale = await db.execute(sql`
@@ -65,7 +65,7 @@ export async function saveSaleInfo(
     `);
 
     if (existingSale.rows.length > 0) {
-      const existing = existingSale.rows[0] as any;
+      const existing = existingSale.rows[0] as { id: number; sale_price: number; discount_percent: number | null };
       // 価格が同じなら更新不要
       if (existing.sale_price === saleInfo.salePrice) {
         // fetched_atだけ更新

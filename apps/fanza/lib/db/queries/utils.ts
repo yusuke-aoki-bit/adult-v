@@ -25,6 +25,23 @@ export type ImageData = { productId: number; imageUrl: string; imageType: string
 export type VideoData = { productId: number; videoUrl: string; videoType: string | null; quality: string | null; duration: number | null };
 export type SaleData = { productId: number; regularPrice: number; salePrice: number; discountPercent: number | null; endAt: Date | null };
 
+// Source/Cache types for mapProductToType
+export interface SourceData {
+  aspName?: string;
+  price?: number | null;
+  currency?: string | null;
+  affiliateUrl?: string;
+  originalProductId?: string;
+  productType?: string | null;
+}
+
+export interface CacheData {
+  price?: number;
+  thumbnailUrl?: string;
+  affiliateUrl?: string;
+  sampleImages?: string[];
+}
+
 export interface BatchRelatedDataResult {
   performersMap: Map<number, PerformerData[]>;
   tagsMap: Map<number, TagData[]>;
@@ -320,8 +337,8 @@ export function mapProductToType(
   product: DbProduct,
   performerData: Array<{ id: number; name: string; nameKana: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
   tagData: Array<{ id: number; name: string; category: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
-  source?: any,
-  cache?: any,
+  source?: SourceData,
+  cache?: CacheData,
   imagesData?: Array<{ imageUrl: string; imageType: string; displayOrder: number | null }>,
   videosData?: Array<{ videoUrl: string; videoType: string | null; quality: string | null; duration: number | null }>,
   locale: string = 'ja',
@@ -353,7 +370,7 @@ export function mapProductToType(
   const providerLabel = providerLabelMap[aspName.toUpperCase()] || providerLabelMap[aspName] || aspName;
 
   const price = cache?.price || source?.price || 0;
-  const currency = source?.currency || 'JPY';
+  const currency = (source?.currency as 'JPY' | 'USD') || 'JPY';
 
   let imageUrl = cache?.thumbnailUrl || product.defaultThumbnailUrl;
   if (!imageUrl && imagesData && imagesData.length > 0) {
@@ -485,8 +502,7 @@ export function mapPerformerToActressTypeSync(
     imageUrl,
     aliases: aliases || [],
     releaseCount,
-    services: services || [],
-    providerIds: providerIds.length > 0 ? providerIds : undefined,
+    services: providerIds.length > 0 ? providerIds : undefined,
     // 将来のフィールド用のプレースホルダー
     age: undefined,
     birthDate: undefined,

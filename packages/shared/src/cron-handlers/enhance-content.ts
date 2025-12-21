@@ -333,7 +333,6 @@ export function createEnhanceContentHandler(deps: EnhanceContentHandlerDeps) {
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 200);
 
       const apiConfig = deps.checkGoogleApiConfig();
-      console.log(`[enhance-content] API Config:`, apiConfig);
 
       let result: { stats: Stats; results: any[] };
 

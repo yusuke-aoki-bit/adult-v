@@ -18,7 +18,6 @@ const PER_PAGE_KEY = 'list-per-page'; // 一覧ページの表示件数
 
 // 許可される表示件数
 const ALLOWED_PER_PAGE = [12, 24, 48, 96] as const;
-const DEFAULT_PER_PAGE = 50;
 
 export function getFilterSettings(page: 'home' | 'actress'): FilterSettings | null {
   if (typeof window === 'undefined') {

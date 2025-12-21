@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { Award, ChevronDown, ChevronUp, Trophy, Flame, Eye } from 'lucide-react';
 import { useDiscoveryBadge } from '@/hooks';
 import type { Badge } from '@adult-v/shared/hooks';
@@ -65,7 +65,7 @@ interface DiscoveryBadgesProps {
   className?: string;
 }
 
-function BadgeCard({ badge, locale }: { badge: Badge; locale: string }) {
+const BadgeCard = memo(function BadgeCard({ badge, locale }: { badge: Badge; locale: string }) {
   const isEarned = badge.progress === 100;
   const name = badge.name[locale as keyof typeof badge.name] || badge.name.ja;
   const description = badge.description[locale as keyof typeof badge.description] || badge.description.ja;
@@ -80,7 +80,7 @@ function BadgeCard({ badge, locale }: { badge: Badge; locale: string }) {
     >
       <div className="flex items-start gap-3">
         <div
-          className={`text-2xl flex-shrink-0 ${
+          className={`text-2xl shrink-0 ${
             isEarned ? '' : 'grayscale'
           }`}
         >
@@ -106,17 +106,26 @@ function BadgeCard({ badge, locale }: { badge: Badge; locale: string }) {
           )}
         </div>
         {isEarned && (
-          <Trophy className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+          <Trophy className="w-4 h-4 text-yellow-500 shrink-0" />
         )}
       </div>
     </div>
   );
-}
+});
 
 export default function DiscoveryBadges({ locale, className = '' }: DiscoveryBadgesProps) {
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const { badges, stats, isLoading } = useDiscoveryBadge();
   const [showAll, setShowAll] = useState(false);
+
+  const displayedBadges = useMemo(
+    () => showAll ? badges : badges.slice(0, 4),
+    [showAll, badges]
+  );
+  const earnedBadges = useMemo(
+    () => badges.filter(b => b.progress === 100),
+    [badges]
+  );
 
   if (isLoading) {
     return (
@@ -128,9 +137,6 @@ export default function DiscoveryBadges({ locale, className = '' }: DiscoveryBad
       </div>
     );
   }
-
-  const displayedBadges = showAll ? badges : badges.slice(0, 4);
-  const earnedBadges = badges.filter(b => b.progress === 100);
 
   return (
     <div className={`bg-gray-800 rounded-lg p-6 ${className}`}>

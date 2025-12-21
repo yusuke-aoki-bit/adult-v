@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Wallet,
@@ -122,21 +122,39 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
   const [budgetInput, setBudgetInput] = useState(String(stats.monthlyBudget));
   const [showAllPurchases, setShowAllPurchases] = useState(false);
 
-  const handleSaveBudget = () => {
+  const handleSaveBudget = useCallback(() => {
     const amount = parseInt(budgetInput, 10);
     if (!isNaN(amount) && amount >= 0) {
       setMonthlyBudget(amount);
     }
     setIsEditing(false);
-  };
+  }, [budgetInput, setMonthlyBudget]);
 
-  const formatPrice = (price: number) => {
+  const handleToggleEdit = useCallback(() => {
+    setBudgetInput(String(stats.monthlyBudget));
+    setIsEditing((prev) => !prev);
+  }, [stats.monthlyBudget]);
+
+  const handleCancelEdit = useCallback(() => {
+    setIsEditing(false);
+  }, []);
+
+  const handleTogglePurchases = useCallback(() => {
+    setShowAllPurchases((prev) => !prev);
+  }, []);
+
+  const formatPrice = useCallback((price: number) => {
     return new Intl.NumberFormat(locale === 'ja' ? 'ja-JP' : locale === 'zh' ? 'zh-CN' : locale === 'ko' ? 'ko-KR' : 'en-US', {
       style: 'currency',
       currency: 'JPY',
       maximumFractionDigits: 0,
     }).format(price);
-  };
+  }, [locale]);
+
+  const displayedPurchases = useMemo(
+    () => showAllPurchases ? stats.purchases : stats.purchases.slice(-3),
+    [showAllPurchases, stats.purchases]
+  );
 
   if (isLoading) {
     return (
@@ -156,8 +174,6 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
       ? 'from-yellow-600 to-yellow-400'
       : 'from-green-600 to-green-400';
 
-  const displayedPurchases = showAllPurchases ? stats.purchases : stats.purchases.slice(-3);
-
   return (
     <div className={`bg-gray-800 rounded-lg p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
@@ -166,10 +182,7 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
           {t.title}
         </h3>
         <button
-          onClick={() => {
-            setBudgetInput(String(stats.monthlyBudget));
-            setIsEditing(!isEditing);
-          }}
+          onClick={handleToggleEdit}
           className="text-gray-400 hover:text-white transition-colors p-1"
           aria-label={t.editBudget}
         >
@@ -197,7 +210,7 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
               {t.save}
             </button>
             <button
-              onClick={() => setIsEditing(false)}
+              onClick={handleCancelEdit}
               className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors"
             >
               {t.cancel}
@@ -320,7 +333,7 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
 
             {stats.purchases.length > 3 && (
               <button
-                onClick={() => setShowAllPurchases(!showAllPurchases)}
+                onClick={handleTogglePurchases}
                 className="w-full mt-2 py-1 text-sm text-gray-400 hover:text-white flex items-center justify-center gap-1 transition-colors"
               >
                 {showAllPurchases ? (

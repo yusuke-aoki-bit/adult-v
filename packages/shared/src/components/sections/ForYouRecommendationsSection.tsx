@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 import { Sparkles, Users } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { getThemeConfig, type SectionTheme } from './theme';
@@ -33,11 +32,13 @@ interface UseRecentlyViewedReturn {
 interface ProductCardProps<T extends BaseProduct> {
   product: T;
   compact?: boolean;
+  size?: 'full' | 'compact' | 'mini';
 }
 
 interface ActressCardProps<A extends BaseActress> {
   actress: A;
   compact?: boolean;
+  size?: 'full' | 'compact' | 'mini';
 }
 
 interface RecommendationMeta {
@@ -49,6 +50,8 @@ interface RecommendationMeta {
 interface ForYouRecommendationsSectionProps<T extends BaseProduct, A extends BaseActress = BaseActress> {
   /** Theme for styling: 'dark' for apps/web, 'light' for apps/fanza */
   theme: SectionTheme;
+  /** Locale for translations */
+  locale?: string;
   /** ProductCard component from the app */
   ProductCard: ComponentType<ProductCardProps<T>>;
   /** ActressCard component from the app (optional) */
@@ -71,6 +74,7 @@ interface ForYouRecommendationsSectionProps<T extends BaseProduct, A extends Bas
  */
 export function ForYouRecommendationsSection<T extends BaseProduct, A extends BaseActress = BaseActress>({
   theme,
+  locale: propLocale,
   ProductCard,
   ActressCard,
   useRecentlyViewed,
@@ -79,8 +83,8 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
   fetchActresses,
   toActressType,
 }: ForYouRecommendationsSectionProps<T, A>): ReactNode {
-  const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  // Use prop locale if provided, otherwise default to 'ja'
+  const locale = propLocale || 'ja';
   const t = getTranslation(forYouTranslations, locale);
   const themeConfig = getThemeConfig(theme);
 
@@ -96,6 +100,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
   // 展開時にフェッチをトリガー
   const handleToggle = useCallback((isOpen: boolean) => {
     if (isOpen && !hasExpanded) {
+      setIsLoading(true);
       setHasExpanded(true);
     }
   }, [hasExpanded]);
@@ -236,14 +241,10 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
     return null;
   }
 
-  // コンテンツの決定：未展開→空、ロード中→スケルトン、ロード完了→商品リスト
+  // コンテンツの決定：未展開/ロード中→スケルトン、ロード完了→商品リスト
   const renderContent = () => {
-    if (!hasExpanded) {
-      // まだ展開されていない場合は空のプレースホルダー
-      return <div className="h-24 flex items-center justify-center text-sm theme-text-muted">クリックして表示</div>;
-    }
-
-    if (isLoading) {
+    // 未展開またはロード中はスケルトンを表示（高さを一定に保つ）
+    if (!hasExpanded || isLoading) {
       return <ProductSkeleton count={8} />;
     }
 
@@ -260,15 +261,15 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
               {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">読み込み中...</span>}
             </h4>
             {isActressLoading ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {[1, 2, 3].map((i) => (
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="bg-gray-700/50 rounded-lg animate-pulse" style={{ aspectRatio: '3/4' }} />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                 {actresses.map((actress) => (
-                  <ActressCard key={actress.id} actress={actress} compact />
+                  <ActressCard key={actress.id} actress={actress} size="mini" />
                 ))}
               </div>
             )}
@@ -284,9 +285,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
           )}
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
             {products.map((product) => (
-              <div key={product.id}>
-                <ProductCard product={product} compact />
-              </div>
+              <ProductCard key={product.id} product={product} size="mini" />
             ))}
           </div>
         </div>

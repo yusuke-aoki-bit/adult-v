@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, X, ExternalLink, RefreshCw, Sparkles, Clock, User } from 'lucide-react';
 import { useFavorites } from '@adult-v/ui-common/hooks';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface DiscoverProduct {
   id: number;
@@ -337,7 +338,7 @@ export default function DiscoverPage() {
                 {/* Secondary Actions */}
                 <div className="flex gap-2 mt-3">
                   <Link
-                    href={`/${locale}/products/${product.id}`}
+                    href={localizedHref(`/products/${product.id}`, locale)}
                     className="flex-1 flex items-center justify-center gap-2 py-2 border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors"
                   >
                     {t.viewDetails}

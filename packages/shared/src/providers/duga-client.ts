@@ -505,6 +505,9 @@ export class DugaApiClient {
 /**
  * DUGAクライアントのシングルトンインスタンスを取得
  */
+// Type alias for backward compatibility
+export type DugaClient = DugaApiClient;
+
 export function getDugaClient(): DugaApiClient {
   const appId = process.env.DUGA_APP_ID;
   const agentId = process.env.DUGA_AGENT_ID;

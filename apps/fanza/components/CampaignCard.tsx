@@ -2,14 +2,16 @@
 
 import { CampaignCard as BaseCampaignCard } from '@adult-v/shared/components';
 import { Campaign } from '@/types/product';
+import { useSiteTheme } from '@/lib/contexts/SiteContext';
 
 interface Props {
   campaign: Campaign;
 }
 
 /**
- * CampaignCard wrapper for apps/fanza (light theme)
+ * CampaignCard wrapper - テーマはSiteContextから自動取得
  */
 export default function CampaignCard({ campaign }: Props) {
-  return <BaseCampaignCard campaign={campaign} theme="light" />;
+  const theme = useSiteTheme();
+  return <BaseCampaignCard campaign={campaign} theme={theme} />;
 }

@@ -39,14 +39,19 @@ async function fetchActresses(ids: (string | number)[]): Promise<Actress[]> {
   }
 }
 
+interface RecentlyViewedProps {
+  locale?: string;
+}
+
 /**
  * 最近見た作品セクション
  * 共有コンポーネントを使用
  */
-export default function RecentlyViewed() {
+export default function RecentlyViewed({ locale }: RecentlyViewedProps) {
   return (
     <RecentlyViewedSection<Product, Actress>
       theme="light"
+      locale={locale}
       ProductCard={ProductCard}
       ActressCard={ActressCard}
       useRecentlyViewed={useRecentlyViewed}

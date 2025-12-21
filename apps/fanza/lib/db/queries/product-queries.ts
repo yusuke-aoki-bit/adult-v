@@ -6,15 +6,16 @@
  * - searchProductByProductId
  * - getProducts
  * - getProductsCount
- * - getProductsByTag
  * - getNewProducts
  * - getRecentProducts
- * - getDiscoverProducts
  * - getSaleProducts
  * - getProductSources
  * - getProductSourcesWithSales
  * - fuzzySearchProducts
- * - getRandomProduct
+ *
+ * 別ファイルから提供:
+ * - getProductsByTag: recommendations.ts
+ * - getRandomProduct: discover-queries.ts
  *
  * 注意: 現在はqueries.tsからre-exportしています。
  * 将来的にqueries.tsから完全に分離する予定です。
@@ -26,15 +27,16 @@ export {
   searchProductByProductId,
   getProducts,
   getProductsCount,
-  getProductsByTag,
   getNewProducts,
   getRecentProducts,
-  getDiscoverProducts,
   getSaleProducts,
   getProductSources,
   getProductSourcesWithSales,
   fuzzySearchProducts,
-  getRandomProduct,
 } from '../queries';
+
+// 別ファイルから re-export
+export { getProductsByTag } from '../recommendations';
+export { getRandomProduct } from '../discover-queries';
 
 export type { SortOption, GetProductsOptions } from '../queries';

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, Search, X, ChevronRight, Loader2 } from 'lucide-react';
+import { Sparkles, Search, X, Loader2 } from 'lucide-react';
 
 const translations = {
   ja: {

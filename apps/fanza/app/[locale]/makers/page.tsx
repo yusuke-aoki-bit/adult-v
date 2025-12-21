@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Building2, Tag, Film, Star, Search } from 'lucide-react';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface Maker {
   id: number;
@@ -156,7 +157,7 @@ export default function MakersListPage() {
             {filteredMakers.map((maker) => (
               <Link
                 key={maker.id}
-                href={`/${locale}/makers/${maker.id}`}
+                href={localizedHref(`/makers/${maker.id}`, locale)}
                 className="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors group"
               >
                 <div className="flex items-center gap-3 mb-3">

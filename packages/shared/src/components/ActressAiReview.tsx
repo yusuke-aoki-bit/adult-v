@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { useParams } from 'next/navigation';
 import { ActressAiReview as ActressAiReviewType } from '../types/product';
 
@@ -78,7 +79,7 @@ interface ActressAiReviewProps {
   theme?: ActressAiReviewTheme;
 }
 
-export default function ActressAiReview({ review, updatedAt, actressName, theme = 'dark' }: ActressAiReviewProps) {
+const ActressAiReview = memo(function ActressAiReview({ review, updatedAt, actressName, theme = 'dark' }: ActressAiReviewProps) {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
@@ -170,4 +171,6 @@ export default function ActressAiReview({ review, updatedAt, actressName, theme 
       </div>
     </div>
   );
-}
+});
+
+export default ActressAiReview;

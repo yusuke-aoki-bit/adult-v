@@ -95,6 +95,13 @@ interface SearchResult {
   matchText: string;
 }
 
+interface ProductApiResponse {
+  id: number | string;
+  title: string;
+  imageUrl?: string | null;
+  description?: string | null;
+}
+
 interface NaturalLanguageSearchProps {
   locale: string;
   className?: string;
@@ -160,7 +167,7 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
       if (response.ok) {
         const data = await response.json();
         // Transform results to include match text
-        const searchResults = (data.products || []).map((p: any) => ({
+        const searchResults = (data.products || []).map((p: ProductApiResponse) => ({
           id: String(p.id),
           title: p.title,
           imageUrl: p.imageUrl || null,

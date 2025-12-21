@@ -2,9 +2,13 @@
 
 import { useEffect } from 'react';
 
+// Debug flag - set NEXT_PUBLIC_DEBUG_WEB_VITALS=true to enable console logging
+const DEBUG_WEB_VITALS = process.env.NEXT_PUBLIC_DEBUG_WEB_VITALS === 'true';
+
 /**
  * Core Web Vitals Performance Monitor
  * Tracks LCP, INP, CLS and reports to analytics
+ * Console logging is disabled in production unless DEBUG_WEB_VITALS is set
  */
 export default function PerformanceMonitor() {
   useEffect(() => {
@@ -17,7 +21,9 @@ export default function PerformanceMonitor() {
     import('web-vitals').then(({ onLCP, onINP, onCLS, onFCP, onTTFB }) => {
       // Largest Contentful Paint (LCP) - Target: < 2.5s
       onLCP((metric) => {
-        console.log('[Core Web Vitals] LCP:', metric.value, 'ms');
+        if (DEBUG_WEB_VITALS) {
+          console.log('[Core Web Vitals] LCP:', metric.value, 'ms');
+        }
         // Send to analytics
         if (window.gtag) {
           window.gtag('event', 'web_vitals', {
@@ -31,7 +37,9 @@ export default function PerformanceMonitor() {
 
       // Interaction to Next Paint (INP) - Target: < 200ms
       onINP((metric) => {
-        console.log('[Core Web Vitals] INP:', metric.value, 'ms');
+        if (DEBUG_WEB_VITALS) {
+          console.log('[Core Web Vitals] INP:', metric.value, 'ms');
+        }
         if (window.gtag) {
           window.gtag('event', 'web_vitals', {
             event_category: 'Web Vitals',
@@ -44,7 +52,9 @@ export default function PerformanceMonitor() {
 
       // Cumulative Layout Shift (CLS) - Target: < 0.1
       onCLS((metric) => {
-        console.log('[Core Web Vitals] CLS:', metric.value);
+        if (DEBUG_WEB_VITALS) {
+          console.log('[Core Web Vitals] CLS:', metric.value);
+        }
         if (window.gtag) {
           window.gtag('event', 'web_vitals', {
             event_category: 'Web Vitals',
@@ -57,7 +67,9 @@ export default function PerformanceMonitor() {
 
       // First Contentful Paint (FCP) - Target: < 1.8s
       onFCP((metric) => {
-        console.log('[Core Web Vitals] FCP:', metric.value, 'ms');
+        if (DEBUG_WEB_VITALS) {
+          console.log('[Core Web Vitals] FCP:', metric.value, 'ms');
+        }
         if (window.gtag) {
           window.gtag('event', 'web_vitals', {
             event_category: 'Web Vitals',
@@ -70,7 +82,9 @@ export default function PerformanceMonitor() {
 
       // Time to First Byte (TTFB) - Target: < 800ms
       onTTFB((metric) => {
-        console.log('[Core Web Vitals] TTFB:', metric.value, 'ms');
+        if (DEBUG_WEB_VITALS) {
+          console.log('[Core Web Vitals] TTFB:', metric.value, 'ms');
+        }
         if (window.gtag) {
           window.gtag('event', 'web_vitals', {
             event_category: 'Web Vitals',

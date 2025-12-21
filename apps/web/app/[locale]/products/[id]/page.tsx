@@ -91,10 +91,63 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+// Product detail translations
+const productDetailTranslations = {
+  ja: {
+    description: '説明',
+    price: '価格',
+    monthly: '月額',
+    releaseDate: '発売日',
+    tags: 'タグ',
+    relatedProducts: '関連作品',
+    sampleVideos: 'サンプル動画',
+    productId: '作品ID',
+    makerId: 'メーカー品番',
+    performers: '出演者',
+  },
+  en: {
+    description: 'Description',
+    price: 'Price',
+    monthly: 'Monthly',
+    releaseDate: 'Release Date',
+    tags: 'Tags',
+    relatedProducts: 'Related Products',
+    sampleVideos: 'Sample Videos',
+    productId: 'Product ID',
+    makerId: 'Maker ID',
+    performers: 'Performers',
+  },
+  zh: {
+    description: '描述',
+    price: '价格',
+    monthly: '月费',
+    releaseDate: '发售日期',
+    tags: '标签',
+    relatedProducts: '相关作品',
+    sampleVideos: '示例视频',
+    productId: '作品ID',
+    makerId: '制造商编号',
+    performers: '出演者',
+  },
+  ko: {
+    description: '설명',
+    price: '가격',
+    monthly: '월정액',
+    releaseDate: '발매일',
+    tags: '태그',
+    relatedProducts: '관련 작품',
+    sampleVideos: '샘플 동영상',
+    productId: '작품ID',
+    makerId: '메이커 번호',
+    performers: '출연자',
+  },
+} as const;
+
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id, locale } = await params;
   const tNav = await getTranslations('nav');
   const tCommon = await getTranslations('common');
+  const t = productDetailTranslations[locale as keyof typeof productDetailTranslations] || productDetailTranslations.ja;
 
   // Try to get product by normalized ID first, then by database ID
   let product = await searchProductByProductId(id, locale);
@@ -215,7 +268,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
               {/* Product Image Gallery */}
               <ProductImageGallery
-                mainImage={product.imageUrl}
+                mainImage={product.imageUrl ?? null}
                 sampleImages={product.sampleImages}
                 productTitle={product.title}
               />
@@ -228,8 +281,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <ProductActions
                       productId={productId}
                       title={product.title}
-                      imageUrl={product.imageUrl}
-                      provider={product.provider}
+                      imageUrl={product.imageUrl ?? null}
+                      provider={product.provider || ''}
                       performerName={product.actressName || product.performers?.[0]?.name}
                       performerId={product.actressId || product.performers?.[0]?.id}
                       tags={product.tags}
@@ -248,7 +301,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.performers && product.performers.length > 0 ? (
                   <div>
                     <h2 className="text-sm font-semibold text-white mb-2">
-                      {product.performers.length === 1 ? tCommon('actress') : '出演者'}
+                      {product.performers.length === 1 ? tCommon('actress') : t.performers}
                     </h2>
                     <div className="flex flex-wrap gap-2">
                       {product.performers.map((performer) => (
@@ -280,16 +333,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                 {product.description && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">説明</h2>
+                    <h2 className="text-sm font-semibold text-white mb-2">{t.description}</h2>
                     <p className="text-white whitespace-pre-wrap">{product.description}</p>
                   </div>
                 )}
 
                 {product.price && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">価格</h2>
+                    <h2 className="text-sm font-semibold text-white mb-2">{t.price}</h2>
                     <p className="text-2xl font-bold text-white">
-                      {isSubscriptionSite(product.provider) && <span className="text-base text-gray-400 mr-1">月額</span>}
+                      {product.provider && isSubscriptionSite(product.provider) && <span className="text-base text-gray-400 mr-1">{t.monthly}</span>}
                       ¥{product.price.toLocaleString()}
                     </p>
                   </div>
@@ -297,14 +350,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                 {product.releaseDate && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">発売日</h2>
+                    <h2 className="text-sm font-semibold text-white mb-2">{t.releaseDate}</h2>
                     <p className="text-white">{product.releaseDate}</p>
                   </div>
                 )}
 
                 {product.tags && product.tags.length > 0 && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">タグ</h2>
+                    <h2 className="text-sm font-semibold text-white mb-2">{t.tags}</h2>
                     <div className="flex flex-wrap gap-2">
                       {product.tags.map((tag, index) => (
                         <span
@@ -322,7 +375,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.affiliateUrl && product.provider !== 'fanza' && (
                   <AffiliateButton
                     affiliateUrl={product.affiliateUrl}
-                    providerLabel={product.providerLabel}
+                    providerLabel={product.providerLabel || ''}
                     price={product.regularPrice || product.price}
                     salePrice={product.salePrice}
                     discount={product.discount}
@@ -395,7 +448,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 関連作品セクション */}
           {relatedProducts.length > 0 && (
-            <RelatedProducts products={relatedProducts} title="関連作品" />
+            <RelatedProducts products={relatedProducts} title={t.relatedProducts} />
           )}
         </div>
       </div>
@@ -404,10 +457,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
       <ViewTracker
         productId={productId}
         productData={{
-          id: product.id,
+          id: String(product.id),
           title: product.title,
-          imageUrl: product.imageUrl,
-          aspName: product.provider,
+          imageUrl: product.imageUrl ?? null,
+          aspName: product.provider || '',
         }}
       />
 
@@ -415,7 +468,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {product.affiliateUrl && product.provider !== 'fanza' && (
         <StickyCta
           affiliateUrl={product.affiliateUrl}
-          providerLabel={product.providerLabel}
+          providerLabel={product.providerLabel || ''}
           price={product.regularPrice || product.price}
           salePrice={product.salePrice}
           discount={product.discount}

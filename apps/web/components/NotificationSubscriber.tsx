@@ -1,10 +1,12 @@
 'use client';
 
 import { NotificationSubscriber as BaseNotificationSubscriber } from '@adult-v/shared/components';
+import { useSiteTheme } from '@/lib/contexts/SiteContext';
 
 /**
- * NotificationSubscriber wrapper for apps/web (dark theme)
+ * NotificationSubscriber wrapper - テーマはSiteContextから自動取得
  */
 export default function NotificationSubscriber() {
-  return <BaseNotificationSubscriber theme="dark" />;
+  const theme = useSiteTheme();
+  return <BaseNotificationSubscriber theme={theme} />;
 }

@@ -1,6 +1,8 @@
 'use client';
 
+import { memo } from 'react';
 import { PreferenceChart as BasePreferenceChart, PreferenceBarChart as BasePreferenceBarChart } from '@adult-v/shared/components';
+import { useSiteTheme } from '@/lib/contexts/SiteContext';
 
 interface PreferenceData {
   label: string;
@@ -15,15 +17,19 @@ interface PreferenceChartProps {
 }
 
 /**
- * PreferenceChart wrapper for apps/fanza (light theme)
+ * PreferenceChart wrapper - テーマはSiteContextから自動取得
  */
-export default function PreferenceChart(props: PreferenceChartProps) {
-  return <BasePreferenceChart {...props} theme="light" />;
-}
+const PreferenceChart = memo(function PreferenceChart(props: PreferenceChartProps) {
+  const theme = useSiteTheme();
+  return <BasePreferenceChart {...props} theme={theme} />;
+});
+
+export default PreferenceChart;
 
 /**
- * PreferenceBarChart wrapper for apps/fanza (light theme)
+ * PreferenceBarChart wrapper - テーマはSiteContextから自動取得
  */
-export function PreferenceBarChart(props: { data: PreferenceData[]; className?: string }) {
-  return <BasePreferenceBarChart {...props} theme="light" />;
-}
+export const PreferenceBarChart = memo(function PreferenceBarChart(props: { data: PreferenceData[]; className?: string }) {
+  const theme = useSiteTheme();
+  return <BasePreferenceBarChart {...props} theme={theme} />;
+});

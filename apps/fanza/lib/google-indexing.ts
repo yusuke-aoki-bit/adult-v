@@ -69,9 +69,10 @@ export async function requestIndexing(
 
     console.log(`[Indexing API] ✅ ${type}: ${url}`);
     return { url, type, success: true };
-  } catch (error: any) {
-    console.error(`[Indexing API] ❌ ${type} failed for ${url}:`, error.message);
-    return { url, type, success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[Indexing API] ❌ ${type} failed for ${url}:`, message);
+    return { url, type, success: false, error: message };
   }
 }
 

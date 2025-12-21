@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Search, Sparkles, X, Loader2, MessageSquare, ChevronRight } from 'lucide-react';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const translations = {
   ja: {
@@ -95,6 +96,13 @@ interface SearchResult {
   matchText: string;
 }
 
+interface ProductApiResponse {
+  id: number | string;
+  title: string;
+  imageUrl?: string | null;
+  description?: string | null;
+}
+
 interface NaturalLanguageSearchProps {
   locale: string;
   className?: string;
@@ -160,7 +168,7 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
       if (response.ok) {
         const data = await response.json();
         // Transform results to include match text
-        const searchResults = (data.products || []).map((p: any) => ({
+        const searchResults = (data.products || []).map((p: ProductApiResponse) => ({
           id: String(p.id),
           title: p.title,
           imageUrl: p.imageUrl || null,
@@ -242,7 +250,7 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
                 {results.slice(0, 6).map(result => (
                   <Link
                     key={result.id}
-                    href={`/${locale}/products/${result.id}`}
+                    href={localizedHref(`/products/${result.id}`, locale)}
                     className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
                   >
                     <div className="w-10 h-14 flex-shrink-0 rounded overflow-hidden bg-gray-200">

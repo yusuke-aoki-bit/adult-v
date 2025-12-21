@@ -5,6 +5,7 @@ import { ActressCardBase, type ActressCardSize } from '@adult-v/shared/component
 import { Actress } from '@/types/product';
 import { normalizeImageUrl } from '@/lib/image-utils';
 import FavoriteButton from './FavoriteButton';
+import { useSiteTheme } from '@/lib/contexts/SiteContext';
 
 interface Props {
   actress: Actress;
@@ -32,13 +33,14 @@ async function fetchProductImages(actressId: string): Promise<string[]> {
 }
 
 function ActressCard({ actress, compact = false, size, priority = false }: Props) {
+  const theme = useSiteTheme();
   return (
     <ActressCardBase
       actress={actress}
       compact={compact}
       size={size}
       priority={priority}
-      theme="dark"
+      theme={theme}
       FavoriteButton={FavoriteButton}
       isFanzaSite={false}
       fetchProductImages={fetchProductImages}

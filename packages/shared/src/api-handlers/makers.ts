@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export interface MakersHandlerDeps {
-  getPopularMakers: (params: {
-    category: 'maker' | 'label' | 'both';
-    limit: number;
-    locale: string;
+  getPopularMakers: (params?: {
+    category?: 'maker' | 'label' | 'both';
+    limit?: number;
+    locale?: string;
   }) => Promise<unknown[]>;
-  analyzeMakerPreference: (productIds: string[], locale: string) => Promise<unknown[]>;
+  analyzeMakerPreference: (productIds: number[], locale?: string) => Promise<unknown[]>;
 }
 
 export function createMakersGetHandler(deps: MakersHandlerDeps) {

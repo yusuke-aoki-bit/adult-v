@@ -12,6 +12,7 @@ import { getProducts, getProductsCount, getAspStats, getPopularTags } from '@/li
 import { generateBaseMetadata, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 export async function generateMetadata({
   params,
@@ -41,19 +42,35 @@ export async function generateMetadata({
   // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
   const hasNonDefaultSort = !!searchParamsData.sort && searchParamsData.sort !== 'releaseDate';
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+
   const metadata = generateBaseMetadata(
     t('title'),
     t('metaDescription'),
     undefined,
-    `/${locale}/products`,
+    localizedHref('/products', locale),
     undefined,
     locale,
   );
+
+  // hreflang/canonical設定
+  const alternates = {
+    canonical: `${baseUrl}/products`,
+    languages: {
+      'ja': `${baseUrl}/products`,
+      'en': `${baseUrl}/products?hl=en`,
+      'zh': `${baseUrl}/products?hl=zh`,
+      'zh-TW': `${baseUrl}/products?hl=zh-TW`,
+      'ko': `${baseUrl}/products?hl=ko`,
+      'x-default': `${baseUrl}/products`,
+    },
+  };
 
   // 検索/フィルター結果・2ページ目以降・非デフォルトソートはnoindex（重複コンテンツ防止）
   if (hasQuery || hasFilters || hasPageParam || hasNonDefaultSort) {
     return {
       ...metadata,
+      alternates,
       robots: {
         index: false,
         follow: true,
@@ -61,7 +78,7 @@ export async function generateMetadata({
     };
   }
 
-  return metadata;
+  return { ...metadata, alternates };
 }
 
 export const dynamic = 'force-dynamic';
@@ -193,19 +210,22 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     count: tag.count,
   }));
 
-  // ItemListSchemaを生成
+  // basePath（?hl=形式）
+  const basePath = localizedHref('/products', locale);
+
+  // ItemListSchemaを生成（?hl=形式のURL）
   const itemListSchema = generateItemListSchema(
     products.map((product) => ({
       name: product.title,
-      url: `/${locale}/products/${product.id}`,
+      url: localizedHref(`/products/${product.id}`, locale),
     })),
     t('title')
   );
 
-  // BreadcrumbSchemaを生成
+  // BreadcrumbSchemaを生成（?hl=形式のURL）
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: tNav('home'), url: `/${locale}` },
-    { name: t('title'), url: `/${locale}/products` },
+    { name: tNav('home'), url: localizedHref('/', locale) },
+    { name: t('title'), url: basePath },
   ]);
 
   return (
@@ -217,7 +237,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
         <div className="container mx-auto px-3 sm:px-4">
           <Breadcrumb
             items={[
-              { label: tNav('home'), href: `/${locale}` },
+              { label: tNav('home'), href: localizedHref('/', locale) },
               { label: t('title') },
             ]}
             className="mb-2 sm:mb-3"
@@ -254,7 +274,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           <div className="flex justify-end mb-2 sm:mb-4">
             <ProductSortDropdown
               sortBy={sortBy}
-              basePath={`/${locale}/products`}
+              basePath={basePath}
             />
           </div>
 
@@ -269,7 +289,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
                 total={totalCount}
                 page={page}
                 perPage={perPage}
-                basePath={`/${locale}/products`}
+                basePath={basePath}
                 position="top"
                 queryParams={queryParams}
               />
@@ -285,7 +305,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
                 total={totalCount}
                 page={page}
                 perPage={perPage}
-                basePath={`/${locale}/products`}
+                basePath={basePath}
                 position="bottom"
                 queryParams={queryParams}
               />
@@ -293,12 +313,12 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           )}
 
           {/* 最近見た作品 */}
-          <RecentlyViewed />
+          <RecentlyViewed locale={locale} />
 
           {/* 女優一覧へのリンク */}
           <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t theme-section-border">
             <Link
-              href={`/${locale}`}
+              href={localizedHref('/', locale)}
               className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-rose-600 transition-colors group"
             >
               <div className="flex items-center gap-3">

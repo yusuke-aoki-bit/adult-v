@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Trophy, TrendingUp } from 'lucide-react';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 // Client-side translations
 const translations = {
@@ -159,8 +160,8 @@ export default function RankingWidget({
           {ranking.map((item) => {
             const href =
               type === 'products'
-                ? `/${locale}/products/${item.productId}`
-                : `/${locale}/actress/${item.performerId}`;
+                ? localizedHref(`/products/${item.productId}`, locale)
+                : localizedHref(`/actress/${item.performerId}`, locale);
 
             return (
               <Link
