@@ -227,10 +227,12 @@ async function extractHeydougaProductDetails(
   // 説明文
   const description = $('meta[name="description"]').attr('content') || '';
 
-  // 出演者
+  // 出演者 - HEYDOUGAはimg.nomovieのalt属性から演者名を抽出
   const performers: string[] = [];
-  $('a[href*="/actress/"]').each((_, el) => {
-    const name = $(el).text().trim();
+
+  // 方法1: movie-playerセクションのimg.nomovieのalt属性
+  $('section.movie-player img.nomovie, .movie-player img').each((_, el) => {
+    const name = $(el).attr('alt')?.trim();
     if (name && isValidPerformerName(name)) {
       const normalized = normalizePerformerName(name);
       if (!performers.includes(normalized)) {
@@ -238,6 +240,19 @@ async function extractHeydougaProductDetails(
       }
     }
   });
+
+  // 方法2: /actress/リンク（フォールバック）
+  if (performers.length === 0) {
+    $('a[href*="/actress/"]').each((_, el) => {
+      const name = $(el).text().trim();
+      if (name && isValidPerformerName(name)) {
+        const normalized = normalizePerformerName(name);
+        if (!performers.includes(normalized)) {
+          performers.push(normalized);
+        }
+      }
+    });
+  }
 
   // 詳細情報
   let releaseDate: string | null = null;
