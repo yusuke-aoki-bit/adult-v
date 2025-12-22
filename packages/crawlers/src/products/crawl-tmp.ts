@@ -275,25 +275,22 @@ async function extractHeydougaProductDetails(
     }
   });
 
-  // サムネイル
+  // サムネイル - HEYDOUGAの場合は固定パターンで生成
   let thumbnailUrl = '';
-  const mainImg = $('img[src*="main"], img[src*="jacket"]').first();
-  if (mainImg.length > 0) {
-    thumbnailUrl = mainImg.attr('src') || '';
-    if (thumbnailUrl && !thumbnailUrl.startsWith('http')) {
-      thumbnailUrl = siteConfig.baseUrl + thumbnailUrl;
-    }
-  }
+  const [siteId, movieId] = productId.split('-');
+
+  // HEYDOUGA: /contents/{site_id}/{movie_id}/player_thumb.webp パターン
+  thumbnailUrl = `${siteConfig.baseUrl}/contents/${siteId}/${movieId}/player_thumb.webp`;
 
   // サンプル画像
   const sampleImages: string[] = [];
-  $('img[src*="cap"], img[src*="sample"]').each((_, el) => {
-    let src = $(el).attr('src') || '';
+  $('img[src*="cap"], img[src*="sample"], img.image-thumbnail').each((_, el) => {
+    let src = $(el).attr('data-src') || $(el).attr('src') || '';
     if (src) {
       if (!src.startsWith('http')) {
         src = siteConfig.baseUrl + src;
       }
-      if (!sampleImages.includes(src)) {
+      if (!sampleImages.includes(src) && !src.includes('player_thumb')) {
         sampleImages.push(src);
       }
     }
@@ -389,21 +386,47 @@ async function extractTmpProductDetails(
     }
   });
 
-  // サムネイル
+  // サムネイル - TMP系は固定パターンで生成
   let thumbnailUrl = '';
-  const mainImg = $('img.main, img.jacket, .main-image img, .package img').first();
-  if (mainImg.length > 0) {
-    thumbnailUrl = mainImg.attr('src') || '';
-    if (thumbnailUrl && !thumbnailUrl.startsWith('http')) {
-      thumbnailUrl = siteConfig.baseUrl + thumbnailUrl;
-    }
-  }
 
-  // OGイメージをフォールバック
-  if (!thumbnailUrl) {
-    const ogImage = $('meta[property="og:image"]').attr('content');
-    if (ogImage) {
-      thumbnailUrl = ogImage;
+  // X1X/ENKOU55/UREKKO: http://static.{site}.com/images/title/{aa}/{bb}/{cc}/player.jpg
+  // IDを6桁にパディングして2桁ずつ分割: 117274 -> 11/72/74
+  if (siteConfig.aspName === 'X1X') {
+    const paddedId = productId.padStart(6, '0');
+    const aa = paddedId.slice(0, 2);
+    const bb = paddedId.slice(2, 4);
+    const cc = paddedId.slice(4, 6);
+    thumbnailUrl = `http://static.x1x.com/images/title/${aa}/${bb}/${cc}/player.jpg`;
+  } else if (siteConfig.aspName === 'ENKOU55') {
+    // ENKOU55: 6桁ID 118197 -> 11/81/97
+    const paddedId = productId.padStart(6, '0');
+    const aa = paddedId.slice(0, 2);
+    const bb = paddedId.slice(2, 4);
+    const cc = paddedId.slice(4, 6);
+    thumbnailUrl = `http://static.enkou55.com/images/title/${aa}/${bb}/${cc}/player.jpg`;
+  } else if (siteConfig.aspName === 'UREKKO') {
+    // UREKKO: 6桁ID 116275 -> 11/62/75
+    const paddedId = productId.padStart(6, '0');
+    const aa = paddedId.slice(0, 2);
+    const bb = paddedId.slice(2, 4);
+    const cc = paddedId.slice(4, 6);
+    thumbnailUrl = `http://static.urekko.com/images/title/${aa}/${bb}/${cc}/player.jpg`;
+  } else {
+    // その他: HTMLから取得を試みる
+    const mainImg = $('img.main, img.jacket, .main-image img, .package img').first();
+    if (mainImg.length > 0) {
+      thumbnailUrl = mainImg.attr('src') || '';
+      if (thumbnailUrl && !thumbnailUrl.startsWith('http')) {
+        thumbnailUrl = siteConfig.baseUrl + thumbnailUrl;
+      }
+    }
+
+    // OGイメージをフォールバック
+    if (!thumbnailUrl) {
+      const ogImage = $('meta[property="og:image"]').attr('content');
+      if (ogImage) {
+        thumbnailUrl = ogImage;
+      }
     }
   }
 
