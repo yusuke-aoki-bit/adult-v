@@ -24,125 +24,133 @@ const CRAWLERS: CrawlerConfig[] = [
     name: 'sokmil',
     script: 'packages/crawlers/src/products/crawl-sokmil-api-v2.ts',
     args: ['--full-scan'],
-    description: 'SOKMIL API (2010年〜現在)',
+    description: 'SOKMIL API (全件)',
   },
   {
     name: 'duga',
     script: 'packages/crawlers/src/products/crawl-duga-api-v2.ts',
     args: ['--full-scan'],
-    description: 'DUGA API (2010年〜現在)',
+    description: 'DUGA API (全件)',
   },
+
+  // スクレイピング系（商品がなくなるまで自動継続）
   {
     name: 'fanza',
     script: 'packages/crawlers/src/products/crawl-fanza.ts',
-    args: ['--full-scan'],
+    args: ['--full-scan', '--max-pages=999999'],
     description: 'FANZA (全ページ)',
   },
 
-  // TMP系（大量ページ取得）
+  // TMP系
   {
     name: 'heydouga',
     script: 'packages/crawlers/src/products/crawl-tmp.ts',
-    args: ['--site=heydouga', '--pages=500'],
-    description: 'Hey動画 (500ページ)',
+    args: ['--site=heydouga', '--pages=999999'],
+    description: 'Hey動画 (全ページ)',
   },
   {
     name: 'x1x',
     script: 'packages/crawlers/src/products/crawl-tmp.ts',
-    args: ['--site=x1x', '--pages=500'],
-    description: 'X1X (500ページ)',
+    args: ['--site=x1x', '--pages=999999'],
+    description: 'X1X (全ページ)',
   },
   {
     name: 'enkou55',
     script: 'packages/crawlers/src/products/crawl-tmp.ts',
-    args: ['--site=enkou55', '--pages=500'],
-    description: '援交55 (500ページ)',
+    args: ['--site=enkou55', '--pages=999999'],
+    description: '援交55 (全ページ)',
   },
   {
     name: 'urekko',
     script: 'packages/crawlers/src/products/crawl-tmp.ts',
-    args: ['--site=urekko', '--pages=500'],
-    description: '熟っ子倶楽部 (500ページ)',
+    args: ['--site=urekko', '--pages=999999'],
+    description: '熟っ子倶楽部 (全ページ)',
   },
 
   // Caribbean系（DTI）
   {
     name: 'caribbean',
     script: 'packages/crawlers/src/products/crawl-caribbean.ts',
-    args: ['--site=caribbeancom', '--pages=500'],
-    description: 'カリビアンコム (500ページ)',
+    args: ['--site=caribbeancom', '--pages=999999'],
+    description: 'カリビアンコム (全ページ)',
+  },
+  {
+    name: 'caribbeanpr',
+    script: 'packages/crawlers/src/products/crawl-caribbean.ts',
+    args: ['--site=caribbeancompr', '--pages=999999'],
+    description: 'カリビアンコムプレミアム (全ページ)',
   },
   {
     name: '1pondo',
     script: 'packages/crawlers/src/products/crawl-caribbean.ts',
-    args: ['--site=1pondo', '--pages=500'],
-    description: '一本道 (500ページ)',
+    args: ['--site=1pondo', '--pages=999999'],
+    description: '一本道 (全ページ)',
   },
   {
     name: 'heyzo',
     script: 'packages/crawlers/src/products/crawl-caribbean.ts',
-    args: ['--site=heyzo', '--pages=500'],
-    description: 'HEYZO (500ページ)',
+    args: ['--site=heyzo', '--pages=999999'],
+    description: 'HEYZO (全ページ)',
   },
   {
     name: 'tenmusume',
     script: 'packages/crawlers/src/products/crawl-caribbean.ts',
-    args: ['--site=10musume', '--pages=500'],
-    description: '天然むすめ (500ページ)',
+    args: ['--site=10musume', '--pages=999999'],
+    description: '天然むすめ (全ページ)',
   },
   {
     name: 'pacopacomama',
     script: 'packages/crawlers/src/products/crawl-caribbean.ts',
-    args: ['--site=pacopacomama', '--pages=500'],
-    description: 'パコパコママ (500ページ)',
+    args: ['--site=pacopacomama', '--pages=999999'],
+    description: 'パコパコママ (全ページ)',
   },
   {
     name: 'muramura',
     script: 'packages/crawlers/src/products/crawl-caribbean.ts',
-    args: ['--site=muramura', '--pages=500'],
-    description: 'むらむら (500ページ)',
+    args: ['--site=muramura', '--pages=999999'],
+    description: 'むらむら (全ページ)',
   },
   {
     name: 'h4610',
     script: 'packages/crawlers/src/products/crawl-caribbean.ts',
-    args: ['--site=h4610', '--pages=500'],
-    description: 'エッチな4610 (500ページ)',
+    args: ['--site=h4610', '--pages=999999'],
+    description: 'エッチな4610 (全ページ)',
   },
   {
     name: 'h0930',
     script: 'packages/crawlers/src/products/crawl-caribbean.ts',
-    args: ['--site=h0930', '--pages=500'],
-    description: '人妻斬り H0930 (500ページ)',
+    args: ['--site=h0930', '--pages=999999'],
+    description: '人妻斬り H0930 (全ページ)',
   },
   {
     name: 'c0930',
     script: 'packages/crawlers/src/products/crawl-caribbean.ts',
-    args: ['--site=c0930', '--pages=500'],
-    description: '人妻斬り C0930 (500ページ)',
+    args: ['--site=c0930', '--pages=999999'],
+    description: '人妻斬り C0930 (全ページ)',
   },
 
   // Tokyo-Hot系
   {
     name: 'tokyohot',
     script: 'packages/crawlers/src/products/crawl-tokyohot.ts',
-    args: ['--pages=500'],
-    description: 'Tokyo-Hot (500ページ)',
+    args: ['--pages=999999'],
+    description: 'Tokyo-Hot (全ページ)',
   },
 
   // Japanska
   {
     name: 'japanska',
     script: 'packages/crawlers/src/products/crawl-japanska.ts',
-    args: ['--pages', '500', '--no-ai'],
-    description: 'Japanska (500ページ)',
+    args: ['--pages', '999999', '--limit', '999999', '--no-ai'],
+    description: 'Japanska (全件)',
   },
 
   // FC2
   {
     name: 'fc2',
     script: 'packages/crawlers/src/products/crawl-fc2-video.ts',
-    args: ['--limit', '10000'],
-    description: 'FC2動画 (10000件)',
+    args: ['--limit', '999999'],
+    description: 'FC2動画 (全件)',
   },
 
   // b10f (CSV全件なのでデフォルトで全件取得)
