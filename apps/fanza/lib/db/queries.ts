@@ -576,29 +576,29 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
 
     // 複数プロバイダー（ASP）でフィルタ（いずれかを含む）
     // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
+    // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
     if (options?.providers && options.providers.length > 0) {
       const aspNames = options.providers;
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
-          LEFT JOIN ${products} p2 ON ps.product_id = p2.id
           WHERE ps.product_id = ${products.id}
           AND (
             CASE
               WHEN ps.asp_name = 'DTI' THEN
                 CASE
-                  WHEN p2.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-                  WHEN p2.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-                  WHEN p2.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-                  WHEN p2.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-                  WHEN p2.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-                  WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-                  WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-                  WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-                  WHEN p2.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-                  WHEN p2.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-                  WHEN p2.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN p2.default_thumbnail_url LIKE '%urekko.com%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%1pondo.tv%' THEN '1pondo'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%heyzo.com%' THEN 'heyzo'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%10musume.com%' THEN '10musume'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%muramura.tv%' THEN 'muramura'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko.com%' THEN 'urekko'
                   ELSE 'dti'
                 END
               ELSE ps.asp_name
@@ -610,29 +610,29 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
 
     // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
     // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
+    // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
     if (options?.excludeProviders && options.excludeProviders.length > 0) {
       const excludeAspNames = options.excludeProviders;
       conditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${productSources} ps
-          LEFT JOIN ${products} p2 ON ps.product_id = p2.id
           WHERE ps.product_id = ${products.id}
           AND (
             CASE
               WHEN ps.asp_name = 'DTI' THEN
                 CASE
-                  WHEN p2.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-                  WHEN p2.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-                  WHEN p2.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-                  WHEN p2.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-                  WHEN p2.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-                  WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-                  WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-                  WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-                  WHEN p2.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-                  WHEN p2.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-                  WHEN p2.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN p2.default_thumbnail_url LIKE '%urekko.com%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%1pondo.tv%' THEN '1pondo'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%heyzo.com%' THEN 'heyzo'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%10musume.com%' THEN '10musume'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%muramura.tv%' THEN 'muramura'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko.com%' THEN 'urekko'
                   ELSE 'dti'
                 END
               ELSE ps.asp_name
@@ -933,29 +933,29 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
 
     // 複数プロバイダー（ASP）でフィルタ
     // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
+    // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
     if (options?.providers && options.providers.length > 0) {
       const aspNames = options.providers;
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
-          LEFT JOIN ${products} p2 ON ps.product_id = p2.id
           WHERE ps.product_id = ${products.id}
           AND (
             CASE
               WHEN ps.asp_name = 'DTI' THEN
                 CASE
-                  WHEN p2.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-                  WHEN p2.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-                  WHEN p2.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-                  WHEN p2.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-                  WHEN p2.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-                  WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-                  WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-                  WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-                  WHEN p2.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-                  WHEN p2.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-                  WHEN p2.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN p2.default_thumbnail_url LIKE '%urekko.com%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%1pondo.tv%' THEN '1pondo'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%heyzo.com%' THEN 'heyzo'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%10musume.com%' THEN '10musume'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%muramura.tv%' THEN 'muramura'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko.com%' THEN 'urekko'
                   ELSE 'dti'
                 END
               ELSE ps.asp_name
@@ -967,29 +967,29 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
 
     // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
     // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
+    // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
     if (options?.excludeProviders && options.excludeProviders.length > 0) {
       const excludeAspNames = options.excludeProviders;
       conditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${productSources} ps
-          LEFT JOIN ${products} p2 ON ps.product_id = p2.id
           WHERE ps.product_id = ${products.id}
           AND (
             CASE
               WHEN ps.asp_name = 'DTI' THEN
                 CASE
-                  WHEN p2.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-                  WHEN p2.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-                  WHEN p2.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-                  WHEN p2.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-                  WHEN p2.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-                  WHEN p2.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-                  WHEN p2.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-                  WHEN p2.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-                  WHEN p2.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-                  WHEN p2.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-                  WHEN p2.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN p2.default_thumbnail_url LIKE '%urekko.com%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancom.com%' THEN 'caribbeancom'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%1pondo.tv%' THEN '1pondo'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%heyzo.com%' THEN 'heyzo'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%10musume.com%' THEN '10musume'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%pacopacomama.com%' THEN 'pacopacomama'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%muramura.tv%' THEN 'muramura'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko.com%' THEN 'urekko'
                   ELSE 'dti'
                 END
               ELSE ps.asp_name

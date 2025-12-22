@@ -31,6 +31,8 @@ export interface GetProductsParams {
   ids?: number[];
   category?: string;
   provider?: string;
+  providers?: string[];
+  excludeProviders?: string[];
   actressId?: string;
   isFeatured?: boolean;
   isNew?: boolean;
@@ -79,6 +81,18 @@ export function createProductsHandler(
       // Parse and validate other parameters
       const category = searchParams.get('category') || undefined;
       const provider = searchParams.get('provider') || undefined;
+
+      // Parse includeAsp and excludeAsp (comma-separated lists)
+      const includeAspParam = searchParams.get('includeAsp');
+      const providers = includeAspParam
+        ? includeAspParam.split(',').map(s => s.trim()).filter(Boolean)
+        : undefined;
+
+      const excludeAspParam = searchParams.get('excludeAsp');
+      const excludeProviders = excludeAspParam
+        ? excludeAspParam.split(',').map(s => s.trim()).filter(Boolean)
+        : undefined;
+
       const actressId = searchParams.get('actressId') || undefined;
       const isFeatured = searchParams.get('isFeatured') === 'true' ? true : undefined;
       const isNew = searchParams.get('isNew') === 'true' ? true : undefined;
@@ -105,6 +119,8 @@ export function createProductsHandler(
         ids,
         category,
         provider,
+        providers: providers && providers.length > 0 ? providers : undefined,
+        excludeProviders: excludeProviders && excludeProviders.length > 0 ? excludeProviders : undefined,
         actressId,
         isFeatured,
         isNew,
@@ -126,7 +142,7 @@ export function createProductsHandler(
         cacheControl = CACHE_1_MIN; // Search results more dynamic
       } else if (actressId) {
         cacheControl = CACHE_1_HOUR; // Actress-specific results are stable
-      } else if (!category && !provider) {
+      } else if (!category && !provider && !providers) {
         cacheControl = CACHE_5_MIN; // General list
       }
 

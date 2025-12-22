@@ -441,6 +441,9 @@ function createEstimateTotal(asp: string, estimate: number, site: string): ASPTo
 
 /**
  * 全ASPの総数を取得（キャッシュあり）
+ *
+ * 注意: ASP名はDBの normalized_product_id の SPLIT_PART で取得される名前と一致させる必要がある
+ * 例: 'DTI: HEYDOUGA', 'DTI: CARIBBEANCOM' など
  */
 export async function getAllASPTotals(forceRefresh = false): Promise<ASPTotal[]> {
   const now = Date.now();
@@ -461,20 +464,34 @@ export async function getAllASPTotals(forceRefresh = false): Promise<ASPTotal[]>
     getSOKMILTotal(),
   ]);
 
-  // 推定値のみのサイト
+  // ASP名を DB の normalized_product_id 形式に合わせる
+  // DBでは SPLIT_PART(normalized_product_id, '-', 1) で取得されるため大文字英語名を使用
+  const normalizedHeyzo = { ...heyzo, asp: 'HEYZO' };
+  const normalizedCaribbean = { ...caribbeancom, asp: 'CARIBBEANCOM' };
+  const normalized1pondo = { ...onepondo, asp: '1PONDO' };
+
+  // 推定値のみのサイト（DB上の名前に合わせる）
   const estimates: ASPTotal[] = [
-    createEstimateTotal('カリビアンコムプレミアム', 6000, 'caribbeancompr.com'),
-    createEstimateTotal('天然むすめ', 3500, '10musume.com'),
-    createEstimateTotal('パコパコママ', 3000, 'pacopacomama.com'),
-    createEstimateTotal('人妻斬り', 1500, 'hitozuma-giri.com'),
-    createEstimateTotal('エッチな4610', 3000, 'h4610.com'),
-    createEstimateTotal('エッチな0930', 4000, 'h0930.com'),
-    createEstimateTotal('ムラムラってくる素人', 2500, 'muramura.tv'),
-    createEstimateTotal('Hey動画', 50000, 'heydouga.com'),
+    // 主要ASP
+    createEstimateTotal('FANZA', 1500000, 'fanza.com'),
     createEstimateTotal('FC2', 500000, 'fc2.com'),
+    // DTIサブサービス（normalized_product_idの形式に合わせる）
+    createEstimateTotal('CARIBBEANCOMPR', 6000, 'caribbeancompr.com'),
+    createEstimateTotal('10MUSUME', 3500, '10musume.com'),
+    createEstimateTotal('PACOPACOMAMA', 3000, 'pacopacomama.com'),
+    createEstimateTotal('HITOZUMAGIRI', 1500, 'hitozuma-giri.com'),
+    createEstimateTotal('H4610', 3000, 'h4610.com'),
+    createEstimateTotal('H0930', 4000, 'h0930.com'),
+    createEstimateTotal('MURAMURA', 2500, 'muramura.tv'),
+    createEstimateTotal('HEYDOUGA', 50000, 'heydouga.com'),
+    createEstimateTotal('X1X', 5000, 'x1x.com'),
+    createEstimateTotal('ENKOU55', 2000, 'enkou55.com'),
+    createEstimateTotal('UREKKO', 3000, 'urekko.com'),
+    createEstimateTotal('TVDEAV', 1000, 'tvde.av'),
+    createEstimateTotal('TOKYOHOT', 8000, 'tokyo-hot.com'),
   ];
 
-  cachedTotals = [duga, b10f, heyzo, mgs, japanska, caribbeancom, onepondo, sokmil, ...estimates];
+  cachedTotals = [duga, b10f, normalizedHeyzo, mgs, japanska, normalizedCaribbean, normalized1pondo, sokmil, ...estimates];
   cacheTime = now;
 
   return cachedTotals;
@@ -500,26 +517,15 @@ export async function getASPEstimate(aspName: string): Promise<number | null> {
 
 /**
  * ASP名とDB名のマッピング
+ *
+ * DBでは 'DTI: HEYDOUGA' のような形式で保存されるため、
+ * サブサービス名を抽出して返す
  */
 export function mapDBNameToASPName(dbName: string): string {
   // DTI: プレフィックスを処理
   if (dbName.startsWith('DTI: ')) {
-    const subService = dbName.replace('DTI: ', '');
-    // サブサービス名をマッピング
-    const mapping: Record<string, string> = {
-      'HEYZO': 'HEYZO',
-      'カリビアンコムプレミアム': 'カリビアンコムプレミアム',
-      'カリビアンコム': 'カリビアンコム',
-      '一本道': '一本道',
-      '天然むすめ': '天然むすめ',
-      'パコパコママ': 'パコパコママ',
-      '人妻斬り': '人妻斬り',
-      'エッチな4610': 'エッチな4610',
-      'エッチな0930': 'エッチな0930',
-      'ムラムラってくる素人': 'ムラムラってくる素人',
-      'Hey動画': 'Hey動画',
-    };
-    return mapping[subService] || subService;
+    // 'DTI: HEYDOUGA' -> 'HEYDOUGA' として返す
+    return dbName.replace('DTI: ', '');
   }
   return dbName;
 }
