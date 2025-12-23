@@ -52,12 +52,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
     // SEO最適化されたメタディスクリプション生成（セール・レーティング情報含む）
+    const productId = product.normalizedProductId || product.id;
     const optimizedDescription = generateOptimizedDescription(
       product.title,
       product.actressName,
       product.tags,
       product.releaseDate,
-      product.normalizedProductId || product.id,
+      productId,
       {
         salePrice: product.salePrice,
         regularPrice: product.regularPrice,
@@ -67,9 +68,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       },
     );
 
+    // SEO: Titleに品番を含める（Google検索で品番検索時にヒットさせる）
+    const seoTitle = productId ? `${productId} ${product.title}` : product.title;
+
     return {
       ...generateBaseMetadata(
-        product.title,
+        seoTitle,
         optimizedDescription,
         product.imageUrl,
         `/${locale}/products/${product.id}`,
@@ -291,16 +295,25 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     />
                   </div>
                   <p className="text-gray-300">{product.providerLabel}</p>
-                  <p className="text-sm text-gray-400 mt-2">
-                    作品ID: {product.normalizedProductId || product.id}
-                    {sources.length > 0 && sources[0].originalProductId &&
-                      ` / メーカー品番: ${sources[0].originalProductId}`}
-                  </p>
+                  {/* SEO強化: 品番を目立つ形で表示 */}
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <span className="inline-flex items-center px-3 py-1 bg-rose-900/50 border border-rose-700 rounded-md text-rose-200 text-sm font-mono">
+                      {product.normalizedProductId || product.id}
+                    </span>
+                    {sources.length > 0 && sources[0].originalProductId && sources[0].originalProductId !== product.normalizedProductId && (
+                      <span className="inline-flex items-center px-2 py-1 bg-gray-700 rounded-md text-gray-300 text-xs font-mono">
+                        {sources[0].originalProductId}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {product.performers && product.performers.length > 0 ? (
-                  <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">
+                  <div className="bg-gray-700/50 rounded-lg p-4">
+                    <h2 className="text-sm font-semibold text-gray-400 mb-3 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
                       {product.performers.length === 1 ? tCommon('actress') : t.performers}
                     </h2>
                     <div className="flex flex-wrap gap-2">
@@ -308,22 +321,33 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         <Link
                           key={performer.id}
                           href={`/${locale}/actress/${performer.id}`}
-                          className="text-rose-600 hover:text-green-700 hover:underline"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-sm font-medium transition-colors"
                         >
-                          {performer.name}
+                          <span>{performer.name}</span>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
                         </Link>
                       ))}
                     </div>
                   </div>
                 ) : product.actressName ? (
-                  <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">{tCommon('actress')}</h2>
+                  <div className="bg-gray-700/50 rounded-lg p-4">
+                    <h2 className="text-sm font-semibold text-gray-400 mb-3 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      {tCommon('actress')}
+                    </h2>
                     {product.actressId ? (
                       <Link
                         href={`/${locale}/actress/${product.actressId}`}
-                        className="text-rose-600 hover:text-green-700 hover:underline"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-sm font-medium transition-colors"
                       >
-                        {product.actressName}
+                        <span>{product.actressName}</span>
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
                       </Link>
                     ) : (
                       <p className="text-white">{product.actressName}</p>

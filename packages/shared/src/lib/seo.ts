@@ -43,7 +43,12 @@ export function generateOptimizedDescription(
 ): string {
   const parts: string[] = [];
 
-  // セール情報を最優先で表示（CTR向上）
+  // 品番を最優先で表示（Google検索でヒットさせる）
+  if (productId) {
+    parts.push(`【${productId}】`);
+  }
+
+  // セール情報を優先表示（CTR向上）
   if (options?.salePrice && options?.regularPrice && options.discount) {
     parts.push(`[SALE] ${options.discount}%OFF`);
   }
@@ -58,7 +63,7 @@ export function generateOptimizedDescription(
   }
 
   if (title) {
-    const maxTitleLength = 60; // セール/評価情報を入れる分短くする
+    const maxTitleLength = 50; // 品番を入れる分短くする
     const trimmedTitle = title.length > maxTitleLength
       ? title.substring(0, maxTitleLength) + '...'
       : title;
@@ -72,10 +77,6 @@ export function generateOptimizedDescription(
 
   if (releaseDate) {
     parts.push(`配信日: ${releaseDate}`);
-  }
-
-  if (productId) {
-    parts.push(`品番: ${productId}`);
   }
 
   const description = parts.join(' | ');
