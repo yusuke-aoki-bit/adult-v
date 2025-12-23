@@ -42,6 +42,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip external domain requests (images, APIs, etc.) - let browser handle directly
+  // This avoids CSP violations when fetching from external domains
+  const requestUrl = new URL(event.request.url);
+  const currentOrigin = self.location.origin;
+  if (requestUrl.origin !== currentOrigin) {
+    return;
+  }
+
+  // Skip Next.js image optimization requests (they proxy external images)
+  if (requestUrl.pathname.startsWith('/_next/image')) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
