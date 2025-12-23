@@ -15,7 +15,7 @@ import FavoriteButton from '@/components/FavoriteButton';
 import StickyCta from '@/components/StickyCta';
 import { getProductById, searchProductByProductId, getProductSources } from '@/lib/db/queries';
 import { isSubscriptionSite } from '@/lib/image-utils';
-import { getRelatedProducts } from '@/lib/db/recommendations';
+import { getRelatedProducts, getPerformerOtherProducts } from '@/lib/db/recommendations';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import Link from 'next/link';
@@ -218,6 +218,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   // 関連作品を取得（FANZAの商品のみ）
   const relatedProducts = await getRelatedProducts(product.id, 12, 'fanza');
+
+  // 出演者の他作品を取得（主演者のみ）
+  const primaryPerformerId = product.performers?.[0]?.id || product.actressId;
+  const primaryPerformerName = product.performers?.[0]?.name || product.actressName;
+  const performerOtherProducts = primaryPerformerId
+    ? await getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6)
+    : [];
 
   // E-E-A-T強化: 全ASPソース情報を取得
   const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
@@ -426,6 +433,58 @@ export default async function ProductDetailPage({ params }: PageProps) {
               locale={locale}
             />
           </div>
+
+          {/* この出演者の他作品セクション */}
+          {performerOtherProducts.length > 0 && primaryPerformerId && primaryPerformerName && (
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold theme-text flex items-center gap-2">
+                  <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  {primaryPerformerName}の他の作品
+                </h2>
+                <Link
+                  href={localizedHref(`/actress/${primaryPerformerId}`, locale)}
+                  className="inline-flex items-center gap-1 text-sm text-rose-600 hover:text-rose-500 transition-colors"
+                >
+                  すべて見る
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                {performerOtherProducts.map((p) => (
+                  <Link
+                    key={p.id}
+                    href={localizedHref(`/products/${p.id}`, locale)}
+                    className="group theme-content rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-500/50 transition-all border theme-border"
+                  >
+                    <div className="relative bg-gray-100" style={{ aspectRatio: '2/3' }}>
+                      {p.imageUrl ? (
+                        <img
+                          src={p.imageUrl}
+                          alt={p.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <span className="text-gray-400 text-xs">NO IMAGE</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-2">
+                      <p className="text-xs theme-text line-clamp-2 group-hover:text-rose-600 transition-colors">
+                        {p.title}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 関連作品セクション */}
           {relatedProducts.length > 0 && (

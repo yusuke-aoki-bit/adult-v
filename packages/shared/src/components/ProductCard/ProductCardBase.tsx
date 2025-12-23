@@ -534,13 +534,19 @@ function ProductCardBase({
             {product.actressId ? (
               <Link
                 href={`/${locale}/actress/${product.actressId}`}
-                className={`${themeConfig.accentColor} ${themeConfig.accentHover} hover:underline underline-offset-2 transition-colors font-medium truncate`}
+                className={`inline-flex items-center gap-0.5 ${themeConfig.accentColor} ${themeConfig.accentHover} hover:underline underline-offset-2 transition-colors font-medium truncate`}
                 onClick={(e) => e.stopPropagation()}
               >
-                {product.actressName ?? t('performerInfo')}
+                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="truncate">{product.actressName ?? t('performerInfo')}</span>
               </Link>
             ) : product.performers && product.performers.length > 0 ? (
-              <span className="truncate">
+              <span className="inline-flex items-center gap-0.5 truncate">
+                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
                 {product.performers.slice(0, 2).map((performer, index) => (
                   <span key={performer.id}>
                     <Link
