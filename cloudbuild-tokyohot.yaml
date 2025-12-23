@@ -1,0 +1,60 @@
+# Tokyo-Hot Sites Crawler (Tokyo-Hot, TVDEAV)
+# Cloud Build + Cloud Run Job設定
+#
+# デプロイ:
+# gcloud builds submit --config=cloudbuild-tokyohot.yaml
+#
+# 手動実行:
+# gcloud run jobs execute crawl-tokyohot --region=asia-northeast1
+
+steps:
+  # 1. Dockerイメージをビルド
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/crawler/crawl-tokyohot:latest'
+      - '-f'
+      - 'Dockerfile.crawler'
+      - '--build-arg'
+      - 'CRAWLER_SCRIPT=scripts/crawlers/crawl-tokyohot-all.ts'
+      - '.'
+
+  # 2. イメージをArtifact Registryにプッシュ
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/crawler/crawl-tokyohot:latest'
+
+  # 3. Cloud Run Jobを作成/更新
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'jobs'
+      - 'deploy'
+      - 'crawl-tokyohot'
+      - '--image'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/crawler/crawl-tokyohot:latest'
+      - '--region'
+      - 'asia-northeast1'
+      - '--task-timeout'
+      - '3600s'
+      - '--max-retries'
+      - '1'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '1'
+      - '--set-secrets'
+      - 'DATABASE_URL=database-url:latest'
+      - '--args'
+      - 'tsx,scripts/crawlers/crawl-tokyohot-all.ts'
+
+images:
+  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/crawler/crawl-tokyohot:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1800s'

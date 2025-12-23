@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # すべてのクローラーをCloud Schedulerで定期実行するセットアップスクリプト
+# グループ化版 - 関連サイトをまとめて実行
 
 set -e
 
@@ -9,271 +10,120 @@ REGION="asia-northeast1"
 LOCATION="asia-northeast1"
 SERVICE_ACCOUNT="646431984228-compute@developer.gserviceaccount.com"
 
-echo "=== 全クローラーのCloud Scheduler設定 ==="
+echo "=== 全クローラーのCloud Scheduler設定（グループ化版） ==="
 echo ""
 
-# 1. DUGA並列クローラー (既存) - 有効化
-echo "【1】DUGA並列クローラー (10並列)"
-echo "スケジュール: 5分ごと"
-echo "ステータス確認中..."
+# ヘルパー関数: スケジューラーを作成/更新
+setup_scheduler() {
+  local name=$1
+  local schedule=$2
+  local job_name=$3
+  local description=$4
 
-# DUGAジョブを有効化
-for i in {0..9}; do
-  echo "  duga-parallel-$i を有効化..."
-  gcloud scheduler jobs resume duga-parallel-$i --location=$LOCATION 2>/dev/null || echo "  既に有効"
-done
+  echo "【$description】"
+  echo "スケジュール: $schedule (JST)"
 
-echo "✅ DUGA並列クローラー設定完了"
-echo ""
-
-# 2. MGS並列クローラー (既存) - 有効化
-echo "【2】MGS並列クローラー (10並列)"
-echo "スケジュール: 5分ごと"
-
-# MGSジョブを有効化
-for i in {0..9}; do
-  echo "  mgs-parallel-$i を有効化..."
-  gcloud scheduler jobs resume mgs-parallel-$i --location=$LOCATION 2>/dev/null || echo "  既に有効"
-done
-
-echo "✅ MGS並列クローラー設定完了"
-echo ""
-
-# 3. Sokmilクローラー
-echo "【3】Sokmilクローラー"
-echo "スケジュール: 毎日3時"
-
-if gcloud run jobs describe sokmil-crawler --region=$REGION &>/dev/null; then
-  if gcloud scheduler jobs describe sokmil-daily --location=$LOCATION &>/dev/null; then
-    echo "  既存のスケジューラーを更新..."
-    gcloud scheduler jobs update http sokmil-daily \
-      --location=$LOCATION \
-      --schedule="0 3 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/sokmil-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
+  if gcloud run jobs describe $job_name --region=$REGION &>/dev/null; then
+    if gcloud scheduler jobs describe $name --location=$LOCATION &>/dev/null; then
+      echo "  既存のスケジューラーを更新..."
+      gcloud scheduler jobs update http $name \
+        --location=$LOCATION \
+        --schedule="$schedule" \
+        --time-zone="Asia/Tokyo" \
+        --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/${job_name}:run" \
+        --http-method=POST \
+        --oauth-service-account-email=$SERVICE_ACCOUNT
+    else
+      echo "  新規スケジューラー作成..."
+      gcloud scheduler jobs create http $name \
+        --location=$LOCATION \
+        --schedule="$schedule" \
+        --time-zone="Asia/Tokyo" \
+        --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/${job_name}:run" \
+        --http-method=POST \
+        --oauth-service-account-email=$SERVICE_ACCOUNT
+    fi
+    echo "✅ $description 設定完了"
   else
-    echo "  新規スケジューラー作成..."
-    gcloud scheduler jobs create http sokmil-daily \
-      --location=$LOCATION \
-      --schedule="0 3 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/sokmil-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
+    echo "⚠️ Cloud Run Job '$job_name' が見つかりません。先にデプロイしてください"
   fi
-  echo "✅ Sokmilクローラー設定完了"
-else
-  echo "⚠️ Sokmil Cloud Run Jobが見つかりません。先にデプロイしてください"
-fi
-echo ""
+  echo ""
+}
 
-# 4. b10fクローラー
-echo "【4】b10fクローラー"
-echo "スケジュール: 毎日4時"
+# ========================================
+# グループ化クローラー（複数サイトをまとめて実行）
+# ========================================
 
-if gcloud run jobs describe b10f-crawler --region=$REGION &>/dev/null; then
-  if gcloud scheduler jobs describe b10f-daily --location=$LOCATION &>/dev/null; then
-    echo "  既存のスケジューラーを更新..."
-    gcloud scheduler jobs update http b10f-daily \
-      --location=$LOCATION \
-      --schedule="0 4 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/b10f-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  else
-    echo "  新規スケジューラー作成..."
-    gcloud scheduler jobs create http b10f-daily \
-      --location=$LOCATION \
-      --schedule="0 4 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/b10f-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  fi
-  echo "✅ b10fクローラー設定完了"
-else
-  echo "⚠️ b10f Cloud Run Jobが見つかりません。先にデプロイしてください"
-fi
-echo ""
+# 1. DTI系（人妻）- h4610, h0930, c0930
+setup_scheduler "crawl-dti-hitozuma-scheduler" "0 0 * * *" "crawl-dti-hitozuma" "DTI系（人妻）クローラー"
 
-# 5. DTIクローラー (一本道, カリビアンコム, カリビアンコムプレミアム, HEYZO)
-echo "【5】DTIクローラー"
-echo "スケジュール: 毎日2時"
+# 2. DTI系（カリビアン）- caribbean, caribbeancompr, 1pondo, heyzo, 10musume, pacopacomama
+setup_scheduler "crawl-dti-caribbean-scheduler" "0 2 * * *" "crawl-dti-caribbean" "DTI系（カリビアン）クローラー"
 
-if gcloud run jobs describe dti-crawler --region=$REGION &>/dev/null; then
-  if gcloud scheduler jobs describe dti-daily --location=$LOCATION &>/dev/null; then
-    echo "  既存のスケジューラーを更新..."
-    gcloud scheduler jobs update http dti-daily \
-      --location=$LOCATION \
-      --schedule="0 2 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/dti-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  else
-    echo "  新規スケジューラー作成..."
-    gcloud scheduler jobs create http dti-daily \
-      --location=$LOCATION \
-      --schedule="0 2 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/dti-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  fi
-  echo "✅ DTIクローラー設定完了"
-else
-  echo "⚠️ DTI Cloud Run Jobが見つかりません。先にデプロイしてください:"
-  echo "   gcloud builds submit --config=cloudbuild-dti.yaml"
-fi
-echo ""
+# 3. FANZA
+setup_scheduler "fanza-daily-scheduler" "0 4 * * *" "fanza-daily" "FANZAクローラー"
 
-# 6. Japanskaクローラー
-echo "【6】Japanskaクローラー"
-echo "スケジュール: 毎日5時"
+# 4. MGS
+setup_scheduler "mgs-daily-scheduler" "0 5 * * *" "mgs-daily" "MGSクローラー"
 
-if gcloud run jobs describe japanska-crawler --region=$REGION &>/dev/null; then
-  if gcloud scheduler jobs describe japanska-daily --location=$LOCATION &>/dev/null; then
-    echo "  既存のスケジューラーを更新..."
-    gcloud scheduler jobs update http japanska-daily \
-      --location=$LOCATION \
-      --schedule="0 5 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/japanska-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  else
-    echo "  新規スケジューラー作成..."
-    gcloud scheduler jobs create http japanska-daily \
-      --location=$LOCATION \
-      --schedule="0 5 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/japanska-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  fi
-  echo "✅ Japanskaクローラー設定完了"
-else
-  echo "⚠️ Japanska Cloud Run Jobが見つかりません。先にデプロイしてください:"
-  echo "   gcloud builds submit --config=cloudbuild-japanska.yaml"
-fi
-echo ""
+# 5. TMP系 - heydouga, x1x, enkou55, urekko, xxxurabi
+setup_scheduler "crawl-tmp-scheduler" "0 6 * * *" "crawl-tmp" "TMP系クローラー"
 
-# 7. FC2クローラー
-echo "【7】FC2クローラー"
-echo "スケジュール: 毎日6時"
+# 6. Tokyo-Hot系 - tokyohot, tvdeav
+setup_scheduler "crawl-tokyohot-scheduler" "0 8 * * *" "crawl-tokyohot" "Tokyo-Hot系クローラー"
 
-if gcloud run jobs describe fc2-crawler --region=$REGION &>/dev/null; then
-  if gcloud scheduler jobs describe fc2-daily --location=$LOCATION &>/dev/null; then
-    echo "  既存のスケジューラーを更新..."
-    gcloud scheduler jobs update http fc2-daily \
-      --location=$LOCATION \
-      --schedule="0 6 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/fc2-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  else
-    echo "  新規スケジューラー作成..."
-    gcloud scheduler jobs create http fc2-daily \
-      --location=$LOCATION \
-      --schedule="0 6 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/fc2-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  fi
-  echo "✅ FC2クローラー設定完了"
-else
-  echo "⚠️ FC2 Cloud Run Jobが見つかりません。先にデプロイしてください:"
-  echo "   gcloud builds submit --config=cloudbuild-fc2.yaml"
-fi
-echo ""
+# 7. 新DTI系 - kin8tengoku, nyoshin, h0230
+setup_scheduler "crawl-dti-new-scheduler" "0 10 * * *" "crawl-dti-new" "新DTI系クローラー"
 
-# 8. Wiki出演者クローラー
-echo "【8】Wiki出演者クローラー"
-echo "スケジュール: 毎週日曜1時"
+# ========================================
+# 単独クローラー（1サイトのみ）
+# ========================================
 
-if gcloud run jobs describe wiki-crawler --region=$REGION &>/dev/null; then
-  if gcloud scheduler jobs describe wiki-weekly --location=$LOCATION &>/dev/null; then
-    echo "  既存のスケジューラーを更新..."
-    gcloud scheduler jobs update http wiki-weekly \
-      --location=$LOCATION \
-      --schedule="0 1 * * 0" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/wiki-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  else
-    echo "  新規スケジューラー作成..."
-    gcloud scheduler jobs create http wiki-weekly \
-      --location=$LOCATION \
-      --schedule="0 1 * * 0" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/wiki-crawler:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  fi
-  echo "✅ Wiki出演者クローラー設定完了"
-else
-  echo "⚠️ Wiki Cloud Run Jobが見つかりません。先にデプロイしてください:"
-  echo "   gcloud builds submit --config=cloudbuild-wiki.yaml"
-fi
-echo ""
+# 8. DUGA
+setup_scheduler "crawl-duga-scheduler" "0 12 * * *" "crawl-duga" "DUGAクローラー"
 
-# 9. Raw Data Processor
-echo "【9】Rawデータ解析ジョブ"
-echo "スケジュール: 毎日7時"
+# 9. SOKMIL
+setup_scheduler "crawl-sokmil-scheduler" "0 14 * * *" "crawl-sokmil" "SOKMILクローラー"
 
-if gcloud run jobs describe raw-data-processor --region=$REGION &>/dev/null; then
-  if gcloud scheduler jobs describe raw-data-daily --location=$LOCATION &>/dev/null; then
-    echo "  既存のスケジューラーを更新..."
-    gcloud scheduler jobs update http raw-data-daily \
-      --location=$LOCATION \
-      --schedule="0 7 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/raw-data-processor:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  else
-    echo "  新規スケジューラー作成..."
-    gcloud scheduler jobs create http raw-data-daily \
-      --location=$LOCATION \
-      --schedule="0 7 * * *" \
-      --time-zone="Asia/Tokyo" \
-      --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/raw-data-processor:run" \
-      --http-method=POST \
-      --oauth-service-account-email=$SERVICE_ACCOUNT
-  fi
-  echo "✅ Rawデータ解析ジョブ設定完了"
-else
-  echo "⚠️ Raw Data Processor Cloud Run Jobが見つかりません。先にデプロイしてください:"
-  echo "   gcloud builds submit --config=cloudbuild-raw-data.yaml"
-fi
-echo ""
+# 10. Japanska
+setup_scheduler "crawl-japanska-scheduler" "0 16 * * *" "crawl-japanska" "Japanskaクローラー"
 
-# 10. 出演者重複排除ジョブ (既存) - 確認のみ
-echo "【10】出演者重複排除ジョブ"
-echo "スケジュール: 毎日3時"
-if gcloud scheduler jobs describe performer-dedup-scheduler --location=$LOCATION &>/dev/null; then
-  echo "✅ 既に設定済み (ENABLED)"
-else
-  echo "⚠️ スケジューラーが見つかりません"
-fi
-echo ""
+# 11. b10f
+setup_scheduler "crawl-b10f-scheduler" "0 18 * * *" "crawl-b10f" "b10fクローラー"
+
+# 12. FC2
+setup_scheduler "crawl-fc2-scheduler" "0 20 * * *" "crawl-fc2" "FC2クローラー"
+
+# 13. Sales（1日3回）
+setup_scheduler "crawl-sales-scheduler" "0 8,14,20 * * *" "crawl-sales" "セールクローラー"
+
+# ========================================
+# その他のジョブ
+# ========================================
+
+# 14. Wiki出演者クローラー（週1回）
+setup_scheduler "wiki-weekly" "0 1 * * 0" "wiki-crawler" "Wiki出演者クローラー"
+
+# 15. GSC Fetcher
+setup_scheduler "gsc-fetcher-daily" "0 7 * * *" "gsc-fetcher" "GSC Fetcherジョブ"
+
+# 16. PageSpeed Checker
+setup_scheduler "pagespeed-checker-daily" "0 9 * * *" "pagespeed-checker" "PageSpeed Checkerジョブ"
 
 # 現在のスケジューラー一覧を表示
+echo ""
 echo "=== 全スケジューラー一覧 ==="
-gcloud scheduler jobs list --location=$LOCATION --format="table(name,schedule,state)" | grep -E "(duga|mgs|sokmil|b10f|dti|japanska|fc2|wiki|performer)" || echo "スケジューラーが見つかりません"
+gcloud scheduler jobs list --location=$LOCATION --format="table(name,schedule,state)" | grep -E "(crawl|fanza|mgs|wiki|gsc|pagespeed|sales)" || echo "スケジューラーが見つかりません"
 
 echo ""
 echo "✅ すべてのクローラーのスケジューラー設定が完了しました！"
 echo ""
 echo "=== デプロイコマンド一覧 ==="
-echo "DTI:      gcloud builds submit --config=cloudbuild-dti.yaml"
-echo "Japanska: gcloud builds submit --config=cloudbuild-japanska.yaml"
-echo "FC2:      gcloud builds submit --config=cloudbuild-fc2.yaml"
-echo "Wiki:     gcloud builds submit --config=cloudbuild-wiki.yaml"
-echo "RawData:  gcloud builds submit --config=cloudbuild-raw-data.yaml"
+echo "DTI-Caribbean: gcloud builds submit --config=cloudbuild-dti-caribbean.yaml"
+echo "DTI-Hitozuma:  gcloud builds submit --config=cloudbuild-dti-hitozuma.yaml"
+echo "DTI-New:       gcloud builds submit --config=cloudbuild-dti-new.yaml"
+echo "TMP:           gcloud builds submit --config=cloudbuild-tmp.yaml"
+echo "Tokyo-Hot:     gcloud builds submit --config=cloudbuild-tokyohot.yaml"
+echo "Japanska:      gcloud builds submit --config=cloudbuild-japanska.yaml"
+echo "FC2:           gcloud builds submit --config=cloudbuild-fc2.yaml"
+echo "Wiki:          gcloud builds submit --config=cloudbuild-wiki.yaml"
