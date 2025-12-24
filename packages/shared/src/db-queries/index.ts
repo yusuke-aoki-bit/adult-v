@@ -15,3 +15,10 @@ export {
   type TopRatedProduct,
   type PerformerOnSaleProduct,
 } from './recommendations';
+
+export {
+  createWikiPerformerSearchQueries,
+  type WikiPerformerSearchDeps,
+  type WikiPerformerSearchQueries,
+  type WikiPerformerSearchResult,
+} from './wiki-performer-search';
