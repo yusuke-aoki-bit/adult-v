@@ -6,6 +6,9 @@
 
 import { sql, ilike, eq, or } from 'drizzle-orm';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyColumn = any;
+
 // 依存性の型定義
 export interface WikiPerformerSearchDeps {
   db: {
@@ -18,14 +21,14 @@ export interface WikiPerformerSearchDeps {
     };
   };
   wikiPerformerIndex: {
-    maker: unknown;
-    performerName: unknown;
-    performerNameRomaji: unknown;
-    performerNameVariants: unknown;
-    productTitle: unknown;
-    productCode: unknown;
-    source: unknown;
-    confidence: unknown;
+    maker: AnyColumn;
+    performerName: AnyColumn;
+    performerNameRomaji: AnyColumn;
+    performerNameVariants: AnyColumn;
+    productTitle: AnyColumn;
+    productCode: AnyColumn;
+    source: AnyColumn;
+    confidence: AnyColumn;
   };
 }
 
