@@ -255,7 +255,6 @@ export default function DiscoverPage() {
                   alt={product.title}
                   fill
                   className="object-cover"
-                  priority
                 />
 
                 {/* Image Navigation Dots */}

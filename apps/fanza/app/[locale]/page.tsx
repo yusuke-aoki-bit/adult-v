@@ -401,8 +401,8 @@ export default async function Home({ params, searchParams }: PageProps) {
           />
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-            {actresses.map((actress, index) => (
-              <ActressCard key={actress.id} actress={actress} compact priority={index < 6} />
+            {actresses.map((actress) => (
+              <ActressCard key={actress.id} actress={actress} compact />
             ))}
           </div>
 

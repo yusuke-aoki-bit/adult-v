@@ -303,12 +303,12 @@ export default function FilterSortBarBase({
                 return (
                   <label
                     key={aspName}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors ${
-                      isSelected
-                        ? 'text-white'
-                        : config.providerUnselected
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all text-white hover:opacity-90 ${
+                      isSelected ? 'ring-2 ring-white ring-offset-1 shadow-md' : ''
                     }`}
-                    style={isSelected && meta.gradientColors ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` } : undefined}
+                    style={meta.gradientColors ? {
+                      background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})`,
+                    } : undefined}
                   >
                     <input
                       type="checkbox"
@@ -316,9 +316,14 @@ export default function FilterSortBarBase({
                       onChange={() => toggleProvider(aspName)}
                       className="sr-only"
                     />
+                    {isSelected && (
+                      <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
                     {meta.label}
                     {count !== undefined && (
-                      <span className={`${isSelected ? 'text-white/80' : 'text-gray-400'}`}>
+                      <span className="text-white/80">
                         ({count.toLocaleString()})
                       </span>
                     )}
