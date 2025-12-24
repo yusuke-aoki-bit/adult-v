@@ -117,6 +117,30 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     encoding: 'utf-8',
     aspName: 'C0930',
   },
+  kin8tengoku: {
+    name: '金髪天國',
+    baseUrl: 'https://www.kin8tengoku.com',
+    listPageUrl: 'https://www.kin8tengoku.com/listpages/all_{page}.html',
+    detailPagePattern: '/moviepages/{id}/index.html',
+    encoding: 'utf-8',
+    aspName: 'KIN8TENGOKU',
+  },
+  nyoshin: {
+    name: '女体のしんぴ',
+    baseUrl: 'https://www.nyoshin.com',
+    listPageUrl: 'https://www.nyoshin.com/listpages/all_{page}.html',
+    detailPagePattern: '/moviepages/{id}/index.html',
+    encoding: 'utf-8',
+    aspName: 'NYOSHIN',
+  },
+  h0230: {
+    name: 'エッチな0230',
+    baseUrl: 'https://www.h0230.com',
+    listPageUrl: 'https://www.h0230.com/listpages/all_{page}.html',
+    detailPagePattern: '/moviepages/{id}/index.html',
+    encoding: 'utf-8',
+    aspName: 'H0230',
+  },
 };
 
 // レート制限: 3秒 + ジッター
@@ -460,6 +484,8 @@ async function main(): Promise<void> {
   let totalSaved = 0;
   let totalSkipped = 0;
   let totalErrors = 0;
+  let consecutiveEmptyPages = 0;
+  const MAX_CONSECUTIVE_EMPTY_PAGES = 200;
 
   for (let pageNum = startPage; pageNum < startPage + pages; pageNum++) {
     console.log(`\n📖 Processing page ${pageNum}...`);
@@ -467,9 +493,16 @@ async function main(): Promise<void> {
     const productIds = await extractProductIdsFromList(siteConfig, pageNum);
 
     if (productIds.length === 0) {
-      console.log('  No products found, stopping.');
-      break;
+      consecutiveEmptyPages++;
+      console.log(`  空ページ検出 (${consecutiveEmptyPages}/${MAX_CONSECUTIVE_EMPTY_PAGES})`);
+      if (consecutiveEmptyPages >= MAX_CONSECUTIVE_EMPTY_PAGES) {
+        console.log('  連続空ページ上限到達、終了します');
+        break;
+      }
+      await rateLimit();
+      continue;
     }
+    consecutiveEmptyPages = 0; // リセット
 
     for (const productId of productIds) {
       await rateLimit();

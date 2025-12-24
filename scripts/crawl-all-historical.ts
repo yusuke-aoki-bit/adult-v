@@ -66,6 +66,12 @@ const CRAWLERS: CrawlerConfig[] = [
     args: ['--site=urekko', '--pages=999999'],
     description: '熟っ子倶楽部 (全ページ)',
   },
+  {
+    name: 'xxxurabi',
+    script: 'packages/crawlers/src/products/crawl-tmp.ts',
+    args: ['--site=xxxurabi', '--pages=999999'],
+    description: 'XXXURABI (全ページ)',
+  },
 
   // Caribbean系（DTI）
   {
@@ -128,13 +134,45 @@ const CRAWLERS: CrawlerConfig[] = [
     args: ['--site=c0930', '--pages=999999'],
     description: '人妻斬り C0930 (全ページ)',
   },
+  {
+    name: 'kin8tengoku',
+    script: 'packages/crawlers/src/products/crawl-caribbean.ts',
+    args: ['--site=kin8tengoku', '--pages=999999'],
+    description: '金髪天國 (全ページ)',
+  },
+  {
+    name: 'nyoshin',
+    script: 'packages/crawlers/src/products/crawl-caribbean.ts',
+    args: ['--site=nyoshin', '--pages=999999'],
+    description: '女体のしんぴ (全ページ)',
+  },
+  {
+    name: 'h0230',
+    script: 'packages/crawlers/src/products/crawl-caribbean.ts',
+    args: ['--site=h0230', '--pages=999999'],
+    description: 'エッチな0230 (全ページ)',
+  },
 
   // Tokyo-Hot系
   {
     name: 'tokyohot',
     script: 'packages/crawlers/src/products/crawl-tokyohot.ts',
-    args: ['--pages=999999'],
+    args: ['--site=tokyo-hot', '--pages=999999'],
     description: 'Tokyo-Hot (全ページ)',
+  },
+  {
+    name: 'tvdeav',
+    script: 'packages/crawlers/src/products/crawl-tokyohot.ts',
+    args: ['--site=tvdeav', '--pages=999999'],
+    description: 'TVdeAV (全ページ)',
+  },
+
+  // MGS
+  {
+    name: 'mgs',
+    script: 'packages/crawlers/src/enrichment/crawl-mgs-list.ts',
+    args: ['--full-scan'],
+    description: 'MGS (全シリーズ)',
   },
 
   // Japanska

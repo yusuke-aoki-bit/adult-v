@@ -98,7 +98,12 @@
     "title": "관련 작품",
     "samePerformer": "같은 배우",
     "sameGenre": "같은 장르",
-    "recent": "최신"
+    "recent": "최신",
+    "performerOtherWorks": "{name}의 다른 작품",
+    "seriesWorks": "{name} 시리즈",
+    "makerOtherWorks": "{name}의 다른 작품",
+    "viewAll": "전체 보기",
+    "viewMore": "더 보기"
   },
   "relatedActresses": {
     "title": "{name}의 공연자",
@@ -106,6 +111,30 @@
     "costarCount": "회 공연",
     "productCount": "작품",
     "genreMatch": "일치"
+  },
+  "similarActresses": {
+    "title": "{name}와 비슷한 여배우",
+    "description": "비슷한 장르에 출연하는 여배우 (공연자 아님)",
+    "genreMatch": "일치",
+    "productCount": "작품",
+    "matchingGenres": "공통 장르"
+  },
+  "performerTopProducts": {
+    "title": "{name}의 인기 작품 TOP5",
+    "description": "평점, 리뷰, 조회수 기반 추천 작품",
+    "rating": "평점",
+    "reviews": "개 리뷰",
+    "views": "회 조회",
+    "onSale": "세일"
+  },
+  "performerOnSale": {
+    "title": "{name}의 세일 작품",
+    "description": "한정 특가! 놓치지 마세요",
+    "off": "할인",
+    "endsIn": "{days}일 남음",
+    "endsTomorrow": "내일까지",
+    "endsToday": "오늘까지!",
+    "yen": "¥"
   },
   "filter": {
     "genre": "장르",
@@ -282,7 +311,10 @@
     "nextImage": "다음 이미지",
     "thumbnailAlt": "썸네일",
     "saleTomorrow": "내일까지",
-    "saleEndsIn": "{days}일 남음"
+    "saleEndsIn": "{days}일 남음",
+    "urgentLastHour": "지금!",
+    "urgentEndsIn": "{hours}시간 남음",
+    "urgentEndsSoon": "{hours}시간 남음"
   },
   "imageLightbox": {
     "close": "닫기",
@@ -311,7 +343,10 @@
     "viewProducts": "전체 보기"
   },
   "stickyCta": {
-    "buyAt": "{provider}에서 구매"
+    "buyAt": "{provider}에서 시청",
+    "urgentHours": "{hours}시간 남음!",
+    "endsToday": "오늘 종료!",
+    "endsSoon": "{days}일 남음"
   },
   "personalized": {
     "recentlyViewed": "최근 본 작품",

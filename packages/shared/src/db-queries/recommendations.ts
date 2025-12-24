@@ -162,6 +162,44 @@ export interface RelatedPerformerWithGenre extends RelatedPerformer {
   genreMatchPercent: number;
 }
 
+export interface SimilarActress {
+  id: number;
+  name: string;
+  thumbnailUrl: string | null;
+  heroImageUrl: string | null;
+  productCount: number;
+  matchingTags: number;
+  totalTags: number;
+  genreMatchPercent: number;
+  topMatchingGenres: string[];
+}
+
+export interface TopRatedProduct {
+  id: number;
+  title: string;
+  normalizedProductId: string | null;
+  imageUrl: string | null;
+  releaseDate: string | null;
+  rating: number | null;
+  reviewCount: number;
+  viewCount: number;
+  rank: number;
+  salePrice: number | null;
+  saleEndAt: string | null;
+}
+
+export interface PerformerOnSaleProduct {
+  id: number;
+  title: string;
+  normalizedProductId: string | null;
+  imageUrl: string | null;
+  releaseDate: string | null;
+  originalPrice: number | null;
+  salePrice: number;
+  saleEndAt: string;
+  discountPercent: number;
+}
+
 // 依存性の型定義
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface RecommendationsDeps {
@@ -1024,6 +1062,265 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
     return relatedProducts.slice(0, limit);
   }
 
+  /**
+   * 類似女優を取得（共演なしでもジャンルが似ている女優を推奨）
+   * 共演者とは異なり、直接の共演はないが同じジャンルの作品に多く出演している女優を提案
+   */
+  async function getSimilarActresses(
+    performerId: number,
+    limit: number = 6
+  ): Promise<SimilarActress[]> {
+    try {
+      const db = getDb();
+
+      const similarActresses = await db.execute(sql`
+        WITH performer_thumbnails AS (
+          SELECT DISTINCT ON (pp.performer_id)
+            pp.performer_id,
+            prod.default_thumbnail_url as thumbnail_url
+          FROM product_performers pp
+          INNER JOIN products prod ON pp.product_id = prod.id
+          WHERE prod.default_thumbnail_url IS NOT NULL
+            AND prod.default_thumbnail_url != ''
+          ORDER BY pp.performer_id, prod.created_at DESC
+        ),
+        -- 対象女優のジャンルタグを取得
+        performer_genre_tags AS (
+          SELECT DISTINCT t.id, t.name
+          FROM product_performers pp
+          INNER JOIN product_tags pt ON pp.product_id = pt.product_id
+          INNER JOIN tags t ON pt.tag_id = t.id
+          WHERE pp.performer_id = ${performerId}
+            AND (t.category = 'genre' OR t.category IS NULL)
+        ),
+        performer_tag_count AS (
+          SELECT COUNT(*) as total FROM performer_genre_tags
+        ),
+        -- 共演者のIDを取得（除外用）
+        co_performer_ids AS (
+          SELECT DISTINCT pp2.performer_id
+          FROM product_performers pp1
+          INNER JOIN product_performers pp2 ON pp1.product_id = pp2.product_id
+          WHERE pp1.performer_id = ${performerId}
+            AND pp2.performer_id != ${performerId}
+        ),
+        -- 他の女優のジャンルタグとの一致を計算
+        other_performer_genre_match AS (
+          SELECT
+            pp.performer_id,
+            t.id as tag_id,
+            t.name as tag_name,
+            CASE WHEN pgt.id IS NOT NULL THEN 1 ELSE 0 END as is_matching
+          FROM product_performers pp
+          INNER JOIN product_tags pt ON pp.product_id = pt.product_id
+          INNER JOIN tags t ON pt.tag_id = t.id
+          LEFT JOIN performer_genre_tags pgt ON t.id = pgt.id
+          WHERE pp.performer_id != ${performerId}
+            AND pp.performer_id NOT IN (SELECT performer_id FROM co_performer_ids)
+            AND (t.category = 'genre' OR t.category IS NULL)
+          GROUP BY pp.performer_id, t.id, t.name, pgt.id
+        ),
+        -- 女優ごとのマッチング集計
+        performer_match_summary AS (
+          SELECT
+            performer_id,
+            COUNT(DISTINCT tag_id) FILTER (WHERE is_matching = 1) as matching_tags,
+            ARRAY_AGG(DISTINCT tag_name) FILTER (WHERE is_matching = 1) as matching_genre_names
+          FROM other_performer_genre_match
+          GROUP BY performer_id
+          HAVING COUNT(DISTINCT tag_id) FILTER (WHERE is_matching = 1) >= 3
+        )
+        SELECT
+          p.id,
+          p.name,
+          pt.thumbnail_url as "thumbnailUrl",
+          pt.thumbnail_url as "heroImageUrl",
+          (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) as "productCount",
+          pms.matching_tags as "matchingTags",
+          (SELECT total FROM performer_tag_count) as "totalTags",
+          CASE
+            WHEN (SELECT total FROM performer_tag_count) > 0
+            THEN ROUND((pms.matching_tags::numeric / (SELECT total FROM performer_tag_count)::numeric) * 100)
+            ELSE 0
+          END as "genreMatchPercent",
+          pms.matching_genre_names as "topMatchingGenres"
+        FROM performers p
+        INNER JOIN performer_match_summary pms ON p.id = pms.performer_id
+        LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
+        WHERE (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) >= 5
+        ORDER BY
+          pms.matching_tags DESC,
+          (SELECT COUNT(*) FROM product_performers WHERE performer_id = p.id) DESC,
+          p.name ASC
+        LIMIT ${limit}
+      `);
+
+      interface SimilarActressRow {
+        id: number;
+        name: string;
+        thumbnailUrl: string | null;
+        heroImageUrl: string | null;
+        productCount: number | string;
+        matchingTags: number | string;
+        totalTags: number | string;
+        genreMatchPercent: number | string;
+        topMatchingGenres: string[] | null;
+      }
+
+      return (similarActresses.rows as SimilarActressRow[]).map(row => ({
+        id: row.id,
+        name: row.name,
+        thumbnailUrl: row.thumbnailUrl,
+        heroImageUrl: row.heroImageUrl,
+        productCount: typeof row.productCount === 'string' ? parseInt(row.productCount) : row.productCount,
+        matchingTags: typeof row.matchingTags === 'string' ? parseInt(row.matchingTags) : row.matchingTags,
+        totalTags: typeof row.totalTags === 'string' ? parseInt(row.totalTags) : row.totalTags,
+        genreMatchPercent: typeof row.genreMatchPercent === 'string' ? parseFloat(row.genreMatchPercent) : row.genreMatchPercent,
+        topMatchingGenres: row.topMatchingGenres ? row.topMatchingGenres.slice(0, 5) : [],
+      }));
+    } catch (error) {
+      console.error('Error fetching similar actresses:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 女優の人気作品TOP5を取得
+   * 評価とレビュー数でランキング（軽量版）
+   */
+  async function getPerformerTopProducts(
+    performerId: number,
+    limit: number = 5
+  ): Promise<TopRatedProduct[]> {
+    try {
+      const db = getDb();
+
+      // 軽量化: product_viewsのサブクエリを削除、LATERAL JOINを削除
+      const topProducts = await db.execute(sql`
+        SELECT
+          p.id,
+          p.title,
+          p.normalized_product_id as "normalizedProductId",
+          p.default_thumbnail_url as "imageUrl",
+          p.release_date as "releaseDate",
+          COALESCE(prs.average_rating, 0) as rating,
+          COALESCE(prs.total_reviews, 0) as "reviewCount",
+          0 as "viewCount",
+          ROW_NUMBER() OVER (
+            ORDER BY
+              COALESCE(prs.average_rating, 0) DESC,
+              COALESCE(prs.total_reviews, 0) DESC,
+              p.release_date DESC NULLS LAST
+          ) as rank,
+          NULL::integer as "salePrice",
+          NULL::timestamptz as "saleEndAt"
+        FROM products p
+        INNER JOIN product_performers pp ON p.id = pp.product_id
+        LEFT JOIN product_rating_summary prs ON p.id = prs.product_id
+        WHERE pp.performer_id = ${performerId}
+          AND (COALESCE(prs.average_rating, 0) > 0 OR COALESCE(prs.total_reviews, 0) > 0)
+        ORDER BY
+          COALESCE(prs.average_rating, 0) DESC,
+          COALESCE(prs.total_reviews, 0) DESC,
+          p.release_date DESC NULLS LAST
+        LIMIT ${limit}
+      `);
+
+      interface TopProductRow {
+        id: number;
+        title: string | null;
+        normalizedProductId: string | null;
+        imageUrl: string | null;
+        releaseDate: string | null;
+        rating: number | string | null;
+        reviewCount: number | string;
+        viewCount: number | string;
+        rank: number | string;
+        salePrice: number | string | null;
+        saleEndAt: string | null;
+      }
+
+      return (topProducts.rows as TopProductRow[]).map(row => ({
+        id: row.id,
+        title: row.title || '',
+        normalizedProductId: row.normalizedProductId,
+        imageUrl: row.imageUrl,
+        releaseDate: row.releaseDate,
+        rating: row.rating ? Number(row.rating) : null,
+        reviewCount: Number(row.reviewCount),
+        viewCount: Number(row.viewCount),
+        rank: Number(row.rank),
+        salePrice: row.salePrice ? Number(row.salePrice) : null,
+        saleEndAt: row.saleEndAt,
+      }));
+    } catch (error) {
+      console.error('Error fetching performer top products:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 女優のセール中作品を取得（軽量版）
+   */
+  async function getPerformerOnSaleProducts(
+    performerId: number,
+    limit: number = 6
+  ): Promise<PerformerOnSaleProduct[]> {
+    try {
+      const db = getDb();
+
+      // product_salesテーブルを使用
+      const onSaleProducts = await db.execute(sql`
+        SELECT
+          p.id,
+          p.title,
+          p.normalized_product_id as "normalizedProductId",
+          p.default_thumbnail_url as "imageUrl",
+          p.release_date as "releaseDate",
+          psl.regular_price as "originalPrice",
+          psl.sale_price as "salePrice",
+          psl.end_at as "saleEndAt",
+          COALESCE(psl.discount_percent, 0) as "discountPercent"
+        FROM products p
+        INNER JOIN product_performers pp ON p.id = pp.product_id
+        INNER JOIN product_sources ps ON p.id = ps.product_id
+        INNER JOIN product_sales psl ON ps.id = psl.product_source_id
+        WHERE pp.performer_id = ${performerId}
+          AND psl.is_active = true
+          AND psl.end_at > NOW()
+        ORDER BY psl.end_at ASC
+        LIMIT ${limit}
+      `);
+
+      interface OnSaleProductRow {
+        id: number;
+        title: string | null;
+        normalizedProductId: string | null;
+        imageUrl: string | null;
+        releaseDate: string | null;
+        originalPrice: number | string | null;
+        salePrice: number | string;
+        saleEndAt: string;
+        discountPercent: number | string;
+      }
+
+      return (onSaleProducts.rows as OnSaleProductRow[]).map(row => ({
+        id: row.id,
+        title: row.title || '',
+        normalizedProductId: row.normalizedProductId,
+        imageUrl: row.imageUrl,
+        releaseDate: row.releaseDate,
+        originalPrice: row.originalPrice ? Number(row.originalPrice) : null,
+        salePrice: Number(row.salePrice),
+        saleEndAt: row.saleEndAt,
+        discountPercent: Number(row.discountPercent),
+      }));
+    } catch (error) {
+      console.error('Error fetching performer on-sale products:', error);
+      return [];
+    }
+  }
+
   return {
     getRelatedProducts,
     getWeeklyHighlights,
@@ -1032,6 +1329,9 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
     getRelatedPerformers,
     getRelatedPerformersWithGenreMatch,
     getRelatedProductsByNames,
+    getSimilarActresses,
+    getPerformerTopProducts,
+    getPerformerOnSaleProducts,
   };
 }
 

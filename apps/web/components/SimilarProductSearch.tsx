@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Sparkles, Search, X, Loader2 } from 'lucide-react';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const translations = {
   ja: {
@@ -179,7 +180,7 @@ export default function SimilarProductSearch({
             {results.map(product => (
               <Link
                 key={product.id}
-                href={`/${locale}/products/${product.id}`}
+                href={localizedHref(`/products/${product.id}`, locale)}
                 className="group block"
               >
                 <div className="relative rounded-lg overflow-hidden bg-gray-700 mb-2" style={{ aspectRatio: '2/3' }}>

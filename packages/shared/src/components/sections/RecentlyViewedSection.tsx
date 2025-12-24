@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, type ReactNode, type ComponentType } from 'react';
-import { Clock, X, Users } from 'lucide-react';
+import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
+import { Clock, X, Users, RefreshCw, AlertCircle } from 'lucide-react';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { getThemeConfig, type SectionTheme } from './theme';
@@ -86,8 +86,12 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
   const [actresses, setActresses] = useState<A[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isActressLoading, setIsActressLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
   // 遅延フェッチ用: 一度でも展開されたかどうか
   const [hasExpanded, setHasExpanded] = useState(false);
+  // リトライ用カウンター
+  const [retryCount, setRetryCount] = useState(0);
 
   // 展開時にフェッチをトリガー
   const handleToggle = useCallback((isOpen: boolean) => {
@@ -96,6 +100,13 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
       setHasExpanded(true);
     }
   }, [hasExpanded]);
+
+  // リトライハンドラー
+  const handleRetry = useCallback(() => {
+    setIsRetrying(true);
+    setError(null);
+    setRetryCount(prev => prev + 1);
+  }, []);
 
   // Fetch full product info from ID list (only when expanded)
   useEffect(() => {
@@ -110,6 +121,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
       }
 
       setIsLoading(true);
+      setError(null);
       try {
         const ids = items.slice(0, 8).map(item => item.id);
 
@@ -185,15 +197,17 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
       } catch (err) {
         console.error('Failed to fetch recently viewed products:', err);
         setProducts([]);
+        setError(locale === 'ja' ? '閲覧履歴の取得に失敗しました' : 'Failed to load viewing history');
       } finally {
         setIsLoading(false);
+        setIsRetrying(false);
       }
     };
 
     if (!isViewedLoading) {
       doFetch();
     }
-  }, [items, isViewedLoading, fetchProducts, fetchActresses, toActressType, ActressCard, hasExpanded]);
+  }, [items, isViewedLoading, fetchProducts, fetchActresses, toActressType, ActressCard, hasExpanded, retryCount, locale]);
 
   // Memoized delete handler to avoid recreating function for each list item
   // NOTE: This hook must be called before any conditional returns to follow Rules of Hooks
@@ -209,15 +223,49 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
   }
 
   // Don't render if expanded but no products (e.g., all items are FANZA-only on web)
-  if (hasExpanded && !isLoading && products.length === 0) {
+  // ただしエラー時はリトライUIを表示するためnullにしない
+  if (hasExpanded && !isLoading && products.length === 0 && !error) {
     return null;
   }
 
-  // コンテンツの決定：未展開/ロード中→スケルトン、ロード完了→商品リスト
+  // コンテンツの決定：未展開/ロード中→スケルトン、エラー→リトライUI、ロード完了→商品リスト
   const renderContent = () => {
     // 未展開またはロード中はスケルトンを表示（高さを一定に保つ）
     if (!hasExpanded || isLoading) {
-      return <ProductSkeleton count={Math.min(items.length, 8)} />;
+      return <ProductSkeleton count={Math.min(items.length, 8)} size="mini" />;
+    }
+
+    // エラー時はリトライボタンを表示
+    if (error) {
+      return (
+        <div className={`flex flex-col items-center justify-center py-8 px-4 rounded-lg ${
+          theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'
+        }`}>
+          <AlertCircle className={`w-8 h-8 mb-3 ${
+            theme === 'dark' ? 'text-red-400' : 'text-red-500'
+          }`} />
+          <p className={`text-sm mb-4 text-center ${
+            theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            {error}
+          </p>
+          <button
+            onClick={handleRetry}
+            disabled={isRetrying}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              theme === 'dark'
+                ? 'bg-rose-600 hover:bg-rose-700 text-white disabled:bg-gray-600'
+                : 'bg-rose-500 hover:bg-rose-600 text-white disabled:bg-gray-400'
+            } disabled:cursor-not-allowed`}
+          >
+            <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
+            {isRetrying
+              ? (locale === 'ja' ? '再読み込み中...' : 'Retrying...')
+              : (locale === 'ja' ? '再読み込み' : 'Try again')
+            }
+          </button>
+        </div>
+      );
     }
 
     return (
@@ -233,7 +281,10 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
             {isActressLoading ? (
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="bg-gray-700/50 rounded-lg animate-pulse" style={{ aspectRatio: '3/4' }} />
+                  <div key={i} className="theme-skeleton-card rounded-lg animate-pulse overflow-hidden">
+                    <div className="aspect-square theme-skeleton-image" />
+                    <div className="p-1.5"><div className="h-2.5 theme-skeleton-image rounded w-3/4" /></div>
+                  </div>
                 ))}
               </div>
             ) : (

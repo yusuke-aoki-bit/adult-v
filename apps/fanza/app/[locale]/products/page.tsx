@@ -135,9 +135,12 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     // adult-vサイトではデフォルトで全ASP表示（フィルターなし）
     includeAsp = isFanzaSite && serverAspFilter ? serverAspFilter : [];
   }
-  const excludeAsp = typeof searchParamsData.excludeAsp === 'string'
+  // ASP名を小文字に正規化（DBのCASE式で小文字に変換されるため）
+  includeAsp = includeAsp.map(asp => asp.toLowerCase());
+
+  const excludeAsp = (typeof searchParamsData.excludeAsp === 'string'
     ? searchParamsData.excludeAsp.split(',').filter(Boolean)
-    : [];
+    : []).map(asp => asp.toLowerCase());
   const hasVideo = searchParamsData.hasVideo === 'true';
   const hasImage = searchParamsData.hasImage === 'true';
   const onSale = searchParamsData.onSale === 'true';

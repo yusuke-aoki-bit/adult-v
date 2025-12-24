@@ -89,8 +89,10 @@ export {
   getThemeConfig,
   darkTheme,
   lightTheme,
+  productDetailTranslations,
+  getTranslation,
 } from './sections';
-export type { SectionTheme, ThemeConfig } from './sections';
+export type { SectionTheme, ThemeConfig, Locale } from './sections';
 
 // Filter components (shared between apps)
 export {
@@ -173,7 +175,7 @@ export {
 export type {
   LanguageSwitcherTheme,
   LanguageSwitcherBaseProps,
-  Locale,
+  Locale as LanguageSwitcherLocale,
 } from './LanguageSwitcher';
 
 // Header (shared between apps)
@@ -196,3 +198,20 @@ export {
   progressColors as budgetProgressColors,
 } from './BudgetManager';
 export type { BudgetManagerTheme, BudgetManagerBaseProps, BudgetStatus } from './BudgetManager';
+
+// Social sharing components
+export { SocialShareButtons } from './SocialShareButtons';
+
+// Similar actresses component
+export { default as SimilarActresses } from './SimilarActresses';
+
+// Performer products components
+export { default as PerformerTopProducts } from './PerformerTopProducts';
+export { default as PerformerOnSaleProducts } from './PerformerOnSaleProducts';
+
+// Watch Later button (shared between apps)
+export { default as WatchLaterButton } from './WatchLaterButton';
+
+// StickyCta (shared between apps)
+export { StickyCtaBase } from './StickyCta';
+export type { StickyCtaBaseProps } from './StickyCta';

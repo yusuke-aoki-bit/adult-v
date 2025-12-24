@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState, useCallback, useMemo, memo, type ReactNode, type ComponentType } from 'react';
 import { useParams } from 'next/navigation';
 import type { Actress, ProviderId } from '../../types/product';
-import { providerMeta } from '../../providers';
+import { providerMeta } from '../../lib/providers';
 import { normalizeImageUrl, isUncensoredThumbnail } from '../../lib/image-utils';
 import ImageLightbox from '../ImageLightbox';
 import { getActressCardThemeConfig, filterServicesForSite, type ActressCardTheme } from './themes';
@@ -246,10 +246,14 @@ function ActressCardBaseComponent({
                 {displayServices.slice(0, 3).map((service) => {
                   const meta = providerMeta[service as ProviderId];
                   if (!meta) return null;
+                  const gradientStyle = meta.gradientColors
+                    ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
+                    : { backgroundColor: '#4b5563' };
                   return (
                     <span
                       key={service}
-                      className={`text-[9px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-0.5 rounded bg-gradient-to-r text-white ${meta.accentClass}`}
+                      className="text-[9px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-0.5 rounded text-white"
+                      style={gradientStyle}
                     >
                       {meta.label}
                     </span>
@@ -344,10 +348,14 @@ function ActressCardBaseComponent({
             {displayServices.map((service) => {
               const meta = providerMeta[service as ProviderId];
               if (!meta) return null;
+              const gradientStyle = meta.gradientColors
+                ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
+                : { backgroundColor: '#4b5563' };
               return (
                 <span
                   key={service}
-                  className={`text-xs font-semibold px-3 py-1 rounded-full bg-gradient-to-r text-white ${meta.accentClass}`}
+                  className="text-xs font-semibold px-3 py-1 rounded-full text-white"
+                  style={gradientStyle}
                 >
                   {meta.label}
                 </span>

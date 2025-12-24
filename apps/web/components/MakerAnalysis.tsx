@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Building2, Tag, Star, ChevronRight, ChevronDown } from 'lucide-react';
 import { useRecentlyViewed } from '@/hooks';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface MakerPreference {
   makerId: number;
@@ -161,7 +162,7 @@ export default function MakerAnalysis({ locale, className = '' }: MakerAnalysisP
           return (
             <Link
               key={maker.makerId}
-              href={`/${locale}/makers/${maker.makerId}`}
+              href={localizedHref(`/makers/${maker.makerId}`, locale)}
               className="block group"
             >
               <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-750 hover:bg-gray-700 transition-colors">
@@ -247,7 +248,7 @@ export default function MakerAnalysis({ locale, className = '' }: MakerAnalysisP
                   {topMakers.slice(0, 3).map(m => (
                     <Link
                       key={m.makerId}
-                      href={`/${locale}/makers/${m.makerId}`}
+                      href={localizedHref(`/makers/${m.makerId}`, locale)}
                       className="text-xs px-2 py-1 bg-blue-900/30 text-blue-300 rounded hover:bg-blue-900/50 transition-colors"
                     >
                       {m.makerName}
@@ -266,7 +267,7 @@ export default function MakerAnalysis({ locale, className = '' }: MakerAnalysisP
                   {topLabels.slice(0, 3).map(m => (
                     <Link
                       key={m.makerId}
-                      href={`/${locale}/makers/${m.makerId}`}
+                      href={localizedHref(`/makers/${m.makerId}`, locale)}
                       className="text-xs px-2 py-1 bg-purple-900/30 text-purple-300 rounded hover:bg-purple-900/50 transition-colors"
                     >
                       {m.makerName}

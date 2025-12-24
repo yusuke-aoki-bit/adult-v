@@ -15,6 +15,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useBudgetTracker } from '@/hooks';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const translations = {
   ja: {
@@ -306,7 +307,7 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
                 >
                   <div className="flex-1 min-w-0">
                     <Link
-                      href={`/${locale}/products/${purchase.productId}`}
+                      href={localizedHref(`/products/${purchase.productId}`, locale)}
                       className="text-sm text-gray-300 hover:text-white truncate block transition-colors"
                     >
                       {purchase.title}
@@ -357,14 +358,14 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
           <h4 className="text-sm font-medium text-gray-400 mb-2">{t.tips}</h4>
           <div className="space-y-2">
             <Link
-              href={`/${locale}/products?sale=true`}
+              href={localizedHref('/products?sale=true', locale)}
               className="flex items-center gap-2 text-sm text-gray-300 hover:text-green-400 transition-colors"
             >
               <span className="text-green-400">•</span>
               {t.waitForSale}
             </Link>
             <Link
-              href={`/${locale}/products?sort=cost-performance`}
+              href={localizedHref('/products?sort=cost-performance', locale)}
               className="flex items-center gap-2 text-sm text-gray-300 hover:text-green-400 transition-colors"
             >
               <span className="text-green-400">•</span>

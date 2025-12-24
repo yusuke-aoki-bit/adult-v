@@ -106,7 +106,12 @@
     "title": "関連作品",
     "samePerformer": "同じ出演者",
     "sameGenre": "同じジャンル",
-    "recent": "新着"
+    "recent": "新着",
+    "performerOtherWorks": "{name}の他の作品",
+    "seriesWorks": "{name}シリーズ",
+    "makerOtherWorks": "{name}の他の作品",
+    "viewAll": "すべて見る",
+    "viewMore": "もっと見る"
   },
   "relatedActresses": {
     "title": "{name}との共演者",
@@ -114,6 +119,30 @@
     "costarCount": "回共演",
     "productCount": "作品",
     "genreMatch": "一致"
+  },
+  "similarActresses": {
+    "title": "{name}と似た女優",
+    "description": "同じジャンルに多く出演している女優（共演なし）",
+    "genreMatch": "一致",
+    "productCount": "作品",
+    "matchingGenres": "共通ジャンル"
+  },
+  "performerTopProducts": {
+    "title": "{name}の人気作品TOP5",
+    "description": "評価・レビュー・閲覧数から算出したおすすめ作品",
+    "rating": "評価",
+    "reviews": "件のレビュー",
+    "views": "回閲覧",
+    "onSale": "セール中"
+  },
+  "performerOnSale": {
+    "title": "{name}のセール中作品",
+    "description": "今だけの特別価格！お見逃しなく",
+    "off": "OFF",
+    "endsIn": "残り{days}日",
+    "endsTomorrow": "明日まで",
+    "endsToday": "今日まで！",
+    "yen": "¥"
   },
   "filter": {
     "genre": "ジャンル",
@@ -290,7 +319,11 @@
     "nextImage": "次の画像",
     "thumbnailAlt": "サムネイル",
     "saleTomorrow": "明日まで",
-    "saleEndsIn": "あと{days}日"
+    "saleEndsIn": "あと{days}日",
+    "urgentLastHour": "今すぐ！",
+    "urgentEndsIn": "残り{hours}時間",
+    "urgentEndsSoon": "あと{hours}時間",
+    "viewSale": "セールを見る"
   },
   "imageLightbox": {
     "close": "閉じる",
@@ -307,7 +340,8 @@
     "nextImage": "次の画像",
     "sampleImageAlt": "サンプル画像",
     "thumbnailAlt": "サムネイル",
-    "sampleImageCount": "サンプル画像: {count}枚（クリックで拡大）",
+    "sampleImageCount": "サンプル画像: {count}枚",
+    "tapToZoom": "タップで拡大",
     "close": "閉じる",
     "clickToCloseEsc": "クリックで閉じる / ESCキー"
   },
@@ -377,7 +411,10 @@
     "noCategories": "カテゴリがありません"
   },
   "stickyCta": {
-    "buyAt": "{provider}で購入"
+    "buyAt": "{provider}で見る",
+    "urgentHours": "残り{hours}時間！",
+    "endsToday": "本日終了！",
+    "endsSoon": "残り{days}日"
   },
   "personalized": {
     "recentlyViewed": "最近チェックした作品",

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Search, Sparkles, X, Loader2, MessageSquare, ChevronRight } from 'lucide-react';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const translations = {
   ja: {
@@ -249,7 +250,7 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
                 {results.slice(0, 6).map(result => (
                   <Link
                     key={result.id}
-                    href={`/${locale}/products/${result.id}`}
+                    href={localizedHref(`/products/${result.id}`, locale)}
                     className="flex items-center gap-3 p-2 bg-gray-750 rounded-lg hover:bg-gray-700 transition-colors group"
                   >
                     <div className="w-10 h-14 flex-shrink-0 rounded overflow-hidden bg-gray-700">

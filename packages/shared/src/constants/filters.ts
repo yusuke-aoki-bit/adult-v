@@ -56,23 +56,24 @@ export const ALPHABET = [
  * クエリパラメータ includeAsp=XXX で使用され、DBのasp_nameと比較される
  */
 export const ASP_DISPLAY_ORDER = [
-  // 作品数順（DB保存名を使用）
-  'SOKMIL',
-  'DUGA',
-  'FANZA',
-  'b10f',         // DB保存名（表示ラベルは providerMeta で 'b10f.jp'）
-  'MGS',          // DB保存名（表示ラベルは providerMeta で 'MGS動画'）
+  // 作品数順（小文字に統一、表示ラベルはproviderMetaで管理）
+  'sokmil',
+  'duga',
+  'fanza',
+  'b10f',
+  'mgs',
   'caribbeancompr', // カリビアンコムPR (DTIサブサービス)
-  'heyzo',        // HEYZO (DTIサブサービス)
-  'FC2',
-  '1pondo',       // 一本道 (DTIサブサービス)
-  'caribbeancom', // CARIBBEANCOM (DTIサブサービス)
-  'heydouga',     // HEYDOUGA (DTIサブサービス)
-  'x1x',          // X1X (DTIサブサービス)
-  'Japanska',
-  'enkou55',      // ENKOU55 (DTIサブサービス)
-  'urekko',       // UREKKO (DTIサブサービス)
-  'tokyohot',     // TOKYOHOT (DTIサブサービス)
+  'heyzo',          // HEYZO (DTIサブサービス)
+  'fc2',
+  '1pondo',         // 一本道 (DTIサブサービス)
+  'caribbeancom',   // CARIBBEANCOM (DTIサブサービス)
+  'heydouga',       // HEYDOUGA (DTIサブサービス)
+  'x1x',            // X1X (DTIサブサービス)
+  'japanska',
+  'enkou55',        // ENKOU55 (DTIサブサービス)
+  'urekko',         // UREKKO (DTIサブサービス)
+  'tvdeav',         // TVDEAV
+  'tokyohot',       // TOKYOHOT (DTIサブサービス)
 ] as const;
 
 /**
@@ -121,6 +122,8 @@ export const ASP_TO_PROVIDER_ID: Record<string, ProviderId | undefined> = {
   'enkou55': 'enkou55',
   'UREKKO': 'urekko',
   'urekko': 'urekko',
+  'TVDEAV': 'tvdeav',
+  'tvdeav': 'tvdeav',
   // DTI個別サービス（日本語キー - DB保存名）
   'カリビアンコム': 'caribbeancom',
   'カリビアンコムプレミアム': 'caribbeancompr',

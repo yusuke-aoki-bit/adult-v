@@ -188,11 +188,13 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
               }`}
             >
               {/* Provider badge */}
-              <div className={`px-2 py-1 rounded text-xs font-bold flex-shrink-0 ${
-                meta?.accentClass?.includes('from-')
-                  ? `bg-gradient-to-r ${meta.accentClass} text-white`
-                  : 'bg-gray-600 text-white'
-              }`}>
+              <div
+                className="px-2 py-1 rounded text-xs font-bold flex-shrink-0 text-white"
+                style={meta?.gradientColors
+                  ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
+                  : { backgroundColor: '#4b5563' }
+                }
+              >
                 {meta?.label || source.aspName}
               </div>
 

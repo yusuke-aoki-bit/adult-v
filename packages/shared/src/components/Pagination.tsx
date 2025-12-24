@@ -181,14 +181,13 @@ export default function Pagination({
     router.push(getUrl(newPage, newPerPage));
   }, [page, perPage, router, getUrl, onSavePerPage]);
 
-  if (totalPages <= 1 && !showPerPageSelector) {
-    return null;
-  }
-
   const showJumpButtons = totalPages > 10;
 
   // ページ番号配列をメモ化（page/totalPagesが変わらない限り再計算しない）
+  // 注: Reactのhooksルールに従い、条件分岐の前にuseMemoを配置
   const visiblePages = useMemo(() => {
+    if (totalPages <= 1) return [1];
+
     const delta = 2;
     const range: number[] = [];
     const rangeWithDots: (number | string)[] = [];
@@ -217,6 +216,10 @@ export default function Pagination({
 
     return rangeWithDots;
   }, [page, totalPages]);
+
+  if (totalPages <= 1 && !showPerPageSelector) {
+    return null;
+  }
 
   return (
     <nav className={`flex flex-col items-center gap-2 sm:gap-3 ${position === 'top' ? 'mb-4 sm:mb-6' : 'mt-6 sm:mt-8'}`}>

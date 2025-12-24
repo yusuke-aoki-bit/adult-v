@@ -970,7 +970,7 @@ async function runFullScan(
   let totalSkipped = 0;
   let totalErrors = 0;
   let consecutiveEmptyPages = 0;
-  const maxConsecutiveEmpty = 3; // 3回連続で空ページが続いたら終了
+  const maxConsecutiveEmpty = 200; // 連続空ページ上限（スクレイピング失敗対策）
 
   const processedCids = new Set<string>();
 
@@ -984,12 +984,13 @@ async function runFullScan(
 
       if (cids.length === 0) {
         consecutiveEmptyPages++;
-        console.log(`  ⚠️ 商品が見つかりません（${consecutiveEmptyPages}/${maxConsecutiveEmpty}）`);
+        console.log(`  空ページ検出 (${consecutiveEmptyPages}/${maxConsecutiveEmpty})`);
 
         if (consecutiveEmptyPages >= maxConsecutiveEmpty) {
-          console.log(`\n🏁 ${maxConsecutiveEmpty}回連続で空ページのため終了`);
+          console.log('  連続空ページ上限到達、終了します');
           break;
         }
+        await rateLimit();
         continue;
       }
 

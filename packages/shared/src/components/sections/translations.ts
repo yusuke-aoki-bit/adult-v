@@ -149,6 +149,69 @@ export const weeklyHighlightsTranslations = {
   },
 } as const;
 
+export const productDetailTranslations = {
+  ja: {
+    description: '説明',
+    price: '価格',
+    monthly: '月額',
+    releaseDate: '発売日',
+    tags: 'タグ',
+    relatedProducts: '関連作品',
+    sampleVideos: 'サンプル動画',
+    productId: '作品ID',
+    makerId: 'メーカー品番',
+    performers: '出演者',
+  },
+  en: {
+    description: 'Description',
+    price: 'Price',
+    monthly: 'Monthly',
+    releaseDate: 'Release Date',
+    tags: 'Tags',
+    relatedProducts: 'Related Products',
+    sampleVideos: 'Sample Videos',
+    productId: 'Product ID',
+    makerId: 'Maker ID',
+    performers: 'Performers',
+  },
+  zh: {
+    description: '描述',
+    price: '价格',
+    monthly: '月费',
+    releaseDate: '发售日期',
+    tags: '标签',
+    relatedProducts: '相关作品',
+    sampleVideos: '示例视频',
+    productId: '作品ID',
+    makerId: '制造商编号',
+    performers: '出演者',
+  },
+  'zh-TW': {
+    description: '描述',
+    price: '價格',
+    monthly: '月費',
+    releaseDate: '發售日期',
+    tags: '標籤',
+    relatedProducts: '相關作品',
+    sampleVideos: '示範影片',
+    productId: '作品ID',
+    makerId: '製造商編號',
+    performers: '演出者',
+  },
+  ko: {
+    description: '설명',
+    price: '가격',
+    monthly: '월정액',
+    releaseDate: '발매일',
+    tags: '태그',
+    relatedProducts: '관련 작품',
+    sampleVideos: '샘플 동영상',
+    productId: '작품ID',
+    makerId: '메이커 번호',
+    performers: '출연자',
+  },
+} as const;
+
 export type Locale = 'ja' | 'en' | 'zh' | 'zh-TW' | 'ko';
 
 export function getTranslation<T extends Record<string, unknown>>(

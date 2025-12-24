@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Users, TrendingUp, ChevronRight, Eye } from 'lucide-react';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const translations = {
   ja: {
@@ -147,7 +148,7 @@ export default function ViewingPatterns({
           return (
             <Link
               key={product.id}
-              href={`/${locale}/products/${product.id}`}
+              href={localizedHref(`/products/${product.id}`, locale)}
               className="flex items-center gap-3 p-2 rounded-lg bg-gray-750 hover:bg-gray-700 transition-colors group"
             >
               {/* Thumbnail */}
@@ -199,7 +200,7 @@ export default function ViewingPatterns({
 
       {relatedProducts.length > 4 && (
         <Link
-          href={`/${locale}/products?performer=${performers[0] || ''}`}
+          href={localizedHref(`/products?performer=${performers[0] || ''}`, locale)}
           className="mt-3 w-full py-2 text-sm text-gray-400 hover:text-white flex items-center justify-center gap-1 transition-colors"
         >
           {t.seeMore}

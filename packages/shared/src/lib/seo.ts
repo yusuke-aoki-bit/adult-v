@@ -675,9 +675,223 @@ export function generateOrganizationSchema(locale: string = 'ja') {
 }
 
 /**
- * カテゴリページ用FAQ（多言語対応）
- * Googleリッチリザルトに表示されCTR向上を狙う
+ * 商品ページ用FAQ（多言語対応）
+ * 商品情報から動的にFAQを生成してリッチリザルト表示
  */
+export function getProductPageFAQs(
+  locale: string = 'ja',
+  options: {
+    productId?: string;
+    title: string;
+    duration?: number;
+    releaseDate?: string;
+    provider?: string;
+    hasSubtitles?: boolean;
+    isHD?: boolean;
+    actressName?: string;
+  }
+): { question: string; answer: string }[] {
+  const { productId, title, duration, releaseDate, provider, hasSubtitles, isHD, actressName } = options;
+
+  const faqsByLocale: Record<string, { question: string; answer: string }[]> = {
+    ja: [
+      ...(duration ? [{
+        question: `「${title}」の収録時間は？`,
+        answer: `この作品の収録時間は約${duration}分です。${duration >= 120 ? '長編作品なのでじっくりお楽しみいただけます。' : duration >= 60 ? '見応えのある内容となっています。' : '短時間でお楽しみいただける作品です。'}`,
+      }] : []),
+      ...(productId ? [{
+        question: `品番「${productId}」はどこで購入できますか？`,
+        answer: `${provider || '各配信サイト'}で購入可能です。当サイトでは複数の配信サイトの価格を比較して最安値でお求めいただけます。`,
+      }] : []),
+      ...(releaseDate ? [{
+        question: `「${title}」の配信開始日はいつですか？`,
+        answer: `${releaseDate}に配信開始されました。${actressName ? `${actressName}出演の人気作品です。` : ''}`,
+      }] : []),
+      {
+        question: `この作品にはサンプル動画がありますか？`,
+        answer: `はい、無料のサンプル動画をご用意しています。購入前に内容をご確認いただけます。`,
+      },
+      ...(isHD ? [{
+        question: `HD・4K画質に対応していますか？`,
+        answer: `はい、高画質版でお楽しみいただけます。対応画質は配信サイトによって異なりますので、各サイトでご確認ください。`,
+      }] : []),
+    ],
+    en: [
+      ...(duration ? [{
+        question: `What is the runtime of "${title}"?`,
+        answer: `This video is approximately ${duration} minutes long. ${duration >= 120 ? 'It\'s a feature-length work you can enjoy thoroughly.' : duration >= 60 ? 'It has substantial content.' : 'A quick video for your enjoyment.'}`,
+      }] : []),
+      ...(productId ? [{
+        question: `Where can I purchase product "${productId}"?`,
+        answer: `Available on ${provider || 'various streaming sites'}. Our site compares prices across multiple platforms to help you find the best deal.`,
+      }] : []),
+      ...(releaseDate ? [{
+        question: `When was "${title}" released?`,
+        answer: `Released on ${releaseDate}. ${actressName ? `A popular work featuring ${actressName}.` : ''}`,
+      }] : []),
+      {
+        question: `Is there a sample video available?`,
+        answer: `Yes, free sample videos are available. You can preview the content before purchasing.`,
+      },
+    ],
+    zh: [
+      ...(duration ? [{
+        question: `"${title}"的播放时长是多少？`,
+        answer: `这部作品约${duration}分钟。${duration >= 120 ? '这是一部长篇作品，可以充分享受。' : duration >= 60 ? '内容充实。' : '短时间即可观看的作品。'}`,
+      }] : []),
+      ...(productId ? [{
+        question: `在哪里可以购买"${productId}"？`,
+        answer: `可在${provider || '各视频平台'}购买。本站比较多个平台的价格，帮您找到最优惠的价格。`,
+      }] : []),
+      ...(releaseDate ? [{
+        question: `"${title}"的发布日期是？`,
+        answer: `${releaseDate}开始配信。${actressName ? `${actressName}出演的人气作品。` : ''}`,
+      }] : []),
+      {
+        question: `有免费的示例视频吗？`,
+        answer: `是的，提供免费的示例视频。您可以在购买前预览内容。`,
+      },
+    ],
+    ko: [
+      ...(duration ? [{
+        question: `"${title}"의 재생 시간은?`,
+        answer: `이 작품은 약 ${duration}분입니다. ${duration >= 120 ? '장편 작품으로 충분히 즐기실 수 있습니다.' : duration >= 60 ? '알찬 내용입니다.' : '짧은 시간에 즐기실 수 있는 작품입니다.'}`,
+      }] : []),
+      ...(productId ? [{
+        question: `"${productId}"는 어디서 구매할 수 있나요?`,
+        answer: `${provider || '각 스트리밍 사이트'}에서 구매 가능합니다. 당 사이트에서는 여러 플랫폼의 가격을 비교하여 최저가를 찾을 수 있습니다.`,
+      }] : []),
+      ...(releaseDate ? [{
+        question: `"${title}"의 출시일은?`,
+        answer: `${releaseDate}에 배포되었습니다. ${actressName ? `${actressName} 출연의 인기 작품입니다.` : ''}`,
+      }] : []),
+      {
+        question: `샘플 동영상이 있나요?`,
+        answer: `네, 무료 샘플 동영상이 제공됩니다. 구매 전에 내용을 확인하실 수 있습니다.`,
+      },
+    ],
+  };
+
+  return faqsByLocale[locale] || faqsByLocale.ja;
+}
+
+/**
+ * 女優ページ用FAQ（多言語対応）
+ * 女優情報から動的にFAQを生成してリッチリザルト表示
+ */
+export function getActressPageFAQs(
+  locale: string = 'ja',
+  options: {
+    name: string;
+    productCount: number;
+    debutYear?: number;
+    latestReleaseDate?: string;
+    aliases?: string[];
+    topGenres?: string[];
+    aspNames?: string[];
+    isRetired?: boolean;
+  }
+): { question: string; answer: string }[] {
+  const { name, productCount, debutYear, latestReleaseDate, aliases, topGenres, aspNames, isRetired } = options;
+
+  const faqsByLocale: Record<string, { question: string; answer: string }[]> = {
+    ja: [
+      {
+        question: `${name}の出演作品数は？`,
+        answer: `${name}は現在${productCount}作品に出演しています。${debutYear ? `${debutYear}年にデビューし、` : ''}${isRetired ? '現在は引退されています。' : '現在も活躍中です。'}`,
+      },
+      ...(debutYear ? [{
+        question: `${name}のデビュー年は？`,
+        answer: `${name}は${debutYear}年にAV女優としてデビューしました。${productCount > 50 ? '多数の作品に出演し、人気女優として活躍しています。' : ''}`,
+      }] : []),
+      ...(topGenres && topGenres.length > 0 ? [{
+        question: `${name}の出演ジャンルは？`,
+        answer: `${name}は${topGenres.slice(0, 5).join('、')}などのジャンルに多く出演しています。様々なシチュエーションの作品をお楽しみいただけます。`,
+      }] : []),
+      ...(aliases && aliases.length > 0 ? [{
+        question: `${name}の別名義は？`,
+        answer: `${name}は${aliases.join('、')}という名義でも活動しています。複数の配信サイトで異なる名前で出演している場合があります。`,
+      }] : []),
+      ...(aspNames && aspNames.length > 0 ? [{
+        question: `${name}の作品はどこで見られますか？`,
+        answer: `${name}の作品は${aspNames.join('、')}などで視聴可能です。当サイトでは複数サイトの価格を比較して最安値でお求めいただけます。`,
+      }] : []),
+      ...(latestReleaseDate ? [{
+        question: `${name}の最新作は？`,
+        answer: `${name}の最新作は${latestReleaseDate}に配信されました。当サイトで最新作から過去作まで全ての出演作品をご確認いただけます。`,
+      }] : []),
+    ],
+    en: [
+      {
+        question: `How many videos has ${name} appeared in?`,
+        answer: `${name} has appeared in ${productCount} videos. ${debutYear ? `She debuted in ${debutYear} and ` : ''}${isRetired ? 'has since retired.' : 'is still active.'}`,
+      },
+      ...(debutYear ? [{
+        question: `When did ${name} debut?`,
+        answer: `${name} debuted as an AV actress in ${debutYear}. ${productCount > 50 ? 'She has appeared in numerous works and is a popular actress.' : ''}`,
+      }] : []),
+      ...(topGenres && topGenres.length > 0 ? [{
+        question: `What genres does ${name} appear in?`,
+        answer: `${name} frequently appears in ${topGenres.slice(0, 5).join(', ')} and other genres. Enjoy her work across various scenarios.`,
+      }] : []),
+      ...(aliases && aliases.length > 0 ? [{
+        question: `Does ${name} have other stage names?`,
+        answer: `${name} also performs under the names ${aliases.join(', ')}. She may appear under different names on various streaming sites.`,
+      }] : []),
+      ...(aspNames && aspNames.length > 0 ? [{
+        question: `Where can I watch ${name}'s videos?`,
+        answer: `${name}'s videos are available on ${aspNames.join(', ')}. Our site compares prices across multiple platforms to help you find the best deal.`,
+      }] : []),
+    ],
+    zh: [
+      {
+        question: `${name}出演了多少部作品？`,
+        answer: `${name}目前出演了${productCount}部作品。${debutYear ? `她于${debutYear}年出道，` : ''}${isRetired ? '目前已经退役。' : '目前仍在活跃中。'}`,
+      },
+      ...(debutYear ? [{
+        question: `${name}是什么时候出道的？`,
+        answer: `${name}于${debutYear}年作为AV女优出道。${productCount > 50 ? '她出演了大量作品，是一位人气女优。' : ''}`,
+      }] : []),
+      ...(topGenres && topGenres.length > 0 ? [{
+        question: `${name}出演哪些类型的作品？`,
+        answer: `${name}经常出演${topGenres.slice(0, 5).join('、')}等类型的作品。可以欣赏她在各种场景中的表演。`,
+      }] : []),
+      ...(aliases && aliases.length > 0 ? [{
+        question: `${name}有其他艺名吗？`,
+        answer: `${name}也以${aliases.join('、')}的名字活动。她可能在不同的平台上使用不同的名字。`,
+      }] : []),
+      ...(aspNames && aspNames.length > 0 ? [{
+        question: `在哪里可以观看${name}的作品？`,
+        answer: `${name}的作品可以在${aspNames.join('、')}等平台观看。本站比较多个平台的价格，帮您找到最优惠的价格。`,
+      }] : []),
+    ],
+    ko: [
+      {
+        question: `${name}는 몇 작품에 출연했나요?`,
+        answer: `${name}는 현재 ${productCount}작품에 출연했습니다. ${debutYear ? `${debutYear}년에 데뷔하여 ` : ''}${isRetired ? '현재는 은퇴했습니다.' : '현재도 활동 중입니다.'}`,
+      },
+      ...(debutYear ? [{
+        question: `${name}의 데뷔년도는?`,
+        answer: `${name}는 ${debutYear}년에 AV 여배우로 데뷔했습니다. ${productCount > 50 ? '다수의 작품에 출연하며 인기 여배우로 활약하고 있습니다.' : ''}`,
+      }] : []),
+      ...(topGenres && topGenres.length > 0 ? [{
+        question: `${name}는 어떤 장르에 출연하나요?`,
+        answer: `${name}는 ${topGenres.slice(0, 5).join(', ')} 등의 장르에 자주 출연합니다. 다양한 상황의 작품을 즐기실 수 있습니다.`,
+      }] : []),
+      ...(aliases && aliases.length > 0 ? [{
+        question: `${name}의 다른 이름은?`,
+        answer: `${name}는 ${aliases.join(', ')}라는 이름으로도 활동하고 있습니다. 여러 사이트에서 다른 이름으로 출연할 수 있습니다.`,
+      }] : []),
+      ...(aspNames && aspNames.length > 0 ? [{
+        question: `${name}의 작품은 어디서 볼 수 있나요?`,
+        answer: `${name}의 작품은 ${aspNames.join(', ')} 등에서 시청 가능합니다. 당 사이트에서는 여러 플랫폼의 가격을 비교하여 최저가를 찾을 수 있습니다.`,
+      }] : []),
+    ],
+  };
+
+  return faqsByLocale[locale] || faqsByLocale.ja;
+}
+
 export function getCategoryPageFAQs(locale: string = 'ja'): { question: string; answer: string }[] {
   const faqsByLocale: Record<string, { question: string; answer: string }[]> = {
     ja: [
@@ -739,4 +953,137 @@ export function getCategoryPageFAQs(locale: string = 'ja'): { question: string; 
   };
 
   return faqsByLocale[locale] || faqsByLocale.ja;
+}
+
+/**
+ * 構造化データ: Review（AIレビュー用）
+ * Googleリッチリザルトに表示されCTR向上を狙う
+ * 注: itemReviewedを含めることでProduct Schemaと連携
+ */
+export function generateReviewSchema(
+  reviewBody: string,
+  productName: string,
+  productUrl: string,
+  options?: {
+    ratingValue?: number;
+    bestRating?: number;
+    worstRating?: number;
+    datePublished?: string;
+    productImage?: string;
+    productId?: string;
+  }
+) {
+  const { siteName } = siteConfig;
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Review',
+    reviewBody,
+    author: {
+      '@type': 'Organization',
+      name: siteName,
+      url: siteUrl,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: siteName,
+      url: siteUrl,
+    },
+    itemReviewed: {
+      '@type': 'Product',
+      name: productName,
+      url: `${siteUrl}${productUrl}`,
+      ...(options?.productImage && { image: options.productImage }),
+      ...(options?.productId && { sku: options.productId }),
+    },
+  };
+
+  // レーティング情報（AIが評価した場合）
+  if (options?.ratingValue) {
+    schema.reviewRating = {
+      '@type': 'Rating',
+      ratingValue: options.ratingValue,
+      bestRating: options.bestRating || 5,
+      worstRating: options.worstRating || 1,
+    };
+  }
+
+  // レビュー公開日（AI分析日）
+  if (options?.datePublished) {
+    schema.datePublished = options.datePublished;
+  }
+
+  return schema;
+}
+
+/**
+ * 構造化データ: CriticReview（専門家レビュー）
+ * AI分析レビューを専門家レビューとして構造化
+ * より信頼性の高いリッチリザルト表示を狙う
+ */
+export function generateCriticReviewSchema(
+  reviewBody: string,
+  productName: string,
+  productUrl: string,
+  options?: {
+    ratingValue?: number;
+    datePublished?: string;
+    productImage?: string;
+    productId?: string;
+    summary?: string;
+  }
+) {
+  const { siteName } = siteConfig;
+
+  // レビュー本文を150文字以内に要約（meta description用）
+  const reviewSummary = options?.summary || (
+    reviewBody.length > 150
+      ? reviewBody.substring(0, 147) + '...'
+      : reviewBody
+  );
+
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'CriticReview',
+    reviewBody,
+    name: `${productName}のAI分析レビュー`,
+    author: {
+      '@type': 'Organization',
+      name: `${siteName} AI分析`,
+      url: siteUrl,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: siteName,
+      url: siteUrl,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${siteUrl}/logo.png`,
+      },
+    },
+    itemReviewed: {
+      '@type': 'Product',
+      name: productName,
+      url: `${siteUrl}${productUrl}`,
+      ...(options?.productImage && { image: options.productImage }),
+      ...(options?.productId && { sku: options.productId }),
+    },
+    description: reviewSummary,
+  };
+
+  // レーティング情報
+  if (options?.ratingValue) {
+    schema.reviewRating = {
+      '@type': 'Rating',
+      ratingValue: options.ratingValue,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+
+  // レビュー公開日
+  if (options?.datePublished) {
+    schema.datePublished = options.datePublished;
+  }
+
+  return schema;
 }

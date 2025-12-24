@@ -43,64 +43,75 @@ type RemotePattern = {
   pathname?: string;
 };
 
-// 共通の画像リモートパターン
+// 共通の画像リモートパターン (Next.js上限: 50パターン)
 export const remotePatterns: RemotePattern[] = [
   // Placeholder
   { protocol: 'https', hostname: 'placehold.co' },
-  // DMM/FANZA
+  // DMM/FANZA (ワイルドカードで統合)
   { protocol: 'https', hostname: '*.dmm.com' },
-  { protocol: 'https', hostname: 'pics.dmm.co.jp' },
-  { protocol: 'https', hostname: 'awsimgsrc.dmm.co.jp' },
   { protocol: 'https', hostname: '*.dmm.co.jp' },
   // DUGA
-  { protocol: 'https', hostname: 'pic.duga.jp' },
-  { protocol: 'https', hostname: 'img.duga.jp' },
+  { protocol: 'https', hostname: '*.duga.jp' },
   { protocol: 'http', hostname: 'duga.jp' },
   // HEYZO
-  { protocol: 'https', hostname: 'www.heyzo.com' },
-  // Caribbeancom
+  { protocol: 'https', hostname: '*.heyzo.com' },
+  // Caribbeancom (両方のドメイン)
   { protocol: 'https', hostname: '*.caribbeancompr.com' },
-  { protocol: 'https', hostname: 'www.caribbeancompr.com' },
+  { protocol: 'https', hostname: '*.caribbeancom.com' },
   // 1pondo
   { protocol: 'https', hostname: '*.1pondo.tv' },
-  { protocol: 'https', hostname: 'www.1pondo.tv' },
-  { protocol: 'https', hostname: 'smovie.1pondo.tv' },
   // MGS
   { protocol: 'https', hostname: '*.mgstage.com' },
-  { protocol: 'https', hostname: 'www.mgstage.com' },
-  { protocol: 'https', hostname: 'static.mgstage.com' },
-  { protocol: 'https', hostname: 'image.mgstage.com' },
   // B10F
-  { protocol: 'https', hostname: 'ads.b10f.jp' },
+  { protocol: 'https', hostname: '*.b10f.jp' },
   { protocol: 'https', hostname: 'b10f.jp' },
   // SOKMIL
-  { protocol: 'https', hostname: 'img.sokmil.com' },
   { protocol: 'https', hostname: '*.sokmil.com' },
   // Japanska
   { protocol: 'https', hostname: '*.japanska-xxx.com' },
-  { protocol: 'https', hostname: 'img01.japanska-xxx.com' },
-  { protocol: 'https', hostname: 'www.japanska-xxx.com' },
   // FC2
-  { protocol: 'https', hostname: '*.contents.fc2.com' },
   { protocol: 'https', hostname: '*.fc2.com' },
-  // DTI sites
-  { protocol: 'https', hostname: 'www.nyoshin.com' },
-  { protocol: 'https', hostname: 'www.unkotare.com' },
-  { protocol: 'https', hostname: 'www.caribbeancom.com' },
-  { protocol: 'https', hostname: 'www.10musume.com' },
-  { protocol: 'https', hostname: 'www.pacopacomama.com' },
-  { protocol: 'https', hostname: 'www.hitozuma-giri.com' },
-  { protocol: 'https', hostname: 'www.av-e-body.com' },
-  { protocol: 'https', hostname: 'www.av-4610.com' },
-  { protocol: 'https', hostname: 'www.av-0230.com' },
-  { protocol: 'https', hostname: 'www.kin8tengoku.com' },
-  { protocol: 'https', hostname: 'www.nozox.com' },
-  { protocol: 'https', hostname: 'www.3d-eros.net' },
-  { protocol: 'https', hostname: 'www.pikkur.com' },
-  { protocol: 'https', hostname: 'www.javholic.com' },
+  // DTI sites (統合)
+  { protocol: 'https', hostname: '*.nyoshin.com' },
+  { protocol: 'https', hostname: '*.unkotare.com' },
+  { protocol: 'https', hostname: '*.10musume.com' },
+  { protocol: 'https', hostname: '*.pacopacomama.com' },
+  { protocol: 'https', hostname: '*.hitozuma-giri.com' },
+  { protocol: 'https', hostname: '*.av-e-body.com' },
+  { protocol: 'https', hostname: '*.av-4610.com' },
+  { protocol: 'https', hostname: '*.av-0230.com' },
+  { protocol: 'https', hostname: '*.kin8tengoku.com' },
+  { protocol: 'https', hostname: '*.nozox.com' },
+  { protocol: 'https', hostname: '*.3d-eros.net' },
+  { protocol: 'https', hostname: '*.pikkur.com' },
+  { protocol: 'https', hostname: '*.javholic.com' },
   // Tokyo Hot
-  { protocol: 'https', hostname: 'my.cdn.tokyo-hot.com' },
   { protocol: 'https', hostname: '*.tokyo-hot.com' },
+  // HEYDOUGA
+  { protocol: 'https', hostname: '*.heydouga.com' },
+  { protocol: 'http', hostname: '*.heydouga.com' },
+  { protocol: 'https', hostname: 'heydouga.com' },
+  { protocol: 'http', hostname: 'heydouga.com' },
+  // X1X
+  { protocol: 'https', hostname: '*.x1x.com' },
+  { protocol: 'http', hostname: '*.x1x.com' },
+  { protocol: 'https', hostname: 'x1x.com' },
+  { protocol: 'http', hostname: 'x1x.com' },
+  // ENKOU55
+  { protocol: 'https', hostname: '*.enkou55.com' },
+  { protocol: 'http', hostname: '*.enkou55.com' },
+  { protocol: 'https', hostname: 'enkou55.com' },
+  { protocol: 'http', hostname: 'enkou55.com' },
+  // UREKKO
+  { protocol: 'https', hostname: '*.urekko.com' },
+  { protocol: 'http', hostname: '*.urekko.com' },
+  { protocol: 'https', hostname: 'urekko.com' },
+  { protocol: 'http', hostname: 'urekko.com' },
+  // TVDEAV
+  { protocol: 'https', hostname: '*.tvdeav.com' },
+  { protocol: 'http', hostname: '*.tvdeav.com' },
+  { protocol: 'https', hostname: 'tvdeav.com' },
+  { protocol: 'http', hostname: 'tvdeav.com' },
 ];
 
 // 共通の画像設定
@@ -124,7 +135,7 @@ export const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://pic.duga.jp https://img.duga.jp https://ad.duga.jp https://*.mgstage.com https://image.mgstage.com https://static.mgstage.com https://img.sokmil.com https://*.sokmil.com https://sokmil-ad.com https://*.japanska-xxx.com https://wimg2.golden-gateway.com https://*.fc2.com https://*.contents.fc2.com https://ads.b10f.jp https://b10f.jp https://www.heyzo.com https://*.caribbeancompr.com https://*.1pondo.tv https://www.nyoshin.com https://www.unkotare.com https://www.caribbeancom.com https://www.10musume.com https://www.pacopacomama.com https://www.hitozuma-giri.com https://www.av-e-body.com https://www.av-4610.com https://www.av-0230.com https://www.kin8tengoku.com https://www.nozox.com https://www.3d-eros.net https://www.pikkur.com https://www.javholic.com https://smovie.1pondo.tv https://awsimgsrc.dmm.co.jp https://placehold.co https://pixelarchivenow.com https://www.googletagmanager.com https://www.google-analytics.com https://*.tokyo-hot.com https://my.cdn.tokyo-hot.com",
+  "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://pic.duga.jp https://img.duga.jp https://ad.duga.jp https://*.mgstage.com https://image.mgstage.com https://static.mgstage.com https://img.sokmil.com https://*.sokmil.com https://sokmil-ad.com https://*.japanska-xxx.com https://wimg2.golden-gateway.com https://*.fc2.com https://*.contents.fc2.com https://ads.b10f.jp https://b10f.jp https://www.heyzo.com https://*.caribbeancompr.com https://*.1pondo.tv https://www.nyoshin.com https://www.unkotare.com https://www.caribbeancom.com https://www.10musume.com https://www.pacopacomama.com https://www.hitozuma-giri.com https://www.av-e-body.com https://www.av-4610.com https://www.av-0230.com https://www.kin8tengoku.com https://www.nozox.com https://www.3d-eros.net https://www.pikkur.com https://www.javholic.com https://smovie.1pondo.tv https://awsimgsrc.dmm.co.jp https://placehold.co https://pixelarchivenow.com https://www.googletagmanager.com https://www.google-analytics.com https://*.tokyo-hot.com https://my.cdn.tokyo-hot.com https://*.heydouga.com http://heydouga.com https://*.x1x.com http://x1x.com https://*.enkou55.com http://*.enkou55.com http://enkou55.com https://*.urekko.com http://*.urekko.com http://urekko.com https://*.tvdeav.com http://*.tvdeav.com http://tvdeav.com",
   "font-src 'self' data:",
   "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com https://firebase.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseremoteconfig.googleapis.com https://firebaselogging-pa.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.dmm.co.jp https://*.dmm.com https://*.mgstage.com",

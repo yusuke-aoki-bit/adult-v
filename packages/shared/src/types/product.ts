@@ -21,7 +21,8 @@ export type ProviderId =
   | 'heydouga'          // HEYDOUGA
   | 'x1x'               // X1X
   | 'enkou55'           // ENKOU55
-  | 'urekko';           // UREKKO
+  | 'urekko'            // UREKKO
+  | 'tvdeav';           // TVDEAV
 
 // 商品カテゴリ（ジャンル）の定義
 export type ProductCategory =
@@ -184,3 +185,20 @@ export type SortOption =
 
 // 出演者タイプ
 export type PerformerType = 'solo' | 'multi';
+
+// セール商品情報
+export interface SaleProduct {
+  productId: number;
+  normalizedProductId: string;
+  title: string;
+  thumbnailUrl: string | null;
+  aspName: string;
+  affiliateUrl: string;
+  regularPrice: number;
+  salePrice: number;
+  discountPercent: number;
+  saleName: string | null;
+  saleType: string | null;
+  endAt: Date | null;
+  performers: Array<{ id: number; name: string }>;
+}

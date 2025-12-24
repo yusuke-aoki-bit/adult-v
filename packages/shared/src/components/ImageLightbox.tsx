@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef, memo, TouchEvent, ReactNode } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getFullSizeImageUrl, isDtiUncensoredSite } from '../lib/image-utils';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -172,10 +172,10 @@ function ImageLightbox({
         WebkitTouchCallout: 'none'
       }}
     >
-      {/* ナビゲーションバー - 最上部に固定配置 */}
-      {hasMultipleImages ? (
-        <div className="shrink-0 flex items-center justify-center py-3 bg-black/90 z-20" onClick={stopPropagation}>
-          <div className="flex items-center gap-2 bg-black/60 rounded-xl px-2 py-1.5">
+      {/* ナビゲーションバー - 最上部に固定配置（1枚でも複数枚でも同じレイアウト） */}
+      <div className="shrink-0 flex items-center justify-center py-3 bg-black/90 z-20" onClick={stopPropagation}>
+        <div className="flex items-center gap-2 bg-black/60 rounded-xl px-2 py-1.5">
+          {hasMultipleImages && (
             <button
               type="button"
               onClick={handlePreviousClick}
@@ -185,16 +185,20 @@ function ImageLightbox({
               <ChevronLeft className="w-5 h-5" />
               {t('previous')}
             </button>
+          )}
+          {hasMultipleImages && (
             <span className="px-2 py-1 text-white/80 text-sm">
               {currentIndex + 1} / {images.length}
             </span>
-            <button
-              type="button"
-              onClick={handleCloseClick}
-              className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-white text-sm font-medium transition-colors"
-            >
-              {t('close')}
-            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleCloseClick}
+            className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-white text-sm font-medium transition-colors"
+          >
+            {t('close')}
+          </button>
+          {hasMultipleImages && (
             <button
               type="button"
               onClick={handleNextClick}
@@ -204,23 +208,9 @@ function ImageLightbox({
               {t('next')}
               <ChevronRight className="w-5 h-5" />
             </button>
-          </div>
+          )}
         </div>
-      ) : (
-        <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-black/90 z-20" onClick={stopPropagation}>
-          <div className="px-3 py-1 bg-black/60 rounded text-white/70 text-xs">
-            {t('clickToCloseEsc')}
-          </div>
-          <button
-            type="button"
-            onClick={handleCloseClick}
-            className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-            aria-label={t('close')}
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-      )}
+      </div>
 
       {/* メイン画像エリア - 残りのスペースを使用 */}
       <div

@@ -99,7 +99,12 @@
     "title": "相关作品",
     "samePerformer": "同一演员",
     "sameGenre": "同一类型",
-    "recent": "最新"
+    "recent": "最新",
+    "performerOtherWorks": "{name}的其他作品",
+    "seriesWorks": "{name}系列",
+    "makerOtherWorks": "{name}的其他作品",
+    "viewAll": "查看全部",
+    "viewMore": "查看更多"
   },
   "relatedActresses": {
     "title": "{name}的合作演员",
@@ -107,6 +112,30 @@
     "costarCount": "次合作",
     "productCount": "作品",
     "genreMatch": "匹配"
+  },
+  "similarActresses": {
+    "title": "与{name}相似的女优",
+    "description": "出演相似类型作品的女优（非合作演员）",
+    "genreMatch": "匹配",
+    "productCount": "作品",
+    "matchingGenres": "共同类型"
+  },
+  "performerTopProducts": {
+    "title": "{name}的人气作品TOP5",
+    "description": "基于评分、评论和浏览量的推荐作品",
+    "rating": "评分",
+    "reviews": "条评论",
+    "views": "次浏览",
+    "onSale": "促销"
+  },
+  "performerOnSale": {
+    "title": "{name}的促销作品",
+    "description": "限时特价！不容错过",
+    "off": "折",
+    "endsIn": "剩余{days}天",
+    "endsTomorrow": "明天截止",
+    "endsToday": "今天截止！",
+    "yen": "¥"
   },
   "filter": {
     "genre": "类型",
@@ -284,7 +313,10 @@
     "nextImage": "下一张图片",
     "thumbnailAlt": "缩略图",
     "saleTomorrow": "明天截止",
-    "saleEndsIn": "还剩{days}天"
+    "saleEndsIn": "还剩{days}天",
+    "urgentLastHour": "现在！",
+    "urgentEndsIn": "剩余{hours}小时",
+    "urgentEndsSoon": "还剩{hours}小时"
   },
   "imageLightbox": {
     "close": "关闭",
@@ -313,7 +345,10 @@
     "noCategories": "暂无分类"
   },
   "stickyCta": {
-    "buyAt": "在{provider}购买"
+    "buyAt": "在{provider}观看",
+    "urgentHours": "剩余{hours}小时！",
+    "endsToday": "今天截止！",
+    "endsSoon": "剩余{days}天"
   },
   "personalized": {
     "recentlyViewed": "最近浏览",

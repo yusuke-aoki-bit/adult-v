@@ -1,19 +1,22 @@
 // @adult-v/shared package exports
 
 // Types
-export * from './types/index.js';
+export * from './types/index';
 
 // Providers
-export * from './providers.js';
-export * from './provider-utils.js';
+export * from './providers';
+export * from './provider-utils';
 
 // Constants
-export * from './constants/index.js';
+export * from './constants/index';
 
 // Utilities
-export * from './localization.js';
-export * from './image-utils.js';
-export * from './site-config.js';
+export * from './localization';
+export * from './image-utils';
+export * from './site-config';
 
 // Prompts
-export * from './prompts/review-templates.js';
+export * from './prompts/review-templates';
+
+// Product ID utilities
+export * from './lib/product-id-utils';

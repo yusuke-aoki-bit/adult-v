@@ -638,6 +638,29 @@ export const wikiPerformerIndex = pgTable(
   }),
 );
 
+/**
+ * フッター用フィーチャー女優テーブル
+ * GSCデータに基づいて動的に更新される
+ */
+export const footerFeaturedActresses = pgTable(
+  'footer_featured_actresses',
+  {
+    id: serial('id').primaryKey(),
+    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerName: varchar('performer_name', { length: 200 }).notNull(),
+    // 選定理由スコア
+    impressions: integer('impressions').default(0), // GSC表示回数
+    position: decimal('position', { precision: 6, scale: 2 }), // 平均順位
+    priorityScore: integer('priority_score').default(0), // 優先度スコア（高い=表示優先）
+    // メタデータ
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    performerUnique: uniqueIndex('idx_footer_featured_performer').on(table.performerId),
+    priorityIdx: index('idx_footer_featured_priority').on(table.priorityScore),
+  }),
+);
+
 // 型エクスポート
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
@@ -675,3 +698,5 @@ export type ProductRawDataLink = typeof productRawDataLinks.$inferSelect;
 export type NewProductRawDataLink = typeof productRawDataLinks.$inferInsert;
 export type WikiPerformerIndex = typeof wikiPerformerIndex.$inferSelect;
 export type NewWikiPerformerIndex = typeof wikiPerformerIndex.$inferInsert;
+export type FooterFeaturedActress = typeof footerFeaturedActresses.$inferSelect;
+export type NewFooterFeaturedActress = typeof footerFeaturedActresses.$inferInsert;

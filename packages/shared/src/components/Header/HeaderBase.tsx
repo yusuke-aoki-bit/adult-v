@@ -137,11 +137,11 @@ export function HeaderBase({
   // セール統計のみ取得（ASP統計は静的リストを使用）
   const { saleStats } = useSaleStats();
 
-  // 静的ASPリスト（FANZAを除外）- useMemoでメモ化
+  // 静的ASPリスト（fanzaを除外）- useMemoでメモ化
   const aspList = useMemo(() => {
     if (isFanzaSite) return [];
     return ASP_DISPLAY_ORDER
-      .filter(aspName => aspName !== 'FANZA')
+      .filter(aspName => aspName !== 'fanza')
       .map(aspName => ({
         aspName,
         providerId: ASP_TO_PROVIDER_ID[aspName] ?? 'duga',

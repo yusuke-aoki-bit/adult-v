@@ -170,6 +170,15 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
     description: '過激な無修正動画',
     siteUrl: 'https://www.tokyo-hot.com/',
   },
+  tvdeav: {
+    id: 'tvdeav',
+    label: 'TVDEAV',
+    accentClass: 'from-teal-600 to-emerald-500',
+    textClass: 'text-teal-300',
+    gradientColors: { from: '#0d9488', to: '#10b981' },
+    description: 'TV出演AV女優の動画配信',
+    siteUrl: 'https://tvdeav.com/',
+  },
   // ===== その他DTI系 =====
   dti: {
     id: 'dti',

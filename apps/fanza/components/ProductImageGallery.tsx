@@ -186,38 +186,16 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
           )}
         </div>
 
-        {/* サムネイル一覧（複数画像がある場合のみ） */}
-        {hasMultipleImages && (
-          <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-5 gap-2">
-            {allImages.map((imgUrl, idx) => (
-              <button
-                key={imgUrl}
-                onClick={() => setSelectedIndex(idx)}
-                className={`relative rounded overflow-hidden border-2 transition-all ${
-                  selectedIndex === idx
-                    ? 'border-rose-700 ring-2 ring-rose-700/50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-                style={{ aspectRatio: '3/4' }}
-              >
-                <Image
-                  src={imgUrl}
-                  alt={`${productTitle} - ${t('sampleImageAlt')} ${idx + 1}`}
-                  fill
-                  className={`object-cover ${isUncensored ? 'blur-[1px]' : ''}`}
-                  sizes="(max-width: 768px) 20vw, (max-width: 1024px) 16vw, 10vw"
-                />
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* 画像枚数表示 */}
-        {hasMultipleImages && (
-          <p className="text-sm text-gray-500 text-center">
-            {t('sampleImageCount', { count: allImages.length })}
-          </p>
-        )}
+        {/* 画像情報表示 */}
+        <div className="flex items-center justify-center gap-3 text-sm text-gray-500">
+          {hasMultipleImages && (
+            <span>{t('sampleImageCount', { count: allImages.length })}</span>
+          )}
+          <span className="flex items-center gap-1">
+            <ZoomIn className="w-4 h-4" />
+            {t('tapToZoom')}
+          </span>
+        </div>
       </div>
 
       {/* ライトボックス */}

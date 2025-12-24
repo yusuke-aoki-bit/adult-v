@@ -83,6 +83,24 @@
     "noProducts": "沒有未分類的作品",
     "itemCount": "{count}件"
   },
+  "products": {
+    "title": "全部作品",
+    "metaDescription": "搜尋DUGA、MGS、DTI等所有串流媒體網站的作品。",
+    "description": "共有{count}件作品",
+    "noProducts": "未找到作品",
+    "viewActressListDesc": "按女優瀏覽作品"
+  },
+  "relatedProducts": {
+    "title": "相關作品",
+    "samePerformer": "同一演員",
+    "sameGenre": "同一類型",
+    "recent": "最新",
+    "performerOtherWorks": "{name}的其他作品",
+    "seriesWorks": "{name}系列",
+    "makerOtherWorks": "{name}的其他作品",
+    "viewAll": "查看全部",
+    "viewMore": "查看更多"
+  },
   "filter": {
     "genre": "類型",
     "site": "串流媒體網站",

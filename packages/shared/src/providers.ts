@@ -168,6 +168,14 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
     description: '人気動画サイト',
     siteUrl: 'https://www.urekko.net/',
   },
+  tvdeav: {
+    id: 'tvdeav',
+    label: 'TVDEAV',
+    accentClass: 'from-teal-600 to-emerald-500',
+    textClass: 'text-teal-300',
+    description: 'TV出演AV女優の動画配信',
+    siteUrl: 'https://tvdeav.com/',
+  },
 };
 
 /**

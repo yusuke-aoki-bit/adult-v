@@ -219,49 +219,78 @@ function ProductCardBase({
 
   // Mini size - simplest card for WeeklyHighlights, etc.
   if (resolvedSize === 'mini') {
+    const miniAffiliateUrl = getAffiliateUrl(product.affiliateUrl, affiliateUrlOptions);
+    const showMiniCta = miniAffiliateUrl && !(hideFanzaPurchaseLinks && product.provider === 'fanza');
+
     return (
-      <Link
-        href={`/${locale}/products/${product.id}`}
-        className={`group ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all`}
-      >
-        <div className={`relative ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`} style={{ aspectRatio: '2/3' }}>
-          {hasValidImageUrl ? (
-            <Image
-              src={imgSrc}
-              alt={product.title}
-              fill
-              sizes="(max-width: 768px) 33vw, 10vw"
-              className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isUncensored ? 'blur-[1px]' : ''}`}
-              loading="lazy"
-              onError={handleImageError}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <svg className={`h-8 w-8 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-              </svg>
-            </div>
-          )}
-          {product.rating && product.rating > 0 && (
-            <div className="absolute top-1 right-1 bg-yellow-500 text-black text-[10px] font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
-              <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-              {product.rating.toFixed(1)}
-            </div>
-          )}
-        </div>
-        <div className="p-1.5">
-          <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-orange-300' : 'text-gray-800 group-hover:text-orange-600'} text-xs font-medium line-clamp-2 transition-colors`}>
-            {product.title}
-          </p>
-        </div>
-      </Link>
+      <div className={`group relative ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all`}>
+        <Link href={`/${locale}/products/${product.id}`}>
+          <div className={`relative ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`} style={{ aspectRatio: '2/3' }}>
+            {hasValidImageUrl ? (
+              <Image
+                src={imgSrc}
+                alt={product.title}
+                fill
+                sizes="(max-width: 768px) 33vw, 10vw"
+                className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isUncensored ? 'blur-[1px]' : ''}`}
+                loading="lazy"
+                onError={handleImageError}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <svg className={`h-8 w-8 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                </svg>
+              </div>
+            )}
+            {product.rating && product.rating > 0 && (
+              <div className="absolute top-1 right-1 bg-yellow-500 text-black text-[10px] font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
+                <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                {product.rating.toFixed(1)}
+              </div>
+            )}
+            {/* ホバー時CTA オーバーレイ */}
+            {showMiniCta && (
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                <span className={`text-white text-[10px] font-bold px-2 py-1 rounded ${
+                  product.salePrice ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-pink-500 to-rose-500'
+                }`}>
+                  {product.salePrice ? t('viewSale') : t('viewDetails')}
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="p-1.5">
+            <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-orange-300' : 'text-gray-800 group-hover:text-orange-600'} text-xs font-medium line-clamp-2 transition-colors`}>
+              {product.title}
+            </p>
+          </div>
+        </Link>
+        {/* 外部リンクCTA（ホバー時のみ表示） */}
+        {showMiniCta && (
+          <a
+            href={miniAffiliateUrl}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute bottom-0 left-0 right-0 py-1.5 text-center text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
+              product.salePrice ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-pink-500 to-rose-500'
+            }`}
+          >
+            {product.providerLabel}で見る
+          </a>
+        )}
+      </div>
     );
   }
 
   // Compact mode
   if (resolvedSize === 'compact') {
+    const compactAffiliateUrl = getAffiliateUrl(product.affiliateUrl, affiliateUrlOptions);
+    const showCompactCta = compactAffiliateUrl && !(hideFanzaPurchaseLinks && product.provider === 'fanza');
+
     return (
       <>
         <div className={`relative block ${themeConfig.cardBg} rounded-lg overflow-hidden hover:ring-2 ${themeConfig.cardHoverRing} transition-all group`}>
@@ -280,13 +309,41 @@ function ProductCardBase({
                 quality={75}
               />
               {product.salePrice && (
-                <div className="absolute top-1 left-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded z-10">
-                  SALE
+                <div className="absolute top-1 left-1 flex gap-1 z-10">
+                  <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    SALE
+                  </span>
+                  {product.discount && product.discount >= 30 && (
+                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded">
+                      お得
+                    </span>
+                  )}
+                </div>
+              )}
+              {/* 高評価バッジ */}
+              {product.rating && product.rating >= 4.5 && (
+                <div className="absolute bottom-1 right-1 bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 z-10">
+                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  {product.rating.toFixed(1)}
                 </div>
               )}
             </div>
             <div className="p-1.5">
               <h3 className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-tight`}>{product.title}</h3>
+              {/* 女優名リンク（導線強化） */}
+              {product.performers && product.performers.length > 0 && (
+                <div className="mt-1 truncate">
+                  <Link
+                    href={`/${locale}/actress/${product.performers[0].id}`}
+                    className={`text-[10px] ${themeConfig.accentColor} hover:underline`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {product.performers[0].name}
+                  </Link>
+                </div>
+              )}
             </div>
           </Link>
 
@@ -322,6 +379,25 @@ function ProductCardBase({
                 />
               )}
             </div>
+          )}
+
+          {/* ホバー時CTA（compactモード） */}
+          {showCompactCta && (
+            <a
+              href={compactAffiliateUrl}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              onClick={(e) => e.stopPropagation()}
+              className={`absolute bottom-0 left-0 right-0 py-1.5 text-center text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 ${
+                product.salePrice
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500'
+                  : theme === 'dark'
+                    ? 'bg-gradient-to-r from-rose-500 to-pink-500'
+                    : 'bg-gradient-to-r from-pink-500 to-rose-500'
+              }`}
+            >
+              {product.providerLabel}で{product.salePrice ? 'お得に' : ''}見る
+            </a>
           )}
         </div>
 
@@ -428,6 +504,27 @@ function ProductCardBase({
               </svg>
             </div>
           )}
+          {/* サンプルコンテンツ数バッジ */}
+          {(product.sampleImages?.length || product.sampleVideos?.length) && (
+            <div className="absolute bottom-2 left-2 flex gap-1">
+              {product.sampleImages && product.sampleImages.length > 0 && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/60 text-white flex items-center gap-0.5">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {product.sampleImages.length}
+                </span>
+              )}
+              {product.sampleVideos && product.sampleVideos.length > 0 && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-rose-600/80 text-white flex items-center gap-0.5">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                  {product.sampleVideos.length}
+                </span>
+              )}
+            </div>
+          )}
           {(hasError || imgSrc === resolvedPlaceholder || !hasValidImageUrl) && (
             <div className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br ${themeConfig.noImageGradient}`}>
               <div className={`text-7xl mb-3 ${themeConfig.noImageEmoji}`}>📷</div>
@@ -451,6 +548,34 @@ function ProductCardBase({
             </span>
           </div>
         )}
+        {/* Urgency badge for sales ending within 48 hours */}
+        {product.salePrice && product.saleEndAt && (() => {
+          const endDate = new Date(product.saleEndAt);
+          const now = new Date();
+          const diffMs = endDate.getTime() - now.getTime();
+          const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+          if (diffHours > 0 && diffHours <= 48) {
+            const isVeryUrgent = diffHours <= 6;
+            const isUrgent = diffHours <= 24;
+            return (
+              <div className="absolute top-4 right-4 z-20" style={{ marginTop: product.isFuture || product.isNew ? '0' : '0' }}>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1 ${
+                  isVeryUrgent
+                    ? 'bg-red-600 text-white animate-pulse'
+                    : isUrgent
+                      ? `${themeConfig.urgencyBadgeBg} ${themeConfig.urgencyBadgeText} animate-pulse`
+                      : 'bg-yellow-500 text-black'
+                }`}>
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  {diffHours <= 1 ? t('urgentLastHour') : diffHours <= 24 ? t('urgentEndsIn', { hours: diffHours }) : t('urgentEndsSoon', { hours: diffHours })}
+                </span>
+              </div>
+            );
+          }
+          return null;
+        })()}
         {product.productType === 'dvd' && (
           <div className="absolute top-4 left-4" style={{ marginTop: product.isFuture || product.isNew ? '28px' : '0' }}>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-600 text-white shadow-lg">
@@ -497,9 +622,16 @@ function ProductCardBase({
                       {resolvedFormatPrice(product.salePrice, product.currency)}
                     </span>
                     {product.discount && (
-                      <span className={`font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} px-1 py-0.5 rounded ${isEmphasized ? 'text-xs' : 'text-[10px]'}`}>
-                        -{product.discount}%
-                      </span>
+                      <>
+                        <span className={`font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} px-1 py-0.5 rounded ${isEmphasized ? 'text-xs' : 'text-[10px]'}`}>
+                          -{product.discount}%
+                        </span>
+                        {product.discount >= 30 && (
+                          <span className="font-bold text-black bg-gradient-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 rounded text-[10px]">
+                            お得
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                   {product.saleEndAt && (() => {
@@ -601,6 +733,15 @@ function ProductCardBase({
                 showCount={true}
               />
             )}
+            {/* 人気バッジ: 高評価かつレビュー多数 */}
+            {product.rating && product.rating >= 4.5 && product.reviewCount && product.reviewCount >= 20 && (
+              <span className="text-[10px] font-bold text-white bg-gradient-to-r from-pink-500 to-rose-500 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                </svg>
+                人気
+              </span>
+            )}
             {product.duration && <span className="shrink-0">・{product.duration}分</span>}
           </div>
         )}
@@ -616,9 +757,16 @@ function ProductCardBase({
                   {resolvedFormatPrice(product.regularPrice, product.currency)}
                 </p>
                 {product.discount && (
-                  <span className={`text-[10px] font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} px-1 py-0.5 rounded`}>
-                    -{product.discount}%
-                  </span>
+                  <>
+                    <span className={`text-[10px] font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} px-1 py-0.5 rounded`}>
+                      -{product.discount}%
+                    </span>
+                    {product.discount >= 30 && (
+                      <span className="text-[10px] font-bold text-black bg-gradient-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 rounded">
+                        お得
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             </div>

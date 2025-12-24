@@ -15,7 +15,7 @@ export interface ProductInfo {
 
 export interface ReviewPromptOptions {
   language: 'ja' | 'en' | 'zh' | 'ko';
-  style: 'expert' | 'casual' | 'enthusiast';
+  style: 'expert'; // Only 'expert' is currently implemented
   focus: 'acting' | 'production' | 'story' | 'overall';
   length: 'short' | 'medium' | 'long';
 }
@@ -126,9 +126,11 @@ export function buildReviewPrompt(
   const { language, style, focus, length } = options;
 
   // システムプロンプト構築
+  const stylePrompts = SYSTEM_PROMPTS[style] || SYSTEM_PROMPTS.expert;
+  const focusPrompts = FOCUS_PROMPTS[focus];
   const systemPrompt = [
-    SYSTEM_PROMPTS[style]?.[language] || SYSTEM_PROMPTS.expert.ja,
-    FOCUS_PROMPTS[focus]?.[language] || FOCUS_PROMPTS[focus]?.ja || '',
+    stylePrompts[language] || stylePrompts.ja,
+    focusPrompts?.ja || '',
   ].join('\n\n');
 
   // ユーザープロンプト構築
@@ -147,7 +149,7 @@ export function buildReviewPrompt(
 
   const userPrompt = `${productDetails}
 
-${LENGTH_INSTRUCTIONS[length]?.[language] || LENGTH_INSTRUCTIONS[length]?.ja}
+${LENGTH_INSTRUCTIONS[length]?.ja || LENGTH_INSTRUCTIONS.medium.ja}
 
 上記の作品についてレビューを執筆してください。`;
 

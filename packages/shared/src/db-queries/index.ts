@@ -11,4 +11,7 @@ export {
   type RecommendedActress,
   type RelatedPerformer,
   type RelatedPerformerWithGenre,
+  type SimilarActress,
+  type TopRatedProduct,
+  type PerformerOnSaleProduct,
 } from './recommendations';

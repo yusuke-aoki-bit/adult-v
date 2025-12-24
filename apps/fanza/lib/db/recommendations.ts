@@ -37,6 +37,9 @@ export const {
   getRelatedPerformers,
   getRelatedPerformersWithGenreMatch,
   getRelatedProductsByNames,
+  getSimilarActresses,
+  getPerformerTopProducts,
+  getPerformerOnSaleProducts,
 } = queries;
 
 // 型エクスポート
@@ -47,11 +50,14 @@ export type {
   RecommendedActress,
   RelatedPerformer,
   RelatedPerformerWithGenre,
+  SimilarActress,
+  TopRatedProduct,
+  PerformerOnSaleProduct,
 } from '@adult-v/shared/db-queries';
 
 // 以下は個別実装のまま（特殊なロジックがあるため）
 
-import { products as productsTable, productPerformers as ppTable, productTags as ptTable } from './schema';
+import { products as productsTable, productPerformers as ppTable, productTags as ptTable, tags as tagsTable } from './schema';
 import { eq, and, inArray, ne, desc } from 'drizzle-orm';
 
 /**
@@ -242,4 +248,178 @@ export async function getRecommendationsFromFavorites(
   }
 
   return recommendations.slice(0, limit);
+}
+
+/**
+ * Get product's genre tags with IDs (excludes maker/label)
+ * 商品のジャンルタグ情報をIDと共に取得
+ */
+export async function getProductGenreTags(productId: number): Promise<Array<{
+  id: number;
+  name: string;
+}>> {
+  const db = getDb();
+
+  const result = await db
+    .select({
+      id: tagsTable.id,
+      name: tagsTable.name,
+    })
+    .from(tagsTable)
+    .innerJoin(ptTable, eq(tagsTable.id, ptTable.tagId))
+    .where(
+      and(
+        eq(ptTable.productId, productId),
+        sql`(${tagsTable.category} = 'genre' OR ${tagsTable.category} IS NULL)`
+      )
+    );
+
+  return result;
+}
+
+/**
+ * Get product's maker info
+ * 商品のメーカー/レーベル情報を取得
+ */
+export async function getProductMaker(productId: number): Promise<{
+  id: number;
+  name: string;
+  category: 'maker' | 'label';
+} | null> {
+  const db = getDb();
+
+  const result = await db
+    .select({
+      id: tagsTable.id,
+      name: tagsTable.name,
+      category: tagsTable.category,
+    })
+    .from(tagsTable)
+    .innerJoin(ptTable, eq(tagsTable.id, ptTable.tagId))
+    .where(
+      and(
+        eq(ptTable.productId, productId),
+        sql`${tagsTable.category} IN ('maker', 'label')`
+      )
+    )
+    .limit(1);
+
+  if (result.length === 0) return null;
+
+  return {
+    id: result[0].id,
+    name: result[0].name,
+    category: result[0].category as 'maker' | 'label',
+  };
+}
+
+/**
+ * Get same maker products
+ * 同じメーカーの他の商品を取得
+ */
+export async function getSameMakerProducts(
+  makerId: number,
+  currentProductId: number,
+  limit: number = 6
+): Promise<Array<{
+  id: number;
+  title: string | null;
+  normalizedProductId: string | null;
+  releaseDate: string | null;
+  imageUrl: string | null;
+}>> {
+  const db = getDb();
+
+  const result = await db
+    .select({
+      id: productsTable.id,
+      title: productsTable.title,
+      normalizedProductId: productsTable.normalizedProductId,
+      releaseDate: productsTable.releaseDate,
+      imageUrl: productsTable.defaultThumbnailUrl,
+    })
+    .from(productsTable)
+    .innerJoin(ptTable, eq(productsTable.id, ptTable.productId))
+    .where(
+      and(
+        eq(ptTable.tagId, makerId),
+        ne(productsTable.id, currentProductId)
+      )
+    )
+    .orderBy(desc(productsTable.releaseDate))
+    .limit(limit);
+
+  return result;
+}
+
+/**
+ * Get product's series tag
+ * 商品のシリーズタグを取得
+ */
+export async function getProductSeries(productId: number): Promise<{
+  id: number;
+  name: string;
+} | null> {
+  const db = getDb();
+
+  const result = await db
+    .select({
+      id: tagsTable.id,
+      name: tagsTable.name,
+    })
+    .from(tagsTable)
+    .innerJoin(ptTable, eq(tagsTable.id, ptTable.tagId))
+    .where(
+      and(
+        eq(ptTable.productId, productId),
+        eq(tagsTable.category, 'series')
+      )
+    )
+    .limit(1);
+
+  if (result.length === 0) return null;
+
+  return {
+    id: result[0].id,
+    name: result[0].name,
+  };
+}
+
+/**
+ * Get same series products
+ * 同じシリーズの他の商品を取得
+ */
+export async function getSameSeriesProducts(
+  seriesId: number,
+  currentProductId: number,
+  limit: number = 6
+): Promise<Array<{
+  id: number;
+  title: string | null;
+  normalizedProductId: string | null;
+  releaseDate: string | null;
+  imageUrl: string | null;
+}>> {
+  const db = getDb();
+
+  const result = await db
+    .select({
+      id: productsTable.id,
+      title: productsTable.title,
+      normalizedProductId: productsTable.normalizedProductId,
+      releaseDate: productsTable.releaseDate,
+      imageUrl: productsTable.defaultThumbnailUrl,
+    })
+    .from(productsTable)
+    .innerJoin(ptTable, eq(productsTable.id, ptTable.productId))
+    .where(
+      and(
+        eq(ptTable.tagId, seriesId),
+        ne(productsTable.id, currentProductId)
+      )
+    )
+    .orderBy(desc(productsTable.releaseDate))
+    .limit(limit);
+
+  return result;
 }

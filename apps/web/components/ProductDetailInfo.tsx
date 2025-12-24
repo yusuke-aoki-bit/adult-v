@@ -4,6 +4,8 @@ import { memo } from 'react';
 import { useParams } from 'next/navigation';
 import { isSubscriptionProvider } from '@/lib/providers';
 import { formatPrice } from '@/lib/utils/subscription';
+import { providerMeta } from '@adult-v/shared/lib/providers';
+import { ASP_TO_PROVIDER_ID } from '@adult-v/shared/constants/filters';
 
 /**
  * 再生時間を分単位でフォーマット
@@ -182,14 +184,24 @@ const ProductDetailInfo = memo(function ProductDetailInfo({
             {t.distributionSites} ({sources.length} {t.sites})
           </h3>
           <div className="space-y-2">
-            {sources.map((source) => (
+            {sources.map((source) => {
+              const providerId = ASP_TO_PROVIDER_ID[source.aspName.toLowerCase()];
+              const meta = providerId ? providerMeta[providerId] : null;
+              const gradientStyle = meta?.gradientColors
+                ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
+                : { backgroundColor: '#4b5563' };
+
+              return (
               <div
                 key={`${source.aspName}-${source.originalProductId}`}
                 className="flex items-center justify-between bg-gray-700/50 rounded p-3 text-xs"
               >
                 <div className="flex items-center gap-3">
-                  <span className="px-2 py-1 bg-gray-600 rounded font-mono text-white">
-                    {source.aspName}
+                  <span
+                    className="px-2 py-1 rounded font-bold text-white"
+                    style={gradientStyle}
+                  >
+                    {meta?.label || source.aspName}
                   </span>
                   <span className="text-gray-300">
                     {t.productId} {source.originalProductId}
@@ -205,7 +217,8 @@ const ProductDetailInfo = memo(function ProductDetailInfo({
                   </span>
                 ) : null}
               </div>
-            ))}
+              );
+            })}
           </div>
           <p className="text-xs text-gray-400 mt-3">
             {t.dataInfo}

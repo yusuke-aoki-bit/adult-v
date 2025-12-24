@@ -8,6 +8,8 @@ import { getDtiServiceFromUrl } from '@/lib/image-utils';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@/lib/localization';
 import { unstable_cache } from 'next/cache';
+import { generateProductIdVariations } from '@adult-v/shared';
+import type { SaleProduct } from '@adult-v/shared';
 // Note: generateActressId is exported from ./queries/utils.ts
 
 // Next.js unstable_cache設定
@@ -399,6 +401,7 @@ export async function getProductById(id: string, locale: string = 'ja'): Promise
 
 /**
  * 商品を商品IDで検索（normalizedProductIdまたはoriginalProductId）
+ * 品番のバリエーション（ハイフンあり/なし、大文字/小文字）にも対応
  * @param productId - 商品ID（正規化済みまたはオリジナル）
  * @param locale - ロケール（'ja' | 'en' | 'zh' | 'ko'）
  */
@@ -406,11 +409,14 @@ export async function searchProductByProductId(productId: string, locale: string
   try {
     const db = getDb();
 
-    // まずnormalizedProductIdで検索
+    // 品番バリエーションを生成
+    const variants = generateProductIdVariations(productId);
+
+    // まずnormalizedProductIdで検索（バリエーション対応）
     const productByNormalizedId = await db
       .select()
       .from(products)
-      .where(eq(products.normalizedProductId, productId))
+      .where(inArray(products.normalizedProductId, variants))
       .limit(1);
 
     if (productByNormalizedId.length > 0) {
@@ -422,11 +428,11 @@ export async function searchProductByProductId(productId: string, locale: string
       return mapProductToType(product, performerData, tagData, sourceData, undefined, imagesData, videosData, locale);
     }
 
-    // originalProductIdで検索
+    // originalProductIdで検索（バリエーション対応）
     const sourceByOriginalId = await db
       .select()
       .from(productSources)
-      .where(eq(productSources.originalProductId, productId))
+      .where(inArray(productSources.originalProductId, variants))
       .limit(1);
 
     if (sourceByOriginalId.length === 0) {
@@ -591,6 +597,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
 
     // 複数プロバイダー（ASP）でフィルタ（いずれかを含む）
     // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
+    // 日本語名や大文字名も正規化名に変換
     // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
     if (options?.providers && options.providers.length > 0) {
       const aspNames = options.providers;
@@ -613,10 +620,37 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
                   WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
                   WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
                   WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko.com%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%tvdeav%' THEN 'tvdeav'
                   ELSE 'dti'
                 END
-              ELSE ps.asp_name
+              -- 日本語名を正規化名に変換
+              WHEN ps.asp_name = 'カリビアンコムプレミアム' THEN 'caribbeancompr'
+              WHEN ps.asp_name = 'カリビアンコムPR' THEN 'caribbeancompr'
+              WHEN ps.asp_name = 'カリビアンコム' THEN 'caribbeancom'
+              WHEN ps.asp_name = '一本道' THEN '1pondo'
+              WHEN ps.asp_name = '天然むすめ' THEN '10musume'
+              WHEN ps.asp_name = 'パコパコママ' THEN 'pacopacomama'
+              WHEN ps.asp_name = 'ムラムラ' THEN 'muramura'
+              -- 主要ASPを小文字に正規化
+              WHEN ps.asp_name = 'SOKMIL' THEN 'sokmil'
+              WHEN ps.asp_name = 'DUGA' THEN 'duga'
+              WHEN ps.asp_name = 'FANZA' THEN 'fanza'
+              WHEN ps.asp_name = 'MGS' THEN 'mgs'
+              WHEN ps.asp_name = 'FC2' THEN 'fc2'
+              WHEN ps.asp_name = 'Japanska' THEN 'japanska'
+              WHEN ps.asp_name = 'JAPANSKA' THEN 'japanska'
+              -- DTI系を小文字に正規化
+              WHEN ps.asp_name = 'CARIBBEANCOM' THEN 'caribbeancom'
+              WHEN ps.asp_name = 'HEYZO' THEN 'heyzo'
+              WHEN ps.asp_name = 'HEYDOUGA' THEN 'heydouga'
+              WHEN ps.asp_name = 'X1X' THEN 'x1x'
+              WHEN ps.asp_name = 'ENKOU55' THEN 'enkou55'
+              WHEN ps.asp_name = 'UREKKO' THEN 'urekko'
+              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
+              WHEN ps.asp_name = 'TOKYOHOT' THEN 'tokyohot'
+              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
+              ELSE LOWER(ps.asp_name)
             END
           ) IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
         )`
@@ -625,6 +659,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
 
     // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
     // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
+    // 日本語名や大文字名も正規化名に変換
     // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
     if (options?.excludeProviders && options.excludeProviders.length > 0) {
       const excludeAspNames = options.excludeProviders;
@@ -647,10 +682,37 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
                   WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
                   WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
                   WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko.com%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%tvdeav%' THEN 'tvdeav'
                   ELSE 'dti'
                 END
-              ELSE ps.asp_name
+              -- 日本語名を正規化名に変換
+              WHEN ps.asp_name = 'カリビアンコムプレミアム' THEN 'caribbeancompr'
+              WHEN ps.asp_name = 'カリビアンコムPR' THEN 'caribbeancompr'
+              WHEN ps.asp_name = 'カリビアンコム' THEN 'caribbeancom'
+              WHEN ps.asp_name = '一本道' THEN '1pondo'
+              WHEN ps.asp_name = '天然むすめ' THEN '10musume'
+              WHEN ps.asp_name = 'パコパコママ' THEN 'pacopacomama'
+              WHEN ps.asp_name = 'ムラムラ' THEN 'muramura'
+              -- 主要ASPを小文字に正規化
+              WHEN ps.asp_name = 'SOKMIL' THEN 'sokmil'
+              WHEN ps.asp_name = 'DUGA' THEN 'duga'
+              WHEN ps.asp_name = 'FANZA' THEN 'fanza'
+              WHEN ps.asp_name = 'MGS' THEN 'mgs'
+              WHEN ps.asp_name = 'FC2' THEN 'fc2'
+              WHEN ps.asp_name = 'Japanska' THEN 'japanska'
+              WHEN ps.asp_name = 'JAPANSKA' THEN 'japanska'
+              -- DTI系を小文字に正規化
+              WHEN ps.asp_name = 'CARIBBEANCOM' THEN 'caribbeancom'
+              WHEN ps.asp_name = 'HEYZO' THEN 'heyzo'
+              WHEN ps.asp_name = 'HEYDOUGA' THEN 'heydouga'
+              WHEN ps.asp_name = 'X1X' THEN 'x1x'
+              WHEN ps.asp_name = 'ENKOU55' THEN 'enkou55'
+              WHEN ps.asp_name = 'UREKKO' THEN 'urekko'
+              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
+              WHEN ps.asp_name = 'TOKYOHOT' THEN 'tokyohot'
+              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
+              ELSE LOWER(ps.asp_name)
             END
           ) IN (${sql.join(excludeAspNames.map(name => sql`${name}`), sql`, `)})
         )`
@@ -969,10 +1031,34 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
                   WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
                   WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
                   WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko.com%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%tvdeav%' THEN 'tvdeav'
                   ELSE 'dti'
                 END
-              ELSE ps.asp_name
+              -- 主要ASPを小文字に正規化
+              WHEN ps.asp_name = 'SOKMIL' THEN 'sokmil'
+              WHEN ps.asp_name = 'DUGA' THEN 'duga'
+              WHEN ps.asp_name = 'FANZA' THEN 'fanza'
+              WHEN ps.asp_name = 'MGS' THEN 'mgs'
+              WHEN ps.asp_name = 'FC2' THEN 'fc2'
+              WHEN ps.asp_name = 'Japanska' THEN 'japanska'
+              WHEN ps.asp_name = 'JAPANSKA' THEN 'japanska'
+              -- DTI系を小文字に正規化（英語名）
+              WHEN ps.asp_name = 'HEYDOUGA' THEN 'heydouga'
+              WHEN ps.asp_name = 'X1X' THEN 'x1x'
+              WHEN ps.asp_name = 'ENKOU55' THEN 'enkou55'
+              WHEN ps.asp_name = 'UREKKO' THEN 'urekko'
+              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
+              WHEN ps.asp_name = 'TOKYOHOT' THEN 'tokyohot'
+              WHEN ps.asp_name = 'HEYZO' THEN 'heyzo'
+              WHEN ps.asp_name = 'CARIBBEANCOM' THEN 'caribbeancom'
+              -- DTI系を小文字に正規化（日本語名）
+              WHEN ps.asp_name = 'カリビアンコムプレミアム' THEN 'caribbeancompr'
+              WHEN ps.asp_name = '一本道' THEN '1pondo'
+              WHEN ps.asp_name = '天然むすめ' THEN '10musume'
+              WHEN ps.asp_name = 'パコパコママ' THEN 'pacopacomama'
+              WHEN ps.asp_name = 'ムラムラ' THEN 'muramura'
+              ELSE LOWER(ps.asp_name)
             END
           ) IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
         )`
@@ -981,6 +1067,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
 
     // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
     // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
+    // 日本語名や大文字名も正規化名に変換
     // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
     if (options?.excludeProviders && options.excludeProviders.length > 0) {
       const excludeAspNames = options.excludeProviders;
@@ -1003,10 +1090,37 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
                   WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
                   WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
                   WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko.com%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko%' THEN 'urekko'
+                  WHEN ${products.defaultThumbnailUrl} LIKE '%tvdeav%' THEN 'tvdeav'
                   ELSE 'dti'
                 END
-              ELSE ps.asp_name
+              -- 日本語名を正規化名に変換
+              WHEN ps.asp_name = 'カリビアンコムプレミアム' THEN 'caribbeancompr'
+              WHEN ps.asp_name = 'カリビアンコムPR' THEN 'caribbeancompr'
+              WHEN ps.asp_name = 'カリビアンコム' THEN 'caribbeancom'
+              WHEN ps.asp_name = '一本道' THEN '1pondo'
+              WHEN ps.asp_name = '天然むすめ' THEN '10musume'
+              WHEN ps.asp_name = 'パコパコママ' THEN 'pacopacomama'
+              WHEN ps.asp_name = 'ムラムラ' THEN 'muramura'
+              -- 主要ASPを小文字に正規化
+              WHEN ps.asp_name = 'SOKMIL' THEN 'sokmil'
+              WHEN ps.asp_name = 'DUGA' THEN 'duga'
+              WHEN ps.asp_name = 'FANZA' THEN 'fanza'
+              WHEN ps.asp_name = 'MGS' THEN 'mgs'
+              WHEN ps.asp_name = 'FC2' THEN 'fc2'
+              WHEN ps.asp_name = 'Japanska' THEN 'japanska'
+              WHEN ps.asp_name = 'JAPANSKA' THEN 'japanska'
+              -- DTI系を小文字に正規化
+              WHEN ps.asp_name = 'CARIBBEANCOM' THEN 'caribbeancom'
+              WHEN ps.asp_name = 'HEYZO' THEN 'heyzo'
+              WHEN ps.asp_name = 'HEYDOUGA' THEN 'heydouga'
+              WHEN ps.asp_name = 'X1X' THEN 'x1x'
+              WHEN ps.asp_name = 'ENKOU55' THEN 'enkou55'
+              WHEN ps.asp_name = 'UREKKO' THEN 'urekko'
+              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
+              WHEN ps.asp_name = 'TOKYOHOT' THEN 'tokyohot'
+              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
+              ELSE LOWER(ps.asp_name)
             END
           ) IN (${sql.join(excludeAspNames.map(name => sql`${name}`), sql`, `)})
         )`
@@ -2099,6 +2213,11 @@ export async function getActressProductCountByAsp(actressId: string): Promise<Ar
               WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
               WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
               WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
               ELSE 'dti'
             END
           ELSE ps.asp_name
@@ -2121,6 +2240,11 @@ export async function getActressProductCountByAsp(actressId: string): Promise<Ar
               WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
               WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
               WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
               ELSE 'dti'
             END
           ELSE ps.asp_name
@@ -2533,6 +2657,11 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
               WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
               WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
               WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
               ELSE 'dti'
             END
           ELSE LOWER(ps.asp_name)
@@ -2844,6 +2973,11 @@ export async function getUncategorizedProducts(options?: {
               WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
               WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
               WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
               ELSE 'dti'
             END
           ELSE ps.asp_name
@@ -2864,6 +2998,11 @@ export async function getUncategorizedProducts(options?: {
               WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
               WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
               WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
               ELSE 'dti'
             END
           ELSE ps.asp_name
@@ -3285,6 +3424,11 @@ async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCo
             WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
             WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
             WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+            WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+            WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+            WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+            WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+            WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
             ELSE 'dti'
           END
         ELSE ps.asp_name
@@ -3307,6 +3451,11 @@ async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCo
             WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
             WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
             WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+            WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+            WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+            WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+            WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+            WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
             ELSE 'dti'
           END
         ELSE ps.asp_name
@@ -3316,10 +3465,48 @@ async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCo
 
   if (!result.rows) return [];
 
-  return result.rows.map(row => ({
-    aspName: row.asp_name,
-    productCount: parseInt(row.product_count, 10),
-    actressCount: parseInt(row.actress_count, 10),
+  // DBの値をASP_DISPLAY_ORDER形式に正規化するマップ
+  // DBには日本語名や大文字で保存されているケースがある
+  const aspNameNormalizeMap: Record<string, string> = {
+    // 日本語 → 英語
+    'カリビアンコムプレミアム': 'caribbeancompr',
+    'カリビアンコムPR': 'caribbeancompr',
+    'カリビアンコム': 'caribbeancom',
+    '一本道': '1pondo',
+    '天然むすめ': '10musume',
+    'パコパコママ': 'pacopacomama',
+    'ムラムラ': 'muramura',
+    // 大文字 → 小文字
+    'CARIBBEANCOM': 'caribbeancom',
+    'HEYZO': 'heyzo',
+    'HEYDOUGA': 'heydouga',
+    'X1X': 'x1x',
+    'ENKOU55': 'enkou55',
+    'UREKKO': 'urekko',
+    'TOKYOHOT': 'tokyohot',
+    'TVDEAV': 'tvdeav',
+  };
+
+  // 同じ正規化名のエントリを統合
+  const merged = new Map<string, { productCount: number; actressCount: number }>();
+  for (const row of result.rows) {
+    const normalized = aspNameNormalizeMap[row.asp_name] || row.asp_name;
+    const existing = merged.get(normalized);
+    if (existing) {
+      existing.productCount += parseInt(row.product_count, 10);
+      existing.actressCount += parseInt(row.actress_count, 10);
+    } else {
+      merged.set(normalized, {
+        productCount: parseInt(row.product_count, 10),
+        actressCount: parseInt(row.actress_count, 10),
+      });
+    }
+  }
+
+  return Array.from(merged.entries()).map(([aspName, stats]) => ({
+    aspName,
+    productCount: stats.productCount,
+    actressCount: stats.actressCount,
   }));
 }
 
@@ -3659,6 +3846,11 @@ export async function getAspStatsByCategory(
               WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
               WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
               WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
               ELSE 'dti'
             END
           ELSE ps.asp_name
@@ -3681,6 +3873,11 @@ export async function getAspStatsByCategory(
               WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
               WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
               WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
               ELSE 'dti'
             END
           ELSE ps.asp_name
@@ -3761,6 +3958,11 @@ export async function getUncategorizedStats(): Promise<UncategorizedStats> {
               WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
               WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
               WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
               ELSE 'dti'
             END
           ELSE ps.asp_name
@@ -3782,6 +3984,11 @@ export async function getUncategorizedStats(): Promise<UncategorizedStats> {
               WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
               WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
               WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
+              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
+              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
+              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
+              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
+              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
               ELSE 'dti'
             END
           ELSE ps.asp_name
@@ -3872,25 +4079,12 @@ export async function getCandidatePerformers(productCode: string): Promise<Array
   }
 }
 
+// SaleProduct型をre-export（後方互換性維持）
+export type { SaleProduct };
+
 /**
  * セール情報付き商品を取得
  */
-export interface SaleProduct {
-  productId: number;
-  normalizedProductId: string;
-  title: string;
-  thumbnailUrl: string | null;
-  aspName: string;
-  affiliateUrl: string;
-  regularPrice: number;
-  salePrice: number;
-  discountPercent: number;
-  saleName: string | null;
-  saleType: string | null;
-  endAt: Date | null;
-  performers: Array<{ id: number; name: string }>;
-}
-
 export async function getSaleProducts(options?: {
   limit?: number;
   aspName?: string;

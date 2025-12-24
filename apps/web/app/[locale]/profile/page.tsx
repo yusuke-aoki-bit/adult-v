@@ -16,6 +16,7 @@ import { PreferenceChart, PreferenceBarChart } from '@adult-v/shared/components'
 import DiscoveryBadges from '@/components/DiscoveryBadges';
 import { usePreferenceAnalysis, profileTranslations, useViewingDiary } from '@/hooks';
 import { CloudSyncSettings, cloudSyncTranslations } from '@adult-v/shared/components';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 // Dynamic imports for heavy components to reduce initial bundle size
 const BudgetTracker = dynamic(() => import('@/components/BudgetTracker'), {
@@ -64,7 +65,7 @@ export default function ProfilePage() {
           <h2 className="text-xl font-bold text-white mb-2">{t.noData}</h2>
           <p className="text-gray-400 mb-6">{t.noDataDesc}</p>
           <Link
-            href={`/${locale}/products`}
+            href={localizedHref('/products', locale)}
             className="inline-flex items-center gap-2 px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition-colors"
           >
             {t.startViewing}
@@ -176,7 +177,7 @@ export default function ProfilePage() {
                 {analysis.recommendedKeywords.map((keyword) => (
                   <Link
                     key={keyword}
-                    href={`/${locale}/products?q=${encodeURIComponent(keyword)}`}
+                    href={localizedHref(`/products?q=${encodeURIComponent(keyword)}`, locale)}
                     className="px-3 py-1.5 bg-gray-700 hover:bg-rose-600 text-gray-300 hover:text-white text-sm rounded-full transition-colors flex items-center gap-1"
                   >
                     <Search className="w-3 h-3" />
@@ -189,7 +190,7 @@ export default function ProfilePage() {
 
           {/* 視聴日記リンク */}
           <Link
-            href={`/${locale}/diary`}
+            href={localizedHref('/diary', locale)}
             className="block bg-gray-800 hover:bg-gray-750 rounded-lg p-4 transition-colors group"
           >
             <div className="flex items-center justify-between">
@@ -212,7 +213,7 @@ export default function ProfilePage() {
                 {entries.slice(0, 5).map((entry) => (
                   <Link
                     key={entry.id}
-                    href={`/${locale}/products/${entry.productId}`}
+                    href={localizedHref(`/products/${entry.productId}`, locale)}
                     className="block text-sm text-gray-300 hover:text-rose-400 truncate transition-colors"
                   >
                     {entry.title}

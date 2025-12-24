@@ -33,7 +33,15 @@ export async function getServerSiteConfig(): Promise<SiteConfig> {
 }
 
 // Adult Viewerで表示するASP一覧（FANZA以外）
-const ADULT_V_ASPS = ['MGS', 'DUGA', 'SOKMIL', 'b10f', 'FC2', 'caribbeancom', 'caribbeancompr', '1pondo', 'heyzo', '10musume', 'pacopacomama', 'muramura', 'tokyohot', 'Japanska'];
+// 注意: この配列はURLパラメータのフィルター検証にも使用される
+const ADULT_V_ASPS = [
+  // 主要ASP
+  'MGS', 'DUGA', 'SOKMIL', 'b10f', 'FC2', 'Japanska',
+  // DTI系サブサービス
+  'caribbeancom', 'caribbeancompr', '1pondo', 'heyzo', '10musume',
+  'pacopacomama', 'muramura', 'tokyohot', 'heydouga', 'x1x',
+  'enkou55', 'urekko', 'tvdeav',
+];
 
 /**
  * サーバーコンポーネントからASPフィルターを取得

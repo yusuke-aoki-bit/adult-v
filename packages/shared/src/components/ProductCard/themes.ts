@@ -42,6 +42,10 @@ export interface ThemeConfig {
   discountBadgeText: string;
   countdownColor: string;
 
+  // Urgency badge
+  urgencyBadgeBg: string;
+  urgencyBadgeText: string;
+
   // CTA button
   ctaGradient: string;
   ctaGradientHover: string;
@@ -106,6 +110,10 @@ export const themes: Record<ProductCardTheme, ThemeConfig> = {
     discountBadgeText: 'text-red-300',
     countdownColor: 'text-yellow-300',
 
+    // Urgency badge
+    urgencyBadgeBg: 'bg-gradient-to-r from-red-600 via-orange-500 to-red-600',
+    urgencyBadgeText: 'text-white',
+
     // CTA button
     ctaGradient: 'from-rose-600 to-pink-600',
     ctaGradientHover: 'hover:from-rose-700 hover:to-pink-700',
@@ -167,6 +175,10 @@ export const themes: Record<ProductCardTheme, ThemeConfig> = {
     discountBadgeBg: 'bg-red-100',
     discountBadgeText: 'text-red-600',
     countdownColor: 'text-amber-600',
+
+    // Urgency badge
+    urgencyBadgeBg: 'bg-gradient-to-r from-red-500 via-orange-400 to-red-500',
+    urgencyBadgeText: 'text-white',
 
     // CTA button
     ctaGradient: 'from-pink-500 to-rose-500',

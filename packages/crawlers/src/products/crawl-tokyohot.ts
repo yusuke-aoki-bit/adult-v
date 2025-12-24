@@ -498,6 +498,8 @@ async function main(): Promise<void> {
   let totalSaved = 0;
   let totalSkipped = 0;
   let totalErrors = 0;
+  let consecutiveEmptyPages = 0;
+  const MAX_CONSECUTIVE_EMPTY_PAGES = 200;
 
   try {
     const browserInstance = await initBrowser();
@@ -515,9 +517,16 @@ async function main(): Promise<void> {
       const productIds = await extractProductIdsFromList(page, siteConfig, pageNum);
 
       if (productIds.length === 0) {
-        console.log('  No products found, stopping.');
-        break;
+        consecutiveEmptyPages++;
+        console.log(`  空ページ検出 (${consecutiveEmptyPages}/${MAX_CONSECUTIVE_EMPTY_PAGES})`);
+        if (consecutiveEmptyPages >= MAX_CONSECUTIVE_EMPTY_PAGES) {
+          console.log('  連続空ページ上限到達、終了します');
+          break;
+        }
+        await rateLimit();
+        continue;
       }
+      consecutiveEmptyPages = 0; // リセット
 
       for (const productId of productIds) {
         await rateLimit();

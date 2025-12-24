@@ -2,6 +2,8 @@
 
 import { useState, useCallback, memo } from 'react';
 import { Calendar, Filter, X } from 'lucide-react';
+import { providerMeta } from '../../lib/providers';
+import { ASP_TO_PROVIDER_ID } from '../../constants/filters';
 
 export interface SearchFilterOptions {
   query?: string;
@@ -195,19 +197,28 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                 配信元
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {PROVIDERS.map((provider) => (
-                  <button
-                    key={provider.value}
-                    onClick={() => handleProviderToggle(provider.value)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      filters.providers?.includes(provider.value)
-                        ? theme.providerActive
-                        : `${theme.providerInactive} ${theme.providerInactiveHover}`
-                    }`}
-                  >
-                    {provider.label}
-                  </button>
-                ))}
+                {PROVIDERS.map((provider) => {
+                  const providerId = ASP_TO_PROVIDER_ID[provider.value.toLowerCase()];
+                  const meta = providerId ? providerMeta[providerId] : null;
+                  const isSelected = filters.providers?.includes(provider.value);
+                  const gradientStyle = isSelected && meta?.gradientColors
+                    ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
+                    : undefined;
+                  return (
+                    <button
+                      key={provider.value}
+                      onClick={() => handleProviderToggle(provider.value)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isSelected
+                          ? 'text-white'
+                          : `${theme.providerInactive} ${theme.providerInactiveHover}`
+                      }`}
+                      style={gradientStyle}
+                    >
+                      {meta?.label || provider.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

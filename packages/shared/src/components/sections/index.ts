@@ -14,6 +14,7 @@ export {
   forYouTranslations,
   salesTranslations,
   weeklyHighlightsTranslations,
+  productDetailTranslations,
   getTranslation,
 } from './translations';
 export type { Locale } from './translations';

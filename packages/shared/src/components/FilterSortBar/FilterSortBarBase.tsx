@@ -144,8 +144,11 @@ export default function FilterSortBarBase({
   }, [searchParams, defaultSort]);
 
   const selectedProviders = useMemo<Set<string>>(() => {
+    // includeAspパラメータを優先、後方互換でproviderもサポート
+    const includeAspParam = searchParams.get('includeAsp');
     const providerParam = searchParams.get('provider');
-    return providerParam ? new Set(providerParam.split(',')) : new Set<string>();
+    const param = includeAspParam || providerParam;
+    return param ? new Set(param.split(',')) : new Set<string>();
   }, [searchParams]);
 
   const selectedPriceRanges = useMemo<Set<string>>(() => {
@@ -168,11 +171,12 @@ export default function FilterSortBarBase({
       params.set('sort', newSort);
     }
 
-    // プロバイダー
+    // プロバイダー（includeAspパラメータを使用、ヘッダーと統一）
+    params.delete('provider'); // 古いパラメータは削除
     if (providers.size === 0) {
-      params.delete('provider');
+      params.delete('includeAsp');
     } else {
-      params.set('provider', Array.from(providers).join(','));
+      params.set('includeAsp', Array.from(providers).join(','));
     }
 
     // 価格帯
@@ -281,7 +285,7 @@ export default function FilterSortBarBase({
           </select>
         </div>
 
-        {/* プロバイダーフィルター（チェックボックス） - ASP_DISPLAY_ORDER順 */}
+        {/* プロバイダーフィルター（チェックボックス） - ASP_DISPLAY_ORDER順、ヘッダーと同じaspNameを使用 */}
         {showProviderFilter && (
           <div>
             <label className={config.label}>
@@ -293,21 +297,23 @@ export default function FilterSortBarBase({
                 if (!providerId) return null;
                 const meta = providerMeta[providerId as ProviderId];
                 if (!meta) return null;
-                const count = providerCounts[providerId];
-                const isSelected = selectedProviders.has(providerId);
+                const count = providerCounts[providerId] ?? providerCounts[aspName];
+                // ヘッダーと同じくaspNameで選択状態を管理
+                const isSelected = selectedProviders.has(aspName);
                 return (
                   <label
-                    key={providerId}
+                    key={aspName}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-colors ${
                       isSelected
-                        ? `bg-gradient-to-r ${meta.accentClass} text-white`
+                        ? 'text-white'
                         : config.providerUnselected
                     }`}
+                    style={isSelected && meta.gradientColors ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` } : undefined}
                   >
                     <input
                       type="checkbox"
                       checked={isSelected}
-                      onChange={() => toggleProvider(providerId)}
+                      onChange={() => toggleProvider(aspName)}
                       className="sr-only"
                     />
                     {meta.label}

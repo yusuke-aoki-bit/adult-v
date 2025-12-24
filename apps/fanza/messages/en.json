@@ -106,7 +106,12 @@
     "title": "Related Videos",
     "samePerformer": "Same Performer",
     "sameGenre": "Same Genre",
-    "recent": "Recent"
+    "recent": "Recent",
+    "performerOtherWorks": "More from {name}",
+    "seriesWorks": "{name} Series",
+    "makerOtherWorks": "More from {name}",
+    "viewAll": "View All",
+    "viewMore": "View More"
   },
   "relatedActresses": {
     "title": "Co-stars of {name}",
@@ -114,6 +119,30 @@
     "costarCount": " co-appearances",
     "productCount": " videos",
     "genreMatch": "match"
+  },
+  "similarActresses": {
+    "title": "Similar to {name}",
+    "description": "Actresses in similar genres (not co-stars)",
+    "genreMatch": "match",
+    "productCount": " videos",
+    "matchingGenres": "Shared genres"
+  },
+  "performerTopProducts": {
+    "title": "Top 5 Videos by {name}",
+    "description": "Best picks based on ratings, reviews and views",
+    "rating": "Rating",
+    "reviews": " reviews",
+    "views": " views",
+    "onSale": "Sale"
+  },
+  "performerOnSale": {
+    "title": "Sale: {name}'s Videos",
+    "description": "Limited time offers! Don't miss out",
+    "off": "OFF",
+    "endsIn": "{days} days left",
+    "endsTomorrow": "Ends tomorrow",
+    "endsToday": "Ends today!",
+    "yen": "¥"
   },
   "filter": {
     "genre": "Genre",
@@ -304,7 +333,11 @@
     "nextImage": "Next image",
     "thumbnailAlt": "Thumbnail",
     "saleTomorrow": "Ends tomorrow",
-    "saleEndsIn": "{days} days left"
+    "saleEndsIn": "{days} days left",
+    "urgentLastHour": "NOW!",
+    "urgentEndsIn": "{hours}h left",
+    "urgentEndsSoon": "{hours}h remaining",
+    "viewSale": "View Sale"
   },
   "imageLightbox": {
     "close": "Close",
@@ -321,7 +354,8 @@
     "nextImage": "Next image",
     "sampleImageAlt": "Sample image",
     "thumbnailAlt": "Thumbnail",
-    "sampleImageCount": "Sample images: {count} (click to enlarge)",
+    "sampleImageCount": "Sample images: {count}",
+    "tapToZoom": "Tap to zoom",
     "close": "Close",
     "clickToCloseEsc": "Click to close / ESC key"
   },
@@ -391,7 +425,10 @@
     "viewProducts": "View All"
   },
   "stickyCta": {
-    "buyAt": "Buy at {provider}"
+    "buyAt": "Watch at {provider}",
+    "urgentHours": "Only {hours}h left!",
+    "endsToday": "Ends today!",
+    "endsSoon": "{days} days left"
   },
   "personalized": {
     "recentlyViewed": "Recently Viewed",

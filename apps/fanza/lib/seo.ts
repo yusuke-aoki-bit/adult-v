@@ -24,4 +24,8 @@ export {
   generateCollectionPageSchema,
   generateOrganizationSchema,
   getCategoryPageFAQs,
+  getProductPageFAQs,
+  getActressPageFAQs,
+  generateReviewSchema,
+  generateCriticReviewSchema,
 } from '@adult-v/shared/lib/seo';

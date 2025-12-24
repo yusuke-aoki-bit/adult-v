@@ -1,6 +1,7 @@
 'use client';
 
 import FavoriteButton from '@/components/FavoriteButton';
+import WatchLaterButton from '@/components/WatchLaterButton';
 import { MarkAsViewedButton } from '@adult-v/shared/components';
 
 interface ProductActionsProps {
@@ -39,6 +40,13 @@ export default function ProductActions({
         duration={duration}
         size="md"
         locale={locale}
+      />
+      <WatchLaterButton
+        productId={productId}
+        title={title}
+        thumbnail={imageUrl ?? undefined}
+        provider={provider}
+        size="md"
       />
       <FavoriteButton
         type="product"

@@ -797,7 +797,10 @@ export default function ProductListFilter({
                           onChange={() => handleIncludeAspChange(asp.aspName)}
                           className={`w-5 h-5 rounded border-gray-300 ${accent.text} focus:${accent.ring}`}
                         />
-                        <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
+                        <span
+                          className="text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded text-white"
+                          style={{ background: meta?.gradientColors ? `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` : 'linear-gradient(to right, #4b5563, #374151)' }}
+                        >
                           {meta?.label || asp.aspName}
                           <span className="ml-1.5 sm:ml-1 text-sm sm:text-xs opacity-80">({asp.count.toLocaleString()})</span>
                         </span>
@@ -827,7 +830,10 @@ export default function ProductListFilter({
                           onChange={() => handleExcludeAspChange(asp.aspName)}
                           className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
                         />
-                        <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
+                        <span
+                          className="text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded text-white"
+                          style={{ background: meta?.gradientColors ? `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` : 'linear-gradient(to right, #4b5563, #374151)' }}
+                        >
                           {meta?.label || asp.aspName}
                           <span className="ml-1.5 sm:ml-1 text-sm sm:text-xs opacity-80">({asp.count.toLocaleString()})</span>
                         </span>

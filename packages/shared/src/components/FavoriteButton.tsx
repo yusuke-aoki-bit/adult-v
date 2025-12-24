@@ -1,7 +1,9 @@
 'use client';
 
 import { Heart } from 'lucide-react';
-import { getThemeMode, getPrimaryColor } from '../lib/theme';
+
+type ThemeMode = 'dark' | 'light';
+type PrimaryColor = 'rose' | 'pink';
 
 interface FavoriteButtonProps {
   type: 'product' | 'actress';
@@ -19,6 +21,8 @@ interface FavoriteButtonProps {
     addToFavorites: string;
     removeFromFavorites: string;
   };
+  theme?: ThemeMode;
+  primaryColor?: PrimaryColor;
 }
 
 export default function FavoriteButton({
@@ -28,13 +32,12 @@ export default function FavoriteButton({
   isLoaded,
   onToggle,
   labels,
+  theme = 'dark',
+  primaryColor = 'rose',
 }: FavoriteButtonProps) {
   if (!isLoaded) {
     return null;
   }
-
-  const mode = getThemeMode();
-  const primaryColor = getPrimaryColor();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -56,16 +59,24 @@ export default function FavoriteButton({
     lg: 'h-6 w-6',
   };
 
-  // テーマに応じたスタイル
+  // テーマに応じたスタイル (Tailwindのsafelistを避けるため具体的なクラスを使用)
   const getButtonStyles = () => {
-    if (mode === 'dark') {
-      return isFavorite
-        ? `bg-${primaryColor}-600 text-white hover:bg-${primaryColor}-700 hover:scale-105`
-        : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:text-white hover:scale-105';
+    if (theme === 'dark') {
+      if (isFavorite) {
+        return primaryColor === 'pink'
+          ? 'bg-pink-600 text-white hover:bg-pink-700 hover:scale-105'
+          : 'bg-rose-600 text-white hover:bg-rose-700 hover:scale-105';
+      }
+      return 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:text-white hover:scale-105';
     } else {
-      return isFavorite
-        ? `bg-${primaryColor}-700 text-white hover:bg-${primaryColor}-800 hover:scale-105`
-        : `bg-white/90 text-gray-500 hover:bg-gray-100 hover:text-${primaryColor}-700 hover:scale-105 border border-gray-200`;
+      if (isFavorite) {
+        return primaryColor === 'pink'
+          ? 'bg-pink-700 text-white hover:bg-pink-800 hover:scale-105'
+          : 'bg-rose-700 text-white hover:bg-rose-800 hover:scale-105';
+      }
+      return primaryColor === 'pink'
+        ? 'bg-white/90 text-gray-500 hover:bg-gray-100 hover:text-pink-700 hover:scale-105 border border-gray-200'
+        : 'bg-white/90 text-gray-500 hover:bg-gray-100 hover:text-rose-700 hover:scale-105 border border-gray-200';
     }
   };
 

@@ -6,6 +6,9 @@ import {
   FanzaSiteLink,
   CrossAspInfo,
   ActressAiReview,
+  SimilarActresses,
+  PerformerTopProducts,
+  PerformerOnSaleProducts,
 } from '@adult-v/shared/components';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -13,12 +16,14 @@ import RelatedActresses from '@/components/RelatedActresses';
 import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis } from '@/lib/db/queries';
 import ActressCareerTimeline from '@/components/ActressCareerTimeline';
 import RetirementAlert from '@/components/RetirementAlert';
-import { getRelatedPerformersWithGenreMatch } from '@/lib/db/recommendations';
+import { getRelatedPerformersWithGenreMatch, getSimilarActresses, getPerformerTopProducts, getPerformerOnSaleProducts } from '@/lib/db/recommendations';
 import {
   generateBaseMetadata,
   generatePersonSchema,
   generateBreadcrumbSchema,
   generateItemListSchema,
+  generateFAQSchema,
+  getActressPageFAQs,
 } from '@/lib/seo';
 import { Metadata } from 'next';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
@@ -156,6 +161,9 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const _tc = await getTranslations('common');
   const tf = await getTranslations('filter');
   const tNav = await getTranslations('nav');
+  const tSimilar = await getTranslations('similarActresses');
+  const tTopProducts = await getTranslations('performerTopProducts');
+  const tOnSale = await getTranslations('performerOnSale');
 
   const decodedId = decodeURIComponent(performerId);
   let actress = await getActressById(decodedId, locale);
@@ -203,8 +211,17 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // Get related performers (co-stars) with genre match percentage
   const relatedPerformers = await getRelatedPerformersWithGenreMatch(parseInt(actress.id), 6);
 
+  // Get similar actresses (genre-based, non-co-stars)
+  const similarActresses = await getSimilarActresses(parseInt(actress.id), 6);
+
   // Get career analysis
   const careerAnalysis = await getActressCareerAnalysis(actress.id);
+
+  // Get performer's top products (most popular by rating/reviews/views)
+  const topProducts = await getPerformerTopProducts(parseInt(actress.id), 5);
+
+  // Get performer's on-sale products
+  const onSaleProducts = await getPerformerOnSaleProducts(parseInt(actress.id), 6);
 
   // Get products
   const allWorks = await getProducts({
@@ -248,11 +265,25 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     t('filmography'),
   ) : null;
 
+  // FAQ Schema生成（リッチリザルト対応）
+  const actressFaqs = getActressPageFAQs(locale, {
+    name: actress.name,
+    productCount: total,
+    debutYear: careerAnalysis?.debutYear ?? undefined,
+    latestReleaseDate: allWorks[0]?.releaseDate ? new Date(allWorks[0].releaseDate).toLocaleDateString('ja-JP') : undefined,
+    aliases: nonPrimaryAliases.length > 0 ? nonPrimaryAliases.map(a => a.aliasName) : undefined,
+    topGenres: genreTags.length > 0 ? genreTags.slice(0, 5).map(t => t.name) : undefined,
+    aspNames: productCountByAsp.length > 0 ? productCountByAsp.map(a => a.aspName) : undefined,
+    isRetired: careerAnalysis ? !careerAnalysis.isActive : undefined,
+  });
+  const faqSchema = generateFAQSchema(actressFaqs);
+
   return (
     <>
       <JsonLD data={personSchema} />
       <JsonLD data={breadcrumbSchema} />
       {worksSchema && <JsonLD data={worksSchema} />}
+      <JsonLD data={faqSchema} />
 
       <div className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
@@ -370,6 +401,43 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
             </div>
           )}
 
+          {/* 人気作品TOP5セクション */}
+          {topProducts.length > 0 && (
+            <PerformerTopProducts
+              products={topProducts}
+              performerName={actress.name}
+              locale={locale}
+              theme="dark"
+              translations={{
+                title: tTopProducts('title', { name: actress.name }),
+                description: tTopProducts('description'),
+                rating: tTopProducts('rating'),
+                reviews: tTopProducts('reviews'),
+                views: tTopProducts('views'),
+                onSale: tTopProducts('onSale'),
+              }}
+            />
+          )}
+
+          {/* セール中作品セクション */}
+          {onSaleProducts.length > 0 && (
+            <PerformerOnSaleProducts
+              products={onSaleProducts}
+              performerName={actress.name}
+              locale={locale}
+              theme="dark"
+              translations={{
+                title: tOnSale('title', { name: actress.name }),
+                description: tOnSale('description'),
+                off: tOnSale('off'),
+                endsIn: tOnSale('endsIn'),
+                endsTomorrow: tOnSale('endsTomorrow'),
+                endsToday: tOnSale('endsToday'),
+                yen: tOnSale('yen'),
+              }}
+            />
+          )}
+
           {/* Tag Filters - 即時適用 */}
           <ActressProductFilter
             genreTags={genreTags}
@@ -416,6 +484,23 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
             <RelatedActresses
               actresses={relatedPerformers}
               currentActressName={actress.name}
+            />
+          )}
+
+          {/* 類似女優セクション（ジャンルベース、共演なし） */}
+          {similarActresses.length > 0 && (
+            <SimilarActresses
+              actresses={similarActresses}
+              currentActressName={actress.name}
+              locale={locale}
+              theme="dark"
+              translations={{
+                title: tSimilar('title', { name: actress.name }),
+                description: tSimilar('description'),
+                genreMatch: tSimilar('genreMatch'),
+                productCount: tSimilar('productCount'),
+                matchingGenres: tSimilar('matchingGenres'),
+              }}
             />
           )}
         </div>

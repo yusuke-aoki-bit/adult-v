@@ -13,6 +13,7 @@ import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 // LCP最適化用のシンプルな画像URL正規化
 function normalizeImageUrlForPreload(url: string | null | undefined): string | null {
@@ -207,7 +208,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   if (isTopPage) {
     try {
       const [sales, uncatCount] = await Promise.all([
-        getSaleProducts({ limit: 10, minDiscount: 30 }), // トップページは10件のみ
+        getSaleProducts({ limit: 24, minDiscount: 30 }), // トップページは24件表示
         getUncategorizedProductsCount({
           includeAsp: serverAspFilter || undefined,
         }),
@@ -254,7 +255,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             <SalesSection saleProducts={saleProducts.map(p => ({
               ...p,
               endAt: p.endAt ? p.endAt.toISOString() : null,
-            }))} locale={locale} />
+            }))} locale={locale} defaultOpen={true} />
           </div>
         </section>
       )}
@@ -273,7 +274,7 @@ export default async function Home({ params, searchParams }: PageProps) {
         <section className="py-3 sm:py-6">
           <div className="container mx-auto px-3 sm:px-4">
             <Link
-              href={`/${locale}/products?uncategorized=true`}
+              href={localizedHref('/products?uncategorized=true', locale)}
               className="flex items-center justify-between p-3 sm:p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-yellow-600 transition-colors group gap-2"
             >
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -340,7 +341,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             total={totalCount}
             page={page}
             perPage={perPage}
-            basePath={`/${locale}`}
+            basePath={localizedHref('/', locale)}
             position="top"
             queryParams={{
               ...(query ? { q: query } : {}),
@@ -367,7 +368,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             total={totalCount}
             page={page}
             perPage={perPage}
-            basePath={`/${locale}`}
+            basePath={localizedHref('/', locale)}
             position="bottom"
             queryParams={{
               ...(query ? { q: query } : {}),
@@ -386,7 +387,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           {/* 商品一覧へのリンク */}
           <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t theme-section-border">
             <Link
-              href={`/${locale}/products`}
+              href={localizedHref('/products', locale)}
               className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-pink-500 transition-colors group"
             >
               <div className="flex items-center gap-3">

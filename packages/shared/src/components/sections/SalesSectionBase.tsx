@@ -65,6 +65,8 @@ interface SalesSectionBaseProps<T extends BaseProduct, A extends BaseActress = B
   fetchActresses?: (ids: (string | number)[]) => Promise<A[]>;
   /** Function to convert performer to actress type */
   toActressType?: (performer: { id: string | number; name: string }) => A;
+  /** Whether to expand by default (useful for mobile) */
+  defaultOpen?: boolean;
 }
 
 /**
@@ -81,6 +83,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
   mergeSaleInfo,
   fetchActresses,
   toActressType,
+  defaultOpen = false,
 }: SalesSectionBaseProps<T, A>): ReactNode {
   // Use prop locale if provided, otherwise default to 'ja'
   const locale = propLocale || 'ja';
@@ -89,10 +92,10 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
 
   const [products, setProducts] = useState<T[]>([]);
   const [actresses, setActresses] = useState<A[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(defaultOpen);
   const [isActressLoading, setIsActressLoading] = useState(false);
   // 遅延フェッチ用: 一度でも展開されたかどうか
-  const [hasExpanded, setHasExpanded] = useState(false);
+  const [hasExpanded, setHasExpanded] = useState(defaultOpen);
 
   // 展開時にフェッチをトリガー
   const handleToggle = useCallback((isOpen: boolean) => {
@@ -221,7 +224,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
   const renderContent = () => {
     // 未展開またはロード中はスケルトンを表示（高さを一定に保つ）
     if (!hasExpanded || isLoading) {
-      return <ProductSkeleton count={Math.min(saleProducts.length, 8)} />;
+      return <ProductSkeleton count={Math.min(saleProducts.length, 8)} size="mini" />;
     }
 
     return (
@@ -237,7 +240,10 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
             {isActressLoading ? (
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="bg-gray-700/50 rounded-lg animate-pulse" style={{ aspectRatio: '3/4' }} />
+                  <div key={i} className="theme-skeleton-card rounded-lg animate-pulse overflow-hidden">
+                    <div className="aspect-square theme-skeleton-image" />
+                    <div className="p-1.5"><div className="h-2.5 theme-skeleton-image rounded w-3/4" /></div>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -286,7 +292,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
       icon={<Flame className="w-5 h-5" />}
       title={t.title}
       itemCount={displayCount}
-      defaultOpen={false}
+      defaultOpen={defaultOpen}
       onToggle={handleToggle}
       iconColorClass={themeConfig.salesSection.iconColorClass}
       bgClass={themeConfig.salesSection.bgClass}

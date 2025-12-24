@@ -4,10 +4,6 @@ import { useFavorites } from '@adult-v/ui-common/hooks';
 import { useTranslations } from 'next-intl';
 import SharedFavoriteButton from '@adult-v/shared/components/FavoriteButton';
 
-// Initialize theme for dark mode (Adult Viewer Lab)
-import { setThemeConfig } from '@adult-v/shared/lib/theme';
-setThemeConfig({ mode: 'dark', primaryColor: 'rose' });
-
 interface FavoriteButtonProps {
   type: 'product' | 'actress';
   id: number | string;
@@ -58,6 +54,8 @@ export default function FavoriteButton({
       isFavorite={favorite}
       isLoaded={isLoaded}
       onToggle={handleToggle}
+      theme="dark"
+      primaryColor="rose"
       labels={{
         addToFavorites: t('addToFavorites'),
         removeFromFavorites: t('removeFromFavorites'),

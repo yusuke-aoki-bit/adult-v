@@ -243,7 +243,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     try {
       const [sales, uncatCount] = await Promise.all([
         getSaleProducts({
-          limit: 10,
+          limit: 24, // トップページは24件表示
           minDiscount: 30,
           aspName: isFanzaSite ? 'FANZA' : undefined, // FANZAサイトの場合はFANZAのみ
         }),
@@ -293,7 +293,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             <SalesSection saleProducts={saleProducts.map(p => ({
               ...p,
               endAt: p.endAt ? p.endAt.toISOString() : null,
-            }))} locale={locale} />
+            }))} locale={locale} defaultOpen={true} />
           </div>
         </section>
       )}

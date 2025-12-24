@@ -24,6 +24,7 @@ interface SaleProductMeta {
 interface SalesSectionProps {
   saleProducts: SaleProductMeta[];
   locale?: string;
+  defaultOpen?: boolean;
 }
 
 // performer情報からActress型に変換
@@ -63,7 +64,7 @@ async function fetchActresses(ids: (string | number)[]): Promise<Actress[]> {
  * セール中商品セクション
  * 共有コンポーネントを使用
  */
-export default function SalesSection({ saleProducts, locale }: SalesSectionProps) {
+export default function SalesSection({ saleProducts, locale, defaultOpen }: SalesSectionProps) {
   return (
     <SalesSectionBase<Product, Actress>
       theme="dark"
@@ -73,6 +74,7 @@ export default function SalesSection({ saleProducts, locale }: SalesSectionProps
       saleProducts={saleProducts}
       fetchActresses={fetchActresses}
       toActressType={toActressType}
+      defaultOpen={defaultOpen}
     />
   );
 }

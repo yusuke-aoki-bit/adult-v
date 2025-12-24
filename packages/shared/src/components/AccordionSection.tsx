@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, memo, ReactNode } from 'react';
+import { useState, useCallback, useEffect, useRef, memo, ReactNode } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 
 interface AccordionSectionProps {
@@ -50,14 +50,21 @@ function AccordionSection({
   className = '',
 }: AccordionSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const isFirstRender = useRef(true);
+
+  // onToggleをレンダリング外で呼び出す（setState in render警告を回避）
+  useEffect(() => {
+    // 初回レンダリング時はスキップ（defaultOpenの場合のみ通知が必要な場合は条件変更）
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    onToggle?.(isOpen);
+  }, [isOpen, onToggle]);
 
   const handleToggle = useCallback(() => {
-    setIsOpen(prev => {
-      const newState = !prev;
-      onToggle?.(newState);
-      return newState;
-    });
-  }, [onToggle]);
+    setIsOpen(prev => !prev);
+  }, []);
 
   const handleClear = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
