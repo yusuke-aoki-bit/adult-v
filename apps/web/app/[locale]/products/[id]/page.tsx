@@ -21,7 +21,7 @@ import {
 } from '@adult-v/shared/components';
 import AffiliateButton from '@/components/AffiliateButton';
 import StickyCta from '@/components/StickyCta';
-import { getProductById, searchProductByProductId, getProductSources, getActressAvgPricePerMin, getProductSourcesWithSales } from '@/lib/db/queries';
+import { getProductById, searchProductByProductId, getProductSources, getActressAvgPricePerMin, getSampleImagesByMakerCode, getProductMakerCode, getAllProductSources } from '@/lib/db/queries';
 import { isSubscriptionSite } from '@/lib/image-utils';
 import { getRelatedProducts, getPerformerOtherProducts, getProductMaker, getSameMakerProducts, getProductGenreTags, getProductSeries, getSameSeriesProducts } from '@/lib/db/recommendations';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema, generateFAQSchema, getProductPageFAQs, generateReviewSchema } from '@/lib/seo';
@@ -117,10 +117,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
   if (!product) notFound();
 
-  // 品番でアクセスした場合、正規URL（数値ID）にリダイレクト（SEO: canonical URL統一）
-  if (foundByProductId && String(product.id) !== id) {
-    redirect(`/${locale}/products/${product.id}`);
-  }
+  // 品番でアクセスした場合でもリダイレクトしない（SEO: Google検索で品番URLがインデックスされる）
+  // canonical URLで正規URLを指定（重複コンテンツ対策）
+  // これにより /products/SSIS-865 でもページが表示され、Googleにインデックスされる
 
   const basePath = `/${locale}/products/${product.id}`;
 
@@ -219,43 +218,55 @@ export default async function ProductDetailPage({ params }: PageProps) {
     : product.title.length > 30 ? product.title.substring(0, 30) + '...' : product.title;
   breadcrumbItems.push({ label: displayTitle });
 
-  // 関連作品を取得
-  const relatedProducts = await getRelatedProducts(product.id, 12);
-
-  // E-E-A-T強化: 全ASPソース情報を取得
+  // E-E-A-T強化: 関連データを並列取得（パフォーマンス最適化）
   const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
-
-  // 出演者の他作品を取得（主演者のみ）
   const primaryPerformerId = product.performers?.[0]?.id || product.actressId;
   const primaryPerformerName = product.performers?.[0]?.name || product.actressName;
-  const performerOtherProducts = primaryPerformerId
-    ? await getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6)
-    : [];
-
-  // 同じメーカーの作品を取得
-  const maker = await getProductMaker(productId);
-  const sameMakerProducts = maker
-    ? await getSameMakerProducts(maker.id, productId, 6)
-    : [];
-
-  // 同じシリーズの作品を取得
-  const series = await getProductSeries(productId);
-  const sameSeriesProducts = series
-    ? await getSameSeriesProducts(series.id, productId, 6)
-    : [];
-
-  // ジャンルタグをID付きで取得（リンク用）
-  const genreTags = await getProductGenreTags(productId);
-  const sources = await getProductSources(productId);
-
-  // 価格比較: セール情報付きソースを取得
-  const sourcesWithSales = await getProductSourcesWithSales(productId);
-
-  // コスパ分析: 女優の平均価格/分を取得
   const actressId = product.actressId || product.performers?.[0]?.id;
-  const actressAvgPricePerMin = actressId
-    ? await getActressAvgPricePerMin(String(actressId))
-    : null;
+
+  // Phase 1: 基本データの並列取得
+  const [
+    relatedProducts,
+    maker,
+    series,
+    genreTags,
+    sources,
+    makerProductCode,
+  ] = await Promise.all([
+    getRelatedProducts(product.id, 12),
+    getProductMaker(productId),
+    getProductSeries(productId),
+    getProductGenreTags(productId),
+    getProductSources(productId),
+    getProductMakerCode(productId),
+  ]);
+
+  // Phase 2: Phase 1の結果に依存するデータの並列取得
+  const [
+    performerOtherProducts,
+    sameMakerProducts,
+    sameSeriesProducts,
+    sourcesWithSales,
+    crossAspSampleImages,
+    actressAvgPricePerMin,
+  ] = await Promise.all([
+    primaryPerformerId
+      ? getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6)
+      : Promise.resolve([]),
+    maker
+      ? getSameMakerProducts(maker.id, productId, 6)
+      : Promise.resolve([]),
+    series
+      ? getSameSeriesProducts(series.id, productId, 6)
+      : Promise.resolve([]),
+    getAllProductSources(productId, product.title, makerProductCode),
+    makerProductCode
+      ? getSampleImagesByMakerCode(makerProductCode)
+      : Promise.resolve([]),
+    actressId
+      ? getActressAvgPricePerMin(String(actressId))
+      : Promise.resolve(null),
+  ]);
 
   return (
     <>
@@ -299,6 +310,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 mainImage={product.imageUrl ?? null}
                 sampleImages={product.sampleImages}
                 productTitle={product.title}
+                crossAspImages={crossAspSampleImages}
               />
 
               {/* Product Info */}
@@ -460,6 +472,43 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         </svg>
                       </a>
                     )}
+                    {/* 他のASPでも購入可能な場合のリンク */}
+                    {sourcesWithSales.length > 1 && (
+                      <div className="mt-3 pt-3 border-t border-gray-600">
+                        <p className="text-xs text-gray-400 mb-2">
+                          他{sourcesWithSales.length - 1}社でも購入可能
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {sourcesWithSales.slice(1, 4).map((source) => {
+                            // 有効なURLかチェック（http/httpsで始まるもののみ）
+                            const isValidUrl = source.affiliateUrl && source.affiliateUrl.startsWith('http');
+                            return (
+                              <a
+                                key={source.aspName}
+                                href={isValidUrl ? source.affiliateUrl : `/${locale}/products/${source.originalProductId || ''}`}
+                                target={isValidUrl ? "_blank" : "_self"}
+                                rel={isValidUrl ? "noopener noreferrer sponsored" : undefined}
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-gray-600 hover:bg-gray-500 text-gray-200 text-xs rounded transition-colors"
+                              >
+                                <span>{source.aspName}</span>
+                                <span className="text-gray-400">¥{(source.salePrice || source.regularPrice || 0).toLocaleString()}</span>
+                              </a>
+                            );
+                          })}
+                          {sourcesWithSales.length > 4 && (
+                            <a
+                              href="#price-comparison"
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-700 hover:bg-emerald-600 text-white text-xs rounded transition-colors"
+                            >
+                              <span>+{sourcesWithSales.length - 4}社</span>
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -487,11 +536,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
-                {/* FANZAで見る直リンク（FANZAソースがある場合） */}
-                <FanzaCrossLink
-                  fanzaUrl={sources.find(s => s.aspName === 'FANZA')?.affiliateUrl}
-                  className="mt-4"
-                />
+                {/* FANZAで見る（apps/fanza経由、直リンクは規約違反） */}
+                {sources.find(s => s.aspName === 'FANZA') && (
+                  <FanzaCrossLink
+                    productId={product.normalizedProductId || product.id}
+                    locale={locale}
+                    className="mt-4"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -510,9 +562,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           )}
 
-          {/* 価格比較セクション */}
-          {sourcesWithSales.length > 1 && (
-            <div className="mt-8">
+          {/* 価格比較セクション - 複数ASPがある場合は価格比較を表示 */}
+          {sourcesWithSales.length > 0 && (
+            <div id="price-comparison" className="mt-8 scroll-mt-20">
               <PriceComparisonServer sources={sourcesWithSales} locale={locale} />
             </div>
           )}

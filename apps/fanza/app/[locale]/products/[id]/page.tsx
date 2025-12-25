@@ -113,10 +113,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
   if (!product) notFound();
 
-  // 品番でアクセスした場合、正規URL（数値ID）にリダイレクト（SEO: canonical URL統一）
-  if (foundByProductId && String(product.id) !== id) {
-    redirect(localizedHref(`/products/${product.id}`, locale));
-  }
+  // 品番でアクセスした場合でもリダイレクトしない（SEO: Google検索で品番URLがインデックスされる）
+  // canonical URLで正規URLを指定（重複コンテンツ対策）
+  // これにより /products/SSIS-865 でもページが表示され、Googleにインデックスされる
 
   const basePath = localizedHref(`/products/${product.id}`, locale);
 
@@ -214,34 +213,45 @@ export default async function ProductDetailPage({ params }: PageProps) {
     : product.title.length > 30 ? product.title.substring(0, 30) + '...' : product.title;
   breadcrumbItems.push({ label: displayTitle });
 
-  // 関連作品を取得（FANZAの商品のみ）
-  const relatedProducts = await getRelatedProducts(product.id, 12, 'fanza');
-
-  // E-E-A-T強化: 全ASPソース情報を取得
+  // E-E-A-T強化: 関連データを並列取得（パフォーマンス最適化）
   const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
-
-  // 出演者の他作品を取得（主演者のみ）
   const primaryPerformerId = product.performers?.[0]?.id || product.actressId;
   const primaryPerformerName = product.performers?.[0]?.name || product.actressName;
-  const performerOtherProducts = primaryPerformerId
-    ? await getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6)
-    : [];
 
-  // 同じメーカーの作品を取得
-  const maker = await getProductMaker(productId);
-  const sameMakerProducts = maker
-    ? await getSameMakerProducts(maker.id, productId, 6)
-    : [];
+  // Phase 1: 基本データの並列取得（FANZAの商品のみ）
+  const [
+    relatedProducts,
+    maker,
+    series,
+    genreTags,
+    sources,
+  ] = await Promise.all([
+    getRelatedProducts(product.id, 12, 'fanza'),
+    getProductMaker(productId),
+    getProductSeries(productId),
+    getProductGenreTags(productId),
+    getProductSources(productId),
+  ]);
 
-  // 同じシリーズの作品を取得
-  const series = await getProductSeries(productId);
-  const sameSeriesProducts = series
-    ? await getSameSeriesProducts(series.id, productId, 6)
-    : [];
+  // Phase 2: Phase 1の結果に依存するデータの並列取得
+  const [
+    performerOtherProducts,
+    sameMakerProducts,
+    sameSeriesProducts,
+  ] = await Promise.all([
+    primaryPerformerId
+      ? getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6, 'fanza')
+      : Promise.resolve([]),
+    maker
+      ? getSameMakerProducts(maker.id, productId, 6, 'fanza')
+      : Promise.resolve([]),
+    series
+      ? getSameSeriesProducts(series.id, productId, 6, 'fanza')
+      : Promise.resolve([]),
+  ]);
 
-  // ジャンルタグをID付きで取得（リンク用）
-  const genreTags = await getProductGenreTags(productId);
-  const sources = await getProductSources(productId);
+  // 注意: apps/fanzaではFANZA ASP規約に準拠し、他ASPの画像は使用しない
+  // crossAspSampleImagesは使用しない（FANZA以外のASPへの遷移・情報表示禁止）
 
   return (
     <>

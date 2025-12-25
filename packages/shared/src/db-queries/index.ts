@@ -29,3 +29,20 @@ export {
   type SaleHelperQueries,
   type SaleInfo,
 } from './sale-helper';
+
+export {
+  createProductQueries,
+  type ProductQueryDeps,
+  type ProductQueries,
+  type ProductSourceResult,
+  type ProductSourceWithSaleResult,
+} from './product-queries';
+
+export {
+  createActressQueries,
+  type ActressQueryDeps,
+  type ActressQueries,
+  type PerformerAlias,
+  type SiteProductCount,
+  type AspProductCount,
+} from './actress-queries';
