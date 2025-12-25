@@ -55,3 +55,12 @@ export {
   PROVIDER_TO_ASP_MAPPING,
   type SiteMode,
 } from './asp-filter';
+
+export {
+  createCoreQueries,
+  type CoreQueryDeps,
+  type CoreQueries,
+  type TagResult,
+  type ProviderProductCount,
+  type SaleStatsResult,
+} from './core-queries';

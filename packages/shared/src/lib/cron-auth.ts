@@ -53,3 +53,86 @@ export function verifyCronRequest(request: NextRequest): boolean {
 export function unauthorizedResponse(): NextResponse {
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
+
+// ============================================================
+// Admin API認証
+// ============================================================
+
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
+
+/**
+ * Admin APIリクエストを認証
+ * X-Admin-Secret ヘッダーまたは Authorization: Bearer トークンをチェック
+ */
+export function verifyAdminRequest(request: NextRequest): boolean {
+  // 1. Authorization ヘッダーをチェック
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ') && ADMIN_SECRET) {
+    const token = authHeader.slice(7);
+    if (token === ADMIN_SECRET) {
+      return true;
+    }
+  }
+
+  // 2. X-Admin-Secret ヘッダーをチェック
+  if (ADMIN_SECRET) {
+    const adminSecret = request.headers.get('x-admin-secret');
+    if (adminSecret === ADMIN_SECRET) {
+      return true;
+    }
+  }
+
+  // 3. 開発環境では緩和（オプション）
+  if (!IS_PRODUCTION && !ADMIN_SECRET) {
+    console.warn('[admin-auth] No ADMIN_SECRET set in dev mode, allowing request');
+    return true;
+  }
+
+  return false;
+}
+
+// ============================================================
+// 認証ミドルウェアヘルパー
+// ============================================================
+
+export type AuthType = 'cron' | 'admin' | 'public';
+
+/**
+ * 認証タイプに基づいてリクエストを検証
+ */
+export function verifyRequest(request: NextRequest, authType: AuthType): boolean {
+  switch (authType) {
+    case 'cron':
+      return verifyCronRequest(request);
+    case 'admin':
+      return verifyAdminRequest(request);
+    case 'public':
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
+ * 認証付きAPIハンドラーを作成
+ */
+export function withAuth<T>(
+  authType: AuthType,
+  handler: (request: NextRequest) => Promise<NextResponse<T>>
+): (request: NextRequest) => Promise<NextResponse<T | { error: string }>> {
+  return async (request: NextRequest) => {
+    if (!verifyRequest(request, authType)) {
+      return unauthorizedResponse() as NextResponse<{ error: string }>;
+    }
+    return handler(request);
+  };
+}
+
+/**
+ * 認証エラーをスロー
+ */
+export function requireAuth(request: NextRequest, authType: AuthType): void {
+  if (!verifyRequest(request, authType)) {
+    throw new Error('Unauthorized');
+  }
+}
