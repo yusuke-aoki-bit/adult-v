@@ -2077,55 +2077,17 @@ export async function getActressProductCountByAsp(actressId: string): Promise<Ar
 
     // DTIはproductsテーブルのdefault_thumbnail_urlから個別サービス名を取得
     // affiliate_urlはclear-tv.comリダイレクトドメインのため使用不可
+    const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'p.default_thumbnail_url');
     const results = await db.execute<{ asp_name: string; count: string }>(sql`
       SELECT
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
-              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
-              ELSE 'dti'
-            END
-          ELSE ps.asp_name
-        END as asp_name,
+        ${sql.raw(aspNormalizeSql)} as asp_name,
         COUNT(DISTINCT pp.product_id) as count
       FROM product_performers pp
       INNER JOIN product_sources ps ON pp.product_id = ps.product_id
       INNER JOIN products p ON pp.product_id = p.id
       WHERE pp.performer_id = ${performerId}
       AND ps.asp_name IS NOT NULL
-      GROUP BY
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
-              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
-              ELSE 'dti'
-            END
-          ELSE ps.asp_name
-        END
+      GROUP BY ${sql.raw(aspNormalizeSql)}
       ORDER BY count DESC
     `);
 
@@ -2414,26 +2376,7 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
     // ASPサービス一覧（DTIは個別サービスに分割）
     db.execute<{ asp_name: string }>(sql`
       SELECT DISTINCT
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
-              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
-              ELSE 'dti'
-            END
-          ELSE LOWER(ps.asp_name)
-        END as asp_name
+        ${sql.raw(buildAspNormalizationSql('ps.asp_name', 'p.default_thumbnail_url'))} as asp_name
       FROM product_performers pp
       INNER JOIN product_sources ps ON pp.product_id = ps.product_id
       INNER JOIN products p ON pp.product_id = p.id
@@ -2727,55 +2670,14 @@ export async function getUncategorizedProducts(options?: {
 
     // ASPフィルター条件（対象/除外）
     // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
+    const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'p.default_thumbnail_url');
     let aspCondition = sql`TRUE`;
     if (includeAsp.length > 0) {
-      aspCondition = sql`(
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
-              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
-              ELSE 'dti'
-            END
-          ELSE ps.asp_name
-        END
-      ) IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+      aspCondition = sql`(${sql.raw(aspNormalizeSql)}) IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
     }
     let excludeAspCondition = sql`TRUE`;
     if (excludeAsp.length > 0) {
-      excludeAspCondition = sql`(ps.asp_name IS NULL OR (
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
-              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
-              ELSE 'dti'
-            END
-          ELSE ps.asp_name
-        END
-      ) NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+      excludeAspCondition = sql`(ps.asp_name IS NULL OR (${sql.raw(aspNormalizeSql)}) NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
     }
 
     // サンプルコンテンツフィルター条件
@@ -3170,49 +3072,21 @@ async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCo
 
   // DTIはproductsテーブルのdefault_thumbnail_urlから個別サービス名を取得
   // affiliate_urlはclear-tv.comリダイレクトドメインのため使用不可
+  const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'p.default_thumbnail_url');
   const result = await db.execute<{
     asp_name: string;
     product_count: string;
     actress_count: string;
   }>(sql`
     SELECT
-      CASE
-        WHEN ps.asp_name = 'DTI' THEN
-          CASE
-            WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-            WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-            WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-            WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-            WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-            WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-            WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-            WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-            ELSE 'dti'
-          END
-        ELSE ps.asp_name
-      END as asp_name,
+      ${sql.raw(aspNormalizeSql)} as asp_name,
       COUNT(DISTINCT ps.product_id) as product_count,
       COUNT(DISTINCT pp.performer_id) as actress_count
     FROM product_sources ps
     LEFT JOIN products p ON ps.product_id = p.id
     LEFT JOIN product_performers pp ON ps.product_id = pp.product_id
     WHERE ps.asp_name IS NOT NULL
-    GROUP BY
-      CASE
-        WHEN ps.asp_name = 'DTI' THEN
-          CASE
-            WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-            WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-            WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-            WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-            WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-            WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-            WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-            WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-            ELSE 'dti'
-          END
-        ELSE ps.asp_name
-      END
+    GROUP BY ${sql.raw(aspNormalizeSql)}
     ORDER BY product_count DESC
   `);
 
@@ -3566,55 +3440,17 @@ export async function getAspStatsByCategory(
     const db = getDb();
     // DTIはproductsテーブルのdefault_thumbnail_urlから個別サービス名を取得
     // affiliate_urlはclear-tv.comリダイレクトドメインのため使用不可
+    const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'p.default_thumbnail_url');
     const result = await db.execute<{ asp_name: string; count: string }>(sql`
       SELECT
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
-              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
-              ELSE 'dti'
-            END
-          ELSE ps.asp_name
-        END as asp_name,
+        ${sql.raw(aspNormalizeSql)} as asp_name,
         COUNT(DISTINCT p.id) as count
       FROM products p
       INNER JOIN product_tags pt ON p.id = pt.product_id
       INNER JOIN product_sources ps ON p.id = ps.product_id
       WHERE pt.tag_id = ${tagId}
       AND ps.asp_name IS NOT NULL
-      GROUP BY
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
-              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
-              ELSE 'dti'
-            END
-          ELSE ps.asp_name
-        END
+      GROUP BY ${sql.raw(aspNormalizeSql)}
       ORDER BY COUNT(DISTINCT p.id) DESC
     `);
 
@@ -3678,54 +3514,16 @@ export async function getUncategorizedStats(): Promise<UncategorizedStats> {
 
     // ASP別統計（DTIはproductsテーブルのdefault_thumbnail_urlから個別サービス名を取得）
     // affiliate_urlはclear-tv.comリダイレクトドメインのため使用不可
+    const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'p.default_thumbnail_url');
     const aspResult = await db.execute<{ asp_name: string; count: string }>(sql`
       SELECT
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
-              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
-              ELSE 'dti'
-            END
-          ELSE ps.asp_name
-        END as asp_name,
+        ${sql.raw(aspNormalizeSql)} as asp_name,
         COUNT(DISTINCT p.id) as count
       FROM products p
       LEFT JOIN product_performers pp ON p.id = pp.product_id
       LEFT JOIN product_sources ps ON p.id = ps.product_id
       WHERE pp.product_id IS NULL AND ps.asp_name IS NOT NULL
-      GROUP BY
-        CASE
-          WHEN ps.asp_name = 'DTI' THEN
-            CASE
-              WHEN p.default_thumbnail_url LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-              WHEN p.default_thumbnail_url LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-              WHEN p.default_thumbnail_url LIKE '%1pondo.tv%' THEN '1pondo'
-              WHEN p.default_thumbnail_url LIKE '%heyzo.com%' THEN 'heyzo'
-              WHEN p.default_thumbnail_url LIKE '%10musume.com%' THEN '10musume'
-              WHEN p.default_thumbnail_url LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-              WHEN p.default_thumbnail_url LIKE '%muramura.tv%' THEN 'muramura'
-              WHEN p.default_thumbnail_url LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-              WHEN p.default_thumbnail_url LIKE '%heydouga.com%' THEN 'heydouga'
-              WHEN p.default_thumbnail_url LIKE '%x1x.com%' THEN 'x1x'
-              WHEN p.default_thumbnail_url LIKE '%enkou55.com%' THEN 'enkou55'
-              WHEN p.default_thumbnail_url LIKE '%urekko%' THEN 'urekko'
-              WHEN p.default_thumbnail_url LIKE '%tvdeav%' THEN 'tvdeav'
-              ELSE 'dti'
-            END
-          ELSE ps.asp_name
-        END
+      GROUP BY ${sql.raw(aspNormalizeSql)}
       ORDER BY count DESC
     `);
 
