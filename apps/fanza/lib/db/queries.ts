@@ -10,8 +10,6 @@ import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, 
 import { unstable_cache } from 'next/cache';
 import {
   generateProductIdVariations,
-  normalizeProductIdForSearch,
-  stripAspPrefix,
   buildAspNormalizationSql,
   normalizeAspName,
   createAspFilterCondition,
