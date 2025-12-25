@@ -22,6 +22,7 @@ export * from './crawler-utils';
 export * from './cache-utils';
 export * from './error-handling';
 export * from './logger';
+export * from './asp-utils';
 // Note: google-apis has translateBatch/translateText which conflicts with translate.ts
 // Import directly from '@adult-v/shared/lib/google-apis' if needed
 

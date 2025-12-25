@@ -92,4 +92,12 @@ export type {
   PaginationOptions,
   SortOptions,
   FilterOptions,
+  // サイトモード関連型
+  SourceData,
+  PerformerData,
+  TagData,
+  CacheData,
+  RawProductRow,
+  FanzaFilterConfig,
+  ProductQueryOptions,
 } from './types';

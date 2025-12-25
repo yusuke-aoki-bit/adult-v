@@ -8,7 +8,7 @@ import { getDtiServiceFromUrl } from '@/lib/image-utils';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@/lib/localization';
 import { unstable_cache } from 'next/cache';
-import { generateProductIdVariations } from '@adult-v/shared';
+import { generateProductIdVariations, buildAspNormalizationSql, normalizeAspName } from '@adult-v/shared';
 import type { SaleProduct } from '@adult-v/shared';
 
 /**
@@ -610,124 +610,31 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
 
     // 複数プロバイダー（ASP）でフィルタ（いずれかを含む）
     // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
-    // 日本語名や大文字名も正規化名に変換
-    // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
+    // 日本語名や大文字名も正規化名に変換（buildAspNormalizationSqlを使用）
     if (options?.providers && options.providers.length > 0) {
       const aspNames = options.providers;
+      // ASP正規化CASE式を生成（ps.asp_name と products.default_thumbnail_url を参照）
+      const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products.id}
-          AND (
-            CASE
-              WHEN ps.asp_name = 'DTI' THEN
-                CASE
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%1pondo.tv%' THEN '1pondo'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%heyzo.com%' THEN 'heyzo'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%10musume.com%' THEN '10musume'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%muramura.tv%' THEN 'muramura'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko%' THEN 'urekko'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%tvdeav%' THEN 'tvdeav'
-                  ELSE 'dti'
-                END
-              -- 日本語名を正規化名に変換
-              WHEN ps.asp_name = 'カリビアンコムプレミアム' THEN 'caribbeancompr'
-              WHEN ps.asp_name = 'カリビアンコムPR' THEN 'caribbeancompr'
-              WHEN ps.asp_name = 'カリビアンコム' THEN 'caribbeancom'
-              WHEN ps.asp_name = '一本道' THEN '1pondo'
-              WHEN ps.asp_name = '天然むすめ' THEN '10musume'
-              WHEN ps.asp_name = 'パコパコママ' THEN 'pacopacomama'
-              WHEN ps.asp_name = 'ムラムラ' THEN 'muramura'
-              -- 主要ASPを小文字に正規化
-              WHEN ps.asp_name = 'SOKMIL' THEN 'sokmil'
-              WHEN ps.asp_name = 'DUGA' THEN 'duga'
-              WHEN ps.asp_name = 'FANZA' THEN 'fanza'
-              WHEN ps.asp_name = 'MGS' THEN 'mgs'
-              WHEN ps.asp_name = 'FC2' THEN 'fc2'
-              WHEN ps.asp_name = 'Japanska' THEN 'japanska'
-              WHEN ps.asp_name = 'JAPANSKA' THEN 'japanska'
-              -- DTI系を小文字に正規化
-              WHEN ps.asp_name = 'CARIBBEANCOM' THEN 'caribbeancom'
-              WHEN ps.asp_name = 'HEYZO' THEN 'heyzo'
-              WHEN ps.asp_name = 'HEYDOUGA' THEN 'heydouga'
-              WHEN ps.asp_name = 'X1X' THEN 'x1x'
-              WHEN ps.asp_name = 'ENKOU55' THEN 'enkou55'
-              WHEN ps.asp_name = 'UREKKO' THEN 'urekko'
-              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
-              WHEN ps.asp_name = 'TOKYOHOT' THEN 'tokyohot'
-              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
-              ELSE LOWER(ps.asp_name)
-            END
-          ) IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
+          AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
         )`
       );
     }
 
     // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
     // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
-    // 日本語名や大文字名も正規化名に変換
-    // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
+    // 日本語名や大文字名も正規化名に変換（buildAspNormalizationSqlを使用）
     if (options?.excludeProviders && options.excludeProviders.length > 0) {
       const excludeAspNames = options.excludeProviders;
+      const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
       conditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products.id}
-          AND (
-            CASE
-              WHEN ps.asp_name = 'DTI' THEN
-                CASE
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%1pondo.tv%' THEN '1pondo'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%heyzo.com%' THEN 'heyzo'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%10musume.com%' THEN '10musume'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%muramura.tv%' THEN 'muramura'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko%' THEN 'urekko'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%tvdeav%' THEN 'tvdeav'
-                  ELSE 'dti'
-                END
-              -- 日本語名を正規化名に変換
-              WHEN ps.asp_name = 'カリビアンコムプレミアム' THEN 'caribbeancompr'
-              WHEN ps.asp_name = 'カリビアンコムPR' THEN 'caribbeancompr'
-              WHEN ps.asp_name = 'カリビアンコム' THEN 'caribbeancom'
-              WHEN ps.asp_name = '一本道' THEN '1pondo'
-              WHEN ps.asp_name = '天然むすめ' THEN '10musume'
-              WHEN ps.asp_name = 'パコパコママ' THEN 'pacopacomama'
-              WHEN ps.asp_name = 'ムラムラ' THEN 'muramura'
-              -- 主要ASPを小文字に正規化
-              WHEN ps.asp_name = 'SOKMIL' THEN 'sokmil'
-              WHEN ps.asp_name = 'DUGA' THEN 'duga'
-              WHEN ps.asp_name = 'FANZA' THEN 'fanza'
-              WHEN ps.asp_name = 'MGS' THEN 'mgs'
-              WHEN ps.asp_name = 'FC2' THEN 'fc2'
-              WHEN ps.asp_name = 'Japanska' THEN 'japanska'
-              WHEN ps.asp_name = 'JAPANSKA' THEN 'japanska'
-              -- DTI系を小文字に正規化
-              WHEN ps.asp_name = 'CARIBBEANCOM' THEN 'caribbeancom'
-              WHEN ps.asp_name = 'HEYZO' THEN 'heyzo'
-              WHEN ps.asp_name = 'HEYDOUGA' THEN 'heydouga'
-              WHEN ps.asp_name = 'X1X' THEN 'x1x'
-              WHEN ps.asp_name = 'ENKOU55' THEN 'enkou55'
-              WHEN ps.asp_name = 'UREKKO' THEN 'urekko'
-              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
-              WHEN ps.asp_name = 'TOKYOHOT' THEN 'tokyohot'
-              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
-              ELSE LOWER(ps.asp_name)
-            END
-          ) IN (${sql.join(excludeAspNames.map(name => sql`${name}`), sql`, `)})
+          AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(excludeAspNames.map(name => sql`${name}`), sql`, `)})
         )`
       );
     }
@@ -1159,121 +1066,29 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
     }
 
     // 複数プロバイダー（ASP）でフィルタ
-    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
-    // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
+    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用（buildAspNormalizationSql）
     if (options?.providers && options.providers.length > 0) {
       const aspNames = options.providers;
+      const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products.id}
-          AND (
-            CASE
-              WHEN ps.asp_name = 'DTI' THEN
-                CASE
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%1pondo.tv%' THEN '1pondo'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%heyzo.com%' THEN 'heyzo'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%10musume.com%' THEN '10musume'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%muramura.tv%' THEN 'muramura'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko%' THEN 'urekko'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%tvdeav%' THEN 'tvdeav'
-                  ELSE 'dti'
-                END
-              -- 主要ASPを小文字に正規化
-              WHEN ps.asp_name = 'SOKMIL' THEN 'sokmil'
-              WHEN ps.asp_name = 'DUGA' THEN 'duga'
-              WHEN ps.asp_name = 'FANZA' THEN 'fanza'
-              WHEN ps.asp_name = 'MGS' THEN 'mgs'
-              WHEN ps.asp_name = 'FC2' THEN 'fc2'
-              WHEN ps.asp_name = 'Japanska' THEN 'japanska'
-              WHEN ps.asp_name = 'JAPANSKA' THEN 'japanska'
-              -- DTI系を小文字に正規化（英語名）
-              WHEN ps.asp_name = 'HEYDOUGA' THEN 'heydouga'
-              WHEN ps.asp_name = 'X1X' THEN 'x1x'
-              WHEN ps.asp_name = 'ENKOU55' THEN 'enkou55'
-              WHEN ps.asp_name = 'UREKKO' THEN 'urekko'
-              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
-              WHEN ps.asp_name = 'TOKYOHOT' THEN 'tokyohot'
-              WHEN ps.asp_name = 'HEYZO' THEN 'heyzo'
-              WHEN ps.asp_name = 'CARIBBEANCOM' THEN 'caribbeancom'
-              -- DTI系を小文字に正規化（日本語名）
-              WHEN ps.asp_name = 'カリビアンコムプレミアム' THEN 'caribbeancompr'
-              WHEN ps.asp_name = '一本道' THEN '1pondo'
-              WHEN ps.asp_name = '天然むすめ' THEN '10musume'
-              WHEN ps.asp_name = 'パコパコママ' THEN 'pacopacomama'
-              WHEN ps.asp_name = 'ムラムラ' THEN 'muramura'
-              ELSE LOWER(ps.asp_name)
-            END
-          ) IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
+          AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
         )`
       );
     }
 
     // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
-    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用
-    // 日本語名や大文字名も正規化名に変換
-    // 外側のproductsテーブルのdefault_thumbnail_urlを参照してURLマッチング
+    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用（buildAspNormalizationSql）
     if (options?.excludeProviders && options.excludeProviders.length > 0) {
       const excludeAspNames = options.excludeProviders;
+      const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
       conditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products.id}
-          AND (
-            CASE
-              WHEN ps.asp_name = 'DTI' THEN
-                CASE
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%1pondo.tv%' THEN '1pondo'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%heyzo.com%' THEN 'heyzo'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%10musume.com%' THEN '10musume'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%muramura.tv%' THEN 'muramura'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%urekko%' THEN 'urekko'
-                  WHEN ${products.defaultThumbnailUrl} LIKE '%tvdeav%' THEN 'tvdeav'
-                  ELSE 'dti'
-                END
-              -- 日本語名を正規化名に変換
-              WHEN ps.asp_name = 'カリビアンコムプレミアム' THEN 'caribbeancompr'
-              WHEN ps.asp_name = 'カリビアンコムPR' THEN 'caribbeancompr'
-              WHEN ps.asp_name = 'カリビアンコム' THEN 'caribbeancom'
-              WHEN ps.asp_name = '一本道' THEN '1pondo'
-              WHEN ps.asp_name = '天然むすめ' THEN '10musume'
-              WHEN ps.asp_name = 'パコパコママ' THEN 'pacopacomama'
-              WHEN ps.asp_name = 'ムラムラ' THEN 'muramura'
-              -- 主要ASPを小文字に正規化
-              WHEN ps.asp_name = 'SOKMIL' THEN 'sokmil'
-              WHEN ps.asp_name = 'DUGA' THEN 'duga'
-              WHEN ps.asp_name = 'FANZA' THEN 'fanza'
-              WHEN ps.asp_name = 'MGS' THEN 'mgs'
-              WHEN ps.asp_name = 'FC2' THEN 'fc2'
-              WHEN ps.asp_name = 'Japanska' THEN 'japanska'
-              WHEN ps.asp_name = 'JAPANSKA' THEN 'japanska'
-              -- DTI系を小文字に正規化
-              WHEN ps.asp_name = 'CARIBBEANCOM' THEN 'caribbeancom'
-              WHEN ps.asp_name = 'HEYZO' THEN 'heyzo'
-              WHEN ps.asp_name = 'HEYDOUGA' THEN 'heydouga'
-              WHEN ps.asp_name = 'X1X' THEN 'x1x'
-              WHEN ps.asp_name = 'ENKOU55' THEN 'enkou55'
-              WHEN ps.asp_name = 'UREKKO' THEN 'urekko'
-              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
-              WHEN ps.asp_name = 'TOKYOHOT' THEN 'tokyohot'
-              WHEN ps.asp_name = 'TVDEAV' THEN 'tvdeav'
-              ELSE LOWER(ps.asp_name)
-            END
-          ) IN (${sql.join(excludeAspNames.map(name => sql`${name}`), sql`, `)})
+          AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(excludeAspNames.map(name => sql`${name}`), sql`, `)})
         )`
       );
     }
@@ -3624,32 +3439,10 @@ async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCo
 
   if (!result.rows) return [];
 
-  // DBの値をASP_DISPLAY_ORDER形式に正規化するマップ
-  // DBには日本語名や大文字で保存されているケースがある
-  const aspNameNormalizeMap: Record<string, string> = {
-    // 日本語 → 英語
-    'カリビアンコムプレミアム': 'caribbeancompr',
-    'カリビアンコムPR': 'caribbeancompr',
-    'カリビアンコム': 'caribbeancom',
-    '一本道': '1pondo',
-    '天然むすめ': '10musume',
-    'パコパコママ': 'pacopacomama',
-    'ムラムラ': 'muramura',
-    // 大文字 → 小文字
-    'CARIBBEANCOM': 'caribbeancom',
-    'HEYZO': 'heyzo',
-    'HEYDOUGA': 'heydouga',
-    'X1X': 'x1x',
-    'ENKOU55': 'enkou55',
-    'UREKKO': 'urekko',
-    'TOKYOHOT': 'tokyohot',
-    'TVDEAV': 'tvdeav',
-  };
-
-  // 同じ正規化名のエントリを統合
+  // 同じ正規化名のエントリを統合（normalizeAspName関数を使用）
   const merged = new Map<string, { productCount: number; actressCount: number }>();
   for (const row of result.rows) {
-    const normalized = aspNameNormalizeMap[row.asp_name] || row.asp_name;
+    const normalized = normalizeAspName(row.asp_name);
     const existing = merged.get(normalized);
     if (existing) {
       existing.productCount += parseInt(row.product_count, 10);

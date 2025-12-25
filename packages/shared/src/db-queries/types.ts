@@ -3,6 +3,7 @@
  * Drizzle ORMのテーブル型を抽象化
  */
 import type { SQL } from 'drizzle-orm';
+import type { SiteMode } from './asp-filter';
 
 // ============================================================
 // テーブル列の型定義
@@ -297,4 +298,131 @@ export interface FilterOptions {
   provider?: string;
   startDate?: string;
   endDate?: string;
+}
+
+// ============================================================
+// サイトモード関連型
+// ============================================================
+
+// Note: SiteModeはasp-filter.tsで定義（'all' | 'fanza-only'）
+
+/**
+ * ソースデータ型
+ * productSourcesテーブルから取得するデータの型
+ */
+export interface SourceData {
+  aspName: string;
+  affiliateUrl: string | null;
+  price: number | null;
+  originalProductId?: string;
+  currency?: string | null;
+  isSubscription?: boolean;
+}
+
+/**
+ * 演者データ型
+ * performersテーブルから取得するデータの型
+ */
+export interface PerformerData {
+  id: number;
+  name: string;
+  nameKana?: string | null;
+  nameEn?: string | null;
+}
+
+/**
+ * タグデータ型
+ * tagsテーブルから取得するデータの型
+ */
+export interface TagData {
+  id: number;
+  name: string;
+  category: string | null;
+  nameEn?: string | null;
+}
+
+/**
+ * バッチ取得用キャッシュデータ
+ * 一括取得した関連データを保持
+ */
+export interface CacheData {
+  sources: Map<number, SourceData[]>;
+  performers: Map<number, PerformerData[]>;
+  tags: Map<number, TagData[]>;
+}
+
+/**
+ * 生の商品行データ型
+ * DBから直接取得した行データ
+ */
+export interface RawProductRow {
+  id: number;
+  normalized_product_id: string;
+  title: string;
+  release_date: string | null;
+  description: string | null;
+  duration: number | null;
+  default_thumbnail_url: string | null;
+  title_en?: string | null;
+  title_zh?: string | null;
+  title_zh_tw?: string | null;
+  title_ko?: string | null;
+  description_en?: string | null;
+  description_zh?: string | null;
+  description_zh_tw?: string | null;
+  description_ko?: string | null;
+  ai_description?: unknown;
+  ai_catchphrase?: string | null;
+  ai_short_description?: string | null;
+  ai_tags?: unknown;
+  ai_review?: string | null;
+  ai_review_updated_at?: Date | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+/**
+ * FANZAフィルタ設定
+ */
+export interface FanzaFilterConfig {
+  /** サイトモード */
+  mode: SiteMode;
+  /** 優先プロバイダー（ソース選択時に優先） */
+  preferredProviders?: string[];
+  /** 除外プロバイダー */
+  excludeProviders?: string[];
+}
+
+/**
+ * 商品クエリオプション（共通）
+ */
+export interface ProductQueryOptions extends PaginationOptions, SortOptions {
+  /** 検索キーワード */
+  search?: string;
+  /** プロバイダーフィルタ */
+  providers?: string[];
+  /** 除外プロバイダー */
+  excludeProviders?: string[];
+  /** 女優ID */
+  actressId?: string;
+  /** タグID */
+  tagId?: number;
+  /** カテゴリ */
+  category?: string;
+  /** 最低価格 */
+  minPrice?: number;
+  /** 最高価格 */
+  maxPrice?: number;
+  /** サンプル動画ありのみ */
+  hasVideo?: boolean;
+  /** サンプル画像ありのみ */
+  hasImage?: boolean;
+  /** セール中のみ */
+  onSale?: boolean;
+  /** 出演形態フィルタ */
+  performerType?: 'solo' | 'multi' | 'all';
+  /** ロケール */
+  locale?: string;
+  /** 未整理作品のみ */
+  uncategorized?: boolean;
 }
