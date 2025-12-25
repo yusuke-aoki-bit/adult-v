@@ -64,3 +64,32 @@ export {
   type ProviderProductCount,
   type SaleStatsResult,
 } from './core-queries';
+
+// 型定義
+export type {
+  Column,
+  ProductsTableColumns,
+  ProductSourcesTableColumns,
+  PerformersTableColumns,
+  TagsTableColumns,
+  ProductPerformersTableColumns,
+  ProductTagsTableColumns,
+  ProductImagesTableColumns,
+  ProductVideosTableColumns,
+  ProductSalesTableColumns,
+  TableReference,
+  ProductsTable,
+  ProductSourcesTable,
+  PerformersTable,
+  TagsTable,
+  ProductPerformersTable,
+  ProductTagsTable,
+  ProductImagesTable,
+  ProductVideosTable,
+  ProductSalesTable,
+  DbConnection,
+  PaginatedResult,
+  PaginationOptions,
+  SortOptions,
+  FilterOptions,
+} from './types';

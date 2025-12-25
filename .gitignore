@@ -70,7 +70,8 @@ build.log
 nul
 
 # docs folder (local documentation/reference files)
-/docs/
+# Note: Architecture docs are now tracked in git
+# /docs/
 adult-v-*.json
 
 # IDE/editor settings
