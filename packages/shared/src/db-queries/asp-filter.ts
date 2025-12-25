@@ -3,6 +3,7 @@
  * サイトモードに応じたSQLフィルタ条件を生成
  */
 import { sql, SQL } from 'drizzle-orm';
+import { buildAspNormalizationSql } from '../lib/asp-utils';
 
 /**
  * サイトモード
@@ -89,7 +90,7 @@ export function createProviderFilterCondition(
 
 /**
  * DTIサブサービスを含む複数プロバイダーフィルタ条件を生成
- * URLからDTIサブサービスを判定
+ * URLからDTIサブサービスを判定（buildAspNormalizationSqlを使用）
  */
 export function createMultiProviderFilterCondition(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,39 +99,30 @@ export function createMultiProviderFilterCondition(
   productSourcesTable: any,
   providers: string[]
 ): SQL {
+  const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
   return sql`EXISTS (
     SELECT 1 FROM ${productSourcesTable} ps
     WHERE ps.product_id = ${productsTable.id}
-    AND (
-      CASE
-        WHEN ps.asp_name = 'DTI' THEN
-          CASE
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%caribbeancompr.com%' THEN 'caribbeancompr'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%caribbeancom.com%' THEN 'caribbeancom'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%1pondo.tv%' THEN '1pondo'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%heyzo.com%' THEN 'heyzo'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%10musume.com%' THEN '10musume'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%pacopacomama.com%' THEN 'pacopacomama'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%muramura.tv%' THEN 'muramura'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%tokyo-hot.com%' THEN 'tokyohot'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%heydouga.com%' THEN 'heydouga'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%x1x.com%' THEN 'x1x'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%enkou55.com%' THEN 'enkou55'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%urekko%' THEN 'urekko'
-            WHEN ${productsTable.defaultThumbnailUrl} LIKE '%tvdeav%' THEN 'tvdeav'
-            ELSE 'dti'
-          END
-        WHEN ps.asp_name = 'カリビアンコム' THEN 'caribbeancom'
-        WHEN ps.asp_name = 'カリビアンコムプレミアム' THEN 'caribbeancompr'
-        WHEN ps.asp_name = '一本道' THEN '1pondo'
-        WHEN ps.asp_name = 'HEYZO' THEN 'heyzo'
-        WHEN ps.asp_name = '天然むすめ' THEN '10musume'
-        WHEN ps.asp_name = 'パコパコママ' THEN 'pacopacomama'
-        WHEN ps.asp_name = 'TOKYOHOT' THEN 'tokyohot'
-        WHEN ps.asp_name = 'Tokyo Hot' THEN 'tokyohot'
-        ELSE LOWER(ps.asp_name)
-      END
-    ) IN (${sql.join(providers.map((p) => sql`${p.toLowerCase()}`), sql`, `)})
+    AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(providers.map((p) => sql`${p.toLowerCase()}`), sql`, `)})
+  )`;
+}
+
+/**
+ * DTIサブサービスを含む除外プロバイダーフィルタ条件を生成
+ * URLからDTIサブサービスを判定（buildAspNormalizationSqlを使用）
+ */
+export function createExcludeProviderFilterCondition(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productsTable: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productSourcesTable: any,
+  excludeProviders: string[]
+): SQL {
+  const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
+  return sql`NOT EXISTS (
+    SELECT 1 FROM ${productSourcesTable} ps
+    WHERE ps.product_id = ${productsTable.id}
+    AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(excludeProviders.map((p) => sql`${p.toLowerCase()}`), sql`, `)})
   )`;
 }
 
