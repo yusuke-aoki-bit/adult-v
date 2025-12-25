@@ -291,11 +291,8 @@ async function extractHeydougaProductDetails(
   });
 
   // サムネイル - HEYDOUGAの場合は固定パターンで生成
-  let thumbnailUrl = '';
-  const [siteId, movieId] = productId.split('-');
-
-  // HEYDOUGA: /contents/{site_id}/{movie_id}/player_thumb.webp パターン
-  thumbnailUrl = `${siteConfig.baseUrl}/contents/${siteId}/${movieId}/player_thumb.webp`;
+  // providerId/movieId は関数冒頭で既に取得済み
+  const thumbnailUrl = `${siteConfig.baseUrl}/contents/${providerId}/${movieId}/player_thumb.webp`;
 
   // サンプル画像
   const sampleImages: string[] = [];
