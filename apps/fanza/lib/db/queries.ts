@@ -8,7 +8,17 @@ import { getDtiServiceFromUrl } from '@/lib/image-utils';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@/lib/localization';
 import { unstable_cache } from 'next/cache';
-import { generateProductIdVariations, normalizeProductIdForSearch, stripAspPrefix, buildAspNormalizationSql, normalizeAspName } from '@adult-v/shared';
+import {
+  generateProductIdVariations,
+  normalizeProductIdForSearch,
+  stripAspPrefix,
+  buildAspNormalizationSql,
+  normalizeAspName,
+  createAspFilterCondition,
+  createProviderFilterCondition,
+  createMultiProviderFilterCondition,
+  createExcludeProviderFilterCondition,
+} from '@adult-v/shared';
 import type { SaleProduct } from '@adult-v/shared';
 
 /**
@@ -548,13 +558,8 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     const conditions = [];
 
     // FANZAサイトではFANZA商品のみを表示（規約により他ASP商品は表示禁止）
-    conditions.push(
-      sql`EXISTS (
-        SELECT 1 FROM ${productSources} ps_fanza
-        WHERE ps_fanza.product_id = ${products.id}
-        AND ps_fanza.asp_name = 'FANZA'
-      )`
-    );
+    // 共有関数を使用: createAspFilterCondition(products, productSources, 'fanza-only')
+    conditions.push(createAspFilterCondition(products, productSources, 'fanza-only'));
 
     // 特定のIDリストでフィルタ（バッチ取得用）
     if (options?.ids && options.ids.length > 0) {
@@ -563,61 +568,17 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
 
     // プロバイダー（ASP）でフィルタ（単一）
     if (options?.provider) {
-      // Map frontend provider names to ASP names
-      const aspMapping: Record<string, string[]> = {
-        'duga': ['DUGA', 'APEX'],
-        'dti': ['DTI'],
-        'dmm': ['DMM'],
-        'sokmil': ['SOKMIL'],
-      };
-      const aspNames = aspMapping[options.provider.toLowerCase()] || [options.provider];
-
-      // EXISTSを使用（IN配列を避ける）
-      if (aspNames.length === 1) {
-        conditions.push(
-          sql`EXISTS (
-            SELECT 1 FROM ${productSources} ps
-            WHERE ps.product_id = ${products.id}
-            AND ps.asp_name = ${aspNames[0]}
-          )`
-        );
-      } else {
-        conditions.push(
-          sql`EXISTS (
-            SELECT 1 FROM ${productSources} ps
-            WHERE ps.product_id = ${products.id}
-            AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
-          )`
-        );
-      }
+      conditions.push(createProviderFilterCondition(products, productSources, options.provider));
     }
 
     // 複数プロバイダー（ASP）でフィルタ（いずれかを含む）
-    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用（buildAspNormalizationSql）
     if (options?.providers && options.providers.length > 0) {
-      const aspNames = options.providers;
-      const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
-      conditions.push(
-        sql`EXISTS (
-          SELECT 1 FROM ${productSources} ps
-          WHERE ps.product_id = ${products.id}
-          AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
-        )`
-      );
+      conditions.push(createMultiProviderFilterCondition(products, productSources, options.providers));
     }
 
     // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
-    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用（buildAspNormalizationSql）
     if (options?.excludeProviders && options.excludeProviders.length > 0) {
-      const excludeAspNames = options.excludeProviders;
-      const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
-      conditions.push(
-        sql`NOT EXISTS (
-          SELECT 1 FROM ${productSources} ps
-          WHERE ps.product_id = ${products.id}
-          AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(excludeAspNames.map(name => sql`${name}`), sql`, `)})
-        )`
-      );
+      conditions.push(createExcludeProviderFilterCondition(products, productSources, options.excludeProviders));
     }
 
     // 価格フィルタ（productSourcesの価格を使用）
@@ -994,59 +955,17 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
 
     // プロバイダー（ASP）でフィルタ（単一）
     if (options?.provider) {
-      const aspMapping: Record<string, string[]> = {
-        'duga': ['DUGA', 'APEX'],
-        'dti': ['DTI'],
-        'dmm': ['DMM'],
-        'sokmil': ['SOKMIL'],
-      };
-      const aspNames = aspMapping[options.provider.toLowerCase()] || [options.provider];
-
-      if (aspNames.length === 1) {
-        conditions.push(
-          sql`EXISTS (
-            SELECT 1 FROM ${productSources} ps
-            WHERE ps.product_id = ${products.id}
-            AND ps.asp_name = ${aspNames[0]}
-          )`
-        );
-      } else {
-        conditions.push(
-          sql`EXISTS (
-            SELECT 1 FROM ${productSources} ps
-            WHERE ps.product_id = ${products.id}
-            AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
-          )`
-        );
-      }
+      conditions.push(createProviderFilterCondition(products, productSources, options.provider));
     }
 
     // 複数プロバイダー（ASP）でフィルタ
-    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用（buildAspNormalizationSql）
     if (options?.providers && options.providers.length > 0) {
-      const aspNames = options.providers;
-      const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
-      conditions.push(
-        sql`EXISTS (
-          SELECT 1 FROM ${productSources} ps
-          WHERE ps.product_id = ${products.id}
-          AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
-        )`
-      );
+      conditions.push(createMultiProviderFilterCondition(products, productSources, options.providers));
     }
 
     // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
-    // DTIサブサービス（caribbeancom, 1pondo等）に対応するためCASE式を使用（buildAspNormalizationSql）
     if (options?.excludeProviders && options.excludeProviders.length > 0) {
-      const excludeAspNames = options.excludeProviders;
-      const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
-      conditions.push(
-        sql`NOT EXISTS (
-          SELECT 1 FROM ${productSources} ps
-          WHERE ps.product_id = ${products.id}
-          AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(excludeAspNames.map(name => sql`${name}`), sql`, `)})
-        )`
-      );
+      conditions.push(createExcludeProviderFilterCondition(products, productSources, options.excludeProviders));
     }
 
     // 女優IDでフィルタ
