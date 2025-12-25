@@ -14,6 +14,8 @@
  * - 出演者検索API (api_m_actor)
  */
 
+import { robustFetch, crawlerLog } from '../crawler';
+
 /**
  * ソクミル API基本パラメータ
  */
@@ -289,13 +291,23 @@ export class SokmilApiClient {
 
     const url = `${this.baseUrl}/${endpoint}?${searchParams.toString()}`;
 
-    console.log(`[SOKMIL API] Requesting: ${url}`);
+    crawlerLog.info(`Requesting: ${url}`);
 
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'User-Agent': 'Sokmil-API-Client/1.0',
+      const response = await robustFetch(url, {
+        init: {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'Sokmil-API-Client/1.0',
+          },
+        },
+        timeoutMs: 30000,
+        retry: {
+          maxRetries: 3,
+          initialDelayMs: 1000,
+          onRetry: (error, attempt, delayMs) => {
+            crawlerLog.warn(`Sokmil API retry ${attempt} after ${delayMs}ms: ${error.message}`);
+          },
         },
       });
 
@@ -304,7 +316,7 @@ export class SokmilApiClient {
       }
 
       const data = await response.json();
-      console.log('[SOKMIL API] Response:', JSON.stringify(data).substring(0, 500));
+      crawlerLog.info(`Response: ${JSON.stringify(data).substring(0, 200)}...`);
       return this.normalizeResponse<T>(data);
     } catch (error) {
       throw new Error(

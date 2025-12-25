@@ -8,6 +8,8 @@
  * - reviews: 個別レビュー（評価、タイトル、日付、投稿者、本文、参考票数）
  */
 
+import { robustFetch, crawlerLog } from '../crawler';
+
 export interface DugaReview {
   /** レビューID (投票用) */
   reviewId: string;
@@ -62,11 +64,21 @@ export interface DugaPageData {
 export async function scrapeDugaProductPage(productId: string): Promise<DugaPageData> {
   const url = `https://duga.jp/ppv/${productId}/`;
 
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-      'Accept-Language': 'ja,en;q=0.9',
+  const response = await robustFetch(url, {
+    init: {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'ja,en;q=0.9',
+      },
+    },
+    timeoutMs: 30000,
+    retry: {
+      maxRetries: 3,
+      initialDelayMs: 1000,
+      onRetry: (error, attempt, delayMs) => {
+        crawlerLog.warn(`DUGA page retry ${attempt} after ${delayMs}ms: ${error.message}`);
+      },
     },
   });
 

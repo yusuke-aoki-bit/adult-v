@@ -9,6 +9,8 @@
  * APIバージョン: 1.2
  */
 
+import { robustFetch, crawlerLog } from '../crawler';
+
 /**
  * DUGA API検索パラメータ
  */
@@ -228,10 +230,20 @@ export class DugaApiClient {
     const url = `${this.baseUrl}?${searchParams.toString()}`;
 
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'User-Agent': 'DUGA-API-Client/1.0',
+      const response = await robustFetch(url, {
+        init: {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'DUGA-API-Client/1.0',
+          },
+        },
+        timeoutMs: 30000,
+        retry: {
+          maxRetries: 3,
+          initialDelayMs: 1000,
+          onRetry: (error, attempt, delayMs) => {
+            crawlerLog.warn(`DUGA API retry ${attempt} after ${delayMs}ms: ${error.message}`);
+          },
         },
       });
 

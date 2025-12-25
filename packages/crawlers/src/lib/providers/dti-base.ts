@@ -24,6 +24,7 @@ import {
   isValidPerformerForProduct,
 } from '../performer-validation';
 import { validateProductData } from '../crawler-utils';
+import { robustFetch, crawlerLog } from '../crawler';
 import {
   generateProductDescription,
   extractProductTags,
@@ -300,8 +301,14 @@ export async function fetchGalleryZip(
   const sampleImages: string[] = [];
 
   try {
-    console.log(`    🔍 Fetching gallery.zip: ${galleryZipUrl}`);
-    const zipResponse = await fetch(galleryZipUrl);
+    crawlerLog.info(`Fetching gallery.zip: ${galleryZipUrl}`);
+    const zipResponse = await robustFetch(galleryZipUrl, {
+      timeoutMs: 60000,
+      retry: {
+        maxRetries: 2,
+        initialDelayMs: 2000,
+      },
+    }).catch(() => ({ ok: false } as Response));
 
     if (zipResponse.ok) {
       const zipBuffer = Buffer.from(await zipResponse.arrayBuffer());
@@ -1159,18 +1166,27 @@ export abstract class DTIBaseCrawler {
   ): Promise<ParsedProductData | null>;
 
   /**
-   * Fetch and decode HTML from URL
+   * Fetch and decode HTML from URL (with retry)
    */
   async fetchHtml(url: string): Promise<string | null> {
     try {
-      const response = await fetch(url);
+      const response = await robustFetch(url, {
+        timeoutMs: 30000,
+        retry: {
+          maxRetries: 3,
+          initialDelayMs: 1000,
+          onRetry: (error, attempt, delayMs) => {
+            crawlerLog.warn(`DTI fetch retry ${attempt} after ${delayMs}ms: ${error.message}`);
+          },
+        },
+      });
       if (!response.ok) return null;
 
       const buffer = Buffer.from(await response.arrayBuffer());
       const contentType = response.headers.get('content-type') || undefined;
       return decodeHtml(buffer, contentType, url);
     } catch (error) {
-      console.error(`  ❌ Error fetching ${url}:`, error);
+      crawlerLog.error(`Error fetching ${url}: ${error instanceof Error ? error.message : String(error)}`);
       return null;
     }
   }
