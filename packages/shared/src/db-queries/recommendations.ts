@@ -1187,13 +1187,20 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
   /**
    * 女優の人気作品TOP5を取得
    * 評価とレビュー数でランキング（軽量版）
+   * @param aspName - ASPフィルター（例: 'fanza'）。指定時は該当ASPの商品のみ返す
    */
   async function getPerformerTopProducts(
     performerId: number,
-    limit: number = 5
+    limit: number = 5,
+    aspName?: string
   ): Promise<TopRatedProduct[]> {
     try {
       const db = getDb();
+
+      // ASPフィルター条件
+      const aspFilter = aspName
+        ? sql`AND EXISTS (SELECT 1 FROM product_sources ps_asp WHERE ps_asp.product_id = p.id AND LOWER(ps_asp.asp_name) = ${aspName.toLowerCase()})`
+        : sql``;
 
       // 軽量化: product_viewsのサブクエリを削除、LATERAL JOINを削除
       const topProducts = await db.execute(sql`
@@ -1219,6 +1226,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         LEFT JOIN product_rating_summary prs ON p.id = prs.product_id
         WHERE pp.performer_id = ${performerId}
           AND (COALESCE(prs.average_rating, 0) > 0 OR COALESCE(prs.total_reviews, 0) > 0)
+          ${aspFilter}
         ORDER BY
           COALESCE(prs.average_rating, 0) DESC,
           COALESCE(prs.total_reviews, 0) DESC,
@@ -1261,13 +1269,20 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
 
   /**
    * 女優のセール中作品を取得（軽量版）
+   * @param aspName - ASPフィルター（例: 'fanza'）。指定時は該当ASPの商品のみ返す
    */
   async function getPerformerOnSaleProducts(
     performerId: number,
-    limit: number = 6
+    limit: number = 6,
+    aspName?: string
   ): Promise<PerformerOnSaleProduct[]> {
     try {
       const db = getDb();
+
+      // ASPフィルター条件
+      const aspFilter = aspName
+        ? sql`AND LOWER(ps.asp_name) = ${aspName.toLowerCase()}`
+        : sql``;
 
       // product_salesテーブルを使用
       const onSaleProducts = await db.execute(sql`
@@ -1288,6 +1303,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         WHERE pp.performer_id = ${performerId}
           AND psl.is_active = true
           AND psl.end_at > NOW()
+          ${aspFilter}
         ORDER BY psl.end_at ASC
         LIMIT ${limit}
       `);

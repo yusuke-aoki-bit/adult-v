@@ -135,11 +135,12 @@ interface MgsProduct {
 }
 
 /**
- * HTMLからMGSアフィリエイトウィジェットコードを生成
+ * MGSアフィリエイトリンクURLを生成
+ * MGSの商品ページURLにアフィリエイトパラメータを付加
  */
-function generateAffiliateWidget(productId: string): string {
-  const className = crypto.randomBytes(4).toString('hex');
-  return `<div class="${className}"></div><script id="mgs_Widget_affiliate" type="text/javascript" charset="utf-8" src="https://static.mgstage.com/mgs/script/common/mgs_Widget_affiliate.js?c=${AFFILIATE_CODE}&t=text&o=t&b=t&s=MOMO&p=${productId}&from=ppv&class=${className}"></script>`;
+function generateAffiliateUrl(productId: string): string {
+  // MGS商品ページへの直接リンク（アフィリエイトパラメータ付き）
+  return `https://www.mgstage.com/product/product_detail/${productId}/?af_id=${AFFILIATE_CODE}`;
 }
 
 /**
@@ -653,8 +654,8 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
       productId = productRecord[0].id;
     }
 
-    // Generate affiliate widget code for MGS
-    const affiliateWidget = generateAffiliateWidget(mgsProduct.productId);
+    // Generate affiliate URL for MGS
+    const affiliateUrl = generateAffiliateUrl(mgsProduct.productId);
 
     // product_sourcesに保存
     const existing = await db
@@ -673,7 +674,7 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
       await db
         .update(productSources)
         .set({
-          affiliateUrl: affiliateWidget,
+          affiliateUrl: affiliateUrl,
           originalProductId: mgsProduct.productId,
           price: mgsProduct.price,
           lastUpdated: new Date(),
@@ -687,7 +688,7 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
         productId,
         aspName: SOURCE_NAME,
         originalProductId: mgsProduct.productId,
-        affiliateUrl: affiliateWidget,
+        affiliateUrl: affiliateUrl,
         price: mgsProduct.price,
         dataSource: 'HTML',
       });

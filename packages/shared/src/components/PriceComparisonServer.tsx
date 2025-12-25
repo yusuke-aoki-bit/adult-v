@@ -22,7 +22,8 @@ interface PriceComparisonServerProps {
 
 const translations = {
   ja: {
-    title: '価格比較',
+    title: '購入先を選択',
+    titleSingle: '購入先',
     cheapest: '最安',
     sale: 'セール中',
     subscription: '月額',
@@ -35,10 +36,11 @@ const translations = {
     buyNow: '購入する',
     noPrice: '価格情報なし',
     savings: '最大節約',
-    compare: '比較',
+    compare: 'サイト',
   },
   en: {
-    title: 'Price Comparison',
+    title: 'Where to Buy',
+    titleSingle: 'Purchase',
     cheapest: 'Best Price',
     sale: 'On Sale',
     subscription: 'Monthly',
@@ -54,7 +56,8 @@ const translations = {
     compare: 'sources',
   },
   zh: {
-    title: '价格比较',
+    title: '购买渠道',
+    titleSingle: '购买',
     cheapest: '最低价',
     sale: '促销中',
     subscription: '月费',
@@ -70,7 +73,8 @@ const translations = {
     compare: '来源',
   },
   ko: {
-    title: '가격 비교',
+    title: '구매처 선택',
+    titleSingle: '구매',
     cheapest: '최저가',
     sale: '세일 중',
     subscription: '월정액',
@@ -136,10 +140,11 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
   // Filter out sources without price
   const sourcesWithPrice = sources.filter(s => s.regularPrice !== null || s.salePrice !== null);
 
-  if (sourcesWithPrice.length < 2) {
-    // Only show comparison if there are multiple sources
+  if (sourcesWithPrice.length === 0) {
     return null;
   }
+
+  const isMultiple = sourcesWithPrice.length >= 2;
 
   // Find cheapest price
   const cheapestSource = sourcesWithPrice[0]; // Already sorted by price
@@ -149,16 +154,18 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
   const highestPrice = Math.max(
     ...sourcesWithPrice.map(s => s.regularPrice ?? s.salePrice ?? 0)
   );
-  const maxSavings = highestPrice - cheapestPrice;
+  const maxSavings = isMultiple ? highestPrice - cheapestPrice : 0;
 
   return (
     <div className="bg-gray-800 rounded-lg p-4">
       <h3 className="text-white font-bold mb-4 flex items-center gap-2">
         <Tag className="w-5 h-5 text-emerald-400" />
-        {t.title}
-        <span className="text-sm font-normal text-gray-400">
-          ({sourcesWithPrice.length} {t.compare})
-        </span>
+        {isMultiple ? t.title : t.titleSingle}
+        {isMultiple && (
+          <span className="text-sm font-normal text-gray-400">
+            ({sourcesWithPrice.length} {t.compare})
+          </span>
+        )}
         {maxSavings > 0 && (
           <span className="ml-auto text-sm font-normal text-emerald-400">
             {t.savings}: ¥{maxSavings.toLocaleString()}
@@ -174,6 +181,10 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
           const saleEndText = formatSaleEnd(source.saleEndAt, t);
           const daysLeft = getDaysUntilEnd(source.saleEndAt);
           const isUrgent = daysLeft !== null && daysLeft <= 3;
+          // 有効なURLかチェック（http/httpsで始まるもののみ）
+          const isValidUrl = source.affiliateUrl && source.affiliateUrl.startsWith('http');
+          // 無効なURLの場合はスキップ
+          if (!isValidUrl) return null;
 
           return (
             <a
@@ -246,13 +257,13 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
 
               {/* Badges */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                {isCheapest && (
+                {isMultiple && isCheapest && (
                   <span className="flex items-center gap-1 text-xs bg-emerald-600 text-white px-2 py-1 rounded">
                     <Crown className="w-3 h-3" />
                     {t.cheapest}
                   </span>
                 )}
-                {source.isOnSale && !isCheapest && (
+                {source.isOnSale && !(isMultiple && isCheapest) && (
                   <span className="flex items-center gap-1 text-xs bg-rose-600 text-white px-2 py-1 rounded">
                     <TrendingDown className="w-3 h-3" />
                     {t.sale}

@@ -43,6 +43,8 @@ export interface DugaAggregateRating {
 export interface DugaPageData {
   /** 商品ID */
   productId: string;
+  /** メーカー品番 (例: ASW-339, SSIS-865) */
+  makerProductCode?: string;
   /** 集計評価情報 */
   aggregateRating?: DugaAggregateRating;
   /** レビュー一覧 */
@@ -84,6 +86,21 @@ export function parseDugaPageHtml(productId: string, html: string): DugaPageData
     productId,
     reviews: [],
   };
+
+  // メーカー品番を抽出
+  // パターン1: <th>メーカー品番</th><td>ASW-339</td>
+  // パターン2: <dt>メーカー品番</dt><dd>SSIS-865</dd>
+  const makerCodeMatch =
+    html.match(/メーカー品番<\/th>\s*<td[^>]*>([^<]+)<\/td>/i) ||
+    html.match(/メーカー品番<\/dt>\s*<dd[^>]*>([^<]+)<\/dd>/i) ||
+    html.match(/<span[^>]*class="[^"]*spec-value[^"]*"[^>]*>([A-Z0-9]+-\d+)<\/span>/i);
+  if (makerCodeMatch) {
+    const code = makerCodeMatch[1].trim();
+    // 品番形式をバリデーション (英数字+ハイフン+数字)
+    if (/^[A-Z0-9]+-?\d+$/i.test(code)) {
+      result.makerProductCode = code.toUpperCase();
+    }
+  }
 
   // マイリスト登録数を抽出
   // <div class="mylistcount"><div class="count-box"><div class="title">マイリスト登録数</div><div class="count">98人</div></div></div>

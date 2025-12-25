@@ -235,7 +235,7 @@ async function extractHeydougaProductDetails(
     const name = $(el).attr('alt')?.trim();
     if (name && isValidPerformerName(name)) {
       const normalized = normalizePerformerName(name);
-      if (!performers.includes(normalized)) {
+      if (normalized && !performers.includes(normalized)) {
         performers.push(normalized);
       }
     }
@@ -247,7 +247,7 @@ async function extractHeydougaProductDetails(
       const name = $(el).text().trim();
       if (name && isValidPerformerName(name)) {
         const normalized = normalizePerformerName(name);
-        if (!performers.includes(normalized)) {
+        if (normalized && !performers.includes(normalized)) {
           performers.push(normalized);
         }
       }
@@ -359,7 +359,7 @@ async function extractTmpProductDetails(
     const name = $(el).text().trim();
     if (name && isValidPerformerName(name)) {
       const normalized = normalizePerformerName(name);
-      if (!performers.includes(normalized)) {
+      if (normalized && !performers.includes(normalized)) {
         performers.push(normalized);
       }
     }
@@ -533,8 +533,6 @@ async function saveProduct(
           .insert(performers)
           .values({
             name: performerName,
-            createdAt: new Date(),
-            updatedAt: new Date(),
           })
           .returning();
       }

@@ -527,30 +527,45 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
     // 収録時間（分単位）- FANZAの商品情報テーブルから抽出
     let duration: number | null = null;
-    // パターン1: 商品情報テーブルの「収録時間」行から取得
-    // 構造: <tr><td>収録時間：</td><td>XXX分</td></tr> または <td>...<span>XXX分</span>...</td>
-    const durationRowMatch = html.match(/収録時間[：:]?\s*<\/t[dh]>\s*<td[^>]*>.*?(\d{1,3})分/i);
-    if (durationRowMatch) {
-      const mins = parseInt(durationRowMatch[1]);
+
+    // パターン1: 「収録時間：」の近くにある分表記を取得（新FANZAデザイン対応）
+    // 構造: <span>収録時間：</span></th><td>...<span>XXX分</span>...</td>
+    const durationContextMatch = html.match(/収録時間[：:]?\s*<\/[^>]+>[\s\S]{0,200}?>(\d{1,3})分</i);
+    if (durationContextMatch) {
+      const mins = parseInt(durationContextMatch[1], 10);
       if (mins >= 1 && mins <= 600) {
         duration = mins;
       }
     }
-    // パターン2: span内の分表記（フォールバック）
+
+    // パターン2: より広い範囲で「収録時間」と分を探す
     if (!duration) {
-      const durationSpanMatch = html.match(/<span[^>]*>(\d{1,3})分<\/span>/i);
-      if (durationSpanMatch) {
-        const mins = parseInt(durationSpanMatch[1]);
-        if (mins >= 10 && mins <= 600) { // 10分以上で誤検知を減らす
+      const durationRowMatch = html.match(/収録時間[\s\S]{0,100}?(\d{1,3})分/i);
+      if (durationRowMatch) {
+        const mins = parseInt(durationRowMatch[1], 10);
+        if (mins >= 1 && mins <= 600) {
           duration = mins;
         }
       }
     }
-    // パターン3: JSON-LDのduration（ISO 8601形式）
+
+    // パターン3: span内の分表記（「収録時間」が見つからない場合のフォールバック）
+    // 20分以上の値のみ（誤検知を減らすため）
+    if (!duration) {
+      const durationSpanMatch = html.match(/<span[^>]*>(\d{2,3})分<\/span>/i);
+      if (durationSpanMatch) {
+        const mins = parseInt(durationSpanMatch[1], 10);
+        if (mins >= 20 && mins <= 600) {
+          duration = mins;
+        }
+      }
+    }
+
+    // パターン4: JSON-LDのduration（ISO 8601形式）
     if (!duration && jsonLdData?.duration) {
       const isoMatch = String(jsonLdData.duration).match(/PT(\d+)M/i);
       if (isoMatch) {
-        const mins = parseInt(isoMatch[1]);
+        const mins = parseInt(isoMatch[1], 10);
         if (mins >= 1 && mins <= 600) {
           duration = mins;
         }
@@ -567,66 +582,40 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     const seriesMatch = html.match(/href="[^"]*\/av\/list\/\?series=\d+"[^>]*>([^<]+)</i);
     const series = seriesMatch ? seriesMatch[1].trim() : null;
 
-    // 価格（JSON-LD優先、なければHTMLから）- FANZAの価格表示構造に基づく
+    // 価格（HTMLから取得）- FANZAの価格表示構造に基づく
+    // 注意: JSON-LDのoffers.priceは月額見放題の最安価格（300円など）のため使用しない
     let price: number | null = null;
 
-    // JSON-LDのoffers.priceを優先使用（最も信頼性が高い）
-    if (jsonLdData?.offers) {
-      const offers = Array.isArray(jsonLdData.offers) ? jsonLdData.offers[0] : jsonLdData.offers;
-      if (offers?.price && typeof offers.price === 'number') {
-        price = offers.price;
+    // HTMLから価格を取得（購入価格・配信価格を優先）
+    // 複数の販売形態があるため、「円」表記からすべて抽出し、適切なものを選択
+    const priceMatches = [...html.matchAll(/(\d{1,3}(?:,\d{3})*)円/g)];
+    if (priceMatches.length > 0) {
+      // 500円〜10000円の範囲の価格を抽出（月額300円や高額セット除外）
+      const validPrices = priceMatches
+        .map(m => parseInt(m[1].replace(/,/g, ''), 10))
+        .filter(p => p >= 500 && p <= 10000);
+
+      if (validPrices.length > 0) {
+        // 一般的なFANZA価格帯（980〜3000円）に近いものを優先
+        // 980, 1480, 1980, 2480, 2980円などが一般的
+        const typicalPrices = validPrices.filter(p => p >= 800 && p <= 3500);
+        if (typicalPrices.length > 0) {
+          // 複数ある場合は最も高い価格（HD版など）を選択
+          price = Math.max(...typicalPrices);
+        } else {
+          // 範囲外でも有効な価格があれば最大値を使用
+          price = Math.max(...validPrices);
+        }
       }
     }
 
-    // JSON-LDになければHTMLから取得（FANZAの構造に特化）
+    // フォールバック: data-price属性（一部のページで使用）
     if (!price) {
-      // パターン1: 価格表示エリア（class="price"を含む要素）
-      // FANZAでは <p class="price d-price">¥1,980</p> のような構造
-      const priceClassMatch = html.match(/class="[^"]*price[^"]*"[^>]*>.*?[¥￥]?\s*(\d{1,3}(?:,\d{3})*)/i);
-      if (priceClassMatch) {
-        const p = parseInt(priceClassMatch[1].replace(/,/g, ''));
-        if (p >= 100 && p <= 50000) {
+      const dataPriceMatch = html.match(/data-price="(\d+)"/i);
+      if (dataPriceMatch) {
+        const p = parseInt(dataPriceMatch[1], 10);
+        if (p >= 500 && p <= 10000) {
           price = p;
-        }
-      }
-
-      // パターン2: 商品情報テーブルの「価格」「希望小売価格」行
-      // 構造: <tr><td>価格：</td><td>¥1,980～</td></tr>
-      if (!price) {
-        const priceRowMatch = html.match(/(?:価格|希望小売価格|配信価格)[：:]?\s*<\/t[dh]>\s*<td[^>]*>.*?[¥￥]?\s*(\d{1,3}(?:,\d{3})*)/i);
-        if (priceRowMatch) {
-          const p = parseInt(priceRowMatch[1].replace(/,/g, ''));
-          if (p >= 100 && p <= 50000) {
-            price = p;
-          }
-        }
-      }
-
-      // パターン3: data-price属性（一部のページで使用）
-      if (!price) {
-        const dataPriceMatch = html.match(/data-price="(\d+)"/i);
-        if (dataPriceMatch) {
-          const p = parseInt(dataPriceMatch[1]);
-          if (p >= 100 && p <= 50000) {
-            price = p;
-          }
-        }
-      }
-
-      // パターン4: 円表記（フォールバック）- 商品価格らしき場所のみ
-      if (!price) {
-        // 「セール」「割引」の近くにある価格を避け、通常価格を取得
-        const priceMatches = [...html.matchAll(/(?:税込|販売価格)?[：:]?\s*[¥￥]?\s*(\d{1,3}(?:,\d{3})*)円/g)];
-        if (priceMatches.length > 0) {
-          // 300円以上50000円以下の価格のみ（月額や小物価格を除外）
-          const prices = priceMatches.map(m => parseInt(m[1].replace(/,/g, ''))).filter(p => p >= 300 && p <= 50000);
-          if (prices.length > 0) {
-            // 複数価格がある場合、最頻出または中央値に近いものを選択
-            const sortedPrices = prices.sort((a, b) => a - b);
-            // 一般的なFANZA価格帯（980〜3980円）に近いものを優先
-            const typicalPrice = sortedPrices.find(p => p >= 500 && p <= 5000) || sortedPrices[0];
-            price = typicalPrice;
-          }
         }
       }
     }

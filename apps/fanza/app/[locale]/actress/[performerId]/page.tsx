@@ -215,11 +215,11 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // Get career analysis
   const careerAnalysis = await getActressCareerAnalysis(actress.id);
 
-  // Get performer's top products (most popular by rating/reviews/views)
-  const topProducts = await getPerformerTopProducts(parseInt(actress.id), 5);
+  // Get performer's top products (most popular by rating/reviews/views) - FANZAの商品のみ
+  const topProducts = await getPerformerTopProducts(parseInt(actress.id), 5, 'fanza');
 
-  // Get performer's on-sale products
-  const onSaleProducts = await getPerformerOnSaleProducts(parseInt(actress.id), 6);
+  // Get performer's on-sale products - FANZAの商品のみ
+  const onSaleProducts = await getPerformerOnSaleProducts(parseInt(actress.id), 6, 'fanza');
 
   // Get products
   const allWorks = await getProducts({

@@ -3,32 +3,48 @@
 const FANZA_SITE_URL = 'https://www.f.adult-v.com';
 
 interface FanzaCrossLinkProps {
-  /** FANZAの直リンクURL（アフィリエイト承認前は直リンク） */
-  fanzaUrl?: string | null;
+  /** 商品ID（apps/fanza経由でリンク） */
+  productId?: string | number | null;
+  /** ロケール */
+  locale?: string;
   /** ボタンのラベル（デフォルト: FANZAで見る） */
   label?: string;
   /** クラス名 */
   className?: string;
+  /** @deprecated FANZAへの直リンクは規約違反のため使用禁止 */
+  fanzaUrl?: string | null;
 }
 
 /**
- * FANZA公式サイトへの直リンクボタン
- * アフィリエイト承認されるまでは直リンクを使用
- * adult-vサイト専用（FANZAサイトでは表示しない）
+ * FANZAサイト（f.adult-v.com）経由でFANZA商品を見るボタン
+ * apps/webからFANZAへの直接リンクは規約違反のため、apps/fanza経由でリンク
+ * リファラーにapps/webが乗らないようにするため
  */
 export default function FanzaCrossLink({
-  fanzaUrl,
+  productId,
+  locale = 'ja',
   label = 'FANZAで見る',
   className = '',
+  fanzaUrl, // 互換性のため残すが使用しない
 }: FanzaCrossLinkProps) {
-  // FANZAのURLがない場合は表示しない
-  if (!fanzaUrl) {
+  // 商品IDがない場合は表示しない（fanzaUrlは直リンクなので使用しない）
+  if (!productId && !fanzaUrl) {
+    return null;
+  }
+
+  // apps/fanza経由のURL（直接FANZAではなく自社サイト経由）
+  const url = productId
+    ? `${FANZA_SITE_URL}/${locale}/products/${productId}`
+    : null;
+
+  // URLがない場合は表示しない
+  if (!url) {
     return null;
   }
 
   return (
     <a
-      href={fanzaUrl}
+      href={url}
       target="_blank"
       rel="noopener noreferrer"
       className={`inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg ${className}`}

@@ -20,6 +20,8 @@ import { getDb } from '../lib/db';
 import { products, productSources, performers, productPerformers, productImages } from '../lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
+import { parseDuration, extractPrice } from '../lib/crawler/parse-helpers';
+import { upsertRawHtmlDataWithGcs, markRawDataAsProcessed } from '../lib/crawler/dedup-helper';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import type { Browser, Page } from 'puppeteer';
@@ -75,6 +77,8 @@ interface TokyoHotProduct {
   thumbnailUrl: string;
   sampleImages: string[];
   genres: string[];
+  price: number | null;  // 月額料金
+  rawHtml: string;  // ハッシュ計算用
 }
 
 /**
@@ -279,7 +283,7 @@ async function extractProductDetails(
 
       if (isValidPerformerName(keyword)) {
         const normalized = normalizePerformerName(keyword);
-        if (!performers.includes(normalized)) {
+        if (normalized && !performers.includes(normalized)) {
           performers.push(normalized);
         }
       }
@@ -303,10 +307,8 @@ async function extractProductDetails(
       }
 
       if (label.includes('収録時間') || label.includes('再生時間') || label.includes('Duration')) {
-        const durationMatch = value.match(/(\d+)\s*(分|min)/);
-        if (durationMatch) {
-          duration = parseInt(durationMatch[1]);
-        }
+        // parse-helpersを使用
+        duration = parseDuration(value);
       }
 
       if (label.includes('カテゴリ') || label.includes('タグ') || label.includes('ジャンル')) {
@@ -351,6 +353,22 @@ async function extractProductDetails(
       }
     });
 
+    // 価格情報（月額制サイトの料金）
+    let price: number | null = null;
+    // Tokyo-Hotの価格パターンを検索
+    const pricePatterns = [
+      /\$(\d+(?:\.\d{2})?)\s*(?:\/month|月)/i,
+      /[¥￥](\d{1,3}(?:,\d{3})*)/,
+      /(\d{1,3}(?:,\d{3})*)\s*円/,
+    ];
+    for (const pattern of pricePatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        price = extractPrice(match[0]);
+        if (price) break;
+      }
+    }
+
     return {
       productId,
       title,
@@ -361,6 +379,8 @@ async function extractProductDetails(
       thumbnailUrl,
       sampleImages,
       genres,
+      price,
+      rawHtml: html,  // ハッシュ計算用
     };
   } catch (error) {
     console.error(`  ❌ Error fetching ${productId}:`, error);
@@ -373,10 +393,25 @@ async function extractProductDetails(
  */
 async function saveProduct(
   siteConfig: JskySiteConfig,
-  product: TokyoHotProduct
-): Promise<boolean> {
+  product: TokyoHotProduct,
+  forceReprocess: boolean = false
+): Promise<{ saved: boolean; isNew: boolean; skippedUnchanged: boolean }> {
   try {
     const normalizedProductId = `${siteConfig.aspName}-${product.productId}`;
+
+    // ハッシュベースの重複検出（GCS優先）
+    const upsertResult = await upsertRawHtmlDataWithGcs(
+      siteConfig.aspName,
+      product.productId,
+      `${siteConfig.baseUrl}/product/${product.productId}/`,
+      product.rawHtml
+    );
+
+    // ハッシュ変更なし、かつ処理済みならスキップ
+    if (upsertResult.shouldSkip && !forceReprocess) {
+      console.log(`  ⏭️ スキップ(変更なし): ${product.productId}`);
+      return { saved: false, isNew: false, skippedUnchanged: true };
+    }
 
     // 既存チェック
     const existingProduct = await db
@@ -385,34 +420,58 @@ async function saveProduct(
       .where(eq(products.normalizedProductId, normalizedProductId))
       .limit(1);
 
-    if (existingProduct.length > 0) {
-      console.log(`  ⏭️ Already exists: ${product.productId}`);
-      return false;
+    const isNew = existingProduct.length === 0;
+
+    // 新規作成または更新
+    let productId: number;
+    if (isNew) {
+      const [newProduct] = await db
+        .insert(products)
+        .values({
+          normalizedProductId,
+          title: product.title,
+          description: product.description || null,
+          defaultThumbnailUrl: product.thumbnailUrl || null,
+          releaseDate: product.releaseDate || null,
+          duration: product.duration || null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning({ id: products.id });
+      productId = newProduct.id;
+      console.log(`  ✓ 新規商品作成 (product_id: ${productId})`);
+    } else {
+      productId = existingProduct[0].id;
+      await db
+        .update(products)
+        .set({
+          title: product.title,
+          description: product.description || null,
+          defaultThumbnailUrl: product.thumbnailUrl || null,
+          releaseDate: product.releaseDate || null,
+          duration: product.duration || null,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, productId));
+      console.log(`  ✓ 商品更新 (product_id: ${productId})`);
     }
 
-    // 新規作成
-    const [newProduct] = await db
-      .insert(products)
-      .values({
-        normalizedProductId,
-        title: product.title,
-        description: product.description || null,
-        defaultThumbnailUrl: product.thumbnailUrl || null,
-        releaseDate: product.releaseDate || null,
-        duration: product.duration || null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returning({ id: products.id });
-
-    // ProductSource
+    // ProductSource（価格情報含む）
     await db.insert(productSources).values({
-      productId: newProduct.id,
+      productId: productId,
       aspName: siteConfig.aspName,
       originalProductId: product.productId,
       affiliateUrl: `${siteConfig.baseUrl}/product/${product.productId}/`,
+      price: product.price,  // 月額料金
       dataSource: 'SCRAPE',
       isSubscription: true, // JSKY系は月額制
+    }).onConflictDoUpdate({
+      target: [productSources.productId, productSources.aspName],
+      set: {
+        affiliateUrl: `${siteConfig.baseUrl}/product/${product.productId}/`,
+        price: product.price,
+        lastUpdated: new Date(),
+      },
     });
 
     // 出演者
@@ -432,8 +491,6 @@ async function saveProduct(
           .insert(performers)
           .values({
             name: performerName,
-            createdAt: new Date(),
-            updatedAt: new Date(),
           })
           .returning();
       }
@@ -441,7 +498,7 @@ async function saveProduct(
       await db
         .insert(productPerformers)
         .values({
-          productId: newProduct.id,
+          productId: productId,
           performerId: existingPerformer.id,
         })
         .onConflictDoNothing();
@@ -452,7 +509,7 @@ async function saveProduct(
       await db
         .insert(productImages)
         .values({
-          productId: newProduct.id,
+          productId: productId,
           imageUrl: product.sampleImages[i],
           imageType: 'sample',
           displayOrder: i,
@@ -462,11 +519,17 @@ async function saveProduct(
         .onConflictDoNothing();
     }
 
-    console.log(`  ✅ Saved: ${product.title}`);
-    return true;
+    // 処理済みマーク
+    await markRawDataAsProcessed('tokyohot', upsertResult.id);
+
+    console.log(`  ✅ ${isNew ? '新規保存' : '更新'}: ${product.title}`);
+    if (product.price) {
+      console.log(`  💰 月額料金: ¥${product.price.toLocaleString()}`);
+    }
+    return { saved: true, isNew, skippedUnchanged: false };
   } catch (error) {
     console.error(`  ❌ Error saving ${product.productId}:`, error);
-    return false;
+    return { saved: false, isNew: false, skippedUnchanged: false };
   }
 }
 
@@ -481,6 +544,7 @@ async function main(): Promise<void> {
   const siteArg = args.find(a => a.startsWith('--site='))?.split('=')[1] || 'tokyo-hot';
   const pagesArg = args.find(a => a.startsWith('--pages='))?.split('=')[1];
   const startPageArg = args.find(a => a.startsWith('--start-page='))?.split('=')[1];
+  const forceReprocess = args.includes('--force');
 
   const pages = pagesArg ? parseInt(pagesArg) : 5;
   const startPage = startPageArg ? parseInt(startPageArg) : 1;
@@ -493,10 +557,12 @@ async function main(): Promise<void> {
   }
 
   console.log(`📍 Site: ${siteConfig.name}`);
-  console.log(`📄 Pages: ${startPage} to ${startPage + pages - 1}\n`);
+  console.log(`📄 Pages: ${startPage} to ${startPage + pages - 1}`);
+  console.log(`🔄 強制再処理: ${forceReprocess ? '有効' : '無効'}\n`);
 
-  let totalSaved = 0;
-  let totalSkipped = 0;
+  let totalNew = 0;
+  let totalUpdated = 0;
+  let totalSkippedUnchanged = 0;
   let totalErrors = 0;
   let consecutiveEmptyPages = 0;
   const MAX_CONSECUTIVE_EMPTY_PAGES = 200;
@@ -537,11 +603,17 @@ async function main(): Promise<void> {
           continue;
         }
 
-        const saved = await saveProduct(siteConfig, product);
-        if (saved) {
-          totalSaved++;
+        const result = await saveProduct(siteConfig, product, forceReprocess);
+        if (result.saved) {
+          if (result.isNew) {
+            totalNew++;
+          } else {
+            totalUpdated++;
+          }
+        } else if (result.skippedUnchanged) {
+          totalSkippedUnchanged++;
         } else {
-          totalSkipped++;
+          totalErrors++;
         }
       }
 
@@ -555,8 +627,9 @@ async function main(): Promise<void> {
 
   console.log('\n========================================');
   console.log('クロール完了');
-  console.log(`  保存: ${totalSaved}`);
-  console.log(`  スキップ: ${totalSkipped}`);
+  console.log(`  新規: ${totalNew}`);
+  console.log(`  更新: ${totalUpdated}`);
+  console.log(`  スキップ(変更なし): ${totalSkippedUnchanged}`);
   console.log(`  エラー: ${totalErrors}`);
   console.log('========================================\n');
 

@@ -827,6 +827,42 @@ function ProductCardBase({
               </a>
             );
           })()}
+
+          {/* 他のASPで購入オプション - ポップオーバー形式で画面ずれを防止 */}
+          {product.alternativeSources && product.alternativeSources.length > 0 && (
+            <div className="mt-1.5 relative">
+              <details className="group">
+                <summary className={`flex items-center justify-center gap-1 text-[10px] ${themeConfig.textMuted} cursor-pointer hover:text-gray-400 transition-colors list-none [&::-webkit-details-marker]:hidden`}>
+                  <span>他{product.alternativeSources.length}社でも購入可</span>
+                  <svg className="w-3 h-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                {/* 絶対位置でポップオーバー表示 - カード高さに影響しない */}
+                <div className={`absolute left-0 right-0 bottom-full mb-1 p-2 rounded-lg shadow-lg z-50 ${theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                  <div className="flex flex-wrap gap-1">
+                    {product.alternativeSources.map((source, idx) => {
+                      // 有効なURLかチェック（http/httpsで始まるもののみ）
+                      const isValidUrl = source.affiliateUrl && source.affiliateUrl.startsWith('http');
+                      const href = isValidUrl ? source.affiliateUrl : `/${locale}/products/${source.productId}`;
+                      return (
+                        <a
+                          key={idx}
+                          href={href}
+                          target={isValidUrl ? "_blank" : "_self"}
+                          rel={isValidUrl ? "noopener noreferrer sponsored" : undefined}
+                          className={`text-[10px] px-2 py-1 rounded ${themeConfig.tagBg} ${themeConfig.tagText} hover:opacity-80 transition-opacity flex items-center gap-1`}
+                        >
+                          <span className="font-medium">{source.aspName}</span>
+                          <span>{resolvedFormatPrice(source.salePrice || source.price)}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              </details>
+            </div>
+          )}
         </div>
       </div>
 

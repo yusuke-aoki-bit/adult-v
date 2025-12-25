@@ -57,15 +57,21 @@ export type {
 
 // 以下は個別実装のまま（特殊なロジックがあるため）
 
-import { products as productsTable, productPerformers as ppTable, productTags as ptTable, tags as tagsTable } from './schema';
-import { eq, and, inArray, ne, desc } from 'drizzle-orm';
+import { products as productsTable, productPerformers as ppTable, productTags as ptTable, tags as tagsTable, productSources as psTable } from './schema';
+import { eq, and, inArray, ne, desc, exists } from 'drizzle-orm';
 
 /**
  * Get performer's other products
+ * @param aspName - ASPフィルター（例: 'fanza'）。指定時は該当ASPの商品のみ返す
  */
-export async function getPerformerOtherProducts(performerId: number, currentProductId?: string, limit: number = 12) {
+export async function getPerformerOtherProducts(performerId: number, currentProductId?: string, limit: number = 12, aspName?: string) {
   const db = getDb();
   const currentProductIdNum = currentProductId ? (typeof currentProductId === 'string' ? parseInt(currentProductId) : currentProductId) : undefined;
+
+  // ASPフィルター条件
+  const aspFilterCondition = aspName
+    ? sql`EXISTS (SELECT 1 FROM product_sources ps WHERE ps.product_id = ${productsTable.id} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
+    : sql`1=1`;
 
   const query = db
     .select({
@@ -81,9 +87,13 @@ export async function getPerformerOtherProducts(performerId: number, currentProd
       currentProductIdNum
         ? and(
             eq(ppTable.performerId, performerId),
-            ne(productsTable.id, currentProductIdNum)
+            ne(productsTable.id, currentProductIdNum),
+            aspFilterCondition
           )
-        : eq(ppTable.performerId, performerId)
+        : and(
+            eq(ppTable.performerId, performerId),
+            aspFilterCondition
+          )
     )
     .orderBy(desc(productsTable.releaseDate))
     .limit(limit);
@@ -316,11 +326,13 @@ export async function getProductMaker(productId: number): Promise<{
 /**
  * Get same maker products
  * 同じメーカーの他の商品を取得
+ * @param aspName - ASPフィルター（例: 'fanza'）。指定時は該当ASPの商品のみ返す
  */
 export async function getSameMakerProducts(
   makerId: number,
   currentProductId: number,
-  limit: number = 6
+  limit: number = 6,
+  aspName?: string
 ): Promise<Array<{
   id: number;
   title: string | null;
@@ -329,6 +341,11 @@ export async function getSameMakerProducts(
   imageUrl: string | null;
 }>> {
   const db = getDb();
+
+  // ASPフィルター条件
+  const aspFilterCondition = aspName
+    ? sql`EXISTS (SELECT 1 FROM product_sources ps WHERE ps.product_id = ${productsTable.id} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
+    : sql`1=1`;
 
   const result = await db
     .select({
@@ -343,7 +360,8 @@ export async function getSameMakerProducts(
     .where(
       and(
         eq(ptTable.tagId, makerId),
-        ne(productsTable.id, currentProductId)
+        ne(productsTable.id, currentProductId),
+        aspFilterCondition
       )
     )
     .orderBy(desc(productsTable.releaseDate))
@@ -388,11 +406,13 @@ export async function getProductSeries(productId: number): Promise<{
 /**
  * Get same series products
  * 同じシリーズの他の商品を取得
+ * @param aspName - ASPフィルター（例: 'fanza'）。指定時は該当ASPの商品のみ返す
  */
 export async function getSameSeriesProducts(
   seriesId: number,
   currentProductId: number,
-  limit: number = 6
+  limit: number = 6,
+  aspName?: string
 ): Promise<Array<{
   id: number;
   title: string | null;
@@ -401,6 +421,11 @@ export async function getSameSeriesProducts(
   imageUrl: string | null;
 }>> {
   const db = getDb();
+
+  // ASPフィルター条件
+  const aspFilterCondition = aspName
+    ? sql`EXISTS (SELECT 1 FROM product_sources ps WHERE ps.product_id = ${productsTable.id} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
+    : sql`1=1`;
 
   const result = await db
     .select({
@@ -415,7 +440,8 @@ export async function getSameSeriesProducts(
     .where(
       and(
         eq(ptTable.tagId, seriesId),
-        ne(productsTable.id, currentProductId)
+        ne(productsTable.id, currentProductId),
+        aspFilterCondition
       )
     )
     .orderBy(desc(productsTable.releaseDate))

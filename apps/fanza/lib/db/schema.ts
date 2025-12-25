@@ -24,6 +24,7 @@ export const products = pgTable(
   {
     id: serial('id').primaryKey(),
     normalizedProductId: varchar('normalized_product_id', { length: 100 }).unique().notNull(),
+    makerProductCode: varchar('maker_product_code', { length: 50 }), // メーカー品番 (例: SSIS-865, 300MIUM-1000)
     title: varchar('title', { length: 500 }).notNull(),
     releaseDate: date('release_date'),
     description: text('description'),
@@ -50,6 +51,7 @@ export const products = pgTable(
   },
   (table) => ({
     normalizedIdIdx: index('idx_products_normalized_id').on(table.normalizedProductId),
+    makerProductCodeIdx: index('idx_products_maker_code').on(table.makerProductCode),
     titleIdx: index('idx_products_title').on(table.title),
     releaseDateIdx: index('idx_products_release_date').on(table.releaseDate),
     titleEnIdx: index('idx_products_title_en').on(table.titleEn),

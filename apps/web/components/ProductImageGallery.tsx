@@ -37,9 +37,11 @@ interface ProductImageGalleryProps {
   mainImage: string | null;
   sampleImages?: string[];
   productTitle: string;
+  /** 品番ベースで統合した全ASPのサンプル画像（名寄せ用） */
+  crossAspImages?: Array<{ imageUrl: string; aspName?: string | null }>;
 }
 
-export default function ProductImageGallery({ mainImage, sampleImages, productTitle }: ProductImageGalleryProps) {
+export default function ProductImageGallery({ mainImage, sampleImages, productTitle, crossAspImages }: ProductImageGalleryProps) {
   const t = useTranslations('productImageGallery');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
@@ -55,11 +57,21 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
   const isUncensored = isDtiUncensoredSite(mainImage || '');
 
   // メイン画像とサンプル画像を結合し、重複を除外、無効なURLをフィルタリング、正規化
-  const allImagesWithDuplicates = [mainImage, ...(sampleImages || [])]
-    .filter((img): img is string => typeof img === 'string' && Boolean(img) && isValidImageUrl(img))
-    .map((img) => normalizeUrl(img)); // プロトコル相対URLを絶対URLに変換
+  const allImagesWithDuplicates = useMemo(() => {
+    const baseImages = [mainImage, ...(sampleImages || [])]
+      .filter((img): img is string => typeof img === 'string' && Boolean(img) && isValidImageUrl(img))
+      .map((img) => normalizeUrl(img));
+
+    // 品番ベースで統合した他ASPのサンプル画像を追加
+    const crossAspImageUrls = (crossAspImages || [])
+      .filter(img => img.imageUrl && isValidImageUrl(img.imageUrl))
+      .map(img => normalizeUrl(img.imageUrl));
+
+    return [...baseImages, ...crossAspImageUrls];
+  }, [mainImage, sampleImages, crossAspImages]);
+
   // 重複する画像URLを除外（Set を使用）
-  const allImages = Array.from(new Set(allImagesWithDuplicates));
+  const allImages = useMemo(() => Array.from(new Set(allImagesWithDuplicates)), [allImagesWithDuplicates]);
   const hasMultipleImages = allImages.length > 1;
 
   const selectedImage = allImages[selectedIndex] || PLACEHOLDER_IMAGE;

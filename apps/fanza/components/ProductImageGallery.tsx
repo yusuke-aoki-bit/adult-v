@@ -37,6 +37,7 @@ interface ProductImageGalleryProps {
   mainImage: string | null;
   sampleImages?: string[];
   productTitle: string;
+  // 注意: apps/fanzaではFANZA ASP規約に準拠し、crossAspImagesは使用しない
 }
 
 export default function ProductImageGallery({ mainImage, sampleImages, productTitle }: ProductImageGalleryProps) {
@@ -55,11 +56,15 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
   const isUncensored = isDtiUncensoredSite(mainImage || '');
 
   // メイン画像とサンプル画像を結合し、重複を除外、無効なURLをフィルタリング、正規化
-  const allImagesWithDuplicates = [mainImage, ...(sampleImages || [])]
-    .filter((img): img is string => typeof img === 'string' && Boolean(img) && isValidImageUrl(img))
-    .map((img) => normalizeUrl(img)); // プロトコル相対URLを絶対URLに変換
+  // 注意: FANZA ASP規約に準拠し、FANZA画像のみ使用（他ASP画像は使用しない）
+  const allImagesWithDuplicates = useMemo(() => {
+    return [mainImage, ...(sampleImages || [])]
+      .filter((img): img is string => typeof img === 'string' && Boolean(img) && isValidImageUrl(img))
+      .map((img) => normalizeUrl(img));
+  }, [mainImage, sampleImages]);
+
   // 重複する画像URLを除外（Set を使用）
-  const allImages = Array.from(new Set(allImagesWithDuplicates));
+  const allImages = useMemo(() => Array.from(new Set(allImagesWithDuplicates)), [allImagesWithDuplicates]);
   const hasMultipleImages = allImages.length > 1;
 
   const selectedImage = allImages[selectedIndex] || PLACEHOLDER_IMAGE;

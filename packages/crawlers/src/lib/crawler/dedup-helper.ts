@@ -21,7 +21,7 @@ import { saveRawHtml, saveRawJson, isGcsEnabled } from '../gcs-crawler-helper';
 // Types
 // ============================================================
 
-export type SourceType = 'duga' | 'sokmil' | 'mgs' | 'fc2' | 'dti' | 'b10f' | 'japanska' | 'wiki-av-wiki' | 'wiki-seesaawiki' | 'wiki-shiroutoname' | 'wiki-fc2-blog';
+export type SourceType = 'duga' | 'sokmil' | 'mgs' | 'fc2' | 'dti' | 'tokyohot' | 'b10f' | 'japanska' | 'wiki-av-wiki' | 'wiki-seesaawiki' | 'wiki-shiroutoname' | 'wiki-fc2-blog';
 
 export type RawDataTable =
   | 'duga_raw_responses'

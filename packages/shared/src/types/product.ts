@@ -81,6 +81,14 @@ export interface Product {
   // AI生成コンテンツ
   aiReview?: string; // AI生成のレビュー
   aiReviewUpdatedAt?: string; // AI生成レビュー更新日時
+  // 同じ作品の他ASPソース（タイトルベース名寄せ用）
+  alternativeSources?: Array<{
+    aspName: string;
+    price: number;
+    salePrice?: number;
+    affiliateUrl: string;
+    productId: number;
+  }>;
 }
 
 // カテゴリ情報

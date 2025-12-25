@@ -74,25 +74,49 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const db = getDb();
 
     // Recent products (5000 items) - SEO priority for content pages
+    // normalizedProductIdも取得して品番ベースURLをsitemapに含める
     const recentProducts = await db
       .select({
         id: products.id,
+        normalizedProductId: products.normalizedProductId,
         updatedAt: products.updatedAt,
       })
       .from(products)
       .orderBy(desc(products.releaseDate))
       .limit(5000);
 
-  // 商品ページ - canonical URLは/ja/products/..., alternatesで各言語を指定
-  const productPages: MetadataRoute.Sitemap = recentProducts.map((product) => ({
-    url: `${BASE_URL}/ja/products/${product.id}`,
-    lastModified: product.updatedAt || new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-    alternates: {
-      languages: getLanguageAlternates(`/products/${product.id}`),
-    },
-  }));
+  // 商品ページ - 数値IDと品番の両方をsitemapに含める（Google検索で品番がヒットする）
+  // canonical URLは数値ID版（/ja/products/123）
+  const productPages: MetadataRoute.Sitemap = recentProducts.flatMap((product) => {
+    const pages: MetadataRoute.Sitemap = [
+      // 数値IDベースのURL（canonical）
+      {
+        url: `${BASE_URL}/ja/products/${product.id}`,
+        lastModified: product.updatedAt || new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+        alternates: {
+          languages: getLanguageAlternates(`/products/${product.id}`),
+        },
+      },
+    ];
+
+    // 品番ベースのURL（Google検索で品番がヒットするよう追加）
+    // normalizedProductIdが存在し、数値IDと異なる場合のみ追加
+    if (product.normalizedProductId && product.normalizedProductId !== String(product.id)) {
+      pages.push({
+        url: `${BASE_URL}/ja/products/${product.normalizedProductId}`,
+        lastModified: product.updatedAt || new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6, // 品番URLは若干低い優先度（canonical URLが優先）
+        alternates: {
+          languages: getLanguageAlternates(`/products/${product.normalizedProductId}`),
+        },
+      });
+    }
+
+    return pages;
+  });
 
   // Top performers (1000 items) - Prioritize performers with most products
   const topPerformers = await db

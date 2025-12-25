@@ -10,6 +10,18 @@ import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, 
 import { unstable_cache } from 'next/cache';
 import { generateProductIdVariations } from '@adult-v/shared';
 import type { SaleProduct } from '@adult-v/shared';
+
+/**
+ * タイトルを正規化（重複排除用）
+ * 空白・記号を除去し、小文字化して同じ作品を識別
+ */
+function normalizeTitle(title: string): string {
+  return title
+    .replace(/[\s　]+/g, '') // 全角・半角スペース除去
+    .replace(/[！!？?「」『』【】（）()＆&～~・:：,，。.、]/g, '') // 記号除去
+    .toLowerCase();
+}
+
 // Note: generateActressId is exported from ./queries/utils.ts
 
 // Next.js unstable_cache設定
@@ -56,6 +68,7 @@ interface ProductRow {
   title: string | null;
   description: string | null;
   normalized_product_id: string | null;
+  maker_product_code?: string | null;
   default_thumbnail_url: string | null;
   release_date: string | null;
   duration: number | null;
@@ -783,18 +796,44 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       }
     }
 
-    // 検索クエリ（PostgreSQL Full Text Search使用）
-    // search_vectorを使用した高速全文検索（GINインデックス使用）
-    // AI生成説明文も検索対象に追加
+    // 検索クエリ（品番検索 + PostgreSQL Full Text Search）
+    // 品番パターン（例: 390JNT-113, SSIS-865, abc00123）を検出して品番検索を優先
     if (options?.query) {
-      const searchPattern = `%${options.query}%`;
-      // Full Text SearchとAI説明文のILIKE検索を組み合わせ
-      conditions.push(
-        sql`(
-          ${products}.search_vector @@ plainto_tsquery('simple', ${options.query})
-          OR ${products.aiDescription}::text ILIKE ${searchPattern}
-        )`
-      );
+      const query = options.query.trim();
+      const searchPattern = `%${query}%`;
+
+      // 品番パターンの判定（英数字とハイフン/アンダースコアの組み合わせ）
+      const isProductIdPattern = /^[a-zA-Z0-9]+[-_]?[a-zA-Z0-9]+$/.test(query) && query.length >= 4;
+
+      if (isProductIdPattern) {
+        // 品番検索: バリエーションを生成してnormalizedProductIdとoriginalProductIdで検索
+        const variants = generateProductIdVariations(query);
+        const variantPatterns = variants.map(v => `%${v}%`);
+
+        conditions.push(
+          sql`(
+            ${products.normalizedProductId} = ANY(${variants})
+            OR ${products.normalizedProductId} ILIKE ANY(${variantPatterns})
+            OR ${products.makerProductCode} ILIKE ANY(${variantPatterns})
+            OR EXISTS (
+              SELECT 1 FROM ${productSources} ps
+              WHERE ps.product_id = ${products.id}
+              AND (ps.original_product_id = ANY(${variants}) OR ps.original_product_id ILIKE ANY(${variantPatterns}))
+            )
+            OR ${products}.search_vector @@ plainto_tsquery('simple', ${query})
+            OR ${products.title} ILIKE ${searchPattern}
+          )`
+        );
+      } else {
+        // 通常の全文検索（タイトル、説明文、AI説明文）
+        conditions.push(
+          sql`(
+            ${products}.search_vector @@ plainto_tsquery('simple', ${query})
+            OR ${products.title} ILIKE ${searchPattern}
+            OR ${products.aiDescription}::text ILIKE ${searchPattern}
+          )`
+        );
+      }
     }
 
     // サンプル動画ありフィルタ
@@ -887,7 +926,40 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       if (productIds.length === 0) return [];
 
       const batchData = await batchFetchProductRelatedData(db, productIds, options?.providers);
-      return mapProductsWithBatchData(productList, batchData, options?.locale || 'ja');
+      const mappedProducts = mapProductsWithBatchData(productList, batchData, options?.locale || 'ja');
+
+      // タイトルベースの重複排除（最安のASPを優先、他ASPはalternativeSourcesに保持）
+      const productGroupsByTitle = new Map<string, typeof mappedProducts>();
+      for (const product of mappedProducts) {
+        const normalizedTitleKey = normalizeTitle(product.title);
+        const group = productGroupsByTitle.get(normalizedTitleKey) || [];
+        group.push(product);
+        productGroupsByTitle.set(normalizedTitleKey, group);
+      }
+
+      const deduplicatedProducts: typeof mappedProducts = [];
+      for (const [, group] of productGroupsByTitle) {
+        const sortedGroup = [...group].sort((a, b) => {
+          const priceA = a.salePrice || a.price || Infinity;
+          const priceB = b.salePrice || b.price || Infinity;
+          return priceA - priceB;
+        });
+        const cheapest = sortedGroup[0];
+        if (sortedGroup.length > 1) {
+          cheapest.alternativeSources = sortedGroup.slice(1).map(p => ({
+            aspName: p.provider || 'unknown',
+            price: p.price,
+            salePrice: p.salePrice,
+            affiliateUrl: p.affiliateUrl || '',
+            productId: typeof p.id === 'string' ? parseInt(p.id, 10) : p.id,
+          }));
+        }
+        deduplicatedProducts.push(cheapest);
+      }
+
+      const originalOrder = new Map(mappedProducts.map((p, i) => [p.id, i]));
+      deduplicatedProducts.sort((a, b) => (originalOrder.get(a.id) ?? Infinity) - (originalOrder.get(b.id) ?? Infinity));
+      return deduplicatedProducts;
     }
 
     // 評価/レビュー数ソートの場合は特別な処理が必要（productRatingSummaryとJOIN）
@@ -918,7 +990,40 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       if (productIds.length === 0) return [];
 
       const batchData = await batchFetchProductRelatedData(db, productIds, options?.providers);
-      return mapProductsWithBatchData(productList, batchData, options?.locale || 'ja');
+      const mappedProducts = mapProductsWithBatchData(productList, batchData, options?.locale || 'ja');
+
+      // タイトルベースの重複排除（最安のASPを優先、他ASPはalternativeSourcesに保持）
+      const productGroupsByTitle = new Map<string, typeof mappedProducts>();
+      for (const product of mappedProducts) {
+        const normalizedTitleKey = normalizeTitle(product.title);
+        const group = productGroupsByTitle.get(normalizedTitleKey) || [];
+        group.push(product);
+        productGroupsByTitle.set(normalizedTitleKey, group);
+      }
+
+      const deduplicatedProducts: typeof mappedProducts = [];
+      for (const [, group] of productGroupsByTitle) {
+        const sortedGroup = [...group].sort((a, b) => {
+          const priceA = a.salePrice || a.price || Infinity;
+          const priceB = b.salePrice || b.price || Infinity;
+          return priceA - priceB;
+        });
+        const cheapest = sortedGroup[0];
+        if (sortedGroup.length > 1) {
+          cheapest.alternativeSources = sortedGroup.slice(1).map(p => ({
+            aspName: p.provider || 'unknown',
+            price: p.price,
+            salePrice: p.salePrice,
+            affiliateUrl: p.affiliateUrl || '',
+            productId: typeof p.id === 'string' ? parseInt(p.id, 10) : p.id,
+          }));
+        }
+        deduplicatedProducts.push(cheapest);
+      }
+
+      const originalOrder = new Map(mappedProducts.map((p, i) => [p.id, i]));
+      deduplicatedProducts.sort((a, b) => (originalOrder.get(a.id) ?? Infinity) - (originalOrder.get(b.id) ?? Infinity));
+      return deduplicatedProducts;
     }
 
     // 通常のソート処理
@@ -962,7 +1067,53 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     if (productIds.length === 0) return [];
 
     const batchData = await batchFetchProductRelatedData(db, productIds, options?.providers);
-    return mapProductsWithBatchData(results, batchData, options?.locale || 'ja');
+    const mappedProducts = mapProductsWithBatchData(results, batchData, options?.locale || 'ja');
+
+    // タイトルベースの重複排除（同じ作品が異なるASPで複数存在する場合、最安のASPを優先）
+    // 同じタイトルの全商品をグループ化
+    const productGroupsByTitle = new Map<string, typeof mappedProducts>();
+    for (const product of mappedProducts) {
+      const normalizedTitleKey = normalizeTitle(product.title);
+      const group = productGroupsByTitle.get(normalizedTitleKey) || [];
+      group.push(product);
+      productGroupsByTitle.set(normalizedTitleKey, group);
+    }
+
+    // 各グループから最安商品を選択し、他のASP情報をalternativeSourcesに追加
+    const deduplicatedProducts: typeof mappedProducts = [];
+    for (const [, group] of productGroupsByTitle) {
+      // 最安価格の商品を選択
+      const sortedGroup = [...group].sort((a, b) => {
+        const priceA = a.salePrice || a.price || Infinity;
+        const priceB = b.salePrice || b.price || Infinity;
+        return priceA - priceB;
+      });
+
+      const cheapest = sortedGroup[0];
+
+      // 他のASP情報をalternativeSourcesに追加（最安以外）
+      if (sortedGroup.length > 1) {
+        cheapest.alternativeSources = sortedGroup.slice(1).map(p => ({
+          aspName: p.provider || 'unknown',
+          price: p.price,
+          salePrice: p.salePrice,
+          affiliateUrl: p.affiliateUrl || '',
+          productId: typeof p.id === 'string' ? parseInt(p.id, 10) : p.id,
+        }));
+      }
+
+      deduplicatedProducts.push(cheapest);
+    }
+
+    // 元の順序を維持（リリース日順など）
+    const originalOrder = new Map(mappedProducts.map((p, i) => [p.id, i]));
+    deduplicatedProducts.sort((a, b) => {
+      const orderA = originalOrder.get(a.id) ?? Infinity;
+      const orderB = originalOrder.get(b.id) ?? Infinity;
+      return orderA - orderB;
+    });
+
+    return deduplicatedProducts;
   } catch (error) {
     console.error('Error fetching products:', error);
     throw error;
@@ -1203,8 +1354,13 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
+    // タイトルベースの重複排除を考慮したカウント
+    // getProductsでタイトル正規化による重複排除を行っているため、
+    // DISTINCT正規化タイトルでカウントする
     const result = await db
-      .select({ count: sql<number>`COUNT(*)` })
+      .select({
+        count: sql<number>`COUNT(DISTINCT LOWER(REGEXP_REPLACE(REGEXP_REPLACE(${products.title}, '[\\s　]+', '', 'g'), '[！!？?「」『』【】（）()＆&～~・:：,，。.、]', '', 'g')))`
+      })
       .from(products)
       .where(whereClause);
 
@@ -2322,7 +2478,7 @@ export async function getProductSourcesWithSales(productId: number) {
   try {
     const db = getDb();
 
-    // Get all sources for this product
+    // Get all sources for this product (excluding FANZA - apps/web shows non-FANZA only)
     const sources = await db
       .select({
         id: productSources.id,
@@ -2335,7 +2491,10 @@ export async function getProductSourcesWithSales(productId: number) {
         productType: productSources.productType,
       })
       .from(productSources)
-      .where(eq(productSources.productId, productId));
+      .where(and(
+        eq(productSources.productId, productId),
+        sql`LOWER(${productSources.aspName}) != 'fanza'`
+      ));
 
     if (sources.length === 0) {
       return [];
@@ -3700,6 +3859,7 @@ export async function getProductsByCategory(
           {
             id: baseProduct.id,
             normalizedProductId: baseProduct.normalized_product_id || '',
+            makerProductCode: baseProduct.maker_product_code ?? null,
             title: baseProduct.title || '',
             releaseDate: baseProduct.release_date,
             description: baseProduct.description,
@@ -5143,5 +5303,259 @@ export async function getPopularSeries(limit: number = 20): Promise<Array<{
     console.error('Error getting popular series:', error);
     return [];
   }
+}
+
+/**
+ * 品番(maker_product_code)で同じ作品の全ASPソース情報（セール情報付き）を取得
+ * 複数のproduct_idにまたがるソースを統合
+ * 品番のバリエーション（ハイフンあり/なし、大文字/小文字など）も検索
+ */
+export async function getProductSourcesByMakerCode(makerProductCode: string) {
+  if (!makerProductCode) return [];
+
+  try {
+    const db = getDb();
+
+    // 正規化した品番でLIKE検索するパターンを作成
+    // ハイフン・アンダースコアを除去し、小文字化した検索キー
+    const normalizedCode = makerProductCode.toLowerCase().replace(/[-_]/g, '');
+
+    // 同じ品番を持つ全商品のソースを取得（正規化した品番で一致検索）
+    const result = await db.execute<{
+      id: number;
+      product_id: number;
+      asp_name: string;
+      original_product_id: string;
+      price: number | null;
+      currency: string | null;
+      affiliate_url: string;
+      is_subscription: boolean | null;
+      product_type: string | null;
+      regular_price: number | null;
+      sale_price: number | null;
+      discount_percent: number | null;
+      end_at: Date | null;
+      is_active: boolean | null;
+    }>(sql`
+      SELECT DISTINCT ON (ps.asp_name)
+        ps.id,
+        ps.product_id,
+        ps.asp_name,
+        ps.original_product_id,
+        ps.price,
+        ps.currency,
+        ps.affiliate_url,
+        ps.is_subscription,
+        ps.product_type,
+        psa.regular_price,
+        psa.sale_price,
+        psa.discount_percent,
+        psa.end_at,
+        psa.is_active
+      FROM product_sources ps
+      JOIN products p ON p.id = ps.product_id
+      LEFT JOIN product_sales psa ON psa.product_source_id = ps.id AND psa.is_active = true
+      WHERE LOWER(REPLACE(REPLACE(p.maker_product_code, '-', ''), '_', '')) = ${normalizedCode}
+        AND LOWER(ps.asp_name) != 'fanza'
+      ORDER BY ps.asp_name, COALESCE(psa.sale_price, ps.price) ASC NULLS LAST
+    `);
+
+    return (result.rows || []).map((row) => ({
+      aspName: row.asp_name,
+      originalProductId: row.original_product_id,
+      regularPrice: row.regular_price ?? row.price,
+      salePrice: row.sale_price ?? null,
+      discountPercent: row.discount_percent ?? null,
+      saleEndAt: row.end_at ?? null,
+      currency: row.currency,
+      affiliateUrl: row.affiliate_url,
+      isSubscription: row.is_subscription,
+      productType: row.product_type,
+      isOnSale: row.is_active === true,
+    }));
+  } catch (error) {
+    console.error(`Error fetching sources by maker code ${makerProductCode}:`, error);
+    return [];
+  }
+}
+
+/**
+ * タイトルベースで同じ作品の全ASPソース情報（セール情報付き）を取得
+ * タイトルを正規化して同じ作品を識別
+ */
+export async function getProductSourcesByTitle(productId: number, title: string) {
+  if (!title) return [];
+
+  try {
+    const db = getDb();
+
+    // タイトルを正規化してLIKE検索用パターンを作成
+    // 空白・記号を除去した正規化タイトルで類似商品を検索
+    const normalizedTitle = title
+      .replace(/[\s　]+/g, '') // スペース除去
+      .replace(/[！!？?「」『』【】（）()＆&～~・:：,，。.、]/g, ''); // 記号除去
+
+    // 同じ正規化タイトルを持つ全商品のソースを取得
+    const result = await db.execute<{
+      id: number;
+      product_id: number;
+      asp_name: string;
+      original_product_id: string;
+      price: number | null;
+      currency: string | null;
+      affiliate_url: string;
+      is_subscription: boolean | null;
+      product_type: string | null;
+      regular_price: number | null;
+      sale_price: number | null;
+      discount_percent: number | null;
+      end_at: Date | null;
+      is_active: boolean | null;
+    }>(sql`
+      SELECT DISTINCT ON (ps.asp_name)
+        ps.id,
+        ps.product_id,
+        ps.asp_name,
+        ps.original_product_id,
+        ps.price,
+        ps.currency,
+        ps.affiliate_url,
+        ps.is_subscription,
+        ps.product_type,
+        psa.regular_price,
+        psa.sale_price,
+        psa.discount_percent,
+        psa.end_at,
+        psa.is_active
+      FROM product_sources ps
+      JOIN products p ON p.id = ps.product_id
+      LEFT JOIN product_sales psa ON psa.product_source_id = ps.id AND psa.is_active = true
+      WHERE LOWER(REGEXP_REPLACE(REGEXP_REPLACE(p.title, '[[:space:]　]+', '', 'g'), '[！!？?「」『』【】（）()＆&～~・:：,，。.、]', '', 'g')) = LOWER(${normalizedTitle})
+        AND LOWER(ps.asp_name) != 'fanza'
+      ORDER BY ps.asp_name, COALESCE(psa.sale_price, ps.price) ASC NULLS LAST
+    `);
+
+    return (result.rows || []).map((row) => ({
+      aspName: row.asp_name,
+      originalProductId: row.original_product_id,
+      regularPrice: row.regular_price ?? row.price,
+      salePrice: row.sale_price ?? null,
+      discountPercent: row.discount_percent ?? null,
+      saleEndAt: row.end_at ?? null,
+      currency: row.currency,
+      affiliateUrl: row.affiliate_url,
+      isSubscription: row.is_subscription,
+      productType: row.product_type,
+      isOnSale: row.is_active === true,
+    }));
+  } catch (error) {
+    console.error(`Error fetching sources by title:`, error);
+    return [];
+  }
+}
+
+/**
+ * 品番(maker_product_code)で同じ作品の全ASPからサンプル画像を取得
+ */
+export async function getSampleImagesByMakerCode(makerProductCode: string) {
+  if (!makerProductCode) return [];
+
+  try {
+    const db = getDb();
+
+    const result = await db.execute<{
+      image_url: string;
+      image_type: string;
+      display_order: number | null;
+      asp_name: string | null;
+    }>(sql`
+      SELECT DISTINCT ON (pi.image_url)
+        pi.image_url,
+        pi.image_type,
+        pi.display_order,
+        pi.asp_name
+      FROM product_images pi
+      JOIN products p ON p.id = pi.product_id
+      WHERE p.maker_product_code = ${makerProductCode}
+        AND pi.image_type IN ('sample', 'screenshot')
+      ORDER BY pi.image_url, pi.display_order ASC NULLS LAST
+      LIMIT 50
+    `);
+
+    return (result.rows || []).map((row) => ({
+      imageUrl: row.image_url,
+      imageType: row.image_type,
+      displayOrder: row.display_order,
+      aspName: row.asp_name,
+    }));
+  } catch (error) {
+    console.error(`Error fetching sample images by maker code ${makerProductCode}:`, error);
+    return [];
+  }
+}
+
+/**
+ * 商品の品番(maker_product_code)を取得
+ */
+export async function getProductMakerCode(productId: number): Promise<string | null> {
+  try {
+    const db = getDb();
+    const result = await db.execute<{ maker_product_code: string | null }>(sql`
+      SELECT maker_product_code FROM products WHERE id = ${productId}
+    `);
+    return result.rows?.[0]?.maker_product_code ?? null;
+  } catch (error) {
+    console.error(`Error fetching maker code for product ${productId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * ソース情報の型定義
+ */
+export type ProductSourceWithSales = {
+  aspName: string;
+  originalProductId: string | null;
+  regularPrice: number | null;
+  salePrice: number | null;
+  discountPercent: number | null;
+  saleEndAt: Date | null;
+  currency: string | null;
+  affiliateUrl: string;
+  isSubscription: boolean | null;
+  productType: string | null;
+  isOnSale: boolean;
+};
+
+/**
+ * 商品の全ASPソース情報を統合取得
+ * 品番ベース + タイトルベース + 商品IDベースで検索し、ASP名で重複排除
+ * 品番ベースの結果を優先
+ */
+export async function getAllProductSources(
+  productId: number,
+  title: string,
+  makerProductCode: string | null
+): Promise<ProductSourceWithSales[]> {
+  // 並列で全検索を実行
+  const [codeBasedSources, titleBasedSources, productIdSources] = await Promise.all([
+    makerProductCode ? getProductSourcesByMakerCode(makerProductCode) : Promise.resolve([]),
+    getProductSourcesByTitle(productId, title),
+    getProductSourcesWithSales(productId),
+  ]);
+
+  // ASP名で重複排除しながらマージ（品番ベース優先）
+  const sourceMap = new Map<string, ProductSourceWithSales>();
+  for (const source of [...productIdSources, ...titleBasedSources, ...codeBasedSources]) {
+    // 後から追加されたものが優先（品番ベースが最優先）
+    sourceMap.set(source.aspName, source);
+  }
+
+  // 価格でソート（安い順）
+  return Array.from(sourceMap.values()).sort((a, b) => {
+    const priceA = a.salePrice ?? a.regularPrice ?? Infinity;
+    const priceB = b.salePrice ?? b.regularPrice ?? Infinity;
+    return priceA - priceB;
+  });
 }
 
