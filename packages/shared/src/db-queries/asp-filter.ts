@@ -128,6 +128,7 @@ export function createExcludeProviderFilterCondition(
 
 /**
  * 女優用ASPフィルタ条件を生成
+ * @param performersTable - performersテーブル参照
  * @param siteMode - サイトモード
  */
 export function createActressAspFilterCondition(
@@ -145,6 +146,6 @@ export function createActressAspFilterCondition(
     )`;
   }
 
-  // adult-v: FANZA専用女優を除外
-  return sql`${performersTable.isFanzaOnly} = FALSE`;
+  // adult-v: FANZA専用女優を除外（NULLも許可）
+  return sql`(${performersTable.isFanzaOnly} = FALSE OR ${performersTable.isFanzaOnly} IS NULL)`;
 }

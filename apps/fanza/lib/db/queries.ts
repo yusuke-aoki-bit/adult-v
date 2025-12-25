@@ -18,6 +18,7 @@ import {
   createProviderFilterCondition,
   createMultiProviderFilterCondition,
   createExcludeProviderFilterCondition,
+  createActressAspFilterCondition,
 } from '@adult-v/shared';
 import type { SaleProduct } from '@adult-v/shared';
 
@@ -1106,16 +1107,8 @@ export async function getActresses(options?: {
 
     const conditions = [];
 
-    // 作品と紐付いている女優のみ表示（出演数0の女優を除外）
     // FANZAサイトではFANZA商品に出演している女優のみ表示（規約により他ASP専用女優は表示禁止）
-    conditions.push(
-      sql`EXISTS (
-        SELECT 1 FROM ${productPerformers} pp
-        INNER JOIN products p2 ON pp.product_id = p2.id
-        INNER JOIN product_sources ps_fanza ON p2.id = ps_fanza.product_id AND ps_fanza.asp_name = 'FANZA'
-        WHERE pp.performer_id = ${performers.id}
-      )`
-    );
+    conditions.push(createActressAspFilterCondition(performers, 'fanza-only'));
 
     // 'etc'フィルタ: 50音・アルファベット以外で始まる名前
     if (options?.excludeInitials) {
@@ -1755,16 +1748,8 @@ export async function getActressesCount(options?: {
 
     const conditions = [];
 
-    // 作品と紐付いている女優のみカウント（出演数0の女優を除外）
     // FANZAサイトではFANZA商品に出演している女優のみカウント（規約により他ASP専用女優は表示禁止）
-    conditions.push(
-      sql`EXISTS (
-        SELECT 1 FROM ${productPerformers} pp
-        INNER JOIN products p2 ON pp.product_id = p2.id
-        INNER JOIN product_sources ps_fanza ON p2.id = ps_fanza.product_id AND ps_fanza.asp_name = 'FANZA'
-        WHERE pp.performer_id = ${performers.id}
-      )`
-    );
+    conditions.push(createActressAspFilterCondition(performers, 'fanza-only'));
 
     // 'etc'フィルタ: 50音・アルファベット以外で始まる名前
     if (options?.excludeInitials) {

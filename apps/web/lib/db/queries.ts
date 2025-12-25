@@ -16,6 +16,7 @@ import {
   createProviderFilterCondition,
   createMultiProviderFilterCondition,
   createExcludeProviderFilterCondition,
+  createActressAspFilterCondition,
 } from '@adult-v/shared';
 import type { SaleProduct } from '@adult-v/shared';
 
@@ -1151,10 +1152,7 @@ export async function getActresses(options?: {
       );
 
       // FANZA専用女優を除外（規約によりadult-vサイトでは表示禁止）
-      // is_fanza_onlyフラグを使用（事前計算済み）
-      conditions.push(
-        sql`(${performers}.is_fanza_only = FALSE OR ${performers}.is_fanza_only IS NULL)`
-      );
+      conditions.push(createActressAspFilterCondition(performers, 'all'));
     }
 
     // 'etc'フィルタ: 50音・アルファベット以外で始まる名前
@@ -1771,10 +1769,7 @@ export async function getActressesCount(options?: {
     );
 
     // FANZA専用女優を除外（規約によりadult-vサイトでは表示禁止）
-    // is_fanza_onlyフラグを使用（事前計算済み）
-    conditions.push(
-      sql`(${performers}.is_fanza_only = FALSE OR ${performers}.is_fanza_only IS NULL)`
-    );
+    conditions.push(createActressAspFilterCondition(performers, 'all'));
 
     // 'etc'フィルタ: 50音・アルファベット以外で始まる名前
     if (options?.excludeInitials) {
