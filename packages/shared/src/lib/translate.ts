@@ -8,8 +8,8 @@
  *      https://api.deepl.com/v2/translate (Pro版)
  */
 
-// DeepL API設定
-const DEEPL_API_URL = 'https://api-free.deepl.com/v2/translate';
+// DeepL API設定（Pro版）
+const DEEPL_API_URL = 'https://api.deepl.com/v2/translate';
 
 // 言語コードマッピング（DeepLの言語コードに変換）
 const DEEPL_LANG_MAP: Record<string, string> = {
@@ -179,12 +179,12 @@ export async function translateToAll(
   }
 
   try {
-    // DeepLのレート制限を考慮してシーケンシャルに実行
-    const en = await translateText(text, 'en', sourceLang);
-    await delay(500); // レート制限対策
-    const zh = await translateText(text, 'zh', sourceLang);
-    await delay(500); // レート制限対策
-    const ko = await translateText(text, 'ko', sourceLang);
+    // Pro版は並列実行可能
+    const [en, zh, ko] = await Promise.all([
+      translateText(text, 'en', sourceLang),
+      translateText(text, 'zh', sourceLang),
+      translateText(text, 'ko', sourceLang),
+    ]);
 
     return { en, zh, ko };
   } catch (error) {
