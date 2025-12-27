@@ -34,15 +34,20 @@ function getDb() {
       const url = new URL(connectionString);
       const cleanConnectionString = `postgresql://${url.username}:${url.password}@${url.host}${url.pathname}`;
 
+      // クローラー用の接続設定（長時間実行に対応）
+      const isCrawler = process.env.CRAWLER_MODE === 'true' || process.argv.some(arg => arg.includes('crawl'));
+
       dbStore.pool = new Pool({
         connectionString: cleanConnectionString,
         // Cloud SQL Proxy経由の場合はSSL不要、それ以外は環境に応じて設定
         ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
-        max: 50, // 最大接続数（本番環境での同時リクエスト対応強化）
-        min: 10, // 最小接続数（常に10接続をプールに保持）
-        idleTimeoutMillis: 60000, // アイドル接続のタイムアウト（60秒）
-        connectionTimeoutMillis: 15000, // 接続タイムアウト（15秒）
+        max: isCrawler ? 5 : 50, // クローラーは少ない接続数で十分
+        min: isCrawler ? 1 : 10, // クローラーは最小限
+        idleTimeoutMillis: isCrawler ? 300000 : 60000, // クローラー: 5分、通常: 60秒
+        connectionTimeoutMillis: 30000, // 接続タイムアウト（30秒に延長）
         allowExitOnIdle: false, // プロセスがアイドル時でも終了させない
+        statement_timeout: isCrawler ? 120000 : 30000, // クエリタイムアウト: クローラー2分、通常30秒
+        query_timeout: isCrawler ? 120000 : 30000, // クエリタイムアウト
       });
 
       dbStore.instance = drizzle(dbStore.pool, { schema });
