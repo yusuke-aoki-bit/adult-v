@@ -20,12 +20,13 @@ const DEEPL_LANG_MAP: Record<string, string> = {
 };
 
 /**
- * DeepL APIで翻訳を実行
+ * DeepL APIで翻訳を実行（リトライ付き）
  */
 async function translateWithDeepL(
   texts: string[],
   sourceLang: string,
-  targetLang: string
+  targetLang: string,
+  retries = 3
 ): Promise<string[]> {
   const apiKey = process.env.DEEPL_API_KEY;
   if (!apiKey) {
@@ -35,31 +36,46 @@ async function translateWithDeepL(
   const source = DEEPL_LANG_MAP[sourceLang] || sourceLang.toUpperCase();
   const target = DEEPL_LANG_MAP[targetLang] || targetLang.toUpperCase();
 
-  try {
-    const response = await fetch(DEEPL_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `DeepL-Auth-Key ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: texts,
-        source_lang: source,
-        target_lang: target,
-      }),
-    });
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const response = await fetch(DEEPL_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `DeepL-Auth-Key ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: texts,
+          source_lang: source,
+          target_lang: target,
+        }),
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`DeepL API error: ${response.status} - ${errorText}`);
+      if (response.status === 429) {
+        // レート制限の場合、指数バックオフで待機してリトライ
+        const waitTime = Math.pow(2, attempt) * 2000; // 2秒、4秒、8秒
+        console.warn(`[DeepL] Rate limited. Waiting ${waitTime}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`DeepL API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      return data.translations.map((t: { text: string }) => t.text);
+    } catch (error) {
+      if (attempt === retries - 1) {
+        console.error('[DeepL] Translation failed after retries:', error);
+        throw error;
+      }
+      console.warn(`[DeepL] Attempt ${attempt + 1} failed, retrying...`);
     }
-
-    const data = await response.json();
-    return data.translations.map((t: { text: string }) => t.text);
-  } catch (error) {
-    console.error('[DeepL] Translation failed:', error);
-    throw error;
   }
+
+  throw new Error('DeepL translation failed after all retries');
 }
 
 /**
@@ -163,12 +179,12 @@ export async function translateToAll(
   }
 
   try {
-    // 並列で翻訳を実行
-    const [en, zh, ko] = await Promise.all([
-      translateText(text, 'en', sourceLang),
-      translateText(text, 'zh', sourceLang),
-      translateText(text, 'ko', sourceLang),
-    ]);
+    // DeepLのレート制限を考慮してシーケンシャルに実行
+    const en = await translateText(text, 'en', sourceLang);
+    await delay(500); // レート制限対策
+    const zh = await translateText(text, 'zh', sourceLang);
+    await delay(500); // レート制限対策
+    const ko = await translateText(text, 'ko', sourceLang);
 
     return { en, zh, ko };
   } catch (error) {
