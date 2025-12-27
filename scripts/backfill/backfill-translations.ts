@@ -1,13 +1,17 @@
 /**
  * 既存の商品・タグ・出演者の翻訳をバックフィルするスクリプト
+ * DeepL APIを使用
  *
  * 使い方:
  *   npx tsx scripts/backfill/backfill-translations.ts [--limit=N] [--type=products|performers|tags]
+ *
+ * 環境変数:
+ *   DEEPL_API_KEY - DeepL APIキー
  */
 
-import { getDb } from '../../lib/db';
 import { sql } from 'drizzle-orm';
-import { translateProduct, translateBatch } from '../../lib/google-apis';
+import { getDb, closeDb } from '../crawlers/lib/db/index.js';
+import { translateBatch, translateToAll, delay } from '../shared/lib/translate.js';
 
 const args = process.argv.slice(2);
 const limitArg = args.find(arg => arg.startsWith('--limit='));
@@ -16,8 +20,8 @@ const typeArg = args.find(arg => arg.startsWith('--type='));
 const BATCH_SIZE = parseInt(limitArg?.split('=')[1] || '100');
 const TYPE = typeArg?.split('=')[1] || 'all';
 
-// レート制限対策: 翻訳APIは100リクエスト/秒程度
-const DELAY_MS = 500;
+// DeepLのレート制限対策（Free版は文字数制限があるため余裕を持つ）
+const DELAY_MS = 300;
 
 async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
   console.log(`\n📦 商品の翻訳を開始 (最大${limit}件)`);
@@ -40,32 +44,36 @@ async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
     const { id, title, description } = product as { id: number; title: string; description?: string };
 
     try {
-      const translation = await translateProduct(title, description || undefined);
+      // タイトルを3言語に翻訳
+      const titleTranslations = await translateToAll(title);
 
-      if (translation) {
-        await db.execute(sql`
-          UPDATE products
-          SET
-            title_en = ${translation.en?.title || null},
-            title_zh = ${translation.zh?.title || null},
-            title_ko = ${translation.ko?.title || null},
-            description_en = ${translation.en?.description || null},
-            description_zh = ${translation.zh?.description || null},
-            description_ko = ${translation.ko?.description || null},
-            updated_at = NOW()
-          WHERE id = ${id}
-        `);
-        translated++;
+      // 説明文があれば翻訳
+      let descTranslations = { en: '', zh: '', ko: '' };
+      if (description) {
+        await delay(DELAY_MS);
+        descTranslations = await translateToAll(description);
+      }
 
-        if (translated % 10 === 0) {
-          console.log(`    ✅ ${translated}件完了 (ID: ${id})`);
-        }
-      } else {
-        failed++;
+      await db.execute(sql`
+        UPDATE products
+        SET
+          title_en = ${titleTranslations.en || null},
+          title_zh = ${titleTranslations.zh || null},
+          title_ko = ${titleTranslations.ko || null},
+          description_en = ${descTranslations.en || null},
+          description_zh = ${descTranslations.zh || null},
+          description_ko = ${descTranslations.ko || null},
+          updated_at = NOW()
+        WHERE id = ${id}
+      `);
+      translated++;
+
+      if (translated % 10 === 0) {
+        console.log(`    ✅ ${translated}件完了 (ID: ${id})`);
       }
 
       // レート制限対策
-      await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+      await delay(DELAY_MS);
 
     } catch (error: unknown) {
       console.error(`    ❌ ID ${id}: ${error instanceof Error ? error.message : error}`);
@@ -95,46 +103,40 @@ async function translatePerformers(db: ReturnType<typeof getDb>, limit: number) 
   let failed = 0;
 
   // バッチ処理で効率化
-  const names = performers.rows.map((p: { name: string }) => p.name);
+  const names = performers.rows.map((p: unknown) => (p as { name: string }).name);
   const languages = ['en', 'zh', 'ko'] as const;
 
   for (const lang of languages) {
     try {
+      console.log(`    🔄 ${lang}翻訳中...`);
       const translations = await translateBatch(names, lang, 'ja');
 
-      if (translations) {
-        for (let i = 0; i < translations.length; i++) {
-          const performer = performers.rows[i] as { id: number; name: string };
-          const translatedName = translations[i]?.translatedText;
+      for (let i = 0; i < translations.length; i++) {
+        const performer = performers.rows[i] as { id: number; name: string };
+        const translatedName = translations[i];
 
-          if (translatedName) {
-            const column = `name_${lang}`;
-            await db.execute(sql.raw(`
-              UPDATE performers
-              SET ${column} = $1, updated_at = NOW()
-              WHERE id = $2
-            `).bind([translatedName, performer.id]));
-          }
+        if (translatedName) {
+          const updateQuery = lang === 'en'
+            ? sql`UPDATE performers SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${performer.id}`
+            : lang === 'zh'
+            ? sql`UPDATE performers SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${performer.id}`
+            : sql`UPDATE performers SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${performer.id}`;
+
+          await db.execute(updateQuery);
+          translated++;
         }
       }
 
       // レート制限対策
-      await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+      await delay(DELAY_MS * 2);
 
     } catch (error: unknown) {
       console.error(`    ❌ ${lang}翻訳エラー: ${error instanceof Error ? error.message : error}`);
+      failed++;
     }
   }
 
-  // 結果確認
-  const result = await db.execute(sql`
-    SELECT COUNT(*) as count
-    FROM performers
-    WHERE name_en IS NOT NULL
-  `);
-  translated = Number((result.rows[0] as { count: number }).count);
-
-  console.log(`  📊 結果: ${translated}件の出演者が翻訳済み`);
+  console.log(`  📊 結果: ${translated}件の翻訳を適用`);
   return { translated, failed };
 }
 
@@ -156,102 +158,104 @@ async function translateTags(db: ReturnType<typeof getDb>, limit: number) {
   let failed = 0;
 
   // バッチ処理で効率化
-  const names = tags.rows.map((t: { name: string }) => t.name);
+  const names = tags.rows.map((t: unknown) => (t as { name: string }).name);
   const languages = ['en', 'zh', 'ko'] as const;
 
   for (const lang of languages) {
     try {
+      console.log(`    🔄 ${lang}翻訳中...`);
       const translations = await translateBatch(names, lang, 'ja');
 
-      if (translations) {
-        for (let i = 0; i < translations.length; i++) {
-          const tag = tags.rows[i] as { id: number; name: string };
-          const translatedName = translations[i]?.translatedText;
+      for (let i = 0; i < translations.length; i++) {
+        const tag = tags.rows[i] as { id: number; name: string };
+        const translatedName = translations[i];
 
-          if (translatedName) {
-            const updateQuery = lang === 'en'
-              ? sql`UPDATE tags SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${tag.id}`
-              : lang === 'zh'
-              ? sql`UPDATE tags SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${tag.id}`
-              : sql`UPDATE tags SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${tag.id}`;
+        if (translatedName) {
+          const updateQuery = lang === 'en'
+            ? sql`UPDATE tags SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${tag.id}`
+            : lang === 'zh'
+            ? sql`UPDATE tags SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${tag.id}`
+            : sql`UPDATE tags SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${tag.id}`;
 
-            await db.execute(updateQuery);
-          }
+          await db.execute(updateQuery);
+          translated++;
         }
       }
 
       // レート制限対策
-      await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+      await delay(DELAY_MS * 2);
 
     } catch (error: unknown) {
       console.error(`    ❌ ${lang}翻訳エラー: ${error instanceof Error ? error.message : error}`);
+      failed++;
     }
   }
 
-  // 結果確認
-  const result = await db.execute(sql`
-    SELECT COUNT(*) as count
-    FROM tags
-    WHERE name_en IS NOT NULL
-  `);
-  translated = Number((result.rows[0] as { count: number }).count);
-
-  console.log(`  📊 結果: ${translated}件のタグが翻訳済み`);
+  console.log(`  📊 結果: ${translated}件の翻訳を適用`);
   return { translated, failed };
 }
 
 async function main() {
-  console.log('🌐 翻訳バックフィル開始');
+  // 環境変数チェック
+  if (!process.env.DEEPL_API_KEY) {
+    console.error('❌ DEEPL_API_KEY環境変数が設定されていません');
+    process.exit(1);
+  }
+
+  console.log('🌐 翻訳バックフィル開始 (DeepL API)');
   console.log(`  設定: type=${TYPE}, limit=${BATCH_SIZE}`);
 
   const db = getDb();
 
-  // 現在の翻訳状況を確認
-  const stats = await db.execute(sql`
-    SELECT
-      (SELECT COUNT(*) FROM products WHERE title_en IS NOT NULL) as products_translated,
-      (SELECT COUNT(*) FROM products) as products_total,
-      (SELECT COUNT(*) FROM performers WHERE name_en IS NOT NULL) as performers_translated,
-      (SELECT COUNT(*) FROM performers) as performers_total,
-      (SELECT COUNT(*) FROM tags WHERE name_en IS NOT NULL) as tags_translated,
-      (SELECT COUNT(*) FROM tags) as tags_total
-  `);
-  console.log('\n📊 現在の翻訳状況:');
-  console.table(stats.rows);
+  try {
+    // 現在の翻訳状況を確認
+    const stats = await db.execute(sql`
+      SELECT
+        (SELECT COUNT(*) FROM products WHERE title_en IS NOT NULL) as products_translated,
+        (SELECT COUNT(*) FROM products) as products_total,
+        (SELECT COUNT(*) FROM performers WHERE name_en IS NOT NULL) as performers_translated,
+        (SELECT COUNT(*) FROM performers) as performers_total,
+        (SELECT COUNT(*) FROM tags WHERE name_en IS NOT NULL) as tags_translated,
+        (SELECT COUNT(*) FROM tags) as tags_total
+    `);
+    console.log('\n📊 現在の翻訳状況:');
+    console.table(stats.rows);
 
-  const results = {
-    products: { translated: 0, failed: 0 },
-    performers: { translated: 0, failed: 0 },
-    tags: { translated: 0, failed: 0 },
-  };
+    const results = {
+      products: { translated: 0, failed: 0 },
+      performers: { translated: 0, failed: 0 },
+      tags: { translated: 0, failed: 0 },
+    };
 
-  if (TYPE === 'all' || TYPE === 'products') {
-    results.products = await translateProducts(db, BATCH_SIZE);
+    if (TYPE === 'all' || TYPE === 'products') {
+      results.products = await translateProducts(db, BATCH_SIZE);
+    }
+
+    if (TYPE === 'all' || TYPE === 'performers') {
+      results.performers = await translatePerformers(db, BATCH_SIZE);
+    }
+
+    if (TYPE === 'all' || TYPE === 'tags') {
+      results.tags = await translateTags(db, BATCH_SIZE);
+    }
+
+    // 最終状況を確認
+    const finalStats = await db.execute(sql`
+      SELECT
+        (SELECT COUNT(*) FROM products WHERE title_en IS NOT NULL) as products_translated,
+        (SELECT COUNT(*) FROM products) as products_total,
+        (SELECT COUNT(*) FROM performers WHERE name_en IS NOT NULL) as performers_translated,
+        (SELECT COUNT(*) FROM performers) as performers_total,
+        (SELECT COUNT(*) FROM tags WHERE name_en IS NOT NULL) as tags_translated,
+        (SELECT COUNT(*) FROM tags) as tags_total
+    `);
+    console.log('\n📊 翻訳後の状況:');
+    console.table(finalStats.rows);
+
+    console.log('\n✅ 翻訳バックフィル完了');
+  } finally {
+    await closeDb();
   }
-
-  if (TYPE === 'all' || TYPE === 'performers') {
-    results.performers = await translatePerformers(db, BATCH_SIZE);
-  }
-
-  if (TYPE === 'all' || TYPE === 'tags') {
-    results.tags = await translateTags(db, BATCH_SIZE);
-  }
-
-  // 最終状況を確認
-  const finalStats = await db.execute(sql`
-    SELECT
-      (SELECT COUNT(*) FROM products WHERE title_en IS NOT NULL) as products_translated,
-      (SELECT COUNT(*) FROM products) as products_total,
-      (SELECT COUNT(*) FROM performers WHERE name_en IS NOT NULL) as performers_translated,
-      (SELECT COUNT(*) FROM performers) as performers_total,
-      (SELECT COUNT(*) FROM tags WHERE name_en IS NOT NULL) as tags_translated,
-      (SELECT COUNT(*) FROM tags) as tags_total
-  `);
-  console.log('\n📊 翻訳後の状況:');
-  console.table(finalStats.rows);
-
-  console.log('\n✅ 翻訳バックフィル完了');
-  process.exit(0);
 }
 
 main().catch(e => {

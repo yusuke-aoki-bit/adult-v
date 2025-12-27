@@ -1,57 +1,64 @@
 /**
- * Lingva Translate API ユーティリティ
+ * DeepL Translate API ユーティリティ
  *
- * Lingva TranslateはGoogle Translateのオープンソースプロキシ
- * APIキー不要で、コンテンツポリシーでブロックされない
+ * DeepL APIを使用した翻訳機能
+ * 高品質な翻訳を提供
  *
- * 公式インスタンス: https://lingva.ml
- * API: https://lingva.ml/api/v1/{source}/{target}/{text}
+ * API: https://api-free.deepl.com/v2/translate (Free版)
+ *      https://api.deepl.com/v2/translate (Pro版)
  */
 
-// Lingvaインスタンス（フォールバック用に複数用意）
-const LINGVA_INSTANCES = [
-  'https://lingva.ml',
-  'https://lingva.lunar.icu',
-  'https://translate.plausibility.cloud',
-];
+// DeepL API設定
+const DEEPL_API_URL = 'https://api-free.deepl.com/v2/translate';
 
-// 言語コードマッピング（Lingvaは小文字を使用）
-const LINGVA_LANG_MAP: Record<string, string> = {
-  ja: 'ja',
-  en: 'en',
-  zh: 'zh', // 簡体字中国語
-  ko: 'ko',
+// 言語コードマッピング（DeepLの言語コードに変換）
+const DEEPL_LANG_MAP: Record<string, string> = {
+  ja: 'JA',
+  en: 'EN',
+  zh: 'ZH', // 簡体字中国語
+  ko: 'KO',
 };
 
 /**
- * 単一のLingvaインスタンスで翻訳を試行
+ * DeepL APIで翻訳を実行
  */
-async function tryTranslateWithInstance(
-  instance: string,
-  text: string,
+async function translateWithDeepL(
+  texts: string[],
   sourceLang: string,
   targetLang: string
-): Promise<string | null> {
-  const source = LINGVA_LANG_MAP[sourceLang] || sourceLang;
-  const target = LINGVA_LANG_MAP[targetLang] || targetLang;
-  const url = `${instance}/api/v1/${source}/${target}/${encodeURIComponent(text)}`;
+): Promise<string[]> {
+  const apiKey = process.env.DEEPL_API_KEY;
+  if (!apiKey) {
+    throw new Error('DEEPL_API_KEY environment variable is not set');
+  }
+
+  const source = DEEPL_LANG_MAP[sourceLang] || sourceLang.toUpperCase();
+  const target = DEEPL_LANG_MAP[targetLang] || targetLang.toUpperCase();
 
   try {
-    const response = await fetch(url, {
-      method: 'GET',
+    const response = await fetch(DEEPL_API_URL, {
+      method: 'POST',
       headers: {
-        'Accept': 'application/json',
+        'Authorization': `DeepL-Auth-Key ${apiKey}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        text: texts,
+        source_lang: source,
+        target_lang: target,
+      }),
     });
 
     if (!response.ok) {
-      return null;
+      const errorText = await response.text();
+      throw new Error(`DeepL API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    return data.translation || null;
-  } catch {
-    return null;
+    return data.translations.map((t: { text: string }) => t.text);
+  } catch (error) {
+    console.error('[DeepL] Translation failed:', error);
+    throw error;
   }
 }
 
@@ -71,21 +78,13 @@ export async function translateText(
     return '';
   }
 
-  // 各インスタンスを順番に試す
-  for (const instance of LINGVA_INSTANCES) {
-    const result = await tryTranslateWithInstance(instance, text, sourceLang, targetLang);
-    if (result) {
-      return result;
-    }
-    console.warn(`[Lingva] Instance ${instance} failed, trying next...`);
-  }
-
-  throw new Error('All Lingva instances failed');
+  const results = await translateWithDeepL([text], sourceLang, targetLang);
+  return results[0] || '';
 }
 
 /**
  * 複数のテキストを一度に翻訳する
- * Lingvaはバッチ翻訳をサポートしていないため、順次翻訳する
+ * DeepLはバッチ翻訳をサポートしているため効率的に処理
  * @param texts 翻訳するテキストの配列
  * @param targetLang 翻訳先の言語コード
  * @param sourceLang 翻訳元の言語コード (デフォルト: 'ja')
@@ -100,21 +99,48 @@ export async function translateBatch(
     return [];
   }
 
-  const results: string[] = [];
-  for (const text of texts) {
+  // 空文字のインデックスを記録
+  const emptyIndices = new Set<number>();
+  const nonEmptyTexts: string[] = [];
+  const indexMap: number[] = [];
+
+  texts.forEach((text, i) => {
     if (!text || text.trim() === '') {
-      results.push('');
+      emptyIndices.add(i);
     } else {
-      try {
-        const translated = await translateText(text, targetLang, sourceLang);
-        results.push(translated);
-        // レート制限を避けるため少し待機
-        await delay(100);
-      } catch {
-        results.push('');
-      }
+      nonEmptyTexts.push(text);
+      indexMap.push(i);
+    }
+  });
+
+  if (nonEmptyTexts.length === 0) {
+    return texts.map(() => '');
+  }
+
+  // DeepLは一度に最大50テキストまで
+  const BATCH_SIZE = 50;
+  const results: string[] = new Array(texts.length).fill('');
+
+  for (let i = 0; i < nonEmptyTexts.length; i += BATCH_SIZE) {
+    const batch = nonEmptyTexts.slice(i, i + BATCH_SIZE);
+    const batchIndices = indexMap.slice(i, i + BATCH_SIZE);
+
+    try {
+      const translated = await translateWithDeepL(batch, sourceLang, targetLang);
+      translated.forEach((text, j) => {
+        results[batchIndices[j]] = text;
+      });
+    } catch (error) {
+      console.error(`[DeepL] Batch translation failed:`, error);
+      // エラー時は空文字列のまま
+    }
+
+    // レート制限を避けるため少し待機
+    if (i + BATCH_SIZE < nonEmptyTexts.length) {
+      await delay(200);
     }
   }
+
   return results;
 }
 
@@ -146,7 +172,7 @@ export async function translateToAll(
 
     return { en, zh, ko };
   } catch (error) {
-    console.error('[Lingva] Translation to all languages failed:', error);
+    console.error('[DeepL] Translation to all languages failed:', error);
     throw error;
   }
 }
