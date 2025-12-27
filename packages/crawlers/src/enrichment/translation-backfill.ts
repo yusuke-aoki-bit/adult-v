@@ -208,18 +208,10 @@ async function main() {
   const db = getDb();
 
   try {
-    // 現在の翻訳状況を確認
-    const stats = await db.execute(sql`
-      SELECT
-        (SELECT COUNT(*) FROM products WHERE title_en IS NOT NULL) as products_translated,
-        (SELECT COUNT(*) FROM products) as products_total,
-        (SELECT COUNT(*) FROM performers WHERE name_en IS NOT NULL) as performers_translated,
-        (SELECT COUNT(*) FROM performers) as performers_total,
-        (SELECT COUNT(*) FROM tags WHERE name_en IS NOT NULL) as tags_translated,
-        (SELECT COUNT(*) FROM tags) as tags_total
-    `);
-    console.log('\n📊 現在の翻訳状況:');
-    console.table(stats.rows);
+    // シンプルな接続テスト
+    console.log('  接続テスト中...');
+    const testResult = await db.execute(sql`SELECT 1 as test`);
+    console.log('  ✅ DB接続成功');
 
     const results = {
       products: { translated: 0, failed: 0 },
@@ -239,18 +231,8 @@ async function main() {
       results.tags = await translateTags(db, BATCH_SIZE);
     }
 
-    // 最終状況を確認
-    const finalStats = await db.execute(sql`
-      SELECT
-        (SELECT COUNT(*) FROM products WHERE title_en IS NOT NULL) as products_translated,
-        (SELECT COUNT(*) FROM products) as products_total,
-        (SELECT COUNT(*) FROM performers WHERE name_en IS NOT NULL) as performers_translated,
-        (SELECT COUNT(*) FROM performers) as performers_total,
-        (SELECT COUNT(*) FROM tags WHERE name_en IS NOT NULL) as tags_translated,
-        (SELECT COUNT(*) FROM tags) as tags_total
-    `);
-    console.log('\n📊 翻訳後の状況:');
-    console.table(finalStats.rows);
+    console.log('\n📊 翻訳結果:');
+    console.table(results);
 
     console.log('\n✅ 翻訳バックフィル完了');
   } finally {
