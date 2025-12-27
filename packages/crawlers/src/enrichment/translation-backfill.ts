@@ -1,9 +1,9 @@
 /**
- * 既存の商品・タグ・出演者の翻訳をバックフィルするスクリプト
+ * 既存の商品・タグ・出演者・レビューの翻訳をバックフィルするスクリプト
  * DeepL APIを使用
  *
  * 使い方:
- *   npx tsx packages/crawlers/src/enrichment/translation-backfill.ts [--limit=N] [--type=products|performers|tags]
+ *   npx tsx packages/crawlers/src/enrichment/translation-backfill.ts [--limit=N] [--type=products|performers|tags|reviews|all]
  *
  * 環境変数:
  *   DEEPL_API_KEY - DeepL APIキー
@@ -195,6 +195,68 @@ async function translateTags(db: ReturnType<typeof getDb>, limit: number) {
   return { translated, failed };
 }
 
+async function translateReviews(db: ReturnType<typeof getDb>, limit: number) {
+  console.log(`\n📝 レビューの翻訳を開始 (最大${limit}件)`);
+
+  // 翻訳されていないレビューを取得（コンテンツがあるもののみ）
+  const reviews = await db.execute(sql`
+    SELECT id, title, content
+    FROM product_reviews
+    WHERE content_en IS NULL AND content IS NOT NULL AND LENGTH(content) > 0
+    ORDER BY id DESC
+    LIMIT ${limit}
+  `);
+
+  console.log(`  → ${reviews.rows.length}件の未翻訳レビューを発見`);
+
+  let translated = 0;
+  let failed = 0;
+
+  for (const review of reviews.rows) {
+    const { id, title, content } = review as { id: number; title?: string; content: string };
+
+    try {
+      // コンテンツを3言語に翻訳
+      const contentTranslations = await translateToAll(content);
+
+      // タイトルがあれば翻訳
+      let titleTranslations = { en: '', zh: '', ko: '' };
+      if (title) {
+        await delay(DELAY_MS);
+        titleTranslations = await translateToAll(title);
+      }
+
+      await db.execute(sql`
+        UPDATE product_reviews
+        SET
+          title_en = ${titleTranslations.en || null},
+          title_zh = ${titleTranslations.zh || null},
+          title_ko = ${titleTranslations.ko || null},
+          content_en = ${contentTranslations.en || null},
+          content_zh = ${contentTranslations.zh || null},
+          content_ko = ${contentTranslations.ko || null},
+          updated_at = NOW()
+        WHERE id = ${id}
+      `);
+      translated++;
+
+      if (translated % 10 === 0) {
+        console.log(`    ✅ ${translated}件完了 (ID: ${id})`);
+      }
+
+      // レート制限対策
+      await delay(DELAY_MS);
+
+    } catch (error: unknown) {
+      console.error(`    ❌ ID ${id}: ${error instanceof Error ? error.message : error}`);
+      failed++;
+    }
+  }
+
+  console.log(`  📊 結果: ${translated}件成功, ${failed}件失敗`);
+  return { translated, failed };
+}
+
 async function main() {
   // 環境変数チェック
   if (!process.env.DEEPL_API_KEY) {
@@ -217,6 +279,7 @@ async function main() {
       products: { translated: 0, failed: 0 },
       performers: { translated: 0, failed: 0 },
       tags: { translated: 0, failed: 0 },
+      reviews: { translated: 0, failed: 0 },
     };
 
     if (TYPE === 'all' || TYPE === 'products') {
@@ -229,6 +292,10 @@ async function main() {
 
     if (TYPE === 'all' || TYPE === 'tags') {
       results.tags = await translateTags(db, BATCH_SIZE);
+    }
+
+    if (TYPE === 'all' || TYPE === 'reviews') {
+      results.reviews = await translateReviews(db, BATCH_SIZE);
     }
 
     console.log('\n📊 翻訳結果:');

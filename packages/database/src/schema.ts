@@ -551,7 +551,13 @@ export const productReviews = pgTable(
     rating: decimal('rating', { precision: 3, scale: 1 }), // 評価（5段階など、ASPにより異なる）
     maxRating: decimal('max_rating', { precision: 3, scale: 1 }).default('5'), // 最大評価値
     title: text('title'), // レビュータイトル
+    titleEn: text('title_en'), // 英語翻訳
+    titleZh: text('title_zh'), // 中国語翻訳
+    titleKo: text('title_ko'), // 韓国語翻訳
     content: text('content'), // レビュー本文
+    contentEn: text('content_en'), // 英語翻訳
+    contentZh: text('content_zh'), // 中国語翻訳
+    contentKo: text('content_ko'), // 韓国語翻訳
     reviewDate: timestamp('review_date'), // レビュー投稿日
     helpful: integer('helpful').default(0), // 参考になった数
     sourceReviewId: varchar('source_review_id', { length: 100 }), // ASP側のレビューID
