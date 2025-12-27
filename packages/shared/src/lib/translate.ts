@@ -8,8 +8,20 @@
  *      https://api.deepl.com/v2/translate (Pro版)
  */
 
-// DeepL API設定（Pro版）
-const DEEPL_API_URL = 'https://api.deepl.com/v2/translate';
+// DeepL API設定（キーの末尾で自動判定）
+function getDeepLApiUrl(): string {
+  const apiKey = process.env.DEEPL_API_KEY || '';
+  // Free版のキーは :fx で終わる
+  if (apiKey.endsWith(':fx')) {
+    return 'https://api-free.deepl.com/v2/translate';
+  }
+  return 'https://api.deepl.com/v2/translate';
+}
+
+function isProVersion(): boolean {
+  const apiKey = process.env.DEEPL_API_KEY || '';
+  return !apiKey.endsWith(':fx');
+}
 
 // 言語コードマッピング（DeepLの言語コードに変換）
 const DEEPL_LANG_MAP: Record<string, string> = {
@@ -38,7 +50,7 @@ async function translateWithDeepL(
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const response = await fetch(DEEPL_API_URL, {
+      const response = await fetch(getDeepLApiUrl(), {
         method: 'POST',
         headers: {
           'Authorization': `DeepL-Auth-Key ${apiKey}`,
@@ -179,14 +191,23 @@ export async function translateToAll(
   }
 
   try {
-    // Pro版は並列実行可能
-    const [en, zh, ko] = await Promise.all([
-      translateText(text, 'en', sourceLang),
-      translateText(text, 'zh', sourceLang),
-      translateText(text, 'ko', sourceLang),
-    ]);
-
-    return { en, zh, ko };
+    if (isProVersion()) {
+      // Pro版は並列実行可能
+      const [en, zh, ko] = await Promise.all([
+        translateText(text, 'en', sourceLang),
+        translateText(text, 'zh', sourceLang),
+        translateText(text, 'ko', sourceLang),
+      ]);
+      return { en, zh, ko };
+    } else {
+      // Free版はレート制限が厳しいのでシーケンシャルに実行
+      const en = await translateText(text, 'en', sourceLang);
+      await delay(500);
+      const zh = await translateText(text, 'zh', sourceLang);
+      await delay(500);
+      const ko = await translateText(text, 'ko', sourceLang);
+      return { en, zh, ko };
+    }
   } catch (error) {
     console.error('[DeepL] Translation to all languages failed:', error);
     throw error;
