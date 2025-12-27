@@ -9,6 +9,7 @@ export default function Footer() {
       getTranslation={getFooterTranslation}
       showPartnerBanners={false}
       showActressList={false}
+      showInternalLinks={true}
       columns={3}
     />
   );

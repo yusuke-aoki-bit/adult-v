@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import nextDynamic from 'next/dynamic';
 import { JsonLD } from '@/components/JsonLD';
 import ProductImageGallery from '@/components/ProductImageGallery';
@@ -19,7 +19,8 @@ import {
   SocialShareButtons,
   productDetailTranslations,
 } from '@adult-v/shared/components';
-import AffiliateButton from '@/components/AffiliateButton';
+// AffiliateButton is available but currently unused - keeping import for future use
+// import AffiliateButton from '@/components/AffiliateButton';
 import StickyCta from '@/components/StickyCta';
 import { getProductById, searchProductByProductId, getProductSources, getActressAvgPricePerMin, getSampleImagesByMakerCode, getProductMakerCode, getAllProductSources } from '@/lib/db/queries';
 import { isSubscriptionSite } from '@/lib/image-utils';
@@ -111,7 +112,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   // Try to get product by normalized ID first, then by database ID
   let product = await searchProductByProductId(id, locale);
-  const foundByProductId = !!product;
+  // foundByProductId is useful for future analytics/redirect logic
+  const _foundByProductId = !!product;
   if (!product && !isNaN(parseInt(id))) {
     product = await getProductById(id, locale);
   }

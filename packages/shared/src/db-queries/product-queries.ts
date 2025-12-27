@@ -27,6 +27,8 @@ export interface ProductQueryDeps {
   productImages: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   productVideos: any;
+  /** Site mode ('all' = exclude FANZA, 'fanza-only' = include all) */
+  siteMode?: 'all' | 'fanza-only';
   /** Function to map DB product to ProductType */
   mapProductToType: (
     product: unknown,
@@ -38,9 +40,8 @@ export interface ProductQueryDeps {
     videos: unknown[],
     locale: string
   ) => unknown;
-  /** Function to fetch product related data */
+  /** Function to fetch product related data (productId only) */
   fetchProductRelatedData: (
-    db: unknown,
     productId: number
   ) => Promise<{
     performerData: unknown[];
@@ -94,11 +95,16 @@ export function createProductQueries(deps: ProductQueryDeps) {
     productSources,
     productImages,
     productVideos,
+    siteMode = 'fanza-only',
     mapProductToType,
     fetchProductRelatedData,
     isValidPerformer,
     generateProductIdVariations,
   } = deps;
+
+  // siteMode 'all' = exclude FANZA (for adult-v site)
+  // siteMode 'fanza-only' = include all (for fanza site)
+  const excludeFanza = siteMode === 'all';
 
   /**
    * 商品IDで商品を取得
@@ -119,7 +125,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
       const product = result[0];
       const { performerData, tagData, sourceData, imagesData, videosData } =
-        await fetchProductRelatedData(db, product.id);
+        await fetchProductRelatedData(product.id);
 
       return mapProductToType(
         product,
@@ -158,7 +164,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
       if (productByNormalizedId.length > 0) {
         const product = productByNormalizedId[0];
         const { performerData, tagData, sourceData, imagesData, videosData } =
-          await fetchProductRelatedData(db, product.id);
+          await fetchProductRelatedData(product.id);
 
         return mapProductToType(
           product,
@@ -258,11 +264,17 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
   /**
    * 商品ソース情報をセール情報付きで取得
+   * siteMode='all' の場合はFANZAを除外（adult-vサイト用）
    */
   async function getProductSourcesWithSales(
     productId: number
   ): Promise<ProductSourceWithSaleResult[]> {
     const db = getDb();
+
+    // Build WHERE clause with optional FANZA exclusion
+    const whereClause = excludeFanza
+      ? sql`ps.product_id = ${productId} AND LOWER(ps.asp_name) != 'fanza'`
+      : sql`ps.product_id = ${productId}`;
 
     const result = await db.execute(sql`
       SELECT
@@ -283,7 +295,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         psl.sale_name as "saleName"
       FROM product_sources ps
       LEFT JOIN product_sales psl ON ps.id = psl.product_source_id AND psl.is_active = TRUE
-      WHERE ps.product_id = ${productId}
+      WHERE ${whereClause}
       ORDER BY
         CASE WHEN psl.sale_price IS NOT NULL THEN 0 ELSE 1 END,
         psl.discount_percent DESC NULLS LAST,
@@ -354,6 +366,190 @@ export function createProductQueries(deps: ProductQueryDeps) {
     return result[0].makerProductCode || result[0].normalizedProductId || null;
   }
 
+  /**
+   * 商品をあいまい検索（メーカー品番、タイトル、normalizedProductIdで検索）
+   * 複数の商品が見つかる可能性があります
+   */
+  async function fuzzySearchProducts<T>(
+    query: string,
+    limit: number = 20,
+    getProductByIdFn: (id: string, locale?: string) => Promise<T | null>
+  ): Promise<T[]> {
+    try {
+      const db = getDb();
+      const searchPattern = `%${query}%`;
+
+      // product_sourcesテーブルでoriginal_product_idを検索
+      const sourceMatches = await db
+        .select({ productId: productSources.productId })
+        .from(productSources)
+        .where(sql`${productSources.originalProductId} ILIKE ${searchPattern}`)
+        .limit(limit);
+
+      // productsテーブルでnormalized_product_idとtitleを検索
+      const productMatches = await db
+        .select({ id: products.id })
+        .from(products)
+        .where(
+          sql`${products.normalizedProductId} ILIKE ${searchPattern} OR ${products.title} ILIKE ${searchPattern}`
+        )
+        .limit(limit);
+
+      // 重複を排除してproduct IDsを集める
+      const productIds = new Set<string>();
+      sourceMatches.forEach((m: { productId: number }) => productIds.add(m.productId.toString()));
+      productMatches.forEach((m: { id: number }) => productIds.add(m.id.toString()));
+
+      if (productIds.size === 0) {
+        return [];
+      }
+
+      // 各商品の詳細情報を取得
+      const productDetails = await Promise.all(
+        Array.from(productIds).slice(0, limit).map(id => getProductByIdFn(id))
+      );
+
+      return productDetails.filter((p): p is NonNullable<typeof p> => p !== null) as T[];
+    } catch (error) {
+      console.error('Error in fuzzy search:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 最新の商品を取得（RSS用）
+   * @param options.limit - 取得する商品数（デフォルト: 100）
+   * @param options.locale - ロケール（'ja' | 'en' | 'zh' | 'ko'）
+   */
+  async function getRecentProducts<T>(options?: {
+    limit?: number;
+    locale?: string;
+  }): Promise<T[]> {
+    try {
+      const db = getDb();
+      const limit = options?.limit || 100;
+      const locale = options?.locale || 'ja';
+
+      // 最新の商品を取得
+      const results = await db
+        .select()
+        .from(products)
+        .orderBy(desc(products.releaseDate), desc(products.createdAt))
+        .limit(limit);
+
+      // 関連データを並列で取得
+      const productsWithData = await Promise.all(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        results.map(async (product: any) => {
+          const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(product.id);
+
+          return mapProductToType(
+            product,
+            performerData,
+            tagData,
+            sourceData,
+            undefined,
+            imagesData as unknown[],
+            videosData as unknown[],
+            locale
+          );
+        })
+      );
+
+      return productsWithData as T[];
+    } catch (error) {
+      console.error('Error getting recent products:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 品番(maker_product_code)で同じ作品の全ASPからサンプル画像を取得
+   * @param options.includeImageType - trueの場合、image_type, display_orderも返す (default: false)
+   * @param options.filterImageTypes - フィルタするimage_type配列 (default: なし)
+   * @param options.limit - 取得件数制限 (default: なし)
+   */
+  async function getSampleImagesByMakerCode(
+    makerProductCode: string,
+    options?: {
+      includeImageType?: boolean;
+      filterImageTypes?: string[];
+      limit?: number;
+    }
+  ): Promise<Array<{
+    imageUrl: string;
+    imageType?: string;
+    displayOrder?: number | null;
+    aspName: string | null;
+  }>> {
+    if (!makerProductCode) return [];
+
+    try {
+      const db = getDb();
+      const includeImageType = options?.includeImageType ?? false;
+      const filterImageTypes = options?.filterImageTypes;
+      const limit = options?.limit;
+
+      if (includeImageType) {
+        // image_type, display_orderを含む詳細版
+        const imageTypeFilter = filterImageTypes && filterImageTypes.length > 0
+          ? sql`AND pi.image_type IN (${sql.join(filterImageTypes.map(t => sql`${t}`), sql`, `)})`
+          : sql``;
+        const limitClause = limit ? sql`LIMIT ${limit}` : sql``;
+
+        const result = await db.execute(sql`
+          SELECT DISTINCT ON (pi.image_url)
+            pi.image_url,
+            pi.image_type,
+            pi.display_order,
+            pi.asp_name
+          FROM ${productImages} pi
+          JOIN ${products} p ON p.id = pi.product_id
+          WHERE p.maker_product_code = ${makerProductCode}
+            ${imageTypeFilter}
+          ORDER BY pi.image_url, pi.display_order ASC NULLS LAST
+          ${limitClause}
+        `);
+
+        type ImageRow = {
+          image_url: string;
+          image_type: string;
+          display_order: number | null;
+          asp_name: string | null;
+        };
+        const rows = (result.rows || []) as ImageRow[];
+        return rows.map((row) => ({
+          imageUrl: row.image_url,
+          imageType: row.image_type,
+          displayOrder: row.display_order,
+          aspName: row.asp_name,
+        }));
+      } else {
+        // シンプル版（imageUrl, aspNameのみ）
+        const result = await db.execute(sql`
+          SELECT DISTINCT pi.image_url, ps.asp_name
+          FROM ${products} p
+          JOIN ${productImages} pi ON p.id = pi.product_id
+          LEFT JOIN ${productSources} ps ON p.id = ps.product_id
+          WHERE p.maker_product_code = ${makerProductCode}
+            AND pi.image_url IS NOT NULL
+            AND pi.image_url != ''
+          ORDER BY ps.asp_name NULLS LAST
+        `);
+
+        type SimpleImageRow = { image_url: string; asp_name: string | null };
+        const rows = (result.rows || []) as SimpleImageRow[];
+        return rows.map(row => ({
+          imageUrl: row.image_url,
+          aspName: row.asp_name,
+        }));
+      }
+    } catch (error) {
+      console.error(`Error fetching sample images by maker code ${makerProductCode}:`, error);
+      return [];
+    }
+  }
+
   return {
     getProductById,
     searchProductByProductId,
@@ -361,6 +557,9 @@ export function createProductQueries(deps: ProductQueryDeps) {
     getProductSourcesWithSales,
     getProductSourcesByMakerCode,
     getProductMakerCode,
+    fuzzySearchProducts,
+    getRecentProducts,
+    getSampleImagesByMakerCode,
   };
 }
 

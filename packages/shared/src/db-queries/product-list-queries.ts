@@ -1,0 +1,713 @@
+/**
+ * 商品リストクエリ
+ * getProducts/getProductsCount共通化
+ */
+import { eq, and, or, desc, asc, sql, inArray, SQL } from 'drizzle-orm';
+import type { GetProductsOptions, ProductSortOption } from './types';
+import type { SiteMode } from './asp-filter';
+import { createAspFilterCondition, createProviderFilterCondition, createMultiProviderFilterCondition, createExcludeProviderFilterCondition } from './asp-filter';
+import { generateProductIdVariations } from '../lib/product-id-utils';
+import { normalizeTitle, deduplicateProductsByTitle, type DeduplicatableProduct } from '../lib/deduplication';
+import type { BatchRelatedDataResult } from './core-queries';
+import type { MapProductsWithBatchDataDeps, DbProduct } from './mappers';
+import { mapProductsWithBatchData } from './mappers';
+
+// ============================================================
+// Types
+// ============================================================
+
+export interface ProductListQueryDeps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getDb: () => any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  products: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productSources: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productPerformers: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productTags: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productImages: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productVideos: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productSales: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productRatingSummary: any;
+  /** サイトモード */
+  siteMode: SiteMode;
+  /** バッチ関連データ取得関数 */
+  batchFetchProductRelatedData: (productIds: number[], providerFilters?: string[]) => Promise<BatchRelatedDataResult>;
+  /** 商品マッパー依存性 */
+  mapperDeps: MapProductsWithBatchDataDeps;
+  /** 単一商品関連データ取得関数 (getProductsByCategory用) */
+  fetchProductRelatedData?: (productId: number) => Promise<{
+    performerData: unknown[];
+    tagData: unknown[];
+    sourceData: unknown;
+    imagesData: unknown[];
+    videosData: unknown[];
+  }>;
+  /** 商品マッパー関数 (getProductsByCategory用) */
+  mapProductToType?: (
+    product: unknown,
+    performers: unknown[],
+    tags: unknown[],
+    source: unknown,
+    cache: unknown,
+    images: unknown[],
+    videos: unknown[],
+    locale: string
+  ) => unknown;
+}
+
+/**
+ * getProductsByCategory用オプション
+ */
+export interface GetProductsByCategoryOptions {
+  limit?: number;
+  offset?: number;
+  sortBy?: 'releaseDateDesc' | 'releaseDateAsc';
+  initial?: string;
+  includeAsp?: string[];
+  excludeAsp?: string[];
+  hasVideo?: boolean;
+  hasImage?: boolean;
+  performerType?: 'solo' | 'multi';
+  locale?: string;
+}
+
+export interface ProductListQueries {
+  getProducts: <T extends DeduplicatableProduct>(options?: GetProductsOptions) => Promise<T[]>;
+  getProductsCount: (options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>) => Promise<number>;
+  getProductsByCategory: <T>(tagId: number, options?: GetProductsByCategoryOptions) => Promise<T[]>;
+}
+
+// ============================================================
+// Factory
+// ============================================================
+
+/**
+ * 商品リストクエリファクトリー
+ */
+export function createProductListQueries(deps: ProductListQueryDeps): ProductListQueries {
+  const {
+    getDb,
+    products,
+    productSources,
+    productPerformers,
+    productTags,
+    productImages,
+    productVideos,
+    productSales,
+    productRatingSummary,
+    siteMode,
+    batchFetchProductRelatedData,
+    mapperDeps,
+  } = deps;
+
+  /**
+   * 共通条件を構築
+   */
+  function buildConditions(options?: GetProductsOptions): SQL[] {
+    const conditions: SQL[] = [];
+
+    // ASPフィルタ（サイトモードに応じて）
+    conditions.push(createAspFilterCondition(products, productSources, siteMode));
+
+    // 特定のIDリストでフィルタ（バッチ取得用）
+    if (options?.ids && options.ids.length > 0) {
+      conditions.push(inArray(products.id, options.ids));
+    }
+
+    // プロバイダー（ASP）でフィルタ（単一）
+    if (options?.provider) {
+      conditions.push(createProviderFilterCondition(products, productSources, options.provider));
+    }
+
+    // 複数プロバイダー（ASP）でフィルタ（いずれかを含む）
+    if (options?.providers && options.providers.length > 0) {
+      conditions.push(createMultiProviderFilterCondition(products, productSources, options.providers));
+    }
+
+    // 除外プロバイダー（ASP）でフィルタ（いずれも含まない）
+    if (options?.excludeProviders && options.excludeProviders.length > 0) {
+      conditions.push(createExcludeProviderFilterCondition(products, productSources, options.excludeProviders));
+    }
+
+    // 価格フィルタ（productSourcesの価格を使用）
+    if (options?.minPrice !== undefined || options?.maxPrice !== undefined) {
+      const priceConditions: SQL[] = [];
+      if (options.minPrice !== undefined) {
+        priceConditions.push(sql`ps.price >= ${options.minPrice}`);
+      }
+      if (options.maxPrice !== undefined) {
+        priceConditions.push(sql`ps.price <= ${options.maxPrice}`);
+      }
+
+      // EXISTSを使用
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productSources} ps
+          WHERE ps.product_id = ${products.id}
+          AND ${sql.join(priceConditions, sql` AND `)}
+        )`
+      );
+    }
+
+    // 女優IDでフィルタ（多対多リレーション）
+    if (options?.actressId) {
+      const performerId = parseInt(options.actressId);
+      if (!isNaN(performerId)) {
+        conditions.push(
+          sql`EXISTS (
+            SELECT 1 FROM ${productPerformers} pp
+            WHERE pp.product_id = ${products.id}
+            AND pp.performer_id = ${performerId}
+          )`
+        );
+      }
+    }
+
+    // タグでフィルタ（対象タグ - いずれかを含む）
+    if (options?.tags && options.tags.length > 0) {
+      const tagIds = options.tags.map(t => parseInt(t)).filter(id => !isNaN(id));
+      if (tagIds.length > 0) {
+        conditions.push(
+          sql`EXISTS (
+            SELECT 1 FROM ${productTags} pt
+            WHERE pt.product_id = ${products.id}
+            AND pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
+          )`
+        );
+      }
+    }
+
+    // 除外タグでフィルタ（いずれも含まない）
+    if (options?.excludeTags && options.excludeTags.length > 0) {
+      const excludeTagIds = options.excludeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
+      if (excludeTagIds.length > 0) {
+        conditions.push(
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${productTags} pt
+            WHERE pt.product_id = ${products.id}
+            AND pt.tag_id IN (${sql.join(excludeTagIds.map(id => sql`${id}`), sql`, `)})
+          )`
+        );
+      }
+    }
+
+    // 検索クエリ（品番検索 + PostgreSQL Full Text Search）
+    if (options?.query) {
+      const query = options.query.trim();
+      const searchPattern = `%${query}%`;
+
+      // 品番パターンの判定（英数字とハイフン/アンダースコアの組み合わせ）
+      const isProductIdPattern = /^[a-zA-Z0-9]+[-_]?[a-zA-Z0-9]+$/.test(query) && query.length >= 4;
+
+      if (isProductIdPattern) {
+        // 品番検索: バリエーションを生成してnormalizedProductIdとoriginalProductIdで検索
+        const variants = generateProductIdVariations(query);
+        const variantPatterns = variants.map(v => `%${v}%`);
+
+        conditions.push(
+          sql`(
+            ${products.normalizedProductId} = ANY(${variants})
+            OR ${products.normalizedProductId} ILIKE ANY(${variantPatterns})
+            OR ${products.makerProductCode} ILIKE ANY(${variantPatterns})
+            OR EXISTS (
+              SELECT 1 FROM ${productSources} ps
+              WHERE ps.product_id = ${products.id}
+              AND (ps.original_product_id = ANY(${variants}) OR ps.original_product_id ILIKE ANY(${variantPatterns}))
+            )
+            OR ${products}.search_vector @@ plainto_tsquery('simple', ${query})
+            OR ${products.title} ILIKE ${searchPattern}
+          )`
+        );
+      } else {
+        // 通常の全文検索（タイトル、説明文、AI説明文）
+        conditions.push(
+          sql`(
+            ${products}.search_vector @@ plainto_tsquery('simple', ${query})
+            OR ${products.title} ILIKE ${searchPattern}
+            OR ${products.aiDescription}::text ILIKE ${searchPattern}
+          )`
+        );
+      }
+    }
+
+    // サンプル動画ありフィルタ
+    if (options?.hasVideo) {
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productVideos} pv
+          WHERE pv.product_id = ${products.id}
+        )`
+      );
+    }
+
+    // サンプル画像ありフィルタ
+    if (options?.hasImage) {
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productImages} pi
+          WHERE pi.product_id = ${products.id}
+        )`
+      );
+    }
+
+    // 出演形態フィルタ
+    if (options?.performerType === 'solo') {
+      // 単体出演: 出演者が1人のみ
+      conditions.push(
+        sql`(
+          SELECT COUNT(*) FROM ${productPerformers} pp
+          WHERE pp.product_id = ${products.id}
+        ) = 1`
+      );
+    } else if (options?.performerType === 'multi') {
+      // 複数出演: 出演者が2人以上
+      conditions.push(
+        sql`(
+          SELECT COUNT(*) FROM ${productPerformers} pp
+          WHERE pp.product_id = ${products.id}
+        ) >= 2`
+      );
+    }
+
+    // セール中フィルタ
+    if (options?.onSale) {
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productSources} ps
+          INNER JOIN ${productSales} psl ON psl.product_source_id = ps.id
+          WHERE ps.product_id = ${products.id}
+          AND psl.is_active = true
+          AND (psl.end_at IS NULL OR psl.end_at > NOW())
+        )`
+      );
+    }
+
+    // 未整理作品フィルタ（出演者なし）
+    if (options?.uncategorized) {
+      conditions.push(
+        sql`NOT EXISTS (
+          SELECT 1 FROM ${productPerformers} pp
+          WHERE pp.product_id = ${products.id}
+        )`
+      );
+    }
+
+    return conditions;
+  }
+
+  /**
+   * ソート句を構築
+   */
+  function buildOrderByClause(sortBy?: ProductSortOption): SQL[] {
+    switch (sortBy) {
+      case 'releaseDateAsc':
+        return [sql`${products.releaseDate} ASC NULLS LAST`, asc(products.normalizedProductId)];
+      case 'titleAsc':
+        return [asc(products.title), asc(products.normalizedProductId)];
+      case 'durationDesc':
+        return [desc(sql`COALESCE(${products.duration}, 0)`), sql`${products.releaseDate} DESC NULLS LAST`, desc(products.normalizedProductId)];
+      case 'durationAsc':
+        return [asc(sql`COALESCE(${products.duration}, 0)`), sql`${products.releaseDate} DESC NULLS LAST`, asc(products.normalizedProductId)];
+      case 'random':
+        return [sql`RANDOM()`];
+      case 'releaseDateDesc':
+      default:
+        return [sql`${products.releaseDate} DESC NULLS LAST`, desc(products.normalizedProductId)];
+    }
+  }
+
+  /**
+   * 価格ソート時の重複排除（サイトモードに応じた処理）
+   */
+  function deduplicateForPriceSort<T extends DeduplicatableProduct>(mappedProducts: T[]): T[] {
+    if (siteMode === 'fanza-only') {
+      // FANZAサイト: 単純に最安を選択
+      const productsByTitle = new Map<string, T>();
+      for (const product of mappedProducts) {
+        const normalizedTitleKey = normalizeTitle(product.title);
+        const existing = productsByTitle.get(normalizedTitleKey);
+        if (!existing) {
+          productsByTitle.set(normalizedTitleKey, product);
+        } else {
+          const existingPrice = existing.salePrice || existing.price || Infinity;
+          const currentPrice = product.salePrice || product.price || Infinity;
+          if (currentPrice < existingPrice) {
+            productsByTitle.set(normalizedTitleKey, product);
+          }
+        }
+      }
+
+      const seenTitles = new Set<string>();
+      return mappedProducts.filter(product => {
+        const normalizedTitleKey = normalizeTitle(product.title);
+        if (seenTitles.has(normalizedTitleKey)) return false;
+        seenTitles.add(normalizedTitleKey);
+        const cheapest = productsByTitle.get(normalizedTitleKey);
+        return cheapest?.id === product.id;
+      });
+    } else {
+      // Webサイト: alternativeSourcesを保持
+      const productGroupsByTitle = new Map<string, T[]>();
+      for (const product of mappedProducts) {
+        const normalizedTitleKey = normalizeTitle(product.title);
+        const group = productGroupsByTitle.get(normalizedTitleKey) || [];
+        group.push(product);
+        productGroupsByTitle.set(normalizedTitleKey, group);
+      }
+
+      const deduplicatedProducts: T[] = [];
+      for (const [, group] of productGroupsByTitle) {
+        const sortedGroup = [...group].sort((a, b) => {
+          const priceA = a.salePrice || a.price || Infinity;
+          const priceB = b.salePrice || b.price || Infinity;
+          return priceA - priceB;
+        });
+        const cheapest = sortedGroup[0];
+        if (sortedGroup.length > 1) {
+          cheapest.alternativeSources = sortedGroup.slice(1).map(p => ({
+            aspName: p.provider || 'unknown',
+            price: p.price,
+            salePrice: p.salePrice,
+            affiliateUrl: p.affiliateUrl || '',
+            productId: typeof p.id === 'string' ? parseInt(p.id, 10) : (p.id as number),
+          }));
+        }
+        deduplicatedProducts.push(cheapest);
+      }
+
+      const originalOrder = new Map(mappedProducts.map((p, i) => [p.id, i]));
+      deduplicatedProducts.sort((a, b) => (originalOrder.get(a.id as string) ?? Infinity) - (originalOrder.get(b.id as string) ?? Infinity));
+      return deduplicatedProducts;
+    }
+  }
+
+  /**
+   * 商品リストを取得
+   */
+  async function getProducts<T extends DeduplicatableProduct>(options?: GetProductsOptions): Promise<T[]> {
+    try {
+      const db = getDb();
+      const conditions = buildConditions(options);
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+      // 価格ソートの場合は特別な処理が必要（productSourcesとJOIN）
+      if (options?.sortBy === 'priceAsc' || options?.sortBy === 'priceDesc') {
+        const results = await db
+          .selectDistinct({
+            product: products,
+            price: productSources.price,
+          })
+          .from(products)
+          .innerJoin(productSources, eq(products.id, productSources.productId))
+          .where(whereClause)
+          .orderBy(
+            options.sortBy === 'priceAsc'
+              ? asc(productSources.price)
+              : desc(productSources.price)
+          )
+          .limit(options?.limit || 100)
+          .offset(options?.offset || 0);
+
+        // バッチでデータを取得
+        const productList = results.map((r: { product: DbProduct }) => r.product);
+        const productIds = productList.map((p: DbProduct) => p.id);
+        if (productIds.length === 0) return [];
+
+        // サイトモードに応じてプロバイダーフィルターを渡す
+        const batchData = siteMode === 'all'
+          ? await batchFetchProductRelatedData(productIds, options?.providers)
+          : await batchFetchProductRelatedData(productIds);
+        const mappedProducts = mapProductsWithBatchData(productList, batchData, mapperDeps, options?.locale || 'ja') as T[];
+
+        // タイトルベースの重複排除（サイトモードに応じた処理）
+        return deduplicateForPriceSort(mappedProducts);
+      }
+
+      // 評価/レビュー数ソートの場合は特別な処理が必要（productRatingSummaryとJOIN）
+      if (options?.sortBy === 'ratingDesc' || options?.sortBy === 'ratingAsc' || options?.sortBy === 'reviewCountDesc') {
+        const results = await db
+          .select({
+            product: products,
+            avgRating: productRatingSummary.averageRating,
+            totalReviews: productRatingSummary.totalReviews,
+          })
+          .from(products)
+          .leftJoin(productRatingSummary, eq(products.id, productRatingSummary.productId))
+          .where(whereClause)
+          .orderBy(
+            options.sortBy === 'ratingDesc'
+              ? desc(sql`COALESCE(${productRatingSummary.averageRating}, 0)`)
+              : options.sortBy === 'ratingAsc'
+              ? asc(sql`COALESCE(${productRatingSummary.averageRating}, 0)`)
+              : desc(sql`COALESCE(${productRatingSummary.totalReviews}, 0)`),
+            desc(products.releaseDate)
+          )
+          .limit(options?.limit || 100)
+          .offset(options?.offset || 0);
+
+        // バッチでデータを取得
+        const productList = results.map((r: { product: DbProduct }) => r.product);
+        const productIds = productList.map((p: DbProduct) => p.id);
+        if (productIds.length === 0) return [];
+
+        // サイトモードに応じてプロバイダーフィルターを渡す
+        const batchData = siteMode === 'all'
+          ? await batchFetchProductRelatedData(productIds, options?.providers)
+          : await batchFetchProductRelatedData(productIds);
+        const mappedProducts = mapProductsWithBatchData(productList, batchData, mapperDeps, options?.locale || 'ja') as T[];
+
+        // タイトルベースの重複排除（共通関数使用）
+        return deduplicateProductsByTitle(mappedProducts, siteMode) as T[];
+      }
+
+      // 通常のソート処理
+      const orderByClause = buildOrderByClause(options?.sortBy);
+
+      const results = await db
+        .select()
+        .from(products)
+        .where(whereClause)
+        .orderBy(...orderByClause)
+        .limit(options?.limit || 100)
+        .offset(options?.offset || 0);
+
+      // バッチでデータを取得
+      const productIds = results.map((p: DbProduct) => p.id);
+      if (productIds.length === 0) return [];
+
+      // サイトモードに応じてプロバイダーフィルターを渡す
+      const batchData = siteMode === 'all'
+        ? await batchFetchProductRelatedData(productIds, options?.providers)
+        : await batchFetchProductRelatedData(productIds);
+      const mappedProducts = mapProductsWithBatchData(results, batchData, mapperDeps, options?.locale || 'ja') as T[];
+
+      // タイトルベースの重複排除（共通関数使用）
+      return deduplicateProductsByTitle(mappedProducts, siteMode) as T[];
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 商品数を取得
+   * サイトモードに応じてカウント方法が異なる:
+   * - 'all': タイトル正規化による重複排除カウント
+   * - 'fanza-only': 単純カウント
+   */
+  async function getProductsCount(options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>): Promise<number> {
+    try {
+      const db = getDb();
+      const conditions = buildConditions(options as GetProductsOptions);
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+      if (siteMode === 'all') {
+        // タイトルベースの重複排除を考慮したカウント
+        const result = await db
+          .select({
+            count: sql<number>`COUNT(DISTINCT LOWER(REGEXP_REPLACE(REGEXP_REPLACE(${products.title}, '[\\s　]+', '', 'g'), '[！!？?「」『』【】（）()＆&～~・:：,，。.、]', '', 'g')))`
+          })
+          .from(products)
+          .where(whereClause);
+
+        return Number(result[0]?.count || 0);
+      } else {
+        // 単純カウント
+        const result = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(products)
+          .where(whereClause);
+
+        return Number(result[0]?.count || 0);
+      }
+    } catch (error) {
+      console.error('Error counting products:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * 特定カテゴリの商品一覧を取得
+   */
+  async function getProductsByCategory<T>(
+    tagId: number,
+    options?: GetProductsByCategoryOptions
+  ): Promise<T[]> {
+    // fetchProductRelatedData と mapProductToType が必須
+    if (!deps.fetchProductRelatedData || !deps.mapProductToType) {
+      console.error('getProductsByCategory requires fetchProductRelatedData and mapProductToType in deps');
+      return [];
+    }
+
+    try {
+      const db = getDb();
+      const limit = options?.limit || 50;
+      const offset = options?.offset || 0;
+      const initial = options?.initial || '';
+      const includeAsp = options?.includeAsp || [];
+      const locale = options?.locale || 'ja';
+      const excludeAsp = options?.excludeAsp || [];
+      const hasVideo = options?.hasVideo || false;
+      const hasImage = options?.hasImage || false;
+      const performerType = options?.performerType;
+
+      // 頭文字フィルター条件
+      let initialCondition = sql`TRUE`;
+      if (initial) {
+        if (initial === 'etc') {
+          initialCondition = sql`p.title !~ '^[あ-んア-ンa-zA-Z]'`;
+        } else if (/^[A-Za-z]$/.test(initial)) {
+          initialCondition = sql`UPPER(LEFT(p.title, 1)) = ${initial.toUpperCase()}`;
+        } else {
+          initialCondition = sql`LEFT(p.title, 1) = ${initial}`;
+        }
+      }
+
+      // ASPフィルター条件（対象/除外）
+      let aspCondition = sql`TRUE`;
+      if (includeAsp.length > 0) {
+        aspCondition = sql`ps.asp_name IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+      }
+      let excludeAspCondition = sql`TRUE`;
+      if (excludeAsp.length > 0) {
+        excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+      }
+
+      // サンプルコンテンツフィルター条件
+      let videoCondition = sql`TRUE`;
+      if (hasVideo) {
+        videoCondition = sql`EXISTS (SELECT 1 FROM product_videos pv WHERE pv.product_id = p.id)`;
+      }
+      let imageCondition = sql`TRUE`;
+      if (hasImage) {
+        imageCondition = sql`EXISTS (SELECT 1 FROM product_images pi WHERE pi.product_id = p.id)`;
+      }
+
+      // 出演形態フィルター条件
+      let performerTypeCondition = sql`TRUE`;
+      if (performerType === 'solo') {
+        performerTypeCondition = sql`(SELECT COUNT(*) FROM product_performers pp WHERE pp.product_id = p.id) = 1`;
+      } else if (performerType === 'multi') {
+        performerTypeCondition = sql`(SELECT COUNT(*) FROM product_performers pp WHERE pp.product_id = p.id) >= 2`;
+      }
+
+      // SQLでフィルター付きクエリを実行
+      const query = sql`
+        SELECT DISTINCT p.*
+        FROM products p
+        INNER JOIN product_tags pt ON p.id = pt.product_id
+        LEFT JOIN product_sources ps ON p.id = ps.product_id
+        WHERE pt.tag_id = ${tagId}
+        AND ${initialCondition}
+        AND ${aspCondition}
+        AND ${excludeAspCondition}
+        AND ${videoCondition}
+        AND ${imageCondition}
+        AND ${performerTypeCondition}
+        ORDER BY p.release_date DESC NULLS LAST, p.created_at DESC
+        LIMIT ${limit}
+        OFFSET ${offset}
+      `;
+
+      const results = await db.execute(query);
+
+      // フル情報を取得
+      const rows = results.rows as unknown as Array<{
+        id: number;
+        normalized_product_id?: string;
+        maker_product_code?: string;
+        title?: string;
+        release_date?: Date | string;
+        description?: string;
+        duration?: number;
+        default_thumbnail_url?: string;
+        title_en?: string;
+        title_zh?: string;
+        title_zh_tw?: string;
+        title_ko?: string;
+        description_en?: string;
+        description_zh?: string;
+        description_zh_tw?: string;
+        description_ko?: string;
+        ai_description?: string;
+        ai_catchphrase?: string;
+        ai_short_description?: string;
+        ai_tags?: string;
+        ai_review?: string;
+        ai_review_updated_at?: Date;
+        created_at?: Date;
+        updated_at?: Date;
+      }>;
+      const productIds = rows.map(r => r.id);
+      if (productIds.length === 0) return [];
+
+      const fullProducts = await Promise.all(
+        productIds.map(async (productId) => {
+          const { performerData, tagData, sourceData, imagesData, videosData } = await deps.fetchProductRelatedData!(productId);
+          const baseProduct = rows.find(r => r.id === productId)!;
+
+          // 日付処理: Date型の場合はISO文字列に変換
+          const releaseDate = baseProduct.release_date instanceof Date
+            ? baseProduct.release_date.toISOString().split('T')[0]
+            : baseProduct.release_date ?? null;
+
+          return deps.mapProductToType!(
+            {
+              id: baseProduct.id,
+              normalizedProductId: baseProduct.normalized_product_id || '',
+              makerProductCode: baseProduct.maker_product_code ?? null,
+              title: baseProduct.title || '',
+              releaseDate,
+              description: baseProduct.description ?? null,
+              duration: baseProduct.duration ?? null,
+              defaultThumbnailUrl: baseProduct.default_thumbnail_url ?? null,
+              titleEn: baseProduct.title_en ?? null,
+              titleZh: baseProduct.title_zh ?? null,
+              titleZhTw: baseProduct.title_zh_tw ?? null,
+              titleKo: baseProduct.title_ko ?? null,
+              descriptionEn: baseProduct.description_en ?? null,
+              descriptionZh: baseProduct.description_zh ?? null,
+              descriptionZhTw: baseProduct.description_zh_tw ?? null,
+              descriptionKo: baseProduct.description_ko ?? null,
+              aiDescription: baseProduct.ai_description ?? null,
+              aiCatchphrase: baseProduct.ai_catchphrase ?? null,
+              aiShortDescription: baseProduct.ai_short_description ?? null,
+              aiTags: baseProduct.ai_tags ?? null,
+              aiReview: baseProduct.ai_review ?? null,
+              aiReviewUpdatedAt: baseProduct.ai_review_updated_at ?? null,
+              createdAt: baseProduct.created_at ?? new Date(),
+              updatedAt: baseProduct.updated_at ?? new Date(),
+            },
+            performerData,
+            tagData,
+            sourceData,
+            undefined,
+            imagesData,
+            videosData,
+            locale
+          );
+        })
+      );
+
+      return fullProducts as T[];
+    } catch (error) {
+      console.error('Error getting products by category:', error);
+      return [];
+    }
+  }
+
+  return {
+    getProducts,
+    getProductsCount,
+    getProductsByCategory,
+  };
+}
+
+export type { GetProductsOptions, ProductSortOption };

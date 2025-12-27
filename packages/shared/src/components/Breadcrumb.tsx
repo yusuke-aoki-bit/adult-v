@@ -13,6 +13,10 @@ interface BreadcrumbProps {
   className?: string;
   /** テーマ: dark (web用), light (fanza用) */
   theme?: BreadcrumbTheme;
+  /** ベースURL（JSON-LD用、省略時はhrefをそのまま使用） */
+  baseUrl?: string;
+  /** JSON-LDスキーマを出力するか（デフォルト: false。既存ページとの重複回避用） */
+  includeSchema?: boolean;
 }
 
 const themeConfig = {
@@ -26,32 +30,74 @@ const themeConfig = {
   },
 };
 
-export default function Breadcrumb({ items, className = '', theme = 'dark' }: BreadcrumbProps) {
+/**
+ * BreadcrumbList JSON-LDスキーマを生成
+ * @see https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
+ */
+export function generateBreadcrumbSchema(items: BreadcrumbItem[], baseUrl?: string) {
+  const itemListElement = items
+    .filter((item) => item.href)
+    .map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.label,
+      item: baseUrl && item.href ? `${baseUrl}${item.href}` : item.href,
+    }));
+
+  // 最後のアイテム（現在のページ）も追加
+  const lastItem = items[items.length - 1];
+  if (lastItem && !lastItem.href) {
+    itemListElement.push({
+      '@type': 'ListItem',
+      position: items.length,
+      name: lastItem.label,
+      item: undefined as unknown as string, // 現在のページはitem省略可能
+    });
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement,
+  };
+}
+
+export default function Breadcrumb({ items, className = '', theme = 'dark', baseUrl, includeSchema = false }: BreadcrumbProps) {
   const config = themeConfig[theme];
+  const schemaData = includeSchema ? generateBreadcrumbSchema(items, baseUrl) : null;
 
   return (
-    <nav aria-label="Breadcrumb" className={`flex items-center gap-1 text-sm sm:text-base whitespace-nowrap ${className}`}>
-      {items.map((item, index) => {
-        const isLast = index === items.length - 1;
+    <>
+      {/* JSON-LD構造化データ（includeSchema=trueの場合のみ） */}
+      {schemaData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+        />
+      )}
+      <nav aria-label="Breadcrumb" className={`flex items-center gap-1 text-sm sm:text-base whitespace-nowrap ${className}`}>
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
 
-        return (
-          <span key={`${item.href || 'current'}-${item.label}`} className="inline-flex items-center gap-1">
-            {index > 0 && (
-              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0" />
-            )}
-            {isLast || !item.href ? (
-              <span className={config.currentItem}>{item.label}</span>
-            ) : (
-              <Link
-                href={item.href}
-                className={`${config.link} transition-colors`}
-              >
-                {item.label}
-              </Link>
-            )}
-          </span>
-        );
-      })}
-    </nav>
+          return (
+            <span key={`${item.href || 'current'}-${item.label}`} className="inline-flex items-center gap-1">
+              {index > 0 && (
+                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0" />
+              )}
+              {isLast || !item.href ? (
+                <span className={config.currentItem}>{item.label}</span>
+              ) : (
+                <Link
+                  href={item.href}
+                  className={`${config.link} transition-colors`}
+                >
+                  {item.label}
+                </Link>
+              )}
+            </span>
+          );
+        })}
+      </nav>
+    </>
   );
 }

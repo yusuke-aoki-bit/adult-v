@@ -8,13 +8,13 @@ import { wikiPerformerIndex } from './db/schema';
 import {
   createWikiPerformerSearchQueries,
   type WikiPerformerSearchResult,
+  type WikiPerformerSearchDeps,
 } from '@adult-v/shared/db-queries';
 
 // 依存性を注入してクエリを生成
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const queries = createWikiPerformerSearchQueries({
-  db: db as any,
-  wikiPerformerIndex: wikiPerformerIndex as any,
+  db: db as unknown as WikiPerformerSearchDeps['db'],
+  wikiPerformerIndex: wikiPerformerIndex as unknown as WikiPerformerSearchDeps['wikiPerformerIndex'],
 });
 
 // Re-export type

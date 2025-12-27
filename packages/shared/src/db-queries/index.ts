@@ -25,9 +25,14 @@ export {
 
 export {
   createSaleHelperQueries,
+  createSaleQueries,
   type SaleHelperDeps,
   type SaleHelperQueries,
+  type SaleQueryDeps,
+  type SaleQueryQueries,
   type SaleInfo,
+  type SaleProduct,
+  type SaleStatsWithAspResult,
 } from './sale-helper';
 
 export {
@@ -39,13 +44,30 @@ export {
 } from './product-queries';
 
 export {
+  createProductListQueries,
+  type ProductListQueryDeps,
+  type ProductListQueries,
+  type GetProductsByCategoryOptions,
+} from './product-list-queries';
+
+export {
   createActressQueries,
   type ActressQueryDeps,
   type ActressQueries,
   type PerformerAlias,
   type SiteProductCount,
   type AspProductCount,
+  type CareerAnalysis,
 } from './actress-queries';
+
+export {
+  createActressListQueries,
+  type ActressListQueryDeps,
+  type ActressListQueries,
+  type ActressSortOption,
+  type GetActressesOptions,
+  type GetActressesCountOptions,
+} from './actress-list-queries';
 
 export {
   createAspFilterCondition,
@@ -64,7 +86,55 @@ export {
   type TagResult,
   type ProviderProductCount,
   type SaleStatsResult,
+  type ProductRelatedData,
+  type BatchRelatedDataResult,
+  type BatchPerformerData,
+  type BatchTagData,
+  type BatchImageData,
+  type BatchVideoData,
+  type BatchSaleData,
+  type CategoryWithCount,
+  type UncategorizedStats,
+  type SeriesInfo,
+  type PopularSeries,
+  type PopularMaker,
+  type MakerPreference,
+  type MakerInfo,
+  type SeriesBasicInfo,
+  type SeriesProduct,
 } from './core-queries';
+
+export {
+  mapPerformerToActressTypeSync,
+  mapProductToType,
+  mapProductsWithBatchData,
+  type DbPerformer,
+  type MapperDeps,
+  type DbProduct,
+  type ProductMapperDeps,
+  type MapProductsWithBatchDataDeps,
+  type SourceData as MapperSourceData,
+  type CacheData as MapperCacheData,
+  type ImageData,
+  type VideoData,
+  type SaleData,
+  type PerformerData as MapperPerformerData,
+  type TagData as MapperTagData,
+} from './mappers';
+
+export {
+  createBatchPerformerQueries,
+  type BatchPerformerQueryDeps,
+  type BatchPerformerQueries,
+} from './batch-performer-queries';
+
+export {
+  createUncategorizedQueries,
+  type UncategorizedQueryDeps,
+  type UncategorizedQueries,
+  type UncategorizedProductsOptions,
+  type UncategorizedProductsCountOptions,
+} from './uncategorized-queries';
 
 // 型定義
 export type {
@@ -99,6 +169,10 @@ export type {
   TagData,
   CacheData,
   RawProductRow,
+  ProductRow,
   FanzaFilterConfig,
   ProductQueryOptions,
+  // getProducts用型定義
+  ProductSortOption,
+  GetProductsOptions,
 } from './types';

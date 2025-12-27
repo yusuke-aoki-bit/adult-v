@@ -57,8 +57,8 @@ export type {
 
 // 以下は個別実装のまま（特殊なロジックがあるため）
 
-import { products as productsTable, productPerformers as ppTable, productTags as ptTable, tags as tagsTable, productSources as psTable } from './schema';
-import { eq, and, inArray, ne, desc, exists } from 'drizzle-orm';
+import { products as productsTable, productPerformers as ppTable, productTags as ptTable, tags as tagsTable } from './schema';
+import { eq, and, inArray, ne, desc } from 'drizzle-orm';
 
 /**
  * Get performer's other products

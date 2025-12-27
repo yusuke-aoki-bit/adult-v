@@ -114,6 +114,48 @@ export function getMemoryCache(): MemoryCache {
   return globalMemoryCache;
 }
 
+// ============================================================
+// レガシー互換関数（queries.ts用）
+// ============================================================
+
+// レガシーメモリキャッシュ（後方互換性用）
+const legacyMemoryCache = new Map<string, { data: unknown; timestamp: number }>();
+
+/**
+ * メモリキャッシュからデータを取得（レガシー互換）
+ */
+export function getFromMemoryCache<T>(key: string, ttlMs: number = CACHE_CONFIG.MEMORY_TTL_MS): T | null {
+  const cached = legacyMemoryCache.get(key);
+  if (cached && Date.now() - cached.timestamp < ttlMs) {
+    return cached.data as T;
+  }
+  legacyMemoryCache.delete(key);
+  return null;
+}
+
+/**
+ * メモリキャッシュにデータを保存（レガシー互換）
+ */
+export function setToMemoryCache<T>(key: string, data: T, maxSize: number = CACHE_CONFIG.MEMORY_MAX_ENTRIES): void {
+  // キャッシュサイズ制限
+  if (legacyMemoryCache.size >= maxSize) {
+    const oldestKey = legacyMemoryCache.keys().next().value;
+    if (oldestKey) legacyMemoryCache.delete(oldestKey);
+  }
+  legacyMemoryCache.set(key, { data, timestamp: Date.now() });
+}
+
+/**
+ * レガシーメモリキャッシュをクリア
+ */
+export function clearLegacyMemoryCache(): void {
+  legacyMemoryCache.clear();
+}
+
+// レガシー定数エクスポート
+export const CACHE_TTL_MS = CACHE_CONFIG.MEMORY_TTL_MS;
+export const CACHE_REVALIDATE_SECONDS = CACHE_CONFIG.DEFAULT_REVALIDATE_SECONDS;
+
 /**
  * キャッシュキー生成ヘルパー
  */

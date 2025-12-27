@@ -39,31 +39,39 @@ export function generateOptimizedDescription(
     discount?: number;
     rating?: number;
     reviewCount?: number;
+    duration?: number;
+    provider?: string;
+    locale?: string;
   },
 ): string {
+  const locale = options?.locale || 'ja';
+
+  // ロケール別テンプレート
+  if (locale === 'ja') {
+    return generateJapaneseProductDescription(title, actressName, tags, productId, options);
+  }
+
+  // 他言語は既存ロジック
   const parts: string[] = [];
 
-  // 品番を最優先で表示（Google検索でヒットさせる）
   if (productId) {
     parts.push(`【${productId}】`);
   }
 
-  // セール情報を優先表示（CTR向上）
   if (options?.salePrice && options?.regularPrice && options.discount) {
     parts.push(`[SALE] ${options.discount}%OFF`);
   }
 
-  // 高評価商品は星を表示
   if (options?.rating && options.rating >= 4.0 && options?.reviewCount && options.reviewCount >= 5) {
-    parts.push(`★${options.rating.toFixed(1)}(${options.reviewCount}件)`);
+    parts.push(`★${options.rating.toFixed(1)}(${options.reviewCount})`);
   }
 
   if (actressName) {
-    parts.push(`${actressName}出演`);
+    parts.push(actressName);
   }
 
   if (title) {
-    const maxTitleLength = 50; // 品番を入れる分短くする
+    const maxTitleLength = 50;
     const trimmedTitle = title.length > maxTitleLength
       ? title.substring(0, maxTitleLength) + '...'
       : title;
@@ -71,18 +79,145 @@ export function generateOptimizedDescription(
   }
 
   if (tags && tags.length > 0) {
-    const genres = tags.slice(0, 3).join('・');
-    parts.push(`【${genres}】`);
-  }
-
-  if (releaseDate) {
-    parts.push(`配信日: ${releaseDate}`);
+    parts.push(tags.slice(0, 3).join(', '));
   }
 
   const description = parts.join(' | ');
   return description.length > 160
     ? description.substring(0, 157) + '...'
     : description;
+}
+
+/**
+ * 日本語商品ページ用CTR最適化ディスクリプション
+ */
+function generateJapaneseProductDescription(
+  title: string,
+  actressName?: string,
+  tags?: string[],
+  productId?: string,
+  options?: {
+    salePrice?: number;
+    regularPrice?: number;
+    discount?: number;
+    rating?: number;
+    reviewCount?: number;
+    duration?: number;
+    provider?: string;
+  },
+): string {
+  const parts: string[] = [];
+
+  // セール時は割引を最優先
+  if (options?.discount && options.discount > 0) {
+    parts.push(`【${options.discount}%OFF】`);
+  }
+
+  // 品番（検索ヒット用）
+  if (productId) {
+    parts.push(productId);
+  }
+
+  // タイトル（短縮）
+  if (title) {
+    const maxLen = options?.discount ? 30 : 40;
+    parts.push(title.length > maxLen ? title.substring(0, maxLen) + '…' : title);
+  }
+
+  // 女優名
+  if (actressName) {
+    parts.push(`${actressName}出演`);
+  }
+
+  // 時間
+  if (options?.duration && options.duration > 0) {
+    parts.push(`${options.duration}分`);
+  }
+
+  // プロバイダー + アクション誘導
+  if (options?.provider) {
+    parts.push(`${options.provider}で今すぐ視聴`);
+  }
+
+  // 評価（高評価のみ）
+  if (options?.rating && options.rating >= 4.0 && options?.reviewCount && options.reviewCount >= 3) {
+    parts.push(`★${options.rating.toFixed(1)}評価`);
+  }
+
+  const description = parts.join(' - ');
+  return description.length > 160
+    ? description.substring(0, 157) + '...'
+    : description;
+}
+
+/**
+ * 女優ページ用CTR最適化ディスクリプション
+ */
+export function generateActressDescription(
+  name: string,
+  options?: {
+    workCount?: number;
+    topGenres?: string[];
+    latestWork?: string;
+    isRetired?: boolean;
+    locale?: string;
+  },
+): string {
+  const locale = options?.locale || 'ja';
+
+  if (locale === 'ja') {
+    const parts: string[] = [];
+
+    parts.push(`${name}の作品一覧`);
+
+    if (options?.workCount && options.workCount > 0) {
+      parts.push(`全${options.workCount}本`);
+    }
+
+    if (options?.topGenres && options.topGenres.length > 0) {
+      parts.push(`人気ジャンル: ${options.topGenres.slice(0, 3).join('・')}`);
+    }
+
+    if (options?.latestWork) {
+      parts.push(`最新作「${options.latestWork.substring(0, 20)}」`);
+    }
+
+    parts.push('高評価作品からセール中作品まで一覧でチェック');
+
+    const description = parts.join(' | ');
+    return description.length > 160
+      ? description.substring(0, 157) + '...'
+      : description;
+  }
+
+  // 英語
+  if (locale === 'en') {
+    const parts = [`${name}'s videos`];
+    if (options?.workCount) parts.push(`${options.workCount} titles`);
+    if (options?.topGenres?.length) parts.push(`Genres: ${options.topGenres.slice(0, 3).join(', ')}`);
+    parts.push('Browse top-rated and sale items');
+    return parts.join(' | ').substring(0, 160);
+  }
+
+  // 中国語
+  if (locale === 'zh') {
+    const parts = [`${name}的作品列表`];
+    if (options?.workCount) parts.push(`共${options.workCount}部`);
+    if (options?.topGenres?.length) parts.push(`热门类型: ${options.topGenres.slice(0, 3).join('・')}`);
+    parts.push('浏览高评分和特价作品');
+    return parts.join(' | ').substring(0, 160);
+  }
+
+  // 韓国語
+  if (locale === 'ko') {
+    const parts = [`${name}의 작품 목록`];
+    if (options?.workCount) parts.push(`총 ${options.workCount}편`);
+    if (options?.topGenres?.length) parts.push(`인기 장르: ${options.topGenres.slice(0, 3).join('・')}`);
+    parts.push('인기작과 할인작 확인하기');
+    return parts.join(' | ').substring(0, 160);
+  }
+
+  return `${name} - Video list and profile`;
 }
 
 // SEO向けキーワード（多言語対応）
@@ -457,6 +592,120 @@ export function generateVideoObjectSchema(
   }
 
   return schema;
+}
+
+/**
+ * 構造化データ: HowTo（視聴方法）
+ * 商品ページに追加することでリッチスニペット表示を狙う
+ */
+export function generateHowToSchema(
+  productTitle: string,
+  providerName: string,
+  affiliateUrl: string,
+  locale: string = 'ja',
+) {
+  const steps = {
+    ja: [
+      {
+        name: '購入ボタンをクリック',
+        text: `「${providerName}で購入」ボタンをクリックして${providerName}の商品ページへ移動します。`,
+      },
+      {
+        name: '会員登録・ログイン',
+        text: `${providerName}のアカウントをお持ちでない場合は無料会員登録を行います。既にアカウントをお持ちの場合はログインしてください。`,
+      },
+      {
+        name: '決済方法を選択',
+        text: 'クレジットカード、電子マネー、コンビニ決済など、お好みの決済方法を選択して購入手続きを完了します。',
+      },
+      {
+        name: 'ストリーミング視聴開始',
+        text: '購入完了後、すぐにストリーミング再生で視聴を開始できます。ダウンロード版の場合はダウンロード後に視聴できます。',
+      },
+    ],
+    en: [
+      {
+        name: 'Click the purchase button',
+        text: `Click the "Buy on ${providerName}" button to go to the ${providerName} product page.`,
+      },
+      {
+        name: 'Register or login',
+        text: `If you don't have a ${providerName} account, create a free account. If you already have one, log in.`,
+      },
+      {
+        name: 'Choose payment method',
+        text: 'Select your preferred payment method such as credit card, e-money, or convenience store payment to complete the purchase.',
+      },
+      {
+        name: 'Start streaming',
+        text: 'After purchase, you can immediately start streaming. For download versions, you can watch after downloading.',
+      },
+    ],
+  };
+
+  const localizedSteps = steps[locale as keyof typeof steps] || steps.ja;
+  const title = locale === 'ja'
+    ? `「${productTitle}」を${providerName}で視聴する方法`
+    : `How to watch "${productTitle}" on ${providerName}`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: title,
+    description: locale === 'ja'
+      ? `${providerName}で「${productTitle}」を購入・視聴するための手順をご紹介します。`
+      : `Step-by-step guide to purchase and watch "${productTitle}" on ${providerName}.`,
+    step: localizedSteps.map((step, index) => ({
+      '@type': 'HowToStep',
+      position: index + 1,
+      name: step.name,
+      text: step.text,
+      url: index === 0 ? affiliateUrl : undefined,
+    })),
+    totalTime: 'PT5M',
+  };
+}
+
+/**
+ * 構造化データ: AggregateOffer（複数ASPの価格比較）
+ * 複数の配信サイトで販売されている場合に使用
+ */
+export function generateAggregateOfferSchema(
+  offers: Array<{
+    providerName: string;
+    price: number;
+    salePrice?: number;
+    url: string;
+    availability?: 'InStock' | 'OutOfStock';
+  }>,
+  currency: string = 'JPY',
+) {
+  if (offers.length === 0) return null;
+
+  const prices = offers.map(o => o.salePrice ?? o.price);
+  const lowPrice = Math.min(...prices);
+  const highPrice = Math.max(...prices);
+
+  return {
+    '@type': 'AggregateOffer',
+    lowPrice,
+    highPrice,
+    priceCurrency: currency,
+    offerCount: offers.length,
+    offers: offers.map(offer => ({
+      '@type': 'Offer',
+      price: offer.salePrice ?? offer.price,
+      priceCurrency: currency,
+      url: offer.url,
+      availability: offer.availability === 'OutOfStock'
+        ? 'https://schema.org/OutOfStock'
+        : 'https://schema.org/InStock',
+      seller: {
+        '@type': 'Organization',
+        name: offer.providerName,
+      },
+    })),
+  };
 }
 
 /**

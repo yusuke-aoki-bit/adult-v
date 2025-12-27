@@ -353,16 +353,17 @@ export interface CacheData {
 
 /**
  * 生の商品行データ型
- * DBから直接取得した行データ
+ * DBから直接取得した行データ（snake_case）
  */
 export interface RawProductRow {
   id: number;
-  normalized_product_id: string;
-  title: string;
-  release_date: string | null;
-  description: string | null;
-  duration: number | null;
-  default_thumbnail_url: string | null;
+  normalized_product_id?: string | null;
+  maker_product_code?: string | null;
+  title: string | null;
+  release_date?: string | Date | null;
+  description?: string | null;
+  duration?: number | null;
+  default_thumbnail_url?: string | null;
   title_en?: string | null;
   title_zh?: string | null;
   title_zh_tw?: string | null;
@@ -371,15 +372,21 @@ export interface RawProductRow {
   description_zh?: string | null;
   description_zh_tw?: string | null;
   description_ko?: string | null;
-  ai_description?: unknown;
+  ai_description?: string | null;
   ai_catchphrase?: string | null;
   ai_short_description?: string | null;
-  ai_tags?: unknown;
+  ai_tags?: string[] | string | null;
   ai_review?: string | null;
   ai_review_updated_at?: Date | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at?: Date | null;
+  updated_at?: Date | null;
 }
+
+/**
+ * 商品行データ型（ProductRow互換）
+ * RawProductRowの別名
+ */
+export type ProductRow = RawProductRow;
 
 /**
  * FANZAフィルタ設定
@@ -425,4 +432,74 @@ export interface ProductQueryOptions extends PaginationOptions, SortOptions {
   locale?: string;
   /** 未整理作品のみ */
   uncategorized?: boolean;
+}
+
+// ============================================================
+// getProducts用型定義
+// ============================================================
+
+/**
+ * ソートオプション
+ */
+export type ProductSortOption =
+  | 'releaseDateDesc'    // リリース日（新しい順）
+  | 'releaseDateAsc'     // リリース日（古い順）
+  | 'priceDesc'          // 価格（高い順）
+  | 'priceAsc'           // 価格（安い順）
+  | 'ratingDesc'         // 評価（高い順）
+  | 'ratingAsc'          // 評価（低い順）
+  | 'reviewCountDesc'    // レビュー数（多い順）
+  | 'durationDesc'       // 再生時間（長い順）
+  | 'durationAsc'        // 再生時間（短い順）
+  | 'titleAsc'           // タイトル（あいうえお順）
+  | 'random';            // ランダム
+
+/**
+ * getProducts関数用オプション
+ */
+export interface GetProductsOptions {
+  /** 取得件数 */
+  limit?: number;
+  /** オフセット */
+  offset?: number;
+  /** 特定のIDリストで取得（バッチ取得用） */
+  ids?: number[];
+  /** カテゴリフィルタ */
+  category?: string;
+  /** プロバイダーフィルタ（単一） */
+  provider?: string;
+  /** 複数プロバイダー/ASPでフィルタ（いずれかを含む） */
+  providers?: string[];
+  /** 除外プロバイダー/ASPでフィルタ（いずれも含まない） */
+  excludeProviders?: string[];
+  /** 女優ID */
+  actressId?: string;
+  /** フィーチャー商品のみ */
+  isFeatured?: boolean;
+  /** 新作のみ */
+  isNew?: boolean;
+  /** 検索クエリ */
+  query?: string;
+  /** ソート順 */
+  sortBy?: ProductSortOption;
+  /** 最低価格 */
+  minPrice?: number;
+  /** 最高価格 */
+  maxPrice?: number;
+  /** 対象タグIDの配列（いずれかを含む） */
+  tags?: string[];
+  /** 除外タグIDの配列（いずれも含まない） */
+  excludeTags?: string[];
+  /** サンプル動画ありのみ */
+  hasVideo?: boolean;
+  /** サンプル画像ありのみ */
+  hasImage?: boolean;
+  /** 出演形態: solo=単体出演, multi=複数出演 */
+  performerType?: 'solo' | 'multi';
+  /** セール中のみ */
+  onSale?: boolean;
+  /** 未整理作品のみ（出演者なし） */
+  uncategorized?: boolean;
+  /** ロケール（'ja' | 'en' | 'zh' | 'ko'） */
+  locale?: string;
 }

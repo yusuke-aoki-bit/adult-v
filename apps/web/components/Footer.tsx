@@ -45,6 +45,7 @@ export default function Footer() {
       getTranslation={getFooterTranslation}
       showPartnerBanners={true}
       showActressList={true}
+      showInternalLinks={true}
       PartnerBanners={PartnerBanners}
       columns={4}
     />

@@ -42,6 +42,22 @@ export const experiments: Record<string, Experiment> = {
     variants: ['control', 'animated'],
     // control: 静的表示, animated: パルスアニメーション
   },
+  // Phase 4: コンバージョン改善用実験
+  ctaPlacement: {
+    name: 'CTA Placement',
+    variants: ['default', 'above_fold', 'sticky'],
+    // default: フッター, above_fold: 画像下, sticky: 追従
+  },
+  trustBadge: {
+    name: 'Trust Badge Display',
+    variants: ['control', 'prominent'],
+    // control: バッジなし, prominent: 公式ロゴ・安全決済バッジ表示
+  },
+  urgencyLevel: {
+    name: 'Urgency Messaging Level',
+    variants: ['subtle', 'moderate', 'prominent'],
+    // subtle: 控えめ, moderate: 中程度, prominent: 強調
+  },
 };
 
 /**

@@ -7,11 +7,11 @@ import type { Product, Actress } from '@/types/product';
 
 interface SaleProductMeta {
   productId: number;
-  normalizedProductId: string;
+  normalizedProductId: string | null;
   title: string;
   thumbnailUrl: string | null;
   aspName: string;
-  affiliateUrl: string;
+  affiliateUrl: string | null;
   regularPrice: number;
   salePrice: number;
   discountPercent: number;

@@ -44,13 +44,26 @@ const createPlaceholderSvg = (width: number, height: number, text: string, bgCol
 };
 
 export const PLACEHOLDERS = {
+  // SVG data URLs (no external requests)
   PRODUCT: createPlaceholderSvg(600, 800, 'NO IMAGE'),
   ACTRESS: createPlaceholderSvg(600, 800, 'NO IMAGE'),
   ACTRESS_THUMB: createPlaceholderSvg(400, 520, 'NO IMAGE'),
-  // Legacy external URLs (for gradual migration)
+
+  // External URLs (legacy, for DB queries and server-side)
+  PRODUCT_URL: 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE',
+  ACTRESS_URL: 'https://placehold.co/400x520/1f2937/ffffff?text=NO+IMAGE',
+
+  // Crawler-specific (green background)
+  CRAWLER_URL: 'https://placehold.co/400x520/052e16/ffffff?text=No+Image',
+
+  // Legacy aliases (for gradual migration)
   PRODUCT_EXTERNAL: 'https://placehold.co/600x800/1f2937/6b7280?text=NO+IMAGE',
   ACTRESS_EXTERNAL: 'https://placehold.co/600x800/1f2937/6b7280?text=NO+IMAGE',
 } as const;
+
+// Convenience exports for DB queries
+export const ACTRESS_PLACEHOLDER = PLACEHOLDERS.ACTRESS_URL;
+export const PRODUCT_PLACEHOLDER = PLACEHOLDERS.PRODUCT_URL;
 
 // Search settings
 export const SEARCH = {

@@ -842,15 +842,12 @@ function ProductCardBase({
                 <div className={`absolute left-0 right-0 bottom-full mb-1 p-2 rounded-lg shadow-lg z-50 ${theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
                   <div className="flex flex-wrap gap-1">
                     {product.alternativeSources.map((source, idx) => {
-                      // 有効なURLかチェック（http/httpsで始まるもののみ）
-                      const isValidUrl = source.affiliateUrl && source.affiliateUrl.startsWith('http');
-                      const href = isValidUrl ? source.affiliateUrl : `/${locale}/products/${source.productId}`;
+                      // 内部リンクを使用（SEO・回遊率向上のため）
+                      const href = `/${locale}/products/${source.productId}`;
                       return (
                         <a
                           key={idx}
                           href={href}
-                          target={isValidUrl ? "_blank" : "_self"}
-                          rel={isValidUrl ? "noopener noreferrer sponsored" : undefined}
                           className={`text-[10px] px-2 py-1 rounded ${themeConfig.tagBg} ${themeConfig.tagText} hover:opacity-80 transition-opacity flex items-center gap-1`}
                         >
                           <span className="font-medium">{source.aspName}</span>

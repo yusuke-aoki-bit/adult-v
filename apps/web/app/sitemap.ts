@@ -1,7 +1,16 @@
 import { MetadataRoute } from 'next';
 import { getDb } from '@/lib/db';
 import { products, performers, tags, productTags } from '@/lib/db/schema';
-import { desc, sql, eq } from 'drizzle-orm';
+import { desc, sql, eq, isNotNull } from 'drizzle-orm';
+
+// サイトマップ設定 - インデックス対象件数
+const SITEMAP_CONFIG = {
+  products: 10000,    // 5000 → 10000に拡大
+  performers: 2000,   // 1000 → 2000に拡大
+  tags: 1000,         // 500 → 1000に拡大
+  makers: 500,        // 新規追加
+  series: 1000,       // 新規追加
+};
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
@@ -73,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const db = getDb();
 
-    // Recent products (5000 items) - SEO priority for content pages
+    // Recent products - SEO priority for content pages
     // normalizedProductIdも取得して品番ベースURLをsitemapに含める
     const recentProducts = await db
       .select({
@@ -83,7 +92,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })
       .from(products)
       .orderBy(desc(products.releaseDate))
-      .limit(5000);
+      .limit(SITEMAP_CONFIG.products);
 
   // 商品ページ - 数値IDと品番の両方をsitemapに含める（Google検索で品番がヒットする）
   // canonical URLは数値ID版（/ja/products/123）
@@ -118,7 +127,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return pages;
   });
 
-  // Top performers (1000 items) - Prioritize performers with most products
+  // Top performers - Prioritize performers with most products
   const topPerformers = await db
     .select({
       id: performers.id,
@@ -131,7 +140,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     )
     .groupBy(performers.id)
     .orderBy(desc(sql`product_count`))
-    .limit(1000);
+    .limit(SITEMAP_CONFIG.performers);
 
   // 女優ページ - canonical URLは/ja/actress/..., alternatesで各言語を指定
   // GSC data shows actress pages get most clicks - prioritize them
@@ -145,7 +154,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   }));
 
-  // Top tags/genres (500 items) - Prioritize tags with most products
+  // Top tags/genres - Prioritize tags with most products
   const topTags = await db
     .select({
       id: tags.id,
@@ -156,7 +165,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .where(eq(tags.category, 'genre'))
     .groupBy(tags.id)
     .orderBy(desc(sql`product_count`))
-    .limit(500);
+    .limit(SITEMAP_CONFIG.tags);
 
   // タグページ - canonical URLは/ja/tags/..., alternatesで各言語を指定
   const tagPages: MetadataRoute.Sitemap = topTags.map((tag) => ({
@@ -169,7 +178,55 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   }));
 
-    return [...staticPages, ...productPages, ...performerPages, ...tagPages];
+  // Top makers - メーカー別ページ（新規追加）
+  const topMakers = await db
+    .select({
+      makerId: products.makerId,
+      productCount: sql<number>`COUNT(DISTINCT ${products.id})`.as('product_count'),
+    })
+    .from(products)
+    .where(isNotNull(products.makerId))
+    .groupBy(products.makerId)
+    .orderBy(desc(sql`product_count`))
+    .limit(SITEMAP_CONFIG.makers);
+
+  const makerPages: MetadataRoute.Sitemap = topMakers
+    .filter(maker => maker.makerId)
+    .map((maker) => ({
+      url: `${BASE_URL}/ja/makers/${maker.makerId}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+      alternates: {
+        languages: getLanguageAlternates(`/makers/${maker.makerId}`),
+      },
+    }));
+
+  // Top series - シリーズページ（新規追加）
+  // seriesカテゴリのタグを取得
+  const topSeries = await db
+    .select({
+      id: tags.id,
+      productCount: sql<number>`COUNT(DISTINCT ${productTags.productId})`.as('product_count'),
+    })
+    .from(tags)
+    .leftJoin(productTags, eq(tags.id, productTags.tagId))
+    .where(eq(tags.category, 'series'))
+    .groupBy(tags.id)
+    .orderBy(desc(sql`product_count`))
+    .limit(SITEMAP_CONFIG.series);
+
+  const seriesPages: MetadataRoute.Sitemap = topSeries.map((series) => ({
+    url: `${BASE_URL}/ja/series/${series.id}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+    alternates: {
+      languages: getLanguageAlternates(`/series/${series.id}`),
+    },
+  }));
+
+    return [...staticPages, ...productPages, ...performerPages, ...tagPages, ...makerPages, ...seriesPages];
   } catch (error) {
     console.error('Error generating sitemap:', error);
     // Return static pages only on error

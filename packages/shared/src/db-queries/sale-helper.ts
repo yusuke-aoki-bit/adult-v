@@ -3,7 +3,7 @@
  * 依存性注入パターンでDBを外部から受け取る
  */
 
-import { sql as drizzleSql } from 'drizzle-orm';
+import { sql as drizzleSql, eq, and, desc, inArray, gte } from 'drizzle-orm';
 
 export interface SaleInfo {
   regularPrice: number;
@@ -14,10 +14,59 @@ export interface SaleInfo {
   endAt?: Date | null;
 }
 
+/**
+ * セール商品の型
+ */
+export interface SaleProduct {
+  productId: number;
+  normalizedProductId: string | null;
+  title: string;
+  thumbnailUrl: string | null;
+  aspName: string;
+  affiliateUrl: string | null;
+  regularPrice: number;
+  salePrice: number;
+  discountPercent: number;
+  saleName: string | null;
+  saleType: string | null;
+  endAt: Date | null;
+  performers: Array<{ id: number; name: string }>;
+}
+
+/**
+ * 既存のセール保存ヘルパー用依存性（後方互換用）
+ */
 export interface SaleHelperDeps {
   getDb: () => {
     execute: (query: ReturnType<typeof drizzleSql>) => Promise<{ rows: unknown[] }>;
   };
+}
+
+/**
+ * セールクエリ用依存性（getSaleProducts用）
+ */
+export interface SaleQueryDeps {
+  getDb: () => {
+    execute: (query: ReturnType<typeof drizzleSql>) => Promise<{ rows: unknown[] }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    select: (fields: any) => any;
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  products: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productSources: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productSales: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productPerformers: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  performers: any;
+  /** サイトモード（キャッシュキー接頭辞に使用） */
+  siteMode: 'all' | 'fanza-only';
+  /** メモリキャッシュ取得関数 */
+  getFromMemoryCache: <T>(key: string) => T | null;
+  /** メモリキャッシュ保存関数 */
+  setToMemoryCache: <T>(key: string, data: T) => void;
 }
 
 export interface SaleHelperQueries {
@@ -28,6 +77,23 @@ export interface SaleHelperQueries {
   ) => Promise<boolean>;
   deactivateSale: (aspName: string, originalProductId: string) => Promise<void>;
   deactivateExpiredSales: () => Promise<number>;
+}
+
+/**
+ * セール統計結果（ASP別統計）
+ */
+export interface SaleStatsWithAspResult {
+  totalSales: number;
+  byAsp: Array<{ aspName: string; count: number; avgDiscount: number }>;
+}
+
+export interface SaleQueryQueries {
+  getSaleProducts: (options?: {
+    limit?: number;
+    aspName?: string;
+    minDiscount?: number;
+  }) => Promise<SaleProduct[]>;
+  getSaleStats: (aspName?: string) => Promise<SaleStatsWithAspResult>;
 }
 
 /**
@@ -190,5 +256,218 @@ export function createSaleHelperQueries(deps: SaleHelperDeps): SaleHelperQueries
     saveSaleInfo,
     deactivateSale,
     deactivateExpiredSales,
+  };
+}
+
+/**
+ * セールクエリを生成（getSaleProducts用）
+ */
+export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
+  const {
+    getDb,
+    products,
+    productSources,
+    productSales,
+    productPerformers,
+    performers,
+    siteMode,
+    getFromMemoryCache,
+    setToMemoryCache,
+  } = deps;
+
+  /**
+   * セール中の商品を取得
+   */
+  async function getSaleProducts(options?: {
+    limit?: number;
+    aspName?: string;
+    minDiscount?: number;
+  }): Promise<SaleProduct[]> {
+    try {
+      const db = getDb();
+      const limit = options?.limit || 20;
+
+      // キャッシュキー生成（siteModeに応じてプレフィックスを変更）
+      const cachePrefix = siteMode === 'fanza-only' ? 'saleProducts:fanza' : 'saleProducts';
+      const cacheKey = `${cachePrefix}:${limit}:${options?.aspName || ''}:${options?.minDiscount || 0}`;
+      const cached = getFromMemoryCache<SaleProduct[]>(cacheKey);
+      if (cached) return cached;
+
+      const conditions = [
+        eq(productSales.isActive, true),
+        drizzleSql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
+      ];
+
+      if (options?.aspName) {
+        conditions.push(eq(productSources.aspName, options.aspName));
+      }
+
+      if (options?.minDiscount) {
+        conditions.push(gte(productSales.discountPercent, options.minDiscount));
+      }
+
+      const results = await db
+        .select({
+          productId: products.id,
+          normalizedProductId: products.normalizedProductId,
+          title: products.title,
+          thumbnailUrl: products.defaultThumbnailUrl,
+          aspName: productSources.aspName,
+          affiliateUrl: productSources.affiliateUrl,
+          regularPrice: productSales.regularPrice,
+          salePrice: productSales.salePrice,
+          discountPercent: productSales.discountPercent,
+          saleName: productSales.saleName,
+          saleType: productSales.saleType,
+          endAt: productSales.endAt,
+        })
+        .from(productSales)
+        .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
+        .innerJoin(products, eq(productSources.productId, products.id))
+        .where(and(...conditions))
+        .orderBy(desc(productSales.discountPercent), desc(productSales.fetchedAt))
+        .limit(limit);
+
+      // 出演者情報を取得
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const productIds = results.map((r: any) => r.productId as number);
+      const performerData = productIds.length > 0
+        ? await db
+            .select({
+              productId: productPerformers.productId,
+              performerId: performers.id,
+              performerName: performers.name,
+            })
+            .from(productPerformers)
+            .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+            .where(inArray(productPerformers.productId, productIds))
+        : [];
+
+      // 商品IDごとに出演者をグループ化
+      const performersByProduct = new Map<number, Array<{ id: number; name: string }>>();
+      for (const p of performerData) {
+        const arr = performersByProduct.get(p.productId) || [];
+        arr.push({ id: p.performerId, name: p.performerName });
+        performersByProduct.set(p.productId, arr);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const saleProducts = results.map((r: any) => ({
+        productId: r.productId,
+        normalizedProductId: r.normalizedProductId,
+        title: r.title,
+        thumbnailUrl: r.thumbnailUrl,
+        aspName: r.aspName,
+        affiliateUrl: r.affiliateUrl,
+        regularPrice: r.regularPrice,
+        salePrice: r.salePrice,
+        discountPercent: r.discountPercent || 0,
+        saleName: r.saleName,
+        saleType: r.saleType,
+        endAt: r.endAt,
+        performers: performersByProduct.get(r.productId) || [],
+      }));
+
+      // キャッシュに保存
+      setToMemoryCache(cacheKey, saleProducts);
+      return saleProducts;
+    } catch (error) {
+      console.error('Error fetching sale products:', error);
+      return [];
+    }
+  }
+
+  /**
+   * セール統計を取得
+   */
+  async function getSaleStats(aspName?: string): Promise<SaleStatsWithAspResult> {
+    try {
+      const db = getDb();
+
+      // ベース条件
+      const baseConditions = [
+        eq(productSales.isActive, true),
+        drizzleSql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
+      ];
+
+      if (aspName) {
+        // ASPフィルターがある場合はJOINして絞り込む
+        const totalResult = await db
+          .select({ count: drizzleSql<number>`count(*)` })
+          .from(productSales)
+          .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
+          .where(and(
+            ...baseConditions,
+            eq(productSources.aspName, aspName)
+          ));
+
+        const total = Number(totalResult[0]?.count || 0);
+
+        // ASP別統計（フィルタあり）
+        const byAspResult = await db
+          .select({
+            aspName: productSources.aspName,
+            count: drizzleSql<number>`count(*)`,
+            avgDiscount: drizzleSql<number>`avg(${productSales.discountPercent})`,
+          })
+          .from(productSales)
+          .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
+          .where(and(
+            ...baseConditions,
+            eq(productSources.aspName, aspName)
+          ))
+          .groupBy(productSources.aspName)
+          .orderBy(desc(drizzleSql`count(*)`));
+
+        return {
+          totalSales: total,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          byAsp: byAspResult.map((r: any) => ({
+            aspName: r.aspName,
+            count: Number(r.count),
+            avgDiscount: Math.round(Number(r.avgDiscount) || 0),
+          })),
+        };
+      }
+
+      // aspNameが指定されていない場合は全ASP対象
+      const totalResult = await db
+        .select({ count: drizzleSql<number>`count(*)` })
+        .from(productSales)
+        .where(and(...baseConditions));
+
+      const total = Number(totalResult[0]?.count || 0);
+
+      // ASP別統計
+      const byAspResult = await db
+        .select({
+          aspName: productSources.aspName,
+          count: drizzleSql<number>`count(*)`,
+          avgDiscount: drizzleSql<number>`avg(${productSales.discountPercent})`,
+        })
+        .from(productSales)
+        .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
+        .where(and(...baseConditions))
+        .groupBy(productSources.aspName)
+        .orderBy(desc(drizzleSql`count(*)`));
+
+      return {
+        totalSales: total,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        byAsp: byAspResult.map((r: any) => ({
+          aspName: r.aspName,
+          count: Number(r.count),
+          avgDiscount: Math.round(Number(r.avgDiscount) || 0),
+        })),
+      };
+    } catch (error) {
+      console.error('Error fetching sale stats:', error);
+      return { totalSales: 0, byAsp: [] };
+    }
+  }
+
+  return {
+    getSaleProducts,
+    getSaleStats,
   };
 }
