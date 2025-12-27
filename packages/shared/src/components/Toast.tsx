@@ -12,7 +12,7 @@ interface Toast {
 }
 
 interface ToastContextType {
-  showToast: (message: string, type?: ToastType) => void;
+  showToast: (message: string, type?: ToastType, duration?: number) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -28,14 +28,15 @@ export function useToast() {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string, type: ToastType = 'info') => {
+  const showToast = useCallback((message: string, type: ToastType = 'info', duration?: number) => {
     const id = Date.now().toString();
     setToasts(prev => [...prev, { id, message, type }]);
 
-    // 3秒後に自動で消える
+    // エラー時は5秒、それ以外は3秒で自動消去
+    const defaultDuration = type === 'error' ? 5000 : 3000;
     setTimeout(() => {
       setToasts(prev => prev.filter(toast => toast.id !== id));
-    }, 3000);
+    }, duration ?? defaultDuration);
   }, []);
 
   const removeToast = useCallback((id: string) => {

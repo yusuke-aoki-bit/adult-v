@@ -128,6 +128,8 @@ export function HeaderBase({
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
   const searchParams = useSearchParams();
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuRef = useRef<HTMLElement>(null);
 
   // ?hl= パラメータから現在の言語を取得
   const hlParam = searchParams.get('hl');
@@ -148,10 +150,58 @@ export function HeaderBase({
       }));
   }, [isFanzaSite]);
 
-  // Memoized callback for closing mobile menu
+  // Memoized callback for closing mobile menu with focus restoration
   const handleMobileMenuClose = useCallback(() => {
     setIsMobileMenuOpen(false);
+    // フォーカスをメニューボタンに戻す
+    menuButtonRef.current?.focus();
   }, []);
+
+  // エスケープキーでモバイルメニューを閉じる + フォーカストラップ
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const menu = mobileMenuRef.current;
+    if (!menu) return;
+
+    // メニューが開いている間、背景スクロールを防止
+    document.body.style.overflow = 'hidden';
+
+    // フォーカス可能な要素を取得
+    const focusableElements = menu.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    // 初期フォーカスを最初の要素に移動
+    firstElement?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleMobileMenuClose();
+        return;
+      }
+
+      // フォーカストラップ
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen, handleMobileMenuClose]);
 
   // スクロール時にヘッダーを自動非表示/表示
   useEffect(() => {
@@ -269,11 +319,14 @@ export function HeaderBase({
             <LanguageSwitcher />
           </nav>
 
-          {/* モバイルメニューボタン */}
+          {/* モバイルメニューボタン - 44x44pxタッチターゲット確保 */}
           <button
-            className="md:hidden p-2"
+            ref={menuButtonRef}
+            className="md:hidden p-2 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={t.menu}
+            aria-label={isMobileMenuOpen ? t.closeMenu : t.menu}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-menu"
           >
             <MenuIcon isOpen={isMobileMenuOpen} />
           </button>
@@ -281,48 +334,64 @@ export function HeaderBase({
 
         {/* モバイルメニュー（検索バー・ナビ・ASP統計を格納） */}
         {isMobileMenuOpen && (
-          <nav className="md:hidden py-3 space-y-1 border-t theme-border max-h-[calc(100dvh-100px)] overflow-y-auto">
+          <nav
+            ref={mobileMenuRef}
+            id="mobile-menu"
+            className="md:hidden py-3 space-y-1 border-t theme-border max-h-[calc(100dvh-100px)] overflow-y-auto"
+            role="navigation"
+            aria-label={t.mobileNav}
+          >
             {/* 検索バー */}
             <div className="pb-2">
               <SearchBar />
             </div>
 
-            {/* ナビゲーションリンク - コンパクトに */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 theme-nav">
+            {/* ナビゲーションリンク - 44pxタッチターゲット確保 */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-0 theme-nav" role="list">
               <Link
                 href={localizedHref('/products', locale)}
-                className="py-1.5 theme-nav-products transition-colors text-sm"
+                className="py-3 min-h-[44px] flex items-center theme-nav-products transition-colors text-sm"
                 onClick={handleMobileMenuClose}
+                role="listitem"
               >
-                {t.products}
+                <ProductsIcon />
+                <span className="ml-2">{t.products}</span>
               </Link>
               <Link
                 href={localizedHref('/', locale)}
-                className="py-1.5 theme-nav-actresses transition-colors text-sm"
+                className="py-3 min-h-[44px] flex items-center theme-nav-actresses transition-colors text-sm"
                 onClick={handleMobileMenuClose}
+                role="listitem"
               >
-                {t.actresses}
+                <ActressesIcon />
+                <span className="ml-2">{t.actresses}</span>
               </Link>
               <Link
                 href={localizedHref('/diary', locale)}
-                className="py-1.5 theme-nav-diary transition-colors text-sm"
+                className="py-3 min-h-[44px] flex items-center theme-nav-diary transition-colors text-sm"
                 onClick={handleMobileMenuClose}
+                role="listitem"
               >
-                {t.diary}
+                <DiaryIcon />
+                <span className="ml-2">{t.diary}</span>
               </Link>
               <Link
                 href={localizedHref('/profile', locale)}
-                className="py-1.5 theme-nav-profile transition-colors text-sm"
+                className="py-3 min-h-[44px] flex items-center theme-nav-profile transition-colors text-sm"
                 onClick={handleMobileMenuClose}
+                role="listitem"
               >
-                {t.profile}
+                <ProfileIcon />
+                <span className="ml-2">{t.profile}</span>
               </Link>
               <Link
                 href={localizedHref('/favorites', locale)}
-                className="py-1.5 theme-nav-favorites transition-colors text-sm"
+                className="py-3 min-h-[44px] flex items-center theme-nav-favorites transition-colors text-sm"
                 onClick={handleMobileMenuClose}
+                role="listitem"
               >
-                {t.favorites}
+                <FavoritesIcon />
+                <span className="ml-2">{t.favorites}</span>
               </Link>
             </div>
 

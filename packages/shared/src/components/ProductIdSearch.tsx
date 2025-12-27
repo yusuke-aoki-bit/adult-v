@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
@@ -13,6 +13,18 @@ export default function ProductIdSearch() {
   const locale = params.locale as string || 'ja';
   const t = useTranslations('productIdSearch');
 
+  // AbortController for request cancellation
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -21,11 +33,22 @@ export default function ProductIdSearch() {
       return;
     }
 
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController
+    abortControllerRef.current = new AbortController();
+
     setIsSearching(true);
     setError('');
 
     try {
-      const response = await fetch(`/api/products/search-by-id?productId=${encodeURIComponent(productId.trim())}`);
+      const response = await fetch(
+        `/api/products/search-by-id?productId=${encodeURIComponent(productId.trim())}`,
+        { signal: abortControllerRef.current.signal }
+      );
       const data = await response.json();
 
       if (response.ok && data.product) {
@@ -35,6 +58,10 @@ export default function ProductIdSearch() {
         setError(data.error || t('errorNotFound'));
       }
     } catch (err) {
+      // Ignore AbortError
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       setError(t('errorGeneric'));
       console.error('Product ID search error:', err);
     } finally {
@@ -48,12 +75,16 @@ export default function ProductIdSearch() {
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           type="text"
+          id="product-id-input"
           value={productId}
           onChange={(e) => {
             setProductId(e.target.value);
             setError('');
           }}
           placeholder={t('placeholder')}
+          aria-label={t('title')}
+          aria-describedby={error ? 'product-search-error' : undefined}
+          aria-invalid={error ? 'true' : 'false'}
           className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
           disabled={isSearching}
         />
@@ -66,7 +97,14 @@ export default function ProductIdSearch() {
         </button>
       </form>
       {error && (
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <p
+          id="product-search-error"
+          role="alert"
+          aria-live="polite"
+          className="mt-2 text-sm text-red-600"
+        >
+          {error}
+        </p>
       )}
       <p className="mt-2 text-xs text-gray-500">
         {t('helperText')}

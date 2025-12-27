@@ -310,7 +310,10 @@ function ProductCardBase({
               />
               {product.salePrice && (
                 <div className="absolute top-1 left-1 flex gap-1 z-10">
-                  <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                  <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                      <path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
+                    </svg>
                     SALE
                   </span>
                   {product.discount && product.discount >= 30 && (
@@ -469,7 +472,7 @@ function ProductCardBase({
           <button
             type="button"
             onClick={handleImageClick}
-            className="absolute inset-0 z-10 cursor-zoom-in focus:outline-none"
+            className="absolute inset-0 z-10 cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             aria-label={t('enlargeImage')}
           />
           <Image
@@ -489,7 +492,7 @@ function ProductCardBase({
             <button
               type="button"
               onClick={handleVideoClick}
-              className="absolute top-2 left-2 z-20 bg-black/70 hover:bg-black/90 text-white p-2 rounded-full transition-all hover:scale-110 flex items-center gap-1"
+              className="absolute top-2 left-2 z-20 bg-black/70 hover:bg-black/90 text-white p-2 rounded-full transition-all hover:scale-110 flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label={t('playSampleVideo')}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -838,8 +841,8 @@ function ProductCardBase({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </summary>
-                {/* 絶対位置でポップオーバー表示 - カード高さに影響しない */}
-                <div className={`absolute left-0 right-0 bottom-full mb-1 p-2 rounded-lg shadow-lg z-50 ${theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                {/* 絶対位置でポップオーバー表示 - カード高さに影響しない、画面外はみ出し防止 */}
+                <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1 w-max max-w-[90vw] p-2 rounded-lg shadow-lg z-50 ${theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
                   <div className="flex flex-wrap gap-1">
                     {product.alternativeSources.map((source, idx) => {
                       // 内部リンクを使用（SEO・回遊率向上のため）

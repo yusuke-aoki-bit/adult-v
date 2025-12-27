@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname, useParams } from 'next/navigation';
 import { providerMeta, type ProviderId } from '../../lib/providers';
 import { ASP_DISPLAY_ORDER, ASP_TO_PROVIDER_ID } from '../../constants/filters';
@@ -137,6 +137,18 @@ export default function FilterSortBarBase({
   const locale = (params?.locale as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const config = themeConfigs[theme];
+
+  // デバウンス用タイマー
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // クリーンアップ
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // URLパラメータから直接計算（stateを使わない）
   const sortBy = useMemo<SortOption>(() => {
@@ -276,6 +288,7 @@ export default function FilterSortBarBase({
             value={sortBy}
             onChange={(e) => handleSortChange(e.target.value as SortOption)}
             className={config.select}
+            aria-label={t.sort}
           >
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -303,7 +316,7 @@ export default function FilterSortBarBase({
                 return (
                   <label
                     key={aspName}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all text-white hover:opacity-90 ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all text-white hover:opacity-90 focus-within:ring-2 focus-within:ring-white focus-within:ring-offset-1 ${
                       isSelected ? 'ring-2 ring-white ring-offset-1 shadow-md' : ''
                     }`}
                     style={meta.gradientColors ? {
@@ -315,6 +328,7 @@ export default function FilterSortBarBase({
                       checked={isSelected}
                       onChange={() => toggleProvider(aspName)}
                       className="sr-only"
+                      aria-label={`${meta.label}${count !== undefined ? ` (${count.toLocaleString()})` : ''}`}
                     />
                     {isSelected && (
                       <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">

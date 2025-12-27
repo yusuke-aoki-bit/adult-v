@@ -1,8 +1,19 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useReducedMotion } from '../../lib/hooks/useReducedMotion';
 
 type ThemeMode = 'dark' | 'light';
+
+/** セール緊急度の閾値設定 */
+export interface UrgencyThresholds {
+  /** 超緊急表示（赤pulse）の閾値（時間） - デフォルト: 6 */
+  criticalHours?: number;
+  /** 緊急表示（オレンジpulse）の閾値（時間） - デフォルト: 24 */
+  urgentHours?: number;
+  /** 終了間近表示の閾値（日数） - デフォルト: 2 */
+  soonDays?: number;
+}
 
 export interface StickyCtaBaseProps {
   affiliateUrl: string;
@@ -15,12 +26,15 @@ export interface StickyCtaBaseProps {
   theme?: ThemeMode;
   labels: {
     buyAt: string;
+    buyAtSale?: string;
     urgentHours?: string;
     endsToday?: string;
     endsSoon?: string;
   };
   /** 信頼バッジを表示するか（A/Bテスト用） */
   showTrustBadge?: boolean;
+  /** セール緊急度の閾値設定（オプション） */
+  urgencyThresholds?: UrgencyThresholds;
 }
 
 // テーマに応じたスタイル設定
@@ -68,6 +82,13 @@ const getThemeStyles = (theme: ThemeMode, isOnSale: boolean) => {
  * デスクトップ：スクロールダウン後に表示される購入ボタン
  * セール終了が近い場合は緊急感を演出
  */
+// デフォルトの緊急度閾値
+const DEFAULT_URGENCY_THRESHOLDS: Required<UrgencyThresholds> = {
+  criticalHours: 6,
+  urgentHours: 24,
+  soonDays: 2,
+};
+
 export function StickyCtaBase({
   affiliateUrl,
   providerLabel,
@@ -79,7 +100,11 @@ export function StickyCtaBase({
   theme = 'dark',
   labels,
   showTrustBadge = false,
+  urgencyThresholds,
 }: StickyCtaBaseProps) {
+  // 閾値をマージ
+  const thresholds = { ...DEFAULT_URGENCY_THRESHOLDS, ...urgencyThresholds };
+  const prefersReducedMotion = useReducedMotion();
   const [isVisible, setIsVisible] = useState(false);
   const [isMobileVisible, setIsMobileVisible] = useState(false);
   const [urgencyText, setUrgencyText] = useState<string | null>(null);
@@ -133,13 +158,13 @@ export function StickyCtaBase({
       const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
       const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-      if (diffHours <= 6) {
+      if (diffHours <= thresholds.criticalHours) {
         setUrgencyText(labels.urgentHours?.replace('{hours}', String(diffHours)) || `残り${diffHours}時間`);
         setIsUrgent(true);
-      } else if (diffHours <= 24) {
+      } else if (diffHours <= thresholds.urgentHours) {
         setUrgencyText(labels.endsToday || '本日終了');
         setIsUrgent(true);
-      } else if (diffDays <= 2) {
+      } else if (diffDays <= thresholds.soonDays) {
         setUrgencyText(labels.endsSoon?.replace('{days}', String(diffDays)) || `残り${diffDays}日`);
         setIsUrgent(false);
       } else {
@@ -151,7 +176,7 @@ export function StickyCtaBase({
     updateUrgency();
     const interval = setInterval(updateUrgency, 60000);
     return () => clearInterval(interval);
-  }, [saleEndAt, salePrice, labels]);
+  }, [saleEndAt, salePrice, labels, thresholds.criticalHours, thresholds.urgentHours, thresholds.soonDays]);
 
   const formatPrice = (amount: number) => {
     if (currency === 'JPY') {
@@ -164,21 +189,33 @@ export function StickyCtaBase({
   const isOnSale = salePrice && price && salePrice < price;
   const styles = getThemeStyles(theme, Boolean(isOnSale));
 
+  // セール時はbuyAtSale（割引率付き）、通常時はbuyAtを使用
+  const ctaText = isOnSale && labels.buyAtSale && discount
+    ? labels.buyAtSale.replace('{discount}', String(discount))
+    : labels.buyAt;
+
   if (!affiliateUrl || !displayPrice) return null;
 
   return (
     <>
       {/* モバイル版：画面下部固定バー */}
       <div
-        className={`fixed bottom-0 left-0 right-0 md:hidden z-50 transition-transform duration-300 ${
-          isMobileVisible ? 'translate-y-0' : 'translate-y-full'
+        className={`fixed bottom-0 left-0 right-0 md:hidden z-50 ${
+          prefersReducedMotion
+            ? (isMobileVisible ? '' : 'hidden')
+            : `transition-transform duration-300 ${isMobileVisible ? 'translate-y-0' : 'translate-y-full'}`
         }`}
       >
         {/* 緊急バッジ */}
         {urgencyText && isMobileVisible && (
-          <div className={`text-center py-1.5 text-sm font-bold ${
-            isUrgent ? 'bg-red-500 text-white animate-pulse' : styles.urgentBadge
-          }`}>
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className={`text-center py-1.5 text-sm font-bold ${
+              isUrgent ? `bg-red-500 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}` : styles.urgentBadge
+            }`}
+          >
             {urgencyText}
           </div>
         )}
@@ -194,7 +231,7 @@ export function StickyCtaBase({
                       {formatPrice(salePrice)}
                     </span>
                     {discount && (
-                      <span className="text-xs font-bold text-white bg-red-500 px-1.5 py-0.5 rounded animate-bounce">
+                      <span className={`text-xs font-bold text-white bg-red-500 px-1.5 py-0.5 rounded ${prefersReducedMotion ? '' : 'animate-bounce'}`}>
                         -{discount}%
                       </span>
                     )}
@@ -215,13 +252,14 @@ export function StickyCtaBase({
               href={affiliateUrl}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`${ctaText} - ${providerLabel}`}
               className={`flex-1 max-w-xs py-3.5 px-6 text-white font-bold text-center rounded-lg shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${styles.buttonGradient}`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {labels.buyAt}
+              {ctaText}
             </a>
           </div>
         </div>
@@ -229,16 +267,23 @@ export function StickyCtaBase({
 
       {/* デスクトップ版：右側フローティングボタン */}
       <div
-        className={`fixed bottom-8 right-8 hidden md:block z-50 transition-all duration-300 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        className={`fixed bottom-8 right-8 hidden md:block z-50 ${
+          prefersReducedMotion
+            ? (isVisible ? '' : 'hidden')
+            : `transition-all duration-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`
         }`}
       >
         <div className={`rounded-2xl shadow-2xl overflow-hidden ${styles.desktopRing}`}>
           {/* 緊急バッジ */}
           {urgencyText && (
-            <div className={`text-center py-1.5 px-4 text-sm font-bold ${
-              isUrgent ? 'bg-red-500 text-white animate-pulse' : styles.urgentBadge
-            }`}>
+            <div
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              className={`text-center py-1.5 px-4 text-sm font-bold ${
+                isUrgent ? `bg-red-500 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}` : styles.urgentBadge
+              }`}
+            >
               {urgencyText}
             </div>
           )}
@@ -274,13 +319,14 @@ export function StickyCtaBase({
               href={affiliateUrl}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`${ctaText} - ${providerLabel}`}
               className={`w-full py-3 px-8 text-white font-bold text-center rounded-xl shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2 ${styles.buttonGradient}`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {labels.buyAt}
+              {ctaText}
             </a>
 
             {/* プロバイダーラベル */}

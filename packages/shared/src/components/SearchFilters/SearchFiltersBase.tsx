@@ -181,6 +181,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
               value={filters.sortBy || 'relevance'}
               onChange={(e) => handleFilterChange('sortBy', e.target.value)}
               className={`w-full rounded-lg px-3 py-2 outline-none ${theme.select} ${theme.selectFocus}`}
+              aria-label="並び替え"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -237,6 +238,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                   onChange={(e) => handleFilterChange('dateFrom', e.target.value || undefined)}
                   className={`w-full rounded-lg px-3 py-2 outline-none text-sm ${theme.dateInput} ${theme.dateInputFocus}`}
                   placeholder="開始日"
+                  aria-label="発売日（開始）"
                 />
               </div>
               <div>
@@ -246,6 +248,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                   onChange={(e) => handleFilterChange('dateTo', e.target.value || undefined)}
                   className={`w-full rounded-lg px-3 py-2 outline-none text-sm ${theme.dateInput} ${theme.dateInputFocus}`}
                   placeholder="終了日"
+                  aria-label="発売日（終了）"
                 />
               </div>
             </div>
@@ -258,9 +261,9 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                 type="checkbox"
                 checked={filters.hasVideo || false}
                 onChange={(e) => handleFilterChange('hasVideo', e.target.checked || undefined)}
-                className={`w-4 h-4 rounded ${theme.checkbox}`}
+                className={`w-4 h-4 rounded ${theme.checkbox} focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500`}
               />
-              <span>サンプル動画あり</span>
+              <span className={filters.hasVideo ? 'font-medium' : ''}>サンプル動画あり</span>
             </label>
 
             <label className={`flex items-center gap-2 text-sm ${theme.checkboxLabel} cursor-pointer`}>
@@ -268,9 +271,9 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                 type="checkbox"
                 checked={filters.hasImage || false}
                 onChange={(e) => handleFilterChange('hasImage', e.target.checked || undefined)}
-                className={`w-4 h-4 rounded ${theme.checkbox}`}
+                className={`w-4 h-4 rounded ${theme.checkbox} focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500`}
               />
-              <span>サンプル画像あり</span>
+              <span className={filters.hasImage ? 'font-medium' : ''}>サンプル画像あり</span>
             </label>
           </div>
         </div>

@@ -23,6 +23,8 @@ interface CrossAspInfoProps {
   aliases: AliasInfo[];
   aspCounts: AspCount[];
   locale: string;
+  /** FANZAサイトのベースURL（apps/fanza用） */
+  fanzaSiteUrl?: string;
 }
 
 const translations = {
@@ -98,6 +100,7 @@ export default function CrossAspInfo({
   aliases,
   aspCounts,
   locale,
+  fanzaSiteUrl,
 }: CrossAspInfoProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const t = translations[locale as TranslationKey] || translations.ja;
@@ -122,7 +125,7 @@ export default function CrossAspInfo({
       {aliases.length > 0 && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-gray-400 mb-2">{t.aliases}</h4>
-          <div className="flex flex-wrap gap-2">
+          <div id="aliases-list" className="flex flex-wrap gap-2">
             {displayAliases.map((alias) => (
               <span
                 key={alias.id}
@@ -148,15 +151,17 @@ export default function CrossAspInfo({
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="mt-2 text-sm text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+              aria-expanded={isExpanded}
+              aria-controls="aliases-list"
             >
               {isExpanded ? (
                 <>
-                  <ChevronUp className="w-4 h-4" />
+                  <ChevronUp className="w-4 h-4" aria-hidden="true" />
                   {t.showLess}
                 </>
               ) : (
                 <>
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-4 h-4" aria-hidden="true" />
                   {t.showMore} ({aliases.length - 5})
                 </>
               )}
@@ -180,11 +185,16 @@ export default function CrossAspInfo({
               const meta = providerId ? providerMeta[providerId] : null;
               const percentage = totalWorks > 0 ? (asp.count / totalWorks) * 100 : 0;
 
+              // FANZAの場合はfanzaSiteUrlを使用、それ以外は現在のサイト内リンク
+              const aspLinkHref = asp.aspName === 'FANZA' && fanzaSiteUrl
+                ? `${fanzaSiteUrl}/${locale}/products?q=${encodeURIComponent(performerName)}&includeAsp=${asp.aspName}`
+                : `/${locale}/products?q=${encodeURIComponent(performerName)}&includeAsp=${asp.aspName}`;
+
               return (
                 <div key={asp.aspName} className="group">
                   <div className="flex items-center justify-between text-sm mb-1">
                     <Link
-                      href={`/${locale}/products?q=${encodeURIComponent(performerName)}&includeAsp=${asp.aspName}`}
+                      href={aspLinkHref}
                       className="flex items-center gap-2 hover:text-cyan-400 transition-colors"
                     >
                       <span
@@ -201,7 +211,14 @@ export default function CrossAspInfo({
                       <span className="text-gray-500 text-xs ml-1">({percentage.toFixed(0)}%)</span>
                     </span>
                   </div>
-                  <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-1.5 bg-gray-700 rounded-full overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={Math.round(percentage)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${meta?.label || asp.aspName}: ${percentage.toFixed(0)}%`}
+                  >
                     <div
                       className={`h-full rounded-full transition-all ${
                         meta?.accentClass?.includes('from-')

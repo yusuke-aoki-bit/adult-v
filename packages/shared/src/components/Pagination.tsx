@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import { useState, useCallback, useMemo } from 'react';
 import { getThemeMode, getPrimaryColor } from '../lib/theme';
+import { useReducedMotion } from '../lib/hooks/useReducedMotion';
 
 // Client-side translations (outside NextIntlClientProvider)
 const translations = {
@@ -96,6 +97,7 @@ export default function Pagination({
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const totalPages = Math.ceil(total / perPage);
   const [inputPage, setInputPage] = useState('');
+  const prefersReducedMotion = useReducedMotion();
 
   const mode = getThemeMode();
   const primaryColor = getPrimaryColor();
@@ -161,6 +163,23 @@ export default function Pagination({
     return queryString ? `${basePath}?${queryString}` : basePath;
   }, [searchParams, queryParams, basePath]);
 
+  // スクロールとフォーカス移動
+  const scrollToTopAndFocus = useCallback(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    });
+
+    setTimeout(() => {
+      const mainContent = document.getElementById('main-content');
+      if (mainContent) {
+        mainContent.setAttribute('tabindex', '-1');
+        mainContent.focus();
+        mainContent.removeAttribute('tabindex');
+      }
+    }, prefersReducedMotion ? 0 : 300);
+  }, [prefersReducedMotion]);
+
   // ページ番号入力での移動
   const handlePageInputSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -168,8 +187,24 @@ export default function Pagination({
     if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= totalPages) {
       router.push(getUrl(targetPage));
       setInputPage('');
+      scrollToTopAndFocus();
     }
-  }, [inputPage, totalPages, router, getUrl]);
+  }, [inputPage, totalPages, router, getUrl, scrollToTopAndFocus]);
+
+  // 入力値の自動補正
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') {
+      setInputPage('');
+      return;
+    }
+    const num = parseInt(value, 10);
+    if (!isNaN(num)) {
+      // 範囲外なら自動補正
+      const clampedValue = Math.min(Math.max(1, num), totalPages);
+      setInputPage(String(clampedValue));
+    }
+  }, [totalPages]);
 
   // 表示件数変更
   const handlePerPageChange = useCallback((newPerPage: number) => {
@@ -179,7 +214,8 @@ export default function Pagination({
     const currentFirstItem = (page - 1) * perPage + 1;
     const newPage = Math.max(1, Math.ceil(currentFirstItem / newPerPage));
     router.push(getUrl(newPage, newPerPage));
-  }, [page, perPage, router, getUrl, onSavePerPage]);
+    scrollToTopAndFocus();
+  }, [page, perPage, router, getUrl, onSavePerPage, scrollToTopAndFocus]);
 
   const showJumpButtons = totalPages > 10;
 
@@ -222,9 +258,12 @@ export default function Pagination({
   }
 
   return (
-    <nav className={`flex flex-col items-center gap-2 sm:gap-3 ${position === 'top' ? 'mb-4 sm:mb-6' : 'mt-6 sm:mt-8'}`}>
+    <nav
+      aria-label={`${t.page} ${page} / ${totalPages}`}
+      className={`flex flex-col items-center gap-2 sm:gap-3 ${position === 'top' ? 'mb-4 sm:mb-6' : 'mt-6 sm:mt-8'}`}
+    >
       {/* メインナビゲーション */}
-      <div className="flex flex-nowrap items-center justify-center gap-1 sm:gap-2">
+      <div className="flex flex-nowrap items-center justify-center gap-1 sm:gap-2" role="group">
         {/* 最初 */}
         <Link
           href={getUrl(1)}
@@ -353,7 +392,7 @@ export default function Pagination({
               min={1}
               max={totalPages}
               value={inputPage}
-              onChange={(e) => setInputPage(e.target.value)}
+              onChange={handleInputChange}
               placeholder={t.inputPlaceholder}
               className={`w-20 px-2 py-1.5 text-center border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent ${styles.input}`}
               aria-label={t.goToPage}
