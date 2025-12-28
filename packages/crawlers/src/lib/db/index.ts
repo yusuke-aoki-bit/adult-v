@@ -43,11 +43,14 @@ function getDb() {
         ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
         max: isCrawler ? 5 : 50, // クローラーは少ない接続数で十分
         min: isCrawler ? 1 : 10, // クローラーは最小限
-        idleTimeoutMillis: isCrawler ? 300000 : 60000, // クローラー: 5分、通常: 60秒
+        idleTimeoutMillis: isCrawler ? 600000 : 60000, // クローラー: 10分、通常: 60秒
         connectionTimeoutMillis: 30000, // 接続タイムアウト（30秒に延長）
         allowExitOnIdle: false, // プロセスがアイドル時でも終了させない
         statement_timeout: isCrawler ? 120000 : 30000, // クエリタイムアウト: クローラー2分、通常30秒
         query_timeout: isCrawler ? 120000 : 30000, // クエリタイムアウト
+        // TCP keepalive設定（長時間接続維持）
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 60000, // 60秒後からkeepalive開始
       });
 
       dbStore.instance = drizzle(dbStore.pool, { schema });
