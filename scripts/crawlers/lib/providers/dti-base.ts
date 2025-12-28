@@ -383,8 +383,11 @@ export function getSampleVideoUrl(
       return `https://www.caribbeancom.com/moviepages/${productId}/sample/sample.mp4`;
     case 'カリビアンコムプレミアム':
       return `https://www.caribbeancompr.com/moviepages/${productId}/sample/sample.mp4`;
-    case 'HEYZO':
-      return `https://www.heyzo.com/moviepages/${productId}/sample/sample.mp4`;
+    case 'HEYZO': {
+      // HEYZO uses sample subdomain with padded product ID
+      const paddedId = productId.padStart(4, '0');
+      return `https://sample.heyzo.com/contents/3000/${paddedId}/heyzo_hd_${paddedId}_sample.mp4`;
+    }
     default:
       return null;
   }
