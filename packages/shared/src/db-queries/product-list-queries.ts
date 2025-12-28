@@ -511,18 +511,25 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       if (siteMode === 'all') {
         // プロバイダー + タイトルの組み合わせで重複排除カウント
         // 同じプロバイダー内の同タイトルは別商品として扱う
-        const result = await db.execute(sql`
-          SELECT COUNT(*) as count FROM (
-            SELECT DISTINCT
-              ps.asp_name,
-              LOWER(REGEXP_REPLACE(REGEXP_REPLACE(p.title, '[\s　]+', '', 'g'), '[！!？?「」『』【】（）()＆&～~・:：,，。.、]', '', 'g')) as normalized_title
-            FROM products p
-            INNER JOIN product_sources ps ON p.id = ps.product_id
-            ${whereClause ? sql`WHERE ${whereClause}` : sql``}
-          ) as unique_products
-        `);
+        // サブクエリでDISTINCTを取得し、そのカウントを返す
+        const normalizedTitleExpr = sql<string>`LOWER(REGEXP_REPLACE(REGEXP_REPLACE(${products.title}, '[\s　]+', '', 'g'), '[！!？?「」『』【】（）()＆&～~・:：,，。.、]', '', 'g'))`;
 
-        return Number((result.rows[0] as Record<string, unknown>)?.count || 0);
+        // Drizzle ORMでサブクエリを構築
+        const subquery = db
+          .selectDistinct({
+            aspName: productSources.aspName,
+            normalizedTitle: normalizedTitleExpr,
+          })
+          .from(products)
+          .innerJoin(productSources, eq(products.id, productSources.productId))
+          .where(whereClause)
+          .as('unique_products');
+
+        const result = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(subquery);
+
+        return Number(result[0]?.count || 0);
       } else {
         // 単純カウント
         const result = await db
