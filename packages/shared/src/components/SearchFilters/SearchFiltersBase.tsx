@@ -40,6 +40,7 @@ export interface SearchFiltersBaseProps {
   initialFilters?: SearchFilterOptions;
   theme: SearchFiltersTheme;
   isFanzaSite?: boolean;
+  locale?: 'ja' | 'en' | 'zh' | 'ko';
 }
 
 export const PROVIDERS = [
@@ -103,9 +104,11 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
   initialFilters = {},
   theme,
   isFanzaSite = false,
+  locale = 'ja',
 }: SearchFiltersBaseProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [filters, setFilters] = useState<SearchFilterOptions>(initialFilters);
+  const t = searchFiltersTranslations[locale] || searchFiltersTranslations.ja;
 
   const handleFilterChange = useCallback((key: keyof SearchFilterOptions, value: SearchFilterOptions[keyof SearchFilterOptions]) => {
     setFilters(prev => {
@@ -150,7 +153,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
         >
           <Filter className="h-5 w-5" />
           <span className="font-medium">
-            フィルター
+            {t.filter}
             {activeFilterCount > 0 && (
               <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${theme.badge}`}>
                 {activeFilterCount}
@@ -165,7 +168,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
             className={`text-sm ${theme.clearButton} ${theme.clearButtonHover} flex items-center gap-1`}
           >
             <X className="h-4 w-4" />
-            クリア
+            {t.clear}
           </button>
         )}
       </div>
@@ -175,13 +178,13 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
           {/* Sort By */}
           <div>
             <label className={`block text-sm font-medium ${theme.label} mb-2`}>
-              並び替え
+              {t.sortBy}
             </label>
             <select
               value={filters.sortBy || 'relevance'}
               onChange={(e) => handleFilterChange('sortBy', e.target.value)}
               className={`w-full rounded-lg px-3 py-2 outline-none ${theme.select} ${theme.selectFocus}`}
-              aria-label="並び替え"
+              aria-label={t.sortBy}
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -195,7 +198,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
           {!isFanzaSite && (
             <div>
               <label className={`block text-sm font-medium ${theme.label} mb-2`}>
-                配信元
+                {t.providers}
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {PROVIDERS.map((provider) => {
@@ -228,7 +231,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
           <div>
             <label className={`block text-sm font-medium ${theme.label} mb-2 flex items-center gap-2`}>
               <Calendar className="h-4 w-4" />
-              発売日
+              {t.releaseDate}
             </label>
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -237,8 +240,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                   value={filters.dateFrom || ''}
                   onChange={(e) => handleFilterChange('dateFrom', e.target.value || undefined)}
                   className={`w-full rounded-lg px-3 py-2 outline-none text-sm ${theme.dateInput} ${theme.dateInputFocus}`}
-                  placeholder="開始日"
-                  aria-label="発売日（開始）"
+                  aria-label={`${t.releaseDate} (from)`}
                 />
               </div>
               <div>
@@ -247,8 +249,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                   value={filters.dateTo || ''}
                   onChange={(e) => handleFilterChange('dateTo', e.target.value || undefined)}
                   className={`w-full rounded-lg px-3 py-2 outline-none text-sm ${theme.dateInput} ${theme.dateInputFocus}`}
-                  placeholder="終了日"
-                  aria-label="発売日（終了）"
+                  aria-label={`${t.releaseDate} (to)`}
                 />
               </div>
             </div>
@@ -263,7 +264,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                 onChange={(e) => handleFilterChange('hasVideo', e.target.checked || undefined)}
                 className={`w-4 h-4 rounded ${theme.checkbox} focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500`}
               />
-              <span className={filters.hasVideo ? 'font-medium' : ''}>サンプル動画あり</span>
+              <span className={filters.hasVideo ? 'font-medium' : ''}>{t.hasVideo}</span>
             </label>
 
             <label className={`flex items-center gap-2 text-sm ${theme.checkboxLabel} cursor-pointer`}>
@@ -273,7 +274,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                 onChange={(e) => handleFilterChange('hasImage', e.target.checked || undefined)}
                 className={`w-4 h-4 rounded ${theme.checkbox} focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500`}
               />
-              <span className={filters.hasImage ? 'font-medium' : ''}>サンプル画像あり</span>
+              <span className={filters.hasImage ? 'font-medium' : ''}>{t.hasImage}</span>
             </label>
           </div>
         </div>

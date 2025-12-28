@@ -117,8 +117,14 @@ export function detectRedirect(
 /**
  * Puppeteerでページ遷移時のリダイレクト検出
  */
+// Puppeteer Page型のインターフェース（実際の依存を避けるため最小限定義）
+interface PuppeteerPage {
+  goto(url: string, options?: { waitUntil?: string; timeout?: number }): Promise<unknown>;
+  url(): string;
+}
+
 export async function navigateWithRedirectCheck(
-  page: any,
+  page: PuppeteerPage,
   url: string,
   options: { waitUntil?: string; timeout?: number } = {}
 ): Promise<{ success: boolean; finalUrl: string; wasRedirected: boolean; redirectType?: string }> {

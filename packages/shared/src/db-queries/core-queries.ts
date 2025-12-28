@@ -4,6 +4,17 @@
  * 依存性注入パターンでDBとスキーマを外部から受け取る
  */
 import { eq, and, sql, inArray, desc, asc, SQL, or, ilike } from 'drizzle-orm';
+
+/**
+ * LIKE/ILIKE用のワイルドカード文字をエスケープ
+ * SQLインジェクション防止のためユーザー入力をサニタイズ
+ */
+function escapeLikePattern(input: string): string {
+  return input
+    .replace(/\\/g, '\\\\')  // バックスラッシュをエスケープ
+    .replace(/%/g, '\\%')    // %をエスケープ
+    .replace(/_/g, '\\_');   // _をエスケープ
+}
 import type { SourceData as MapperSourceData } from './mappers';
 import { selectProductSources, groupSourcesByProduct } from '../lib/source-selection';
 import { buildAspNormalizationSql } from '../lib/asp-utils';
@@ -512,6 +523,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     limit: number = 20
   ): Promise<number[]> {
     const db = getDb();
+    const escapedTerm = escapeLikePattern(searchTerm);
 
     if (table === 'products') {
       const result = await db
@@ -519,9 +531,9 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         .from(products)
         .where(
           or(
-            ilike(products.title, `%${searchTerm}%`),
-            ilike(products.normalizedProductId, `%${searchTerm}%`),
-            ilike(products.description, `%${searchTerm}%`)
+            ilike(products.title, `%${escapedTerm}%`),
+            ilike(products.normalizedProductId, `%${escapedTerm}%`),
+            ilike(products.description, `%${escapedTerm}%`)
           )
         )
         .limit(limit);
@@ -533,8 +545,8 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       .from(performers)
       .where(
         or(
-          ilike(performers.name, `%${searchTerm}%`),
-          ilike(performers.nameKana, `%${searchTerm}%`)
+          ilike(performers.name, `%${escapedTerm}%`),
+          ilike(performers.nameKana, `%${escapedTerm}%`)
         )
       )
       .limit(limit);

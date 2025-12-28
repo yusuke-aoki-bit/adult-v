@@ -111,8 +111,8 @@ function ActressCardBaseComponent({
     }
   };
 
-  // Image click handler for lightbox
-  const handleImageClick = useCallback(async (e: React.MouseEvent) => {
+  // Image click/keydown handler for lightbox
+  const handleImageClick = useCallback(async (e: React.MouseEvent | React.KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -189,7 +189,7 @@ function ActressCardBaseComponent({
             onClick={fetchProductImages ? handleImageClick : undefined}
             onKeyDown={(e) => {
               if (fetchProductImages && (e.key === 'Enter' || e.key === ' ')) {
-                handleImageClick(e as unknown as React.MouseEvent);
+                handleImageClick(e);
               }
             }}
             className={`relative w-full block ${fetchProductImages ? 'cursor-pointer' : ''} group`}

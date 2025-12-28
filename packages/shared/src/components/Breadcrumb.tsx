@@ -30,28 +30,36 @@ const themeConfig = {
   },
 };
 
+// BreadcrumbList JSON-LD用の型定義
+interface BreadcrumbListItem {
+  '@type': 'ListItem';
+  position: number;
+  name: string;
+  item?: string;
+}
+
 /**
  * BreadcrumbList JSON-LDスキーマを生成
  * @see https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
  */
 export function generateBreadcrumbSchema(items: BreadcrumbItem[], baseUrl?: string) {
-  const itemListElement = items
+  const itemListElement: BreadcrumbListItem[] = items
     .filter((item) => item.href)
     .map((item, index) => ({
-      '@type': 'ListItem',
+      '@type': 'ListItem' as const,
       position: index + 1,
       name: item.label,
       item: baseUrl && item.href ? `${baseUrl}${item.href}` : item.href,
     }));
 
-  // 最後のアイテム（現在のページ）も追加
+  // 最後のアイテム（現在のページ）も追加（itemは省略可能）
   const lastItem = items[items.length - 1];
   if (lastItem && !lastItem.href) {
     itemListElement.push({
       '@type': 'ListItem',
       position: items.length,
       name: lastItem.label,
-      item: undefined as unknown as string, // 現在のページはitem省略可能
+      // 現在のページはitem省略（schema.orgの仕様で許容される）
     });
   }
 

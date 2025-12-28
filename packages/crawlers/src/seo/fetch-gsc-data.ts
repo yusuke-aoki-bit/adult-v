@@ -162,28 +162,31 @@ async function main() {
   // 3. DBに保存
   console.log('💾 DBに保存中...');
 
-  // クエリデータを保存
-  for (const row of queryRows) {
-    const query = row.keys[0];
+  // クエリデータをバッチ保存（N+1解消）
+  const BATCH_SIZE = 100;
+  const queryValues = queryRows.map(row => ({
+    queryType: 'query' as const,
+    queryOrUrl: row.keys[0],
+    clicks: row.clicks,
+    impressions: row.impressions,
+    ctr: String(row.ctr),
+    position: String(row.position),
+    dateStart: dateStartStr,
+    dateEnd: dateEndStr,
+  }));
+
+  for (let i = 0; i < queryValues.length; i += BATCH_SIZE) {
+    const batch = queryValues.slice(i, i + BATCH_SIZE);
     await db
       .insert(seoMetrics)
-      .values({
-        queryType: 'query',
-        queryOrUrl: query,
-        clicks: row.clicks,
-        impressions: row.impressions,
-        ctr: String(row.ctr),
-        position: String(row.position),
-        dateStart: dateStartStr,
-        dateEnd: dateEndStr,
-      })
+      .values(batch)
       .onConflictDoUpdate({
         target: [seoMetrics.queryType, seoMetrics.queryOrUrl, seoMetrics.dateStart, seoMetrics.dateEnd],
         set: {
-          clicks: row.clicks,
-          impressions: row.impressions,
-          ctr: String(row.ctr),
-          position: String(row.position),
+          clicks: sql`excluded.clicks`,
+          impressions: sql`excluded.impressions`,
+          ctr: sql`excluded.ctr`,
+          position: sql`excluded.position`,
           fetchedAt: new Date(),
         },
       });
@@ -193,8 +196,8 @@ async function main() {
   const existingPerformers = await db.select({ id: performers.id }).from(performers);
   const existingPerformerIds = new Set(existingPerformers.map(p => p.id));
 
-  // ページデータを保存（女優ページのみperformerIdを関連付け）
-  for (const row of pageRows) {
+  // ページデータをバッチ保存（N+1解消）
+  const pageValues = pageRows.map(row => {
     const url = row.keys[0];
     let performerId: number | null = null;
 
@@ -208,27 +211,32 @@ async function main() {
       }
     }
 
+    return {
+      queryType: 'page' as const,
+      queryOrUrl: url,
+      performerId,
+      clicks: row.clicks,
+      impressions: row.impressions,
+      ctr: String(row.ctr),
+      position: String(row.position),
+      dateStart: dateStartStr,
+      dateEnd: dateEndStr,
+    };
+  });
+
+  for (let i = 0; i < pageValues.length; i += BATCH_SIZE) {
+    const batch = pageValues.slice(i, i + BATCH_SIZE);
     await db
       .insert(seoMetrics)
-      .values({
-        queryType: 'page',
-        queryOrUrl: url,
-        performerId,
-        clicks: row.clicks,
-        impressions: row.impressions,
-        ctr: String(row.ctr),
-        position: String(row.position),
-        dateStart: dateStartStr,
-        dateEnd: dateEndStr,
-      })
+      .values(batch)
       .onConflictDoUpdate({
         target: [seoMetrics.queryType, seoMetrics.queryOrUrl, seoMetrics.dateStart, seoMetrics.dateEnd],
         set: {
-          clicks: row.clicks,
-          impressions: row.impressions,
-          ctr: String(row.ctr),
-          position: String(row.position),
-          performerId,
+          clicks: sql`excluded.clicks`,
+          impressions: sql`excluded.impressions`,
+          ctr: sql`excluded.ctr`,
+          position: sql`excluded.position`,
+          performerId: sql`excluded.performer_id`,
           fetchedAt: new Date(),
         },
       });

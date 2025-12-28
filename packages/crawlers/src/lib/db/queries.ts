@@ -2998,6 +2998,7 @@ export async function getProductsByCategory(
           {
             id: baseProduct.id,
             normalizedProductId: baseProduct.normalized_product_id,
+            makerProductCode: baseProduct.maker_product_code || null,
             title: baseProduct.title,
             releaseDate: baseProduct.release_date,
             description: baseProduct.description,

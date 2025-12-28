@@ -6,6 +6,17 @@
 
 import { sql, ilike, eq, or } from 'drizzle-orm';
 
+/**
+ * LIKE/ILIKE用のワイルドカード文字をエスケープ
+ * SQLインジェクション防止のためユーザー入力をサニタイズ
+ */
+function escapeLikePattern(input: string): string {
+  return input
+    .replace(/\\/g, '\\\\')  // バックスラッシュをエスケープ
+    .replace(/%/g, '\\%')    // %をエスケープ
+    .replace(/_/g, '\\_');   // _をエスケープ
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyColumn = any;
 
@@ -130,14 +141,15 @@ export function createWikiPerformerSearchQueries(
   async function searchPerformerByName(
     name: string
   ): Promise<WikiPerformerSearchResult[]> {
+    const escapedName = escapeLikePattern(name);
     const results = await db
       .select()
       .from(wikiPerformerIndex)
       .where(
         or(
-          ilike(wikiPerformerIndex.performerName, `%${name}%`),
-          ilike(wikiPerformerIndex.performerNameRomaji, `%${name}%`),
-          sql`${wikiPerformerIndex.performerNameVariants}::text ILIKE ${'%' + name + '%'}`
+          ilike(wikiPerformerIndex.performerName, `%${escapedName}%`),
+          ilike(wikiPerformerIndex.performerNameRomaji, `%${escapedName}%`),
+          sql`${wikiPerformerIndex.performerNameVariants}::text ILIKE ${'%' + escapedName + '%'}`
         )
       )
       .limit(20);

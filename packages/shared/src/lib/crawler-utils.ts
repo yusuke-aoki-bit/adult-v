@@ -114,11 +114,17 @@ export function detectRedirect(
   return { isRedirected: false };
 }
 
+// Puppeteer Page型のインターフェース（実際の依存を避けるため最小限定義）
+interface PuppeteerPage {
+  goto(url: string, options?: { waitUntil?: string; timeout?: number }): Promise<unknown>;
+  url(): string;
+}
+
 /**
  * Puppeteerでページ遷移時のリダイレクト検出
  */
 export async function navigateWithRedirectCheck(
-  page: any,
+  page: PuppeteerPage,
   url: string,
   options: { waitUntil?: string; timeout?: number } = {}
 ): Promise<{ success: boolean; finalUrl: string; wasRedirected: boolean; redirectType?: string }> {

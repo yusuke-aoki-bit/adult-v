@@ -37,8 +37,19 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
   const performerIds = performerData.map((pp) => pp.performerId);
   const tagIds = tagData.map((pt) => pt.tagId);
 
+  // 関連商品の型定義（releaseDateはDBからstringで返される）
+  interface RelatedProduct {
+    id: number;
+    title: string;
+    normalizedProductId: string;
+    releaseDate: string | null;
+    imageUrl: string | null;
+    matchScore?: number;
+    matchType: 'performer' | 'tag' | 'recent';
+  }
+
   // Strategy 1: Same performers (highest priority)
-  let relatedProducts: any[] = [];
+  let relatedProducts: RelatedProduct[] = [];
 
   if (performerIds.length > 0) {
     const samePerformerProducts = await db
@@ -62,7 +73,7 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
       .orderBy(desc(sql`match_score`), desc(products.releaseDate))
       .limit(limit);
 
-    relatedProducts = samePerformerProducts.map((p: any) => ({
+    relatedProducts = samePerformerProducts.map((p) => ({
       ...p,
       matchType: 'performer' as const,
     }));
@@ -95,7 +106,7 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
       .limit(limit - relatedProducts.length);
 
     relatedProducts.push(
-      ...sameTagProducts.map((p: any) => ({
+      ...sameTagProducts.map((p) => ({
         ...p,
         matchType: 'tag' as const,
       }))
@@ -253,7 +264,18 @@ export async function getRecommendationsFromFavorites(
   const performerIds = favoritePerformers.map((fp) => fp.performerId);
   const tagIds = favoriteTags.map((ft) => ft.tagId);
 
-  let recommendations: any[] = [];
+  // レコメンド商品の型定義（releaseDateはDBからstringで返される）
+  interface RecommendedProduct {
+    id: number;
+    title: string;
+    normalizedProductId: string;
+    releaseDate: string | null;
+    imageUrl: string | null;
+    matchScore?: number;
+    matchType: 'favorite_performer' | 'favorite_tag';
+  }
+
+  let recommendations: RecommendedProduct[] = [];
 
   // Strategy 1: Products with favorite performers
   if (performerIds.length > 0) {
@@ -278,7 +300,7 @@ export async function getRecommendationsFromFavorites(
       .orderBy(desc(sql`match_score`), desc(products.releaseDate))
       .limit(limit);
 
-    recommendations = performerMatches.map((p: any) => ({
+    recommendations = performerMatches.map((p) => ({
       ...p,
       matchType: 'favorite_performer' as const,
     }));
@@ -311,7 +333,7 @@ export async function getRecommendationsFromFavorites(
       .limit(limit - recommendations.length);
 
     recommendations.push(
-      ...tagMatches.map((p: any) => ({
+      ...tagMatches.map((p) => ({
         ...p,
         matchType: 'favorite_tag' as const,
       }))

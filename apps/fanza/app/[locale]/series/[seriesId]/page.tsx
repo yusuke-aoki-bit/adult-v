@@ -148,13 +148,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       locale
     ),
     alternates: {
-      canonical: `${baseUrl}/series/${seriesId}?hl=${locale}`,
+      canonical: `${baseUrl}/series/${seriesId}`,
       languages: {
-        'ja': `${baseUrl}/series/${seriesId}?hl=ja`,
+        'ja': `${baseUrl}/series/${seriesId}`,
         'en': `${baseUrl}/series/${seriesId}?hl=en`,
         'zh': `${baseUrl}/series/${seriesId}?hl=zh`,
         'ko': `${baseUrl}/series/${seriesId}?hl=ko`,
-        'x-default': `${baseUrl}/series/${seriesId}?hl=ja`,
+        'x-default': `${baseUrl}/series/${seriesId}`,
       },
     },
   };
