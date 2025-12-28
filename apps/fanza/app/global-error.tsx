@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { defaultLocale } from '@/i18n';
 
 const translations = {
@@ -54,9 +55,10 @@ export default function GlobalError({
     : defaultLocale;
   const t = translations[locale] || translations[defaultLocale as keyof typeof translations] || translations.en;
 
-  // エラーをコンソールに記録
+  // エラーをSentryとコンソールに記録
   useEffect(() => {
     console.error('Global error:', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

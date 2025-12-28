@@ -304,15 +304,18 @@ async function main() {
   // まず既存データをクリア
   await db.delete(footerFeaturedActresses);
 
-  // 新データを挿入
-  for (const actress of matchedActresses.slice(0, 20)) {
-    await db.insert(footerFeaturedActresses).values({
-      performerId: actress.performerId,
-      performerName: actress.performerName,
-      impressions: actress.impressions,
-      position: String(actress.position),
-      priorityScore: actress.priorityScore,
-    });
+  // 新データをバッチ挿入（N+1クエリ回避）
+  const top20 = matchedActresses.slice(0, 20);
+  if (top20.length > 0) {
+    await db.insert(footerFeaturedActresses).values(
+      top20.map(actress => ({
+        performerId: actress.performerId,
+        performerName: actress.performerName,
+        impressions: actress.impressions,
+        position: String(actress.position),
+        priorityScore: actress.priorityScore,
+      }))
+    );
   }
 
   console.log(`✅ フッター女優リスト更新完了: ${Math.min(matchedActresses.length, 20)}名`);
