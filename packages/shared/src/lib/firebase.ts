@@ -2,6 +2,11 @@
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import {
+  initializeAppCheck,
+  ReCaptchaV3Provider,
+  type AppCheck,
+} from 'firebase/app-check';
+import {
   getAuth,
   signInAnonymously,
   onAuthStateChanged,
@@ -55,6 +60,7 @@ const firebaseConfig = {
 
 // Singleton instances
 let app: FirebaseApp | null = null;
+let appCheck: AppCheck | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 let analytics: Analytics | null = null;
@@ -88,12 +94,48 @@ export function getFirebaseApp(): FirebaseApp | null {
   return app;
 }
 
+// Initialize Firebase App Check
+export function getFirebaseAppCheck(): AppCheck | null {
+  if (typeof window === 'undefined') return null;
+
+  const firebaseApp = getFirebaseApp();
+  if (!firebaseApp) return null;
+
+  if (!appCheck) {
+    const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+    if (!siteKey) {
+      console.warn('reCAPTCHA site key not configured. App Check disabled.');
+      return null;
+    }
+
+    try {
+      // Enable debug token in development
+      if (process.env.NODE_ENV === 'development') {
+        // @ts-expect-error - Debug token for development
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      }
+
+      appCheck = initializeAppCheck(firebaseApp, {
+        provider: new ReCaptchaV3Provider(siteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+    } catch (error) {
+      console.error('Failed to initialize App Check:', error);
+      return null;
+    }
+  }
+  return appCheck;
+}
+
 // Initialize Firebase Auth
 export function getFirebaseAuth(): Auth | null {
   if (typeof window === 'undefined') return null;
 
   const firebaseApp = getFirebaseApp();
   if (!firebaseApp) return null;
+
+  // Initialize App Check before other services
+  getFirebaseAppCheck();
 
   if (!auth) {
     auth = getAuth(firebaseApp);
@@ -107,6 +149,9 @@ export function getFirebaseFirestore(): Firestore | null {
 
   const firebaseApp = getFirebaseApp();
   if (!firebaseApp) return null;
+
+  // Initialize App Check before other services
+  getFirebaseAppCheck();
 
   if (!db) {
     db = getFirestore(firebaseApp);
