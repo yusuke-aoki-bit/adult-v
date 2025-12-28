@@ -292,7 +292,7 @@ export default function Pagination({
         {/* 前へ */}
         <Link
           href={getUrl(page - 1)}
-          className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[44px] sm:min-w-[60px] text-center ${
+          className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[48px] min-h-[48px] sm:min-w-[60px] flex items-center justify-center ${
             page === 1 ? styles.buttonDisabled : styles.button
           }`}
           aria-disabled={page === 1}
@@ -319,7 +319,7 @@ export default function Pagination({
                 <Link
                   key={pageNum}
                   href={getUrl(pageNum as number)}
-                  className={`${showOnMobile ? '' : 'hidden sm:block'} px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors ${
+                  className={`${showOnMobile ? '' : 'hidden sm:flex'} px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center ${
                     isCurrent ? styles.buttonActive : styles.button
                   }`}
                   aria-current={isCurrent ? 'page' : undefined}
@@ -334,7 +334,7 @@ export default function Pagination({
         {/* 次へ */}
         <Link
           href={getUrl(page + 1)}
-          className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[44px] sm:min-w-[60px] text-center ${
+          className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors min-w-[48px] min-h-[48px] sm:min-w-[60px] flex items-center justify-center ${
             page >= totalPages ? styles.buttonDisabled : styles.button
           }`}
           aria-disabled={page >= totalPages}

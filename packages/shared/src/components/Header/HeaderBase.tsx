@@ -340,10 +340,10 @@ export function HeaderBase({
             <LanguageSwitcher />
           </nav>
 
-          {/* モバイルメニューボタン - 44x44pxタッチターゲット確保 */}
+          {/* モバイルメニューボタン - 48x48pxタッチターゲット確保 */}
           <button
             ref={menuButtonRef}
-            className="md:hidden p-2 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2"
+            className="md:hidden p-2 min-w-[48px] min-h-[48px] flex items-center justify-center -mr-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? t.closeMenu : t.menu}
             aria-expanded={isMobileMenuOpen}
@@ -367,11 +367,11 @@ export function HeaderBase({
               <SearchBar />
             </div>
 
-            {/* ナビゲーションリンク - 44pxタッチターゲット確保 */}
+            {/* ナビゲーションリンク - 48pxタッチターゲット確保 */}
             <div className="grid grid-cols-2 gap-x-4 gap-y-0 theme-nav" role="list">
               <Link
                 href={localizedHref('/products', locale)}
-                className="py-3 min-h-[44px] flex items-center theme-nav-products transition-colors text-sm"
+                className="py-3 min-h-[48px] flex items-center theme-nav-products transition-colors text-sm"
                 onClick={handleMobileMenuClose}
                 role="listitem"
               >
@@ -380,7 +380,7 @@ export function HeaderBase({
               </Link>
               <Link
                 href={localizedHref('/', locale)}
-                className="py-3 min-h-[44px] flex items-center theme-nav-actresses transition-colors text-sm"
+                className="py-3 min-h-[48px] flex items-center theme-nav-actresses transition-colors text-sm"
                 onClick={handleMobileMenuClose}
                 role="listitem"
               >
@@ -389,7 +389,7 @@ export function HeaderBase({
               </Link>
               <Link
                 href={localizedHref('/diary', locale)}
-                className="py-3 min-h-[44px] flex items-center theme-nav-diary transition-colors text-sm"
+                className="py-3 min-h-[48px] flex items-center theme-nav-diary transition-colors text-sm"
                 onClick={handleMobileMenuClose}
                 role="listitem"
               >
@@ -398,7 +398,7 @@ export function HeaderBase({
               </Link>
               <Link
                 href={localizedHref('/profile', locale)}
-                className="py-3 min-h-[44px] flex items-center theme-nav-profile transition-colors text-sm"
+                className="py-3 min-h-[48px] flex items-center theme-nav-profile transition-colors text-sm"
                 onClick={handleMobileMenuClose}
                 role="listitem"
               >
@@ -407,7 +407,7 @@ export function HeaderBase({
               </Link>
               <Link
                 href={localizedHref('/favorites', locale)}
-                className="py-3 min-h-[44px] flex items-center theme-nav-favorites transition-colors text-sm"
+                className="py-3 min-h-[48px] flex items-center theme-nav-favorites transition-colors text-sm"
                 onClick={handleMobileMenuClose}
                 role="listitem"
               >

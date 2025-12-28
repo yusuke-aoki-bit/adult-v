@@ -18,26 +18,28 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Revalidate every hour
 
-// hreflang用の言語バリエーションを生成（ロケールプレフィックス方式）
-// 例: /products/123 → { ja: /ja/products/123, en: /en/products/123, ... }
+// hreflang用の言語バリエーションを生成（?hl=パラメータ方式）
+// middlewareが/ja/, /en/などのプレフィックスを?hl=形式に301リダイレクトするため統一
+// 例: /products/123 → { ja: /products/123, en: /products/123?hl=en, ... }
 function getLanguageAlternates(basePath: string) {
-  // basePath が空の場合（ルートページ）は空文字列として扱う
+  // basePath が空の場合（ルートページ）は / として扱う
   const path = basePath === '/' ? '' : basePath;
   return {
-    ja: `${BASE_URL}/ja${path}`,
-    en: `${BASE_URL}/en${path}`,
-    zh: `${BASE_URL}/zh${path}`,
-    ko: `${BASE_URL}/ko${path}`,
+    ja: `${BASE_URL}${path || '/'}`,
+    en: `${BASE_URL}${path || '/'}?hl=en`,
+    zh: `${BASE_URL}${path || '/'}?hl=zh`,
+    'zh-TW': `${BASE_URL}${path || '/'}?hl=zh-TW`,
+    ko: `${BASE_URL}${path || '/'}?hl=ko`,
   };
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages with high priority and daily updates
-  // canonical URLは日本語版（/ja/...）、alternatesで各言語を指定
+  // canonical URLはパラメータなし（日本語デフォルト）、alternatesで各言語を指定
   const staticPages: MetadataRoute.Sitemap = [
-    // Home page - canonical URL is /ja (Japanese default)
+    // Home page - canonical URL is / (Japanese default)
     {
-      url: `${BASE_URL}/ja`,
+      url: `${BASE_URL}/`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1.0,
@@ -47,7 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     // Products pages
     {
-      url: `${BASE_URL}/ja/products`,
+      url: `${BASE_URL}/products`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.9,
@@ -57,7 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     // Categories pages
     {
-      url: `${BASE_URL}/ja/categories`,
+      url: `${BASE_URL}/categories`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.9,
@@ -67,14 +69,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     // Privacy policy page (Japanese only)
     {
-      url: `${BASE_URL}/ja/privacy`,
+      url: `${BASE_URL}/privacy`,
       lastModified: new Date('2024-12-09'),
       changeFrequency: 'yearly' as const,
       priority: 0.3,
     },
     // Terms of service page (Japanese only)
     {
-      url: `${BASE_URL}/ja/terms`,
+      url: `${BASE_URL}/terms`,
       lastModified: new Date('2024-12-09'),
       changeFrequency: 'yearly' as const,
       priority: 0.3,
@@ -105,7 +107,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const productPages: MetadataRoute.Sitemap = recentProducts.flatMap((product) => {
       const pages: MetadataRoute.Sitemap = [
         {
-          url: `${BASE_URL}/ja/products/${product.id}`,
+          url: `${BASE_URL}/products/${product.id}`,
           lastModified: product.updatedAt || new Date(),
           changeFrequency: 'weekly' as const,
           priority: 0.7,
@@ -117,7 +119,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       if (product.normalizedProductId && product.normalizedProductId !== String(product.id)) {
         pages.push({
-          url: `${BASE_URL}/ja/products/${product.normalizedProductId}`,
+          url: `${BASE_URL}/products/${product.normalizedProductId}`,
           lastModified: product.updatedAt || new Date(),
           changeFrequency: 'weekly' as const,
           priority: 0.6,
@@ -147,7 +149,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // 女優ページ - GSC data shows actress pages get most clicks
     const performerPages: MetadataRoute.Sitemap = topPerformers.map((performer) => ({
-      url: `${BASE_URL}/ja/actress/${performer.id}`,
+      url: `${BASE_URL}/actress/${performer.id}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
@@ -170,7 +172,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .limit(SITEMAP_CONFIG.tags);
 
     const tagPages: MetadataRoute.Sitemap = topTags.map((tag) => ({
-      url: `${BASE_URL}/ja/tags/${tag.id}`,
+      url: `${BASE_URL}/tags/${tag.id}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.6,
@@ -194,7 +196,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const makerPages: MetadataRoute.Sitemap = topMakers
       .filter(maker => maker.makerId)
       .map((maker) => ({
-        url: `${BASE_URL}/ja/makers/${maker.makerId}`,
+        url: `${BASE_URL}/makers/${maker.makerId}`,
         lastModified: new Date(),
         changeFrequency: 'weekly' as const,
         priority: 0.6,
@@ -217,7 +219,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .limit(SITEMAP_CONFIG.series);
 
     const seriesPages: MetadataRoute.Sitemap = topSeries.map((series) => ({
-      url: `${BASE_URL}/ja/series/${series.id}`,
+      url: `${BASE_URL}/series/${series.id}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.6,

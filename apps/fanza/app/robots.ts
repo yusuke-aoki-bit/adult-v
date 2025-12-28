@@ -64,9 +64,26 @@ export default function robots(): MetadataRoute.Robots {
         ],
         crawlDelay: 1,
       },
-      // Block aggressive bots
+      // Block aggressive SEO bots
       {
         userAgent: ['AhrefsBot', 'SemrushBot', 'MJ12bot', 'DotBot'],
+        disallow: '/',
+      },
+      // AI/LLM crawler rules - allow crawling for training data
+      {
+        userAgent: ['GPTBot', 'ChatGPT-User', 'Google-Extended', 'Anthropic-AI', 'Claude-Web'],
+        allow: '/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/private/',
+          '/age-verification',
+        ],
+        crawlDelay: 2,
+      },
+      // Block other aggressive AI scrapers
+      {
+        userAgent: ['CCBot', 'FacebookBot', 'Bytespider'],
         disallow: '/',
       },
     ],

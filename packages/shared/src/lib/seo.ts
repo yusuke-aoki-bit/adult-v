@@ -332,24 +332,27 @@ export function generateBaseMetadata(
   const pageKeywords = keywords || localeKeywords[locale as keyof typeof localeKeywords] || defaultKeywords;
   const ogLocale = localeMap[locale] || 'ja_JP';
 
-  // pathからlocale部分を除去してbasePathを取得
+  // pathからlocale部分を除去してbasePathを取得（?hl=パラメータ形式に統一）
+  // middlewareが/ja/, /en/などのプレフィックスを?hl=形式に301リダイレクトするため
   // 例: /ja/actress/123 → /actress/123
   // 例: /en → '' (ルートページ)
   const localePattern = /^\/(ja|en|zh|ko)(\/|$)/;
   const basePath = path ? path.replace(localePattern, '/').replace(/^\/$/, '') : '';
+  const canonicalUrl = `${siteUrl}${basePath || '/'}`;
 
   return {
     title: pageTitle,
     description: pageDescription,
     keywords: pageKeywords.join(', '),
     alternates: {
-      canonical: pageUrl,
+      canonical: canonicalUrl,
       languages: {
-        'ja': `${siteUrl}/ja${basePath}`,
-        'en': `${siteUrl}/en${basePath}`,
-        'zh': `${siteUrl}/zh${basePath}`,
-        'ko': `${siteUrl}/ko${basePath}`,
-        'x-default': pageUrl, // canonical と一致させてSEO警告を回避
+        'ja': `${siteUrl}${basePath || '/'}`,
+        'en': `${siteUrl}${basePath || '/'}?hl=en`,
+        'zh': `${siteUrl}${basePath || '/'}?hl=zh`,
+        'zh-TW': `${siteUrl}${basePath || '/'}?hl=zh-TW`,
+        'ko': `${siteUrl}${basePath || '/'}?hl=ko`,
+        'x-default': canonicalUrl,
       },
     },
     openGraph: {

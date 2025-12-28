@@ -168,8 +168,8 @@ export default function FilterSortBarBase({
     return priceParam ? new Set(priceParam.split(',')) : new Set<string>();
   }, [searchParams]);
 
-  // フィルター適用（即時実行）
-  const applyFilters = useCallback((
+  // フィルター適用（内部実行）
+  const executeApplyFilters = useCallback((
     newSort: SortOption,
     providers: Set<string>,
     priceRanges: Set<string>
@@ -203,6 +203,20 @@ export default function FilterSortBarBase({
     const queryString = params.toString();
     router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
   }, [searchParams, defaultSort, router, pathname]);
+
+  // フィルター適用（デバウンス付き - 連続操作時の負荷軽減）
+  const applyFilters = useCallback((
+    newSort: SortOption,
+    providers: Set<string>,
+    priceRanges: Set<string>
+  ): void => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      executeApplyFilters(newSort, providers, priceRanges);
+    }, 300);
+  }, [executeApplyFilters]);
 
   // プロバイダーチェック切り替え
   const toggleProvider = useCallback((providerId: string) => {
