@@ -207,7 +207,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   // タグ、ASP統計、女優リスト、女優数を同時に取得
   const [allTags, aspStatsResult, actresses, totalCount] = await Promise.all([
     getTags(),
-    !isFanzaSite ? getAspStats().catch((error) => {
+    !isFanzaSite ? getAspStats().catch((error: unknown) => {
       console.error('Failed to fetch ASP stats:', error);
       return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
     }) : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),

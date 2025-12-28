@@ -9,6 +9,14 @@ import { localizedHref } from '@adult-v/shared/i18n';
 
 export const dynamic = 'force-dynamic';
 
+// Tag type from getPopularTags
+interface Tag {
+  id: number;
+  name: string;
+  category: string | null;
+  count: number;
+}
+
 interface PageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ category?: string }>;
@@ -55,14 +63,14 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
   const tags = await getPopularTags({ limit: 100, category: selectedCategory });
 
   // カテゴリ別にグループ化
-  const tagsByCategory = tags.reduce((acc, tag) => {
+  const tagsByCategory = tags.reduce((acc: Record<string, Tag[]>, tag: Tag) => {
     const cat = tag.category || 'other';
     if (!acc[cat]) {
       acc[cat] = [];
     }
     acc[cat].push(tag);
     return acc;
-  }, {} as Record<string, typeof tags>);
+  }, {} as Record<string, Tag[]>);
 
   // カテゴリの表示順序
   const categoryOrder = ['genre', 'situation', 'play', 'body', 'costume', 'other'];
