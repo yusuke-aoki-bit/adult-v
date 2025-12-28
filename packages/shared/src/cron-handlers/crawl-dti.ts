@@ -243,7 +243,8 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
   } else if (config.siteName === 'カリビアンコムプレミアム') {
     sampleVideoUrl = `https://www.caribbeancompr.com/moviepages/${productId}/sample/sample.mp4`;
   } else if (config.siteName === 'HEYZO') {
-    sampleVideoUrl = `https://www.heyzo.com/moviepages/${productId}/sample/sample.mp4`;
+    const paddedId = productId.padStart(4, '0');
+    sampleVideoUrl = `https://sample.heyzo.com/contents/3000/${paddedId}/heyzo_hd_${paddedId}_sample.mp4`;
   }
 
   return { title, description, performers, releaseDate, thumbnailUrl, sampleVideoUrl, price };

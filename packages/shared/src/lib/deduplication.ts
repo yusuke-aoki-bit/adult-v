@@ -42,6 +42,18 @@ export function normalizeTitle(title: string): string {
 }
 
 /**
+ * 重複排除キーを生成
+ * 同じプロバイダー内では重複排除しない（FC2など同タイトルで別動画が多いため）
+ * 異なるプロバイダー間では同一作品とみなして重複排除
+ */
+function getDeduplicationKey(product: DeduplicatableProduct): string {
+  const normalizedTitle = normalizeTitle(product.title);
+  // プロバイダー + タイトルをキーにすることで、
+  // 同じプロバイダー内の同タイトル商品は別商品として扱う
+  return `${product.provider || 'unknown'}:${normalizedTitle}`;
+}
+
+/**
  * 商品配列をタイトルベースで重複排除
  *
  * @param products - 重複排除対象の商品配列
@@ -54,7 +66,7 @@ export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
 ): T[] {
   if (products.length === 0) return [];
 
-  // 全商品をタイトルでグループ化
+  // 全商品をタイトルでグループ化（プロバイダー横断の重複検出用）
   const productGroupsByTitle = new Map<string, T[]>();
   for (const product of products) {
     const normalizedTitleKey = normalizeTitle(product.title);
@@ -63,32 +75,61 @@ export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
     productGroupsByTitle.set(normalizedTitleKey, group);
   }
 
-  // siteMode === 'all' の場合: 代替ソースを保持
+  // siteMode === 'all' の場合: 異なるプロバイダー間のみ重複排除し、代替ソースを保持
   if (siteMode === 'all') {
     const deduplicatedProducts: T[] = [];
+    const seenKeys = new Set<string>();
 
-    for (const [, group] of productGroupsByTitle) {
-      // 最安価格の商品を選択
-      const sortedGroup = [...group].sort((a, b) => {
-        const priceA = a.salePrice || a.price || Infinity;
-        const priceB = b.salePrice || b.price || Infinity;
-        return priceA - priceB;
-      });
+    for (const [normalizedTitle, group] of productGroupsByTitle) {
+      // 同じプロバイダー内の商品はすべて保持する
+      // 異なるプロバイダー間では最安を選択し、代替ソースとして他を保持
 
-      const cheapest = sortedGroup[0];
-
-      // 他のASP情報をalternativeSourcesに追加（最安以外）
-      if (sortedGroup.length > 1) {
-        cheapest.alternativeSources = sortedGroup.slice(1).map(p => ({
-          aspName: p.provider || 'unknown',
-          price: p.price,
-          salePrice: p.salePrice,
-          affiliateUrl: p.affiliateUrl || '',
-          productId: typeof p.id === 'string' ? parseInt(p.id, 10) : p.id,
-        }));
+      // まずプロバイダーごとにグループ化
+      const byProvider = new Map<string, T[]>();
+      for (const product of group) {
+        const provider = product.provider || 'unknown';
+        const providerGroup = byProvider.get(provider) || [];
+        providerGroup.push(product);
+        byProvider.set(provider, providerGroup);
       }
 
-      deduplicatedProducts.push(cheapest);
+      // 各プロバイダーから1つずつ代表を選出（最安）
+      const representatives: T[] = [];
+      for (const [, providerProducts] of byProvider) {
+        // 同じプロバイダー内の全商品を保持（重複排除しない）
+        for (const p of providerProducts) {
+          const key = getDeduplicationKey(p);
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            representatives.push(p);
+          }
+        }
+      }
+
+      // 異なるプロバイダー間で同じタイトルがある場合、代替ソースを設定
+      if (byProvider.size > 1) {
+        // 価格順にソート
+        representatives.sort((a, b) => {
+          const priceA = a.salePrice || a.price || Infinity;
+          const priceB = b.salePrice || b.price || Infinity;
+          return priceA - priceB;
+        });
+
+        // 最安商品に他プロバイダーの情報を代替ソースとして追加
+        const cheapest = representatives[0];
+        const alternatives = representatives.slice(1).filter(p => p.provider !== cheapest.provider);
+        if (alternatives.length > 0 && !cheapest.alternativeSources) {
+          cheapest.alternativeSources = alternatives.map(p => ({
+            aspName: p.provider || 'unknown',
+            price: p.price,
+            salePrice: p.salePrice,
+            affiliateUrl: p.affiliateUrl || '',
+            productId: typeof p.id === 'string' ? parseInt(p.id, 10) : p.id,
+          }));
+        }
+      }
+
+      deduplicatedProducts.push(...representatives);
     }
 
     // 元の順序を維持
@@ -103,35 +144,15 @@ export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
   }
 
   // siteMode === 'fanza-only' の場合: シンプル重複排除（代替ソースなし）
-  // 各タイトルの最安商品を特定
-  const productsByTitle = new Map<string, T>();
-  for (const product of products) {
-    const normalizedTitleKey = normalizeTitle(product.title);
-    const existing = productsByTitle.get(normalizedTitleKey);
-
-    if (!existing) {
-      productsByTitle.set(normalizedTitleKey, product);
-    } else {
-      const existingPrice = existing.salePrice || existing.price || Infinity;
-      const currentPrice = product.salePrice || product.price || Infinity;
-      if (currentPrice < existingPrice) {
-        productsByTitle.set(normalizedTitleKey, product);
-      }
-    }
-  }
-
-  // 元の順序を維持しながら重複を除去
-  const seenTitles = new Set<string>();
+  // 同じプロバイダー内の同タイトルは別商品として扱う
+  const seenKeys = new Set<string>();
   return products.filter(product => {
-    const normalizedTitleKey = normalizeTitle(product.title);
+    const key = getDeduplicationKey(product);
 
-    if (seenTitles.has(normalizedTitleKey)) {
+    if (seenKeys.has(key)) {
       return false;
     }
-    seenTitles.add(normalizedTitleKey);
-
-    // 最安の商品かどうかをチェック
-    const cheapest = productsByTitle.get(normalizedTitleKey);
-    return cheapest?.id === product.id;
+    seenKeys.add(key);
+    return true;
   });
 }

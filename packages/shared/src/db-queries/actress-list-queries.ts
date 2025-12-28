@@ -382,13 +382,23 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
       } else if (sortBy === 'recent') {
-        results = await db
-          .select()
-          .from(performers)
-          .where(whereClause)
-          .orderBy(sql`${performers.latestReleaseDate} DESC NULLS LAST`, desc(performers.id))
-          .limit(options?.limit || 100)
-          .offset(options?.offset || 0);
+        // 作品の発売日で女優をソート
+        // LEFT JOINで最新作品の発売日を取得してソート
+        const rawResults = await db.execute(sql`
+          SELECT p.*, latest.max_release_date
+          FROM performers p
+          LEFT JOIN (
+            SELECT pp.performer_id, MAX(pr.release_date) as max_release_date
+            FROM product_performers pp
+            JOIN products pr ON pp.product_id = pr.id
+            GROUP BY pp.performer_id
+          ) latest ON p.id = latest.performer_id
+          ${whereClause ? sql`WHERE ${whereClause}` : sql``}
+          ORDER BY latest.max_release_date DESC NULLS LAST, p.id DESC
+          LIMIT ${options?.limit || 100}
+          OFFSET ${options?.offset || 0}
+        `);
+        results = rawResults.rows;
       } else {
         // 名前順
         let orderByClauses;
