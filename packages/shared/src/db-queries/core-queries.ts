@@ -4,6 +4,12 @@
  * 依存性注入パターンでDBとスキーマを外部から受け取る
  */
 import { eq, and, sql, inArray, desc, asc, SQL, or, ilike } from 'drizzle-orm';
+import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+
+// DI用の型エイリアス（anyを回避しつつ柔軟性を保つ）
+type DrizzleDb = NodePgDatabase;
+type AnyTable = PgTableWithColumns<TableConfig>;
 
 /**
  * LIKE/ILIKE用のワイルドカード文字をエスケープ
@@ -24,28 +30,28 @@ import { buildAspNormalizationSql } from '../lib/asp-utils';
 // ============================================================
 
 export interface CoreQueryDeps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getDb: () => any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  products: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  performers: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productPerformers: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  performerAliases: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tags: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productTags: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productSources: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productImages: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productVideos: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productSales: any;
+  /** データベース取得関数 */
+  getDb: () => DrizzleDb;
+  /** productsテーブル */
+  products: AnyTable;
+  /** performersテーブル */
+  performers: AnyTable;
+  /** productPerformersテーブル */
+  productPerformers: AnyTable;
+  /** performerAliasesテーブル */
+  performerAliases: AnyTable;
+  /** tagsテーブル */
+  tags: AnyTable;
+  /** productTagsテーブル */
+  productTags: AnyTable;
+  /** productSourcesテーブル */
+  productSources: AnyTable;
+  /** productImagesテーブル */
+  productImages: AnyTable;
+  /** productVideosテーブル */
+  productVideos: AnyTable;
+  /** productSalesテーブル */
+  productSales: AnyTable;
   /** サイトモード ('all' | 'fanza-only') */
   siteMode: 'all' | 'fanza-only';
   /** 演者バリデーション関数 */

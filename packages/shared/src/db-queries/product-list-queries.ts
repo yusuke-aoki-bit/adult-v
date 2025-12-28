@@ -11,30 +11,36 @@ import { normalizeTitle, deduplicateProductsByTitle, type DeduplicatableProduct 
 import type { BatchRelatedDataResult } from './core-queries';
 import type { MapProductsWithBatchDataDeps, DbProduct } from './mappers';
 import { mapProductsWithBatchData } from './mappers';
+import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+
+// Drizzle ORM型定義（DIパターン用）
+type DrizzleDb = NodePgDatabase;
+type AnyTable = PgTableWithColumns<TableConfig>;
 
 // ============================================================
 // Types
 // ============================================================
 
 export interface ProductListQueryDeps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getDb: () => any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  products: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productSources: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productPerformers: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productTags: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productImages: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productVideos: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productSales: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  productRatingSummary: any;
+  /** データベース取得関数 */
+  getDb: () => DrizzleDb;
+  /** productsテーブル */
+  products: AnyTable;
+  /** productSourcesテーブル */
+  productSources: AnyTable;
+  /** productPerformersテーブル */
+  productPerformers: AnyTable;
+  /** productTagsテーブル */
+  productTags: AnyTable;
+  /** productImagesテーブル */
+  productImages: AnyTable;
+  /** productVideosテーブル */
+  productVideos: AnyTable;
+  /** productSalesテーブル */
+  productSales: AnyTable;
+  /** productRatingSummaryテーブル */
+  productRatingSummary: AnyTable;
   /** サイトモード */
   siteMode: SiteMode;
   /** バッチ関連データ取得関数 */
