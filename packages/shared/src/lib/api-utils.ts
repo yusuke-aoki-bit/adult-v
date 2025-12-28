@@ -23,7 +23,8 @@ export function validatePagination(searchParams: URLSearchParams): ValidationRes
   const offsetStr = searchParams.get('offset');
 
   // Parse with parseInt for more strict validation
-  const limit = limitStr ? parseInt(limitStr, 10) : 100;
+  // デフォルト96件（ユーザー調整不要の最大値）
+  const limit = limitStr ? parseInt(limitStr, 10) : 96;
   const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
 
   // Check for NaN
@@ -37,12 +38,12 @@ export function validatePagination(searchParams: URLSearchParams): ValidationRes
     };
   }
 
-  // Validate ranges
-  if (limit < 30 || limit > 100) {
+  // Validate ranges（12-96の範囲、デフォルト96）
+  if (limit < 12 || limit > 96) {
     return {
       valid: false,
       error: NextResponse.json(
-        { error: 'Limit must be between 30 and 100' },
+        { error: 'Limit must be between 12 and 96' },
         { status: 400 }
       ),
     };

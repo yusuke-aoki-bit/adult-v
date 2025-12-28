@@ -27,7 +27,8 @@ function convertToLargeSize(url: string): string {
     .replace(/\/240x180\.jpg/g, '/640x480.jpg')
     .replace(/\/noauth\/240x180\.jpg/g, '/noauth/640x480.jpg')
     .replace(/\/480x360\.jpg/g, '/640x480.jpg')
-    // scap → sample は試さない（404になることが多い）
+    // scap → sample (小サイズキャプチャ → フルサイズサンプル)
+    .replace(/\/scap\//g, '/sample/')
     // -t, _t, /t/ パターン
     .replace(/-t\.jpg/g, '-l.jpg')
     .replace(/_t\.jpg/g, '_l.jpg')
@@ -78,6 +79,7 @@ async function main() {
     AND (
       image_url LIKE '%/240x180.jpg%'
       OR image_url LIKE '%/480x360.jpg%'
+      OR image_url LIKE '%/scap/%'
       OR image_url LIKE '%-t.jpg'
       OR image_url LIKE '%_t.jpg'
       OR image_url LIKE '%-s.jpg'
@@ -150,6 +152,7 @@ async function main() {
     AND (
       p.default_thumbnail_url LIKE '%/240x180.jpg%'
       OR p.default_thumbnail_url LIKE '%/480x360.jpg%'
+      OR p.default_thumbnail_url LIKE '%/scap/%'
       OR p.default_thumbnail_url LIKE '%-t.jpg'
       OR p.default_thumbnail_url LIKE '%_t.jpg'
       OR p.default_thumbnail_url LIKE '%-s.jpg'
@@ -205,6 +208,7 @@ async function main() {
       AND (
         image_url LIKE '%/240x180.jpg%'
         OR image_url LIKE '%/480x360.jpg%'
+        OR image_url LIKE '%/scap/%'
         OR image_url LIKE '%-t.jpg'
         OR image_url LIKE '%_t.jpg'
         OR image_url LIKE '%-s.jpg'
@@ -221,6 +225,7 @@ async function main() {
       AND (
         p.default_thumbnail_url LIKE '%/240x180.jpg%'
         OR p.default_thumbnail_url LIKE '%/480x360.jpg%'
+        OR p.default_thumbnail_url LIKE '%/scap/%'
         OR p.default_thumbnail_url LIKE '%-t.jpg'
         OR p.default_thumbnail_url LIKE '%_t.jpg'
         OR p.default_thumbnail_url LIKE '%-s.jpg'

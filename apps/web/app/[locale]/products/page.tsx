@@ -86,8 +86,8 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const DEFAULT_ITEMS_PER_PAGE = 12;
-const ALLOWED_PER_PAGE = [12, 24, 48] as const;
+const DEFAULT_ITEMS_PER_PAGE = 96;
+const ALLOWED_PER_PAGE = [12, 24, 48, 96] as const;
 
 export default async function ProductsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
