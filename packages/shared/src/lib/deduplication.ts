@@ -28,6 +28,8 @@ export interface DeduplicatableProduct {
   provider?: string;
   affiliateUrl?: string;
   alternativeSources?: AlternativeSource[];
+  /** 元のプロダクトID（FC2など同一タイトルで異なる動画がある場合に使用） */
+  originalProductId?: string;
 }
 
 /**
@@ -42,15 +44,33 @@ export function normalizeTitle(title: string): string {
 }
 
 /**
+ * 同一タイトルで別動画が多いプロバイダー
+ * これらのプロバイダーでは originalProductId をキーに使用
+ */
+const PROVIDERS_WITH_DUPLICATE_TITLES = new Set([
+  'fc2',
+  'FC2',
+  'duga',
+  'DUGA',
+]);
+
+/**
  * 重複排除キーを生成
  * 同じプロバイダー内では重複排除しない（FC2など同タイトルで別動画が多いため）
  * 異なるプロバイダー間では同一作品とみなして重複排除
  */
 function getDeduplicationKey(product: DeduplicatableProduct): string {
+  const provider = product.provider || 'unknown';
+
+  // FC2/DUGAなど同一タイトルで別動画が多いプロバイダーは
+  // originalProductId をキーに使用して正確に重複判定
+  if (PROVIDERS_WITH_DUPLICATE_TITLES.has(provider) && product.originalProductId) {
+    return `${provider}:id:${product.originalProductId}`;
+  }
+
+  // その他のプロバイダーはタイトルベースで重複判定
   const normalizedTitle = normalizeTitle(product.title);
-  // プロバイダー + タイトルをキーにすることで、
-  // 同じプロバイダー内の同タイトル商品は別商品として扱う
-  return `${product.provider || 'unknown'}:${normalizedTitle}`;
+  return `${provider}:title:${normalizedTitle}`;
 }
 
 /**
