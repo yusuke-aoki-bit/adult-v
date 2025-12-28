@@ -22,6 +22,7 @@ export default function StickyCta(props: StickyCtaProps) {
       theme="light"
       labels={{
         buyAt: t('buyAt', { provider: props.providerLabel }),
+        buyAtSale: t('buyAtSale', { provider: props.providerLabel, discount: '{discount}' }),
         urgentHours: t('urgentHours', { hours: '{hours}' }),
         endsToday: t('endsToday'),
         endsSoon: t('endsSoon', { days: '{days}' }),

@@ -8,18 +8,12 @@
 import { Pool } from 'pg';
 
 const MIGRATION_SQL = `
--- Add translation columns to product_reviews table
-ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS title_en TEXT;
-ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS title_zh TEXT;
-ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS title_ko TEXT;
-ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS content_en TEXT;
-ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS content_zh TEXT;
-ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS content_ko TEXT;
-
--- Add index for untranslated reviews lookup
-CREATE INDEX IF NOT EXISTS idx_product_reviews_untranslated
-ON product_reviews (id)
-WHERE content_en IS NULL AND content IS NOT NULL;
+-- Fix FANZA products with duration stored in seconds instead of minutes
+-- Duration values > 600 are likely seconds (max realistic video duration is ~600 minutes = 10 hours)
+UPDATE products
+SET duration = ROUND(duration::numeric / 60)
+WHERE normalized_product_id LIKE 'FANZA-%'
+  AND duration > 600;
 `;
 
 async function main() {
@@ -39,15 +33,24 @@ async function main() {
     await pool.query(MIGRATION_SQL);
     console.log('✅ Migration completed successfully');
 
-    // 確認
+    // 確認: duration分布を表示
     const result = await pool.query(`
-      SELECT column_name
-      FROM information_schema.columns
-      WHERE table_name = 'product_reviews'
-      AND column_name LIKE '%_en' OR column_name LIKE '%_zh' OR column_name LIKE '%_ko'
-      ORDER BY column_name
+      SELECT
+        CASE
+          WHEN duration < 60 THEN 'under_60_min'
+          WHEN duration < 180 THEN '60-180_min'
+          WHEN duration < 600 THEN '180-600_min'
+          ELSE 'over_600_min'
+        END as range,
+        COUNT(*) as count
+      FROM products
+      WHERE normalized_product_id LIKE 'FANZA-%'
+        AND duration IS NOT NULL
+      GROUP BY 1
+      ORDER BY 1
     `);
-    console.log('Translation columns:', result.rows.map(r => r.column_name));
+    console.log('Duration distribution after fix:');
+    console.table(result.rows);
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);

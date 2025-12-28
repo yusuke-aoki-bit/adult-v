@@ -318,6 +318,8 @@
   },
   "imageLightbox": {
     "close": "关闭",
+    "closeLightbox": "关闭图片查看器",
+    "lightboxTitle": "图片查看器",
     "previous": "上一张",
     "next": "下一张",
     "clickToCloseEsc": "← 上一张 | 中央关闭 | 下一张 →",

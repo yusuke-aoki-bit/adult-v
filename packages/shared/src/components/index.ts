@@ -215,3 +215,6 @@ export { default as WatchLaterButton } from './WatchLaterButton';
 // StickyCta (shared between apps)
 export { StickyCtaBase } from './StickyCta';
 export type { StickyCtaBaseProps } from './StickyCta';
+
+// Accessibility components
+export { SkipLink } from './SkipLink';

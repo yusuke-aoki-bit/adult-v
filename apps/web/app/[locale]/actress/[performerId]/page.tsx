@@ -51,7 +51,7 @@ interface PageProps {
   }>;
 }
 
-const PER_PAGE = 24;
+const PER_PAGE = 12;
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   try {
@@ -386,6 +386,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 aliases={aliases}
                 aspCounts={productCountByAsp}
                 locale={locale}
+                fanzaSiteUrl="https://www.f.adult-v.com"
               />
             </div>
           )}

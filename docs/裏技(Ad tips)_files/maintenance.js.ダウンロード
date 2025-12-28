@@ -1,0 +1,4 @@
+// @charset "UTF-8";
+// Set to true to display maintenance text
+// Set to false to hide maintenance text
+window.maintenance = false

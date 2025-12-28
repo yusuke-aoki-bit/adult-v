@@ -1,0 +1,6 @@
+// @charset "UTF-8";
+
+window.marqueeData = {
+  "en": "The issue of ad blocking in AdBlock has become a problem. We have changed the destination URLs and the domains from which images and other content are loaded. Please take immediate action to ensure that there is no loss of revenue. For more details, please refer to the email newsletter.",
+  "ja": "AdBlockにおける広告非表示が問題となっています。リンクの飛び先URLや、画像などの読み込み元のドメインを変更しました。報酬の取りこぼしが無いよう、早急な対応をお願いします。詳細はメールマガジンをご確認ください。"
+}

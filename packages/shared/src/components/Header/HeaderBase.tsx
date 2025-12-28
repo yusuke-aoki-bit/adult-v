@@ -8,12 +8,16 @@ import { headerTranslations, useSaleStats, type SaleStats, type HeaderTranslatio
 import { localizedHref, locales, defaultLocale, type Locale } from '../../i18n';
 import { ASP_DISPLAY_ORDER, ASP_TO_PROVIDER_ID } from '../../constants/filters';
 
+// FANZAサイトへのリンク用URL
+const FANZA_SITE_URL = 'https://www.f.adult-v.com';
+
 // Memoized ASP Badge List to prevent re-renders
 interface AspBadgeListProps {
   aspList: { aspName: string; providerId: string }[];
   saleStats: SaleStats | null;
   locale: string;
   saleLabel: string;
+  fanzaSiteLabel?: string;
   onLinkClick?: () => void;
 }
 
@@ -22,6 +26,7 @@ const AspBadgeList = memo(function AspBadgeList({
   saleStats,
   locale,
   saleLabel,
+  fanzaSiteLabel,
   onLinkClick,
 }: AspBadgeListProps) {
   return (
@@ -39,6 +44,22 @@ const AspBadgeList = memo(function AspBadgeList({
           <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
         </Link>
       ) : null}
+      {/* FANZAサイトへのリンク（adult-vサイトのみ） */}
+      {fanzaSiteLabel && (
+        <a
+          href={`${FANZA_SITE_URL}/${locale}`}
+          className="asp-badge"
+          style={{ background: 'linear-gradient(to right, #ec4899, #f43f5e)' }}
+          onClick={onLinkClick}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span className="font-bold">{fanzaSiteLabel}</span>
+          <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      )}
       {/* ASPリンク */}
       {aspList.map((asp) => {
         const meta = providerMeta[asp.providerId as keyof typeof providerMeta];
@@ -409,6 +430,7 @@ export function HeaderBase({
                   saleStats={saleStats}
                   locale={locale}
                   saleLabel={t.sale}
+                  fanzaSiteLabel={!isFanzaSite ? t.fanzaSite : undefined}
                   onLinkClick={handleMobileMenuClose}
                 />
               </div>
@@ -426,6 +448,7 @@ export function HeaderBase({
               saleStats={saleStats}
               locale={locale}
               saleLabel={t.sale}
+              fanzaSiteLabel={!isFanzaSite ? t.fanzaSite : undefined}
             />
           </div>
         </div>

@@ -7,10 +7,11 @@
  * - 重複クロール防止: hash比較
  * - 重複分析防止: processedAtチェック
  * - 商品ページからレビュー情報をスクレイピング
+ * - 双方向クロール: 新着順と古い順の両方でスキャンして全商品を確保
  *
  * 使い方:
  * npx tsx packages/crawlers/src/products/crawl-duga-api-v2.ts [--limit 100] [--offset 0] [--skip-reviews] [--no-ai] [--force]
- * npx tsx packages/crawlers/src/products/crawl-duga-api-v2.ts --full-scan --year=2024
+ * npx tsx packages/crawlers/src/products/crawl-duga-api-v2.ts --full-scan --year=2024 [--no-bidirectional]
  */
 
 import { sql } from 'drizzle-orm';
@@ -54,24 +55,28 @@ class DugaCrawler extends BaseCrawler<DugaProduct> {
   }
 
   /**
-   * 新着作品を取得
+   * 新着作品を取得（双方向対応: 新着と古い作品の両方を取得）
    */
   private async fetchNewReleases(): Promise<DugaProduct[]> {
     const { limit, offset } = this.cliArgs;
     const PAGE_SIZE = 100;
+    const bidirectional = !process.argv.includes('--no-bidirectional');
 
     this.log('info', '新着作品を取得中...');
+    this.log('info', `双方向クロール: ${bidirectional ? '有効' : '無効'}`);
 
     const allItems: DugaProduct[] = [];
+    const seenIds = new Set<string>();
     let currentOffset = offset;
     let totalProcessed = 0;
 
     // 最初のリクエストで総数を取得
     const firstResponse = await this.dugaClient.getNewReleases(PAGE_SIZE, currentOffset);
-    this.log('info', `API総件数: ${firstResponse.count.toLocaleString()}件`);
+    const totalCount = firstResponse.count;
+    this.log('info', `API総件数: ${totalCount.toLocaleString()}件`);
     this.log('info', `取得目標: ${limit === 99999 ? '全件' : limit + '件'}`);
 
-    // ページネーションループ
+    // 新着順でページネーション
     let response = firstResponse;
     while (totalProcessed < limit) {
       if (totalProcessed > 0) {
@@ -84,14 +89,58 @@ class DugaCrawler extends BaseCrawler<DugaProduct> {
         break;
       }
 
-      allItems.push(...response.items);
+      // 重複除外
+      for (const item of response.items) {
+        if (!seenIds.has(item.productId)) {
+          seenIds.add(item.productId);
+          allItems.push(item);
+        }
+      }
       totalProcessed += response.items.length;
       currentOffset += PAGE_SIZE;
 
-      this.log('success', `ページ取得: ${response.items.length}件 (累計: ${totalProcessed.toLocaleString()}件)`);
+      this.log('success', `ページ取得: ${response.items.length}件 (累計: ${allItems.length}件)`);
 
       if (totalProcessed >= limit || response.items.length < PAGE_SIZE) {
         break;
+      }
+    }
+
+    // 双方向クロール: 古い作品も取得（末尾からオフセット）
+    // DUGAのAPIは降順固定なので、末尾に近いオフセットから取得
+    if (bidirectional && allItems.length < limit && totalCount > allItems.length) {
+      this.log('info', '\n=== 古い作品の取得 ===');
+
+      // 末尾からのオフセットを計算（totalCountからさかのぼる）
+      const remainingLimit = limit - allItems.length;
+      const startOffsetFromEnd = Math.max(0, totalCount - remainingLimit);
+      let oldOffset = startOffsetFromEnd;
+
+      while (allItems.length < limit && oldOffset < totalCount) {
+        await this.waitForRateLimit();
+
+        const oldResponse = await this.dugaClient.getNewReleases(PAGE_SIZE, oldOffset);
+
+        if (oldResponse.items.length === 0) {
+          break;
+        }
+
+        let newCount = 0;
+        for (const item of oldResponse.items) {
+          if (!seenIds.has(item.productId)) {
+            seenIds.add(item.productId);
+            allItems.push(item);
+            newCount++;
+          }
+        }
+
+        oldOffset += PAGE_SIZE;
+
+        this.log('success', `古い作品取得: ${newCount}件新規 (累計: ${allItems.length}件)`);
+
+        if (newCount === 0 || allItems.length >= limit) {
+          break;
+        }
       }
     }
 

@@ -7,9 +7,10 @@
  * - 重複クロール防止: hash比較
  * - 重複分析防止: processedAtチェック
  * - パースしたデータを正規化テーブルに保存
+ * - 双方向クロール: 新着と古い作品の両方を取得
  *
  * 使い方:
- * npx tsx packages/crawlers/src/products/crawl-sokmil-api-v2.ts [--limit 100] [--offset 0] [--no-ai] [--force]
+ * npx tsx packages/crawlers/src/products/crawl-sokmil-api-v2.ts [--limit 100] [--offset 0] [--no-ai] [--force] [--no-bidirectional]
  * npx tsx packages/crawlers/src/products/crawl-sokmil-api-v2.ts --full-scan --year=2024
  */
 
@@ -52,15 +53,18 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
   }
 
   /**
-   * 新着作品を取得
+   * 新着作品を取得（双方向対応: 新着と古い作品の両方を取得）
    */
   private async fetchNewReleases(): Promise<SokmilProduct[]> {
     const { limit, offset } = this.cliArgs;
     const PAGE_SIZE = 100;
+    const bidirectional = !process.argv.includes('--no-bidirectional');
 
     this.log('info', '新着作品を取得中...');
+    this.log('info', `双方向クロール: ${bidirectional ? '有効' : '無効'}`);
 
     const allItems: SokmilProduct[] = [];
+    const seenIds = new Set<string>();
     let currentOffset = offset + 1; // Sokmil APIは1から開始
 
     // 最初のリクエストで総数を取得
@@ -75,10 +79,11 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
       return [];
     }
 
-    this.log('info', `API総件数: ${firstResponse.totalCount.toLocaleString()}件`);
+    const totalCount = firstResponse.totalCount;
+    this.log('info', `API総件数: ${totalCount.toLocaleString()}件`);
     this.log('info', `取得目標: ${limit === 99999 ? '全件' : limit + '件'}`);
 
-    // ページネーションループ
+    // ページネーションループ（新着順）
     let response = firstResponse;
     while (allItems.length < limit) {
       if (allItems.length > 0) {
@@ -100,7 +105,13 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
         break;
       }
 
-      allItems.push(...response.data);
+      // 重複除外
+      for (const item of response.data) {
+        if (!seenIds.has(item.itemId)) {
+          seenIds.add(item.itemId);
+          allItems.push(item);
+        }
+      }
       currentOffset += PAGE_SIZE;
 
       this.log('success', `ページ取得: ${response.data.length}件 (累計: ${allItems.length.toLocaleString()}件)`);
@@ -119,6 +130,54 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
       if (allItems.length % 5000 === 0 && allItems.length > 0) {
         this.log('info', 'レートリミット対策: 3秒待機...');
         await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
+
+    // 双方向クロール: 古い作品も取得（末尾からオフセット）
+    // SOKMILのAPIは降順固定なので、末尾に近いオフセットから取得
+    if (bidirectional && allItems.length < limit && totalCount > allItems.length) {
+      this.log('info', '\n=== 古い作品の取得 ===');
+
+      // 末尾からのオフセットを計算（totalCountからさかのぼる）
+      // offset上限50000を考慮
+      const remainingLimit = Math.min(limit - allItems.length, 50000 - currentOffset);
+      const startOffsetFromEnd = Math.min(Math.max(1, totalCount - remainingLimit), 50000);
+      let oldOffset = startOffsetFromEnd;
+
+      while (allItems.length < limit && oldOffset < Math.min(totalCount, 50000)) {
+        await this.waitForRateLimit();
+
+        const oldResponse = await this.sokmilClient.searchItems({
+          hits: PAGE_SIZE,
+          offset: oldOffset,
+          sort: 'date',
+        });
+
+        if (oldResponse.status !== 'success') {
+          this.log('error', `API エラー: ${oldResponse.error}`);
+          break;
+        }
+
+        if (oldResponse.data.length === 0) {
+          break;
+        }
+
+        let newCount = 0;
+        for (const item of oldResponse.data) {
+          if (!seenIds.has(item.itemId)) {
+            seenIds.add(item.itemId);
+            allItems.push(item);
+            newCount++;
+          }
+        }
+
+        oldOffset += PAGE_SIZE;
+
+        this.log('success', `古い作品取得: ${newCount}件新規 (累計: ${allItems.length}件)`);
+
+        if (newCount === 0 || allItems.length >= limit || oldOffset > 50000) {
+          break;
+        }
       }
     }
 

@@ -135,9 +135,16 @@ function ImageLightbox({
     setImageError(false);
   }, []);
 
-  // キーボードナビゲーション & スクロール無効化
+  // ダイアログのrefを取得してフォーカストラップを実装
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // キーボードナビゲーション & スクロール無効化 & フォーカストラップ
   useEffect(() => {
     if (!isOpen) return;
+
+    // 開く前のフォーカス要素を保存
+    previousActiveElement.current = document.activeElement as HTMLElement;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -146,14 +153,52 @@ function ImageLightbox({
         goToPrevious();
       } else if (e.key === 'ArrowRight' && hasMultipleImages) {
         goToNext();
+      } else if (e.key === 'Tab') {
+        // フォーカストラップ: ダイアログ内にフォーカスを閉じ込める
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+
+        const focusableElements = dialog.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          // Shift+Tab: 最初の要素から最後へ
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement?.focus();
+          }
+        } else {
+          // Tab: 最後の要素から最初へ
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement?.focus();
+          }
+        }
       }
     };
 
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleKeyDown);
+
+    // ダイアログを開いた時、最初のフォーカス可能な要素にフォーカス
+    requestAnimationFrame(() => {
+      const dialog = dialogRef.current;
+      if (dialog) {
+        const firstFocusable = dialog.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        firstFocusable?.focus();
+      }
+    });
+
     return () => {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
+      // 閉じた時、元のフォーカスを復元
+      previousActiveElement.current?.focus();
     };
   }, [isOpen, hasMultipleImages, goToPrevious, goToNext, onClose]);
 
@@ -163,6 +208,10 @@ function ImageLightbox({
 
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('lightboxTitle')}
       className="fixed inset-0 z-50 flex flex-col cursor-pointer select-none lightbox-backdrop"
       onClick={handleZoneClick}
       style={{
@@ -195,6 +244,7 @@ function ImageLightbox({
             type="button"
             onClick={handleCloseClick}
             className="px-3 py-1.5 hover:bg-white/10 rounded-lg text-white text-sm font-medium transition-colors"
+            aria-label={t('closeLightbox')}
           >
             {t('close')}
           </button>
@@ -279,6 +329,8 @@ function ImageLightbox({
                     : 'border-transparent hover:border-gray-500'
                 }`}
                 style={{ backgroundColor: '#374151' }}
+                aria-label={`${t('thumbnailAlt')} ${idx + 1}`}
+                aria-current={currentIndex === idx ? 'true' : undefined}
               >
                 {/* フォールバック番号 */}
                 <span className="absolute inset-0 flex items-center justify-center text-xs" style={{ color: '#9ca3af' }}>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<!-- saved from url=(0040)https://sokmil-ad.com/member/api_m_actor -->
+<html lang="ja" style="--vsc-domain: &quot;sokmil-ad.com&quot;;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>ソクミルアフィリエイト</title>
+
+  <link rel="stylesheet" href="./ソクミルアフィリエイト出演者検索API_files/reset.css">
+  <link rel="stylesheet" href="./ソクミルアフィリエイト出演者検索API_files/jquery-ui.css">
+  <link rel="stylesheet" href="./ソクミルアフィリエイト出演者検索API_files/select2.css">
+  <link rel="stylesheet" href="./ソクミルアフィリエイト出演者検索API_files/style.css">
+  <link rel="stylesheet" href="./ソクミルアフィリエイト出演者検索API_files/shadowbox.css">
+  <link rel="stylesheet" href="./ソクミルアフィリエイト出演者検索API_files/font-awesome.min.css">
+
+  <script src="./ソクミルアフィリエイト出演者検索API_files/jquery.min.js.ダウンロード"></script>
+  <script src="./ソクミルアフィリエイト出演者検索API_files/jquery-ui.min.js.ダウンロード"></script>
+  <script src="./ソクミルアフィリエイト出演者検索API_files/select2.js.ダウンロード"></script>
+  <script src="./ソクミルアフィリエイト出演者検索API_files/basic.js.ダウンロード" charset="shift-jis"></script>
+  <script src="./ソクミルアフィリエイト出演者検索API_files/clipboard.js.ダウンロード"></script>
+  <script src="./ソクミルアフィリエイト出演者検索API_files/shadowbox.js.ダウンロード"></script>
+  <script src="./ソクミルアフィリエイト出演者検索API_files/ajaxzip3.js.ダウンロード" charset="UTF-8"></script>
+  <script src="./ソクミルアフィリエイト出演者検索API_files/highcharts.js.ダウンロード"></script>
+  <script src="./ソクミルアフィリエイト出演者検索API_files/exporting.js.ダウンロード"></script>
+</head>
+<body>
+<div id="wrapper">
+  <header>
+    <div class="head clearfix">
+      <h1><a href="https://sokmil-ad.com/"><img src="./ソクミルアフィリエイト出演者検索API_files/logo_start.png"></a></h1>
+      <a href="https://sokmil-ad.com/member/signout"><div class="logout"><i class="fa fa-sign-out"></i>ログアウト</div></a>
+      <a href="https://sokmil-ad.com/member/"><div class="logout"><i class="fa fa-home"></i>パートナーTOP</div></a>
+      <div class="logout"><p class="welcome">ようこそ<i class="fa fa-user"></i><span>青木悠祐</span>様</p></div>
+    </div>
+    <nav class="navi">
+      <ul class="menu">
+        <li class="menu__single">
+          <a class="init-bottom" href="https://sokmil-ad.com/member/summary">サマリー</a>
+          <ul class="menu__second-level">
+            <li><a href="https://sokmil-ad.com/member/summary?mode=daily">日別サマリー</a></li>
+            <li><a href="https://sokmil-ad.com/member/summary?mode=monthly">月別サマリー</a></li>
+            <li><a href="https://sokmil-ad.com/member/summary?mode=media">メディア別サマリー</a></li>
+            <li><a href="https://sokmil-ad.com/member/summary?mode=content">商品別サマリー</a></li>
+          </ul>
+        </li>
+        <li class="menu__single">
+          <a class="init-bottom" href="https://sokmil-ad.com/member/media">サイト管理</a>
+          <ul class="menu__second-level">
+            <li><a href="https://sokmil-ad.com/member/media">サイト一覧</a></li>
+            <li><a href="https://sokmil-ad.com/member/media_add">サイト申請</a></li>
+          </ul>
+        </li>
+        <li class="menu__single">
+          <a class="init-bottom" href="https://sokmil-ad.com/member/api_m_actor#">広告作成</a>
+          <ul class="menu__second-level">
+            <li><a href="https://sokmil-ad.com/member/link_banner">バナー</a></li>
+            <li><a href="https://sokmil-ad.com/member/link_url">URLよりリンク作成</a></li>
+            <li><a href="https://sokmil-ad.com/member/link_keyword">キーワードでリンク作成</a></li>
+            <li><a href="https://sokmil-ad.com/member/api">WEBサービス</a></li>
+          </ul>
+        </li>
+        <li class="menu__single">
+          <a class="init-bottom" href="https://sokmil-ad.com/member/api_m_actor#">登録情報</a>
+          <ul class="menu__second-level">
+            <li><a href="https://sokmil-ad.com/member/account">登録情報変更</a></li>
+            <li><a href="https://sokmil-ad.com/member/chemail">メールアドレスの変更</a></li>
+            <li><a href="https://sokmil-ad.com/member/payprice">最低振込金額変更</a></li>
+            <li><a href="https://sokmil-ad.com/member/bank">振り込み口座登録</a></li>
+          </ul>
+        </li>
+        <li><a href="https://sokmil-ad.com/member/message">メッセージ</a></li>
+      </ul>
+    </nav>
+
+  </header>
+
+  <div id="contents">
+  <div class="page-title">
+    <h2>WEBサービス…出演者検索API</h2>
+  </div>
+
+  <section>
+    <p>このAPIはソクミルアフィリエイト内の出演者の情報を取得することが可能なAPIです。</p>
+
+    <h3>リクエスト仕様</h3>
+
+    <form>
+      <p>下記のURLにリクエストすることで取得できます。</p>
+      <p><input type="text" name="api_path" value="https://sokmil-ad.com/api/v1/Actor" class="xlarge"></p>
+    </form>
+
+    <div class="api-ex">
+      <p>リクエスト例</p>
+      <p>https://sokmil-ad.com/api/v1/Actor?affiliate_id=47418-001&amp;api_key=70c75ce3a36c1f503f2515ff094d6f60&amp;output=json</p>
+    </div>
+
+    <table class="table-report">
+      <tbody><tr>
+        <th>パラメーター</th>
+        <th>要素の説明</th>
+        <th>必須</th>
+        <th>値のサンプル</th>
+        <th>概要</th>
+      </tr>
+      </tbody><tbody>
+        <tr>
+          <td>api_key</td>
+          <td>API KEY</td>
+          <td>○</td>
+          <td>70c75ce3a36c1f503f2515ff094d6f60</td>
+          <td>このページで発行している代理店様固有の値になります。</td>
+        </tr>
+        <tr>
+          <td>affiliate_id</td>
+          <td>アフィリエイトID</td>
+          <td>○</td>
+          <td>47418-001</td>
+          <td>サイト固有の値です。サイト一覧よりご確認ください。</td>
+        </tr>
+        <tr>
+          <td>output</td>
+          <td>出力形式</td>
+          <td>○</td>
+          <td>json</td>
+          <td>
+            JSON：json<br>
+            xml：xml<br>
+          </td>
+        </tr>
+        <tr>
+          <td>hits</td>
+          <td>取得件数</td>
+          <td></td>
+          <td>20</td>
+          <td>初期値：20　最大：100 </td>
+        </tr>
+        <tr>
+          <td>offset</td>
+          <td>取得開始位置</td>
+          <td></td>
+          <td>1</td>
+          <td>初期値：1　最大：50000 </td>
+        </tr>
+        <tr>
+          <td>sort</td>
+          <td>並び順</td>
+          <td></td>
+          <td>price</td>
+          <td>
+            商品の並び順です。<br>
+            初期値：price<br>
+            価格が高い順：price<br>
+            価格が安い順：-price<br>
+            新着：date<br>
+          </td>
+        </tr>
+        <tr>
+          <td>category</td>
+          <td>カテゴリ</td>
+          <td></td>
+          <td>av</td>
+          <td>
+            アダルト動画：av<br>
+            グラビア：idol<br>
+          </td>
+        </tr>
+        <tr>
+          <td>gender</td>
+          <td>性別</td>
+          <td></td>
+          <td>f</td>
+          <td>
+            f：女性<br>
+            m：男性<br>
+          </td>
+        </tr>
+        <tr>
+          <td>keyword</td>
+          <td>キーワード</td>
+          <td></td>
+          <td>琥珀うた</td>
+          <td>
+            UTF-8で指定してください。商品名/ジャンル名/出演者名から検索します。
+          </td>
+        </tr>
+        <tr>
+          <td>initial</td>
+          <td>イニシャル</td>
+          <td></td>
+          <td>こ</td>
+          <td>
+            UTF-8で指定してください。
+          </td>
+        </tr>
+        <tr>
+          <td>bust</td>
+          <td>バスト</td>
+          <td></td>
+          <td>88</td>
+          <td>
+            bust=88ならバスト88cm以上、<br>
+            bust=-88ならバスト88cm以下、<br>
+            bust=88-95ならバスト88cm以上～95cm以下<br>
+          </td>
+        </tr>
+        <tr>
+          <td>waist</td>
+          <td>ウエスト</td>
+          <td></td>
+          <td>60</td>
+          <td>
+            同上<br>
+          </td>
+        </tr>
+        <tr>
+          <td>hip</td>
+          <td>ヒップ</td>
+          <td></td>
+          <td>85-90</td>
+          <td>
+            同上<br>
+          </td>
+        </tr>
+        <tr>
+          <td>height</td>
+          <td>身長</td>
+          <td></td>
+          <td>165</td>
+          <td>
+            同上<br>
+          </td>
+        </tr>
+        <tr>
+          <td>cup</td>
+          <td>カップ数</td>
+          <td></td>
+          <td>d</td>
+          <td>
+            A～の半角英字
+          </td>
+        </tr>
+        <tr>
+          <td>birthday</td>
+          <td>誕生日</td>
+          <td></td>
+          <td>19900101</td>
+          <td>
+            yyyymmddの形式で指定<br>
+            birthday=19900101なら1990年1月1日以降生まれ、<br>
+            birthday=-19900101なら1990年1月1日以前生まれ、<br>
+            birthday=19900101-19951231なら<br>
+            1990年1月1日生まれ～1995年12月31日生まれ<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>レスポンス値</h3>
+    <table class="table-report">
+      <tbody><tr>
+        <th>フィールド</th>
+        <th>要素の説明</th>
+        <th>値のサンプル</th>
+        <th>概要</th>
+      </tr>
+      </tbody><tbody>
+        <tr>
+          <td>request</td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>├ parameters</td>
+          <td></td>
+          <td></td>
+          <td>リクエストした内容をお返しします。</td>
+        </tr>
+        <tr>
+          <td>result</td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>├ status</td>
+          <td>ステータスコード</td>
+          <td>200</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>├ result_count</td>
+          <td>取得件数</td>
+          <td>20</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>├ total_count</td>
+          <td>全体件数</td>
+          <td>150627</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>├ first_position</td>
+          <td>検索開始位置</td>
+          <td>1</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>└ actor</td>
+          <td>出演者情報</td>
+          <td></td>
+          <td></td>
+        </tr>
+
+        <tr>
+          <td>　├ id</td>
+          <td>出演者ID</td>
+          <td>kohakuuta</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ name</td>
+          <td>女優名</td>
+          <td>琥珀うた</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ ruby</td>
+          <td>女優名（読み仮名）</td>
+          <td>こはくうた</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ bust</td>
+          <td>バスト</td>
+          <td>96</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ category</td>
+          <td>カテゴリ</td>
+          <td>av</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ gender</td>
+          <td>性別</td>
+          <td>female</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ cup</td>
+          <td>カップ数</td>
+          <td>C</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ waist</td>
+          <td>ウェスト</td>
+          <td>60</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ hip</td>
+          <td>ヒップ</td>
+          <td>88</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ height</td>
+          <td>身長</td>
+          <td>168</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ birthday</td>
+          <td>生年月日</td>
+          <td>1987-03-24</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ imageURL</td>
+          <td>画像URL</td>
+          <td>http://imgrbn.sokmil.com/pict/staff/100_kohakuuta_T1377832081.jpg</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　├ listURL</td>
+          <td>リストページURL</td>
+          <td>https://www.sokmil.com/av/kohakuuta/</td>
+          <td></td>
+        </tr> 
+        <tr>  
+          <td>　└ affiliateURL</td>
+          <td>アフィリエイトURL</td>
+          <td>https://www.sokmil.com/av/kohakuuta/?affi=10000-001</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  </div>
+  <footer id="footer">
+    <div>
+      <ul>
+        <li><a href="https://sokmil-ad.com/terms">ご利用規約</a></li>
+        <li><a href="https://sokmil-ad.com/privacy">個人情報保護方針</a></li>
+        <li><a href="https://sokmil-ad.com/contact">お問い合わせ</a></li>
+        <li><a href="http://www.sokmil.com/" target="_blank">ソクミル</a></li>
+      </ul>
+    </div>
+    <p>このホームページに掲載されている全ての画像、文章、データ等の無断転用、転載をお断りします。<br>
+      Unauthorized use or reproduction of materials contained in this page is strictly prohibited.<br>
+      © ソクミル 2004-2024 All Rights Reserved.</p>
+  </footer>
+</div>
+
+</body></html>

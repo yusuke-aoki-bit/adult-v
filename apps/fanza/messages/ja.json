@@ -327,6 +327,8 @@
   },
   "imageLightbox": {
     "close": "閉じる",
+    "closeLightbox": "画像ビューアを閉じる",
+    "lightboxTitle": "画像ビューア",
     "previous": "戻る",
     "next": "次へ",
     "clickToCloseEsc": "← 前 | 中央で閉じる | 次 →",
@@ -411,7 +413,8 @@
     "noCategories": "カテゴリがありません"
   },
   "stickyCta": {
-    "buyAt": "{provider}で見る",
+    "buyAt": "{provider}で購入",
+    "buyAtSale": "{provider}でお得に購入 -{discount}%",
     "urgentHours": "残り{hours}時間！",
     "endsToday": "本日終了！",
     "endsSoon": "残り{days}日"

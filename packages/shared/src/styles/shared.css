@@ -566,3 +566,16 @@ select {
     scroll-behavior: auto !important;
   }
 }
+
+/* Landscape orientation - モバイルメニュー最適化 */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* モバイルメニューの最大高さを調整 */
+  #mobile-menu {
+    max-height: calc(100dvh - 80px);
+  }
+
+  /* ヘッダーの固定位置調整 */
+  header.sticky {
+    position: relative;
+  }
+}

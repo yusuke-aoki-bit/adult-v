@@ -88,8 +88,8 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const DEFAULT_ITEMS_PER_PAGE = 24;
-const ALLOWED_PER_PAGE = [12, 24, 48, 96] as const;
+const DEFAULT_ITEMS_PER_PAGE = 12;
+const ALLOWED_PER_PAGE = [12, 24, 48] as const;
 
 export default async function ProductsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -297,7 +297,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
                 queryParams={queryParams}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

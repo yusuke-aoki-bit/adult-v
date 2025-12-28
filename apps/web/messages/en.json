@@ -343,6 +343,8 @@
   },
   "imageLightbox": {
     "close": "Close",
+    "closeLightbox": "Close image viewer",
+    "lightboxTitle": "Image viewer",
     "previous": "Prev",
     "next": "Next",
     "clickToCloseEsc": "← Prev | Center to close | Next →",

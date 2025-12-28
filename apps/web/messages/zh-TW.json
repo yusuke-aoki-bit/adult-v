@@ -256,6 +256,8 @@
   },
   "imageLightbox": {
     "close": "關閉",
+    "closeLightbox": "關閉圖片檢視器",
+    "lightboxTitle": "圖片檢視器",
     "previous": "上一張",
     "next": "下一張",
     "clickToCloseEsc": "← 上一張 | 中央關閉 | 下一張 →",

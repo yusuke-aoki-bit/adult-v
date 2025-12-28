@@ -86,6 +86,7 @@ function SortDropdownComponent({ sortBy, theme = 'dark' }: SortDropdownProps) {
         value={sortBy}
         onChange={(e) => handleSortChange(e.target.value)}
         className={colors.select}
+        aria-label={t.sortLabel}
       >
         <option value="nameAsc">{t.nameAsc}</option>
         <option value="nameDesc">{t.nameDesc}</option>

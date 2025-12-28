@@ -5,8 +5,11 @@
  * - https://video.fc2.com/a/?_tct=&d=2 (アダルト動画一覧)
  * - https://adult.contents.fc2.com/ (コンテンツマーケット)
  *
+ * 機能:
+ * - 双方向クロール: 新着順リストと古いIDの両方をスキャン
+ *
  * 使い方:
- * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fc2-video.ts [--limit 100] [--source video|contents]
+ * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fc2-video.ts [--limit 100] [--source video|contents] [--no-bidirectional]
  */
 
 if (!process.env.DATABASE_URL) {
@@ -491,6 +494,7 @@ async function main() {
   let limit = 100;
   let source: 'video' | 'contents' | 'both' = 'both';
   let startPage = 1;
+  const bidirectional = !args.includes('--no-bidirectional');
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--limit' && args[i + 1]) {
@@ -505,7 +509,8 @@ async function main() {
   }
 
   console.log('=== FC2動画アダルト クローラー (Puppeteer + Stealth) ===\n');
-  console.log(`設定: limit=${limit}, source=${source}, startPage=${startPage}\n`);
+  console.log(`設定: limit=${limit}, source=${source}, startPage=${startPage}`);
+  console.log(`双方向クロール: ${bidirectional ? '有効' : '無効'}\n`);
 
   // Puppeteer起動
   console.log('ブラウザを起動中 (stealth mode)...');
@@ -607,6 +612,55 @@ async function main() {
             totalSaved++;
           }
           totalFound++;
+        }
+      }
+    }
+  }
+
+  // 双方向クロール: 古いIDをスキャン（contents.fc2のみ、数値IDなので範囲指定可能）
+  if (bidirectional && (source === 'contents' || source === 'both') && totalFound < limit) {
+    console.log('\n=== 古いIDのスキャン (contents.fc2.com) ===\n');
+
+    // DBから既存の最小IDを取得
+    const minIdResult = await db.execute(sql`
+      SELECT MIN(CAST(original_product_id AS INTEGER)) as min_id
+      FROM product_sources
+      WHERE asp_name = 'FC2'
+        AND original_product_id ~ '^[0-9]+$'
+    `);
+    const currentMinId = (minIdResult.rows[0]?.min_id as number) || 4800000;
+
+    console.log(`  現在の最小ID: ${currentMinId}`);
+
+    // 最小IDより小さい範囲をサンプリング
+    const sampleStart = Math.max(4000000, currentMinId - 1000); // FC2のIDは400万台から
+    let consecutiveNotFound = 0;
+    const maxConsecutiveNotFound = 20;
+
+    for (let id = currentMinId - 1; id >= sampleStart && totalFound < limit; id--) {
+      const idStr = id.toString();
+      if (processedIds.has(idStr)) continue;
+
+      processedIds.add(idStr);
+
+      const product = await fetchContentsDetailPage(page, idStr);
+
+      if (product) {
+        console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
+        consecutiveNotFound = 0;
+
+        const savedId = await saveProduct(product);
+        if (savedId) {
+          totalSaved++;
+        }
+        totalFound++;
+      } else {
+        consecutiveNotFound++;
+        if (consecutiveNotFound >= maxConsecutiveNotFound) {
+          console.log(`  ${maxConsecutiveNotFound}連続で商品が見つからないため、スキップ`);
+          // 100ずつジャンプ
+          id = Math.max(sampleStart, id - 100);
+          consecutiveNotFound = 0;
         }
       }
     }

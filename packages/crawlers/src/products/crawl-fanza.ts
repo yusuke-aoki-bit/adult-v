@@ -5,16 +5,19 @@
  * - FANZA (dmm.co.jp) からHTMLをクロールして商品データを取得
  * - 新作リストページから商品リストを取得
  * - 商品詳細ページからメタデータを取得
+ * - 双方向クロール: 新着順と古い順の両方でスキャンして全商品を確保（MGSと同様）
  * - robots.txt遵守: /digital/videoa/-/list/ と /detail/ は許可
  * - レート制限: 3秒以上の間隔
  *
  * 使い方:
  * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fanza.ts [--pages 10] [--start-page 1] [--no-ai] [--force]
- * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fanza.ts --full-scan [--sort=old] [--max-pages=1000]
+ * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fanza.ts --full-scan [--max-pages=1000] [--no-bidirectional]
  */
 
 // ソートオプション（新しい順、古い順、人気順）
 type SortOrder = 'date' | 'ranking' | 'review';
+// 日付ソートの方向（新着順、古い順）- MGSと同様の双方向クロール用
+type DateSortDirection = 'new' | 'old';
 
 if (!process.env.DATABASE_URL) {
   console.error('ERROR: DATABASE_URL environment variable is not set');
@@ -22,7 +25,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 import { getDb } from '../lib/db';
-import { products, productSources, performers, productPerformers, productImages, productVideos } from '../lib/db/schema';
+import { products, productSources, performers, productPerformers, productImages, productVideos, productReviews, productRatingSummary } from '../lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { validateProductData } from '../lib/crawler-utils';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
@@ -52,6 +55,22 @@ const JITTER_MS = 1500;
 let browser: Browser | null = null;
 let sessionInitialized = false;
 
+interface FanzaReview {
+  reviewerId: string;
+  reviewerName: string;
+  rating: number;
+  title?: string;
+  content: string;
+  reviewDate?: string;
+  helpful?: number;
+}
+
+interface FanzaRatingSummary {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution?: Record<number, number>;
+}
+
 interface FanzaProduct {
   cid: string;
   title: string;
@@ -67,6 +86,8 @@ interface FanzaProduct {
   series: string | null;
   genres: string[];
   price: number | null;
+  reviews?: FanzaReview[];
+  ratingSummary?: FanzaRatingSummary;
 }
 
 /**
@@ -234,10 +255,13 @@ async function fetchPage(url: string): Promise<{ html: string; status: number } 
  * リストページから商品CIDを取得（新FANZA: video.dmm.co.jp対応）
  * @param pageNum ページ番号
  * @param sort ソート順（date=新しい順, ranking=人気順, review=レビュー順）
+ * @param direction ソート方向（new=新しい順, old=古い順）- dateソート時のみ有効
  */
-async function getCidsFromListPage(pageNum: number, sort: SortOrder = 'date'): Promise<string[]> {
+async function getCidsFromListPage(pageNum: number, sort: SortOrder = 'date', direction: DateSortDirection = 'new'): Promise<string[]> {
   // 新FANZAはページネーションパラメータが異なる
-  const url = `https://video.dmm.co.jp/av/list/?sort=${sort}&page=${pageNum}`;
+  // direction=oldの場合はリリース日昇順（古い順）
+  const sortParam = sort === 'date' && direction === 'old' ? 'release_date' : sort;
+  const url = `https://video.dmm.co.jp/av/list/?sort=${sortParam}&page=${pageNum}`;
   console.log(`📋 リストページ取得中: ${url}`);
 
   await rateLimit();
@@ -562,13 +586,32 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     }
 
     // パターン4: JSON-LDのduration（ISO 8601形式）
+    // 対応形式: PT120M (分), PT7200S (秒), PT2H (時間), PT2H30M (時間+分)
     if (!duration && jsonLdData?.duration) {
-      const isoMatch = String(jsonLdData.duration).match(/PT(\d+)M/i);
-      if (isoMatch) {
-        const mins = parseInt(isoMatch[1], 10);
-        if (mins >= 1 && mins <= 600) {
-          duration = mins;
-        }
+      const durationStr = String(jsonLdData.duration);
+      let mins = 0;
+
+      // 時間 (H)
+      const hoursMatch = durationStr.match(/PT(\d+)H/i);
+      if (hoursMatch) {
+        mins += parseInt(hoursMatch[1], 10) * 60;
+      }
+
+      // 分 (M)
+      const minsMatch = durationStr.match(/(\d+)M/i);
+      if (minsMatch) {
+        mins += parseInt(minsMatch[1], 10);
+      }
+
+      // 秒 (S) - 秒単位の場合は分に変換
+      const secsMatch = durationStr.match(/(\d+)S/i);
+      if (secsMatch && mins === 0) {
+        // 秒のみの場合（PT7200Sなど）
+        mins = Math.round(parseInt(secsMatch[1], 10) / 60);
+      }
+
+      if (mins >= 1 && mins <= 600) {
+        duration = mins;
       }
     }
 
@@ -627,6 +670,88 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       description = descMatch[0].replace(/\s+/g, ' ').trim();
     }
 
+    // レビュー・評価サマリーの抽出
+    let ratingSummary: FanzaRatingSummary | undefined;
+    const reviews: FanzaReview[] = [];
+
+    // JSON-LDから評価情報を取得
+    if (jsonLdData?.aggregateRating) {
+      const ar = jsonLdData.aggregateRating;
+      ratingSummary = {
+        averageRating: parseFloat(ar.ratingValue) || 0,
+        totalReviews: parseInt(ar.reviewCount) || parseInt(ar.ratingCount) || 0,
+      };
+    }
+
+    // HTMLから平均評価を取得（JSON-LDがない場合のフォールバック）
+    if (!ratingSummary) {
+      // パターン1: 「平均評価：」の近くにある数値
+      const avgRatingMatch = html.match(/平均評価[：:]\s*<[^>]*>?\s*([0-9.]+)/i);
+      // パターン2: 星評価のdata属性やclass（FANZAの新デザイン対応）
+      const starRatingMatch = html.match(/data-rating="([0-9.]+)"/i) ||
+        html.match(/rating[^>]*>([0-9.]+)</i) ||
+        html.match(/評価[：:]?\s*([0-9.]+)\s*(?:点|\/)/i);
+      // レビュー件数
+      const reviewCountMatch = html.match(/(\d+)\s*件のレビュー/i) ||
+        html.match(/レビュー[：:]?\s*(\d+)\s*件/i) ||
+        html.match(/(\d+)\s*(?:件|reviews)/i);
+
+      const avgRating = avgRatingMatch?.[1] || starRatingMatch?.[1];
+      if (avgRating) {
+        ratingSummary = {
+          averageRating: parseFloat(avgRating) || 0,
+          totalReviews: reviewCountMatch ? parseInt(reviewCountMatch[1]) : 0,
+        };
+      }
+    }
+
+    // レビュー評価分布の取得（★1〜5の件数）
+    if (ratingSummary) {
+      const distribution: Record<number, number> = {};
+      for (let star = 1; star <= 5; star++) {
+        // パターン: 「★5」「5.00」の近くにある件数
+        const starPattern = new RegExp(`${star}(?:\\.0*)?\\s*(?:<[^>]*>\\s*)*(?:[(（])?\\s*(\\d+)\\s*(?:[件）)])?`, 'i');
+        const match = html.match(starPattern);
+        if (match) {
+          distribution[star] = parseInt(match[1]) || 0;
+        }
+      }
+      if (Object.keys(distribution).length > 0) {
+        ratingSummary.ratingDistribution = distribution;
+      }
+    }
+
+    // 個別レビューの抽出（レビューリストセクションから）
+    // FANZAのレビュー構造: <div class="d-review">内の各レビュー項目
+    const reviewBlocks = html.match(/<div[^>]*class="[^"]*review[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi) || [];
+    for (const block of reviewBlocks.slice(0, 10)) { // 最大10件
+      // レビュワー名
+      const reviewerMatch = block.match(/(?:投稿者|ニックネーム)[：:]\s*([^<\n]+)/i);
+      // 評価（★の数）
+      const starsMatch = block.match(/★+/);
+      const ratingMatch = block.match(/([0-9.]+)\s*(?:点|\/5)/i);
+      // レビュー本文
+      const contentMatch = block.match(/<p[^>]*class="[^"]*(?:comment|text|content)[^"]*"[^>]*>([\s\S]*?)<\/p>/i);
+      // 投稿日
+      const dateMatch = block.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+
+      if (contentMatch || starsMatch || ratingMatch) {
+        const rating = ratingMatch
+          ? parseFloat(ratingMatch[1])
+          : starsMatch
+            ? starsMatch[0].length
+            : 0;
+
+        reviews.push({
+          reviewerId: `fanza-${Date.now()}-${reviews.length}`,
+          reviewerName: reviewerMatch ? reviewerMatch[1].trim() : '匿名',
+          rating,
+          content: contentMatch ? contentMatch[1].replace(/<[^>]+>/g, '').trim() : '',
+          reviewDate: dateMatch ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}` : undefined,
+        });
+      }
+    }
+
     return {
       cid,
       title,
@@ -642,6 +767,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       series,
       genres,
       price,
+      reviews: reviews.length > 0 ? reviews : undefined,
+      ratingSummary,
     };
   } catch (error) {
     console.error(`  ❌ HTMLパースエラー: ${error}`);
@@ -794,6 +921,58 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
       }
     }
 
+    // レビュー・評価サマリーの保存（新規・既存商品共通）
+    if (product.ratingSummary) {
+      await db
+        .insert(productRatingSummary)
+        .values({
+          productId,
+          aspName: 'FANZA',
+          averageRating: String(product.ratingSummary.averageRating),
+          totalReviews: product.ratingSummary.totalReviews,
+          ratingDistribution: product.ratingSummary.ratingDistribution || null,
+        })
+        .onConflictDoUpdate({
+          target: [productRatingSummary.productId, productRatingSummary.aspName],
+          set: {
+            averageRating: String(product.ratingSummary.averageRating),
+            totalReviews: product.ratingSummary.totalReviews,
+            ratingDistribution: product.ratingSummary.ratingDistribution || null,
+            lastUpdated: sql`NOW()`,
+          },
+        });
+      console.log(`    ⭐ 評価サマリー保存: ${product.ratingSummary.averageRating}点 (${product.ratingSummary.totalReviews}件)`);
+    }
+
+    // 個別レビューの保存
+    if (product.reviews && product.reviews.length > 0) {
+      let savedReviews = 0;
+      for (const review of product.reviews) {
+        try {
+          await db
+            .insert(productReviews)
+            .values({
+              productId,
+              aspName: 'FANZA',
+              reviewerName: review.reviewerName,
+              rating: String(review.rating),
+              title: review.title || null,
+              content: review.content,
+              reviewDate: review.reviewDate ? new Date(review.reviewDate) : null,
+              helpful: review.helpful || 0,
+              sourceReviewId: review.reviewerId,
+            })
+            .onConflictDoNothing();
+          savedReviews++;
+        } catch {
+          // 重複エラーなどは無視
+        }
+      }
+      if (savedReviews > 0) {
+        console.log(`    📝 レビュー保存: ${savedReviews}件`);
+      }
+    }
+
     return productId;
   } catch (error) {
     console.error(`    ❌ 保存エラー: ${error}`);
@@ -941,15 +1120,18 @@ async function saveTranslations(productId: number, product: FanzaProduct): Promi
 
 /**
  * フルスキャンモード: 全ページをクロールして全商品を収集
+ * MGSと同様に新着順と古い順の両方でクロールして全商品を確保
  */
 async function runFullScan(
   sort: SortOrder,
   maxPages: number,
   enableAI: boolean,
   forceReprocess: boolean,
+  bidirectional: boolean = true, // デフォルトで双方向
 ): Promise<void> {
   console.log('=== FANZA フルスキャンモード ===');
   console.log(`ソート順: ${sort}`);
+  console.log(`双方向クロール: ${bidirectional ? '有効（新着順＋古い順）' : '無効'}`);
   console.log(`最大ページ数: ${maxPages}`);
   console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
   console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}`);
@@ -958,92 +1140,118 @@ async function runFullScan(
   let totalSaved = 0;
   let totalSkipped = 0;
   let totalErrors = 0;
-  let consecutiveEmptyPages = 0;
-  const maxConsecutiveEmpty = 200; // 連続空ページ上限（スクレイピング失敗対策）
-
   const processedCids = new Set<string>();
 
-  for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+  // 双方向クロール: 新着順と古い順の両方でスキャン（MGSと同様）
+  const directions: DateSortDirection[] = bidirectional && sort === 'date'
+    ? ['new', 'old']
+    : ['new'];
+
+  for (const direction of directions) {
     console.log(`\n========================================`);
-    console.log(`📋 ページ ${pageNum}/${maxPages} を処理中...`);
+    console.log(`📋 ソート方向: ${direction === 'new' ? '新着順' : '古い順'}`);
     console.log(`========================================`);
 
-    try {
-      const cids = await getCidsFromListPage(pageNum, sort);
+    let consecutiveEmptyPages = 0;
+    let consecutiveNoNew = 0;
+    const maxConsecutiveEmpty = 200; // 連続空ページ上限
+    const maxConsecutiveNoNew = 5; // 連続新規なし上限
 
-      if (cids.length === 0) {
-        consecutiveEmptyPages++;
-        console.log(`  空ページ検出 (${consecutiveEmptyPages}/${maxConsecutiveEmpty})`);
+    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+      console.log(`\n--- ${direction === 'new' ? '新着' : '古い'}順 ページ ${pageNum}/${maxPages} ---`);
 
-        if (consecutiveEmptyPages >= maxConsecutiveEmpty) {
-          console.log('  連続空ページ上限到達、終了します');
-          break;
-        }
-        await rateLimit();
-        continue;
-      }
+      try {
+        const cids = await getCidsFromListPage(pageNum, sort, direction);
 
-      consecutiveEmptyPages = 0;
+        if (cids.length === 0) {
+          consecutiveEmptyPages++;
+          console.log(`  空ページ検出 (${consecutiveEmptyPages}/${maxConsecutiveEmpty})`);
 
-      // 重複を除外
-      const newCids = cids.filter(cid => !processedCids.has(cid));
-      console.log(`  📦 新規CID: ${newCids.length}件 (重複除外: ${cids.length - newCids.length}件)`);
-
-      for (let i = 0; i < newCids.length; i++) {
-        const cid = newCids[i];
-        processedCids.add(cid);
-
-        console.log(`\n  [${i + 1}/${newCids.length}] 商品CID: ${cid}`);
-
-        try {
-          const { product, rawDataId, shouldSkip } = await parseDetailPage(cid, forceReprocess);
-
-          if (shouldSkip) {
-            totalSkipped++;
-            continue;
+          if (consecutiveEmptyPages >= maxConsecutiveEmpty) {
+            console.log('  連続空ページ上限到達、次の方向へ');
+            break;
           }
+          await rateLimit();
+          continue;
+        }
 
-          if (product) {
-            console.log(`      タイトル: ${product.title.substring(0, 50)}...`);
-            console.log(`      出演者: ${product.performers.join(', ') || '不明'}`);
-            console.log(`      📷 サンプル画像: ${product.sampleImages.length}件`);
-            console.log(`      🎬 サンプル動画: ${product.sampleVideos.length}件`);
+        consecutiveEmptyPages = 0;
 
-            const savedId = await saveProduct(product);
+        // 重複を除外（全方向で共有）
+        const newCids = cids.filter(cid => !processedCids.has(cid));
+        console.log(`  📦 新規CID: ${newCids.length}件 (重複除外: ${cids.length - newCids.length}件)`);
 
-            if (savedId) {
-              if (enableAI) {
-                const { aiDescription, aiTags } = await generateAIContent(product, enableAI);
-                await saveAIContent(savedId, aiDescription, aiTags);
-              }
+        // 連続して新規がない場合はこの方向を終了
+        if (newCids.length === 0) {
+          consecutiveNoNew++;
+          console.log(`  連続新規なし: ${consecutiveNoNew}/${maxConsecutiveNoNew}`);
+          if (consecutiveNoNew >= maxConsecutiveNoNew) {
+            console.log('  連続新規なし上限到達、次の方向へ');
+            break;
+          }
+          continue;
+        } else {
+          consecutiveNoNew = 0;
+        }
 
-              await saveTranslations(savedId, product);
+        for (let i = 0; i < newCids.length; i++) {
+          const cid = newCids[i];
+          processedCids.add(cid);
 
-              if (rawDataId) {
-                await markRawDataAsProcessed('raw_html_data', rawDataId);
-              }
+          console.log(`\n  [${i + 1}/${newCids.length}] 商品CID: ${cid}`);
 
-              totalSaved++;
-            } else {
+          try {
+            const { product, rawDataId, shouldSkip } = await parseDetailPage(cid, forceReprocess);
+
+            if (shouldSkip) {
               totalSkipped++;
+              continue;
             }
+
+            if (product) {
+              console.log(`      タイトル: ${product.title.substring(0, 50)}...`);
+              console.log(`      出演者: ${product.performers.join(', ') || '不明'}`);
+              console.log(`      📷 サンプル画像: ${product.sampleImages.length}件`);
+              console.log(`      🎬 サンプル動画: ${product.sampleVideos.length}件`);
+
+              const savedId = await saveProduct(product);
+
+              if (savedId) {
+                if (enableAI) {
+                  const { aiDescription, aiTags } = await generateAIContent(product, enableAI);
+                  await saveAIContent(savedId, aiDescription, aiTags);
+                }
+
+                await saveTranslations(savedId, product);
+
+                if (rawDataId) {
+                  await markRawDataAsProcessed('raw_html_data', rawDataId);
+                }
+
+                totalSaved++;
+              } else {
+                totalSkipped++;
+              }
+            }
+          } catch (error) {
+            console.error(`      ❌ エラー: ${error}`);
+            totalErrors++;
           }
-        } catch (error) {
-          console.error(`      ❌ エラー: ${error}`);
-          totalErrors++;
         }
+
+        // ページ単位の進捗表示
+        console.log(`\n  📊 ページ ${pageNum} 完了 - 累計: 保存=${totalSaved}, スキップ=${totalSkipped}, エラー=${totalErrors}`);
+
+      } catch (error) {
+        console.error(`  ❌ ページ ${pageNum} でエラー: ${error}`);
+        totalErrors++;
+
+        // エラーが続いても少し待って続行
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
-
-      // ページ単位の進捗表示
-      console.log(`\n  📊 ページ ${pageNum} 完了 - 累計: 保存=${totalSaved}, スキップ=${totalSkipped}, エラー=${totalErrors}`);
-
-    } catch (error) {
-      console.error(`  ❌ ページ ${pageNum} でエラー: ${error}`);
-      totalErrors++;
-
-      // エラーが続いても少し待って続行
-      await new Promise(resolve => setTimeout(resolve, 5000));
     }
+
+    console.log(`\n📊 ${direction === 'new' ? '新着順' : '古い順'}完了 - 累計: 処理=${processedCids.size}, 保存=${totalSaved}`);
   }
 
   await closeBrowser();
@@ -1086,7 +1294,10 @@ async function main() {
       maxPages = parseInt(maxPagesArg.split('=')[1], 10);
     }
 
-    await runFullScan(sort, maxPages, enableAI, forceReprocess);
+    // 双方向クロール: デフォルトで有効、--no-bidirectionalで無効化
+    const bidirectional = !args.includes('--no-bidirectional');
+
+    await runFullScan(sort, maxPages, enableAI, forceReprocess, bidirectional);
     process.exit(0);
     return;
   }
@@ -1121,24 +1332,55 @@ async function main() {
     }
   }
 
+  // 双方向クロール: デフォルトで有効
+  const bidirectional = !args.includes('--no-bidirectional');
+
   console.log('=== FANZA クローラー ===');
   console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
   console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}`);
   console.log(`ソート順: ${sort}`);
+  console.log(`双方向クロール: ${bidirectional ? '有効（新着順＋古い順）' : '無効'}`);
   console.log(`設定: pages=${pages}, start-page=${startPage}, limit=${limit}`);
   console.log(`レート制限: ${RATE_LIMIT_MS}ms + ${JITTER_MS}msジッター\n`);
 
   // 1. リストページから商品CIDを収集
   const allCids: string[] = [];
+  const seenCids = new Set<string>();
   const endPage = startPage + pages - 1;
 
+  // 新着順でリストページからCIDを収集
+  console.log('=== 新着順でクロール ===');
   for (let pageNum = startPage; pageNum <= endPage && allCids.length < limit; pageNum++) {
-    const cids = await getCidsFromListPage(pageNum, sort);
+    const cids = await getCidsFromListPage(pageNum, sort, 'new');
     for (const cid of cids) {
-      if (!allCids.includes(cid) && allCids.length < limit) {
+      if (!seenCids.has(cid) && allCids.length < limit) {
+        seenCids.add(cid);
         allCids.push(cid);
       }
     }
+  }
+
+  console.log(`\n📦 新着順から ${allCids.length} 件の商品CIDを収集`);
+
+  // 双方向クロール: 古い順でも収集
+  if (bidirectional && allCids.length < limit) {
+    console.log('\n=== 古い順でクロール ===');
+    for (let pageNum = startPage; pageNum <= endPage && allCids.length < limit; pageNum++) {
+      const cids = await getCidsFromListPage(pageNum, sort, 'old');
+      let newCount = 0;
+      for (const cid of cids) {
+        if (!seenCids.has(cid) && allCids.length < limit) {
+          seenCids.add(cid);
+          allCids.push(cid);
+          newCount++;
+        }
+      }
+      if (newCount === 0) {
+        console.log(`  ページ ${pageNum}: 新規なし、終了`);
+        break;
+      }
+    }
+    console.log(`\n📦 古い順から追加 ${allCids.length - seenCids.size + 1} 件`);
   }
 
   console.log(`\n📦 合計 ${allCids.length} 件の商品CIDを収集\n`);

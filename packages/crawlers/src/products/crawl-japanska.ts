@@ -5,11 +5,13 @@
  * - Japanska (japanska-xxx.com) からHTMLをクロールして商品データを取得
  * - 商品一覧ページから商品リストを取得
  * - 商品詳細ページからメタデータを取得
+ * - 双方向クロール: 新着順リストと古い商品ID範囲の両方をスキャン
  * - アフィリエイトURL: https://wlink.golden-gateway.com/id/9512-1-001-{詳細ID}/
  * - AI機能: Gemini APIによる説明文生成・タグ抽出（--no-aiオプションで無効化可能）
  *
  * 使い方:
  * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-japanska.ts [--limit 100] [--start 1] [--no-ai]
+ * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-japanska.ts --full-scan [--start-id=1000] [--end-id=10000]
  */
 
 if (!process.env.DATABASE_URL) {
@@ -913,11 +915,88 @@ async function getMovieIdsFromListPage(pageNum: number = 0): Promise<string[]> {
 }
 
 /**
+ * フルスキャンモード: 商品ID範囲でクロール
+ * リストページには表示されない古い商品も取得可能
+ */
+async function runFullScan(
+  startId: number,
+  endId: number,
+  enableAI: boolean,
+  forceReprocess: boolean,
+): Promise<{ found: number; saved: number; skipped: number }> {
+  console.log('=== Japanska フルスキャンモード ===');
+  console.log(`ID範囲: ${startId} - ${endId}`);
+  console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
+  console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}\n`);
+
+  let totalFound = 0;
+  let totalSaved = 0;
+  let totalSkipped = 0;
+  let consecutiveNotFound = 0;
+  const maxConsecutiveNotFound = 50; // 50連続で見つからなければスキップ
+
+  for (let movieId = startId; movieId <= endId; movieId++) {
+    const movieIdStr = movieId.toString();
+
+    // 10個ごとに進捗表示
+    if ((movieId - startId) % 10 === 0) {
+      console.log(`\n--- ID ${movieId}/${endId} (進捗: ${Math.round((movieId - startId) / (endId - startId) * 100)}%) ---`);
+    }
+
+    console.log(`[${movieId}] 処理中...`);
+
+    const { product, rawDataId, shouldSkip } = await parseDetailPage(movieIdStr, forceReprocess);
+
+    if (shouldSkip) {
+      totalSkipped++;
+      consecutiveNotFound = 0;
+      continue;
+    }
+
+    if (product) {
+      console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
+      consecutiveNotFound = 0;
+
+      const savedId = await saveProduct(product);
+      if (savedId) {
+        if (enableAI) {
+          const { aiDescription, aiTags } = await generateAIContent(product, enableAI);
+          await saveAIContent(savedId, aiDescription, aiTags);
+          await translateAndSave(savedId, product.title, product.description, enableAI);
+        }
+
+        if (rawDataId) {
+          await markRawDataAsProcessed('japanska', rawDataId);
+        }
+
+        totalSaved++;
+      }
+      totalFound++;
+    } else {
+      consecutiveNotFound++;
+      if (consecutiveNotFound >= maxConsecutiveNotFound) {
+        console.log(`  ${maxConsecutiveNotFound}連続で商品が見つからないため、この範囲をスキップ`);
+        // 1000ずつジャンプして次を探す
+        movieId = Math.min(movieId + 1000, endId);
+        consecutiveNotFound = 0;
+      }
+    }
+
+    // レート制限
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  return { found: totalFound, saved: totalSaved, skipped: totalSkipped };
+}
+
+/**
  * メイン処理
  * リストページベースでクロール（サイト構造変更対応）
  * --pages: 取得するリストページ数 (デフォルト: 5)
  * --start-page: 開始ページ番号 (デフォルト: 1)
  * --limit: 最大取得件数 (デフォルト: 200)
+ * --full-scan: ID範囲でフルスキャン
+ * --bidirectional: 新着リスト＋古いID範囲の両方をスキャン
  */
 async function main() {
   const args = process.argv.slice(2);
@@ -928,6 +1007,11 @@ async function main() {
   let limit = 200;
   const enableAI = !args.includes('--no-ai');
   const forceReprocess = args.includes('--force');
+  const fullScan = args.includes('--full-scan');
+  const bidirectional = !args.includes('--no-bidirectional');
+
+  let startId = 1000;  // デフォルトID開始
+  let endId = 10000;   // デフォルトID終了
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--pages' && args[i + 1]) {
@@ -939,20 +1023,43 @@ async function main() {
     if (args[i] === '--limit' && args[i + 1]) {
       limit = parseInt(args[i + 1]);
     }
+    if (args[i].startsWith('--start-id=')) {
+      startId = parseInt(args[i].split('=')[1]);
+    }
+    if (args[i].startsWith('--end-id=')) {
+      endId = parseInt(args[i].split('=')[1]);
+    }
+  }
+
+  // フルスキャンモード
+  if (fullScan) {
+    const result = await runFullScan(startId, endId, enableAI, forceReprocess);
+    console.log('\n=== フルスキャン完了 ===');
+    console.log(`取得件数: ${result.found}`);
+    console.log(`保存件数: ${result.saved}`);
+    console.log(`スキップ件数: ${result.skipped}`);
+    await closeBrowser();
+    process.exit(0);
+    return;
   }
 
   console.log('=== Japanska クローラー (リストページベース) ===');
   console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
   console.log(`強制再処理: ${forceReprocess ? '有効' : '無効'}`);
+  console.log(`双方向クロール: ${bidirectional ? '有効' : '無効'}`);
   console.log(`設定: pages=${pages}, start-page=${startPage}, limit=${limit}\n`);
 
-  // 1. リストページから商品IDを収集
+  // 1. リストページから商品IDを収集（新着順）
   const allMovieIds: string[] = [];
+  const seenIds = new Set<string>();
   const endPage = startPage + pages - 1;
+
+  console.log('=== 新着順リストからクロール ===');
   for (let pageNum = startPage - 1; pageNum < endPage && allMovieIds.length < limit; pageNum++) {
     const ids = await getMovieIdsFromListPage(pageNum);
     for (const id of ids) {
-      if (!allMovieIds.includes(id) && allMovieIds.length < limit) {
+      if (!seenIds.has(id) && allMovieIds.length < limit) {
+        seenIds.add(id);
         allMovieIds.push(id);
       }
     }
@@ -960,7 +1067,39 @@ async function main() {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
-  console.log(`\n📦 合計 ${allMovieIds.length} 件の商品IDを収集\n`);
+  console.log(`\n📦 新着リストから ${allMovieIds.length} 件の商品IDを収集`);
+
+  // 双方向クロール: DBから既存の最小IDを取得して、それより小さいIDをスキャン
+  if (bidirectional && allMovieIds.length < limit) {
+    console.log('\n=== 古い商品IDのスキャン ===');
+
+    // DBから既存の最小IDを取得
+    const minIdResult = await db.execute(sql`
+      SELECT MIN(CAST(REGEXP_REPLACE(original_product_id, '[^0-9]', '', 'g') AS INTEGER)) as min_id
+      FROM product_sources
+      WHERE asp_name = 'Japanska'
+        AND original_product_id ~ '^[0-9]+$'
+    `);
+    const currentMinId = minIdResult.rows[0]?.min_id as number || 10000;
+
+    console.log(`  現在の最小ID: ${currentMinId}`);
+
+    // 最小IDより小さい範囲をサンプリング
+    const sampleStart = Math.max(1, currentMinId - 500);
+    const remainingLimit = limit - allMovieIds.length;
+
+    for (let id = currentMinId - 1; id >= sampleStart && allMovieIds.length < limit; id--) {
+      const idStr = id.toString();
+      if (!seenIds.has(idStr)) {
+        seenIds.add(idStr);
+        allMovieIds.push(idStr);
+      }
+    }
+
+    console.log(`  追加ID: ${allMovieIds.length - seenIds.size + remainingLimit} 件`);
+  }
+
+  console.log(`\n📦 合計 ${allMovieIds.length} 件の商品IDを処理対象\n`);
 
   let totalFound = 0;
   let totalSaved = 0;

@@ -1,7 +1,7 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { locales } from '@/i18n';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { locales, defaultLocale } from '@/i18n';
 
 // ロケールからhreflang属性へのマッピング（Google推奨形式）
 const hreflangMap: Record<string, string[]> = {
@@ -15,19 +15,43 @@ const hreflangMap: Record<string, string[]> = {
 // 追加の地域向けhreflangタグ - 現在は不要（zh-TWロケールで対応）
 const additionalHreflangs: Array<{ hreflang: string; locale: string }> = [];
 
-export default function HreflangTags() {
-  const pathname = usePathname();
+/**
+ * URLを構築する（?hl=パラメータ方式）
+ * - デフォルトロケール(ja)の場合は ?hl= なし
+ * - 他のロケールの場合は ?hl={locale}
+ * - 既存のクエリパラメータは保持（hl以外）
+ */
+function buildUrl(
+  baseUrl: string,
+  pathname: string,
+  locale: string,
+  searchParams: URLSearchParams
+): string {
+  const params = new URLSearchParams();
 
-  // パスから現在のロケールプレフィックスを削除
-  let pathWithoutLocale = pathname;
-  for (const loc of locales) {
-    if (pathname === `/${loc}` || pathname.startsWith(`/${loc}/`)) {
-      pathWithoutLocale = pathname.slice(`/${loc}`.length) || '/';
-      break;
+  // 既存のパラメータを保持（hl, page以外）
+  // hl: ロケールパラメータは新しい値で上書き
+  // page: ページ番号は言語切り替え時にリセット
+  searchParams.forEach((value, key) => {
+    if (key !== 'hl' && key !== 'page') {
+      params.set(key, value);
     }
+  });
+
+  // デフォルトロケール以外は ?hl= を追加
+  if (locale !== defaultLocale) {
+    params.set('hl', locale);
   }
 
-  // サイトのベースURL（本番環境で置き換えてください）
+  const queryString = params.toString();
+  return queryString ? `${baseUrl}${pathname}?${queryString}` : `${baseUrl}${pathname}`;
+}
+
+export default function HreflangTags() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // サイトのベースURL
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
   return (
@@ -35,12 +59,13 @@ export default function HreflangTags() {
       {/* 各言語のhreflangタグ */}
       {locales.map((locale) => {
         const hreflangs = hreflangMap[locale] || [locale];
+        const url = buildUrl(baseUrl, pathname, locale, searchParams);
         return hreflangs.map((hreflang) => (
           <link
             key={`${locale}-${hreflang}`}
             rel="alternate"
             hrefLang={hreflang}
-            href={`${baseUrl}/${locale}${pathWithoutLocale}`}
+            href={url}
           />
         ));
       })}
@@ -50,14 +75,14 @@ export default function HreflangTags() {
           key={hreflang}
           rel="alternate"
           hrefLang={hreflang}
-          href={`${baseUrl}/${locale}${pathWithoutLocale}`}
+          href={buildUrl(baseUrl, pathname, locale, searchParams)}
         />
       ))}
-      {/* x-defaultタグ（デフォルトはja） */}
+      {/* x-defaultタグ（デフォルトはja - ?hl=なし） */}
       <link
         rel="alternate"
         hrefLang="x-default"
-        href={`${baseUrl}/ja${pathWithoutLocale}`}
+        href={buildUrl(baseUrl, pathname, defaultLocale, searchParams)}
       />
     </>
   );

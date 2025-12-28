@@ -36,6 +36,7 @@ export default function ProductSortDropdown({ sortBy, basePath, theme }: Product
         value={sortBy}
         onChange={(e) => handleSortChange(e.target.value)}
         className={themeConfig.sortDropdown.selectClass}
+        aria-label={t.sortLabel}
       >
         <option value="releaseDateDesc">{t.releaseDateDesc}</option>
         <option value="releaseDateAsc">{t.releaseDateAsc}</option>

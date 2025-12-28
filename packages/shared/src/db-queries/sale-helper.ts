@@ -277,6 +277,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
 
   /**
    * セール中の商品を取得
+   * ASP優先順位: MGS > DUGA > SOKMIL > FANZA
    */
   async function getSaleProducts(options?: {
     limit?: number;
@@ -306,6 +307,15 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
         conditions.push(gte(productSales.discountPercent, options.minDiscount));
       }
 
+      // ASP優先順位でソート（MGS優先）
+      const aspPriorityOrder = drizzleSql`CASE
+        WHEN ${productSources.aspName} = 'MGS' THEN 1
+        WHEN ${productSources.aspName} = 'DUGA' THEN 2
+        WHEN ${productSources.aspName} = 'SOKMIL' THEN 3
+        WHEN ${productSources.aspName} = 'FANZA' THEN 4
+        ELSE 5
+      END`;
+
       const results = await db
         .select({
           productId: products.id,
@@ -325,7 +335,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
         .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
         .innerJoin(products, eq(productSources.productId, products.id))
         .where(and(...conditions))
-        .orderBy(desc(productSales.discountPercent), desc(productSales.fetchedAt))
+        .orderBy(aspPriorityOrder, desc(productSales.discountPercent), desc(productSales.fetchedAt))
         .limit(limit);
 
       // 出演者情報を取得
