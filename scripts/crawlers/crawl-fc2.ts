@@ -513,8 +513,9 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
           if (saved) {
             console.log(`    💰 セール情報保存完了`);
           }
-        } catch (saleError: any) {
-          console.log(`    ⚠️ セール情報保存失敗: ${saleError.message}`);
+        } catch (saleError: unknown) {
+          const errorMessage = saleError instanceof Error ? saleError.message : String(saleError);
+          console.log(`    ⚠️ セール情報保存失敗: ${errorMessage}`);
         }
       }
     }

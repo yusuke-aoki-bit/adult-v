@@ -251,7 +251,7 @@ async function fetchPageWithPuppeteer(url: string, referer?: string, maxRetries:
           waitUntil: 'networkidle2',
           timeout: 60000,
         });
-      } catch (timeoutError: any) {
+      } catch (timeoutError: unknown) {
         // タイムアウトしても、部分的に読み込まれている可能性がある
         console.log(`    ⚠️ ページ読み込みタイムアウト、部分コンテンツを試行...`);
         const html = await page.content();
@@ -273,9 +273,10 @@ async function fetchPageWithPuppeteer(url: string, referer?: string, maxRetries:
       // ページコンテンツ取得
       const html = await page.content();
       return { html, status };
-    } catch (error: any) {
+    } catch (error: unknown) {
       const isLastAttempt = attempt === maxRetries;
-      console.log(`    ⚠️ Puppeteer fetch失敗 (${attempt}/${maxRetries}): ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(`    ⚠️ Puppeteer fetch失敗 (${attempt}/${maxRetries}): ${errorMessage}`);
       if (isLastAttempt) {
         return { html: null, status: 0 };
       }

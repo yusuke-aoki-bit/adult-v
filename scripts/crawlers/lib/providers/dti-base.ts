@@ -957,8 +957,9 @@ export async function saveProduct(
           if (saved) {
             console.log(`    💰 Saved sale info to database`);
           }
-        } catch (saleError: any) {
-          console.log(`    ⚠️ セール情報保存失敗: ${saleError.message}`);
+        } catch (saleError: unknown) {
+          const errorMessage = saleError instanceof Error ? saleError.message : String(saleError);
+          console.log(`    ⚠️ セール情報保存失敗: ${errorMessage}`);
         }
       }
 
