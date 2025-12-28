@@ -1,6 +1,9 @@
 /**
  * ASPフィルタ条件生成ユーティリティ
  * サイトモードに応じたSQLフィルタ条件を生成
+ *
+ * Note: DIパターンのため、テーブル型は any を使用
+ * 将来的にはジェネリクスを使った型安全な実装を検討
  */
 import { sql, SQL } from 'drizzle-orm';
 import { buildAspNormalizationSql } from '../lib/asp-utils';
@@ -99,7 +102,8 @@ export function createMultiProviderFilterCondition(
   productSourcesTable: any,
   providers: string[]
 ): SQL {
-  const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
+  // サブクエリ内ではproduct_sourcesのaffiliate_urlを使用（外部テーブル参照を避ける）
+  const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'ps.affiliate_url');
   return sql`EXISTS (
     SELECT 1 FROM ${productSourcesTable} ps
     WHERE ps.product_id = ${productsTable.id}
@@ -118,7 +122,8 @@ export function createExcludeProviderFilterCondition(
   productSourcesTable: any,
   excludeProviders: string[]
 ): SQL {
-  const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'products.default_thumbnail_url');
+  // サブクエリ内ではproduct_sourcesのaffiliate_urlを使用（外部テーブル参照を避ける）
+  const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'ps.affiliate_url');
   return sql`NOT EXISTS (
     SELECT 1 FROM ${productSourcesTable} ps
     WHERE ps.product_id = ${productsTable.id}

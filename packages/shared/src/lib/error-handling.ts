@@ -268,7 +268,29 @@ export interface ErrorLogContext {
 }
 
 /**
- * エラーをログ出力
+ * Sentryにエラーを送信（利用可能な場合）
+ */
+async function reportToSentry(error: unknown, context?: ErrorLogContext): Promise<void> {
+  try {
+    // 動的インポートでSentryを読み込み（オプショナル依存）
+    const Sentry = await import('@sentry/nextjs').catch(() => null);
+    if (Sentry) {
+      Sentry.withScope((scope) => {
+        if (context) {
+          Object.entries(context).forEach(([key, value]) => {
+            scope.setExtra(key, value);
+          });
+        }
+        Sentry.captureException(error);
+      });
+    }
+  } catch {
+    // Sentryが利用できない場合は無視
+  }
+}
+
+/**
+ * エラーをログ出力（Sentry統合）
  */
 export function logError(error: unknown, context?: ErrorLogContext): void {
   const errorInfo = {
@@ -280,6 +302,9 @@ export function logError(error: unknown, context?: ErrorLogContext): void {
   };
 
   console.error('[ERROR]', JSON.stringify(errorInfo, null, 2));
+
+  // Sentryにも送信（非同期・ノンブロッキング）
+  reportToSentry(error, context).catch(() => {});
 }
 
 /**

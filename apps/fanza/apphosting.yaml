@@ -65,3 +65,8 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  # Sentry Configuration
+  - variable: SENTRY_DSN
+    secret: sentry-dsn-fanza
+  - variable: NEXT_PUBLIC_SENTRY_DSN
+    secret: sentry-dsn-fanza

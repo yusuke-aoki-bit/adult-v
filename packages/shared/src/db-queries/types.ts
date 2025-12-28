@@ -214,6 +214,34 @@ export type ProductSalesTable = TableReference & ProductSalesTableColumns;
 // ============================================================
 
 /**
+ * SQLクエリ型（Drizzle互換）
+ * DIパターンで注入されるクエリビルダーの型
+ */
+export type SqlQuery = SQL | { getSQL: () => SQL };
+
+/**
+ * DB execute結果の行型
+ * DIパターンのため具体的な型推論が効かない
+ */
+export type DbRow = Record<string, unknown>;
+
+/**
+ * DB execute メソッドの型
+ * cron-handlers等で共通使用
+ */
+export interface DbExecutor {
+  execute: (query: SqlQuery) => Promise<{ rows: DbRow[]; rowCount: number | null }>;
+}
+
+/**
+ * 型付きDB execute メソッド
+ * ジェネリクスで結果の行型を指定可能
+ */
+export interface TypedDbExecutor {
+  execute: <T extends DbRow = DbRow>(query: SqlQuery) => Promise<{ rows: T[]; rowCount: number | null }>;
+}
+
+/**
  * DB接続の基本型
  */
 export interface DbConnection {
@@ -457,11 +485,36 @@ export type ProductSortOption =
 /**
  * getProducts関数用オプション
  */
+/**
+ * カーソルベースページネーション用カーソル
+ * Base64エンコードされたJSON: { releaseDate: string, id: number }
+ */
+export type ProductCursor = string;
+
+/**
+ * カーソルベースページネーション結果
+ */
+export interface CursorPaginatedResult<T> {
+  items: T[];
+  nextCursor: ProductCursor | null;
+  hasMore: boolean;
+}
+
+/**
+ * カーソルデータ（内部用）
+ */
+export interface CursorData {
+  releaseDate: string | null;
+  id: number;
+}
+
 export interface GetProductsOptions {
   /** 取得件数 */
   limit?: number;
-  /** オフセット */
+  /** オフセット（従来のページネーション用） */
   offset?: number;
+  /** カーソル（カーソルベースページネーション用） */
+  cursor?: ProductCursor;
   /** 特定のIDリストで取得（バッチ取得用） */
   ids?: number[];
   /** カテゴリフィルタ */

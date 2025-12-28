@@ -2,9 +2,10 @@
  * 商品リストクエリ
  * getProducts/getProductsCount共通化
  */
-import { eq, and, or, desc, asc, sql, inArray, SQL } from 'drizzle-orm';
-import type { GetProductsOptions, ProductSortOption } from './types';
+import { eq, and, or, desc, asc, sql, inArray, SQL, lt, gt } from 'drizzle-orm';
+import type { GetProductsOptions, ProductSortOption, CursorPaginatedResult, CursorData } from './types';
 import type { SiteMode } from './asp-filter';
+import { decodeCursor, encodeCursor, createCursorFromProduct } from '../lib/cursor-pagination';
 import { createAspFilterCondition, createProviderFilterCondition, createMultiProviderFilterCondition, createExcludeProviderFilterCondition } from './asp-filter';
 import { generateProductIdVariations } from '../lib/product-id-utils';
 import { normalizeTitle, deduplicateProductsByTitle, type DeduplicatableProduct } from '../lib/deduplication';
@@ -88,6 +89,7 @@ export interface ProductListQueries {
   getProducts: <T extends DeduplicatableProduct>(options?: GetProductsOptions) => Promise<T[]>;
   getProductsCount: (options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>) => Promise<number>;
   getProductsByCategory: <T>(tagId: number, options?: GetProductsByCategoryOptions) => Promise<T[]>;
+  getProductsWithCursor: <T extends DeduplicatableProduct>(options?: Omit<GetProductsOptions, 'offset'> & { cursor?: string }) => Promise<CursorPaginatedResult<T>>;
 }
 
 // ============================================================
@@ -422,8 +424,9 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
           .offset(options?.offset || 0);
 
         // バッチでデータを取得
-        const productList = results.map((r: { product: DbProduct }) => r.product);
-        const productIds = productList.map((p: DbProduct) => p.id);
+        // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
+        const productList = results.map((r) => r.product as unknown as DbProduct);
+        const productIds = productList.map((p) => p.id);
         if (productIds.length === 0) return [];
 
         // サイトモードに応じてプロバイダーフィルターを渡す
@@ -459,8 +462,9 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
           .offset(options?.offset || 0);
 
         // バッチでデータを取得
-        const productList = results.map((r: { product: DbProduct }) => r.product);
-        const productIds = productList.map((p: DbProduct) => p.id);
+        // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
+        const productList = results.map((r) => r.product as unknown as DbProduct);
+        const productIds = productList.map((p) => p.id);
         if (productIds.length === 0) return [];
 
         // サイトモードに応じてプロバイダーフィルターを渡す
@@ -485,14 +489,31 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         .offset(options?.offset || 0);
 
       // バッチでデータを取得
-      const productIds = results.map((p: DbProduct) => p.id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const typedResults = results as any[];
+      const productIds = typedResults.map((p) => p.id as number);
       if (productIds.length === 0) return [];
 
       // サイトモードに応じてプロバイダーフィルターを渡す
       const batchData = siteMode === 'all'
         ? await batchFetchProductRelatedData(productIds, options?.providers)
         : await batchFetchProductRelatedData(productIds);
-      const mappedProducts = mapProductsWithBatchData(results, batchData, mapperDeps, options?.locale || 'ja') as T[];
+      const dbProducts = typedResults.map((p) => ({
+        id: p.id as number,
+        title: p.title as string,
+        normalizedProductId: p.normalizedProductId as string | null,
+        defaultThumbnailUrl: p.defaultThumbnailUrl as string | null,
+        releaseDate: p.releaseDate as Date | null,
+        duration: p.duration as number | null,
+        makerName: p.makerName as string | null,
+        labelName: p.labelName as string | null,
+        description: p.description as string | null,
+        reviewCount: p.reviewCount as number | null,
+        reviewAverage: p.reviewAverage as number | null,
+        createdAt: p.createdAt as Date | null,
+        updatedAt: p.updatedAt as Date | null,
+      })) as DbProduct[];
+      const mappedProducts = mapProductsWithBatchData(dbProducts, batchData, mapperDeps, options?.locale || 'ja') as T[];
 
       // タイトルベースの重複排除（共通関数使用）
       return deduplicateProductsByTitle(mappedProducts, siteMode) as T[];
@@ -721,11 +742,173 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
     }
   }
 
+  /**
+   * カーソルベースページネーションで商品を取得
+   *
+   * オフセットベースより高パフォーマンス:
+   * - 大規模データセットでも一定のパフォーマンス
+   * - リアルタイム更新時の重複/欠落防止
+   *
+   * 制限事項:
+   * - releaseDateDesc/releaseDateAscソートのみ対応
+   * - ランダムソート非対応
+   */
+  async function getProductsWithCursor<T extends DeduplicatableProduct>(
+    options?: Omit<GetProductsOptions, 'offset'> & { cursor?: string }
+  ): Promise<CursorPaginatedResult<T>> {
+    try {
+      const db = getDb();
+      const limit = options?.limit || 100;
+      const sortBy = options?.sortBy || 'releaseDateDesc';
+
+      // カーソルベースは releaseDate ソートのみ対応
+      if (sortBy !== 'releaseDateDesc' && sortBy !== 'releaseDateAsc') {
+        throw new Error(`Cursor pagination only supports releaseDateDesc/releaseDateAsc. Got: ${sortBy}`);
+      }
+
+      const isDescending = sortBy === 'releaseDateDesc';
+
+      // カーソルをデコード
+      let cursorData: CursorData | null = null;
+      if (options?.cursor) {
+        cursorData = decodeCursor(options.cursor);
+        if (!cursorData) {
+          throw new Error('Invalid cursor');
+        }
+      }
+
+      // 基本条件を構築
+      const baseConditions = buildConditions(options as GetProductsOptions);
+
+      // カーソル条件を追加
+      if (cursorData) {
+        const { releaseDate, id } = cursorData;
+
+        if (releaseDate === null) {
+          // NULLの中でidで比較
+          if (isDescending) {
+            baseConditions.push(
+              or(
+                sql`${products.releaseDate} IS NOT NULL`,
+                and(
+                  sql`${products.releaseDate} IS NULL`,
+                  lt(products.id, id)
+                )
+              )!
+            );
+          } else {
+            baseConditions.push(
+              and(
+                sql`${products.releaseDate} IS NULL`,
+                gt(products.id, id)
+              )!
+            );
+          }
+        } else {
+          // 通常のカーソル条件
+          const cursorDate = new Date(releaseDate);
+          if (isDescending) {
+            baseConditions.push(
+              or(
+                lt(products.releaseDate, cursorDate),
+                and(
+                  eq(products.releaseDate, cursorDate),
+                  lt(products.id, id)
+                ),
+                sql`${products.releaseDate} IS NULL`
+              )!
+            );
+          } else {
+            baseConditions.push(
+              or(
+                gt(products.releaseDate, cursorDate),
+                and(
+                  eq(products.releaseDate, cursorDate),
+                  gt(products.id, id)
+                )
+              )!
+            );
+          }
+        }
+      }
+
+      const whereClause = baseConditions.length > 0 ? and(...baseConditions) : undefined;
+
+      // +1件取得して次ページの有無を判定
+      const results = await db
+        .select()
+        .from(products)
+        .where(whereClause)
+        .orderBy(
+          isDescending
+            ? desc(sql`COALESCE(${products.releaseDate}, '1970-01-01')`)
+            : asc(sql`COALESCE(${products.releaseDate}, '9999-12-31')`),
+          isDescending ? desc(products.id) : asc(products.id)
+        )
+        .limit(limit + 1);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const typedResults = results as any[];
+      const hasMore = typedResults.length > limit;
+      const itemsToProcess = hasMore ? typedResults.slice(0, limit) : typedResults;
+
+      const productIds = itemsToProcess.map((p) => p.id as number);
+      if (productIds.length === 0) {
+        return { items: [], nextCursor: null, hasMore: false };
+      }
+
+      // バッチでデータを取得
+      const batchData = siteMode === 'all'
+        ? await batchFetchProductRelatedData(productIds, options?.providers)
+        : await batchFetchProductRelatedData(productIds);
+
+      const dbProducts = itemsToProcess.map((p) => ({
+        id: p.id as number,
+        title: p.title as string,
+        normalizedProductId: p.normalizedProductId as string | null,
+        defaultThumbnailUrl: p.defaultThumbnailUrl as string | null,
+        releaseDate: p.releaseDate as Date | null,
+        duration: p.duration as number | null,
+        makerName: p.makerName as string | null,
+        labelName: p.labelName as string | null,
+        description: p.description as string | null,
+        reviewCount: p.reviewCount as number | null,
+        reviewAverage: p.reviewAverage as number | null,
+        createdAt: p.createdAt as Date | null,
+        updatedAt: p.updatedAt as Date | null,
+      })) as DbProduct[];
+
+      const mappedProducts = mapProductsWithBatchData(dbProducts, batchData, mapperDeps, options?.locale || 'ja') as T[];
+      const deduplicatedProducts = deduplicateProductsByTitle(mappedProducts, siteMode) as T[];
+
+      // 次のカーソルを生成
+      let nextCursor: string | null = null;
+      if (hasMore && deduplicatedProducts.length > 0) {
+        const lastProduct = deduplicatedProducts[deduplicatedProducts.length - 1];
+        // 元のDBデータからreleaseDateを取得（マッピング後のデータはフォーマットが変わっている可能性）
+        const lastDbProduct = dbProducts.find((p) => p.id === (lastProduct as { id: number }).id);
+        if (lastDbProduct) {
+          nextCursor = encodeCursor(createCursorFromProduct(lastDbProduct));
+        }
+      }
+
+      return {
+        items: deduplicatedProducts,
+        nextCursor,
+        hasMore,
+      };
+    } catch (error) {
+      console.error('Error fetching products with cursor:', error);
+      throw error;
+    }
+  }
+
   return {
     getProducts,
     getProductsCount,
     getProductsByCategory,
+    getProductsWithCursor,
   };
 }
 
-export type { GetProductsOptions, ProductSortOption };
+export type { GetProductsOptions, ProductSortOption, CursorPaginatedResult };
