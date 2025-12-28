@@ -421,30 +421,42 @@ async function main() {
           `);
         }
 
-        // 7. 出演者を保存
+        // 7. 出演者を保存（バッチ処理）
         if (item.actors && item.actors.length > 0) {
-          for (const actor of item.actors) {
-            if (!isValidPerformerName(actor.name)) continue;
+          // バリデーションと正規化を先に行う（nullを除外）
+          const validPerformerNames = item.actors
+            .filter(actor => isValidPerformerName(actor.name))
+            .map(actor => normalizePerformerName(actor.name))
+            .filter((name): name is string => name !== null && isValidPerformerForProduct(name, item.itemName));
 
-            const normalizedName = normalizePerformerName(actor.name);
-            if (!isValidPerformerForProduct(normalizedName, item.itemName)) continue;
-
-            const performerResult = await db.execute(sql`
+          if (validPerformerNames.length > 0) {
+            // バッチでperformersをupsert
+            const performerResults = await db.execute(sql`
               INSERT INTO performers (name)
-              VALUES (${normalizedName})
+              SELECT unnest(${validPerformerNames}::text[])
               ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-              RETURNING id
+              RETURNING id, name
             `);
 
-            const performerRow = getFirstRow<IdRow>(performerResult);
-            const performerId = performerRow!.id;
+            // 出演者ID-名前マップを作成
+            const performerIdMap = new Map<string, number>();
+            for (const row of performerResults.rows as { id: number; name: string }[]) {
+              performerIdMap.set(row.name, row.id);
+            }
 
-            await db.execute(sql`
-              INSERT INTO product_performers (product_id, performer_id)
-              VALUES (${productId}, ${performerId})
-              ON CONFLICT DO NOTHING
-            `);
-            stats.performersLinked++;
+            // バッチでproduct_performersにリレーション作成
+            const performerIds = validPerformerNames
+              .map(name => performerIdMap.get(name))
+              .filter((id): id is number => id !== undefined);
+
+            if (performerIds.length > 0) {
+              await db.execute(sql`
+                INSERT INTO product_performers (product_id, performer_id)
+                SELECT ${productId}, unnest(${performerIds}::int[])
+                ON CONFLICT DO NOTHING
+              `);
+              stats.performersLinked += performerIds.length;
+            }
           }
         }
 

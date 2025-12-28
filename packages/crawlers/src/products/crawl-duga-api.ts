@@ -514,26 +514,35 @@ async function main() {
           console.log(`  ✓ カテゴリ/タグ保存完了`);
         }
 
-        // 8. 出演者情報保存（performersがある場合）
+        // 8. 出演者情報保存（performersがある場合）- バッチ処理
         if (item.performers && item.performers.length > 0) {
           console.log(`  👤 出演者保存中 (${item.performers.length}人)...`);
 
-          for (const performer of item.performers) {
-            // performersテーブルにupsert
-            const performerResult = await db.execute(sql`
-              INSERT INTO performers (name)
-              VALUES (${performer.name})
-              ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-              RETURNING id
-            `);
+          const performerNames = item.performers.map((p: { name: string }) => p.name);
 
-            const performerRow = getFirstRow<IdRow>(performerResult);
-            const performerId = performerRow!.id;
+          // バッチでperformersをupsert
+          const performerResults = await db.execute(sql`
+            INSERT INTO performers (name)
+            SELECT unnest(${performerNames}::text[])
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+            RETURNING id, name
+          `);
 
-            // product_performersにリレーション作成
+          // 出演者ID-名前マップを作成
+          const performerIdMap = new Map<string, number>();
+          for (const row of performerResults.rows as { id: number; name: string }[]) {
+            performerIdMap.set(row.name, row.id);
+          }
+
+          // バッチでproduct_performersにリレーション作成
+          const performerIds = performerNames
+            .map((name: string) => performerIdMap.get(name))
+            .filter((id: number | undefined): id is number => id !== undefined);
+
+          if (performerIds.length > 0) {
             await db.execute(sql`
               INSERT INTO product_performers (product_id, performer_id)
-              VALUES (${productId}, ${performerId})
+              SELECT ${productId}, unnest(${performerIds}::int[])
               ON CONFLICT DO NOTHING
             `);
           }
