@@ -71,6 +71,57 @@ export default function robots(): MetadataRoute.Robots {
         ],
         crawlDelay: 1,
       },
+      // Baidu (中国) - 簡体字中国語コンテンツの検索対応
+      {
+        userAgent: 'Baiduspider',
+        allow: '/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/private/',
+          '/age-verification',
+          '/categories',
+          '/categories/',
+          '/*?*include=',
+          '/*?*exclude=',
+          '/*?*page=',
+        ],
+        crawlDelay: 0.5,
+      },
+      // Naver (韓国) - 韓国語コンテンツの検索対応
+      {
+        userAgent: 'Naverbot',
+        allow: '/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/private/',
+          '/age-verification',
+          '/categories',
+          '/categories/',
+          '/*?*include=',
+          '/*?*exclude=',
+          '/*?*page=',
+        ],
+        crawlDelay: 1,
+      },
+      // Yandex (ロシア) - ロシア語圏の検索対応
+      {
+        userAgent: 'YandexBot',
+        allow: '/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/private/',
+          '/age-verification',
+          '/categories',
+          '/categories/',
+          '/*?*include=',
+          '/*?*exclude=',
+          '/*?*page=',
+        ],
+        crawlDelay: 1,
+      },
       // Block aggressive SEO bots
       {
         userAgent: ['AhrefsBot', 'SemrushBot', 'MJ12bot', 'DotBot'],

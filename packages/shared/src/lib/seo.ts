@@ -309,6 +309,7 @@ const localeMap: Record<string, string> = {
   ja: 'ja_JP',
   en: 'en_US',
   zh: 'zh_CN',
+  'zh-TW': 'zh_TW',
   ko: 'ko_KR',
 };
 
