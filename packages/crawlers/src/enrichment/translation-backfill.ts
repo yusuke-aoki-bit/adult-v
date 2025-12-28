@@ -88,11 +88,13 @@ async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
 async function translatePerformers(db: ReturnType<typeof getDb>, limit: number) {
   console.log(`\n👤 出演者の翻訳を開始 (最大${limit}件)`);
 
-  // 翻訳されていない出演者を取得
+  // 翻訳されていない出演者を取得（作品数が多い順）
   const performers = await db.execute(sql`
-    SELECT id, name
-    FROM performers
-    WHERE name_en IS NULL AND name IS NOT NULL
+    SELECT p.id, p.name, COUNT(pp.product_id) as product_count
+    FROM performers p
+    LEFT JOIN product_performers pp ON p.id = pp.performer_id
+    WHERE p.name_en IS NULL AND p.name IS NOT NULL
+    GROUP BY p.id, p.name
     ORDER BY product_count DESC NULLS LAST
     LIMIT ${limit}
   `);
