@@ -208,7 +208,7 @@ export async function getTrendingProducts(limit: number = 20, days: number = 7) 
       COUNT(pv.id) as view_count
     FROM products p
     LEFT JOIN product_views pv ON p.id = pv.product_id
-      AND pv.viewed_at >= NOW() - INTERVAL '${sql.raw(days.toString())} days'
+      AND pv.viewed_at >= NOW() - INTERVAL '1 day' * ${days}
     WHERE NOT EXISTS (
       SELECT 1 FROM product_sources ps
       WHERE ps.product_id = p.id

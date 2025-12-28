@@ -18,7 +18,7 @@ export async function getAnalyticsData(daysBack: number): Promise<AnalyticsData>
   const totalViewsResult = await db.execute(sql`
     SELECT COUNT(*) as total_views
     FROM product_views
-    WHERE viewed_at >= NOW() - INTERVAL '${sql.raw(daysBack.toString())} days'
+    WHERE viewed_at >= NOW() - INTERVAL '1 day' * ${daysBack}
   `);
   const totalViews = Number(totalViewsResult.rows[0]?.total_views || 0);
 
@@ -38,7 +38,7 @@ export async function getAnalyticsData(daysBack: number): Promise<AnalyticsData>
   const uniqueVisitorsResult = await db.execute(sql`
     SELECT COUNT(DISTINCT DATE_TRUNC('hour', viewed_at)) as unique_visitors
     FROM product_views
-    WHERE viewed_at >= NOW() - INTERVAL '${sql.raw(daysBack.toString())} days'
+    WHERE viewed_at >= NOW() - INTERVAL '1 day' * ${daysBack}
   `);
   const uniqueVisitors = Number(uniqueVisitorsResult.rows[0]?.unique_visitors || 0);
 
@@ -50,7 +50,7 @@ export async function getAnalyticsData(daysBack: number): Promise<AnalyticsData>
       COUNT(pv.id) as views
     FROM products p
     JOIN product_views pv ON p.id = pv.product_id
-    WHERE pv.viewed_at >= NOW() - INTERVAL '${sql.raw(daysBack.toString())} days'
+    WHERE pv.viewed_at >= NOW() - INTERVAL '1 day' * ${daysBack}
     GROUP BY p.id, p.title
     ORDER BY views DESC
     LIMIT 5
@@ -70,7 +70,7 @@ export async function getAnalyticsData(daysBack: number): Promise<AnalyticsData>
     FROM performers perf
     JOIN product_performers pp ON perf.id = pp.performer_id
     JOIN product_views pv ON pp.product_id = pv.product_id
-    WHERE pv.viewed_at >= NOW() - INTERVAL '${sql.raw(daysBack.toString())} days'
+    WHERE pv.viewed_at >= NOW() - INTERVAL '1 day' * ${daysBack}
     GROUP BY perf.id, perf.name
     ORDER BY views DESC
     LIMIT 5
