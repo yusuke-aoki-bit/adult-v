@@ -8,6 +8,7 @@ import { eq, and, sql, inArray, desc, asc, SQL } from 'drizzle-orm';
 // Types
 // ============================================================
 
+// Note: DI型でanyを使用するのは意図的 - Drizzle ORMの具象型はアプリ固有のため
 export interface ProductQueryDeps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getDb: () => any;
@@ -441,7 +442,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
       const productsWithData = await Promise.all(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         results.map(async (product: any) => {
-          const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(product.id);
+          const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(product.id as number);
 
           return mapProductToType(
             product,

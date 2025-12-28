@@ -5,6 +5,7 @@
 import { and, or, desc, asc, sql, inArray, notInArray, eq, type SQL } from 'drizzle-orm';
 import type { SiteMode } from './asp-filter';
 import { createActressAspFilterCondition } from './asp-filter';
+import { extractPerformerIds, extractIds } from '../lib/type-guards';
 
 // ============================================================
 // Types
@@ -65,6 +66,7 @@ export interface GetActressesCountOptions {
   bloodTypes?: string[];
 }
 
+// Note: DI型でanyを使用するのは意図的 - Drizzle ORMの具象型はアプリ固有のため
 export interface ActressListQueryDeps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getDb: () => any;
@@ -184,7 +186,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           .where(inArray(productTags.tagId, tagIds));
 
         if (performerIds.length > 0) {
-          const performerIdValues = performerIds.map((p: { performerId: number }) => p.performerId);
+          const performerIdValues = extractPerformerIds(performerIds);
           conditions.push(inArray(performers.id, performerIdValues));
         } else {
           return { conditions, earlyReturn: true };
@@ -203,7 +205,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           .where(inArray(productTags.tagId, tagIds));
 
         if (excludedPerformerIds.length > 0) {
-          const excludedPerformerIdValues = excludedPerformerIds.map((p: { performerId: number }) => p.performerId);
+          const excludedPerformerIdValues = extractPerformerIds(excludedPerformerIds);
           conditions.push(notInArray(performers.id, excludedPerformerIdValues));
         }
       }
@@ -218,7 +220,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
         .where(inArray(productSources.aspName, options.includeAsps));
 
       if (performerIds.length > 0) {
-        const performerIdValues = performerIds.map((p: { performerId: number }) => p.performerId);
+        const performerIdValues = extractPerformerIds(performerIds);
         conditions.push(inArray(performers.id, performerIdValues));
       } else {
         return { conditions, earlyReturn: true };
@@ -234,7 +236,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
         .where(inArray(productSources.aspName, options.excludeAsps));
 
       if (excludedPerformerIds.length > 0) {
-        const excludedPerformerIdValues = excludedPerformerIds.map((p: { performerId: number }) => p.performerId);
+        const excludedPerformerIdValues = extractPerformerIds(excludedPerformerIds);
         conditions.push(notInArray(performers.id, excludedPerformerIdValues));
       }
     }
@@ -247,7 +249,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
         .innerJoin(productPerformers, eq(productVideos.productId, productPerformers.productId));
 
       if (performerIds.length > 0) {
-        const performerIdValues = performerIds.map((p: { performerId: number }) => p.performerId);
+        const performerIdValues = extractPerformerIds(performerIds);
         conditions.push(inArray(performers.id, performerIdValues));
       } else {
         return { conditions, earlyReturn: true };
@@ -262,7 +264,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
         .innerJoin(productPerformers, eq(productImages.productId, productPerformers.productId));
 
       if (performerIds.length > 0) {
-        const performerIdValues = performerIds.map((p: { performerId: number }) => p.performerId);
+        const performerIdValues = extractPerformerIds(performerIds);
         conditions.push(inArray(performers.id, performerIdValues));
       } else {
         return { conditions, earlyReturn: true };
@@ -340,7 +342,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
         conditions.push(
           or(
             nameConditions,
-            inArray(performers.id, matchingPerformerIds.map((p: { performerId: number }) => p.performerId))
+            inArray(performers.id, extractPerformerIds(matchingPerformerIds))
           )!
         );
       } else {
@@ -418,7 +420,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
       }
 
       // バッチでサムネイル、ASPサービス、別名を取得
-      const performerIds = results.map((p: { id: number }) => p.id);
+      const performerIds = extractIds(results);
       const [thumbnails, servicesMap, aliasesMap] = await Promise.all([
         batchGetPerformerThumbnails(performerIds),
         batchGetPerformerServices(performerIds),
@@ -426,16 +428,19 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
       ]);
 
       const locale = options?.locale || 'ja';
-      const actresses = results.map((performer: { id: number; releaseCount?: number }) =>
-        mapPerformerToActress(
+      // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
+      const actresses = results.map((performer: Record<string, unknown>) => {
+        const id = performer.id as number;
+        const releaseCount = (performer.releaseCount as number | null) ?? 0;
+        return mapPerformerToActress(
           performer,
-          performer.releaseCount || 0,
-          thumbnails.get(performer.id),
-          servicesMap.get(performer.id),
-          aliasesMap.get(performer.id),
+          releaseCount,
+          thumbnails.get(id),
+          servicesMap.get(id),
+          aliasesMap.get(id),
           locale
-        )
-      );
+        );
+      });
 
       return actresses as T[];
     } catch (error) {

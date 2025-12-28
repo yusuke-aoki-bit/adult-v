@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { parsePerformerNames, isValidPerformerForProduct } from '../lib/performer-validation';
-import { validateProductData } from '../lib/crawler-utils';
+import { validateProductData, savePerformersBatch } from '../lib/crawler-utils';
 import { getAIHelper } from '../lib/crawler';
 import type { GeneratedDescription } from '../lib/google-apis';
 import { saveCsvToGcs } from '../lib/google-apis';
@@ -77,6 +77,15 @@ function getLargeImageUrl(imageUrl: string): string {
   if (!imageUrl) return imageUrl;
   // /1s.jpg → /1.jpg に変換 (1l.jpgはプレースホルダーなので使わない)
   return imageUrl.replace(/\/(\d+)s\.jpg$/, '/$1.jpg');
+}
+
+/**
+ * 商品IDから画像URLを生成（CSVに画像URLがない場合のフォールバック）
+ * 形式: https://ads.b10f.jp/images/{productId}/1.jpg
+ */
+function generateImageUrlFromProductId(productId: string): string {
+  // productIdからサフィックスなしの画像URLを生成
+  return `https://ads.b10f.jp/images/${productId}/1.jpg`;
 }
 
 async function downloadCsv(): Promise<string> {
@@ -408,8 +417,10 @@ async function main() {
         const releaseDateParsed = item.releaseDate ? new Date(item.releaseDate) : null;
         const durationMinutes = item.duration ? parseInt(item.duration) : null;
         const priceYen = item.price ? parseInt(item.price) : null;
-        // 大サイズ画像URL (1s.jpg → 1.jpg)
-        const largeImageUrl = getLargeImageUrl(item.imageUrl);
+        // 大サイズ画像URL (1s.jpg → 1.jpg)、CSVに画像URLがない場合は商品IDから生成
+        const largeImageUrl = item.imageUrl
+          ? getLargeImageUrl(item.imageUrl)
+          : generateImageUrlFromProductId(item.productId);
 
         const productResult = await db.execute(sql`
           INSERT INTO products (
@@ -515,7 +526,8 @@ async function main() {
 
           // キャプチャ画像URLを生成
           // 例: https://ads.b10f.jp/images/142-zmar-146_a/c1.jpg
-          const baseImageUrl = item.imageUrl.replace(/\/1s\.jpg$/, '');
+          const imageUrlToUse = item.imageUrl || generateImageUrlFromProductId(item.productId);
+          const baseImageUrl = imageUrlToUse.replace(/\/1s?\.jpg$/, '');
 
           for (let i = 1; i <= captureCount; i++) {
             const captureUrl = `${baseImageUrl}/c${i}.jpg`;
@@ -542,11 +554,12 @@ async function main() {
         }
 
         // 10. パッケージ画像を保存（大サイズのみ）
-        if (item.imageUrl) {
+        {
           // 大サイズのみ保存（1s.jpg → 1.jpg に変換）
           // 1s.jpg は約40KB、1.jpg は約200KB
-          const baseImageUrl = item.imageUrl.replace(/\/1s\.jpg$/, '');
-          const largeImageUrl = `${baseImageUrl}/1.jpg`;
+          const imageUrlToUse = item.imageUrl || generateImageUrlFromProductId(item.productId);
+          const baseImageUrl = imageUrlToUse.replace(/\/1s?\.jpg$/, '');
+          const packageImageUrl = `${baseImageUrl}/1.jpg`;
 
           await db.execute(sql`
             INSERT INTO product_images (
@@ -557,7 +570,7 @@ async function main() {
               display_order
             )
             VALUES
-              (${productId}, 'b10f', ${largeImageUrl}, 'package', 0)
+              (${productId}, 'b10f', ${packageImageUrl}, 'package', 0)
             ON CONFLICT DO NOTHING
           `);
 
@@ -568,11 +581,12 @@ async function main() {
         // b10f.jp のサンプル動画は https://ads.b10f.jp/flv/{productCode}.mp4 形式
         // imageUrl例: https://ads.b10f.jp/images/142-zmar-147_a/1s.jpg → productCode: 142-zmar-147
         // imageUrl例: https://ads.b10f.jp/images/1-dmow-096/1s.jpg → productCode: 1-dmow-096
-        if (item.imageUrl) {
+        {
+          const videoImageUrl = item.imageUrl || generateImageUrlFromProductId(item.productId);
           // imageUrlからproductCodeを抽出（_a, _b などのサフィックスを除去）
           // パターン: /images/{productCode}[_suffix]/1s.jpg
-          const productCodeMatch = item.imageUrl.match(/\/images\/([^\/]+?)(?:_[a-z])?\/\d+s?\.jpg/i);
-          const productCode = productCodeMatch ? productCodeMatch[1] : null;
+          const productCodeMatch = videoImageUrl.match(/\/images\/([^\/]+?)(?:_[a-z])?\/\d+s?\.jpg/i);
+          const productCode = productCodeMatch ? productCodeMatch[1] : item.productId;
 
           if (productCode) {
             const sampleVideoUrl = `https://ads.b10f.jp/flv/${productCode}.mp4`;
@@ -650,23 +664,8 @@ async function main() {
           if (validPerformerNames.length > 0) {
             console.log(`  👤 出演者保存中 (${validPerformerNames.length}人)...`);
 
-            for (const performerName of validPerformerNames) {
-              const performerResult = await db.execute(sql`
-                INSERT INTO performers (name)
-                VALUES (${performerName})
-                ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-                RETURNING id
-              `);
-
-              const performerRow = getFirstRow<IdRow>(performerResult);
-              const performerId = performerRow!.id;
-
-              await db.execute(sql`
-                INSERT INTO product_performers (product_id, performer_id)
-                VALUES (${productId}, ${performerId})
-                ON CONFLICT DO NOTHING
-              `);
-            }
+            // バッチ処理で一括保存（N+1クエリ防止）
+            await savePerformersBatch(db, productId, validPerformerNames);
 
             console.log(`  ✓ 出演者保存完了`);
           } else {

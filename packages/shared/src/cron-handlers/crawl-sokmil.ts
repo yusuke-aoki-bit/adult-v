@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import type { SokmilClient } from '../providers/sokmil-client';
+import type { DbExecutor } from '../db-queries/types';
 
 interface CrawlStats {
   totalFetched: number;
@@ -20,7 +21,7 @@ interface CrawlStats {
 interface CrawlSokmilHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
+  getDb: () => DbExecutor;
   getSokmilClient: () => SokmilClient;
 }
 

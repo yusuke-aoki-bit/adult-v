@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import * as cheerio from 'cheerio';
+import type { DbExecutor } from '../db-queries/types';
 
 interface CrawlStats {
   totalFetched: number;
@@ -129,7 +130,7 @@ async function parseDetailPage(itemId: string): Promise<SokmilProduct | null> {
 interface CrawlSokmilScrapeHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
+  getDb: () => DbExecutor;
 }
 
 export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDeps) {

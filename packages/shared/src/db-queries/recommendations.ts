@@ -200,8 +200,7 @@ export interface PerformerOnSaleProduct {
   discountPercent: number;
 }
 
-// 依存性の型定義
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// Note: DI型でanyを使用するのは意図的 - Drizzle ORMの具象型はアプリ固有のため
 export interface RecommendationsDeps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getDb: () => any;

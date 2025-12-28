@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
+import type { DbExecutor } from '../db-queries/types';
 
 interface Stats {
   totalProcessed: number;
@@ -38,7 +39,7 @@ interface AnalyticsReportResult {
 interface SeoEnhanceHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
+  getDb: () => DbExecutor;
   requestIndexing: (url: string, type?: 'URL_UPDATED' | 'URL_DELETED') => Promise<IndexingResult>;
   getAnalyticsReport: (
     propertyId: string,

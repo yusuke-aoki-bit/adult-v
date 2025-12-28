@@ -16,6 +16,8 @@ interface AccordionSectionProps {
   showClear?: boolean;
   /** クリアボタンのラベル */
   clearLabel?: string;
+  /** クリア確認メッセージ */
+  clearConfirmMessage?: string;
   /** クリア時のコールバック */
   onClear?: () => void;
   /** トグル時のコールバック（遅延フェッチ用） */
@@ -41,7 +43,8 @@ function AccordionSection({
   itemCount,
   defaultOpen = false,
   showClear = false,
-  clearLabel = 'クリア',
+  clearLabel,
+  clearConfirmMessage,
   onClear,
   onToggle,
   iconColorClass = 'text-rose-500',
@@ -68,10 +71,11 @@ function AccordionSection({
 
   const handleClear = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onClear && window.confirm('すべてクリアしますか？')) {
+    // confirmメッセージが指定されていない場合は確認なしで実行
+    if (onClear && (!clearConfirmMessage || window.confirm(clearConfirmMessage))) {
       onClear();
     }
-  }, [onClear]);
+  }, [onClear, clearConfirmMessage]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {

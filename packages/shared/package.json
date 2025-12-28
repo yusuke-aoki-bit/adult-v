@@ -42,6 +42,7 @@
     "./config/next-config-base": "./src/config/next-config-base.ts"
   },
   "dependencies": {
+    "@adult-v/database": "workspace:*",
     "firebase": "^11.0.0"
   },
   "peerDependencies": {

@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
+import type { DbExecutor } from '../db-queries/types';
 
 const RATE_LIMIT_MS = 1500;
 
@@ -34,13 +35,19 @@ function normalizeProductCode(code: string): string {
 function isValidPerformerName(name: string): boolean {
   if (!name || name.length < 2 || name.length > 30) return false;
   if (!/^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z・]+$/.test(name)) return false;
-  const excludePatterns = [
-    '素人', 'ナンパ', '企画', 'AV', '動画', 'サンプル', '無料',
+  // 完全一致で除外するパターン（素人系の仮名は許可するため部分一致から削除）
+  const exactExcludePatterns = [
+    '素人', 'ナンパ', '企画', '熟女', '人妻', // 単体のみ除外
+  ];
+  if (exactExcludePatterns.includes(name)) return false;
+  // 部分一致で除外するパターン
+  const partialExcludePatterns = [
+    'AV', '動画', 'サンプル', '無料',
     '高画質', 'HD', '4K', 'VR', 'カテゴリ', 'タグ', 'ジャンル',
     '人気', 'ランキング', '新着', '特集', 'セール', '配信',
     'page', 'Page', 'PAGE', 'next', 'prev'
   ];
-  return !excludePatterns.some(p => name.includes(p));
+  return !partialExcludePatterns.some(p => name.includes(p));
 }
 
 async function crawlNakiny(page: number): Promise<LookupEntry[]> {
@@ -386,7 +393,7 @@ async function crawlAVWiki(page: number): Promise<LookupEntry[]> {
 interface CrawlPerformerLookupHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
+  getDb: () => DbExecutor;
 }
 
 async function saveEntries(

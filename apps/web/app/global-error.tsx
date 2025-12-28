@@ -50,10 +50,18 @@ export default function GlobalError({
   reset: () => void;
 }) {
   // ブラウザの言語設定から適切な翻訳を取得
-  const locale = typeof window !== 'undefined'
-    ? (navigator.language.split('-')[0] as keyof typeof translations)
-    : defaultLocale;
-  const t = translations[locale] || translations[defaultLocale as keyof typeof translations] || translations.en;
+  const getLocale = (): keyof typeof translations => {
+    if (typeof window === 'undefined') return defaultLocale as keyof typeof translations;
+    const lang = navigator.language;
+    // zh-TW, zh-HK などの繁体字圏を検出
+    if (lang.startsWith('zh-TW') || lang.startsWith('zh-HK')) return 'zh-TW';
+    if (lang.startsWith('zh')) return 'zh';
+    const baseLang = lang.split('-')[0];
+    if (baseLang in translations) return baseLang as keyof typeof translations;
+    return 'en';
+  };
+  const locale = getLocale();
+  const t = translations[locale];
 
   // エラーをSentryとコンソールに記録
   useEffect(() => {

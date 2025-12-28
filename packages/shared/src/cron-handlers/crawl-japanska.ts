@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
+import type { DbExecutor } from '../db-queries/types';
 
 interface CrawlStats {
   totalFetched: number;
@@ -123,7 +124,7 @@ async function parseDetailPage(movieId: string): Promise<JapanskaProduct | null>
 interface CrawlJapanskaHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
+  getDb: () => DbExecutor;
 }
 
 export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {

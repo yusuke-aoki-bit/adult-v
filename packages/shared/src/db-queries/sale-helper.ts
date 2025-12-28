@@ -45,12 +45,10 @@ export interface SaleHelperDeps {
 /**
  * セールクエリ用依存性（getSaleProducts用）
  */
+// Note: DI型でanyを使用するのは意図的 - Drizzle ORMの具象型はアプリ固有のため
 export interface SaleQueryDeps {
-  getDb: () => {
-    execute: (query: ReturnType<typeof drizzleSql>) => Promise<{ rows: unknown[] }>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    select: (fields: any) => any;
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getDb: () => any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   products: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -340,8 +338,9 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
 
       // 出演者情報を取得
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const productIds = results.map((r: any) => r.productId as number);
-      const performerData = productIds.length > 0
+      const typedResults = results as any[];
+      const productIds = typedResults.map((r) => r.productId as number);
+      const rawPerformerData = productIds.length > 0
         ? await db
             .select({
               productId: productPerformers.productId,
@@ -354,28 +353,30 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
         : [];
 
       // 商品IDごとに出演者をグループ化
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const typedPerformerData = rawPerformerData as any[];
       const performersByProduct = new Map<number, Array<{ id: number; name: string }>>();
-      for (const p of performerData) {
-        const arr = performersByProduct.get(p.productId) || [];
-        arr.push({ id: p.performerId, name: p.performerName });
-        performersByProduct.set(p.productId, arr);
+      for (const p of typedPerformerData) {
+        const productId = p.productId as number;
+        const arr = performersByProduct.get(productId) || [];
+        arr.push({ id: p.performerId as number, name: p.performerName as string });
+        performersByProduct.set(productId, arr);
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const saleProducts = results.map((r: any) => ({
-        productId: r.productId,
-        normalizedProductId: r.normalizedProductId,
-        title: r.title,
-        thumbnailUrl: r.thumbnailUrl,
-        aspName: r.aspName,
-        affiliateUrl: r.affiliateUrl,
-        regularPrice: r.regularPrice,
-        salePrice: r.salePrice,
-        discountPercent: r.discountPercent || 0,
-        saleName: r.saleName,
-        saleType: r.saleType,
-        endAt: r.endAt,
-        performers: performersByProduct.get(r.productId) || [],
+      const saleProducts: SaleProduct[] = typedResults.map((r: any) => ({
+        productId: r.productId as number,
+        normalizedProductId: r.normalizedProductId as string | null,
+        title: r.title as string,
+        thumbnailUrl: r.thumbnailUrl as string | null,
+        aspName: r.aspName as string,
+        affiliateUrl: r.affiliateUrl as string | null,
+        regularPrice: r.regularPrice as number,
+        salePrice: r.salePrice as number,
+        discountPercent: (r.discountPercent as number | null) || 0,
+        saleName: r.saleName as string | null,
+        saleType: r.saleType as string | null,
+        endAt: r.endAt as Date | null,
+        performers: performersByProduct.get(r.productId as number) || [],
       }));
 
       // キャッシュに保存
@@ -433,7 +434,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
           totalSales: total,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           byAsp: byAspResult.map((r: any) => ({
-            aspName: r.aspName,
+            aspName: r.aspName as string,
             count: Number(r.count),
             avgDiscount: Math.round(Number(r.avgDiscount) || 0),
           })),
@@ -465,7 +466,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
         totalSales: total,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         byAsp: byAspResult.map((r: any) => ({
-          aspName: r.aspName,
+          aspName: r.aspName as string,
           count: Number(r.count),
           avgDiscount: Math.round(Number(r.avgDiscount) || 0),
         })),

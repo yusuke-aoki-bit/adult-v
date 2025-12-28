@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
+import type { DbExecutor } from '../db-queries/types';
 
 interface ProcessStats {
   totalProcessed: number;
@@ -27,7 +28,7 @@ interface RawHtmlRow {
 interface ProcessRawDataHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
+  getDb: () => DbExecutor;
 }
 
 export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {

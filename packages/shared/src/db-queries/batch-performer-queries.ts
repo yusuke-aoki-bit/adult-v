@@ -9,6 +9,7 @@ import { eq, desc, inArray, sql } from 'drizzle-orm';
 // Types
 // ============================================================
 
+// Note: DI型でanyを使用するのは意図的 - Drizzle ORMの具象型はアプリ固有のため
 export interface BatchPerformerQueryDeps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getDb: () => any;
@@ -100,13 +101,17 @@ export function createBatchPerformerQueries(deps: BatchPerformerQueryDeps) {
 
     const map = new Map<number, string[]>();
     for (const r of results) {
-      if (!r.aspName) continue;
+      const aspName = r.aspName as string | null;
+      const thumbnailUrl = r.thumbnailUrl as string | null;
+      const performerId = r.performerId as number;
 
-      let serviceName = r.aspName;
+      if (!aspName) continue;
+
+      let serviceName = aspName;
 
       // DTI系の場合、サムネイルURLからサービスを判別
-      if (r.aspName.toUpperCase() === 'DTI' && r.thumbnailUrl) {
-        const dtiService = getDtiServiceFromUrl(r.thumbnailUrl);
+      if (aspName.toUpperCase() === 'DTI' && thumbnailUrl) {
+        const dtiService = getDtiServiceFromUrl(thumbnailUrl);
         if (dtiService) {
           serviceName = dtiService;
         } else {
@@ -115,13 +120,13 @@ export function createBatchPerformerQueries(deps: BatchPerformerQueryDeps) {
         }
       } else {
         // DTI以外は小文字に正規化
-        serviceName = r.aspName.toLowerCase();
+        serviceName = aspName.toLowerCase();
       }
 
-      const services = map.get(r.performerId) || [];
+      const services = map.get(performerId) || [];
       if (!services.includes(serviceName)) {
         services.push(serviceName);
-        map.set(r.performerId, services);
+        map.set(performerId, services);
       }
     }
     return map;
@@ -147,11 +152,15 @@ export function createBatchPerformerQueries(deps: BatchPerformerQueryDeps) {
 
     const map = new Map<number, string[]>();
     for (const r of results) {
-      if (!r.aliasName || r.isPrimary) continue; // 主名は除外（既にnameに含まれる）
-      const aliases = map.get(r.performerId) || [];
-      if (!aliases.includes(r.aliasName)) {
-        aliases.push(r.aliasName);
-        map.set(r.performerId, aliases);
+      const performerId = r.performerId as number;
+      const aliasName = r.aliasName as string | null;
+      const isPrimary = r.isPrimary as boolean | null;
+
+      if (!aliasName || isPrimary) continue; // 主名は除外（既にnameに含まれる）
+      const aliases = map.get(performerId) || [];
+      if (!aliases.includes(aliasName)) {
+        aliases.push(aliasName);
+        map.set(performerId, aliases);
       }
     }
     return map;

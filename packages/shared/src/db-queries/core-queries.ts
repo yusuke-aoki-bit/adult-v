@@ -24,6 +24,7 @@ function escapeLikePattern(input: string): string {
 import type { SourceData as MapperSourceData } from './mappers';
 import { selectProductSources, groupSourcesByProduct } from '../lib/source-selection';
 import { buildAspNormalizationSql } from '../lib/asp-utils';
+import { extractIds, extractProductIds } from '../lib/type-guards';
 
 // ============================================================
 // Types
@@ -343,7 +344,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
   async function getTags(category?: string): Promise<TagResult[]> {
     const db = getDb();
 
-    let query = db
+    const baseQuery = db
       .select({
         id: tags.id,
         name: tags.name,
@@ -351,11 +352,16 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       })
       .from(tags);
 
-    if (category) {
-      query = query.where(eq(tags.category, category));
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const results: any[] = category
+      ? await baseQuery.where(eq(tags.category, category)).orderBy(asc(tags.name))
+      : await baseQuery.orderBy(asc(tags.name));
 
-    return query.orderBy(asc(tags.name));
+    return results.map((r) => ({
+      id: r.id as number,
+      name: r.name as string,
+      category: r.category as string | null,
+    }));
   }
 
   /**
@@ -374,7 +380,14 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       .where(eq(tags.id, tagId))
       .limit(1);
 
-    return result.length > 0 ? result[0] : null;
+    if (result.length === 0) return null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const r = result[0] as any;
+    return {
+      id: r.id as number,
+      name: r.name as string,
+      category: r.category as string | null,
+    };
   }
 
   /**
@@ -543,7 +556,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
           )
         )
         .limit(limit);
-      return result.map((r: { id: number }) => r.id);
+      return extractIds(result);
     }
 
     const result = await db
@@ -556,7 +569,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         )
       )
       .limit(limit);
-    return result.map((r: { id: number }) => r.id);
+    return extractIds(result);
   }
 
   /**
@@ -605,7 +618,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         return [];
       }
 
-      const productIdList = actressProductIds.map((p: { productId: number }) => p.productId);
+      const productIdList = extractProductIds(actressProductIds);
 
       // 女優の作品に含まれるタグを取得（件数カウントなし）
       const results = await db
@@ -624,7 +637,12 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         )
         .orderBy(tags.name);
 
-      return results;
+      // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
+      return results.map((r) => ({
+        id: r.id as number,
+        name: r.name as string,
+        category: r.category as string | null,
+      }));
     } catch (error) {
       console.error('Error fetching tags for actress:', error);
       throw error;
@@ -650,7 +668,14 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         .where(eq(performerAliases.performerId, performerId))
         .orderBy(desc(performerAliases.isPrimary), asc(performerAliases.aliasName));
 
-      return aliases;
+      // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
+      return aliases.map((a) => ({
+        id: a.id as number,
+        aliasName: a.aliasName as string,
+        source: a.source as string | null,
+        isPrimary: a.isPrimary as boolean | null,
+        createdAt: a.createdAt as Date,
+      }));
     } catch (error) {
       console.error(`Error fetching aliases for performer ${performerId}:`, error);
       return [];
@@ -688,8 +713,9 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         .groupBy(tags.name)
         .orderBy(desc(sql<number>`COUNT(DISTINCT ${products.id})`));
 
-      return results.map((r: { siteName: string; count: number }) => ({
-        siteName: r.siteName,
+      // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
+      return results.map((r) => ({
+        siteName: r.siteName as string,
         count: Number(r.count),
       }));
     } catch (error) {
@@ -705,7 +731,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     const db = getDb();
     const isValidPerformer = deps.isValidPerformer || (() => true);
 
-    const [performerData, tagData, sourceData, imagesData, videosData] = await Promise.all([
+    const [rawPerformerData, rawTagData, rawSourceData, rawImagesData, rawVideosData] = await Promise.all([
       // 出演者情報を取得
       db
         .select({
@@ -766,10 +792,51 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         .where(eq(productVideos.productId, productId)),
     ]);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const performerData = (rawPerformerData as any[]).map((p) => ({
+      id: p.id as number,
+      name: p.name as string,
+      nameKana: p.nameKana as string | null,
+    }));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tagData = (rawTagData as any[]).map((t) => ({
+      id: t.id as number,
+      name: t.name as string,
+      category: t.category as string | null,
+    }));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawSource = rawSourceData[0] as any | undefined;
+    const sourceData = rawSource ? {
+      aspName: rawSource.aspName as string | undefined,
+      originalProductId: rawSource.originalProductId as string | undefined,
+      affiliateUrl: rawSource.affiliateUrl as string | undefined,
+      price: rawSource.price as number | undefined,
+      currency: rawSource.currency as string | undefined,
+    } : undefined;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const imagesData = (rawImagesData as any[]).map((img) => ({
+      productId: img.productId as number,
+      imageUrl: img.imageUrl as string,
+      imageType: img.imageType as string,
+      displayOrder: img.displayOrder as number | null,
+    }));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const videosData = (rawVideosData as any[]).map((v) => ({
+      productId: v.productId as number,
+      videoUrl: v.videoUrl as string,
+      videoType: v.videoType as string | null,
+      quality: v.quality as string | null,
+      duration: v.duration as number | null,
+    }));
+
     return {
       performerData: performerData.filter(isValidPerformer),
       tagData,
-      sourceData: sourceData[0],
+      sourceData,
       imagesData,
       videosData,
     };
@@ -874,44 +941,94 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     ]);
 
     // Map by productId
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typedPerformers = allPerformers as any[];
     const performersMap = new Map<number, BatchPerformerData[]>();
-    for (const p of allPerformers) {
-      if (!performersMap.has(p.productId)) performersMap.set(p.productId, []);
-      performersMap.get(p.productId)!.push({ id: p.id, name: p.name, nameKana: p.nameKana });
+    for (const p of typedPerformers) {
+      const productId = p.productId as number;
+      if (!performersMap.has(productId)) performersMap.set(productId, []);
+      performersMap.get(productId)!.push({
+        id: p.id as number,
+        name: p.name as string,
+        nameKana: p.nameKana as string | null,
+      });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typedTags = allTags as any[];
     const tagsMap = new Map<number, BatchTagData[]>();
-    for (const t of allTags) {
-      if (!tagsMap.has(t.productId)) tagsMap.set(t.productId, []);
-      tagsMap.get(t.productId)!.push({ id: t.id, name: t.name, category: t.category });
+    for (const t of typedTags) {
+      const productId = t.productId as number;
+      if (!tagsMap.has(productId)) tagsMap.set(productId, []);
+      tagsMap.get(productId)!.push({
+        id: t.id as number,
+        name: t.name as string,
+        category: t.category as string | null,
+      });
     }
 
     // ソース選択（共通関数使用: siteModeに応じてソースを選択）
-    type SourceType = { aspName: string; productId: number; id: number; price: number | null; currency: string | null; affiliateUrl: string | null; originalProductId: string | null; productType: string | null };
-    const sourcesByProduct = groupSourcesByProduct(allSources as SourceType[]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typedSources = (allSources as any[]).map((s) => ({
+      id: s.id as number,
+      productId: s.productId as number,
+      aspName: s.aspName as string,
+      originalProductId: s.originalProductId as string | null,
+      affiliateUrl: s.affiliateUrl as string | null,
+      price: s.price as number | null,
+      currency: s.currency as string | null,
+      productType: s.productType as string | null,
+    }));
+    const sourcesByProduct = groupSourcesByProduct(typedSources);
     const { sourcesMap } = selectProductSources(sourcesByProduct, {
       siteMode,
       preferredProviders,
       debug: true,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typedImages = allImages as any[];
     const imagesMap = new Map<number, BatchImageData[]>();
-    for (const img of allImages) {
-      if (!imagesMap.has(img.productId)) imagesMap.set(img.productId, []);
-      imagesMap.get(img.productId)!.push(img);
+    for (const img of typedImages) {
+      const productId = img.productId as number;
+      if (!imagesMap.has(productId)) imagesMap.set(productId, []);
+      imagesMap.get(productId)!.push({
+        productId: img.productId as number,
+        imageUrl: img.imageUrl as string,
+        imageType: img.imageType as string,
+        displayOrder: img.displayOrder as number | null,
+      });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typedVideos = allVideos as any[];
     const videosMap = new Map<number, BatchVideoData[]>();
-    for (const vid of allVideos) {
-      if (!videosMap.has(vid.productId)) videosMap.set(vid.productId, []);
-      videosMap.get(vid.productId)!.push(vid);
+    for (const vid of typedVideos) {
+      const productId = vid.productId as number;
+      if (!videosMap.has(productId)) videosMap.set(productId, []);
+      videosMap.get(productId)!.push({
+        productId: vid.productId as number,
+        videoUrl: vid.videoUrl as string,
+        videoType: vid.videoType as string | null,
+        quality: vid.quality as string | null,
+        duration: vid.duration as number | null,
+      });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typedSales = allSales as any[];
     const salesMap = new Map<number, BatchSaleData>();
-    for (const sale of allSales) {
+    for (const sale of typedSales) {
       // 1商品に複数セールがある場合は最初のものを使用
-      if (!salesMap.has(sale.productId)) {
-        salesMap.set(sale.productId, sale);
+      const productId = sale.productId as number;
+      if (!salesMap.has(productId)) {
+        salesMap.set(productId, {
+          productId: sale.productId as number,
+          regularPrice: sale.regularPrice as number,
+          salePrice: sale.salePrice as number,
+          discountPercent: sale.discountPercent as number | null,
+          endAt: sale.endAt as Date | null,
+        });
       }
     }
 
@@ -1222,7 +1339,8 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
       if (tagResult.length === 0) return null;
 
-      const tag = tagResult[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tag = tagResult[0] as any;
 
       // シリーズの統計情報を取得
       const statsResult = await db.execute(sql`

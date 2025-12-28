@@ -3,9 +3,9 @@
  * that only have thumbnails but no sample images in product_images table
  */
 
-import { getDb } from '../lib/db';
+import { db } from '../../packages/database/src';
 import { sql } from 'drizzle-orm';
-import { productImages } from '../lib/db/schema';
+import { productImages } from '../../packages/database/src/schema';
 
 async function fetch1pondoSampleImages(productId: string): Promise<{
   sampleImages: string[];
@@ -41,7 +41,7 @@ async function fetch1pondoSampleImages(productId: string): Promise<{
 }
 
 async function main() {
-  const db = getDb();
+  // db is imported from packages/database
 
   console.log('🔍 Finding 一本道 products without sample images...\n');
 

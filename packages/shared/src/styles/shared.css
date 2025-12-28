@@ -128,6 +128,21 @@ html {
 
   /* Image placeholder */
   --image-placeholder-bg: #1f2937; /* gray-800 */
+
+  /* Social Share (Brand colors) */
+  --social-line-bg: #00B900;
+  --social-line-hover: #00a000;
+  --social-twitter-bg: #374151; /* gray-700 */
+  --social-twitter-hover: #4b5563; /* gray-600 */
+  --social-twitter-text: #e5e7eb; /* gray-200 */
+  --social-twitter-border: transparent;
+  --social-copy-bg: #374151; /* gray-700 */
+  --social-copy-hover: #4b5563; /* gray-600 */
+  --social-copy-text: #e5e7eb; /* gray-200 */
+  --social-copy-border: transparent;
+  --social-copy-success-bg: #059669; /* emerald-600 */
+  --social-copy-success-text: #ffffff;
+  --social-copy-success-border: transparent;
 }
 
 /* FANZA Theme (Light: FANZA official brand colors) */
@@ -201,6 +216,21 @@ html {
 
   /* Image placeholder */
   --image-placeholder-bg: #E5E7EB; /* gray-200 */
+
+  /* Social Share (Brand colors - same for light theme) */
+  --social-line-bg: #00B900;
+  --social-line-hover: #00a000;
+  --social-twitter-bg: #ffffff;
+  --social-twitter-hover: #f9fafb; /* gray-50 */
+  --social-twitter-text: #374151; /* gray-700 */
+  --social-twitter-border: #e5e7eb; /* gray-200 */
+  --social-copy-bg: #ffffff;
+  --social-copy-hover: #f9fafb; /* gray-50 */
+  --social-copy-text: #374151; /* gray-700 */
+  --social-copy-border: #e5e7eb; /* gray-200 */
+  --social-copy-success-bg: #dcfce7; /* emerald-100 */
+  --social-copy-success-text: #047857; /* emerald-700 */
+  --social-copy-success-border: #bbf7d0; /* emerald-200 */
 }
 
 /* ===========================================

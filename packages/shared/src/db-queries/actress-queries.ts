@@ -8,6 +8,7 @@ import { eq, and, sql, inArray, desc, asc } from 'drizzle-orm';
 // Types
 // ============================================================
 
+// Note: DI型でanyを使用するのは意図的 - Drizzle ORMの具象型はアプリ固有のため
 export interface ActressQueryDeps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getDb: () => any;
@@ -133,7 +134,12 @@ export function createActressQueries(deps: ActressQueryDeps) {
       .from(performerAliases)
       .where(eq(performerAliases.performerId, performerId));
 
-    return aliases;
+    // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
+    return aliases.map((a: Record<string, unknown>) => ({
+      id: a.id as number,
+      aliasName: a.aliasName as string,
+      source: a.source as string | null,
+    }));
   }
 
   /**
@@ -282,7 +288,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
       }
 
       // ActressType形式に変換（getActressByIdで画像など取得）
-      const rows = result.rows as ActressWithNewReleasesRow[];
+      const rows = result.rows as unknown as ActressWithNewReleasesRow[];
       const actressesWithDetails = await Promise.all(
         rows.map(async (actress) => {
           const fullActress = await fetchActress(actress.id.toString(), locale);

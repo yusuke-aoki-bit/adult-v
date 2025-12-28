@@ -398,16 +398,25 @@ async function main() {
           upsertResult.gcsUrl || `hash:${rawDataId}`
         );
 
-        // 5. 画像を保存
+        // 5. 画像を保存（バッチINSERT）
         const imageUrls: string[] = [];
         if (item.packageImageUrl) imageUrls.push(item.packageImageUrl);
         if (item.sampleImages) imageUrls.push(...item.sampleImages);
 
-        for (const imageUrl of imageUrls) {
-          const isThumb = imageUrl === item.thumbnailUrl || imageUrl === item.packageImageUrl;
+        if (imageUrls.length > 0) {
+          const imageTypes = imageUrls.map((url) =>
+            url === item.thumbnailUrl || url === item.packageImageUrl ? 'thumbnail' : 'sample'
+          );
+          const displayOrders = imageUrls.map((_, i) => i);
+
           await db.execute(sql`
             INSERT INTO product_images (product_id, image_url, image_type, display_order, asp_name)
-            VALUES (${productId}, ${imageUrl}, ${isThumb ? 'thumbnail' : 'sample'}, ${imageUrls.indexOf(imageUrl)}, ${SOURCE_NAME})
+            SELECT
+              ${productId},
+              unnest(${imageUrls}::text[]),
+              unnest(${imageTypes}::text[]),
+              unnest(${displayOrders}::int[]),
+              ${SOURCE_NAME}
             ON CONFLICT (product_id, image_url) DO NOTHING
           `);
         }
@@ -460,25 +469,36 @@ async function main() {
           }
         }
 
-        // 8. ジャンル/タグを保存
+        // 8. ジャンル/タグを保存（バッチ処理）
         if (item.genres && item.genres.length > 0) {
-          for (const genre of item.genres) {
-            const tagResult = await db.execute(sql`
-              INSERT INTO tags (name, category)
-              VALUES (${genre.name}, 'genre')
-              ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-              RETURNING id
-            `);
+          const genreNames = item.genres.map((g: { name: string }) => g.name);
 
-            const tagRow = getFirstRow<IdRow>(tagResult);
-            const tagId = tagRow!.id;
+          // バッチでtagsをupsert
+          const tagResults = await db.execute(sql`
+            INSERT INTO tags (name, category)
+            SELECT unnest(${genreNames}::text[]), 'genre'
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+            RETURNING id, name
+          `);
 
+          // タグID-名前マップを作成
+          const tagIdMap = new Map<string, number>();
+          for (const row of tagResults.rows as { id: number; name: string }[]) {
+            tagIdMap.set(row.name, row.id);
+          }
+
+          // バッチでproduct_tagsにリレーション作成
+          const tagIds = genreNames
+            .map((name: string) => tagIdMap.get(name))
+            .filter((id: number | undefined): id is number => id !== undefined);
+
+          if (tagIds.length > 0) {
             await db.execute(sql`
               INSERT INTO product_tags (product_id, tag_id)
-              VALUES (${productId}, ${tagId})
+              SELECT ${productId}, unnest(${tagIds}::int[])
               ON CONFLICT DO NOTHING
             `);
-            stats.tagsLinked++;
+            stats.tagsLinked += tagIds.length;
           }
         }
 

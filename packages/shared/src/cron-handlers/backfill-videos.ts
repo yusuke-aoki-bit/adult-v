@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
+import type { DbExecutor } from '../db-queries/types';
 
 interface BackfillStats {
   checked: number;
@@ -117,7 +118,7 @@ async function fetchVideoForProduct(asp: string, productId: string): Promise<str
 interface BackfillVideosHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
+  getDb: () => DbExecutor;
 }
 
 export function createBackfillVideosHandler(deps: BackfillVideosHandlerDeps) {

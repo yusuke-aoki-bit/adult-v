@@ -377,7 +377,7 @@ async function main() {
         );
         console.log(`  ✓ リカバリーリンク作成完了`);
 
-        // 5. サンプル画像を保存
+        // 5. サンプル画像を保存（バッチINSERT）
         if (item.sampleImages && item.sampleImages.length > 0) {
           console.log(`  📷 サンプル画像保存中 (${item.sampleImages.length}枚)...`);
 
@@ -389,30 +389,24 @@ async function main() {
             AND image_type = 'sample'
           `);
 
-          // 新しい画像を挿入
-          for (const [imgIndex, imageUrl] of item.sampleImages.entries()) {
-            await db.execute(sql`
-              INSERT INTO product_images (
-                product_id,
-                asp_name,
-                image_url,
-                image_type,
-                display_order
-              )
-              VALUES (
-                ${productId},
-                'DUGA',
-                ${imageUrl},
-                'sample',
-                ${imgIndex}
-              )
-            `);
-          }
+          // バッチINSERT用のデータ準備
+          const imageUrls = item.sampleImages;
+          const displayOrders = item.sampleImages.map((_: string, i: number) => i);
+
+          await db.execute(sql`
+            INSERT INTO product_images (product_id, asp_name, image_url, image_type, display_order)
+            SELECT
+              ${productId},
+              'DUGA',
+              unnest(${imageUrls}::text[]),
+              'sample',
+              unnest(${displayOrders}::int[])
+          `);
 
           console.log(`  ✓ サンプル画像保存完了`);
         }
 
-        // 5.5. サンプル動画を保存
+        // 5.5. サンプル動画を保存（バッチINSERT）
         if (item.sampleVideos && item.sampleVideos.length > 0) {
           console.log(`  🎬 サンプル動画保存中 (${item.sampleVideos.length}件)...`);
 
@@ -423,25 +417,19 @@ async function main() {
             AND asp_name = 'DUGA'
           `);
 
-          // 新しい動画を挿入
-          for (const [videoIndex, videoUrl] of item.sampleVideos.entries()) {
-            await db.execute(sql`
-              INSERT INTO product_videos (
-                product_id,
-                asp_name,
-                video_url,
-                video_type,
-                display_order
-              )
-              VALUES (
-                ${productId},
-                'DUGA',
-                ${videoUrl},
-                'sample',
-                ${videoIndex}
-              )
-            `);
-          }
+          // バッチINSERT用のデータ準備
+          const videoUrls = item.sampleVideos;
+          const videoDisplayOrders = item.sampleVideos.map((_: string, i: number) => i);
+
+          await db.execute(sql`
+            INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
+            SELECT
+              ${productId},
+              'DUGA',
+              unnest(${videoUrls}::text[]),
+              'sample',
+              unnest(${videoDisplayOrders}::int[])
+          `);
 
           console.log(`  ✓ サンプル動画保存完了`);
         }
@@ -469,44 +457,62 @@ async function main() {
           console.log(`  ✓ パッケージ画像保存完了`);
         }
 
-        // 7. カテゴリ・タグ保存（categoriesがある場合）
+        // 7. カテゴリ・タグ保存（categoriesがある場合）- バッチ処理
         if (item.categories && item.categories.length > 0) {
           console.log(`  🏷️  カテゴリ/タグ保存中 (${item.categories.length}件)...`);
 
-          for (const category of item.categories) {
-            // まずcategoriesテーブルにupsert
-            const categoryResult = await db.execute(sql`
-              INSERT INTO categories (name)
-              VALUES (${category.name})
-              ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-              RETURNING id
-            `);
+          const categoryNames = item.categories.map((c: { name: string }) => c.name);
 
-            const categoryRow = getFirstRow<IdRow>(categoryResult);
-            const categoryId = categoryRow!.id;
+          // バッチでcategoriesをupsert
+          const categoryResults = await db.execute(sql`
+            INSERT INTO categories (name)
+            SELECT unnest(${categoryNames}::text[])
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+            RETURNING id, name
+          `);
 
-            // product_categoriesにリレーション作成
+          // カテゴリID-名前マップを作成
+          const categoryIdMap = new Map<string, number>();
+          for (const row of categoryResults.rows as { id: number; name: string }[]) {
+            categoryIdMap.set(row.name, row.id);
+          }
+
+          // バッチでproduct_categoriesにリレーション作成
+          const categoryIds = categoryNames
+            .map((name: string) => categoryIdMap.get(name))
+            .filter((id: number | undefined): id is number => id !== undefined);
+
+          if (categoryIds.length > 0) {
             await db.execute(sql`
               INSERT INTO product_categories (product_id, category_id)
-              VALUES (${productId}, ${categoryId})
+              SELECT ${productId}, unnest(${categoryIds}::int[])
               ON CONFLICT DO NOTHING
             `);
+          }
 
-            // tagsテーブルにも保存（ジャンルタグとして）
-            const tagResult = await db.execute(sql`
-              INSERT INTO tags (name, category)
-              VALUES (${category.name}, 'genre')
-              ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-              RETURNING id
-            `);
+          // バッチでtagsをupsert（ジャンルタグとして）
+          const tagResults = await db.execute(sql`
+            INSERT INTO tags (name, category)
+            SELECT unnest(${categoryNames}::text[]), 'genre'
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+            RETURNING id, name
+          `);
 
-            const tagRow = getFirstRow<IdRow>(tagResult);
-            const tagId = tagRow!.id;
+          // タグID-名前マップを作成
+          const tagIdMap = new Map<string, number>();
+          for (const row of tagResults.rows as { id: number; name: string }[]) {
+            tagIdMap.set(row.name, row.id);
+          }
 
-            // product_tagsにリレーション作成
+          // バッチでproduct_tagsにリレーション作成
+          const tagIds = categoryNames
+            .map((name: string) => tagIdMap.get(name))
+            .filter((id: number | undefined): id is number => id !== undefined);
+
+          if (tagIds.length > 0) {
             await db.execute(sql`
               INSERT INTO product_tags (product_id, tag_id)
-              VALUES (${productId}, ${tagId})
+              SELECT ${productId}, unnest(${tagIds}::int[])
               ON CONFLICT DO NOTHING
             `);
           }
@@ -609,51 +615,57 @@ async function main() {
               console.log(`  ✓ 評価サマリー保存完了 (${pageData.aggregateRating.averageRating}点, ${pageData.aggregateRating.reviewCount}件)`);
             }
 
-            // 個別レビューを保存
+            // 個別レビューを保存（バッチ処理）
             if (pageData.reviews.length > 0) {
               console.log(`  📝 個別レビュー保存中 (${pageData.reviews.length}件)...`);
 
-              for (const review of pageData.reviews) {
-                await db.execute(sql`
-                  INSERT INTO product_reviews (
-                    product_id,
-                    asp_name,
-                    reviewer_name,
-                    rating,
-                    max_rating,
-                    title,
-                    content,
-                    review_date,
-                    helpful,
-                    source_review_id,
-                    created_at,
-                    updated_at
-                  )
-                  VALUES (
-                    ${productId},
-                    'DUGA',
-                    ${review.reviewerName || null},
-                    ${review.rating},
-                    5,
-                    ${review.title || null},
-                    ${review.content || null},
-                    ${review.date ? new Date(review.date) : null},
-                    ${review.helpfulYes},
-                    ${review.reviewId || null},
-                    NOW(),
-                    NOW()
-                  )
-                  ON CONFLICT (product_id, asp_name, source_review_id)
-                  DO UPDATE SET
-                    reviewer_name = EXCLUDED.reviewer_name,
-                    rating = EXCLUDED.rating,
-                    title = EXCLUDED.title,
-                    content = EXCLUDED.content,
-                    helpful = EXCLUDED.helpful,
-                    updated_at = NOW()
-                `);
-                stats.reviewsSaved++;
-              }
+              // レビューデータを配列に変換
+              const reviewerNames = pageData.reviews.map((r: { reviewerName?: string }) => r.reviewerName || null);
+              const ratings = pageData.reviews.map((r: { rating: number }) => r.rating);
+              const titles = pageData.reviews.map((r: { title?: string }) => r.title || null);
+              const contents = pageData.reviews.map((r: { content?: string }) => r.content || null);
+              const reviewDates = pageData.reviews.map((r: { date?: string }) => r.date ? new Date(r.date).toISOString() : null);
+              const helpfuls = pageData.reviews.map((r: { helpfulYes?: number }) => r.helpfulYes ?? 0);
+              const sourceReviewIds = pageData.reviews.map((r: { reviewId?: string }) => r.reviewId || null);
+
+              await db.execute(sql`
+                INSERT INTO product_reviews (
+                  product_id,
+                  asp_name,
+                  reviewer_name,
+                  rating,
+                  max_rating,
+                  title,
+                  content,
+                  review_date,
+                  helpful,
+                  source_review_id,
+                  created_at,
+                  updated_at
+                )
+                SELECT
+                  ${productId},
+                  'DUGA',
+                  unnest(${reviewerNames}::text[]),
+                  unnest(${ratings}::int[]),
+                  5,
+                  unnest(${titles}::text[]),
+                  unnest(${contents}::text[]),
+                  unnest(${reviewDates}::timestamp[]),
+                  unnest(${helpfuls}::int[]),
+                  unnest(${sourceReviewIds}::text[]),
+                  NOW(),
+                  NOW()
+                ON CONFLICT (product_id, asp_name, source_review_id)
+                DO UPDATE SET
+                  reviewer_name = EXCLUDED.reviewer_name,
+                  rating = EXCLUDED.rating,
+                  title = EXCLUDED.title,
+                  content = EXCLUDED.content,
+                  helpful = EXCLUDED.helpful,
+                  updated_at = NOW()
+              `);
+              stats.reviewsSaved += pageData.reviews.length;
 
               console.log(`  ✓ 個別レビュー保存完了`);
             } else {

@@ -63,9 +63,11 @@ function getDeduplicationKey(product: DeduplicatableProduct): string {
   const provider = product.provider || 'unknown';
 
   // FC2/DUGAなど同一タイトルで別動画が多いプロバイダーは
-  // originalProductId をキーに使用して正確に重複判定
-  if (PROVIDERS_WITH_DUPLICATE_TITLES.has(provider) && product.originalProductId) {
-    return `${provider}:id:${product.originalProductId}`;
+  // originalProductId または id をキーに使用して正確に重複判定
+  // ※同じプロバイダー内では絶対に重複排除しない
+  if (PROVIDERS_WITH_DUPLICATE_TITLES.has(provider)) {
+    const uniqueId = product.originalProductId || product.id;
+    return `${provider}:id:${uniqueId}`;
   }
 
   // その他のプロバイダーはタイトルベースで重複判定
@@ -86,58 +88,39 @@ export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
 ): T[] {
   if (products.length === 0) return [];
 
-  // 全商品をタイトルでグループ化（プロバイダー横断の重複検出用）
-  const productGroupsByTitle = new Map<string, T[]>();
-  for (const product of products) {
-    const normalizedTitleKey = normalizeTitle(product.title);
-    const group = productGroupsByTitle.get(normalizedTitleKey) || [];
-    group.push(product);
-    productGroupsByTitle.set(normalizedTitleKey, group);
-  }
-
   // siteMode === 'all' の場合: 異なるプロバイダー間のみ重複排除し、代替ソースを保持
   if (siteMode === 'all') {
     const deduplicatedProducts: T[] = [];
     const seenKeys = new Set<string>();
 
-    for (const [normalizedTitle, group] of productGroupsByTitle) {
-      // 同じプロバイダー内の商品はすべて保持する
-      // 異なるプロバイダー間では最安を選択し、代替ソースとして他を保持
+    // まず全商品をキーでグループ化（同一キーの商品を検出）
+    const productsByKey = new Map<string, T[]>();
+    for (const product of products) {
+      const key = getDeduplicationKey(product);
+      const group = productsByKey.get(key) || [];
+      group.push(product);
+      productsByKey.set(key, group);
+    }
 
-      // まずプロバイダーごとにグループ化
-      const byProvider = new Map<string, T[]>();
-      for (const product of group) {
-        const provider = product.provider || 'unknown';
-        const providerGroup = byProvider.get(provider) || [];
-        providerGroup.push(product);
-        byProvider.set(provider, providerGroup);
-      }
-
-      // 各プロバイダーから1つずつ代表を選出（最安）
-      const representatives: T[] = [];
-      for (const [, providerProducts] of byProvider) {
-        // 同じプロバイダー内の全商品を保持（重複排除しない）
-        for (const p of providerProducts) {
-          const key = getDeduplicationKey(p);
-          if (!seenKeys.has(key)) {
-            seenKeys.add(key);
-            representatives.push(p);
-          }
+    // 同一キーのグループから代表を選出し、代替ソースを設定
+    for (const [key, group] of productsByKey) {
+      if (group.length === 1) {
+        // 重複なし
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          deduplicatedProducts.push(group[0]);
         }
-      }
-
-      // 異なるプロバイダー間で同じタイトルがある場合、代替ソースを設定
-      if (byProvider.size > 1) {
-        // 価格順にソート
-        representatives.sort((a, b) => {
+      } else {
+        // 重複あり - 最安商品を選択し、他を代替ソースに
+        const sorted = [...group].sort((a, b) => {
           const priceA = a.salePrice || a.price || Infinity;
           const priceB = b.salePrice || b.price || Infinity;
           return priceA - priceB;
         });
 
-        // 最安商品に他プロバイダーの情報を代替ソースとして追加
-        const cheapest = representatives[0];
-        const alternatives = representatives.slice(1).filter(p => p.provider !== cheapest.provider);
+        const cheapest = sorted[0];
+        const alternatives = sorted.slice(1).filter(p => p.provider !== cheapest.provider);
+
         if (alternatives.length > 0 && !cheapest.alternativeSources) {
           cheapest.alternativeSources = alternatives.map(p => ({
             aspName: p.provider || 'unknown',
@@ -147,9 +130,12 @@ export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
             productId: typeof p.id === 'string' ? parseInt(p.id, 10) : p.id,
           }));
         }
-      }
 
-      deduplicatedProducts.push(...representatives);
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          deduplicatedProducts.push(cheapest);
+        }
+      }
     }
 
     // 元の順序を維持

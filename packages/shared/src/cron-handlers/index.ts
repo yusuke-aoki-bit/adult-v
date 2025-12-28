@@ -40,5 +40,8 @@ export { createNormalizePerformersHandler } from './normalize-performers';
 // Performer pipeline handler
 export { createPerformerPipelineHandler } from './performer-pipeline';
 
+// Content enrichment pipeline handler
+export { createContentEnrichmentPipelineHandler } from './content-enrichment-pipeline';
+
 // Raw data processing handler
 export { createProcessRawDataHandler } from './process-raw-data';

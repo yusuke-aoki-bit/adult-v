@@ -2,6 +2,11 @@
  * クローラー共通ユーティリティ
  * リダイレクト検知、トップページ情報フィルタリングなど
  */
+import { sql } from 'drizzle-orm';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyDb = NodePgDatabase<any>;
 
 // トップページ/リダイレクトページの特徴的なパターン
 const TOP_PAGE_PATTERNS = {
@@ -297,4 +302,103 @@ export async function fetchPerformersFromGoogleSearch(
     console.warn(`[Google Search] 女優名取得失敗 (${productCode}):`, error);
     return [];
   }
+}
+
+/**
+ * 演者をバッチでUPSERTし、product_performersリレーションを作成
+ * N+1クエリを防ぐためのバッチ処理関数
+ *
+ * @param db - Drizzle DBインスタンス
+ * @param productId - 商品ID
+ * @param performerNames - 演者名の配列
+ * @returns 挿入/更新された演者数
+ */
+export async function savePerformersBatch(
+  db: AnyDb,
+  productId: number,
+  performerNames: string[]
+): Promise<number> {
+  if (performerNames.length === 0) {
+    return 0;
+  }
+
+  // 1. 全演者を一括でUPSERT
+  const performerValues = performerNames
+    .map((name) => `(${sql`${name}`})`)
+    .join(', ');
+
+  // UNNEST を使用してバッチINSERT
+  const upsertResult = await db.execute(sql`
+    INSERT INTO performers (name)
+    SELECT unnest(ARRAY[${sql.join(performerNames.map(n => sql`${n}`), sql`, `)}]::text[])
+    ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+    RETURNING id, name
+  `);
+
+  const performerMap = new Map<string, number>();
+  for (const row of upsertResult.rows as { id: number; name: string }[]) {
+    performerMap.set(row.name, row.id);
+  }
+
+  // 2. product_performers リレーションを一括作成
+  const performerIds = performerNames
+    .map((name) => performerMap.get(name))
+    .filter((id): id is number => id !== undefined);
+
+  if (performerIds.length > 0) {
+    await db.execute(sql`
+      INSERT INTO product_performers (product_id, performer_id)
+      SELECT ${productId}, unnest(ARRAY[${sql.join(performerIds.map(id => sql`${id}`), sql`, `)}]::integer[])
+      ON CONFLICT DO NOTHING
+    `);
+  }
+
+  return performerIds.length;
+}
+
+/**
+ * タグをバッチでUPSERTし、product_tagsリレーションを作成
+ * N+1クエリを防ぐためのバッチ処理関数
+ *
+ * @param db - Drizzle DBインスタンス
+ * @param productId - 商品ID
+ * @param tagNames - タグ名の配列
+ * @returns 挿入/更新されたタグ数
+ */
+export async function saveTagsBatch(
+  db: AnyDb,
+  productId: number,
+  tagNames: string[]
+): Promise<number> {
+  if (tagNames.length === 0) {
+    return 0;
+  }
+
+  // 1. 全タグを一括でUPSERT
+  const upsertResult = await db.execute(sql`
+    INSERT INTO tags (name)
+    SELECT unnest(ARRAY[${sql.join(tagNames.map(n => sql`${n}`), sql`, `)}]::text[])
+    ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+    RETURNING id, name
+  `);
+
+  const tagMap = new Map<string, number>();
+  for (const row of upsertResult.rows as { id: number; name: string }[]) {
+    tagMap.set(row.name, row.id);
+  }
+
+  // 2. product_tags リレーションを一括作成
+  const tagIds = tagNames
+    .map((name) => tagMap.get(name))
+    .filter((id): id is number => id !== undefined);
+
+  if (tagIds.length > 0) {
+    await db.execute(sql`
+      INSERT INTO product_tags (product_id, tag_id)
+      SELECT ${productId}, unnest(ARRAY[${sql.join(tagIds.map(id => sql`${id}`), sql`, `)}]::integer[])
+      ON CONFLICT DO NOTHING
+    `);
+  }
+
+  return tagIds.length;
 }

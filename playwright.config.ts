@@ -29,4 +29,23 @@ export default defineConfig({
       },
     },
   ],
+
+  /* テスト実行前にサーバーを自動起動 */
+  webServer: [
+    {
+      command: 'npm run dev:web',
+      url: 'http://localhost:3000',
+      timeout: 120000,
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'SITE_MODE=fanza npm run dev:web -- --port 3001',
+      url: 'http://localhost:3001',
+      timeout: 120000,
+      reuseExistingServer: !process.env.CI,
+      env: {
+        SITE_MODE: 'fanza',
+      },
+    },
+  ],
 });

@@ -9,8 +9,6 @@ interface SocialShareButtonsProps {
   title: string;
   /** Product ID for tracking */
   productId?: string;
-  /** Theme: 'dark' or 'light' */
-  theme?: 'dark' | 'light';
   /** Compact mode (icons only) */
   compact?: boolean;
 }
@@ -18,12 +16,16 @@ interface SocialShareButtonsProps {
 /**
  * Social share buttons for product pages
  * Supports Twitter/X, LINE, Copy URL
+ *
+ * Colors are managed via CSS variables in shared.css:
+ * - --social-line-bg, --social-line-hover
+ * - --social-twitter-bg, --social-twitter-hover, --social-twitter-text, --social-twitter-border
+ * - --social-copy-bg, --social-copy-hover, --social-copy-text, --social-copy-border
+ * - --social-copy-success-bg, --social-copy-success-text, --social-copy-success-border
  */
 export function SocialShareButtons({
   url,
   title,
-  productId,
-  theme = 'dark',
   compact = false,
 }: SocialShareButtonsProps) {
   const [copied, setCopied] = useState(false);
@@ -43,11 +45,8 @@ export function SocialShareButtons({
     }
   }, [shareUrl]);
 
-  const buttonBaseClass = theme === 'dark'
-    ? 'flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all'
-    : 'flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all border';
-
-  const iconSize = compact ? 'w-4 h-4' : 'w-4 h-4';
+  const buttonBaseClass = 'flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all';
+  const iconSize = 'w-4 h-4';
   const textClass = compact ? 'hidden' : 'text-xs font-medium';
 
   return (
@@ -57,11 +56,20 @@ export function SocialShareButtons({
         href={`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`}
         target="_blank"
         rel="noopener noreferrer"
-        className={`${buttonBaseClass} ${
-          theme === 'dark'
-            ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
-            : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200'
-        }`}
+        className={buttonBaseClass}
+        style={{
+          backgroundColor: 'var(--social-twitter-bg)',
+          color: 'var(--social-twitter-text)',
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: 'var(--social-twitter-border)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'var(--social-twitter-hover)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'var(--social-twitter-bg)';
+        }}
         title="X (Twitter)でシェア"
       >
         <svg className={iconSize} viewBox="0 0 24 24" fill="currentColor">
@@ -70,16 +78,22 @@ export function SocialShareButtons({
         <span className={textClass}>X</span>
       </a>
 
-      {/* LINE */}
+      {/* LINE - Brand color is consistent across themes */}
       <a
         href={`https://social-plugins.line.me/lineit/share?url=${encodedUrl}`}
         target="_blank"
         rel="noopener noreferrer"
-        className={`${buttonBaseClass} ${
-          theme === 'dark'
-            ? 'bg-[#00B900] hover:bg-[#00a000] text-white'
-            : 'bg-[#00B900] hover:bg-[#00a000] text-white border-[#00B900]'
-        }`}
+        className={buttonBaseClass}
+        style={{
+          backgroundColor: 'var(--social-line-bg)',
+          color: '#ffffff',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'var(--social-line-hover)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'var(--social-line-bg)';
+        }}
         title="LINEでシェア"
       >
         <svg className={iconSize} viewBox="0 0 24 24" fill="currentColor">
@@ -91,15 +105,24 @@ export function SocialShareButtons({
       {/* Copy URL */}
       <button
         onClick={handleCopy}
-        className={`${buttonBaseClass} ${
-          copied
-            ? theme === 'dark'
-              ? 'bg-emerald-600 text-white'
-              : 'bg-emerald-100 text-emerald-700 border-emerald-200'
-            : theme === 'dark'
-              ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
-              : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200'
-        }`}
+        className={buttonBaseClass}
+        style={{
+          backgroundColor: copied ? 'var(--social-copy-success-bg)' : 'var(--social-copy-bg)',
+          color: copied ? 'var(--social-copy-success-text)' : 'var(--social-copy-text)',
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: copied ? 'var(--social-copy-success-border)' : 'var(--social-copy-border)',
+        }}
+        onMouseEnter={(e) => {
+          if (!copied) {
+            e.currentTarget.style.backgroundColor = 'var(--social-copy-hover)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!copied) {
+            e.currentTarget.style.backgroundColor = 'var(--social-copy-bg)';
+          }
+        }}
         title="URLをコピー"
         type="button"
       >

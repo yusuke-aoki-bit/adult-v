@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
+import type { DbExecutor } from '../db-queries/types';
 
 interface CrawlStats {
   totalFetched: number;
@@ -253,7 +254,7 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
 interface CrawlDtiHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
+  getDb: () => DbExecutor;
 }
 
 export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {

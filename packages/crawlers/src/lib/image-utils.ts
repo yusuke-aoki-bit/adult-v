@@ -335,6 +335,21 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
       .replace(/-s\./, '-l.');
   }
 
+  // ========== TOKYO-HOT / TVDEAV ==========
+  // e.g., https://my.tokyo-hot.com/media/xxxx/cap/0001.jpg -> https://my.tokyo-hot.com/media/xxxx/cap/0001_h.jpg
+  // e.g., https://my.tokyo-hot.com/media/xxxx/jacket.jpg -> https://my.tokyo-hot.com/media/xxxx/jacket_h.jpg
+  if (thumbnailUrl.includes('tokyo-hot.com') || thumbnailUrl.includes('tvdeav.com')) {
+    return thumbnailUrl
+      .replace(/\/cap\/(\d+)\.jpg$/, '/cap/$1_h.jpg')  // cap/0001.jpg -> cap/0001_h.jpg
+      .replace(/\/jacket\.jpg$/, '/jacket_h.jpg')      // jacket.jpg -> jacket_h.jpg
+      .replace(/\/(\d+)\.jpg$/, '/$1_h.jpg')          // 番号.jpg -> 番号_h.jpg
+      .replace(/\/s\//, '/l/')
+      .replace(/_s\./, '_l.')
+      .replace(/-s\./, '-l.')
+      .replace(/\/thumb\//, '/large/')
+      .replace(/\/small\//, '/large/');
+  }
+
   // ========== 汎用パターン（最後のフォールバック） ==========
   // 一般的なサムネイルパターンを試す
   const result = thumbnailUrl

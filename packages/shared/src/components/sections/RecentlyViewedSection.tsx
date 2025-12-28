@@ -335,6 +335,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
           defaultOpen={false}
           showClear={hasExpanded && products.length > 0}
           clearLabel={t.clearAll}
+          clearConfirmMessage={t.clearConfirm}
           onClear={clearAll}
           onToggle={handleToggle}
           iconColorClass={themeConfig.recentlyViewed.iconColorClass}

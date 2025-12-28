@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
 import { normalizePerformerName, parsePerformerNames } from '../lib/performer-validation';
+import type { DbExecutor } from '../db-queries/types';
 
 interface Stats {
   totalProcessed: number;
@@ -182,7 +183,7 @@ interface CustomSearchResult {
 interface NormalizePerformersHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
+  getDb: () => DbExecutor;
   customSearch?: (query: string, options: any) => Promise<CustomSearchResult | null>;
   extractPerformerNames?: (text: string) => Promise<string[]>;
   checkGoogleApiConfig?: () => GoogleApiConfig;

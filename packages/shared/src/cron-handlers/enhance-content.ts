@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
+import type { DbExecutor } from '../db-queries/types';
 
 interface Stats {
   totalProcessed: number;
@@ -48,7 +49,7 @@ interface YouTubeVideoResult {
 interface EnhanceContentHandlerDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => { execute: (query: any) => Promise<{ rows: any[]; rowCount: number | null }> };
+  getDb: () => DbExecutor;
   detectFaces: (imageUrl: string) => Promise<FaceDetectResult[]>;
   labelImage: (imageUrl: string) => Promise<LabelResult[]>;
   translateText: (text: string, targetLang: string, sourceLang: string) => Promise<TranslateResult | null>;

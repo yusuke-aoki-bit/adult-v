@@ -22,9 +22,11 @@ const TYPE = typeArg?.split('=')[1] || 'all';
 
 // DeepLのレート制限対策（Free版は文字数制限があるため余裕を持つ）
 const DELAY_MS = 300;
+// 並列処理のバッチサイズ（DeepL Pro APIのレート制限に合わせて調整）
+const PARALLEL_BATCH_SIZE = 10;
 
 async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
-  console.log(`\n📦 商品の翻訳を開始 (最大${limit}件)`);
+  console.log(`\n📦 商品の翻訳を開始 (最大${limit}件、並列バッチサイズ: ${PARALLEL_BATCH_SIZE})`);
 
   // 翻訳されていない商品を取得
   const products = await db.execute(sql`
@@ -40,44 +42,72 @@ async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
   let translated = 0;
   let failed = 0;
 
-  for (const product of products.rows) {
-    const { id, title, description } = product as { id: number; title: string; description?: string };
+  // バッチに分割して並列処理
+  const productList = products.rows as { id: number; title: string; description?: string }[];
+
+  for (let i = 0; i < productList.length; i += PARALLEL_BATCH_SIZE) {
+    const batch = productList.slice(i, i + PARALLEL_BATCH_SIZE);
+    console.log(`    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(productList.length / PARALLEL_BATCH_SIZE)} 処理中...`);
+
+    // バッチ内で並列に翻訳
+    const titles = batch.map(p => p.title);
+    const descriptions = batch.map(p => p.description || '');
 
     try {
-      // タイトルを3言語に翻訳
-      const titleTranslations = await translateToAll(title);
+      // タイトルをバッチで翻訳（3言語同時）
+      const [titlesEn, titlesZh, titlesKo] = await Promise.all([
+        translateBatch(titles, 'en', 'ja'),
+        translateBatch(titles, 'zh', 'ja'),
+        translateBatch(titles, 'ko', 'ja'),
+      ]);
 
-      // 説明文があれば翻訳
-      let descTranslations = { en: '', zh: '', ko: '' };
-      if (description) {
+      // 説明文があるものだけバッチで翻訳
+      const descriptionsWithContent = descriptions.filter(d => d.length > 0);
+      let descsEn: string[] = [];
+      let descsZh: string[] = [];
+      let descsKo: string[] = [];
+
+      if (descriptionsWithContent.length > 0) {
         await delay(DELAY_MS);
-        descTranslations = await translateToAll(description);
+        [descsEn, descsZh, descsKo] = await Promise.all([
+          translateBatch(descriptionsWithContent, 'en', 'ja'),
+          translateBatch(descriptionsWithContent, 'zh', 'ja'),
+          translateBatch(descriptionsWithContent, 'ko', 'ja'),
+        ]);
       }
 
-      await db.execute(sql`
-        UPDATE products
-        SET
-          title_en = ${titleTranslations.en || null},
-          title_zh = ${titleTranslations.zh || null},
-          title_ko = ${titleTranslations.ko || null},
-          description_en = ${descTranslations.en || null},
-          description_zh = ${descTranslations.zh || null},
-          description_ko = ${descTranslations.ko || null},
-          updated_at = NOW()
-        WHERE id = ${id}
-      `);
-      translated++;
+      // DB更新（並列）
+      let descIndex = 0;
+      await Promise.all(batch.map(async (product, idx) => {
+        const hasDesc = product.description && product.description.length > 0;
+        const descEn = hasDesc ? descsEn[descIndex] : null;
+        const descZh = hasDesc ? descsZh[descIndex] : null;
+        const descKo = hasDesc ? descsKo[descIndex] : null;
+        if (hasDesc) descIndex++;
 
-      if (translated % 10 === 0) {
-        console.log(`    ✅ ${translated}件完了 (ID: ${id})`);
-      }
+        await db.execute(sql`
+          UPDATE products
+          SET
+            title_en = ${titlesEn[idx] || null},
+            title_zh = ${titlesZh[idx] || null},
+            title_ko = ${titlesKo[idx] || null},
+            description_en = ${descEn || null},
+            description_zh = ${descZh || null},
+            description_ko = ${descKo || null},
+            updated_at = NOW()
+          WHERE id = ${product.id}
+        `);
+      }));
 
-      // レート制限対策
-      await delay(DELAY_MS);
+      translated += batch.length;
+      console.log(`    ✅ ${translated}件完了`);
+
+      // レート制限対策（バッチ間のディレイ）
+      await delay(DELAY_MS * 2);
 
     } catch (error: unknown) {
-      console.error(`    ❌ ID ${id}: ${error instanceof Error ? error.message : error}`);
-      failed++;
+      console.error(`    ❌ バッチ処理エラー: ${error instanceof Error ? error.message : error}`);
+      failed += batch.length;
     }
   }
 
@@ -198,7 +228,7 @@ async function translateTags(db: ReturnType<typeof getDb>, limit: number) {
 }
 
 async function translateReviews(db: ReturnType<typeof getDb>, limit: number) {
-  console.log(`\n📝 レビューの翻訳を開始 (最大${limit}件)`);
+  console.log(`\n📝 レビューの翻訳を開始 (最大${limit}件、並列バッチサイズ: ${PARALLEL_BATCH_SIZE})`);
 
   // 翻訳されていないレビューを取得（コンテンツがあるもののみ）
   const reviews = await db.execute(sql`
@@ -214,44 +244,71 @@ async function translateReviews(db: ReturnType<typeof getDb>, limit: number) {
   let translated = 0;
   let failed = 0;
 
-  for (const review of reviews.rows) {
-    const { id, title, content } = review as { id: number; title?: string; content: string };
+  // バッチに分割して並列処理
+  const reviewList = reviews.rows as { id: number; title?: string; content: string }[];
+
+  for (let i = 0; i < reviewList.length; i += PARALLEL_BATCH_SIZE) {
+    const batch = reviewList.slice(i, i + PARALLEL_BATCH_SIZE);
+    console.log(`    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(reviewList.length / PARALLEL_BATCH_SIZE)} 処理中...`);
+
+    const contents = batch.map(r => r.content);
+    const titles = batch.map(r => r.title || '');
 
     try {
-      // コンテンツを3言語に翻訳
-      const contentTranslations = await translateToAll(content);
+      // コンテンツをバッチで翻訳（3言語同時）
+      const [contentsEn, contentsZh, contentsKo] = await Promise.all([
+        translateBatch(contents, 'en', 'ja'),
+        translateBatch(contents, 'zh', 'ja'),
+        translateBatch(contents, 'ko', 'ja'),
+      ]);
 
-      // タイトルがあれば翻訳
-      let titleTranslations = { en: '', zh: '', ko: '' };
-      if (title) {
+      // タイトルがあるものだけバッチで翻訳
+      const titlesWithContent = titles.filter(t => t.length > 0);
+      let titlesEn: string[] = [];
+      let titlesZh: string[] = [];
+      let titlesKo: string[] = [];
+
+      if (titlesWithContent.length > 0) {
         await delay(DELAY_MS);
-        titleTranslations = await translateToAll(title);
+        [titlesEn, titlesZh, titlesKo] = await Promise.all([
+          translateBatch(titlesWithContent, 'en', 'ja'),
+          translateBatch(titlesWithContent, 'zh', 'ja'),
+          translateBatch(titlesWithContent, 'ko', 'ja'),
+        ]);
       }
 
-      await db.execute(sql`
-        UPDATE product_reviews
-        SET
-          title_en = ${titleTranslations.en || null},
-          title_zh = ${titleTranslations.zh || null},
-          title_ko = ${titleTranslations.ko || null},
-          content_en = ${contentTranslations.en || null},
-          content_zh = ${contentTranslations.zh || null},
-          content_ko = ${contentTranslations.ko || null},
-          updated_at = NOW()
-        WHERE id = ${id}
-      `);
-      translated++;
+      // DB更新（並列）
+      let titleIndex = 0;
+      await Promise.all(batch.map(async (review, idx) => {
+        const hasTitle = review.title && review.title.length > 0;
+        const titleEn = hasTitle ? titlesEn[titleIndex] : null;
+        const titleZh = hasTitle ? titlesZh[titleIndex] : null;
+        const titleKo = hasTitle ? titlesKo[titleIndex] : null;
+        if (hasTitle) titleIndex++;
 
-      if (translated % 10 === 0) {
-        console.log(`    ✅ ${translated}件完了 (ID: ${id})`);
-      }
+        await db.execute(sql`
+          UPDATE product_reviews
+          SET
+            title_en = ${titleEn || null},
+            title_zh = ${titleZh || null},
+            title_ko = ${titleKo || null},
+            content_en = ${contentsEn[idx] || null},
+            content_zh = ${contentsZh[idx] || null},
+            content_ko = ${contentsKo[idx] || null},
+            updated_at = NOW()
+          WHERE id = ${review.id}
+        `);
+      }));
 
-      // レート制限対策
-      await delay(DELAY_MS);
+      translated += batch.length;
+      console.log(`    ✅ ${translated}件完了`);
+
+      // レート制限対策（バッチ間のディレイ）
+      await delay(DELAY_MS * 2);
 
     } catch (error: unknown) {
-      console.error(`    ❌ ID ${id}: ${error instanceof Error ? error.message : error}`);
-      failed++;
+      console.error(`    ❌ バッチ処理エラー: ${error instanceof Error ? error.message : error}`);
+      failed += batch.length;
     }
   }
 

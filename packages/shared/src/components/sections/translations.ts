@@ -6,26 +6,31 @@ export const recentlyViewedTranslations = {
   ja: {
     title: '最近見た作品',
     clearAll: 'すべて削除',
+    clearConfirm: 'すべてクリアしますか？',
     removeFromHistory: '履歴から削除',
   },
   en: {
     title: 'Recently Viewed',
     clearAll: 'Clear all',
+    clearConfirm: 'Are you sure you want to clear all?',
     removeFromHistory: 'Remove from history',
   },
   zh: {
     title: '最近浏览',
     clearAll: '全部删除',
+    clearConfirm: '确定要清除全部吗？',
     removeFromHistory: '从历史记录中删除',
   },
   'zh-TW': {
     title: '最近瀏覽',
     clearAll: '全部刪除',
+    clearConfirm: '確定要清除全部嗎？',
     removeFromHistory: '從記錄中刪除',
   },
   ko: {
     title: '최근 본 작품',
     clearAll: '전체 삭제',
+    clearConfirm: '전체 삭제하시겠습니까?',
     removeFromHistory: '기록에서 삭제',
   },
 } as const;
