@@ -45,6 +45,7 @@ import type {
   CategoryWithCount,
   UncategorizedStats,
   SeriesInfo as SharedSeriesInfo,
+  SeriesProduct,
   PopularSeries,
   PopularMaker,
   MakerPreference,
@@ -1369,11 +1370,6 @@ export interface SeriesInfo extends SharedSeriesInfo {
 export async function getSeriesInfo(seriesTagId: number): Promise<SeriesInfo | null> {
   return getSeriesInfoShared(seriesTagId);
 }
-
-/**
- * シリーズ作品の型定義
- */
-export type { SeriesProduct } from '@adult-v/shared';
 
 /**
  * シリーズ内の作品リストを取得（完走ガイド用）

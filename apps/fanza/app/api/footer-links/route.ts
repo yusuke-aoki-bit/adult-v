@@ -5,8 +5,8 @@
 
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { tags, productTags, products } from '@/lib/db/schema';
-import { desc, sql, eq, isNotNull } from 'drizzle-orm';
+import { tags, productTags } from '@/lib/db/schema';
+import { desc, sql, eq } from 'drizzle-orm';
 
 // 1時間キャッシュ
 export const revalidate = 3600;
@@ -55,16 +55,17 @@ export async function GET() {
       .orderBy(desc(sql`product_count`))
       .limit(5);
 
-    // 人気メーカー取得（作品数順）
+    // 人気メーカー取得（作品数順）- tagsテーブルのcategory='maker'から取得
     const popularMakers = await db
       .select({
-        id: products.makerId,
-        name: products.makerName,
-        productCount: sql<number>`COUNT(DISTINCT ${products.id})`.as('product_count'),
+        id: tags.id,
+        name: tags.name,
+        productCount: sql<number>`COUNT(DISTINCT ${productTags.productId})`.as('product_count'),
       })
-      .from(products)
-      .where(isNotNull(products.makerId))
-      .groupBy(products.makerId, products.makerName)
+      .from(tags)
+      .leftJoin(productTags, eq(tags.id, productTags.tagId))
+      .where(eq(tags.category, 'maker'))
+      .groupBy(tags.id, tags.name)
       .orderBy(desc(sql`product_count`))
       .limit(5);
 

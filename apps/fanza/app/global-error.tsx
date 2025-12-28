@@ -32,6 +32,13 @@ const translations = {
     home: '홈으로 이동',
     errorId: '오류 ID',
   },
+  'zh-TW': {
+    title: '發生意外錯誤',
+    description: '應用程式發生嚴重錯誤。請重新載入頁面。',
+    reload: '重新載入頁面',
+    home: '返回首頁',
+    errorId: '錯誤ID',
+  },
 } as const;
 
 export default function GlobalError({

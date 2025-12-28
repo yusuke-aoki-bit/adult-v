@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 import { getDb } from '@/lib/db';
 import { products, performers, tags, productTags } from '@/lib/db/schema';
-import { desc, sql, eq, isNotNull } from 'drizzle-orm';
+import { desc, sql, eq } from 'drizzle-orm';
 
 // サイトマップ設定 - インデックス対象件数
 const SITEMAP_CONFIG = {
@@ -179,15 +179,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   }));
 
-  // Top makers - メーカー別ページ（新規追加）
+  // Top makers - メーカー別ページ（tagsテーブルのcategory='maker'から取得）
   const topMakers = await db
     .select({
-      makerId: products.makerId,
-      productCount: sql<number>`COUNT(DISTINCT ${products.id})`.as('product_count'),
+      makerId: tags.id,
+      productCount: sql<number>`COUNT(DISTINCT ${productTags.productId})`.as('product_count'),
     })
-    .from(products)
-    .where(isNotNull(products.makerId))
-    .groupBy(products.makerId)
+    .from(tags)
+    .leftJoin(productTags, eq(tags.id, productTags.tagId))
+    .where(eq(tags.category, 'maker'))
+    .groupBy(tags.id)
     .orderBy(desc(sql`product_count`))
     .limit(SITEMAP_CONFIG.makers);
 
