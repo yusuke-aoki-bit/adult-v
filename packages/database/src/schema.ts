@@ -45,6 +45,9 @@ export const products = pgTable(
     aiShortDescription: text('ai_short_description'), // AIが生成した短い説明文
     aiTags: jsonb('ai_tags'), // AI抽出タグ（genres, attributes, plays, situations）
     aiReview: text('ai_review'), // AI生成のレビュー要約（ユーザーレビューベース）
+    aiReviewEn: text('ai_review_en'), // AIレビュー（英語）
+    aiReviewZh: text('ai_review_zh'), // AIレビュー（中国語簡体字）
+    aiReviewKo: text('ai_review_ko'), // AIレビュー（韓国語）
     aiReviewUpdatedAt: timestamp('ai_review_updated_at'), // AIレビュー更新日時
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -154,6 +157,9 @@ export const performers = pgTable(
     isFanzaOnly: boolean('is_fanza_only').default(false), // FANZA専用フラグ（FANZA以外のASPに出演作品がない）
     // AIレビュー
     aiReview: text('ai_review'), // Gemini AIによる演者レビュー
+    aiReviewEn: text('ai_review_en'), // AIレビュー（英語）
+    aiReviewZh: text('ai_review_zh'), // AIレビュー（中国語簡体字）
+    aiReviewKo: text('ai_review_ko'), // AIレビュー（韓国語）
     aiReviewUpdatedAt: timestamp('ai_review_updated_at'), // レビュー更新日時
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },

@@ -45,3 +45,6 @@ export { createContentEnrichmentPipelineHandler } from './content-enrichment-pip
 
 // Raw data processing handler
 export { createProcessRawDataHandler } from './process-raw-data';
+
+// Migration handler
+export { createRunMigrationHandler } from './run-migration';

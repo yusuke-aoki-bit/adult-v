@@ -1,9 +1,18 @@
 /**
- * 既存の商品・タグ・出演者・レビューの翻訳をバックフィルするスクリプト
+ * 既存の商品・タグ・出演者・レビュー・AIレビューの翻訳をバックフィルするスクリプト
  * DeepL APIを使用
  *
  * 使い方:
- *   npx tsx packages/crawlers/src/enrichment/translation-backfill.ts [--limit=N] [--type=products|performers|tags|reviews|all]
+ *   npx tsx packages/crawlers/src/enrichment/translation-backfill.ts [--limit=N] [--type=TYPE]
+ *
+ * TYPE:
+ *   - all: 全て翻訳
+ *   - products: 商品タイトル・説明文
+ *   - performers: 演者名
+ *   - tags: タグ名
+ *   - reviews: ユーザーレビュー
+ *   - ai-reviews: 商品AIレビュー
+ *   - performer-ai-reviews: 演者AIレビュー
  *
  * 環境変数:
  *   DEEPL_API_KEY - DeepL APIキー
@@ -316,6 +325,136 @@ async function translateReviews(db: ReturnType<typeof getDb>, limit: number) {
   return { translated, failed };
 }
 
+async function translateAiReviews(db: ReturnType<typeof getDb>, limit: number) {
+  console.log(`\n🤖 AIレビューの翻訳を開始 (最大${limit}件、並列バッチサイズ: ${PARALLEL_BATCH_SIZE})`);
+
+  // AIレビューはあるが翻訳されていない商品を取得
+  const products = await db.execute(sql`
+    SELECT id, ai_review
+    FROM products
+    WHERE ai_review IS NOT NULL
+      AND ai_review_en IS NULL
+      AND LENGTH(ai_review) > 0
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `);
+
+  console.log(`  → ${products.rows.length}件の未翻訳AIレビューを発見`);
+
+  let translated = 0;
+  let failed = 0;
+
+  // バッチに分割して並列処理
+  const productList = products.rows as { id: number; ai_review: string }[];
+
+  for (let i = 0; i < productList.length; i += PARALLEL_BATCH_SIZE) {
+    const batch = productList.slice(i, i + PARALLEL_BATCH_SIZE);
+    console.log(`    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(productList.length / PARALLEL_BATCH_SIZE)} 処理中...`);
+
+    const aiReviews = batch.map(p => p.ai_review);
+
+    try {
+      // AIレビューをバッチで翻訳（3言語同時）
+      const [reviewsEn, reviewsZh, reviewsKo] = await Promise.all([
+        translateBatch(aiReviews, 'en', 'ja'),
+        translateBatch(aiReviews, 'zh', 'ja'),
+        translateBatch(aiReviews, 'ko', 'ja'),
+      ]);
+
+      // DB更新（並列）
+      await Promise.all(batch.map(async (product, idx) => {
+        await db.execute(sql`
+          UPDATE products
+          SET
+            ai_review_en = ${reviewsEn[idx] || null},
+            ai_review_zh = ${reviewsZh[idx] || null},
+            ai_review_ko = ${reviewsKo[idx] || null},
+            updated_at = NOW()
+          WHERE id = ${product.id}
+        `);
+      }));
+
+      translated += batch.length;
+      console.log(`    ✅ ${translated}件完了`);
+
+      // レート制限対策（バッチ間のディレイ）
+      await delay(DELAY_MS * 2);
+
+    } catch (error: unknown) {
+      console.error(`    ❌ バッチ処理エラー: ${error instanceof Error ? error.message : error}`);
+      failed += batch.length;
+    }
+  }
+
+  console.log(`  📊 結果: ${translated}件成功, ${failed}件失敗`);
+  return { translated, failed };
+}
+
+async function translatePerformerAiReviews(db: ReturnType<typeof getDb>, limit: number) {
+  console.log(`\n🎭 演者AIレビューの翻訳を開始 (最大${limit}件、並列バッチサイズ: ${PARALLEL_BATCH_SIZE})`);
+
+  // AIレビューはあるが翻訳されていない演者を取得
+  const performers = await db.execute(sql`
+    SELECT id, ai_review
+    FROM performers
+    WHERE ai_review IS NOT NULL
+      AND ai_review_en IS NULL
+      AND LENGTH(ai_review) > 0
+    ORDER BY id DESC
+    LIMIT ${limit}
+  `);
+
+  console.log(`  → ${performers.rows.length}件の未翻訳演者AIレビューを発見`);
+
+  let translated = 0;
+  let failed = 0;
+
+  // バッチに分割して並列処理
+  const performerList = performers.rows as { id: number; ai_review: string }[];
+
+  for (let i = 0; i < performerList.length; i += PARALLEL_BATCH_SIZE) {
+    const batch = performerList.slice(i, i + PARALLEL_BATCH_SIZE);
+    console.log(`    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(performerList.length / PARALLEL_BATCH_SIZE)} 処理中...`);
+
+    const aiReviews = batch.map(p => p.ai_review);
+
+    try {
+      // AIレビューをバッチで翻訳（3言語同時）
+      const [reviewsEn, reviewsZh, reviewsKo] = await Promise.all([
+        translateBatch(aiReviews, 'en', 'ja'),
+        translateBatch(aiReviews, 'zh', 'ja'),
+        translateBatch(aiReviews, 'ko', 'ja'),
+      ]);
+
+      // DB更新（並列）
+      await Promise.all(batch.map(async (performer, idx) => {
+        await db.execute(sql`
+          UPDATE performers
+          SET
+            ai_review_en = ${reviewsEn[idx] || null},
+            ai_review_zh = ${reviewsZh[idx] || null},
+            ai_review_ko = ${reviewsKo[idx] || null},
+            updated_at = NOW()
+          WHERE id = ${performer.id}
+        `);
+      }));
+
+      translated += batch.length;
+      console.log(`    ✅ ${translated}件完了`);
+
+      // レート制限対策（バッチ間のディレイ）
+      await delay(DELAY_MS * 2);
+
+    } catch (error: unknown) {
+      console.error(`    ❌ バッチ処理エラー: ${error instanceof Error ? error.message : error}`);
+      failed += batch.length;
+    }
+  }
+
+  console.log(`  📊 結果: ${translated}件成功, ${failed}件失敗`);
+  return { translated, failed };
+}
+
 async function main() {
   // 環境変数チェック
   if (!process.env.DEEPL_API_KEY) {
@@ -339,6 +478,8 @@ async function main() {
       performers: { translated: 0, failed: 0 },
       tags: { translated: 0, failed: 0 },
       reviews: { translated: 0, failed: 0 },
+      aiReviews: { translated: 0, failed: 0 },
+      performerAiReviews: { translated: 0, failed: 0 },
     };
 
     if (TYPE === 'all' || TYPE === 'products') {
@@ -355,6 +496,14 @@ async function main() {
 
     if (TYPE === 'all' || TYPE === 'reviews') {
       results.reviews = await translateReviews(db, BATCH_SIZE);
+    }
+
+    if (TYPE === 'all' || TYPE === 'ai-reviews') {
+      results.aiReviews = await translateAiReviews(db, BATCH_SIZE);
+    }
+
+    if (TYPE === 'all' || TYPE === 'performer-ai-reviews') {
+      results.performerAiReviews = await translatePerformerAiReviews(db, BATCH_SIZE);
     }
 
     console.log('\n📊 翻訳結果:');
