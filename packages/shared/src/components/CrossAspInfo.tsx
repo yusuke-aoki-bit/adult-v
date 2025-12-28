@@ -185,16 +185,23 @@ export default function CrossAspInfo({
               const meta = providerId ? providerMeta[providerId] : null;
               const percentage = totalWorks > 0 ? (asp.count / totalWorks) * 100 : 0;
 
-              // FANZAの場合はfanzaSiteUrlを使用、それ以外は現在のサイト内リンク
-              const aspLinkHref = asp.aspName === 'FANZA' && fanzaSiteUrl
+              // FANZAの場合はfanzaSiteUrlを使用（外部リンク）、それ以外は現在のサイト内リンク
+              const isFanzaExternal = asp.aspName === 'FANZA' && fanzaSiteUrl;
+              const aspLinkHref = isFanzaExternal
                 ? `${fanzaSiteUrl}/${locale}/products?q=${encodeURIComponent(performerName)}&includeAsp=${asp.aspName}`
                 : `/${locale}/products?q=${encodeURIComponent(performerName)}&includeAsp=${asp.aspName}`;
+
+              // 外部リンクの場合はaタグ、内部リンクの場合はLinkを使用
+              const LinkComponent = isFanzaExternal ? 'a' : Link;
+              const linkProps = isFanzaExternal
+                ? { href: aspLinkHref, target: '_blank', rel: 'noopener noreferrer' }
+                : { href: aspLinkHref };
 
               return (
                 <div key={asp.aspName} className="group">
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <Link
-                      href={aspLinkHref}
+                    <LinkComponent
+                      {...linkProps}
                       className="flex items-center gap-2 hover:text-cyan-400 transition-colors"
                     >
                       <span
@@ -205,7 +212,7 @@ export default function CrossAspInfo({
                         {meta?.label || asp.aspName}
                       </span>
                       <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Link>
+                    </LinkComponent>
                     <span className="text-gray-300">
                       <span className="font-medium text-white">{asp.count.toLocaleString()}</span>
                       <span className="text-gray-500 text-xs ml-1">({percentage.toFixed(0)}%)</span>
