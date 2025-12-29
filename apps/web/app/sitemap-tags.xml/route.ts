@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { tags, productTags } from '@/lib/db/schema';
-import { desc, sql, eq, or } from 'drizzle-orm';
+import { desc, sql, eq } from 'drizzle-orm';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.adult-v.com';
 

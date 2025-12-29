@@ -3,6 +3,17 @@ import { test, expect } from '@playwright/test';
 // Increase timeout for all tests in this file
 test.setTimeout(60000);
 
+// Helper to get domain from baseURL
+function getDomain(baseURL: string | undefined): string {
+  if (!baseURL) return 'localhost';
+  try {
+    const url = new URL(baseURL);
+    return url.hostname;
+  } catch {
+    return 'localhost';
+  }
+}
+
 test.describe('Basic Navigation & SEO', () => {
   test('should load homepage with age verification', async ({ page }) => {
     await page.goto('/');
@@ -13,12 +24,13 @@ test.describe('Basic Navigation & SEO', () => {
     expect(url.includes('age-verification') || url.endsWith('/') || url.includes('localhost')).toBeTruthy();
   });
 
-  test('should accept age verification and navigate to homepage', async ({ page, context }) => {
+  test('should accept age verification and navigate to homepage', async ({ page, context, baseURL }) => {
     // First, set age verification cookie to bypass age gate
+    const domain = getDomain(baseURL);
     await context.addCookies([{
       name: 'age-verified',
       value: 'true',
-      domain: 'localhost',
+      domain,
       path: '/',
     }]);
 
@@ -28,12 +40,13 @@ test.describe('Basic Navigation & SEO', () => {
     await expect(page).not.toHaveURL(/age-verification/);
   });
 
-  test('should have proper meta tags for SEO', async ({ page, context }) => {
+  test('should have proper meta tags for SEO', async ({ page, context, baseURL }) => {
     // Set age verification cookie to bypass age gate
+    const domain = getDomain(baseURL);
     await context.addCookies([{
       name: 'age-verified',
       value: 'true',
-      domain: 'localhost',
+      domain,
       path: '/',
     }]);
 
@@ -52,12 +65,13 @@ test.describe('Basic Navigation & SEO', () => {
     expect(ogImage).toBeTruthy();
   });
 
-  test('should have hreflang tags for multi-language support', async ({ page, context }) => {
+  test('should have hreflang tags for multi-language support', async ({ page, context, baseURL }) => {
     // Set age verification cookie
+    const domain = getDomain(baseURL);
     await context.addCookies([{
       name: 'age-verified',
       value: 'true',
-      domain: 'localhost',
+      domain,
       path: '/',
     }]);
 
@@ -80,12 +94,13 @@ test.describe('Basic Navigation & SEO', () => {
     expect(koLink).toMatch(/\/ko|hl=ko/);
   });
 
-  test('should navigate between language versions', async ({ page, context }) => {
+  test('should navigate between language versions', async ({ page, context, baseURL }) => {
     // Set age verification cookie
+    const domain = getDomain(baseURL);
     await context.addCookies([{
       name: 'age-verified',
       value: 'true',
-      domain: 'localhost',
+      domain,
       path: '/',
     }]);
 

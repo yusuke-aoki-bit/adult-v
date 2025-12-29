@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { getDb } from '@/lib/db';
-import { products, productImages, productSources } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { products, productSources } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export const alt = 'Product Detail';
 export const size = {
@@ -87,7 +87,6 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           }}
         >
           {productImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={productImage}
               alt={productTitle}

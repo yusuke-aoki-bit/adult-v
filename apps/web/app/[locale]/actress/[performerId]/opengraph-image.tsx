@@ -76,7 +76,6 @@ export default async function Image({ params }: { params: Promise<{ performerId:
           }}
         >
           {actressImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={actressImage}
               alt={actressName}
