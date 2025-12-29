@@ -28,6 +28,8 @@ export interface ProductQueryDeps {
   productImages: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   productVideos: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productSales: any;
   /** Site mode ('all' = exclude FANZA, 'fanza-only' = include all) */
   siteMode?: 'all' | 'fanza-only';
   /** Function to map DB product to ProductType */
@@ -39,7 +41,13 @@ export interface ProductQueryDeps {
     cache: unknown,
     images: unknown[],
     videos: unknown[],
-    locale: string
+    locale: string,
+    saleData?: {
+      regularPrice: number;
+      salePrice: number;
+      discountPercent: number | null;
+      endAt: Date | null;
+    }
   ) => unknown;
   /** Function to fetch product related data (productId only) */
   fetchProductRelatedData: (
@@ -50,6 +58,12 @@ export interface ProductQueryDeps {
     sourceData: unknown;
     imagesData: unknown[];
     videosData: unknown[];
+    saleData?: {
+      regularPrice: number;
+      salePrice: number;
+      discountPercent: number | null;
+      endAt: Date | null;
+    };
   }>;
   /** Function to validate performer */
   isValidPerformer: (performer: { name: string }) => boolean;
@@ -96,6 +110,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
     productSources,
     productImages,
     productVideos,
+    productSales,
     siteMode = 'fanza-only',
     mapProductToType,
     fetchProductRelatedData,
@@ -125,7 +140,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
       }
 
       const product = result[0];
-      const { performerData, tagData, sourceData, imagesData, videosData } =
+      const { performerData, tagData, sourceData, imagesData, videosData, saleData } =
         await fetchProductRelatedData(product.id);
 
       return mapProductToType(
@@ -136,7 +151,8 @@ export function createProductQueries(deps: ProductQueryDeps) {
         undefined,
         imagesData,
         videosData,
-        locale
+        locale,
+        saleData
       ) as T;
     } catch (error) {
       console.error(`Error fetching product ${id}:`, error);
@@ -164,7 +180,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
       if (productByNormalizedId.length > 0) {
         const product = productByNormalizedId[0];
-        const { performerData, tagData, sourceData, imagesData, videosData } =
+        const { performerData, tagData, sourceData, imagesData, videosData, saleData } =
           await fetchProductRelatedData(product.id);
 
         return mapProductToType(
@@ -175,7 +191,8 @@ export function createProductQueries(deps: ProductQueryDeps) {
           undefined,
           imagesData,
           videosData,
-          locale
+          locale,
+          saleData
         ) as T;
       }
 
@@ -203,7 +220,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
       const productData = product[0];
 
-      const [performerData, tagData, imagesData, videosData] = await Promise.all([
+      const [performerData, tagData, imagesData, videosData, saleDataResult] = await Promise.all([
         db
           .select({
             id: performers.id,
@@ -231,7 +248,33 @@ export function createProductQueries(deps: ProductQueryDeps) {
           .select()
           .from(productVideos)
           .where(eq(productVideos.productId, productData.id)),
+        // セール情報を取得
+        db
+          .select({
+            regularPrice: productSales.regularPrice,
+            salePrice: productSales.salePrice,
+            discountPercent: productSales.discountPercent,
+            endAt: productSales.endAt,
+          })
+          .from(productSales)
+          .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
+          .where(
+            and(
+              eq(productSources.productId, productData.id),
+              eq(productSales.isActive, true),
+              sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
+            )
+          )
+          .limit(1),
       ]);
+
+      // セールデータの変換
+      const saleData = saleDataResult[0] ? {
+        regularPrice: saleDataResult[0].regularPrice,
+        salePrice: saleDataResult[0].salePrice,
+        discountPercent: saleDataResult[0].discountPercent,
+        endAt: saleDataResult[0].endAt,
+      } : undefined;
 
       return mapProductToType(
         productData,
@@ -241,7 +284,8 @@ export function createProductQueries(deps: ProductQueryDeps) {
         undefined,
         imagesData,
         videosData,
-        locale
+        locale,
+        saleData
       ) as T;
     } catch (error) {
       console.error(`Error searching product by product ID ${productId}:`, error);

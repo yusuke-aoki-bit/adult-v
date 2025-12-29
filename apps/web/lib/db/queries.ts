@@ -253,6 +253,7 @@ const productQueries = createProductQueries({
   productSources,
   productImages,
   productVideos,
+  productSales,
   siteMode: 'all', // FANZA除外
   mapProductToType,
   fetchProductRelatedData: fetchProductRelatedDataShared,

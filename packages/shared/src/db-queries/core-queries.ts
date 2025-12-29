@@ -87,6 +87,12 @@ export interface ProductRelatedData {
     quality: string | null;
     duration: number | null;
   }>;
+  saleData?: {
+    regularPrice: number;
+    salePrice: number;
+    discountPercent: number | null;
+    endAt: Date | null;
+  };
 }
 
 /**
@@ -739,7 +745,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     const db = getDb();
     const isValidPerformer = deps.isValidPerformer || (() => true);
 
-    const [rawPerformerData, rawTagData, rawSourceData, rawImagesData, rawVideosData] = await Promise.all([
+    const [rawPerformerData, rawTagData, rawSourceData, rawImagesData, rawVideosData, rawSaleData] = await Promise.all([
       // 出演者情報を取得
       db
         .select({
@@ -798,6 +804,25 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         })
         .from(productVideos)
         .where(eq(productVideos.productId, productId)),
+
+      // セール情報を取得（アクティブなもののみ）
+      db
+        .select({
+          regularPrice: productSales.regularPrice,
+          salePrice: productSales.salePrice,
+          discountPercent: productSales.discountPercent,
+          endAt: productSales.endAt,
+        })
+        .from(productSales)
+        .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
+        .where(
+          and(
+            eq(productSources.productId, productId),
+            eq(productSales.isActive, true),
+            sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
+          )
+        )
+        .limit(1),
     ]);
 
     // 型変換ヘルパーを使用してas anyを回避
@@ -807,12 +832,23 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     const imagesData = toImageRows(rawImagesData);
     const videosData = toVideoRows(rawVideosData);
 
+    // セールデータの変換
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawSale = rawSaleData[0] as any;
+    const saleData = rawSale ? {
+      regularPrice: rawSale.regularPrice as number,
+      salePrice: rawSale.salePrice as number,
+      discountPercent: rawSale.discountPercent as number | null,
+      endAt: rawSale.endAt as Date | null,
+    } : undefined;
+
     return {
       performerData: performerData.filter(isValidPerformer),
       tagData,
       sourceData,
       imagesData,
       videosData,
+      saleData,
     };
   }
 

@@ -827,6 +827,7 @@ function getProductQueries() {
       productSources,
       productImages,
       productVideos,
+      productSales,
       mapProductToType,
       fetchProductRelatedData: fetchProductRelatedDataShared,
       isValidPerformer,
