@@ -54,6 +54,9 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  # DeepL API Key for translation
+  - variable: DEEPL_API_KEY
+    secret: deepl-api-key
   # Sentry Configuration
   - variable: SENTRY_DSN
     secret: sentry-dsn

@@ -610,6 +610,31 @@ export const productRatingSummary = pgTable(
 );
 
 /**
+ * 商品翻訳テーブル
+ * 各商品のタイトル・説明の多言語翻訳を保存
+ */
+export const productTranslations = pgTable(
+  'product_translations',
+  {
+    id: serial('id').primaryKey(),
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    language: varchar('language', { length: 10 }).notNull(), // 'en', 'zh', 'zh-TW', 'ko'
+    title: text('title'),
+    description: text('description'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productLanguageUnique: uniqueIndex('idx_product_translations_unique').on(
+      table.productId,
+      table.language,
+    ),
+    productIdx: index('idx_product_translations_product_id').on(table.productId),
+    languageIdx: index('idx_product_translations_language').on(table.language),
+  }),
+);
+
+/**
  * Wiki/参考サイトから取得した出演者インデックス
  * 商品ID、作品タイトルから出演者名を検索するためのテーブル
  */
@@ -684,3 +709,5 @@ export type ProductRawDataLink = typeof productRawDataLinks.$inferSelect;
 export type NewProductRawDataLink = typeof productRawDataLinks.$inferInsert;
 export type WikiPerformerIndex = typeof wikiPerformerIndex.$inferSelect;
 export type NewWikiPerformerIndex = typeof wikiPerformerIndex.$inferInsert;
+export type ProductTranslation = typeof productTranslations.$inferSelect;
+export type NewProductTranslation = typeof productTranslations.$inferInsert;
