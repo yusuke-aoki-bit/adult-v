@@ -177,14 +177,17 @@ const ProductDetailInfo = memo(function ProductDetailInfo({
         </div>
       </div>
 
-      {/* データソースの透明性 */}
-      {sources.length > 0 && (
+      {/* データソースの透明性 - apps/webではFANZAを除外 */}
+      {sources.filter(s => s.aspName !== 'FANZA').length > 0 && (
         <div className="mt-6 pt-4 border-t border-gray-700">
           <h3 className="text-sm font-semibold text-white mb-3">
-            {t.distributionSites} ({sources.length} {t.sites})
+            {t.distributionSites} ({sources.filter(s => s.aspName !== 'FANZA').length} {t.sites})
           </h3>
           <div className="space-y-2">
-            {sources.map((source) => {
+            {sources
+              // apps/webではFANZAソースを除外（FANZAはFanzaCrossLink経由で表示）
+              .filter((source) => source.aspName !== 'FANZA')
+              .map((source) => {
               const providerId = ASP_TO_PROVIDER_ID[source.aspName.toLowerCase()];
               const meta = providerId ? providerMeta[providerId] : null;
               const gradientStyle = meta?.gradientColors

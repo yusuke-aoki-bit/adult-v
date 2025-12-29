@@ -10,7 +10,7 @@
 
 import { getDb } from '../../lib/db';
 import { products, performers, productPerformers, performerAliases, wikiCrawlData } from '../../lib/db/schema';
-import { eq, sql, and, isNull } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../../lib/performer-validation';
 
 const db = getDb();
@@ -73,34 +73,47 @@ function extractProductCode(normalizedId: string): string[] {
 }
 
 /**
- * wiki_crawl_dataから品番-演者マッピングを取得
+ * wiki_crawl_dataから品番-演者マッピングを取得（バッチ処理）
  */
 async function loadWikiPerformerMappings(): Promise<Map<string, string[]>> {
   console.log('📚 wiki_crawl_dataを読み込み中...');
 
-  const wikiData = await db
-    .select({
-      productCode: wikiCrawlData.productCode,
-      performerName: wikiCrawlData.performerName,
-      source: wikiCrawlData.source,
-    })
-    .from(wikiCrawlData);
-
-  // 品番 → 演者名リストのマップを作成
   const mapping = new Map<string, string[]>();
+  const BATCH_SIZE = 10000;
+  let lastId = 0;
+  let totalLoaded = 0;
 
-  for (const row of wikiData) {
-    const code = row.productCode.toUpperCase();
-    if (!mapping.has(code)) {
-      mapping.set(code, []);
+  while (true) {
+    // IDベースのページネーション（OFFSETより高速）
+    const wikiData = await db.execute<{ id: number; product_code: string; performer_name: string }>(
+      sql`SELECT id, product_code, performer_name FROM wiki_crawl_data WHERE id > ${lastId} ORDER BY id LIMIT ${BATCH_SIZE}`
+    );
+
+    if (wikiData.rows.length === 0) {
+      break;
     }
-    const performers = mapping.get(code)!;
-    if (!performers.includes(row.performerName)) {
-      performers.push(row.performerName);
+
+    for (const row of wikiData.rows) {
+      const code = row.product_code.toUpperCase();
+      if (!mapping.has(code)) {
+        mapping.set(code, []);
+      }
+      const performers = mapping.get(code)!;
+      if (!performers.includes(row.performer_name)) {
+        performers.push(row.performer_name);
+      }
+      lastId = row.id;
+    }
+
+    totalLoaded += wikiData.rows.length;
+    console.log(`  📖 ${totalLoaded}件ロード済み (lastId: ${lastId})...`);
+
+    if (wikiData.rows.length < BATCH_SIZE) {
+      break;
     }
   }
 
-  console.log(`  ✓ ${wikiData.length}件のレコードをロード`);
+  console.log(`  ✓ ${totalLoaded}件のレコードをロード`);
   console.log(`  ✓ ${mapping.size}件のユニーク品番`);
 
   return mapping;

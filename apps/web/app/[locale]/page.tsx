@@ -384,23 +384,78 @@ export default async function Home({ params, searchParams }: PageProps) {
             }}
           />
 
-          {/* 商品一覧へのリンク */}
+          {/* 主要ページへのナビゲーション */}
           <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t theme-section-border">
-            <Link
-              href={localizedHref('/products', locale)}
-              className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-pink-500 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🎬</span>
-                <div>
-                  <span className="theme-text font-medium">{t('viewProductList')}</span>
-                  <p className="theme-text-muted text-sm mt-0.5">{t('viewProductListDesc')}</p>
+            <h2 className="text-lg sm:text-xl font-bold theme-text mb-4">{t('browseByCategory')}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {/* 商品一覧 */}
+              <Link
+                href={localizedHref('/products', locale)}
+                className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-pink-500 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🎬</span>
+                  <div>
+                    <span className="theme-text font-medium">{t('viewProductList')}</span>
+                    <p className="theme-text-muted text-sm mt-0.5">{t('viewProductListDesc')}</p>
+                  </div>
                 </div>
-              </div>
-              <svg className="w-5 h-5 theme-text-muted group-hover:text-pink-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
+                <svg className="w-5 h-5 theme-text-muted group-hover:text-pink-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+
+              {/* カテゴリー一覧 */}
+              <Link
+                href={localizedHref('/categories', locale)}
+                className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-purple-500 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📂</span>
+                  <div>
+                    <span className="theme-text font-medium">{t('viewCategories')}</span>
+                    <p className="theme-text-muted text-sm mt-0.5">{t('viewCategoriesDesc')}</p>
+                  </div>
+                </div>
+                <svg className="w-5 h-5 theme-text-muted group-hover:text-purple-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+
+              {/* シリーズ一覧 */}
+              <Link
+                href={localizedHref('/series', locale)}
+                className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-blue-500 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📚</span>
+                  <div>
+                    <span className="theme-text font-medium">{t('viewSeries')}</span>
+                    <p className="theme-text-muted text-sm mt-0.5">{t('viewSeriesDesc')}</p>
+                  </div>
+                </div>
+                <svg className="w-5 h-5 theme-text-muted group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+
+              {/* メーカー一覧 */}
+              <Link
+                href={localizedHref('/makers', locale)}
+                className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-amber-500 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🏭</span>
+                  <div>
+                    <span className="theme-text font-medium">{t('viewMakers')}</span>
+                    <p className="theme-text-muted text-sm mt-0.5">{t('viewMakersDesc')}</p>
+                  </div>
+                </div>
+                <svg className="w-5 h-5 theme-text-muted group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

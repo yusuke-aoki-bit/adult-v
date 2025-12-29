@@ -594,7 +594,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   {tRelated('seriesWorks', { name: series.name })}
                 </h2>
                 <Link
-                  href={localizedHref(`/tags/${series.id}`, locale)}
+                  href={localizedHref(`/series/${series.id}`, locale)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors shadow-sm"
                 >
                   {tRelated('viewAll')}
@@ -633,7 +633,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 ))}
                 {/* もっと見るカード */}
                 <Link
-                  href={localizedHref(`/tags/${series.id}`, locale)}
+                  href={localizedHref(`/series/${series.id}`, locale)}
                   className="group bg-linear-to-br from-purple-600/10 to-purple-800/10 rounded-lg overflow-hidden hover:from-purple-600/20 hover:to-purple-800/20 transition-all flex flex-col items-center justify-center border border-purple-500/30 hover:border-purple-500/50 shrink-0 w-[120px] sm:w-[140px] snap-start"
                   style={{ aspectRatio: '2/3' }}
                 >
@@ -657,7 +657,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   {tRelated('makerOtherWorks', { name: maker.name })}
                 </h2>
                 <Link
-                  href={localizedHref(`/tags/${maker.id}`, locale)}
+                  href={localizedHref(`/makers/${maker.id}`, locale)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-500 rounded-lg transition-colors shadow-sm"
                 >
                   {tRelated('viewAll')}
@@ -696,7 +696,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 ))}
                 {/* もっと見るカード */}
                 <Link
-                  href={localizedHref(`/tags/${maker.id}`, locale)}
+                  href={localizedHref(`/makers/${maker.id}`, locale)}
                   className="group bg-linear-to-br from-amber-600/10 to-amber-800/10 rounded-lg overflow-hidden hover:from-amber-600/20 hover:to-amber-800/20 transition-all flex flex-col items-center justify-center border border-amber-500/30 hover:border-amber-500/50 shrink-0 w-[120px] sm:w-[140px] snap-start"
                   style={{ aspectRatio: '2/3' }}
                 >

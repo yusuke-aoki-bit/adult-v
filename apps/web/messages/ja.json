@@ -53,7 +53,14 @@
     "viewAllSales": "すべてのセール商品を見る",
     "saleUntil": "〜{date}まで",
     "viewProductList": "全作品一覧",
-    "viewProductListDesc": "全ての配信サイトの作品を横断検索"
+    "viewProductListDesc": "全ての配信サイトの作品を横断検索",
+    "browseByCategory": "カテゴリから探す",
+    "viewCategories": "ジャンル一覧",
+    "viewCategoriesDesc": "ジャンル・シチュエーションから検索",
+    "viewSeries": "シリーズ一覧",
+    "viewSeriesDesc": "人気シリーズから作品を探す",
+    "viewMakers": "メーカー一覧",
+    "viewMakersDesc": "メーカー・レーベルから作品を探す"
   },
   "header": {
     "title": "ADULT VIEWER LAB",

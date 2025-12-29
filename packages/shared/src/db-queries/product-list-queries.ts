@@ -45,7 +45,14 @@ export interface ProductListQueryDeps {
   /** サイトモード */
   siteMode: SiteMode;
   /** バッチ関連データ取得関数 */
-  batchFetchProductRelatedData: (productIds: number[], providerFilters?: string[]) => Promise<BatchRelatedDataResult>;
+  batchFetchProductRelatedData: (
+    productIds: number[],
+    providerFilters?: string[],
+    options?: {
+      limitImagesPerProduct?: number;
+      limitVideosPerProduct?: number;
+    }
+  ) => Promise<BatchRelatedDataResult>;
   /** 商品マッパー依存性 */
   mapperDeps: MapProductsWithBatchDataDeps;
   /** 単一商品関連データ取得関数 (getProductsByCategory用) */
@@ -430,9 +437,11 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         if (productIds.length === 0) return [];
 
         // サイトモードに応じてプロバイダーフィルターを渡す
+        // 一覧表示では画像1枚、動画1件で十分（パフォーマンス最適化）
+        const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1 };
         const batchData = siteMode === 'all'
-          ? await batchFetchProductRelatedData(productIds, options?.providers)
-          : await batchFetchProductRelatedData(productIds);
+          ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
+          : await batchFetchProductRelatedData(productIds, undefined, listLimits);
         const mappedProducts = mapProductsWithBatchData(productList, batchData, mapperDeps, options?.locale || 'ja') as T[];
 
         // タイトルベースの重複排除（サイトモードに応じた処理）
@@ -468,9 +477,11 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         if (productIds.length === 0) return [];
 
         // サイトモードに応じてプロバイダーフィルターを渡す
+        // 一覧表示では画像1枚、動画1件で十分（パフォーマンス最適化）
+        const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1 };
         const batchData = siteMode === 'all'
-          ? await batchFetchProductRelatedData(productIds, options?.providers)
-          : await batchFetchProductRelatedData(productIds);
+          ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
+          : await batchFetchProductRelatedData(productIds, undefined, listLimits);
         const mappedProducts = mapProductsWithBatchData(productList, batchData, mapperDeps, options?.locale || 'ja') as T[];
 
         // タイトルベースの重複排除（共通関数使用）
@@ -495,9 +506,11 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       if (productIds.length === 0) return [];
 
       // サイトモードに応じてプロバイダーフィルターを渡す
+      // 一覧表示では画像1枚、動画1件で十分（パフォーマンス最適化）
+      const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1 };
       const batchData = siteMode === 'all'
-        ? await batchFetchProductRelatedData(productIds, options?.providers)
-        : await batchFetchProductRelatedData(productIds);
+        ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
+        : await batchFetchProductRelatedData(productIds, undefined, listLimits);
       const dbProducts = typedResults.map((p) => ({
         id: p.id as number,
         title: p.title as string,
@@ -802,7 +815,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       if (cursorData) {
         const { releaseDate, id } = cursorData;
 
-        if (releaseDate === null) {
+        if (releaseDate === null || releaseDate === undefined) {
           // NULLの中でidで比較
           if (isDescending) {
             baseConditions.push(
@@ -876,9 +889,11 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       }
 
       // バッチでデータを取得
+      // 一覧表示では画像1枚、動画1件で十分（パフォーマンス最適化）
+      const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1 };
       const batchData = siteMode === 'all'
-        ? await batchFetchProductRelatedData(productIds, options?.providers)
-        : await batchFetchProductRelatedData(productIds);
+        ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
+        : await batchFetchProductRelatedData(productIds, undefined, listLimits);
 
       const dbProducts = itemsToProcess.map((p) => ({
         id: p.id as number,

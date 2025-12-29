@@ -308,6 +308,11 @@ export async function fetchPerformersFromGoogleSearch(
  * 演者をバッチでUPSERTし、product_performersリレーションを作成
  * N+1クエリを防ぐためのバッチ処理関数
  *
+ * 演者名の検索順序:
+ * 1. performers.name で完全一致を検索
+ * 2. performer_aliases.alias_name で別名を検索
+ * 3. 見つからなければ新規作成
+ *
  * @param db - Drizzle DBインスタンス
  * @param productId - 商品ID
  * @param performerNames - 演者名の配列
@@ -322,25 +327,48 @@ export async function savePerformersBatch(
     return 0;
   }
 
-  // 1. 全演者を一括でUPSERT
-  const performerValues = performerNames
-    .map((name) => `(${sql`${name}`})`)
-    .join(', ');
-
-  // UNNEST を使用してバッチINSERT
-  const upsertResult = await db.execute(sql`
-    INSERT INTO performers (name)
-    SELECT unnest(ARRAY[${sql.join(performerNames.map(n => sql`${n}`), sql`, `)}]::text[])
-    ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-    RETURNING id, name
-  `);
-
   const performerMap = new Map<string, number>();
-  for (const row of upsertResult.rows as { id: number; name: string }[]) {
+
+  // 1. まず performers.name で既存の演者を検索
+  const existingPerformers = await db.execute(sql`
+    SELECT id, name FROM performers
+    WHERE name = ANY(ARRAY[${sql.join(performerNames.map(n => sql`${n}`), sql`, `)}]::text[])
+  `);
+  for (const row of existingPerformers.rows as { id: number; name: string }[]) {
     performerMap.set(row.name, row.id);
   }
 
-  // 2. product_performers リレーションを一括作成
+  // 2. 見つからなかった名前について performer_aliases で別名検索
+  const notFoundNames = performerNames.filter(name => !performerMap.has(name));
+  if (notFoundNames.length > 0) {
+    const aliasResults = await db.execute(sql`
+      SELECT pa.alias_name, pa.performer_id, p.name as performer_name
+      FROM performer_aliases pa
+      JOIN performers p ON pa.performer_id = p.id
+      WHERE pa.alias_name = ANY(ARRAY[${sql.join(notFoundNames.map(n => sql`${n}`), sql`, `)}]::text[])
+    `);
+    for (const row of aliasResults.rows as { alias_name: string; performer_id: number; performer_name: string }[]) {
+      // 別名で見つかった場合、その演者IDを使用
+      performerMap.set(row.alias_name, row.performer_id);
+      console.log(`  📝 別名マッチ: "${row.alias_name}" → "${row.performer_name}" (ID: ${row.performer_id})`);
+    }
+  }
+
+  // 3. まだ見つからない名前は新規作成
+  const stillNotFound = performerNames.filter(name => !performerMap.has(name));
+  if (stillNotFound.length > 0) {
+    const upsertResult = await db.execute(sql`
+      INSERT INTO performers (name)
+      SELECT unnest(ARRAY[${sql.join(stillNotFound.map(n => sql`${n}`), sql`, `)}]::text[])
+      ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+      RETURNING id, name
+    `);
+    for (const row of upsertResult.rows as { id: number; name: string }[]) {
+      performerMap.set(row.name, row.id);
+    }
+  }
+
+  // 4. product_performers リレーションを一括作成
   const performerIds = performerNames
     .map((name) => performerMap.get(name))
     .filter((id): id is number => id !== undefined);
@@ -354,6 +382,51 @@ export async function savePerformersBatch(
   }
 
   return performerIds.length;
+}
+
+/**
+ * wiki_crawl_data優先で演者を保存
+ *
+ * 全ASPクローラーで使用する統合関数。
+ * 1. wiki_crawl_dataから品番で正しい演者名を検索
+ * 2. 見つかった場合はそれを使用（クローラーから取得した演者名は無視）
+ * 3. 見つからない場合はクローラーから取得した演者名を使用
+ *
+ * @param db - Drizzle DBインスタンス
+ * @param productId - 商品ID
+ * @param productCode - 商品コード（品番）例: mfcs00191, MFCS-191, 300MIUM-1000
+ * @param crawledPerformers - クローラーから取得した演者名（フォールバック用）
+ * @param aspPrefix - ASPプレフィックス（省略可能）
+ * @returns 保存された演者数
+ */
+export async function savePerformersWithWikiPriority(
+  db: AnyDb,
+  productId: number,
+  productCode: string,
+  crawledPerformers: string[],
+  aspPrefix?: string
+): Promise<number> {
+  // 1. wiki_crawl_dataから演者名を検索
+  const wikiPerformers = await getPerformersFromWikiCrawlData(db, productCode, aspPrefix);
+
+  // 2. wiki_crawl_dataで見つかった場合はそれを使用
+  let performerNames: string[];
+  if (wikiPerformers.length > 0) {
+    performerNames = wikiPerformers;
+    if (crawledPerformers.length > 0) {
+      console.log(`    ℹ️ クローラー取得演者をスキップ: ${crawledPerformers.join(', ')}`);
+    }
+  } else {
+    // 見つからない場合はクローラーから取得した演者名を使用
+    performerNames = crawledPerformers;
+  }
+
+  if (performerNames.length === 0) {
+    return 0;
+  }
+
+  // 3. 演者を保存
+  return savePerformersBatch(db, productId, performerNames);
 }
 
 /**
@@ -401,4 +474,100 @@ export async function saveTagsBatch(
   }
 
   return tagIds.length;
+}
+
+/**
+ * 品番ID（normalized_product_id）から複数の検索用品番形式を抽出
+ *
+ * 例:
+ *   FANZA-gvh00802 → ['FANZA-GVH00802', 'GVH00802', 'GVH-802']
+ *   FANZA-mfcs00191 → ['FANZA-MFCS00191', 'MFCS00191', 'MFCS-191']
+ *   425bdsx-01902 → ['425BDSX-01902', 'BDSX-01902', 'BDSX01902']
+ */
+export function extractProductCodes(normalizedId: string): string[] {
+  const codes: string[] = [];
+  const upper = normalizedId.toUpperCase();
+
+  // そのままの形式を追加
+  codes.push(upper);
+
+  // FANZA-xxx形式からプレフィックスを除去
+  if (upper.startsWith('FANZA-')) {
+    const withoutFanza = upper.replace('FANZA-', '');
+    codes.push(withoutFanza);
+
+    // gvh00802 → GVH-802 形式に変換（先頭0を除去）
+    const match = withoutFanza.match(/^([A-Z]+)(\d+)$/);
+    if (match) {
+      const letters = match[1];
+      const numbers = match[2].replace(/^0+/, ''); // 先頭の0を除去
+      codes.push(`${letters}-${numbers}`);
+      codes.push(`${letters}${numbers}`); // ハイフンなし版も追加
+    }
+  }
+
+  // MGS形式: 425bdsx-01902 → BDSX-01902
+  const mgsMatch = upper.match(/^\d+([A-Z]+)-?(\d+)$/);
+  if (mgsMatch) {
+    const letters = mgsMatch[1];
+    const numbers = mgsMatch[2].replace(/^0+/, '');
+    codes.push(`${letters}-${numbers}`);
+    codes.push(`${letters}${mgsMatch[2]}`); // ハイフンなし版も追加
+  }
+
+  // 数字プレフィックス + 品番形式: 425BDSX-01902 → BDSX-01902
+  const numPrefixMatch = upper.match(/^(\d{2,3})([A-Z]+)-?(\d+)$/);
+  if (numPrefixMatch) {
+    const letters = numPrefixMatch[2];
+    const numbers = numPrefixMatch[3];
+    codes.push(`${letters}-${numbers}`);
+    codes.push(`${letters}-${numbers.replace(/^0+/, '')}`);
+  }
+
+  return [...new Set(codes)];
+}
+
+/**
+ * wiki_crawl_dataテーブルから品番で演者名を検索
+ *
+ * 全ASPのクローラーで演者名を取得する前に、
+ * まずwiki_crawl_dataから正しい演者名を検索するために使用
+ *
+ * @param db - Drizzle DBインスタンス
+ * @param productCode - 商品コード（例: mfcs00191, MFCS-191, 300MIUM-1000）
+ * @param aspPrefix - ASPプレフィックス（例: 'FANZA', 'MGS'）省略可能
+ * @returns 見つかった演者名の配列（見つからない場合は空配列）
+ */
+export async function getPerformersFromWikiCrawlData(
+  db: AnyDb,
+  productCode: string,
+  aspPrefix?: string
+): Promise<string[]> {
+  // 品番から複数の検索用品番形式を生成
+  const normalizedId = aspPrefix ? `${aspPrefix}-${productCode}` : productCode;
+  const productCodes = extractProductCodes(normalizedId);
+
+  // 品番そのものも追加（大文字小文字両方）
+  productCodes.push(productCode.toUpperCase());
+  productCodes.push(productCode);
+
+  // 重複除去
+  const uniqueCodes = [...new Set(productCodes)];
+
+  // wiki_crawl_dataで検索
+  const result = await db.execute(sql`
+    SELECT DISTINCT performer_name
+    FROM wiki_crawl_data
+    WHERE UPPER(product_code) = ANY(ARRAY[${sql.join(uniqueCodes.map(c => sql`${c.toUpperCase()}`), sql`, `)}]::text[])
+  `);
+
+  const performers = (result.rows as { performer_name: string }[])
+    .map(row => row.performer_name)
+    .filter(name => name && name.length > 0);
+
+  if (performers.length > 0) {
+    console.log(`    📚 wiki_crawl_dataから演者取得: ${performers.join(', ')}`);
+  }
+
+  return performers;
 }

@@ -43,7 +43,19 @@
     "filterSettings": "篩選設定",
     "newReleases": "新作發布女優",
     "popularActresses": "人氣女優",
-    "popularTags": "熱門標籤"
+    "popularTags": "熱門標籤",
+    "saleProducts": "特價促銷中",
+    "viewAllSales": "查看所有促銷商品",
+    "saleUntil": "截止至{date}",
+    "viewProductList": "全部作品",
+    "viewProductListDesc": "跨平台搜尋所有配信站點的作品",
+    "browseByCategory": "按分類瀏覽",
+    "viewCategories": "類型列表",
+    "viewCategoriesDesc": "按類型和場景搜尋",
+    "viewSeries": "系列列表",
+    "viewSeriesDesc": "按人氣系列查找作品",
+    "viewMakers": "廠商列表",
+    "viewMakersDesc": "按廠商和廠牌瀏覽"
   },
   "header": {
     "title": "ADULT VIEWER LAB",

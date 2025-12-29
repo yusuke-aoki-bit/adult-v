@@ -14,7 +14,7 @@ import { getDb } from '../lib/db';
 import { rawHtmlData, productSources, products, performers, productPerformers, tags, productTags, productImages, productVideos, productReviews, productRatingSummary } from '../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
-import { validateProductData, isTopPageHtml } from '../lib/crawler-utils';
+import { validateProductData, isTopPageHtml, savePerformersWithWikiPriority } from '../lib/crawler-utils';
 import { getAIHelper, type AIProcessingResult } from '../lib/crawler';
 import type { GeneratedDescription } from '../lib/google-apis';
 import { translateProductLingva, ProductTranslation } from '../lib/translate';
@@ -703,60 +703,27 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
 
 /**
  * 女優データを保存して、作品と紐付け
+ * wiki_crawl_dataから品番で演者名を検索し、見つかった場合はそれを優先使用
  */
 async function savePerformers(
   productId: number,
+  productCode: string,
   performerNames: string[],
 ): Promise<void> {
-  if (!performerNames || performerNames.length === 0) {
-    return;
-  }
-
   const db = getDb();
 
   try {
-    for (const name of performerNames) {
-      // 女優を検索または作成
-      const performerRecord = await db
-        .select()
-        .from(performers)
-        .where(eq(performers.name, name))
-        .limit(1);
+    // wiki_crawl_data優先で演者を保存
+    const savedCount = await savePerformersWithWikiPriority(
+      db,
+      productId,
+      productCode,
+      performerNames || [],
+      'MGS'
+    );
 
-      let performerId: number;
-
-      if (performerRecord.length === 0) {
-        // 新規作成
-        const [newPerformer] = await db
-          .insert(performers)
-          .values({ name })
-          .returning();
-
-        performerId = newPerformer.id;
-        console.log(`  Created performer: ${name}`);
-      } else {
-        performerId = performerRecord[0].id;
-      }
-
-      // product_performersに紐付け（重複チェック）
-      const existing = await db
-        .select()
-        .from(productPerformers)
-        .where(
-          and(
-            eq(productPerformers.productId, productId),
-            eq(productPerformers.performerId, performerId),
-          ),
-        )
-        .limit(1);
-
-      if (existing.length === 0) {
-        await db.insert(productPerformers).values({
-          productId,
-          performerId,
-        });
-        console.log(`  Linked performer ${name} to product ${productId}`);
-      }
+    if (savedCount > 0) {
+      console.log(`  Saved ${savedCount} performer(s) to product ${productId}`);
     }
   } catch (error) {
     console.error('Error saving performers:', error);
@@ -1255,10 +1222,8 @@ async function main() {
       if (productRecord.length > 0) {
         const productId = productRecord[0].id;
 
-        // 女優データを保存
-        if (mgsProduct.performerNames && mgsProduct.performerNames.length > 0) {
-          await savePerformers(productId, mgsProduct.performerNames);
-        }
+        // 女優データを保存（wiki_crawl_data優先）
+        await savePerformers(productId, mgsProduct.productId, mgsProduct.performerNames || []);
 
         // 画像URLを決定（HTMLから取得できなかった場合はパターンベースで生成）
         const thumbnailUrl = mgsProduct.thumbnailUrl || generateMgsImageUrlFallback(mgsProduct.productId) || undefined;

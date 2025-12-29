@@ -25,9 +25,9 @@ if (!process.env.DATABASE_URL) {
 }
 
 import { getDb } from '../lib/db';
-import { products, productSources, performers, productPerformers, productImages, productVideos, productReviews, productRatingSummary } from '../lib/db/schema';
+import { products, productSources, productImages, productVideos, productReviews, productRatingSummary } from '../lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { validateProductData } from '../lib/crawler-utils';
+import { validateProductData, savePerformersWithWikiPriority } from '../lib/crawler-utils';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
 import { getAIHelper } from '../lib/crawler';
 import { translateProductLingva } from '../lib/translate';
@@ -844,48 +844,24 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
         dataSource: 'CRAWL',
       });
 
-      // 出演者登録
-      for (const performerName of product.performers) {
-        if (!isValidPerformerName(performerName)) continue;
-        if (!isValidPerformerForProduct(performerName, product.title)) continue;
+      // 出演者登録（wiki_crawl_data優先）
+      // クローラーから取得した演者名をバリデーション
+      const validatedPerformers = product.performers
+        .filter(name => isValidPerformerName(name) && isValidPerformerForProduct(name, product.title))
+        .map(name => normalizePerformerName(name))
+        .filter((name): name is string => name !== null);
 
-        const normalizedName = normalizePerformerName(performerName);
+      // wiki_crawl_data優先で演者を保存
+      const savedCount = await savePerformersWithWikiPriority(
+        db,
+        productId,
+        product.cid,
+        validatedPerformers,
+        'FANZA'
+      );
 
-        const [performer] = await db
-          .select()
-          .from(performers)
-          .where(eq(performers.name, normalizedName))
-          .limit(1);
-
-        let performerId: number;
-        if (performer) {
-          performerId = performer.id;
-        } else {
-          const [inserted] = await db
-            .insert(performers)
-            .values({ name: normalizedName })
-            .returning({ id: performers.id });
-          performerId = inserted.id;
-        }
-
-        // 商品-出演者リンク
-        const existingLink = await db
-          .select()
-          .from(productPerformers)
-          .where(
-            and(
-              eq(productPerformers.productId, productId),
-              eq(productPerformers.performerId, performerId)
-            )
-          )
-          .limit(1);
-
-        if (existingLink.length === 0) {
-          await db.insert(productPerformers).values({
-            productId,
-            performerId,
-          });
-        }
+      if (savedCount > 0) {
+        console.log(`    ✓ 演者 ${savedCount}名を登録`);
       }
 
       // サンプル画像保存

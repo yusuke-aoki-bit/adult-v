@@ -48,7 +48,14 @@
     "viewAllSales": "모든 세일 상품 보기",
     "saleUntil": "~{date}까지",
     "viewProductList": "전체 작품 목록",
-    "viewProductListDesc": "모든 스트리밍 사이트의 작품을 통합 검색"
+    "viewProductListDesc": "모든 스트리밍 사이트의 작품을 통합 검색",
+    "browseByCategory": "카테고리별 탐색",
+    "viewCategories": "장르 목록",
+    "viewCategoriesDesc": "장르와 상황별로 검색",
+    "viewSeries": "시리즈 목록",
+    "viewSeriesDesc": "인기 시리즈로 작품 찾기",
+    "viewMakers": "제작사 목록",
+    "viewMakersDesc": "제작사와 레이블별로 탐색"
   },
   "header": {
     "title": "ADULT VIEWER LAB",

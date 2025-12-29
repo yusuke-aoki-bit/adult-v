@@ -226,3 +226,262 @@ export function getStringArrayField(row: Record<string, unknown>, key: string): 
   if (isArray(value) && value.every(isString)) return value;
   return undefined;
 }
+
+// ============================================================
+// DBクエリ結果用の型変換ヘルパー
+// DIパターンで型情報が失われる場合に使用
+// ============================================================
+
+/**
+ * Performer行データの型
+ */
+export interface PerformerRow {
+  id: number;
+  name: string;
+  nameKana: string | null;
+}
+
+/**
+ * Tag行データの型
+ */
+export interface TagRow {
+  id: number;
+  name: string;
+  category: string | null;
+}
+
+/**
+ * ProductSource行データの型
+ */
+export interface SourceRow {
+  aspName: string | undefined;
+  originalProductId: string | undefined;
+  affiliateUrl: string | undefined;
+  price: number | undefined;
+  currency: string | undefined;
+}
+
+/**
+ * ProductImage行データの型
+ */
+export interface ImageRow {
+  productId: number;
+  imageUrl: string;
+  imageType: string;
+  displayOrder: number | null;
+}
+
+/**
+ * ProductVideo行データの型
+ */
+export interface VideoRow {
+  productId: number;
+  videoUrl: string;
+  videoType: string | null;
+  quality: string | null;
+  duration: number | null;
+}
+
+/**
+ * 未知の配列をPerformerRow[]に型安全に変換
+ */
+export function toPerformerRows(rows: unknown[]): PerformerRow[] {
+  return rows.map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      id: (r.id as number) ?? 0,
+      name: (r.name as string) ?? '',
+      nameKana: (r.nameKana as string | null) ?? null,
+    };
+  });
+}
+
+/**
+ * 未知の配列をTagRow[]に型安全に変換
+ */
+export function toTagRows(rows: unknown[]): TagRow[] {
+  return rows.map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      id: (r.id as number) ?? 0,
+      name: (r.name as string) ?? '',
+      category: (r.category as string | null) ?? null,
+    };
+  });
+}
+
+/**
+ * 未知の値をSourceRow | undefinedに型安全に変換
+ */
+export function toSourceRow(row: unknown): SourceRow | undefined {
+  if (!row) return undefined;
+  const r = row as Record<string, unknown>;
+  return {
+    aspName: r.aspName as string | undefined,
+    originalProductId: r.originalProductId as string | undefined,
+    affiliateUrl: r.affiliateUrl as string | undefined,
+    price: r.price as number | undefined,
+    currency: r.currency as string | undefined,
+  };
+}
+
+/**
+ * 未知の配列をImageRow[]に型安全に変換
+ */
+export function toImageRows(rows: unknown[]): ImageRow[] {
+  return rows.map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      productId: (r.productId as number) ?? 0,
+      imageUrl: (r.imageUrl as string) ?? '',
+      imageType: (r.imageType as string) ?? '',
+      displayOrder: (r.displayOrder as number | null) ?? null,
+    };
+  });
+}
+
+/**
+ * 未知の配列をVideoRow[]に型安全に変換
+ */
+export function toVideoRows(rows: unknown[]): VideoRow[] {
+  return rows.map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      productId: (r.productId as number) ?? 0,
+      videoUrl: (r.videoUrl as string) ?? '',
+      videoType: (r.videoType as string | null) ?? null,
+      quality: (r.quality as string | null) ?? null,
+      duration: (r.duration as number | null) ?? null,
+    };
+  });
+}
+
+// ============================================================
+// バッチクエリ結果用の型変換（スネーク/キャメルケース両対応）
+// db.executeはスネークケース、通常クエリはキャメルケースを返す
+// ============================================================
+
+/**
+ * BatchSource行データの型
+ */
+export interface BatchSourceRow {
+  id: number;
+  productId: number;
+  aspName: string;
+  originalProductId: string | null;
+  affiliateUrl: string | null;
+  price: number | null;
+  currency: string | null;
+  productType: string | null;
+}
+
+/**
+ * 未知の配列をBatchSourceRow[]に型安全に変換
+ */
+export function toBatchSourceRows(rows: unknown[]): BatchSourceRow[] {
+  return rows.map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      id: ((r.id ?? 0) as number),
+      productId: ((r.product_id ?? r.productId ?? 0) as number),
+      aspName: ((r.asp_name ?? r.aspName ?? '') as string),
+      originalProductId: ((r.original_product_id ?? r.originalProductId ?? null) as string | null),
+      affiliateUrl: ((r.affiliate_url ?? r.affiliateUrl ?? null) as string | null),
+      price: ((r.price ?? null) as number | null),
+      currency: ((r.currency ?? null) as string | null),
+      productType: ((r.product_type ?? r.productType ?? null) as string | null),
+    };
+  });
+}
+
+/**
+ * BatchImage行データの型
+ */
+export interface BatchImageRow {
+  productId: number;
+  imageUrl: string;
+  imageType: string;
+  displayOrder: number | null;
+}
+
+/**
+ * 未知の配列をBatchImageRow[]に型安全に変換（スネーク/キャメルケース両対応）
+ */
+export function toBatchImageRows(rows: unknown[]): BatchImageRow[] {
+  return rows.map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      productId: ((r.product_id ?? r.productId ?? 0) as number),
+      imageUrl: ((r.image_url ?? r.imageUrl ?? '') as string),
+      imageType: ((r.image_type ?? r.imageType ?? '') as string),
+      displayOrder: ((r.display_order ?? r.displayOrder ?? null) as number | null),
+    };
+  });
+}
+
+/**
+ * BatchVideo行データの型
+ */
+export interface BatchVideoRow {
+  productId: number;
+  videoUrl: string;
+  videoType: string | null;
+  quality: string | null;
+  duration: number | null;
+}
+
+/**
+ * 未知の配列をBatchVideoRow[]に型安全に変換（スネーク/キャメルケース両対応）
+ */
+export function toBatchVideoRows(rows: unknown[]): BatchVideoRow[] {
+  return rows.map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      productId: ((r.product_id ?? r.productId ?? 0) as number),
+      videoUrl: ((r.video_url ?? r.videoUrl ?? '') as string),
+      videoType: ((r.video_type ?? r.videoType ?? null) as string | null),
+      quality: ((r.quality ?? null) as string | null),
+      duration: ((r.duration ?? null) as number | null),
+    };
+  });
+}
+
+/**
+ * BatchSale行データの型
+ */
+export interface BatchSaleRow {
+  productId: number;
+  regularPrice: number;
+  salePrice: number;
+  discountPercent: number | null;
+  endAt: Date | null;
+}
+
+/**
+ * 未知の配列をBatchSaleRow[]に型安全に変換
+ */
+export function toBatchSaleRows(rows: unknown[]): BatchSaleRow[] {
+  return rows.map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      productId: ((r.product_id ?? r.productId ?? 0) as number),
+      regularPrice: ((r.regular_price ?? r.regularPrice ?? 0) as number),
+      salePrice: ((r.sale_price ?? r.salePrice ?? 0) as number),
+      discountPercent: ((r.discount_percent ?? r.discountPercent ?? null) as number | null),
+      endAt: ((r.end_at ?? r.endAt ?? null) as Date | null),
+    };
+  });
+}
+
+/**
+ * db.executeの結果（rows配列を持つ）か通常の配列かを判定して配列を取得
+ */
+export function extractRowsArray(result: unknown): unknown[] {
+  if (Array.isArray(result)) {
+    return result;
+  }
+  if (isObject(result) && 'rows' in result && Array.isArray(result.rows)) {
+    return result.rows;
+  }
+  return [];
+}

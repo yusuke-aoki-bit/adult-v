@@ -560,9 +560,15 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       await this.saveSampleVideos(productId, data.sampleVideos);
     }
 
-    // 出演者
+    // 出演者（wiki_crawl_data優先）
     if (data.performers && data.performers.length > 0) {
-      const result = await processProductPerformers(productId, data.performers, data.title);
+      const result = await processProductPerformers(
+        productId,
+        data.performers,
+        data.title,
+        data.originalId, // 品番（wiki検索用）
+        this.options.aspName // ASPプレフィックス
+      );
       console.log(`  ✓ 出演者保存完了 (${result.added}/${result.total}人)`);
     }
 

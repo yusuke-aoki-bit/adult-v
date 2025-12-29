@@ -48,7 +48,14 @@
     "viewAllSales": "查看所有促销商品",
     "saleUntil": "截止至{date}",
     "viewProductList": "全部作品",
-    "viewProductListDesc": "跨平台搜索所有配信站点的作品"
+    "viewProductListDesc": "跨平台搜索所有配信站点的作品",
+    "browseByCategory": "按分类浏览",
+    "viewCategories": "类型列表",
+    "viewCategoriesDesc": "按类型和场景搜索",
+    "viewSeries": "系列列表",
+    "viewSeriesDesc": "按人气系列查找作品",
+    "viewMakers": "厂商列表",
+    "viewMakersDesc": "按厂商和厂牌浏览"
   },
   "header": {
     "title": "ADULT VIEWER LAB",

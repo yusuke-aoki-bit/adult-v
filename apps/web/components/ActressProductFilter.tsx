@@ -45,6 +45,9 @@ export default function ActressProductFilter({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // apps/webではFANZAを除外（FANZAはapps/fanzaのみで表示）
+  const filteredProductCountByAsp = productCountByAsp.filter(asp => asp.aspName !== 'FANZA');
+
   // 現在のフィルター状態を取得
   const hasVideo = searchParams.get('hasVideo') === 'true';
   const hasImage = searchParams.get('hasImage') === 'true';
@@ -281,7 +284,7 @@ export default function ActressProductFilter({
         )}
 
         {/* 配信サイト（ASP）フィルター */}
-        {productCountByAsp.length > 0 && (
+        {filteredProductCountByAsp.length > 0 && (
           <div>
             <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{t.site}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -289,7 +292,7 @@ export default function ActressProductFilter({
               <div>
                 <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.include}</p>
                 <div className="space-y-1 sm:space-y-0.5 border border-gray-600 rounded-lg sm:rounded p-2 bg-gray-750">
-                  {productCountByAsp.map((asp) => {
+                  {filteredProductCountByAsp.map((asp) => {
                     const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                     const meta = providerId ? providerMeta[providerId] : null;
                     const isSelected = includeAsps.includes(asp.aspName);
@@ -322,7 +325,7 @@ export default function ActressProductFilter({
                   {allAvailableAsps.map((aspName) => {
                     const providerId = ASP_TO_PROVIDER_ID[aspName];
                     const meta = providerId ? providerMeta[providerId] : null;
-                    const aspData = productCountByAsp.find(a => a.aspName === aspName);
+                    const aspData = filteredProductCountByAsp.find(a => a.aspName === aspName);
                     const count = aspData?.count || 0;
                     const isSelected = excludeAsps.includes(aspName);
                     return (

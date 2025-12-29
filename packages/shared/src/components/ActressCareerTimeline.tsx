@@ -39,7 +39,7 @@ interface ActressCareerTimelineProps {
 const translations = {
   ja: {
     title: 'キャリア分析',
-    debut: 'デビュー',
+    debut: '最も古い作品',
     latest: '最新作',
     peakYear: '全盛期',
     totalProducts: '総作品数',
@@ -56,7 +56,7 @@ const translations = {
   },
   en: {
     title: 'Career Analysis',
-    debut: 'Debut',
+    debut: 'Earliest',
     latest: 'Latest',
     peakYear: 'Peak Year',
     totalProducts: 'Total Products',
@@ -73,7 +73,7 @@ const translations = {
   },
   zh: {
     title: '职业生涯分析',
-    debut: '出道',
+    debut: '最早作品',
     latest: '最新作',
     peakYear: '巅峰期',
     totalProducts: '总作品数',
@@ -90,7 +90,7 @@ const translations = {
   },
   ko: {
     title: '커리어 분석',
-    debut: '데뷔',
+    debut: '가장 오래된 작품',
     latest: '최신작',
     peakYear: '전성기',
     totalProducts: '총 작품 수',

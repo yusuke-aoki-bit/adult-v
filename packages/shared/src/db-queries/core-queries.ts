@@ -24,7 +24,15 @@ function escapeLikePattern(input: string): string {
 import type { SourceData as MapperSourceData } from './mappers';
 import { selectProductSources, groupSourcesByProduct } from '../lib/source-selection';
 import { buildAspNormalizationSql } from '../lib/asp-utils';
-import { extractIds, extractProductIds } from '../lib/type-guards';
+import {
+  extractIds,
+  extractProductIds,
+  toPerformerRows,
+  toTagRows,
+  toSourceRow,
+  toImageRows,
+  toVideoRows,
+} from '../lib/type-guards';
 
 // ============================================================
 // Types
@@ -792,46 +800,12 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         .where(eq(productVideos.productId, productId)),
     ]);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const performerData = (rawPerformerData as any[]).map((p) => ({
-      id: p.id as number,
-      name: p.name as string,
-      nameKana: p.nameKana as string | null,
-    }));
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tagData = (rawTagData as any[]).map((t) => ({
-      id: t.id as number,
-      name: t.name as string,
-      category: t.category as string | null,
-    }));
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rawSource = rawSourceData[0] as any | undefined;
-    const sourceData = rawSource ? {
-      aspName: rawSource.aspName as string | undefined,
-      originalProductId: rawSource.originalProductId as string | undefined,
-      affiliateUrl: rawSource.affiliateUrl as string | undefined,
-      price: rawSource.price as number | undefined,
-      currency: rawSource.currency as string | undefined,
-    } : undefined;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const imagesData = (rawImagesData as any[]).map((img) => ({
-      productId: img.productId as number,
-      imageUrl: img.imageUrl as string,
-      imageType: img.imageType as string,
-      displayOrder: img.displayOrder as number | null,
-    }));
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const videosData = (rawVideosData as any[]).map((v) => ({
-      productId: v.productId as number,
-      videoUrl: v.videoUrl as string,
-      videoType: v.videoType as string | null,
-      quality: v.quality as string | null,
-      duration: v.duration as number | null,
-    }));
+    // 型変換ヘルパーを使用してas anyを回避
+    const performerData = toPerformerRows(rawPerformerData);
+    const tagData = toTagRows(rawTagData);
+    const sourceData = toSourceRow(rawSourceData[0]);
+    const imagesData = toImageRows(rawImagesData);
+    const videosData = toVideoRows(rawVideosData);
 
     return {
       performerData: performerData.filter(isValidPerformer),
@@ -847,10 +821,17 @@ export function createCoreQueries(deps: CoreQueryDeps) {
    * N+1問題を解消し、商品一覧の高速化に使用
    * @param productIds - 商品IDの配列
    * @param preferredProviders - 優先プロバイダー（フィルター用、オプショナル）
+   * @param options - 取得オプション
+   * @param options.limitImagesPerProduct - 商品あたりの画像取得数上限（一覧表示用、デフォルト: 無制限）
+   * @param options.limitVideosPerProduct - 商品あたりの動画取得数上限（一覧表示用、デフォルト: 無制限）
    */
   async function batchFetchProductRelatedData(
     productIds: number[],
-    preferredProviders?: string[]
+    preferredProviders?: string[],
+    options?: {
+      limitImagesPerProduct?: number;
+      limitVideosPerProduct?: number;
+    }
   ): Promise<BatchRelatedDataResult> {
     if (productIds.length === 0) {
       return {
@@ -864,6 +845,63 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     }
 
     const db = getDb();
+    const limitImages = options?.limitImagesPerProduct;
+    const limitVideos = options?.limitVideosPerProduct;
+
+    // 画像クエリ: LIMITが指定されている場合はROW_NUMBERで商品あたりの件数を制限
+    const imagesQuery = limitImages
+      ? db.execute(sql`
+          SELECT product_id, image_url, image_type, display_order
+          FROM (
+            SELECT
+              product_id,
+              image_url,
+              image_type,
+              display_order,
+              ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY display_order ASC NULLS LAST) as rn
+            FROM product_images
+            WHERE product_id = ANY(${productIds})
+          ) ranked
+          WHERE rn <= ${limitImages}
+        `)
+      : db
+          .select({
+            productId: productImages.productId,
+            imageUrl: productImages.imageUrl,
+            imageType: productImages.imageType,
+            displayOrder: productImages.displayOrder,
+          })
+          .from(productImages)
+          .where(inArray(productImages.productId, productIds))
+          .orderBy(asc(productImages.displayOrder));
+
+    // 動画クエリ: LIMITが指定されている場合はROW_NUMBERで商品あたりの件数を制限
+    const videosQuery = limitVideos
+      ? db.execute(sql`
+          SELECT product_id, video_url, video_type, quality, duration
+          FROM (
+            SELECT
+              product_id,
+              video_url,
+              video_type,
+              quality,
+              duration,
+              ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY id ASC) as rn
+            FROM product_videos
+            WHERE product_id = ANY(${productIds})
+          ) ranked
+          WHERE rn <= ${limitVideos}
+        `)
+      : db
+          .select({
+            productId: productVideos.productId,
+            videoUrl: productVideos.videoUrl,
+            videoType: productVideos.videoType,
+            quality: productVideos.quality,
+            duration: productVideos.duration,
+          })
+          .from(productVideos)
+          .where(inArray(productVideos.productId, productIds));
 
     const [allPerformers, allTags, allSources, allImages, allVideos, allSales] = await Promise.all([
       db
@@ -899,27 +937,8 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         })
         .from(productSources)
         .where(inArray(productSources.productId, productIds)),
-      db
-        .select({
-          productId: productImages.productId,
-          imageUrl: productImages.imageUrl,
-          imageType: productImages.imageType,
-          displayOrder: productImages.displayOrder,
-        })
-        .from(productImages)
-        .where(inArray(productImages.productId, productIds))
-        .orderBy(asc(productImages.displayOrder)),
-      // サンプル動画を取得
-      db
-        .select({
-          productId: productVideos.productId,
-          videoUrl: productVideos.videoUrl,
-          videoType: productVideos.videoType,
-          quality: productVideos.quality,
-          duration: productVideos.duration,
-        })
-        .from(productVideos)
-        .where(inArray(productVideos.productId, productIds)),
+      imagesQuery,
+      videosQuery,
       // アクティブなセール情報を取得
       db
         .select({
@@ -987,29 +1006,35 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const typedImages = allImages as any[];
+    // db.executeの結果はrows配列を持つ、通常のクエリは配列を直接返す
+    const rawImages = limitImages ? (allImages as { rows: any[] }).rows : allImages;
+    const typedImages = rawImages as any[];
     const imagesMap = new Map<number, BatchImageData[]>();
     for (const img of typedImages) {
-      const productId = img.productId as number;
+      // db.executeはスネークケース、通常クエリはキャメルケース
+      const productId = (img.product_id ?? img.productId) as number;
       if (!imagesMap.has(productId)) imagesMap.set(productId, []);
       imagesMap.get(productId)!.push({
-        productId: img.productId as number,
-        imageUrl: img.imageUrl as string,
-        imageType: img.imageType as string,
-        displayOrder: img.displayOrder as number | null,
+        productId: productId,
+        imageUrl: (img.image_url ?? img.imageUrl) as string,
+        imageType: (img.image_type ?? img.imageType) as string,
+        displayOrder: (img.display_order ?? img.displayOrder) as number | null,
       });
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const typedVideos = allVideos as any[];
+    // db.executeの結果はrows配列を持つ、通常のクエリは配列を直接返す
+    const rawVideos = limitVideos ? (allVideos as { rows: any[] }).rows : allVideos;
+    const typedVideos = rawVideos as any[];
     const videosMap = new Map<number, BatchVideoData[]>();
     for (const vid of typedVideos) {
-      const productId = vid.productId as number;
+      // db.executeはスネークケース、通常クエリはキャメルケース
+      const productId = (vid.product_id ?? vid.productId) as number;
       if (!videosMap.has(productId)) videosMap.set(productId, []);
       videosMap.get(productId)!.push({
-        productId: vid.productId as number,
-        videoUrl: vid.videoUrl as string,
-        videoType: vid.videoType as string | null,
+        productId: productId,
+        videoUrl: (vid.video_url ?? vid.videoUrl) as string,
+        videoType: (vid.video_type ?? vid.videoType) as string | null,
         quality: vid.quality as string | null,
         duration: vid.duration as number | null,
       });

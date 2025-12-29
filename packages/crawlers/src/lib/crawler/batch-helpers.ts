@@ -8,16 +8,19 @@ import { db } from '../db';
 import {
   performers,
   productPerformers,
+  performerAliases,
   tags,
   productTags,
   productImages,
+  wikiCrawlData,
 } from '../db/schema';
-import { eq, inArray, and } from 'drizzle-orm';
+import { eq, inArray, and, sql } from 'drizzle-orm';
 import {
   isValidPerformerName,
   normalizePerformerName,
   isValidPerformerForProduct,
 } from '../performer-validation';
+import { extractProductCodes } from '../crawler-utils';
 
 // ============================================================
 // Performer Batch Operations
@@ -128,24 +131,88 @@ export async function linkProductToPerformers(
 }
 
 /**
+ * wiki_crawl_dataから品番で演者名を検索
+ *
+ * @param productCode - 商品コード（品番）
+ * @param aspPrefix - ASPプレフィックス（省略可能）
+ * @returns 見つかった演者名の配列
+ */
+async function getPerformersFromWikiData(
+  productCode: string,
+  aspPrefix?: string
+): Promise<string[]> {
+  // 品番から複数の検索用品番形式を生成
+  const normalizedId = aspPrefix ? `${aspPrefix}-${productCode}` : productCode;
+  const productCodes = extractProductCodes(normalizedId);
+
+  // 品番そのものも追加（大文字小文字両方）
+  productCodes.push(productCode.toUpperCase());
+  productCodes.push(productCode);
+
+  // 重複除去
+  const uniqueCodes = [...new Set(productCodes)];
+
+  // wiki_crawl_dataで検索
+  const result = await db
+    .select({ performerName: wikiCrawlData.performerName })
+    .from(wikiCrawlData)
+    .where(sql`UPPER(${wikiCrawlData.productCode}) = ANY(ARRAY[${sql.join(uniqueCodes.map(c => sql`${c.toUpperCase()}`), sql`, `)}]::text[])`);
+
+  const performers = [...new Set(result.map(r => r.performerName).filter(name => name && name.length > 0))];
+
+  if (performers.length > 0) {
+    console.log(`    📚 wiki_crawl_dataから演者取得: ${performers.join(', ')}`);
+  }
+
+  return performers;
+}
+
+/**
  * 出演者の取得/作成と商品への関連付けを一括実行
+ * wiki_crawl_dataから品番で演者名を検索し、見つかった場合はそれを優先使用
+ *
+ * @param productId - 商品ID
+ * @param performerNames - クローラーから取得した演者名（フォールバック用）
+ * @param productTitle - 商品タイトル（バリデーション用）
+ * @param productCode - 商品コード（品番）- wiki検索用（省略可能）
+ * @param aspPrefix - ASPプレフィックス（省略可能）
  */
 export async function processProductPerformers(
   productId: number,
   performerNames: string[],
-  productTitle?: string
+  productTitle?: string,
+  productCode?: string,
+  aspPrefix?: string
 ): Promise<{ added: number; total: number }> {
-  // 1. 正規化・検証
-  const validNames = normalizeAndValidatePerformers(performerNames, productTitle);
+  let namesToProcess: string[];
+
+  // 1. wiki_crawl_dataから演者名を検索（productCodeが指定されている場合）
+  if (productCode) {
+    const wikiPerformers = await getPerformersFromWikiData(productCode, aspPrefix);
+    if (wikiPerformers.length > 0) {
+      namesToProcess = wikiPerformers;
+      if (performerNames.length > 0) {
+        console.log(`    ℹ️ クローラー取得演者をスキップ: ${performerNames.join(', ')}`);
+      }
+    } else {
+      // wiki_crawl_dataで見つからない場合はクローラーから取得した演者名を使用
+      namesToProcess = performerNames;
+    }
+  } else {
+    namesToProcess = performerNames;
+  }
+
+  // 2. 正規化・検証
+  const validNames = normalizeAndValidatePerformers(namesToProcess, productTitle);
 
   if (validNames.length === 0) {
     return { added: 0, total: 0 };
   }
 
-  // 2. 出演者を取得または作成
-  const nameToId = await ensurePerformers(validNames);
+  // 3. 出演者を取得または作成（別名検索も含む）
+  const nameToId = await ensurePerformersWithAliases(validNames);
 
-  // 3. 商品との関連を作成
+  // 4. 商品との関連を作成
   const performerIds = validNames
     .map((name) => nameToId.get(name))
     .filter((id): id is number => id !== undefined);
@@ -162,6 +229,85 @@ export async function processProductPerformers(
     added: performerIds.length - existingCount.length,
     total: performerIds.length,
   };
+}
+
+/**
+ * 出演者をバッチで取得または作成（別名検索も含む）
+ *
+ * 検索順序:
+ * 1. performers.name で完全一致を検索
+ * 2. performer_aliases.alias_name で別名を検索
+ * 3. 見つからなければ新規作成
+ *
+ * @returns name -> id のマッピング
+ */
+async function ensurePerformersWithAliases(
+  names: string[]
+): Promise<Map<string, number>> {
+  if (names.length === 0) {
+    return new Map();
+  }
+
+  const uniqueNames = [...new Set(names)];
+  const nameToId = new Map<string, number>();
+
+  // 1. 既存の出演者を一括取得
+  const existing = await db
+    .select({ id: performers.id, name: performers.name })
+    .from(performers)
+    .where(inArray(performers.name, uniqueNames));
+
+  for (const p of existing) {
+    nameToId.set(p.name, p.id);
+  }
+
+  // 2. 見つからなかった名前について別名テーブルで検索
+  const notFoundNames = uniqueNames.filter((name) => !nameToId.has(name));
+  if (notFoundNames.length > 0) {
+    const aliasResults = await db
+      .select({
+        aliasName: performerAliases.aliasName,
+        performerId: performerAliases.performerId,
+        performerName: performers.name,
+      })
+      .from(performerAliases)
+      .innerJoin(performers, eq(performerAliases.performerId, performers.id))
+      .where(inArray(performerAliases.aliasName, notFoundNames));
+
+    for (const row of aliasResults) {
+      nameToId.set(row.aliasName, row.performerId);
+      console.log(`    📝 別名マッチ: "${row.aliasName}" → "${row.performerName}" (ID: ${row.performerId})`);
+    }
+  }
+
+  // 3. まだ見つからない名前は新規作成
+  const stillNotFound = uniqueNames.filter((name) => !nameToId.has(name));
+  if (stillNotFound.length > 0) {
+    const created = await db
+      .insert(performers)
+      .values(stillNotFound.map((name) => ({ name })))
+      .onConflictDoNothing()
+      .returning({ id: performers.id, name: performers.name });
+
+    for (const p of created) {
+      nameToId.set(p.name, p.id);
+    }
+
+    // onConflictDoNothingで作成されなかった場合、再取得
+    const stillMissing = stillNotFound.filter((name) => !nameToId.has(name));
+    if (stillMissing.length > 0) {
+      const refetch = await db
+        .select({ id: performers.id, name: performers.name })
+        .from(performers)
+        .where(inArray(performers.name, stillMissing));
+
+      for (const p of refetch) {
+        nameToId.set(p.name, p.id);
+      }
+    }
+  }
+
+  return nameToId;
 }
 
 // ============================================================

@@ -1726,13 +1726,34 @@ async function main() {
   // 品番検索モード
   if (args[0] === '--search' && args[1]) {
     const productCode = args[1];
-    console.log(`🔍 Searching for: ${productCode}\n`);
+    const shouldSave = args.includes('--save'); // --saveオプションでDBに保存
+    console.log(`🔍 Searching for: ${productCode}${shouldSave ? ' (will save to DB)' : ''}\n`);
 
     const avWikiResults = await searchAvWiki(productCode);
     console.log(`av-wiki.net: ${avWikiResults.length > 0 ? avWikiResults.join(', ') : '(not found)'}`);
 
     const shiroutoResults = await searchShiroutoname(productCode);
     console.log(`shiroutoname.com: ${shiroutoResults.length > 0 ? shiroutoResults.join(', ') : '(not found)'}`);
+
+    // DBに保存
+    if (shouldSave) {
+      const db = getDb();
+      let saved = 0;
+
+      if (avWikiResults.length > 0) {
+        const count = await saveToWikiCrawlData(db, 'av-wiki', productCode.toUpperCase(), avWikiResults, `https://av-wiki.net/?s=${productCode}`);
+        saved += count;
+        console.log(`\n💾 Saved ${count} performers from av-wiki.net`);
+      }
+
+      if (shiroutoResults.length > 0) {
+        const count = await saveToWikiCrawlData(db, 'shiroutoname', productCode.toUpperCase(), shiroutoResults, `https://shiroutoname.com/?s=${productCode}`);
+        saved += count;
+        console.log(`💾 Saved ${count} performers from shiroutoname.com`);
+      }
+
+      console.log(`\n✅ Total saved: ${saved} performers`);
+    }
 
     process.exit(0);
   }

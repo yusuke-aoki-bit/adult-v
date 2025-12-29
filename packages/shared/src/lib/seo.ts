@@ -1051,11 +1051,11 @@ export function getActressPageFAQs(
     ja: [
       {
         question: `${name}の出演作品数は？`,
-        answer: `${name}は現在${productCount}作品に出演しています。${debutYear ? `${debutYear}年にデビューし、` : ''}${isRetired ? '現在は引退されています。' : '現在も活躍中です。'}`,
+        answer: `${name}は現在${productCount}作品に出演しています。${debutYear ? `データ上最も古い作品は${debutYear}年のもので、` : ''}${isRetired ? '現在は引退されています。' : '現在も活躍中です。'}`,
       },
       ...(debutYear ? [{
-        question: `${name}のデビュー年は？`,
-        answer: `${name}は${debutYear}年にAV女優としてデビューしました。${productCount > 50 ? '多数の作品に出演し、人気女優として活躍しています。' : ''}`,
+        question: `${name}の初出演作品はいつ？`,
+        answer: `${name}のデータ上最も古い作品は${debutYear}年のものです。${productCount > 50 ? '多数の作品に出演し、人気女優として活躍しています。' : ''}`,
       }] : []),
       ...(topGenres && topGenres.length > 0 ? [{
         question: `${name}の出演ジャンルは？`,
@@ -1077,11 +1077,11 @@ export function getActressPageFAQs(
     en: [
       {
         question: `How many videos has ${name} appeared in?`,
-        answer: `${name} has appeared in ${productCount} videos. ${debutYear ? `She debuted in ${debutYear} and ` : ''}${isRetired ? 'has since retired.' : 'is still active.'}`,
+        answer: `${name} has appeared in ${productCount} videos. ${debutYear ? `The earliest recorded work is from ${debutYear} and ` : ''}${isRetired ? 'has since retired.' : 'is still active.'}`,
       },
       ...(debutYear ? [{
-        question: `When did ${name} debut?`,
-        answer: `${name} debuted as an AV actress in ${debutYear}. ${productCount > 50 ? 'She has appeared in numerous works and is a popular actress.' : ''}`,
+        question: `What is ${name}'s earliest work?`,
+        answer: `The earliest recorded work for ${name} is from ${debutYear}. ${productCount > 50 ? 'She has appeared in numerous works and is a popular actress.' : ''}`,
       }] : []),
       ...(topGenres && topGenres.length > 0 ? [{
         question: `What genres does ${name} appear in?`,
@@ -1099,11 +1099,11 @@ export function getActressPageFAQs(
     zh: [
       {
         question: `${name}出演了多少部作品？`,
-        answer: `${name}目前出演了${productCount}部作品。${debutYear ? `她于${debutYear}年出道，` : ''}${isRetired ? '目前已经退役。' : '目前仍在活跃中。'}`,
+        answer: `${name}目前出演了${productCount}部作品。${debutYear ? `数据上最早的作品是${debutYear}年的，` : ''}${isRetired ? '目前已经退役。' : '目前仍在活跃中。'}`,
       },
       ...(debutYear ? [{
-        question: `${name}是什么时候出道的？`,
-        answer: `${name}于${debutYear}年作为AV女优出道。${productCount > 50 ? '她出演了大量作品，是一位人气女优。' : ''}`,
+        question: `${name}最早的作品是什么时候？`,
+        answer: `${name}数据上最早的作品是${debutYear}年的。${productCount > 50 ? '她出演了大量作品，是一位人气女优。' : ''}`,
       }] : []),
       ...(topGenres && topGenres.length > 0 ? [{
         question: `${name}出演哪些类型的作品？`,
@@ -1121,11 +1121,11 @@ export function getActressPageFAQs(
     ko: [
       {
         question: `${name}는 몇 작품에 출연했나요?`,
-        answer: `${name}는 현재 ${productCount}작품에 출연했습니다. ${debutYear ? `${debutYear}년에 데뷔하여 ` : ''}${isRetired ? '현재는 은퇴했습니다.' : '현재도 활동 중입니다.'}`,
+        answer: `${name}는 현재 ${productCount}작품에 출연했습니다. ${debutYear ? `데이터상 가장 오래된 작품은 ${debutYear}년 것이며, ` : ''}${isRetired ? '현재는 은퇴했습니다.' : '현재도 활동 중입니다.'}`,
       },
       ...(debutYear ? [{
-        question: `${name}의 데뷔년도는?`,
-        answer: `${name}는 ${debutYear}년에 AV 여배우로 데뷔했습니다. ${productCount > 50 ? '다수의 작품에 출연하며 인기 여배우로 활약하고 있습니다.' : ''}`,
+        question: `${name}의 가장 오래된 작품은?`,
+        answer: `${name}의 데이터상 가장 오래된 작품은 ${debutYear}년 것입니다. ${productCount > 50 ? '다수의 작품에 출연하며 인기 여배우로 활약하고 있습니다.' : ''}`,
       }] : []),
       ...(topGenres && topGenres.length > 0 ? [{
         question: `${name}는 어떤 장르에 출연하나요?`,

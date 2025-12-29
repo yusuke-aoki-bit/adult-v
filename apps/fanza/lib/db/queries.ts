@@ -346,10 +346,42 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
 }
 
 /**
+ * 商品総数を取得（フィルターなし、キャッシュ付き）
+ */
+const getCachedTotalProductCount = unstable_cache(
+  async () => {
+    return getProductsCountShared();
+  },
+  ['fanza-total-product-count'],
+  { revalidate: 300 } // 5分間キャッシュ
+);
+
+/**
  * 商品数を取得（フィルタ条件付き）
- * 共有ファクトリーを使用
+ * フィルターなしの場合はキャッシュを使用
  */
 export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>): Promise<number> {
+  // フィルターなしの場合はキャッシュを使用
+  const hasFilters = options && (
+    options.query ||
+    options.providers?.length ||
+    options.excludeProviders?.length ||
+    options.tags?.length ||
+    options.excludeTags?.length ||
+    options.hasVideo ||
+    options.hasImage ||
+    options.onSale ||
+    options.uncategorized ||
+    options.performerType ||
+    options.actressId ||
+    options.isNew ||
+    options.isFeatured
+  );
+
+  if (!hasFilters) {
+    return getCachedTotalProductCount();
+  }
+
   return getProductsCountShared(options);
 }
 
@@ -827,9 +859,9 @@ export async function getActressesWithNewReleases(options: {
 }
 
 /**
- * 人気タグ(作品数が多いタグ)を取得
+ * 人気タグ(作品数が多いタグ)を取得（キャッシュ付き）
  */
-export async function getPopularTags(options: {
+async function getPopularTagsUncached(options: {
   category?: string;
   limit?: number;
 } = {}): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
@@ -857,6 +889,22 @@ export async function getPopularTags(options: {
     // タイムアウトエラーの場合は空配列を返す
     return [];
   }
+}
+
+// キャッシュ化されたgetPopularTags（5分間キャッシュ）
+const getCachedPopularTags = unstable_cache(
+  async (category: string | undefined, limit: number) => {
+    return getPopularTagsUncached({ category, limit });
+  },
+  ['fanza-popular-tags'],
+  { revalidate: 300 } // 5分間キャッシュ
+);
+
+export async function getPopularTags(options: {
+  category?: string;
+  limit?: number;
+} = {}): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
+  return getCachedPopularTags(options.category, options.limit ?? 20);
 }
 
 /**

@@ -53,7 +53,14 @@
     "viewAllSales": "View All Sale Items",
     "saleUntil": "Until {date}",
     "viewProductList": "All Products",
-    "viewProductListDesc": "Search across all streaming platforms"
+    "viewProductListDesc": "Search across all streaming platforms",
+    "browseByCategory": "Browse by Category",
+    "viewCategories": "Genres",
+    "viewCategoriesDesc": "Search by genre and situation",
+    "viewSeries": "Series",
+    "viewSeriesDesc": "Find videos by popular series",
+    "viewMakers": "Studios",
+    "viewMakersDesc": "Browse by studio and label"
   },
   "header": {
     "title": "ADULT VIEWER LAB",

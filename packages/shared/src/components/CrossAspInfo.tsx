@@ -187,8 +187,9 @@ export default function CrossAspInfo({
 
               // FANZAの場合はfanzaSiteUrlを使用（外部リンク）、それ以外は現在のサイト内リンク
               const isFanzaExternal = asp.aspName === 'FANZA' && fanzaSiteUrl;
+              // FANZAサイトではincludeAspパラメータ不要（FANZAのみなので）
               const aspLinkHref = isFanzaExternal
-                ? `${fanzaSiteUrl}/${locale}/products?q=${encodeURIComponent(performerName)}&includeAsp=${asp.aspName}`
+                ? `${fanzaSiteUrl}/${locale}/actress/${performerId}`
                 : `/${locale}/products?q=${encodeURIComponent(performerName)}&includeAsp=${asp.aspName}`;
 
               // 外部リンクの場合はaタグ、内部リンクの場合はLinkを使用

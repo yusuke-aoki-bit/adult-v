@@ -502,9 +502,24 @@ export interface CursorPaginatedResult<T> {
 
 /**
  * カーソルデータ（内部用）
+ * 複数のソートタイプに対応
  */
 export interface CursorData {
-  releaseDate: string | null;
+  /** ソートタイプ（省略時は'releaseDate'） */
+  type?: 'releaseDate' | 'price' | 'rating' | 'reviewCount' | 'duration' | 'title';
+  /** リリース日（type='releaseDate'時に使用） */
+  releaseDate?: string | null;
+  /** 価格（type='price'時に使用） */
+  price?: number | null;
+  /** 評価（type='rating'時に使用） */
+  rating?: number | null;
+  /** レビュー数（type='reviewCount'時に使用） */
+  reviewCount?: number | null;
+  /** 再生時間（type='duration'時に使用） */
+  duration?: number | null;
+  /** タイトル（type='title'時に使用） */
+  title?: string | null;
+  /** 商品ID（一意性を保証するセカンダリキー） */
   id: number;
 }
 
