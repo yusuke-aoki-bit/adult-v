@@ -70,6 +70,8 @@ export interface ProductCardBaseProps {
   affiliateUrlOptions?: GetAffiliateUrlOptions;
   /** Whether to hide FANZA purchase links (for adult-v site) */
   hideFanzaPurchaseLinks?: boolean;
+  /** Priority loading for LCP optimization (first few cards) */
+  priority?: boolean;
 }
 
 // Default placeholder images
@@ -92,6 +94,7 @@ function ProductCardBase({
   trackCtaClick,
   affiliateUrlOptions = {},
   hideFanzaPurchaseLinks = false,
+  priority = false,
 }: ProductCardBaseProps) {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
@@ -233,7 +236,8 @@ function ProductCardBase({
                 fill
                 sizes="(max-width: 768px) 33vw, 10vw"
                 className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isUncensored ? 'blur-[1px]' : ''}`}
-                loading="lazy"
+                loading={priority ? undefined : "lazy"}
+                priority={priority}
                 onError={handleImageError}
               />
             ) : (
@@ -302,7 +306,8 @@ function ProductCardBase({
                 fill
                 className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
                 sizes="(max-width: 768px) 33vw, 12.5vw"
-                loading="lazy"
+                loading={priority ? undefined : "lazy"}
+                priority={priority}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
                 onError={handleImageError}
@@ -481,11 +486,11 @@ function ProductCardBase({
             fill
             className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            loading="lazy"
+            loading={priority ? undefined : "lazy"}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
             onError={handleImageError}
-            priority={false}
+            priority={priority}
             quality={80}
           />
           {hasSampleVideo && (

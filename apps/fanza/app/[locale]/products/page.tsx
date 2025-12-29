@@ -169,21 +169,19 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     excludeTags: excludeTags.length > 0 ? excludeTags : undefined,
   };
 
-  // ASP統計、タグ、総件数を並列取得（FANZAサイトではASP統計は不要）
-  const [aspStats, popularTags, totalCount] = await Promise.all([
+  // ASP統計、タグ、総件数、商品を全て並列取得（パフォーマンス最適化）
+  const [aspStats, popularTags, totalCount, products] = await Promise.all([
     isFanzaSite ? Promise.resolve([]) : getAspStats(),
     getPopularTags({ limit: 50 }),
     getProductsCount(filterOptions),
+    getProducts({
+      ...filterOptions,
+      offset,
+      limit: perPage,
+      sortBy: sortBy as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'ratingDesc' | 'reviewCountDesc' | 'titleAsc',
+      locale,
+    }),
   ]);
-
-  // 商品を取得（offsetとlimitでページネーション）
-  const products = await getProducts({
-    ...filterOptions,
-    offset,
-    limit: perPage,
-    sortBy: sortBy as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'ratingDesc' | 'reviewCountDesc' | 'titleAsc',
-    locale,
-  });
 
   // ページネーション用のクエリパラメータ
   // FANZAサイトではASPフィルターは自動適用されるためURLに含めない
@@ -298,8 +296,12 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
               />
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {products.map((product, index) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    priority={index < 6}
+                  />
                 ))}
               </div>
 

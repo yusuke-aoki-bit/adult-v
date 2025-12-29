@@ -24,9 +24,11 @@ interface ProductCardProps {
   compact?: boolean;
   /** Card size: 'full', 'compact', or 'mini' */
   size?: ProductCardSize;
+  /** Priority loading for LCP optimization (first few cards) */
+  priority?: boolean;
 }
 
-function ProductCard({ product, rankPosition, compact = false, size }: ProductCardProps) {
+function ProductCard({ product, rankPosition, compact = false, size, priority = false }: ProductCardProps) {
   const theme = useSiteTheme();
   return (
     <ProductCardBase
@@ -44,6 +46,7 @@ function ProductCard({ product, rankPosition, compact = false, size }: ProductCa
       getVariant={getVariant}
       trackCtaClick={trackCtaClick}
       hideFanzaPurchaseLinks={true}
+      priority={priority}
     />
   );
 }
@@ -53,6 +56,7 @@ export default memo(ProductCard, (prevProps, nextProps) => {
     prevProps.product.id === nextProps.product.id &&
     prevProps.rankPosition === nextProps.rankPosition &&
     prevProps.compact === nextProps.compact &&
-    prevProps.size === nextProps.size
+    prevProps.size === nextProps.size &&
+    prevProps.priority === nextProps.priority
   );
 });

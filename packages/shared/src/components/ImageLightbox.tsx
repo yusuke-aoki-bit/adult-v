@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef, memo, TouchEvent, ReactNode } from 'react';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getFullSizeImageUrl, isDtiUncensoredSite } from '../lib/image-utils';
 import { useTranslations } from 'next-intl';
@@ -275,13 +276,19 @@ function ImageLightbox({
             transform: `translateX(${swipeOffset}px)`,
             transition: isTransitioning ? 'transform 0.3s ease-out' : 'none',
             maxHeight: '100%',
+            width: '100%',
+            height: '80vh',
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={imageError ? currentImage : fullSizeImage}
             alt={alt}
-            className={`max-w-full max-h-full object-contain ${isUncensored ? 'blur-[1px]' : ''}`}
+            fill
+            className={`object-contain ${isUncensored ? 'blur-[1px]' : ''}`}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+            quality={85}
+            priority
+            unoptimized={currentImage.includes('placeholder.co')}
             onError={() => {
               if (!imageError) {
                 setImageError(true);
@@ -336,11 +343,14 @@ function ImageLightbox({
                 <span className="absolute inset-0 flex items-center justify-center text-xs" style={{ color: '#9ca3af' }}>
                   {idx + 1}
                 </span>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={imgUrl}
                   alt={`${t('thumbnailAlt')} ${idx + 1}`}
-                  className={`absolute inset-0 w-full h-full object-cover ${isDtiUncensoredSite(imgUrl) ? 'blur-[2px]' : ''}`}
+                  fill
+                  sizes="64px"
+                  className={`object-cover ${isDtiUncensoredSite(imgUrl) ? 'blur-[2px]' : ''}`}
+                  quality={60}
+                  unoptimized={imgUrl.includes('placeholder.co')}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.opacity = '0';

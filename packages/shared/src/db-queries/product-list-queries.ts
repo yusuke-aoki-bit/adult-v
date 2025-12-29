@@ -524,48 +524,66 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
   }
 
   /**
+   * フィルターオプションが空かどうかを判定
+   */
+  function hasNoFilters(options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>): boolean {
+    if (!options) return true;
+    return !options.query &&
+           !options.providers?.length &&
+           !options.excludeProviders?.length &&
+           !options.tags?.length &&
+           !options.excludeTags?.length &&
+           !options.hasVideo &&
+           !options.hasImage &&
+           !options.onSale &&
+           !options.uncategorized &&
+           !options.performerType &&
+           !options.actressId &&
+           !options.isNew &&
+           !options.isFeatured;
+  }
+
+  /**
    * 商品数を取得
-   * サイトモードに応じてカウント方法が異なる:
-   * - 'all': タイトル正規化による重複排除カウント
-   * - 'fanza-only': 単純カウント
+   * パフォーマンス最適化:
+   * - フィルターなし: 単純COUNT（高速）
+   * - フィルターあり: 条件付きCOUNT（重複排除なし）
+   *
+   * 注: 重複排除はgetProducts側で行うため、カウントは概算値となる
    */
   async function getProductsCount(options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>): Promise<number> {
     try {
       const db = getDb();
+
+      // フィルターなしの場合は単純カウント（最速）
+      if (hasNoFilters(options)) {
+        const result = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(products);
+        return Number(result[0]?.count || 0);
+      }
+
+      // フィルターありの場合
       const conditions = buildConditions(options as GetProductsOptions);
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-      if (siteMode === 'all') {
-        // プロバイダー + タイトルの組み合わせで重複排除カウント
-        // 同じプロバイダー内の同タイトルは別商品として扱う
-        // サブクエリでDISTINCTを取得し、そのカウントを返す
-        const normalizedTitleExpr = sql<string>`LOWER(REGEXP_REPLACE(REGEXP_REPLACE(${products.title}, '[\s　]+', '', 'g'), '[！!？?「」『』【】（）()＆&～~・:：,，。.、]', '', 'g'))`;
-
-        // Drizzle ORMでサブクエリを構築
-        const subquery = db
-          .selectDistinct({
-            aspName: productSources.aspName,
-            normalizedTitle: normalizedTitleExpr,
-          })
+      // プロバイダーフィルターがある場合はproduct_sourcesとJOIN
+      if (options?.providers?.length || options?.excludeProviders?.length) {
+        const result = await db
+          .select({ count: sql<number>`count(DISTINCT ${products.id})` })
           .from(products)
           .innerJoin(productSources, eq(products.id, productSources.productId))
-          .where(whereClause)
-          .as('unique_products');
-
-        const result = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(subquery);
-
-        return Number(result[0]?.count || 0);
-      } else {
-        // 単純カウント
-        const result = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(products)
           .where(whereClause);
-
         return Number(result[0]?.count || 0);
       }
+
+      // その他のフィルター: 単純カウント
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(products)
+        .where(whereClause);
+
+      return Number(result[0]?.count || 0);
     } catch (error) {
       console.error('Error counting products:', error);
       return 0;
