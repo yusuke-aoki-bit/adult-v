@@ -896,7 +896,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
               display_order,
               ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY display_order ASC NULLS LAST) as rn
             FROM product_images
-            WHERE product_id = ANY(${productIds})
+            WHERE product_id = ANY(ARRAY[${sql.join(productIds.map(id => sql`${id}`), sql`, `)}]::integer[])
           ) ranked
           WHERE rn <= ${limitImages}
         `)
@@ -924,7 +924,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
               duration,
               ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY id ASC) as rn
             FROM product_videos
-            WHERE product_id = ANY(${productIds})
+            WHERE product_id = ANY(ARRAY[${sql.join(productIds.map(id => sql`${id}`), sql`, `)}]::integer[])
           ) ranked
           WHERE rn <= ${limitVideos}
         `)
