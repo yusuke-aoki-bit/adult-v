@@ -4,6 +4,7 @@
  * 以下の順序で処理を実行:
  * 1. crawl-performer-lookup: Wikiサイトをクロールしてlookupテーブルに保存
  * 2. normalize-performers: lookupテーブルから商品-演者紐付けを作成
+ * 3. merge-fake-performers: 仮名演者（○○ N歳 職業）を正しい演者にマージ
  *
  * GET /api/cron/performer-pipeline?asp=MGS&limit=100
  *
@@ -11,6 +12,7 @@
  *   asp - 対象ASP (省略時は全ASP)
  *   limit - 処理件数上限 (デフォルト: 500)
  *   source - クロール対象ソース (カンマ区切り、デフォルト: nakiny,minnano-av)
+ *   skipMerge - trueの場合、仮名演者マージをスキップ
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -32,6 +34,12 @@ interface PipelineStats {
     productsProcessed: number;
     newLinks: number;
   };
+  mergePhase: {
+    fakePerformersFound: number;
+    performersMerged: number;
+    productsMoved: number;
+    aliasesAdded: number;
+  };
   totalDuration: number;
 }
 
@@ -48,17 +56,25 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
     const asp = searchParams.get('asp') || undefined;
     const limit = parseInt(searchParams.get('limit') || '500', 10);
     const sources = (searchParams.get('source') || 'nakiny,minnano-av').split(',');
+    const skipMerge = searchParams.get('skipMerge') === 'true';
 
     console.log('[performer-pipeline] Starting pipeline');
     console.log(`  ASP: ${asp || 'all'}`);
     console.log(`  Limit: ${limit}`);
     console.log(`  Sources: ${sources.join(', ')}`);
+    console.log(`  Skip Merge: ${skipMerge}`);
 
     const stats: PipelineStats = {
       crawlPhase: [],
       linkPhase: {
         productsProcessed: 0,
         newLinks: 0,
+      },
+      mergePhase: {
+        fakePerformersFound: 0,
+        performersMerged: 0,
+        productsMoved: 0,
+        aliasesAdded: 0,
       },
       totalDuration: 0,
     };
@@ -81,6 +97,19 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
       const linkResult = await linkPerformersFromLookup(db, asp, limit);
       stats.linkPhase = linkResult;
       console.log(`  Processed: ${linkResult.productsProcessed}, New links: ${linkResult.newLinks}`);
+
+      // Phase 3: 仮名演者マージ処理
+      // 「○○ N歳 職業」形式の仮名演者を正しい演者にマージ
+      if (!skipMerge) {
+        console.log('\n[Phase 3] Merging fake performers...');
+
+        const mergeResult = await mergeFakePerformers(db, limit);
+        stats.mergePhase = mergeResult;
+        console.log(`  Found: ${mergeResult.fakePerformersFound}, Merged: ${mergeResult.performersMerged}`);
+        console.log(`  Products moved: ${mergeResult.productsMoved}, Aliases added: ${mergeResult.aliasesAdded}`);
+      } else {
+        console.log('\n[Phase 3] Skipping fake performer merge (skipMerge=true)');
+      }
 
       stats.totalDuration = Date.now() - startTime;
 
@@ -222,4 +251,310 @@ function isValidPerformerName(name: string): boolean {
     'カテゴリ', 'タグ', 'ジャンル', '人気', 'ランキング', '新着',
   ];
   return !partialExcludePatterns.some(p => name.includes(p));
+}
+
+/**
+ * 仮名演者かどうかを判定
+ * 「○○ N歳 職業」パターンにマッチする名前を仮名と判断
+ */
+function isFakePerformerName(name: string): boolean {
+  // パターン1: 「名前 N歳 職業」（例: ゆな 21歳 歯科助手）
+  if (/^.{1,10}\s+\d{2}歳\s+.+$/.test(name)) return true;
+
+  // パターン2: 「名前 N歳」（例: あかり 24歳）
+  if (/^.{1,10}\s+\d{2}歳$/.test(name)) return true;
+
+  // パターン3: 「名前（N歳）」（例: さくら（22歳））
+  if (/^.{1,10}（\d{2}歳）/.test(name)) return true;
+
+  // パターン4: 「N歳 職業」で始まる（例: 21歳 OL）
+  if (/^\d{2}歳\s+/.test(name)) return true;
+
+  return false;
+}
+
+/**
+ * 品番を正規化して検索用パターンを生成
+ */
+function normalizeProductCodeForSearch(code: string): string[] {
+  const codes: string[] = [];
+  const upper = code.toUpperCase();
+
+  codes.push(upper);
+
+  // MGS-xxx形式からプレフィックスを除去
+  if (upper.startsWith('MGS-')) {
+    codes.push(upper.replace('MGS-', ''));
+  }
+
+  // ハイフンなしバージョン
+  codes.push(upper.replace(/-/g, ''));
+
+  // 数字プレフィックス付きの変形
+  const match = upper.match(/^(\d+)([A-Z]+)-?(\d+)$/);
+  if (match) {
+    const [, numPrefix, letters, number] = match;
+    codes.push(`${numPrefix}${letters}-${number}`);
+    codes.push(`${numPrefix}${letters}${number}`);
+    codes.push(`${numPrefix}${letters}-${parseInt(number, 10)}`);
+  }
+
+  return [...new Set(codes)];
+}
+
+/**
+ * wiki_crawl_dataから演者名を検索
+ */
+async function getPerformersFromWiki(
+  db: ReturnType<typeof import('../lib/db').getDb>,
+  productCode: string
+): Promise<string[]> {
+  const searchCodes = normalizeProductCodeForSearch(productCode);
+
+  const result = await db.execute(sql`
+    SELECT DISTINCT performer_name
+    FROM wiki_crawl_data
+    WHERE UPPER(product_code) = ANY(ARRAY[${sql.join(
+      searchCodes.map((c) => sql`${c.toUpperCase()}`),
+      sql`, `
+    )}]::text[])
+  `);
+
+  return (result.rows as { performer_name: string }[])
+    .map((row) => row.performer_name)
+    .filter((name) => name && name.length > 0 && !isFakePerformerName(name));
+}
+
+/**
+ * FANZAで同じ品番の商品から演者を検索
+ */
+async function findPerformersFromFanza(
+  db: ReturnType<typeof import('../lib/db').getDb>,
+  productCode: string
+): Promise<{ id: number; name: string }[]> {
+  const searchCodes = normalizeProductCodeForSearch(productCode);
+
+  const result = await db.execute(sql`
+    SELECT
+      pf.id,
+      pf.name
+    FROM products p
+    JOIN product_performers pp ON p.id = pp.product_id
+    JOIN performers pf ON pp.performer_id = pf.id
+    WHERE p.normalized_product_id LIKE 'FANZA-%'
+    AND (
+      ${sql.join(
+        searchCodes.map(
+          (code) =>
+            sql`UPPER(p.normalized_product_id) LIKE ${'%' + code + '%'}`
+        ),
+        sql` OR `
+      )}
+    )
+    LIMIT 10
+  `);
+
+  return (result.rows as { id: number; name: string }[])
+    .filter((row) => !isFakePerformerName(row.name));
+}
+
+/**
+ * 仮名演者を正しい演者にマージ
+ */
+async function mergePerformerIntoCorrect(
+  db: ReturnType<typeof import('../lib/db').getDb>,
+  wrongPerformerId: number,
+  wrongPerformerName: string,
+  correctPerformerId: number,
+  correctPerformerName: string,
+  source: string = 'performer-pipeline'
+): Promise<{ productsMoved: number; aliasAdded: boolean }> {
+  // 1. 仮名演者にリンクされている商品を取得
+  const linkedProducts = await db.execute(sql`
+    SELECT product_id FROM product_performers
+    WHERE performer_id = ${wrongPerformerId}
+  `);
+
+  const productIds = (linkedProducts.rows as { product_id: number }[]).map(r => r.product_id);
+
+  // 2. 商品リンクを正しい演者に移行
+  let productsMoved = 0;
+  for (const productId of productIds) {
+    // 既に正しい演者にリンクされているかチェック
+    const existingLink = await db.execute(sql`
+      SELECT 1 FROM product_performers
+      WHERE product_id = ${productId} AND performer_id = ${correctPerformerId}
+      LIMIT 1
+    `);
+
+    if (existingLink.rows.length === 0) {
+      await db.execute(sql`
+        INSERT INTO product_performers (product_id, performer_id)
+        VALUES (${productId}, ${correctPerformerId})
+        ON CONFLICT DO NOTHING
+      `);
+      productsMoved++;
+    }
+
+    // 仮名演者へのリンクを削除
+    await db.execute(sql`
+      DELETE FROM product_performers
+      WHERE product_id = ${productId} AND performer_id = ${wrongPerformerId}
+    `);
+  }
+
+  // 3. 仮名をエイリアスとして登録
+  let aliasAdded = false;
+  const existingAlias = await db.execute(sql`
+    SELECT 1 FROM performer_aliases
+    WHERE performer_id = ${correctPerformerId} AND alias_name = ${wrongPerformerName}
+    LIMIT 1
+  `);
+
+  if (existingAlias.rows.length === 0) {
+    await db.execute(sql`
+      INSERT INTO performer_aliases (performer_id, alias_name, source)
+      VALUES (${correctPerformerId}, ${wrongPerformerName}, ${source})
+      ON CONFLICT DO NOTHING
+    `);
+    aliasAdded = true;
+  }
+
+  // 4. 仮名演者レコードを削除（リンクがなくなった場合のみ）
+  const remainingLinks = await db.execute(sql`
+    SELECT 1 FROM product_performers WHERE performer_id = ${wrongPerformerId} LIMIT 1
+  `);
+
+  if (remainingLinks.rows.length === 0) {
+    // 仮名演者の既存エイリアスを正しい演者に移行
+    await db.execute(sql`
+      UPDATE performer_aliases
+      SET performer_id = ${correctPerformerId}
+      WHERE performer_id = ${wrongPerformerId}
+      AND alias_name NOT IN (
+        SELECT alias_name FROM performer_aliases WHERE performer_id = ${correctPerformerId}
+      )
+    `);
+
+    // 重複するエイリアスを削除
+    await db.execute(sql`
+      DELETE FROM performer_aliases WHERE performer_id = ${wrongPerformerId}
+    `);
+
+    // 仮名演者レコードを削除
+    await db.execute(sql`
+      DELETE FROM performers WHERE id = ${wrongPerformerId}
+    `);
+  }
+
+  return { productsMoved, aliasAdded };
+}
+
+/**
+ * 仮名演者をマージする処理
+ */
+async function mergeFakePerformers(
+  db: ReturnType<typeof import('../lib/db').getDb>,
+  limit: number
+): Promise<{
+  fakePerformersFound: number;
+  performersMerged: number;
+  productsMoved: number;
+  aliasesAdded: number;
+}> {
+  let fakePerformersFound = 0;
+  let performersMerged = 0;
+  let productsMoved = 0;
+  let aliasesAdded = 0;
+
+  // 仮名演者パターンにマッチする演者を取得
+  const fakePerformers = await db.execute(sql`
+    SELECT DISTINCT pf.id, pf.name
+    FROM performers pf
+    JOIN product_performers pp ON pf.id = pp.performer_id
+    JOIN products p ON pp.product_id = p.id
+    JOIN product_sources ps ON p.id = ps.product_id
+    WHERE ps.asp_name = 'MGS'
+    AND (
+      pf.name ~ '^.{1,10}\s+\d{2}歳\s+.+$'
+      OR pf.name ~ '^.{1,10}\s+\d{2}歳$'
+      OR pf.name ~ '^.{1,10}（\d{2}歳）'
+      OR pf.name ~ '^\d{2}歳\s+'
+    )
+    ORDER BY pf.id
+    LIMIT ${limit}
+  `);
+
+  fakePerformersFound = fakePerformers.rows.length;
+
+  for (const fakePerformer of fakePerformers.rows as { id: number; name: string }[]) {
+    // 仮名演者にリンクされている商品の品番を取得
+    const productsResult = await db.execute(sql`
+      SELECT p.id, p.normalized_product_id
+      FROM products p
+      JOIN product_performers pp ON p.id = pp.product_id
+      WHERE pp.performer_id = ${fakePerformer.id}
+      LIMIT 1
+    `);
+
+    if (productsResult.rows.length === 0) continue;
+
+    const product = productsResult.rows[0] as { id: number; normalized_product_id: string };
+    const productCode = product.normalized_product_id.replace(/^[A-Z]+-/, '').toUpperCase();
+
+    // wiki_crawl_dataから正しい演者を検索
+    let correctPerformerName: string | null = null;
+    let correctPerformerId: number | null = null;
+
+    const wikiPerformers = await getPerformersFromWiki(db, productCode);
+    if (wikiPerformers.length > 0) {
+      correctPerformerName = wikiPerformers[0];
+    } else {
+      // FANZAから検索
+      const fanzaPerformers = await findPerformersFromFanza(db, productCode);
+      if (fanzaPerformers.length > 0) {
+        correctPerformerName = fanzaPerformers[0].name;
+        correctPerformerId = fanzaPerformers[0].id;
+      }
+    }
+
+    if (!correctPerformerName) continue;
+
+    // 正しい演者IDを取得または作成
+    if (!correctPerformerId) {
+      const performerResult = await db.execute(sql`
+        SELECT id FROM performers WHERE name = ${correctPerformerName} LIMIT 1
+      `);
+      if (performerResult.rows.length > 0) {
+        correctPerformerId = (performerResult.rows[0] as { id: number }).id;
+      } else {
+        const insertResult = await db.execute(sql`
+          INSERT INTO performers (name)
+          VALUES (${correctPerformerName})
+          ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+          RETURNING id
+        `);
+        correctPerformerId = (insertResult.rows[0] as { id: number }).id;
+      }
+    }
+
+    if (correctPerformerId === fakePerformer.id) continue;
+
+    // マージ実行
+    const mergeResult = await mergePerformerIntoCorrect(
+      db,
+      fakePerformer.id,
+      fakePerformer.name,
+      correctPerformerId,
+      correctPerformerName
+    );
+
+    performersMerged++;
+    productsMoved += mergeResult.productsMoved;
+    if (mergeResult.aliasAdded) aliasesAdded++;
+
+    console.log(`    Merged: ${fakePerformer.name} → ${correctPerformerName}`);
+  }
+
+  return { fakePerformersFound, performersMerged, productsMoved, aliasesAdded };
 }
