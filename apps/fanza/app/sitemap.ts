@@ -103,34 +103,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .orderBy(desc(products.releaseDate))
       .limit(SITEMAP_CONFIG.products);
 
-    // 商品ページ - 数値IDと品番の両方をsitemapに含める
-    const productPages: MetadataRoute.Sitemap = recentProducts.flatMap((product) => {
-      const pages: MetadataRoute.Sitemap = [
-        {
-          url: `${BASE_URL}/products/${product.id}`,
-          lastModified: product.updatedAt || new Date(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.7,
-          alternates: {
-            languages: getLanguageAlternates(`/products/${product.id}`),
-          },
-        },
-      ];
-
-      if (product.normalizedProductId && product.normalizedProductId !== String(product.id)) {
-        pages.push({
-          url: `${BASE_URL}/products/${product.normalizedProductId}`,
-          lastModified: product.updatedAt || new Date(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.6,
-          alternates: {
-            languages: getLanguageAlternates(`/products/${product.normalizedProductId}`),
-          },
-        });
-      }
-
-      return pages;
-    });
+    // 商品ページ - 正規URL（数値ID）のみをsitemapに含める
+    // 品番URLは数値IDにcanonical設定されるため、sitemapには数値IDのみ含める
+    // これによりGoogleの重複ページ問題（29,598件）を解消
+    const productPages: MetadataRoute.Sitemap = recentProducts.map((product) => ({
+      url: `${BASE_URL}/products/${product.id}`,
+      lastModified: product.updatedAt || new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+      alternates: {
+        languages: getLanguageAlternates(`/products/${product.id}`),
+      },
+    }));
 
     // Top performers - Prioritize performers with most products
     const topPerformers = await db
