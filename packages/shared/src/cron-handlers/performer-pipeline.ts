@@ -468,6 +468,8 @@ async function mergeFakePerformers(
   let aliasesAdded = 0;
 
   // 仮名演者パターンにマッチする演者を取得
+  // 「○○ N歳 職業」形式の仮名演者を検出
+  // LIKE '%歳%'で「歳」を含む演者を取得し、実名演者（フルネーム漢字）を除外
   const fakePerformers = await db.execute(sql`
     SELECT DISTINCT pf.id, pf.name
     FROM performers pf
@@ -475,12 +477,9 @@ async function mergeFakePerformers(
     JOIN products p ON pp.product_id = p.id
     JOIN product_sources ps ON p.id = ps.product_id
     WHERE ps.asp_name = 'MGS'
-    AND (
-      pf.name ~ '^.{1,10}\s+\d{2}歳\s+.+$'
-      OR pf.name ~ '^.{1,10}\s+\d{2}歳$'
-      OR pf.name ~ '^.{1,10}（\d{2}歳）'
-      OR pf.name ~ '^\d{2}歳\s+'
-    )
+    AND pf.name LIKE '%歳%'
+    AND pf.name NOT LIKE '%千歳%'
+    AND pf.name NOT LIKE '%万歳%'
     ORDER BY pf.id
     LIMIT ${limit}
   `);
