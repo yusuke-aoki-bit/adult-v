@@ -140,6 +140,7 @@ export const cspDirectives = [
   "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com https://firebase.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseremoteconfig.googleapis.com https://firebaselogging-pa.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.dmm.co.jp https://*.dmm.com https://*.mgstage.com",
   "media-src 'self' https://*.dmm.co.jp https://*.dmm.com https://*.mgstage.com https://smovie.1pondo.tv https://sample.heyzo.com https://*.caribbeancom.com https://*.caribbeancompr.com https://*.10musume.com https://*.pacopacomama.com https://cc3001.dmm.co.jp https://litevideo.dmm.co.jp",
+  "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -223,8 +224,6 @@ export function createI18nRedirects() {
  */
 export function createLegacyRedirects() {
   return [
-    { source: '/categories', destination: '/products', permanent: true },
-    { source: '/categories', has: [{ type: 'query' as const, key: 'category' }], destination: '/products', permanent: true },
     { source: '/product/:id', destination: '/products/:id', permanent: true },
     { source: '/categories/:tagId', destination: '/products?include=:tagId', permanent: true },
     { source: '/uncategorized', destination: '/products?uncategorized=true', permanent: true },

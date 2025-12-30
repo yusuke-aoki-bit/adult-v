@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef, memo, useCallback, useMemo, type ReactNode, type ComponentType } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import { providerMeta } from '../../lib/providers';
 import { headerTranslations, useSaleStats, type SaleStats, type HeaderTranslation } from '../../lib/hooks/useHeaderStats';
 import { localizedHref, locales, defaultLocale, type Locale } from '../../i18n';
@@ -17,7 +17,8 @@ interface AspBadgeListProps {
   saleStats: SaleStats | null;
   locale: string;
   saleLabel: string;
-  fanzaSiteLabel?: string;
+  /** 現在のパス（FANZAリンクでコンテキストを保持するため） */
+  currentPath?: string;
   onLinkClick?: () => void;
 }
 
@@ -26,7 +27,7 @@ const AspBadgeList = memo(function AspBadgeList({
   saleStats,
   locale,
   saleLabel,
-  fanzaSiteLabel,
+  currentPath,
   onLinkClick,
 }: AspBadgeListProps) {
   return (
@@ -44,26 +45,39 @@ const AspBadgeList = memo(function AspBadgeList({
           <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
         </Link>
       ) : null}
-      {/* FANZAサイトへのリンク（adult-vサイトのみ） */}
-      {fanzaSiteLabel && (
-        <a
-          href={`${FANZA_SITE_URL}/${locale}`}
-          className="asp-badge"
-          style={{ background: 'linear-gradient(to right, #ec4899, #f43f5e)' }}
-          onClick={onLinkClick}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span className="font-bold">{fanzaSiteLabel}</span>
-          <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-        </a>
-      )}
-      {/* ASPリンク */}
+      {/* ASPリンク - FANZAはf.adult-v.comへ外部リンク、その他は内部フィルター */}
       {aspList.map((asp) => {
         const meta = providerMeta[asp.providerId as keyof typeof providerMeta];
         const colors = meta?.gradientColors || { from: '#4b5563', to: '#374151' };
+        const isFanza = asp.aspName.toLowerCase() === 'fanza';
+
+        // FANZAは外部サイト（f.adult-v.com）へ遷移（現在のパスを保持）
+        if (isFanza) {
+          // 現在のパスからlocalePrefixを除去してFANZAサイトURLを生成
+          // 例: /ja/actress/123 → f.adult-v.com/actress/123?hl=ja
+          const pathWithoutLocale = currentPath?.replace(/^\/[a-z]{2}(-[A-Z]{2})?/, '') || '';
+          const fanzaUrl = pathWithoutLocale
+            ? `${FANZA_SITE_URL}${pathWithoutLocale}${pathWithoutLocale.includes('?') ? '&' : '?'}hl=${locale}`
+            : `${FANZA_SITE_URL}/?hl=${locale}`;
+          return (
+            <a
+              key={asp.aspName}
+              href={fanzaUrl}
+              className="asp-badge"
+              style={{ background: `linear-gradient(to right, ${colors.from}, ${colors.to})` }}
+              onClick={onLinkClick}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="font-bold">{meta?.label || asp.aspName}</span>
+              <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          );
+        }
+
+        // その他のASPは内部フィルター
         return (
           <Link
             key={asp.aspName}
@@ -149,6 +163,7 @@ export function HeaderBase({
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLElement>(null);
 
@@ -160,11 +175,11 @@ export function HeaderBase({
   // セール統計のみ取得（ASP統計は静的リストを使用）
   const { saleStats } = useSaleStats();
 
-  // 静的ASPリスト（fanzaを除外）- useMemoでメモ化
+  // 静的ASPリスト - useMemoでメモ化
+  // FANZAサイトでは空リスト、adult-vサイトではFANZA含む全ASPを表示
   const aspList = useMemo(() => {
     if (isFanzaSite) return [];
     return ASP_DISPLAY_ORDER
-      .filter(aspName => aspName !== 'fanza')
       .map(aspName => ({
         aspName,
         providerId: ASP_TO_PROVIDER_ID[aspName] ?? 'duga',
@@ -430,7 +445,7 @@ export function HeaderBase({
                   saleStats={saleStats}
                   locale={locale}
                   saleLabel={t.sale}
-                  fanzaSiteLabel={!isFanzaSite ? t.fanzaSite : undefined}
+                  currentPath={pathname}
                   onLinkClick={handleMobileMenuClose}
                 />
               </div>
@@ -448,7 +463,7 @@ export function HeaderBase({
               saleStats={saleStats}
               locale={locale}
               saleLabel={t.sale}
-              fanzaSiteLabel={!isFanzaSite ? t.fanzaSite : undefined}
+              currentPath={pathname}
             />
           </div>
         </div>

@@ -86,8 +86,7 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const DEFAULT_ITEMS_PER_PAGE = 16;
-const ALLOWED_PER_PAGE = [12, 16, 24, 48, 96] as const;
+const PER_PAGE = 96;
 
 export default async function Home({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -98,10 +97,6 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
-
-  // 表示件数をURLパラメータから取得（許可リスト内のみ有効）
-  const limitParam = Number(searchParamsData.limit) || DEFAULT_ITEMS_PER_PAGE;
-  const perPage = (ALLOWED_PER_PAGE as readonly number[]).includes(limitParam) ? limitParam : DEFAULT_ITEMS_PER_PAGE;
 
   // FANZAサイトかどうかを判定
   const [serverAspFilter, isFanzaSite] = await Promise.all([
@@ -145,7 +140,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   const hasImage = searchParamsData.hasImage === 'true';
   const hasReview = searchParamsData.hasReview === 'true';
 
-  const offset = (page - 1) * perPage;
+  const offset = (page - 1) * PER_PAGE;
 
   // "etc"の場合は特別処理（50音・アルファベット以外）
   const isEtcFilter = initialFilter === 'etc';
@@ -179,7 +174,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     }) : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
     getActresses({
       ...actressQueryOptions,
-      limit: perPage,
+      limit: PER_PAGE,
       offset,
       locale,
     }),
@@ -340,7 +335,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           <Pagination
             total={totalCount}
             page={page}
-            perPage={perPage}
+            perPage={PER_PAGE}
             basePath={localizedHref('/', locale)}
             position="top"
             queryParams={{
@@ -367,7 +362,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           <Pagination
             total={totalCount}
             page={page}
-            perPage={perPage}
+            perPage={PER_PAGE}
             basePath={localizedHref('/', locale)}
             position="bottom"
             queryParams={{
@@ -384,78 +379,23 @@ export default async function Home({ params, searchParams }: PageProps) {
             }}
           />
 
-          {/* 主要ページへのナビゲーション */}
+          {/* 商品一覧へのリンク */}
           <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t theme-section-border">
-            <h2 className="text-lg sm:text-xl font-bold theme-text mb-4">{t('browseByCategory')}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {/* 商品一覧 */}
-              <Link
-                href={localizedHref('/products', locale)}
-                className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-pink-500 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🎬</span>
-                  <div>
-                    <span className="theme-text font-medium">{t('viewProductList')}</span>
-                    <p className="theme-text-muted text-sm mt-0.5">{t('viewProductListDesc')}</p>
-                  </div>
+            <Link
+              href={localizedHref('/products', locale)}
+              className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-pink-500 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🎬</span>
+                <div>
+                  <span className="theme-text font-medium">{t('viewProductList')}</span>
+                  <p className="theme-text-muted text-sm mt-0.5">{t('viewProductListDesc')}</p>
                 </div>
-                <svg className="w-5 h-5 theme-text-muted group-hover:text-pink-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-
-              {/* カテゴリー一覧 */}
-              <Link
-                href={localizedHref('/categories', locale)}
-                className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-purple-500 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">📂</span>
-                  <div>
-                    <span className="theme-text font-medium">{t('viewCategories')}</span>
-                    <p className="theme-text-muted text-sm mt-0.5">{t('viewCategoriesDesc')}</p>
-                  </div>
-                </div>
-                <svg className="w-5 h-5 theme-text-muted group-hover:text-purple-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-
-              {/* シリーズ一覧 */}
-              <Link
-                href={localizedHref('/series', locale)}
-                className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-blue-500 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">📚</span>
-                  <div>
-                    <span className="theme-text font-medium">{t('viewSeries')}</span>
-                    <p className="theme-text-muted text-sm mt-0.5">{t('viewSeriesDesc')}</p>
-                  </div>
-                </div>
-                <svg className="w-5 h-5 theme-text-muted group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-
-              {/* メーカー一覧 */}
-              <Link
-                href={localizedHref('/makers', locale)}
-                className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-amber-500 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🏭</span>
-                  <div>
-                    <span className="theme-text font-medium">{t('viewMakers')}</span>
-                    <p className="theme-text-muted text-sm mt-0.5">{t('viewMakersDesc')}</p>
-                  </div>
-                </div>
-                <svg className="w-5 h-5 theme-text-muted group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
+              </div>
+              <svg className="w-5 h-5 theme-text-muted group-hover:text-pink-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
         </div>
       </section>

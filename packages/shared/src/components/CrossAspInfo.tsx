@@ -185,12 +185,12 @@ export default function CrossAspInfo({
               const meta = providerId ? providerMeta[providerId] : null;
               const percentage = totalWorks > 0 ? (asp.count / totalWorks) * 100 : 0;
 
-              // FANZAの場合はfanzaSiteUrlを使用（外部リンク）、それ以外は現在のサイト内リンク
+              // FANZAの場合はfanzaSiteUrlを使用（外部リンク）、それ以外は演者詳細ページ内でASPフィルター
               const isFanzaExternal = asp.aspName === 'FANZA' && fanzaSiteUrl;
-              // FANZAサイトではincludeAspパラメータ不要（FANZAのみなので）
+              // 演者詳細ページに asp パラメータでフィルターするリンクを生成
               const aspLinkHref = isFanzaExternal
                 ? `${fanzaSiteUrl}/${locale}/actress/${performerId}`
-                : `/${locale}/products?q=${encodeURIComponent(performerName)}&includeAsp=${asp.aspName}`;
+                : `/${locale}/actress/${performerId}?asp=${asp.aspName.toLowerCase()}`;
 
               // 外部リンクの場合はaタグ、内部リンクの場合はLinkを使用
               const LinkComponent = isFanzaExternal ? 'a' : Link;

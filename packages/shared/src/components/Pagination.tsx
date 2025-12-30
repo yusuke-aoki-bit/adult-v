@@ -20,7 +20,6 @@ const translations = {
     go: '移動',
     jumpBack: '-10',
     jumpForward: '+10',
-    perPage: '件/ページ',
   },
   en: {
     first: 'First',
@@ -34,7 +33,6 @@ const translations = {
     go: 'Go',
     jumpBack: '-10',
     jumpForward: '+10',
-    perPage: '/page',
   },
   zh: {
     first: '首页',
@@ -48,7 +46,6 @@ const translations = {
     go: '跳转',
     jumpBack: '-10',
     jumpForward: '+10',
-    perPage: '条/页',
   },
   ko: {
     first: '처음',
@@ -62,12 +59,8 @@ const translations = {
     go: '이동',
     jumpBack: '-10',
     jumpForward: '+10',
-    perPage: '건/페이지',
   },
 } as const;
-
-// 表示件数オプション
-const PER_PAGE_OPTIONS = [12, 24, 48, 96] as const;
 
 interface PaginationProps {
   total: number;
@@ -76,8 +69,6 @@ interface PaginationProps {
   basePath: string;
   queryParams?: Record<string, string>;
   position?: 'top' | 'bottom';
-  showPerPageSelector?: boolean;
-  onSavePerPage?: (perPage: number) => void;
 }
 
 export default function Pagination({
@@ -87,8 +78,6 @@ export default function Pagination({
   basePath,
   queryParams = {},
   position = 'bottom',
-  showPerPageSelector = false,
-  onSavePerPage,
 }: PaginationProps) {
   const searchParams = useSearchParams();
   const params = useParams();
@@ -111,7 +100,6 @@ export default function Pagination({
     jumpButtonDisabled: 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50',
     input: 'border-gray-600 text-white bg-gray-700 focus:ring-rose-500',
     submitButton: `bg-${primaryColor}-600 text-white hover:bg-${primaryColor}-700 disabled:bg-gray-600 disabled:text-gray-400`,
-    select: `border-gray-600 text-white bg-gray-700 focus:ring-${primaryColor}-500 focus:border-${primaryColor}-500`,
     pageInfo: 'text-gray-400',
     dots: 'text-gray-400',
   } : {
@@ -122,15 +110,14 @@ export default function Pagination({
     jumpButtonDisabled: 'bg-gray-100 text-gray-500 cursor-not-allowed pointer-events-none opacity-50',
     input: `border-gray-300 text-gray-900 bg-white focus:ring-${primaryColor}-500`,
     submitButton: `bg-${primaryColor}-500 text-white hover:bg-${primaryColor}-600 disabled:bg-gray-200 disabled:text-gray-400`,
-    select: `border-gray-300 text-gray-900 bg-white focus:ring-${primaryColor}-500 focus:border-${primaryColor}-500`,
     pageInfo: 'text-gray-500',
     dots: 'text-gray-500',
   }, [mode, primaryColor]);
 
   // クエリパラメータを保持
   // 注意: queryParams（サーバーサイドから渡される正確な値）を優先し、
-  // searchParams（現在のURL）からは hl と limit のみ保持する
-  const getUrl = useCallback((pageNum: number, newPerPage?: number) => {
+  // searchParams（現在のURL）からは hl のみ保持する
+  const getUrl = useCallback((pageNum: number) => {
     const urlParams = new URLSearchParams();
 
     // 言語パラメータを保持（?hl=形式）
@@ -147,16 +134,6 @@ export default function Pagination({
     // ページ番号を設定（1の場合は省略）
     if (pageNum > 1) {
       urlParams.set('page', pageNum.toString());
-    }
-
-    // 表示件数を設定（新しい値またはsearchParamsから）
-    if (newPerPage) {
-      urlParams.set('limit', newPerPage.toString());
-    } else {
-      const currentLimit = searchParams.get('limit');
-      if (currentLimit) {
-        urlParams.set('limit', currentLimit);
-      }
     }
 
     const queryString = urlParams.toString();
@@ -206,17 +183,6 @@ export default function Pagination({
     }
   }, [totalPages]);
 
-  // 表示件数変更
-  const handlePerPageChange = useCallback((newPerPage: number) => {
-    if (onSavePerPage) {
-      onSavePerPage(newPerPage);
-    }
-    const currentFirstItem = (page - 1) * perPage + 1;
-    const newPage = Math.max(1, Math.ceil(currentFirstItem / newPerPage));
-    router.push(getUrl(newPage, newPerPage));
-    scrollToTopAndFocus();
-  }, [page, perPage, router, getUrl, onSavePerPage, scrollToTopAndFocus]);
-
   const showJumpButtons = totalPages > 10;
 
   // ページ番号配列をメモ化（page/totalPagesが変わらない限り再計算しない）
@@ -253,7 +219,7 @@ export default function Pagination({
     return rangeWithDots;
   }, [page, totalPages]);
 
-  if (totalPages <= 1 && !showPerPageSelector) {
+  if (totalPages <= 1) {
     return null;
   }
 
@@ -405,24 +371,6 @@ export default function Pagination({
               {t.go}
             </button>
           </form>
-        )}
-
-        {/* 表示件数セレクター */}
-        {showPerPageSelector && (
-          <div className="flex items-center gap-1">
-            <select
-              value={perPage}
-              onChange={(e) => handlePerPageChange(parseInt(e.target.value))}
-              className={`px-2 sm:px-3 py-1.5 sm:py-2 border rounded-md text-sm sm:text-base ${styles.select}`}
-              aria-label="表示件数"
-            >
-              {PER_PAGE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}{t.perPage}
-                </option>
-              ))}
-            </select>
-          </div>
         )}
       </div>
     </nav>

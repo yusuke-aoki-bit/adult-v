@@ -56,23 +56,23 @@ const PROVIDERS_WITH_DUPLICATE_TITLES = new Set([
 
 /**
  * 重複排除キーを生成
- * 同じプロバイダー内では重複排除しない（FC2など同タイトルで別動画が多いため）
- * 異なるプロバイダー間では同一作品とみなして重複排除
+ * FC2/DUGAなどは同一タイトルで別動画が多いため、originalProductIdでユニーク判定
+ * その他のプロバイダーは、異なるプロバイダー間でも同一タイトルなら同一作品とみなす
  */
 function getDeduplicationKey(product: DeduplicatableProduct): string {
   const provider = product.provider || 'unknown';
 
   // FC2/DUGAなど同一タイトルで別動画が多いプロバイダーは
   // originalProductId または id をキーに使用して正確に重複判定
-  // ※同じプロバイダー内では絶対に重複排除しない
   if (PROVIDERS_WITH_DUPLICATE_TITLES.has(provider)) {
     const uniqueId = product.originalProductId || product.id;
-    return `${provider}:id:${uniqueId}`;
+    return `provider:${provider}:id:${uniqueId}`;
   }
 
   // その他のプロバイダーはタイトルベースで重複判定
+  // プロバイダー名を含めない → 異なるASP間でも同一タイトルなら同一作品として扱う
   const normalizedTitle = normalizeTitle(product.title);
-  return `${provider}:title:${normalizedTitle}`;
+  return `title:${normalizedTitle}`;
 }
 
 /**

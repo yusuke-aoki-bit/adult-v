@@ -49,7 +49,7 @@ interface PageProps {
   }>;
 }
 
-const PER_PAGE = 12;
+const PER_PAGE = 96;
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   try {
