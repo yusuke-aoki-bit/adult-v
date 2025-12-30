@@ -34,6 +34,12 @@ const themeStyles = {
   },
 };
 
+// 事前計算したblurDataURL（モジュールレベルで1回だけ生成）
+const PRECOMPUTED_BLUR_DATA_URLS = {
+  dark: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciPjxzdG9wIHN0b3AtY29sb3I9IiMxZjI5MzciIG9mZnNldD0iMCUiIC8+PHN0b3Agc3RvcC1jb2xvcj0iIzM3NDE1MSIgb2Zmc2V0PSI1MCUiIC8+PHN0b3Agc3RvcC1jb2xvcj0iIzFmMjkzNyIgb2Zmc2V0PSIxMDAlIiAvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSI3MDAiIGhlaWdodD0iNDc1IiBmaWxsPSIjMWYyOTM3IiAvPjxyZWN0IGlkPSJyIiB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgZmlsbD0idXJsKCNnKSIgLz48YW5pbWF0ZSB4bGluazpocmVmPSIjciIgYXR0cmlidXRlTmFtZT0ieCIgZnJvbT0iLTcwMCIgdG89IjcwMCIgZHVyPSIxcyIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiICAvPjwvc3ZnPg==',
+  light: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciPjxzdG9wIHN0b3AtY29sb3I9IiNlNWU3ZWIiIG9mZnNldD0iMCUiIC8+PHN0b3Agc3RvcC1jb2xvcj0iI2QxZDVkYiIgb2Zmc2V0PSI1MCUiIC8+PHN0b3Agc3RvcC1jb2xvcj0iI2U1ZTdlYiIgb2Zmc2V0PSIxMDAlIiAvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSI3MDAiIGhlaWdodD0iNDc1IiBmaWxsPSIjZTVlN2ViIiAvPjxyZWN0IGlkPSJyIiB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgZmlsbD0idXJsKCNnKSIgLz48YW5pbWF0ZSB4bGluazpocmVmPSIjciIgYXR0cmlidXRlTmFtZT0ieCIgZnJvbT0iLTcwMCIgdG89IjcwMCIgZHVyPSIxcyIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiICAvPjwvc3ZnPg==',
+};
+
 /**
  * Optimized Image component with blur placeholder and error handling
  */
@@ -54,28 +60,8 @@ export function OptimizedImageBase({
   const [hasError, setHasError] = useState(false);
   const styles = themeStyles[theme];
 
-  // Simple blur data URL for placeholder
-  const shimmer = (w: number, h: number) => `
-    <svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-      <defs>
-        <linearGradient id="g">
-          <stop stop-color="${styles.shimmerColors.start}" offset="0%" />
-          <stop stop-color="${styles.shimmerColors.mid}" offset="50%" />
-          <stop stop-color="${styles.shimmerColors.end}" offset="100%" />
-        </linearGradient>
-      </defs>
-      <rect width="${w}" height="${h}" fill="${styles.bgColor}" />
-      <rect id="r" width="${w}" height="${h}" fill="url(#g)" />
-      <animate xlink:href="#r" attributeName="x" from="-${w}" to="${w}" dur="1s" repeatCount="indefinite"  />
-    </svg>
-  `;
-
-  const toBase64 = (str: string) =>
-    typeof window === 'undefined'
-      ? Buffer.from(str).toString('base64')
-      : window.btoa(str);
-
-  const blurDataURL = `data:image/svg+xml;base64,${toBase64(shimmer(700, 475))}`;
+  // 事前計算したblurDataURLを使用（毎回の生成を回避）
+  const blurDataURL = PRECOMPUTED_BLUR_DATA_URLS[theme];
 
   if (hasError) {
     return (

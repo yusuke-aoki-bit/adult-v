@@ -7,7 +7,8 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { getPopularTags } from '@/lib/db/queries';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-export const dynamic = 'force-dynamic';
+// カテゴリ一覧は変更頻度が低いためISRで1時間キャッシュ
+export const revalidate = 3600;
 
 interface PageProps {
   params: Promise<{ locale: string }>;

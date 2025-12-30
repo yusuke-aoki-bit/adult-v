@@ -1,6 +1,16 @@
 /**
  * Redisキャッシュユーティリティ
+ * Upstash Redisを使用（環境変数が設定されている場合）
+ * フォールバックとしてインメモリキャッシュを使用
  */
+
+// Upstash Redis クライアント型定義（動的インポート用）
+interface RedisClientType {
+  get<T>(key: string): Promise<T | null>;
+  set(key: string, value: unknown, options?: { ex?: number }): Promise<string | null>;
+  del(...keys: string[]): Promise<number>;
+  scan(cursor: string | number, options?: { match?: string; count?: number }): Promise<[string, string[]]>;
+}
 
 // キャッシュTTL設定
 const CACHE_TTL = 60 * 5; // 5分
@@ -13,7 +23,43 @@ const CACHE_KEYS = {
   PRODUCT_DETAIL: 'product:detail',
   SEARCH_RESULTS: 'search:results',
   TAGS_LIST: 'tags:list',
+  API_RESPONSE: 'api:response',
+  RECOMMENDATIONS: 'recommendations',
 } as const;
+
+// Upstash Redis クライアント（動的インポートで遅延読み込み）
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let redisClient: any = null;
+let redisInitialized = false;
+
+async function getRedisClient(): Promise<unknown | null> {
+  if (redisInitialized) return redisClient;
+  redisInitialized = true;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (url && token) {
+    try {
+      // 動的インポートでビルド時の問題を回避
+      const { Redis } = await import('@upstash/redis');
+      redisClient = new Redis({ url, token });
+      console.log('✅ Upstash Redis client initialized');
+      return redisClient;
+    } catch (error) {
+      console.warn('⚠️ Failed to initialize Upstash Redis:', error);
+      return null;
+    }
+  }
+
+  return null;
+}
+
+// Redisが利用可能かどうか（非同期）
+export async function isRedisAvailable(): Promise<boolean> {
+  const client = await getRedisClient();
+  return client !== null;
+}
 
 /**
  * キャッシュキーを生成
@@ -89,19 +135,30 @@ if (typeof setInterval !== 'undefined') {
 
 /**
  * キャッシュから取得
+ * Upstash Redisが利用可能な場合はRedisから、そうでない場合はインメモリから取得
  */
 export async function getCache<T>(key: string): Promise<T | null> {
   try {
+    const redis = await getRedisClient() as RedisClientType | null;
+
+    if (redis) {
+      // Upstash Redisから取得
+      const data = await redis.get<T>(key);
+      return data;
+    }
+
     // インメモリキャッシュから取得
     return memoryCache.get<T>(key);
   } catch (error) {
     console.error('Cache get error:', error);
-    return null;
+    // Redisエラー時はインメモリにフォールバック
+    return memoryCache.get<T>(key);
   }
 }
 
 /**
  * キャッシュに保存
+ * Upstash Redisが利用可能な場合はRedisに、そうでない場合はインメモリに保存
  */
 export async function setCache<T>(
   key: string,
@@ -109,9 +166,20 @@ export async function setCache<T>(
   ttl: number = CACHE_TTL
 ): Promise<void> {
   try {
+    const redis = await getRedisClient() as RedisClientType | null;
+
+    if (redis) {
+      // Upstash Redisに保存（EXオプションでTTL設定）
+      await redis.set(key, data, { ex: ttl });
+      return;
+    }
+
+    // インメモリキャッシュに保存
     memoryCache.set(key, data, ttl);
   } catch (error) {
     console.error('Cache set error:', error);
+    // Redisエラー時はインメモリにフォールバック
+    memoryCache.set(key, data, ttl);
   }
 }
 
@@ -120,21 +188,47 @@ export async function setCache<T>(
  */
 export async function deleteCache(key: string): Promise<void> {
   try {
+    const redis = await getRedisClient() as RedisClientType | null;
+
+    if (redis) {
+      await redis.del(key);
+      return;
+    }
+
     memoryCache.delete(key);
   } catch (error) {
     console.error('Cache delete error:', error);
+    memoryCache.delete(key);
   }
 }
 
 /**
  * パターンに一致するキャッシュを削除
+ * Upstash RedisではSCANを使用してパターンマッチ
  */
-export async function deleteCachePattern(_pattern: string): Promise<void> {
+export async function deleteCachePattern(pattern: string): Promise<void> {
   try {
+    const redis = await getRedisClient() as RedisClientType | null;
+
+    if (redis) {
+      // Upstash RedisでSCANを使用してキーを取得して削除
+      let cursor = '0';
+      do {
+        const result = await redis.scan(cursor, { match: pattern, count: 100 });
+        cursor = String(result[0]);
+        const keys = result[1];
+        if (keys.length > 0) {
+          await redis.del(...keys);
+        }
+      } while (cursor !== '0');
+      return;
+    }
+
     // インメモリキャッシュの場合は全削除
     memoryCache.clear();
   } catch (error) {
     console.error('Cache delete pattern error:', error);
+    memoryCache.clear();
   }
 }
 

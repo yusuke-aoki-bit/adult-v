@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback, useRef, useEffect } from 'react';
+import { useMemo, useCallback, useRef, useEffect, memo } from 'react';
 import { useRouter, useSearchParams, usePathname, useParams } from 'next/navigation';
 import { providerMeta, type ProviderId } from '../../lib/providers';
 import { ASP_DISPLAY_ORDER, ASP_TO_PROVIDER_ID } from '../../constants/filters';
@@ -123,7 +123,7 @@ const themeConfigs: Record<FilterSortBarTheme, ThemeConfig> = {
   },
 };
 
-export default function FilterSortBarBase({
+function FilterSortBarBase({
   theme,
   defaultSort = 'releaseDateDesc',
   showProviderFilter = true,
@@ -397,3 +397,5 @@ export default function FilterSortBarBase({
     </div>
   );
 }
+
+export default memo(FilterSortBarBase);

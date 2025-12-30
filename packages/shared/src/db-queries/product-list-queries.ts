@@ -718,55 +718,47 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       const productIds = rows.map(r => r.id);
       if (productIds.length === 0) return [];
 
-      const fullProducts = await Promise.all(
-        productIds.map(async (productId) => {
-          const { performerData, tagData, sourceData, imagesData, videosData } = await deps.fetchProductRelatedData!(productId);
-          const baseProduct = rows.find(r => r.id === productId)!;
+      // バッチ取得を使用してN+1問題を解消
+      const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1 };
+      const batchData = await batchFetchProductRelatedData(productIds, undefined, listLimits);
 
-          // 日付処理: Date型の場合はISO文字列に変換
-          const releaseDate = baseProduct.release_date instanceof Date
-            ? baseProduct.release_date.toISOString().split('T')[0]
-            : baseProduct.release_date ?? null;
+      // rows を DbProduct 形式に変換
+      const dbProducts = rows.map((r) => {
+        // 日付処理: Date型の場合はISO文字列に変換
+        const releaseDate = r.release_date instanceof Date
+          ? r.release_date.toISOString().split('T')[0]
+          : r.release_date ?? null;
 
-          return deps.mapProductToType!(
-            {
-              id: baseProduct.id,
-              normalizedProductId: baseProduct.normalized_product_id || '',
-              makerProductCode: baseProduct.maker_product_code ?? null,
-              title: baseProduct.title || '',
-              releaseDate,
-              description: baseProduct.description ?? null,
-              duration: baseProduct.duration ?? null,
-              defaultThumbnailUrl: baseProduct.default_thumbnail_url ?? null,
-              titleEn: baseProduct.title_en ?? null,
-              titleZh: baseProduct.title_zh ?? null,
-              titleZhTw: baseProduct.title_zh_tw ?? null,
-              titleKo: baseProduct.title_ko ?? null,
-              descriptionEn: baseProduct.description_en ?? null,
-              descriptionZh: baseProduct.description_zh ?? null,
-              descriptionZhTw: baseProduct.description_zh_tw ?? null,
-              descriptionKo: baseProduct.description_ko ?? null,
-              aiDescription: baseProduct.ai_description ?? null,
-              aiCatchphrase: baseProduct.ai_catchphrase ?? null,
-              aiShortDescription: baseProduct.ai_short_description ?? null,
-              aiTags: baseProduct.ai_tags ?? null,
-              aiReview: baseProduct.ai_review ?? null,
-              aiReviewUpdatedAt: baseProduct.ai_review_updated_at ?? null,
-              createdAt: baseProduct.created_at ?? new Date(),
-              updatedAt: baseProduct.updated_at ?? new Date(),
-            },
-            performerData,
-            tagData,
-            sourceData,
-            undefined,
-            imagesData,
-            videosData,
-            locale
-          );
-        })
-      );
+        return {
+          id: r.id,
+          normalizedProductId: r.normalized_product_id || '',
+          makerProductCode: r.maker_product_code ?? null,
+          title: r.title || '',
+          releaseDate,
+          description: r.description ?? null,
+          duration: r.duration ?? null,
+          defaultThumbnailUrl: r.default_thumbnail_url ?? null,
+          titleEn: r.title_en ?? null,
+          titleZh: r.title_zh ?? null,
+          titleZhTw: r.title_zh_tw ?? null,
+          titleKo: r.title_ko ?? null,
+          descriptionEn: r.description_en ?? null,
+          descriptionZh: r.description_zh ?? null,
+          descriptionZhTw: r.description_zh_tw ?? null,
+          descriptionKo: r.description_ko ?? null,
+          aiDescription: r.ai_description ?? null,
+          aiCatchphrase: r.ai_catchphrase ?? null,
+          aiShortDescription: r.ai_short_description ?? null,
+          aiTags: r.ai_tags ?? null,
+          aiReview: r.ai_review ?? null,
+          aiReviewUpdatedAt: r.ai_review_updated_at ?? null,
+          createdAt: r.created_at ?? new Date(),
+          updatedAt: r.updated_at ?? new Date(),
+        };
+      });
 
-      return fullProducts as T[];
+      const mappedProducts = mapProductsWithBatchData(dbProducts, batchData, mapperDeps, locale);
+      return mappedProducts as T[];
     } catch (error) {
       console.error('Error getting products by category:', error);
       return [];

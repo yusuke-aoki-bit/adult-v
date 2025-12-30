@@ -8,7 +8,10 @@ import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
 const ProductVideoPlayer = nextDynamic(() => import('@/components/ProductVideoPlayer'), {
   loading: () => <div className="h-48 bg-gray-700 rounded-lg animate-pulse flex items-center justify-center text-gray-500">動画を読み込み中...</div>,
 });
-import RelatedProducts from '@/components/RelatedProducts';
+// LCP最適化: RelatedProductsを遅延読み込み（ファーストビュー外のコンポーネント）
+const RelatedProducts = nextDynamic(() => import('@/components/RelatedProducts'), {
+  loading: () => <div className="h-64 bg-gray-800 rounded-lg animate-pulse" />,
+});
 import ProductDetailInfo from '@/components/ProductDetailInfo';
 import ProductActions from '@/components/ProductActions';
 import {

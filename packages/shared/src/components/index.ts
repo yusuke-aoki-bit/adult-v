@@ -218,3 +218,7 @@ export type { StickyCtaBaseProps } from './StickyCta';
 
 // Accessibility components
 export { SkipLink } from './SkipLink';
+
+// Virtual scroll components
+// TODO: Enable after fixing build issues
+// export { VirtualProductGridBase } from './VirtualProductGrid';

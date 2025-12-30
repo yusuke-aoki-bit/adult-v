@@ -140,21 +140,27 @@ function ProductCardBase({
   const primaryVideo = hasSampleVideo ? product.sampleVideos![0] : null;
 
   const allImages = useMemo(() => {
+    const imageSet = new Set<string>();
     const images: string[] = [];
+
     if (hasValidImageUrl && product.imageUrl) {
       const normalized = normalizeImageUrl(product.imageUrl);
       const fullSize = getFullSizeImageUrl(normalized);
+      imageSet.add(fullSize);
       images.push(fullSize);
     }
-    if (product.sampleImages && product.sampleImages.length > 0) {
-      product.sampleImages.forEach(img => {
-        const normalized = normalizeImageUrl(img);
-        const fullSize = getFullSizeImageUrl(normalized);
-        if (!images.includes(fullSize)) {
-          images.push(fullSize);
-        }
-      });
+
+    // sampleImagesは最大20枚に制限（パフォーマンス最適化）
+    const sampleImages = product.sampleImages?.slice(0, 20) || [];
+    for (const img of sampleImages) {
+      const normalized = normalizeImageUrl(img);
+      const fullSize = getFullSizeImageUrl(normalized);
+      if (!imageSet.has(fullSize)) {
+        imageSet.add(fullSize);
+        images.push(fullSize);
+      }
     }
+
     return images;
   }, [product.imageUrl, product.sampleImages, hasValidImageUrl]);
 
@@ -211,6 +217,24 @@ function ProductCardBase({
   const handleCloseVideoModal = useCallback(() => {
     setShowVideoModal(false);
   }, []);
+
+  // セール終了日の計算を事前にメモ化（パフォーマンス最適化）
+  const saleUrgencyInfo = useMemo(() => {
+    if (!product.salePrice || !product.saleEndAt) {
+      return { diffHours: 0, diffDays: 0, isVeryUrgent: false, isUrgent: false, showBadge: false, showCountdown: false };
+    }
+    const endDate = new Date(product.saleEndAt);
+    const now = new Date();
+    const diffMs = endDate.getTime() - now.getTime();
+    const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const isVeryUrgent = diffHours > 0 && diffHours <= 6;
+    const isUrgent = diffHours > 0 && diffHours <= 24;
+    const showBadge = diffHours > 0 && diffHours <= 48;
+    const showCountdown = diffDays > 0 && diffDays <= 3;
+
+    return { diffHours, diffDays, isVeryUrgent, isUrgent, showBadge, showCountdown };
+  }, [product.salePrice, product.saleEndAt]);
 
   // CTA click handler - memoized to avoid recreation on each render
   const handleCtaClick = useCallback(() => {
@@ -557,33 +581,22 @@ function ProductCardBase({
           </div>
         )}
         {/* Urgency badge for sales ending within 48 hours */}
-        {product.salePrice && product.saleEndAt && (() => {
-          const endDate = new Date(product.saleEndAt);
-          const now = new Date();
-          const diffMs = endDate.getTime() - now.getTime();
-          const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-          if (diffHours > 0 && diffHours <= 48) {
-            const isVeryUrgent = diffHours <= 6;
-            const isUrgent = diffHours <= 24;
-            return (
-              <div className="absolute top-4 right-4 z-20" style={{ marginTop: product.isFuture || product.isNew ? '0' : '0' }}>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1 ${
-                  isVeryUrgent
-                    ? 'bg-red-600 text-white animate-pulse'
-                    : isUrgent
-                      ? `${themeConfig.urgencyBadgeBg} ${themeConfig.urgencyBadgeText} animate-pulse`
-                      : 'bg-yellow-500 text-black'
-                }`}>
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                  </svg>
-                  {diffHours <= 1 ? t('urgentLastHour') : diffHours <= 24 ? t('urgentEndsIn', { hours: diffHours }) : t('urgentEndsSoon', { hours: diffHours })}
-                </span>
-              </div>
-            );
-          }
-          return null;
-        })()}
+        {saleUrgencyInfo.showBadge && (
+          <div className="absolute top-4 right-4 z-20">
+            <span className={`text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1 ${
+              saleUrgencyInfo.isVeryUrgent
+                ? 'bg-red-600 text-white animate-pulse'
+                : saleUrgencyInfo.isUrgent
+                  ? `${themeConfig.urgencyBadgeBg} ${themeConfig.urgencyBadgeText} animate-pulse`
+                  : 'bg-yellow-500 text-black'
+            }`}>
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              {saleUrgencyInfo.diffHours <= 1 ? t('urgentLastHour') : saleUrgencyInfo.diffHours <= 24 ? t('urgentEndsIn', { hours: saleUrgencyInfo.diffHours }) : t('urgentEndsSoon', { hours: saleUrgencyInfo.diffHours })}
+            </span>
+          </div>
+        )}
         {product.productType === 'dvd' && (
           <div className="absolute top-4 left-4" style={{ marginTop: product.isFuture || product.isNew ? '28px' : '0' }}>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-600 text-white shadow-lg">
@@ -642,21 +655,11 @@ function ProductCardBase({
                       </>
                     )}
                   </div>
-                  {product.saleEndAt && (() => {
-                    const endDate = new Date(product.saleEndAt);
-                    const now = new Date();
-                    const diffMs = endDate.getTime() - now.getTime();
-                    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-                    if (diffDays <= 0) return null;
-                    if (diffDays <= 3) {
-                      return (
-                        <span className={`text-[10px] font-bold ${themeConfig.countdownColor} ${isAnimated ? 'animate-pulse' : ''}`}>
-                          {diffDays === 1 ? '⏰ ' + t('saleTomorrow') : `⏰ ${t('saleEndsIn', { days: diffDays })}`}
-                        </span>
-                      );
-                    }
-                    return null;
-                  })()}
+                  {saleUrgencyInfo.showCountdown && (
+                    <span className={`text-[10px] font-bold ${themeConfig.countdownColor} ${isAnimated ? 'animate-pulse' : ''}`}>
+                      {saleUrgencyInfo.diffDays === 1 ? '⏰ ' + t('saleTomorrow') : `⏰ ${t('saleEndsIn', { days: saleUrgencyInfo.diffDays })}`}
+                    </span>
+                  )}
                 </div>
               ) : (
                 <span className={`font-bold ${themeConfig.regularPriceColor} ${isEmphasized ? 'text-base' : 'text-sm'}`}>

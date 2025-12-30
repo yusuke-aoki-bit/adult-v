@@ -43,7 +43,10 @@
   },
   "dependencies": {
     "@adult-v/database": "workspace:*",
-    "firebase": "^11.0.0"
+    "@upstash/redis": "^1.36.0",
+    "firebase": "^11.0.0",
+    "react-virtualized-auto-sizer": "^2.0.1",
+    "react-window": "^2.2.3"
   },
   "peerDependencies": {
     "react": "^18 || ^19",

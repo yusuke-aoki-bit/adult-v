@@ -31,6 +31,8 @@ function ImageLightbox({
   const [imageError, setImageError] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const preloadedImages = useRef<Set<string>>(new Set());
 
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
@@ -44,17 +46,47 @@ function ImageLightbox({
     if (isOpen) {
       setCurrentIndex(initialIndex);
       setImageError(false);
+      setIsImageLoaded(false);
     }
   }, [isOpen, initialIndex]);
+
+  // 画像プリロード関数
+  const preloadImage = useCallback((url: string) => {
+    if (!url || preloadedImages.current.has(url)) return;
+    const fullUrl = getFullSizeImageUrl(url);
+    if (preloadedImages.current.has(fullUrl)) return;
+
+    const img = new window.Image();
+    img.src = fullUrl;
+    preloadedImages.current.add(fullUrl);
+  }, []);
+
+  // 現在の画像と前後の画像をプリロード
+  useEffect(() => {
+    if (!isOpen || images.length === 0) return;
+
+    // 現在の画像をプリロード
+    preloadImage(images[currentIndex]);
+
+    // 前後の画像をプリロード
+    if (images.length > 1) {
+      const prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
+      const nextIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
+      preloadImage(images[prevIndex]);
+      preloadImage(images[nextIndex]);
+    }
+  }, [isOpen, currentIndex, images, preloadImage]);
 
   const goToPrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
     setImageError(false);
+    setIsImageLoaded(false);
   }, [images.length]);
 
   const goToNext = useCallback(() => {
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
     setImageError(false);
+    setIsImageLoaded(false);
   }, [images.length]);
 
   // スワイプハンドラー
@@ -134,6 +166,7 @@ function ImageLightbox({
     e.stopPropagation();
     setCurrentIndex(idx);
     setImageError(false);
+    setIsImageLoaded(false);
   }, []);
 
   // ダイアログのrefを取得してフォーカストラップを実装
@@ -280,15 +313,22 @@ function ImageLightbox({
             height: '80vh',
           }}
         >
+          {/* ローディングスピナー */}
+          {!isImageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+            </div>
+          )}
           <Image
             src={imageError ? currentImage : fullSizeImage}
             alt={alt}
             fill
-            className={`object-contain ${isUncensored ? 'blur-[1px]' : ''}`}
+            className={`object-contain transition-opacity duration-200 ${isUncensored ? 'blur-[1px]' : ''} ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
             quality={85}
             priority
             unoptimized={currentImage.includes('placeholder.co')}
+            onLoad={() => setIsImageLoaded(true)}
             onError={() => {
               if (!imageError) {
                 setImageError(true);

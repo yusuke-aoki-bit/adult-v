@@ -70,3 +70,8 @@ env:
     secret: sentry-dsn-fanza
   - variable: NEXT_PUBLIC_SENTRY_DSN
     secret: sentry-dsn-fanza
+  # Upstash Redis Cache
+  - variable: UPSTASH_REDIS_REST_URL
+    secret: upstash-redis-url
+  - variable: UPSTASH_REDIS_REST_TOKEN
+    secret: upstash-redis-token
