@@ -3,10 +3,10 @@
  * Gemini APIを使用してユーザーレビューからAIレビューを生成
  */
 
-import { db } from '../lib/db/index.js';
-import { products, productReviews, productPerformers, performers, productTags, tags } from '../lib/db/schema.js';
+import { db } from '../packages/database/src/client.js';
+import { products, productReviews, productPerformers, performers, productTags, tags } from '../packages/database/src/schema.js';
 import { eq, sql, desc, isNull, and, lt } from 'drizzle-orm';
-import { generateProductReview, GeneratedProductReview } from '../lib/google-apis.js';
+import { generateProductReview, type GeneratedProductReview } from '../packages/shared/src/lib/google-apis.js';
 
 const BATCH_SIZE = 10;
 const DELAY_BETWEEN_BATCHES = 2000; // 2秒

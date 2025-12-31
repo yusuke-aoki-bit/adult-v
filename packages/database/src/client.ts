@@ -35,20 +35,30 @@ function getDb() {
       const cleanConnectionString = `postgresql://${url.username}:${url.password}@${url.host}${url.pathname}`;
 
       const isDev = process.env.NODE_ENV !== 'production';
+      // Cloud Run Jobs用の設定（長時間バッチ処理に最適化）
+      const isCloudRunJob = process.env.K_SERVICE !== undefined || process.env.CLOUD_RUN_JOB !== undefined;
 
       dbStore.pool = new Pool({
         connectionString: cleanConnectionString,
         // Cloud SQL Proxy経由の場合はSSL不要、それ以外は環境に応じて設定
         ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
-        // 開発環境と本番環境で異なる設定
-        max: isDev ? 5 : 50, // 開発: 5, 本番: 50
-        min: isDev ? 0 : 10, // 開発: 0（オンデマンド接続）, 本番: 10
-        idleTimeoutMillis: isDev ? 10000 : 60000, // 開発: 10秒, 本番: 60秒
-        connectionTimeoutMillis: isDev ? 10000 : 15000, // 開発: 10秒, 本番: 15秒
-        allowExitOnIdle: isDev, // 開発環境では終了を許可
+        // 環境に応じた接続プール設定
+        max: isDev ? 5 : (isCloudRunJob ? 10 : 50), // 開発: 5, ジョブ: 10, Webサーバー: 50
+        min: isDev ? 0 : (isCloudRunJob ? 1 : 10), // 開発: 0, ジョブ: 1, Webサーバー: 10
+        idleTimeoutMillis: isDev ? 10000 : (isCloudRunJob ? 30000 : 60000), // 開発: 10秒, ジョブ: 30秒, Web: 60秒
+        connectionTimeoutMillis: isDev ? 10000 : 30000, // 接続タイムアウト: 開発10秒, 本番30秒
+        allowExitOnIdle: isDev || isCloudRunJob, // 開発・ジョブ環境では終了を許可
         // クエリタイムアウト
-        query_timeout: isDev ? 30000 : 60000, // 開発: 30秒, 本番: 60秒
-        statement_timeout: isDev ? 30000 : 60000,
+        query_timeout: isDev ? 30000 : 120000, // 開発: 30秒, 本番: 120秒（長いクエリ対応）
+        statement_timeout: isDev ? 30000 : 120000,
+      });
+
+      // 接続エラー時のハンドリング
+      dbStore.pool.on('error', (err) => {
+        console.error('Unexpected database pool error:', err);
+        // 接続プールをリセット
+        dbStore.instance = null;
+        dbStore.pool = null;
       });
 
       dbStore.instance = drizzle(dbStore.pool, { schema });
