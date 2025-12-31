@@ -69,6 +69,8 @@ export { default as PriceComparisonServer } from './PriceComparisonServer';
 // Cross-site and cross-ASP components
 export { default as CrossAspInfo } from './CrossAspInfo';
 export { default as FanzaCrossLink, FanzaSiteLink } from './FanzaCrossLink';
+export { default as FanzaSiteBanner } from './FanzaSiteBanner';
+export { default as FanzaNewReleasesSection } from './FanzaNewReleasesSection';
 
 // Product action components
 export { default as MarkAsViewedButton } from './MarkAsViewedButton';

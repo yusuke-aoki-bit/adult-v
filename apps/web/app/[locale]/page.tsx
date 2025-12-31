@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import ActressCard from '@/components/ActressCard';
-import { SortDropdown } from '@adult-v/shared/components';
+import { SortDropdown, FanzaNewReleasesSection } from '@adult-v/shared/components';
 import Pagination from '@/components/Pagination';
 import ActressListFilter from '@/components/ActressListFilter';
 import RecentlyViewed from '@/components/RecentlyViewed';
@@ -263,6 +263,11 @@ export default async function Home({ params, searchParams }: PageProps) {
 
       {/* 今週の注目（B4: 自動キュレーション） */}
       <WeeklyHighlights locale={locale} />
+
+      {/* FANZA新作ピックアップ（FANZA専門サイトへの導線強化） */}
+      {!isFanzaSite && isTopPage && (
+        <FanzaNewReleasesSection locale={locale} />
+      )}
 
       {/* 未整理作品へのリンク */}
       {uncategorizedCount > 0 && (

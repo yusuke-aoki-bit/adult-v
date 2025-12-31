@@ -11,6 +11,7 @@ import ForYouRecommendations from '@/components/ForYouRecommendations';
 import SalesSection from '@/components/SalesSection';
 import WeeklyHighlights from '@/components/WeeklyHighlights';
 import { JsonLD } from '@/components/JsonLD';
+import { FanzaSiteBanner } from '@adult-v/shared/components';
 import { getProducts, getProductsCount, getAspStats, getPopularTags, getUncategorizedProductsCount, getSaleProducts, SaleProduct } from '@/lib/db/queries';
 import { generateBaseMetadata, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { Metadata } from 'next';
@@ -284,6 +285,15 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
 
       {/* 今週の注目（自動キュレーション） */}
       <WeeklyHighlights locale={locale} />
+
+      {/* FANZA専門サイトへの誘導バナー（トップページ表示時のみ） */}
+      {!isFanzaSite && isTopPage && (
+        <section className="py-3 sm:py-4">
+          <div className="container mx-auto px-3 sm:px-4">
+            <FanzaSiteBanner locale={locale} variant="card" />
+          </div>
+        </section>
+      )}
 
       {/* 未整理作品へのリンク */}
       {uncategorizedCount > 0 && (
