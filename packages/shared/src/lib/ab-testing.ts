@@ -58,6 +58,17 @@ export const experiments: Record<string, Experiment> = {
     variants: ['subtle', 'moderate', 'prominent'],
     // subtle: 控えめ, moderate: 中程度, prominent: 強調
   },
+  // FANZA導線強化用実験
+  fanzaBannerStyle: {
+    name: 'FANZA Banner Style',
+    variants: ['footer', 'card', 'prominent'],
+    // footer: フッターのみ, card: カード形式追加, prominent: 目立つバナー
+  },
+  fanzaSectionPosition: {
+    name: 'FANZA Section Position',
+    variants: ['after_weekly', 'before_actresses', 'sidebar'],
+    // after_weekly: 今週の注目の後, before_actresses: 女優リストの前, sidebar: サイドバー
+  },
 };
 
 /**

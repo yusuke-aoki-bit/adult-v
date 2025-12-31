@@ -45,39 +45,11 @@ const AspBadgeList = memo(function AspBadgeList({
           <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
         </Link>
       ) : null}
-      {/* ASPリンク - FANZAはf.adult-v.comへ外部リンク、その他は内部フィルター */}
+      {/* ASPリンク - 内部フィルター（FANZAはヘッダーから除外済み） */}
       {aspList.map((asp) => {
         const meta = providerMeta[asp.providerId as keyof typeof providerMeta];
         const colors = meta?.gradientColors || { from: '#4b5563', to: '#374151' };
-        const isFanza = asp.aspName.toLowerCase() === 'fanza';
 
-        // FANZAは外部サイト（f.adult-v.com）へ遷移（現在のパスを保持）
-        if (isFanza) {
-          // 現在のパスからlocalePrefixを除去してFANZAサイトURLを生成
-          // 例: /ja/actress/123 → f.adult-v.com/actress/123?hl=ja
-          const pathWithoutLocale = currentPath?.replace(/^\/[a-z]{2}(-[A-Z]{2})?/, '') || '';
-          const fanzaUrl = pathWithoutLocale
-            ? `${FANZA_SITE_URL}${pathWithoutLocale}${pathWithoutLocale.includes('?') ? '&' : '?'}hl=${locale}`
-            : `${FANZA_SITE_URL}/?hl=${locale}`;
-          return (
-            <a
-              key={asp.aspName}
-              href={fanzaUrl}
-              className="asp-badge"
-              style={{ background: `linear-gradient(to right, ${colors.from}, ${colors.to})` }}
-              onClick={onLinkClick}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="font-bold">{meta?.label || asp.aspName}</span>
-              <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
-          );
-        }
-
-        // その他のASPは内部フィルター
         return (
           <Link
             key={asp.aspName}
@@ -188,10 +160,12 @@ export function HeaderBase({
   const { saleStats } = useSaleStats();
 
   // 静的ASPリスト - useMemoでメモ化
-  // FANZAサイトでは空リスト、adult-vサイトではFANZA含む全ASPを表示
+  // FANZAサイトでは空リスト、adult-vサイトではFANZAを除外した全ASPを表示
+  // FANZAはヘッダーではなく各ページ（女優、商品）で専用リンクとして表示
   const aspList = useMemo(() => {
     if (isFanzaSite) return [];
     return ASP_DISPLAY_ORDER
+      .filter(aspName => aspName !== 'fanza') // FANZAはヘッダーから除外
       .map(aspName => ({
         aspName,
         providerId: ASP_TO_PROVIDER_ID[aspName] ?? 'duga',

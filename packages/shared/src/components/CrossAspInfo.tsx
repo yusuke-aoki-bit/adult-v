@@ -17,14 +17,19 @@ interface AspCount {
   count: number;
 }
 
+// デフォルトのFANZAサイトURL
+const DEFAULT_FANZA_SITE_URL = 'https://www.f.adult-v.com';
+
 interface CrossAspInfoProps {
   performerId: number;
   performerName: string;
   aliases: AliasInfo[];
   aspCounts: AspCount[];
   locale: string;
-  /** FANZAサイトのベースURL（apps/fanza用） */
+  /** FANZAサイトのベースURL（デフォルト: f.adult-v.com） */
   fanzaSiteUrl?: string;
+  /** FANZAへのリンクを非表示にする（apps/fanza用） */
+  hideFanzaLink?: boolean;
 }
 
 const translations = {
@@ -100,7 +105,8 @@ export default function CrossAspInfo({
   aliases,
   aspCounts,
   locale,
-  fanzaSiteUrl,
+  fanzaSiteUrl = DEFAULT_FANZA_SITE_URL,
+  hideFanzaLink = false,
 }: CrossAspInfoProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const t = translations[locale as TranslationKey] || translations.ja;
@@ -180,21 +186,24 @@ export default function CrossAspInfo({
             </span>
           </h4>
           <div className="space-y-2">
-            {sortedAspCounts.map((asp) => {
+            {sortedAspCounts
+              // hideFanzaLinkがtrueの場合はFANZAを除外
+              .filter(asp => !(hideFanzaLink && asp.aspName === 'FANZA'))
+              .map((asp) => {
               const providerId = ASP_TO_PROVIDER[asp.aspName];
               const meta = providerId ? providerMeta[providerId] : null;
               const percentage = totalWorks > 0 ? (asp.count / totalWorks) * 100 : 0;
 
-              // FANZAの場合はfanzaSiteUrlを使用（外部リンク）、それ以外は演者詳細ページ内でASPフィルター
-              const isFanzaExternal = asp.aspName === 'FANZA' && fanzaSiteUrl;
+              // FANZAの場合は常に外部リンク（f.adult-v.com）
+              const isFanza = asp.aspName === 'FANZA';
               // 演者詳細ページに asp パラメータでフィルターするリンクを生成
-              const aspLinkHref = isFanzaExternal
+              const aspLinkHref = isFanza
                 ? `${fanzaSiteUrl}/${locale}/actress/${performerId}`
                 : `/${locale}/actress/${performerId}?asp=${asp.aspName.toLowerCase()}`;
 
               // 外部リンクの場合はaタグ、内部リンクの場合はLinkを使用
-              const LinkComponent = isFanzaExternal ? 'a' : Link;
-              const linkProps = isFanzaExternal
+              const LinkComponent = isFanza ? 'a' : Link;
+              const linkProps = isFanza
                 ? { href: aspLinkHref, target: '_blank', rel: 'noopener noreferrer' }
                 : { href: aspLinkHref };
 

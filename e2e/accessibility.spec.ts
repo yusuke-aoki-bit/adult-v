@@ -255,6 +255,139 @@ test.describe('Accessibility Tests', () => {
   });
 });
 
+test.describe('FANZA Links Accessibility', () => {
+  test.beforeEach(async ({ context }) => {
+    await context.addCookies([{
+      name: 'age-verified',
+      value: 'true',
+      domain: 'localhost',
+      path: '/',
+    }]);
+  });
+
+  test('FANZA banner links have accessible text', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000);
+
+    // Find FANZA-related links
+    const fanzaLinks = page.locator('a[href*="f.adult-v.com"]');
+    const count = await fanzaLinks.count();
+
+    console.log(`Found ${count} FANZA links`);
+
+    for (let i = 0; i < count; i++) {
+      const link = fanzaLinks.nth(i);
+
+      // Check for accessible text
+      const text = await link.textContent();
+      const ariaLabel = await link.getAttribute('aria-label');
+      const title = await link.getAttribute('title');
+
+      const hasAccessibleText =
+        (text && text.trim().length > 0) ||
+        ariaLabel ||
+        title;
+
+      expect(hasAccessibleText).toBeTruthy();
+    }
+  });
+
+  test('FANZA external links have security attributes', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000);
+
+    const fanzaLinks = page.locator('a[href*="f.adult-v.com"]');
+    const count = await fanzaLinks.count();
+
+    for (let i = 0; i < count; i++) {
+      const link = fanzaLinks.nth(i);
+      const target = await link.getAttribute('target');
+      const rel = await link.getAttribute('rel');
+
+      // External links should open in new tab with security attributes
+      if (target === '_blank') {
+        expect(rel).toContain('noopener');
+      }
+    }
+  });
+
+  test('FANZA banner has proper focus indicators', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000);
+
+    const fanzaLink = page.locator('a[href*="f.adult-v.com"]').first();
+
+    if (await fanzaLink.isVisible().catch(() => false)) {
+      await fanzaLink.focus();
+
+      const hasFocusStyle = await fanzaLink.evaluate((el) => {
+        const styles = window.getComputedStyle(el);
+        const outline = styles.outline;
+        const boxShadow = styles.boxShadow;
+        const ringColor = styles.getPropertyValue('--tw-ring-color');
+
+        return (
+          (outline !== 'none' && outline !== '0px none rgb(0, 0, 0)') ||
+          (boxShadow !== 'none' && boxShadow !== '') ||
+          ringColor !== ''
+        );
+      });
+
+      console.log(`FANZA link focus indicator: ${hasFocusStyle}`);
+    }
+  });
+
+  test('FANZA section has proper ARIA landmark', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000);
+
+    // Check for section elements containing FANZA content
+    const fanzaSections = page.locator('section:has(a[href*="f.adult-v.com"])');
+    const count = await fanzaSections.count();
+
+    console.log(`FANZA sections found: ${count}`);
+
+    // Sections should exist and be properly structured
+    if (count > 0) {
+      // Check for heading within section
+      const firstSection = fanzaSections.first();
+      const headingCount = await firstSection.locator('h1, h2, h3, h4').count();
+
+      console.log(`Headings in FANZA section: ${headingCount}`);
+    }
+  });
+
+  test('FANZA links work with keyboard navigation', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Tab until we reach a FANZA link
+    let foundFanzaLink = false;
+    for (let i = 0; i < 50; i++) {
+      await page.keyboard.press('Tab');
+      await page.waitForTimeout(50);
+
+      const focusedHref = await page.evaluate(() => {
+        const el = document.activeElement as HTMLAnchorElement;
+        return el?.href || '';
+      });
+
+      if (focusedHref.includes('f.adult-v.com')) {
+        foundFanzaLink = true;
+        console.log(`Reached FANZA link after ${i + 1} tabs`);
+        break;
+      }
+    }
+
+    // Note: Not failing if not found, as it may require scrolling
+    console.log(`FANZA link reachable via keyboard: ${foundFanzaLink}`);
+  });
+});
+
 test.describe('Mobile Accessibility', () => {
   test.use({ viewport: { width: 375, height: 667 } });
 

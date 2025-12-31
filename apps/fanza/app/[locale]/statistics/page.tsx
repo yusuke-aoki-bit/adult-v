@@ -123,10 +123,10 @@ export default async function StatisticsPage({
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-3xl font-bold mb-2 theme-text">
             AV業界統計・ランキング
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="theme-text-secondary">
             {currentYear}年{currentMonth}月更新 - 業界の最新動向をデータで分析
           </p>
         </div>
@@ -166,22 +166,22 @@ export default async function StatisticsPage({
 
       {/* 月別リリース推移 */}
       <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-4">月別リリース数の推移</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+        <h2 className="text-2xl font-bold mb-4 theme-text">月別リリース数の推移</h2>
+        <p className="theme-text-secondary mb-4">
           過去24ヶ月間の新作リリース数の推移を表示しています。
         </p>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
           <ReleasesTrendChart data={monthlyStats} />
         </div>
       </section>
 
       {/* 年別統計 */}
       <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-4">年別作品数・出演女優数</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+        <h2 className="text-2xl font-bold mb-4 theme-text">年別作品数・出演女優数</h2>
+        <p className="theme-text-secondary mb-4">
           2015年以降の年別作品数と出演女優数の推移。
         </p>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
           <YearlyStatsChart data={yearlyStats} />
         </div>
       </section>
@@ -190,22 +190,22 @@ export default async function StatisticsPage({
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         {/* 人気女優ランキング */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">作品数ランキング TOP20</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <h2 className="text-2xl font-bold mb-4 theme-text">作品数ランキング TOP20</h2>
+          <p className="theme-text-secondary mb-4">
             出演作品数が多い女優のランキング。
           </p>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="theme-content rounded-lg shadow-sm border theme-border overflow-hidden">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+              <thead className="bg-pink-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-300">順位</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-300">女優名</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-600 dark:text-gray-300">作品数</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">順位</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">女優名</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">作品数</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-200">
                 {topPerformers.map((performer, index) => (
-                  <tr key={performer.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <tr key={performer.id} className="hover:bg-pink-50/50">
                     <td className="px-4 py-3 text-sm">
                       <span className={`font-bold ${index < 3 ? 'text-yellow-500' : 'text-gray-500'}`}>
                         {index + 1}
@@ -214,12 +214,12 @@ export default async function StatisticsPage({
                     <td className="px-4 py-3">
                       <Link
                         href={localizedHref(`/actresses/${performer.id}`, locale)}
-                        className="text-indigo-600 dark:text-indigo-400 hover:underline"
+                        className="text-pink-600 hover:text-pink-700 hover:underline"
                       >
                         {performer.name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">
+                    <td className="px-4 py-3 text-right text-sm theme-text-secondary">
                       {performer.productCount.toLocaleString()}
                     </td>
                   </tr>
@@ -231,11 +231,11 @@ export default async function StatisticsPage({
 
         {/* ジャンル分布 */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">人気ジャンル TOP20</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <h2 className="text-2xl font-bold mb-4 theme-text">人気ジャンル TOP20</h2>
+          <p className="theme-text-secondary mb-4">
             作品数の多いジャンルランキング。
           </p>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
             <GenreDistributionChart data={topGenres} />
           </div>
         </section>
@@ -243,94 +243,94 @@ export default async function StatisticsPage({
 
       {/* メーカーシェア */}
       <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-4">メーカー別シェア TOP20</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+        <h2 className="text-2xl font-bold mb-4 theme-text">メーカー別シェア TOP20</h2>
+        <p className="theme-text-secondary mb-4">
           作品数が多いメーカーのランキング。業界シェアを可視化。
         </p>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
           <MakerShareChart data={makerStats} />
         </div>
       </section>
 
       {/* ジャンルトレンド */}
       <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-4">ジャンル別トレンド（過去12ヶ月）</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+        <h2 className="text-2xl font-bold mb-4 theme-text">ジャンル別トレンド（過去12ヶ月）</h2>
+        <p className="theme-text-secondary mb-4">
           人気TOP10ジャンルの月別推移。トレンドの変化を分析。
         </p>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
           <GenreTrendChart data={genreTrends} />
         </div>
       </section>
 
       {/* 新人デビュー統計 */}
       <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-4">年別新人デビュー数</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+        <h2 className="text-2xl font-bold mb-4 theme-text">年別新人デビュー数</h2>
+        <p className="theme-text-secondary mb-4">
           過去10年間の新人デビュー数の推移。
         </p>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
           <DebutTrendChart data={debutTrends} />
         </div>
       </section>
 
       {/* ウィジェット埋め込みガイド */}
-      <section className="mb-12 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-6 border border-indigo-200 dark:border-indigo-800">
-        <h2 className="text-xl font-bold mb-4">統計ウィジェットを埋め込む</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+      <section className="mb-12 bg-pink-50 rounded-lg p-6 border border-pink-200">
+        <h2 className="text-xl font-bold mb-4 theme-text">統計ウィジェットを埋め込む</h2>
+        <p className="theme-text-secondary mb-4">
           このデータを外部サイトやブログに埋め込むことができます。以下のiframeコードをコピーしてください。
         </p>
 
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-medium mb-2">概要統計（作品数・女優数）:</p>
+            <p className="text-sm font-medium mb-2 theme-text">概要統計（作品数・女優数）:</p>
             <code className="block p-3 bg-gray-800 text-green-400 text-xs rounded overflow-x-auto">
               {`<iframe src="${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/embed/stats?type=overview" width="320" height="180" frameborder="0"></iframe>`}
             </code>
           </div>
 
           <div>
-            <p className="text-sm font-medium mb-2">人気女優ランキング:</p>
+            <p className="text-sm font-medium mb-2 theme-text">人気女優ランキング:</p>
             <code className="block p-3 bg-gray-800 text-green-400 text-xs rounded overflow-x-auto">
               {`<iframe src="${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/embed/stats?type=performers&limit=5" width="320" height="280" frameborder="0"></iframe>`}
             </code>
           </div>
 
           <div>
-            <p className="text-sm font-medium mb-2">人気ジャンル:</p>
+            <p className="text-sm font-medium mb-2 theme-text">人気ジャンル:</p>
             <code className="block p-3 bg-gray-800 text-green-400 text-xs rounded overflow-x-auto">
               {`<iframe src="${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/embed/stats?type=genres&limit=5" width="320" height="280" frameborder="0"></iframe>`}
             </code>
           </div>
 
           <div>
-            <p className="text-sm font-medium mb-2">月別リリース推移:</p>
+            <p className="text-sm font-medium mb-2 theme-text">月別リリース推移:</p>
             <code className="block p-3 bg-gray-800 text-green-400 text-xs rounded overflow-x-auto">
               {`<iframe src="${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/embed/stats?type=releases" width="320" height="200" frameborder="0"></iframe>`}
             </code>
           </div>
         </div>
 
-        <div className="mt-4 p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-          <p className="text-sm font-medium mb-2">パラメータ:</p>
-          <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-            <li><code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">theme=dark</code> - ダークテーマ</li>
-            <li><code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">limit=10</code> - 表示件数（最大10）</li>
+        <div className="mt-4 p-3 theme-content rounded border theme-border">
+          <p className="text-sm font-medium mb-2 theme-text">パラメータ:</p>
+          <ul className="text-xs theme-text-secondary space-y-1">
+            <li><code className="bg-gray-100 px-1 rounded">theme=dark</code> - ダークテーマ</li>
+            <li><code className="bg-gray-100 px-1 rounded">limit=10</code> - 表示件数（最大10）</li>
           </ul>
         </div>
       </section>
 
       {/* データ出典・注意書き */}
-      <section className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-bold mb-2">データについて</h2>
-        <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+      <section className="theme-content rounded-lg p-6 border theme-border">
+        <h2 className="text-lg font-bold mb-2 theme-text">データについて</h2>
+        <ul className="text-sm theme-text-secondary space-y-1">
           <li>• 統計データは毎日自動更新されます。</li>
           <li>• 作品数は当サイトに登録されている作品を対象としています。</li>
           <li>• 女優ランキングは出演作品数に基づいています。</li>
           <li>• このデータを引用する場合は、出典としてURLを記載してください。</li>
           <li>• ウィジェットの埋め込みは自由に行えます。</li>
         </ul>
-        <p className="mt-4 text-xs text-gray-500 dark:text-gray-500">
+        <p className="mt-4 text-xs text-gray-500">
           最終更新: {new Date().toLocaleDateString('ja-JP')}
         </p>
       </section>
@@ -348,9 +348,9 @@ function StatCard({
   suffix: string;
 }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{label}</p>
-      <p className="text-2xl md:text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+    <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
+      <p className="text-sm theme-text-secondary mb-1">{label}</p>
+      <p className="text-2xl md:text-3xl font-bold text-pink-600">
         {value}
         <span className="text-sm font-normal text-gray-500 ml-1">{suffix}</span>
       </p>
