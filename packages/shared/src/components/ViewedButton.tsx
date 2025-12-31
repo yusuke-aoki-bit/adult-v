@@ -1,9 +1,27 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
 import { Check, Eye } from 'lucide-react';
 import { useViewingDiary, type DiaryEntry } from '../hooks/useViewingDiary';
+
+// Default translations (Japanese) for when translations prop is not provided
+const DEFAULT_TRANSLATIONS = {
+  markAsViewed: '視聴済みにする',
+  unmarkAsViewed: '視聴済みを解除',
+  viewed: '視聴済み',
+  viewCount: (count: number) => `${count}回視聴`,
+  addedToDiary: '視聴履歴に追加しました',
+  removedFromDiary: '視聴履歴から削除しました',
+};
+
+export interface ViewedButtonTranslations {
+  markAsViewed?: string;
+  unmarkAsViewed?: string;
+  viewed?: string;
+  viewCount?: (count: number) => string;
+  addedToDiary?: string;
+  removedFromDiary?: string;
+}
 
 interface ViewedButtonProps {
   productId: string;
@@ -20,6 +38,8 @@ interface ViewedButtonProps {
   iconOnly?: boolean;
   /** カスタムクラス */
   className?: string;
+  /** Optional translations - uses Japanese defaults if not provided */
+  translations?: ViewedButtonTranslations;
 }
 
 export default function ViewedButton({
@@ -34,8 +54,14 @@ export default function ViewedButton({
   size = 'sm',
   iconOnly = false,
   className = '',
+  translations = {},
 }: ViewedButtonProps) {
-  const t = useTranslations('viewingDiary');
+  // Merge provided translations with defaults
+  const t = {
+    ...DEFAULT_TRANSLATIONS,
+    ...translations,
+  };
+
   const { entries, addEntry, removeEntry, getViewCountForProduct } = useViewingDiary();
   const [isViewed, setIsViewed] = useState(false);
   const [viewCount, setViewCount] = useState(0);
@@ -57,7 +83,7 @@ export default function ViewedButton({
       const latestEntry = entries.find((entry) => entry.productId === productId);
       if (latestEntry) {
         removeEntry(latestEntry.id);
-        setShowToast(t('removedFromDiary'));
+        setShowToast(t.removedFromDiary);
       }
     } else {
       // 視聴済みマーク
@@ -73,7 +99,7 @@ export default function ViewedButton({
         viewedAt: Date.now(),
       };
       addEntry(newEntry);
-      setShowToast(t('addedToDiary'));
+      setShowToast(t.addedToDiary);
     }
 
     // トースト表示後に消す
@@ -92,6 +118,10 @@ export default function ViewedButton({
     md: 'w-4 h-4',
   }[size];
 
+  const viewCountText = typeof t.viewCount === 'function'
+    ? t.viewCount(viewCount)
+    : `${viewCount}回視聴`;
+
   return (
     <>
       <button
@@ -107,8 +137,8 @@ export default function ViewedButton({
           ${iconOnly ? '' : 'flex items-center gap-1'}
           ${className}
         `}
-        title={isViewed ? t('unmarkAsViewed') : t('markAsViewed')}
-        aria-label={isViewed ? t('unmarkAsViewed') : t('markAsViewed')}
+        title={isViewed ? t.unmarkAsViewed : t.markAsViewed}
+        aria-label={isViewed ? t.unmarkAsViewed : t.markAsViewed}
         aria-pressed={isViewed}
       >
         {isViewed ? (
@@ -116,14 +146,14 @@ export default function ViewedButton({
             <Check className={iconSize} />
             {!iconOnly && (
               <span className="whitespace-nowrap">
-                {viewCount > 1 ? t('viewCount', { count: viewCount }) : t('viewed')}
+                {viewCount > 1 ? viewCountText : t.viewed}
               </span>
             )}
           </>
         ) : (
           <>
             <Eye className={iconSize} />
-            {!iconOnly && <span className="whitespace-nowrap">{t('markAsViewed')}</span>}
+            {!iconOnly && <span className="whitespace-nowrap">{t.markAsViewed}</span>}
           </>
         )}
       </button>

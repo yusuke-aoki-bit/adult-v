@@ -3,13 +3,66 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useCallback, useMemo, memo, type ReactNode, type ComponentType } from 'react';
-import { useTranslations } from 'next-intl';
 import { usePathname, useSearchParams, useParams } from 'next/navigation';
 import type { Product } from '../../types';
 import { normalizeImageUrl, getFullSizeImageUrl, isDtiUncensoredSite, isSubscriptionSite } from '../../lib/image-utils';
 import { generateAltText } from '../../lib/seo-utils';
 import { getThemeConfig, type ProductCardTheme } from './themes';
 import { getAffiliateUrl, type GetAffiliateUrlOptions } from './helpers';
+
+// Default translations (Japanese) for ProductCard
+const DEFAULT_TRANSLATIONS: Record<string, string> = {
+  viewSale: 'セールを見る',
+  viewDetails: '詳細を見る',
+  playSampleVideo: 'サンプル動画を再生',
+  close: '閉じる',
+  videoNotSupported: 'お使いのブラウザは動画をサポートしていません',
+  enlargeImage: '画像を拡大',
+  comingSoon: '近日発売',
+  monthly: '月額',
+  urgentLastHour: '残り1時間',
+  urgentEndsIn: '残り{hours}時間',
+  urgentEndsSoon: '残り{hours}時間',
+  saleTomorrow: '明日まで',
+  saleEndsIn: '残り{days}日',
+  performerInfo: '出演者情報',
+  releaseDateTbd: '発売日未定',
+  subscriptionOnly: '月額見放題',
+};
+
+// Safe hook that tries to use next-intl but falls back gracefully
+function useSafeProductCardTranslations(): (key: string, params?: Record<string, string | number>) => string {
+  try {
+    // Try to import and use next-intl
+    const { useTranslations } = require('next-intl');
+    const t = useTranslations('productCard');
+    return (key: string, params?: Record<string, string | number>) => {
+      try {
+        return t(key, params);
+      } catch {
+        // Translation key not found, use fallback
+        let fallback = DEFAULT_TRANSLATIONS[key] || key;
+        if (params) {
+          Object.entries(params).forEach(([k, v]) => {
+            fallback = fallback.replace(`{${k}}`, String(v));
+          });
+        }
+        return fallback;
+      }
+    };
+  } catch {
+    // next-intl context not available, use fallback
+    return (key: string, params?: Record<string, string | number>) => {
+      let fallback = DEFAULT_TRANSLATIONS[key] || key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          fallback = fallback.replace(`{${k}}`, String(v));
+        });
+      }
+      return fallback;
+    };
+  }
+}
 
 // Blur placeholder for images
 const BLUR_DATA_URL = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==';
@@ -98,7 +151,7 @@ function ProductCardBase({
 }: ProductCardBaseProps) {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
-  const t = useTranslations('productCard');
+  const t = useSafeProductCardTranslations();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const themeConfig = getThemeConfig(theme);

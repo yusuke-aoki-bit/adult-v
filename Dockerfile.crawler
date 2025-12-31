@@ -57,6 +57,9 @@ COPY scripts/update-minnano-details.ts ./scripts/
 COPY scripts/db-stats.ts ./scripts/
 COPY scripts/analyze-wiki-product-codes.ts ./scripts/
 COPY scripts/run-ai-review-migration.ts ./scripts/
+COPY scripts/check-prices-table.ts ./scripts/
+COPY scripts/run-prices-migration.ts ./scripts/
+COPY scripts/fix-malformed-image-urls.ts ./scripts/
 COPY scripts/crawlers/ ./scripts/crawlers/
 COPY scripts/backfill/ ./scripts/backfill/
 
