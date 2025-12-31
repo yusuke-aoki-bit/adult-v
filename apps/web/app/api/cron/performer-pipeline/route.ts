@@ -12,7 +12,7 @@ import { getDb } from '@/lib/db';
 import { createPerformerPipelineHandler } from '@adult-v/shared/cron-handlers';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300;
+export const maxDuration = 1800; // 30 minutes for large batch processing
 
 export const GET = createPerformerPipelineHandler({
   verifyCronRequest,

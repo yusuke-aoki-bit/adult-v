@@ -9,7 +9,9 @@ RUN npm ci
 
 # Copy necessary files for AI review generation
 COPY lib/ ./lib/
+COPY packages/ ./packages/
 COPY scripts/generate-performer-reviews.ts ./scripts/
+COPY scripts/generate-product-reviews.ts ./scripts/
 COPY tsconfig.json ./
 
 # Default command (limit can be overridden via args)

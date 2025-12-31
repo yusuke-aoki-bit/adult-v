@@ -342,18 +342,27 @@ export async function getGenreTrends(months: number = 12, topGenres: number = 10
 
 /**
  * 年別新人デビュー数推移
+ * 各女優の最初の出演作品のリリース年をデビュー年として計算
  */
 export async function getDebutTrends(years: number = 10): Promise<DebutStats[]> {
   const currentYear = new Date().getFullYear();
   const startYear = currentYear - years + 1;
 
   const result = await db.execute(sql`
+    WITH performer_debuts AS (
+      SELECT
+        pp.performer_id,
+        EXTRACT(YEAR FROM MIN(p.release_date))::int as debut_year
+      FROM product_performers pp
+      INNER JOIN products p ON pp.product_id = p.id
+      WHERE p.release_date IS NOT NULL
+      GROUP BY pp.performer_id
+    )
     SELECT
       debut_year as year,
       COUNT(*)::int as debut_count
-    FROM performers
-    WHERE debut_year IS NOT NULL
-      AND debut_year >= ${startYear}
+    FROM performer_debuts
+    WHERE debut_year >= ${startYear}
       AND debut_year <= ${currentYear}
     GROUP BY debut_year
     ORDER BY debut_year ASC
