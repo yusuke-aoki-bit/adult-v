@@ -14,6 +14,12 @@ export default function robots(): MetadataRoute.Robots {
           '/_next/',
           '/private/',
           '/age-verification',
+          // 言語プレフィックス付きURLを除外（?hl=パラメータ方式に統一、重複コンテンツ防止）
+          '/ja/',
+          '/en/',
+          '/zh/',
+          '/zh-TW/',
+          '/ko/',
           // フィルターパラメータ付きURLを除外（重複コンテンツ防止）
           '/*?*include=',
           '/*?*exclude=',
@@ -43,6 +49,12 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/private/',
           '/age-verification',
+          // 言語プレフィックス付きURLを除外（?hl=パラメータ方式に統一）
+          '/ja/',
+          '/en/',
+          '/zh/',
+          '/zh-TW/',
+          '/ko/',
           '/*?*include=',
           '/*?*exclude=',
           '/*?*page=',

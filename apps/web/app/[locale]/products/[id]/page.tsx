@@ -85,22 +85,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // SEO: Titleに品番を含める（Google検索で品番検索時にヒットさせる）
     const seoTitle = productId ? `${productId} ${product.title}` : product.title;
 
+    // canonical URLは現在のロケールに応じて設定（日本語はパラメータなし）
+    const productPath = `/products/${product.id}`;
+    const canonicalUrl = locale === 'ja' ? `${baseUrl}${productPath}` : `${baseUrl}${productPath}?hl=${locale}`;
+
     return {
       ...generateBaseMetadata(
         seoTitle,
         optimizedDescription,
         product.imageUrl,
         `/${locale}/products/${product.id}`,
+        undefined,
+        locale,
       ),
       alternates: {
-        canonical: `${baseUrl}/products/${product.id}`,
+        canonical: canonicalUrl,
         languages: {
-          'ja': `${baseUrl}/products/${product.id}`,
-          'en': `${baseUrl}/products/${product.id}?hl=en`,
-          'zh': `${baseUrl}/products/${product.id}?hl=zh`,
-          'zh-TW': `${baseUrl}/products/${product.id}?hl=zh-TW`,
-          'ko': `${baseUrl}/products/${product.id}?hl=ko`,
-          'x-default': `${baseUrl}/products/${product.id}`,
+          'ja': `${baseUrl}${productPath}`,
+          'en': `${baseUrl}${productPath}?hl=en`,
+          'zh': `${baseUrl}${productPath}?hl=zh`,
+          'zh-TW': `${baseUrl}${productPath}?hl=zh-TW`,
+          'ko': `${baseUrl}${productPath}?hl=ko`,
+          'x-default': `${baseUrl}${productPath}`,
         },
       },
     };

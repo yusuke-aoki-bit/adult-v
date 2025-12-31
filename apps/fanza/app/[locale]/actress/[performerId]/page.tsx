@@ -125,15 +125,18 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       locale,
     );
 
-    // hreflang/canonical設定
+    // hreflang/canonical設定（日本語はパラメータなし、他言語は?hl=付き）
+    const actressPath = `/actress/${actress.id}`;
+    const canonicalUrl = locale === 'ja' ? `${baseUrl}${actressPath}` : `${baseUrl}${actressPath}?hl=${locale}`;
     const alternates = {
-      canonical: `${baseUrl}/actress/${actress.id}?hl=${locale}`,
+      canonical: canonicalUrl,
       languages: {
-        'ja': `${baseUrl}/actress/${actress.id}?hl=ja`,
-        'en': `${baseUrl}/actress/${actress.id}?hl=en`,
-        'zh': `${baseUrl}/actress/${actress.id}?hl=zh`,
-        'ko': `${baseUrl}/actress/${actress.id}?hl=ko`,
-        'x-default': `${baseUrl}/actress/${actress.id}?hl=ja`,
+        'ja': `${baseUrl}${actressPath}`,
+        'en': `${baseUrl}${actressPath}?hl=en`,
+        'zh': `${baseUrl}${actressPath}?hl=zh`,
+        'zh-TW': `${baseUrl}${actressPath}?hl=zh-TW`,
+        'ko': `${baseUrl}${actressPath}?hl=ko`,
+        'x-default': `${baseUrl}${actressPath}`,
       },
     };
 

@@ -337,9 +337,12 @@ export function generateBaseMetadata(
   // middlewareが/ja/, /en/などのプレフィックスを?hl=形式に301リダイレクトするため
   // 例: /ja/actress/123 → /actress/123
   // 例: /en → '' (ルートページ)
-  const localePattern = /^\/(ja|en|zh|ko)(\/|$)/;
+  const localePattern = /^\/(ja|en|zh|zh-TW|ko)(\/|$)/;
   const basePath = path ? path.replace(localePattern, '/').replace(/^\/$/, '') : '';
-  const canonicalUrl = `${siteUrl}${basePath || '/'}`;
+  // canonical URLは現在のロケールの?hl=パラメータ付きURL
+  // 日本語がデフォルトの場合でも?hl=jaを付けて統一（Googleの重複判定を回避）
+  const baseWithPath = `${siteUrl}${basePath || '/'}`;
+  const canonicalUrl = locale === 'ja' ? baseWithPath : `${baseWithPath}?hl=${locale}`;
 
   return {
     title: pageTitle,
@@ -348,12 +351,12 @@ export function generateBaseMetadata(
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        'ja': `${siteUrl}${basePath || '/'}`,
-        'en': `${siteUrl}${basePath || '/'}?hl=en`,
-        'zh': `${siteUrl}${basePath || '/'}?hl=zh`,
-        'zh-TW': `${siteUrl}${basePath || '/'}?hl=zh-TW`,
-        'ko': `${siteUrl}${basePath || '/'}?hl=ko`,
-        'x-default': canonicalUrl,
+        'ja': baseWithPath,
+        'en': `${baseWithPath}?hl=en`,
+        'zh': `${baseWithPath}?hl=zh`,
+        'zh-TW': `${baseWithPath}?hl=zh-TW`,
+        'ko': `${baseWithPath}?hl=ko`,
+        'x-default': baseWithPath,
       },
     },
     openGraph: {
