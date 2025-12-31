@@ -98,9 +98,6 @@ const nextConfig = {
   // Next.js 16 experimental features
   experimental: {
     optimizePackageImports,
-    // Enable Turbopack file system cache for faster builds
-    turbopackFileSystemCacheForDev: true,
-    turbopackFileSystemCacheForBuild: true,
   },
   reactStrictMode: true,
   output: 'standalone',

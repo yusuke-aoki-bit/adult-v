@@ -47,7 +47,6 @@ const EnhancedAiReview = nextDynamic(() => import('@/components/EnhancedAiReview
 });
 const ProductPriceSection = nextDynamic(() => import('@/components/ProductPriceSection'), {
   loading: () => <div className="h-64 bg-gray-800 rounded-lg animate-pulse" />,
-  ssr: false,
 });
 
 interface PageProps {
