@@ -568,6 +568,8 @@ export interface GetProductsOptions {
   onSale?: boolean;
   /** 未整理作品のみ（出演者なし） */
   uncategorized?: boolean;
+  /** 特定の発売日でフィルタ（YYYY-MM-DD形式） */
+  releaseDate?: string;
   /** ロケール（'ja' | 'en' | 'zh' | 'ko'） */
   locale?: string;
 }

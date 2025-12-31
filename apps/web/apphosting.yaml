@@ -60,10 +60,27 @@ env:
   # Sentry Configuration
   - variable: SENTRY_DSN
     secret: sentry-dsn
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_SENTRY_DSN
     secret: sentry-dsn
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: SENTRY_ORG
+    value: avviewer-lab
+    availability:
+      - BUILD
+  - variable: SENTRY_PROJECT
+    value: mgs
+    availability:
+      - BUILD
   # Upstash Redis Cache
   - variable: UPSTASH_REDIS_REST_URL
     secret: upstash-redis-url
   - variable: UPSTASH_REDIS_REST_TOKEN
     secret: upstash-redis-token
+  # Google Service Account for Indexing API
+  - variable: GOOGLE_SERVICE_ACCOUNT_KEY
+    secret: google-service-account-key

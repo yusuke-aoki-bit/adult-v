@@ -129,12 +129,48 @@ export {
 } from './batch-performer-queries';
 
 export {
+  getMonthlyReleaseStats,
+  getTopPerformersByProductCount,
+  getTopGenres,
+  getAspDistribution,
+  getYearlyStats,
+  getOverallStats,
+  getCurrentMonthReleases,
+  getNewPerformersThisYear,
+  getMakerShareStats,
+  getGenreTrends,
+  getDebutTrends,
+  getDailyReleases,
+  getCalendarDetailData,
+  type MonthlyReleaseStats,
+  type TopPerformer,
+  type GenreStats,
+  type AspStats,
+  type YearlyStats,
+  type OverallStats,
+  type MakerStats,
+  type GenreTrend,
+  type DebutStats,
+  type DailyRelease,
+  type CalendarProduct,
+  type CalendarPerformer,
+  type CalendarDayData,
+} from './stats-queries';
+
+export {
   createUncategorizedQueries,
   type UncategorizedQueryDeps,
   type UncategorizedQueries,
   type UncategorizedProductsOptions,
   type UncategorizedProductsCountOptions,
 } from './uncategorized-queries';
+
+export {
+  createPriceHistoryQueries,
+  type PriceHistoryEntry,
+  type PriceHistoryWithAsp,
+  type PriceStats,
+} from './price-history';
 
 // 型定義
 export type {

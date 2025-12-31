@@ -24,6 +24,16 @@ interface JobStatus {
   consoleUrl?: string;
 }
 
+interface SchedulerStatus {
+  name: string;
+  schedule: string;
+  timeZone: string;
+  state: 'ENABLED' | 'PAUSED' | 'UNKNOWN';
+  lastAttemptTime?: string;
+  lastAttemptStatus?: 'SUCCEEDED' | 'FAILED' | 'UNKNOWN';
+  nextRunTime?: string;
+}
+
 interface JobsData {
   jobs: JobStatus[];
   summary: {
@@ -32,8 +42,30 @@ interface JobsData {
     failed: number;
     unknown: number;
   };
+  schedulers: SchedulerStatus[];
+  schedulerSummary: {
+    enabled: number;
+    paused: number;
+    failed: number;
+    succeeded: number;
+  };
   generatedAt: string;
   error?: string;
+}
+
+interface SeoIndexingSummary {
+  total_indexed: string;
+  requested: string;
+  pending: string;
+  errors: string;
+  ownership_required: string;
+  last_requested_at: string | null;
+  not_requested: string;
+}
+
+interface SeoIndexingByStatus {
+  status: string;
+  count: string;
 }
 
 interface VideoStats {
@@ -249,6 +281,8 @@ interface StatsData {
   translationStats: TranslationStat[];
   priceStats: PriceStat[];
   tableRowCounts: TableRowCount[];
+  seoIndexingByStatus: SeoIndexingByStatus[];
+  seoIndexingSummary: SeoIndexingSummary | null;
   generatedAt: string;
 }
 
@@ -541,6 +575,122 @@ export default function AdminStatsContent() {
             {jobsData.error && (
               <div className="mt-3 text-xs text-yellow-500">
                 Note: Could not fetch live status from Cloud Run
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Scheduler Status */}
+        {jobsData && jobsData.schedulers && jobsData.schedulers.length > 0 && (
+          <div className="bg-gray-800 rounded-lg p-6 mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Scheduler Status</h2>
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-green-400">Enabled: {jobsData.schedulerSummary.enabled}</span>
+                <span className="text-yellow-400">Paused: {jobsData.schedulerSummary.paused}</span>
+                <span className="text-red-400">Failed: {jobsData.schedulerSummary.failed}</span>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-400 border-b border-gray-700">
+                    <th className="pb-3 pr-4">Name</th>
+                    <th className="pb-3 pr-4">Schedule</th>
+                    <th className="pb-3 pr-4">State</th>
+                    <th className="pb-3 pr-4">Last Run</th>
+                    <th className="pb-3 pr-4">Status</th>
+                    <th className="pb-3">Next Run</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {jobsData.schedulers.map((s) => (
+                    <tr key={s.name} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                      <td className="py-2 pr-4 font-medium">{s.name}</td>
+                      <td className="py-2 pr-4 text-gray-400 font-mono text-xs">{s.schedule}</td>
+                      <td className="py-2 pr-4">
+                        <span className={`px-2 py-0.5 rounded text-xs ${
+                          s.state === 'ENABLED' ? 'bg-green-900/50 text-green-400' :
+                          s.state === 'PAUSED' ? 'bg-yellow-900/50 text-yellow-400' :
+                          'bg-gray-700 text-gray-400'
+                        }`}>
+                          {s.state}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-gray-500 text-xs">
+                        {s.lastAttemptTime ? new Date(s.lastAttemptTime).toLocaleString('ja-JP', {
+                          month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        }) : '-'}
+                      </td>
+                      <td className="py-2 pr-4">
+                        {s.lastAttemptStatus === 'SUCCEEDED' && <span className="text-green-400">✅</span>}
+                        {s.lastAttemptStatus === 'FAILED' && <span className="text-red-400">❌</span>}
+                        {s.lastAttemptStatus === 'UNKNOWN' && <span className="text-gray-400">-</span>}
+                      </td>
+                      <td className="py-2 text-gray-500 text-xs">
+                        {s.nextRunTime ? new Date(s.nextRunTime).toLocaleString('ja-JP', {
+                          month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        }) : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* SEO Indexing Status */}
+        {data.seoIndexingSummary && (
+          <div className="bg-gray-800 rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-4">SEO Indexing Status</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-4">
+              <div className="bg-gray-700/50 rounded p-3">
+                <div className="text-2xl font-bold text-blue-400">{formatNumber(data.seoIndexingSummary.total_indexed)}</div>
+                <div className="text-xs text-gray-400">Total Indexed</div>
+              </div>
+              <div className="bg-gray-700/50 rounded p-3">
+                <div className="text-2xl font-bold text-green-400">{formatNumber(data.seoIndexingSummary.requested)}</div>
+                <div className="text-xs text-gray-400">Requested</div>
+              </div>
+              <div className="bg-gray-700/50 rounded p-3">
+                <div className="text-2xl font-bold text-yellow-400">{formatNumber(data.seoIndexingSummary.pending)}</div>
+                <div className="text-xs text-gray-400">Pending</div>
+              </div>
+              <div className="bg-gray-700/50 rounded p-3">
+                <div className="text-2xl font-bold text-red-400">{formatNumber(data.seoIndexingSummary.errors)}</div>
+                <div className="text-xs text-gray-400">Errors</div>
+              </div>
+              <div className="bg-gray-700/50 rounded p-3">
+                <div className="text-2xl font-bold text-orange-400">{formatNumber(data.seoIndexingSummary.ownership_required)}</div>
+                <div className="text-xs text-gray-400">Ownership Required</div>
+              </div>
+              <div className="bg-gray-700/50 rounded p-3">
+                <div className="text-2xl font-bold text-gray-400">{formatNumber(data.seoIndexingSummary.not_requested)}</div>
+                <div className="text-xs text-gray-400">Not Requested</div>
+              </div>
+              <div className="bg-gray-700/50 rounded p-3">
+                <div className="text-sm font-mono text-gray-300">
+                  {data.seoIndexingSummary.last_requested_at
+                    ? new Date(data.seoIndexingSummary.last_requested_at).toLocaleString('ja-JP', {
+                        month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })
+                    : '-'}
+                </div>
+                <div className="text-xs text-gray-400">Last Request</div>
+              </div>
+            </div>
+            {data.seoIndexingByStatus && data.seoIndexingByStatus.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-400 mb-2">By Status</h3>
+                <div className="flex flex-wrap gap-2">
+                  {data.seoIndexingByStatus.map((s) => (
+                    <div key={s.status} className="bg-gray-700/30 rounded px-3 py-1 text-sm">
+                      <span className="text-gray-400">{s.status}:</span>
+                      <span className="ml-1 font-mono">{formatNumber(s.count)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

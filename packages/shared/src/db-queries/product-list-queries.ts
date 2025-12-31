@@ -314,6 +314,11 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       );
     }
 
+    // 発売日フィルタ（YYYY-MM-DD形式）
+    if (options?.releaseDate) {
+      conditions.push(eq(sql`TO_CHAR(${products.releaseDate}, 'YYYY-MM-DD')`, options.releaseDate));
+    }
+
     return conditions;
   }
 
@@ -553,7 +558,8 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
            !options.performerType &&
            !options.actressId &&
            !options.isNew &&
-           !options.isFeatured;
+           !options.isFeatured &&
+           !options.releaseDate;
   }
 
   /**

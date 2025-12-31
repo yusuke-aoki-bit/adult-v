@@ -1,7 +1,7 @@
 // サーバーサイドでのみデータベースにアクセス
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import * as schema from './schema.js';
+import * as schema from './schema';
 
 // データベース接続を管理するオブジェクト
 const dbStore: { instance: ReturnType<typeof drizzle> | null; pool: Pool | null } = {

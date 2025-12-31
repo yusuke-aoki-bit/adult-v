@@ -39,7 +39,8 @@ export async function generateMetadata({
     searchParamsData.include ||
     searchParamsData.exclude ||
     searchParamsData.performerType ||
-    searchParamsData.uncategorized
+    searchParamsData.uncategorized ||
+    searchParamsData.releaseDate
   );
   const hasPageParam = !!searchParamsData.page && searchParamsData.page !== '1';
   // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
@@ -145,6 +146,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   const onSale = searchParamsData.onSale === 'true';
   const uncategorized = searchParamsData.uncategorized === 'true';
   const performerType = searchParamsData.performerType as 'solo' | 'multi' | undefined;
+  const releaseDate = typeof searchParamsData.releaseDate === 'string' ? searchParamsData.releaseDate : undefined;
   const includeTags = typeof searchParamsData.include === 'string'
     ? searchParamsData.include.split(',').filter(Boolean)
     : [];
@@ -164,6 +166,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     onSale: onSale || undefined,
     uncategorized: uncategorized || undefined,
     performerType: performerType || undefined,
+    releaseDate: releaseDate || undefined,
     tags: includeTags.length > 0 ? includeTags : undefined,
     excludeTags: excludeTags.length > 0 ? excludeTags : undefined,
   };
@@ -171,7 +174,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   // TOPページ（フィルターなし、1ページ目）かどうかを判定
   const userSetIncludeAsps = isFanzaSite ? [] : includeAsp;
   const userSetExcludeAsps = isFanzaSite ? [] : excludeAsp;
-  const isTopPage = !query && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !onSale && !uncategorized && !performerType && includeTags.length === 0 && excludeTags.length === 0 && sortBy === 'releaseDateDesc' && page === 1;
+  const isTopPage = !query && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !onSale && !uncategorized && !performerType && !releaseDate && includeTags.length === 0 && excludeTags.length === 0 && sortBy === 'releaseDateDesc' && page === 1;
 
   // ASP統計、タグ、総件数、商品を全て並列取得（パフォーマンス最適化）
   const [aspStats, popularTags, totalCount, products] = await Promise.all([
@@ -221,6 +224,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   if (onSale) queryParams.onSale = 'true';
   if (uncategorized) queryParams.uncategorized = 'true';
   if (performerType) queryParams.performerType = performerType;
+  if (releaseDate) queryParams.releaseDate = releaseDate;
   if (includeTags.length > 0) queryParams.include = includeTags.join(',');
   if (excludeTags.length > 0) queryParams.exclude = excludeTags.join(',');
   if (sortBy !== 'releaseDateDesc') queryParams.sort = sortBy;

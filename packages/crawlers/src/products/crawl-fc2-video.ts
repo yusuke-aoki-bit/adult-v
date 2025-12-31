@@ -24,6 +24,7 @@ import { products, productSources, performers, productPerformers, productVideos,
 import { eq, sql, and } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import { saveRawHtml as saveRawHtmlToGcs, calculateHash } from '../lib/gcs-crawler-helper';
+import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
 
 // Stealthプラグインを適用
 puppeteer.use(StealthPlugin());
@@ -42,6 +43,7 @@ interface FC2VideoProduct {
   sampleVideoUrl?: string;
   duration?: number;
   price?: number;
+  saleInfo?: SaleInfo;
   source: 'video' | 'contents';
 }
 
@@ -245,26 +247,59 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
         }
       }
 
-      // 価格
-      const priceEl = document.querySelector('.price, .video_price');
+      // 価格とセール情報
       let price: number | null = null;
+      let regularPrice: number | null = null;
+      let discountPercent: number | null = null;
+
+      // パターン1: 取り消し線の価格（元値）
+      const delPriceEl = document.querySelector('.price del, .price s, .price strike, .original_price');
+      if (delPriceEl) {
+        const match = delPriceEl.textContent?.match(/(\d{1,3}(?:,\d{3})*)/);
+        if (match) {
+          regularPrice = parseInt(match[1].replace(/,/g, ''));
+        }
+      }
+
+      // パターン2: 現在価格
+      const priceEl = document.querySelector('.price, .video_price, .sale_price, .current_price');
       if (priceEl) {
-        const match = priceEl.textContent?.match(/(\d{1,3}(?:,\d{3})*)/);
+        const priceText = priceEl.textContent || '';
+        // 取り消し線でない価格を取得
+        const match = priceText.replace(/<del>.*?<\/del>/g, '').match(/(\d{1,3}(?:,\d{3})*)/);
         if (match) {
           price = parseInt(match[1].replace(/,/g, ''));
         }
+      }
+
+      // パターン3: %OFF表記
+      const offMatch = document.body.innerText.match(/(\d+)\s*%\s*(?:OFF|オフ|off)/);
+      if (offMatch) {
+        discountPercent = parseInt(offMatch[1]);
       }
 
       // 説明
       const descEl = document.querySelector('.video_description, .description, meta[name="description"]');
       const description = descEl?.textContent?.trim() || (descEl as HTMLMetaElement)?.content || undefined;
 
-      return { title, thumbnailUrl, duration, price, description };
+      return { title, thumbnailUrl, duration, price, regularPrice, discountPercent, description };
     });
 
     if (!info.title) {
       console.log(`    ⚠️ タイトル取得失敗`);
       return null;
+    }
+
+    // セール情報を構築
+    let saleInfo: SaleInfo | undefined;
+    if (info.regularPrice && info.price && info.regularPrice > info.price) {
+      saleInfo = {
+        regularPrice: info.regularPrice,
+        salePrice: info.price,
+        discountPercent: info.discountPercent || Math.round((1 - info.price / info.regularPrice) * 100),
+        saleType: 'sale',
+      };
+      console.log(`    💰 Sale detected: ¥${info.regularPrice.toLocaleString()} → ¥${info.price.toLocaleString()}`);
     }
 
     return {
@@ -275,6 +310,7 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
       thumbnailUrl: info.thumbnailUrl || undefined,
       duration: info.duration || undefined,
       price: info.price || undefined,
+      saleInfo,
       source: 'video',
     };
   } catch (error) {
@@ -360,11 +396,38 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
         }
       });
 
-      // 価格
+      // 価格とセール情報
       let price: number | null = null;
+      let regularPrice: number | null = null;
+      let discountPercent: number | null = null;
+
+      // パターン1: 取り消し線の価格（元値）
+      const delPriceEl = document.querySelector('del, s, strike, .original_price, .regular_price');
+      if (delPriceEl) {
+        const match = delPriceEl.textContent?.match(/(\d{1,3}(?:,\d{3})*)/);
+        if (match) {
+          regularPrice = parseInt(match[1].replace(/,/g, ''));
+        }
+      }
+
+      // パターン2: 現在価格
       const priceText = document.body.innerText.match(/(\d{1,3}(?:,\d{3})*)\s*(?:円|pt|ポイント)/);
       if (priceText) {
         price = parseInt(priceText[1].replace(/,/g, ''));
+      }
+
+      // パターン3: 定価/通常価格表記
+      if (!regularPrice) {
+        const regularMatch = document.body.innerText.match(/(?:定価|通常|元)[価値:]?\s*(\d{1,3}(?:,\d{3})*)/);
+        if (regularMatch) {
+          regularPrice = parseInt(regularMatch[1].replace(/,/g, ''));
+        }
+      }
+
+      // パターン4: %OFF表記
+      const offMatch = document.body.innerText.match(/(\d+)\s*%\s*(?:OFF|オフ|off)/);
+      if (offMatch) {
+        discountPercent = parseInt(offMatch[1]);
       }
 
       // 再生時間
@@ -378,7 +441,7 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
       const descEl = document.querySelector('meta[name="description"], .description') as HTMLMetaElement | HTMLElement | null;
       const description = (descEl as HTMLMetaElement)?.content || descEl?.textContent?.trim() || undefined;
 
-      return { title, thumbnailUrl, performers, price, duration, description };
+      return { title, thumbnailUrl, performers, price, regularPrice, discountPercent, duration, description };
     });
 
     if (!info.title) {
@@ -386,11 +449,24 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
       return null;
     }
 
+    // セール情報を構築
+    let saleInfo: SaleInfo | undefined;
+    if (info.regularPrice && info.price && info.regularPrice > info.price) {
+      saleInfo = {
+        regularPrice: info.regularPrice,
+        salePrice: info.price,
+        discountPercent: info.discountPercent || Math.round((1 - info.price / info.regularPrice) * 100),
+        saleType: 'sale',
+      };
+      console.log(`    💰 Sale detected: ¥${info.regularPrice.toLocaleString()} → ¥${info.price.toLocaleString()}`);
+    }
+
     return {
       videoId: articleId,
       title: info.title,
       description: info.description,
       performers: info.performers,
+      saleInfo,
       thumbnailUrl: info.thumbnailUrl || undefined,
       duration: info.duration || undefined,
       price: info.price || undefined,
@@ -477,6 +553,19 @@ async function saveProduct(product: FC2VideoProduct): Promise<number | null> {
           productId,
           performerId,
         }).onConflictDoNothing();
+      }
+    }
+
+    // セール情報保存（新規・既存両方で実行）
+    if (product.saleInfo) {
+      try {
+        const saved = await saveSaleInfo('FC2', product.videoId, product.saleInfo);
+        if (saved) {
+          console.log(`    💰 セール情報保存: ¥${product.saleInfo.regularPrice.toLocaleString()} → ¥${product.saleInfo.salePrice.toLocaleString()} (${product.saleInfo.discountPercent}% OFF)`);
+        }
+      } catch (saleError: unknown) {
+        const errorMessage = saleError instanceof Error ? saleError.message : String(saleError);
+        console.log(`    ⚠️ セール情報保存失敗: ${errorMessage}`);
       }
     }
 

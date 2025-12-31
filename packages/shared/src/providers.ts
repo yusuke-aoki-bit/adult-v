@@ -1,4 +1,4 @@
-import type { ProviderId, ProviderMeta } from './types/product.js';
+import type { ProviderId, ProviderMeta } from './types/product';
 
 // 型の再エクスポート
 export type { ProviderId, ProviderMeta };

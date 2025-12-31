@@ -330,9 +330,13 @@ export async function getJapanskaTotal(): Promise<ASPTotal> {
 }
 
 /**
- * カリビアンコム HTMLから最大IDを取得
+ * カリビアンコム HTMLから総数を取得
+ * IDは YYMMDD_NNN 形式（例: 251225_001）なので、連番部分のみをカウント
  */
 export async function getCaribbeancomTotal(): Promise<ASPTotal> {
+  // 推定値: 約5000本（公式サイトより）
+  const FALLBACK_ESTIMATE = 5000;
+
   try {
     const response = await fetch('https://www.caribbeancom.com/listpages/all1.htm', {
       headers: {
@@ -342,38 +346,57 @@ export async function getCaribbeancomTotal(): Promise<ASPTotal> {
 
     if (!response.ok) {
       return {
-        asp: 'カリビアンコム',
-        apiTotal: null,
-        source: `HTTP ${response.status}`,
+        asp: 'CARIBBEANCOM',
+        apiTotal: FALLBACK_ESTIMATE,
+        source: `caribbeancom.com (推定値)`,
       };
     }
 
     const html = await response.text();
-    const movieMatches = html.matchAll(/\/moviepages\/(\d{6}_\d{3})\//g);
-    let maxId = 0;
-    for (const match of movieMatches) {
-      const id = parseInt(match[1].replace('_', ''));
-      if (id > maxId) maxId = id;
+
+    // ページネーションから推定（1ページ12件）
+    const pageMatches = html.matchAll(/all(\d+)\.htm/g);
+    let maxPage = 1;
+    for (const match of pageMatches) {
+      const page = parseInt(match[1]);
+      if (page > maxPage) maxPage = page;
     }
 
-    if (maxId > 100) {
+    if (maxPage > 10) {
+      const apiTotal = maxPage * 12;
       return {
-        asp: 'カリビアンコム',
-        apiTotal: maxId,
-        source: `caribbeancom.com (最大ID: ${maxId})`
+        asp: 'CARIBBEANCOM',
+        apiTotal,
+        source: `caribbeancom.com (${maxPage}ページ x 12件)`
+      };
+    }
+
+    // 動画のユニークIDをカウント
+    const movieMatches = html.matchAll(/\/moviepages\/(\d{6}_\d{3})\//g);
+    const uniqueIds = new Set<string>();
+    for (const match of movieMatches) {
+      uniqueIds.add(match[1]);
+    }
+
+    if (uniqueIds.size > 0) {
+      // 1ページあたり12件として推定
+      return {
+        asp: 'CARIBBEANCOM',
+        apiTotal: FALLBACK_ESTIMATE,
+        source: `caribbeancom.com (推定値、${uniqueIds.size}件検出)`
       };
     }
 
     return {
-      asp: 'カリビアンコム',
-      apiTotal: null,
-      source: 'caribbeancom.com (パターン不一致)'
+      asp: 'CARIBBEANCOM',
+      apiTotal: FALLBACK_ESTIMATE,
+      source: 'caribbeancom.com (推定値)'
     };
   } catch (e) {
     return {
-      asp: 'カリビアンコム',
-      apiTotal: null,
-      source: 'エラー',
+      asp: 'CARIBBEANCOM',
+      apiTotal: FALLBACK_ESTIMATE,
+      source: 'caribbeancom.com (推定値)',
       error: String(e)
     };
   }
@@ -467,7 +490,6 @@ export async function getAllASPTotals(forceRefresh = false): Promise<ASPTotal[]>
   // ASP名を DB の normalized_product_id 形式に合わせる
   // DBでは SPLIT_PART(normalized_product_id, '-', 1) で取得されるため大文字英語名を使用
   const normalizedHeyzo = { ...heyzo, asp: 'HEYZO' };
-  const normalizedCaribbean = { ...caribbeancom, asp: 'CARIBBEANCOM' };
   const normalized1pondo = { ...onepondo, asp: '1PONDO' };
 
   // 推定値のみのサイト（DB上の名前に合わせる）
@@ -491,7 +513,8 @@ export async function getAllASPTotals(forceRefresh = false): Promise<ASPTotal[]>
     createEstimateTotal('TOKYOHOT', 8000, 'tokyo-hot.com'),
   ];
 
-  cachedTotals = [duga, b10f, normalizedHeyzo, mgs, japanska, normalizedCaribbean, normalized1pondo, sokmil, ...estimates];
+  // caribbeancom は getCaribbeancomTotal() で直接 CARIBBEANCOM を返すようになった
+  cachedTotals = [duga, b10f, normalizedHeyzo, mgs, japanska, caribbeancom, normalized1pondo, sokmil, ...estimates];
   cacheTime = now;
 
   return cachedTotals;
@@ -516,6 +539,19 @@ export async function getASPEstimate(aspName: string): Promise<number | null> {
 }
 
 /**
+ * 日本語ASP名から英語ASP名へのマッピング
+ */
+const JAPANESE_TO_ENGLISH_ASP: Record<string, string> = {
+  'カリビアンコムプレミアム': 'CARIBBEANCOMPR',
+  '一本道': '1PONDO',
+  'カリビアンコム': 'CARIBBEANCOM',
+  '天然むすめ': '10MUSUME',
+  'パコパコママ': 'PACOPACOMAMA',
+  'ムラムラってくる素人': 'MURAMURA',
+  'Hey動画': 'HEYDOUGA',
+};
+
+/**
  * ASP名とDB名のマッピング
  *
  * DBでは 'DTI: HEYDOUGA' のような形式で保存されるため、
@@ -525,7 +561,11 @@ export function mapDBNameToASPName(dbName: string): string {
   // DTI: プレフィックスを処理
   if (dbName.startsWith('DTI: ')) {
     // 'DTI: HEYDOUGA' -> 'HEYDOUGA' として返す
-    return dbName.replace('DTI: ', '');
+    const subService = dbName.replace('DTI: ', '');
+    // 日本語名の場合は英語名に変換
+    return JAPANESE_TO_ENGLISH_ASP[subService] || subService;
   }
-  return dbName;
+
+  // 日本語名の場合は英語名に変換
+  return JAPANESE_TO_ENGLISH_ASP[dbName] || dbName;
 }

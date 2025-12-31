@@ -222,3 +222,10 @@ export { SkipLink } from './SkipLink';
 // Virtual scroll components
 // TODO: Enable after fixing build issues
 // export { VirtualProductGridBase } from './VirtualProductGrid';
+
+// Price alert and tracking components
+export { default as SaleAlertButton } from './SaleAlertButton';
+export { default as PriceHistoryChart } from './PriceHistoryChart';
+export { default as ActressBundleCalculator } from './ActressBundleCalculator';
+export { default as ForYouSales } from './ForYouSales';
+export { default as SalePrediction } from './SalePrediction';

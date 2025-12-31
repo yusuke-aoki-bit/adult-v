@@ -12,4 +12,9 @@ export const STORAGE_KEYS = {
   PWA_DISMISSED: `pwa-install-dismissed-${SITE_MODE}`,
   NOTIFICATIONS_ENABLED: `notifications-enabled-${SITE_MODE}`,
   CLOUD_SYNC_ENABLED: `cloud-sync-enabled-${SITE_MODE}`,
+  // 購買直結機能用
+  PRICE_ALERTS: `priceAlerts-${SITE_MODE}`,
+  SALE_PREFERENCES: `salePreferences-${SITE_MODE}`,
+  VIDEO_WATCH_PROGRESS: `videoWatchProgress-${SITE_MODE}`,
+  NOTIFICATION_PREFERENCES: `notificationPreferences-${SITE_MODE}`,
 } as const;

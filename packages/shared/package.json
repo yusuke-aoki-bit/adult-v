@@ -39,6 +39,7 @@
     "./api-handlers": "./src/api-handlers/index.ts",
     "./cron-handlers": "./src/cron-handlers/index.ts",
     "./db-queries": "./src/db-queries/index.ts",
+    "./components/stats": "./src/components/stats/index.ts",
     "./config/next-config-base": "./src/config/next-config-base.ts"
   },
   "dependencies": {
@@ -50,7 +51,7 @@
   },
   "peerDependencies": {
     "react": "^18 || ^19",
-    "next": "^14 || ^15",
+    "next": "^14 || ^15 || ^16",
     "lucide-react": "^0.469.0",
     "recharts": "^2.12.0"
   },

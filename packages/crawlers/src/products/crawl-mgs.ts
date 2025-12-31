@@ -20,43 +20,11 @@ import type { GeneratedDescription } from '../lib/google-apis';
 import { translateProductLingva, ProductTranslation } from '../lib/translate';
 import { saveRawHtml, calculateHash } from '../lib/gcs-crawler-helper';
 import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
+import { buildPriceInfoList, saveProductPricesBySourceId } from '../lib/price-helper';
+import { getMgsPath, getMakerByProductCode } from '../lib/maker-mapping';
 
 const AFFILIATE_CODE = '6CS5PGEBQDUYPZLHYEM33TBZFJ'; // MGSアフィリエイトコード
 const SOURCE_NAME = 'MGS';
-
-// MGS メーカーマッピング (シリーズプレフィックスからメーカーIDを推測)
-// バックフィルで発見したパターンに基づく
-const makerMap: Record<string, string> = {
-  // SODクリエイト
-  STARS: 'sodcreate/107stars',
-  SDAB: 'sodcreate/1sdab',
-  SDJS: 'sodcreate/1sdjs',
-  SDDE: 'sodcreate/1sdde',
-  SDAM: 'sodcreate/1sdam',
-  SDMU: 'sodcreate/1sdmu',
-  SDNT: 'sodcreate/1sdnt',
-  SDNM: 'sodcreate/1sdnm',
-  CAWD: 'kawaii/112cawd',
-  // プレステージ
-  SABA: 'prestige/118saba',
-  ABW: 'prestige/118abw',
-  ABP: 'prestige/118abp',
-  ABS: 'prestige/118abs',
-  ABF: 'prestige/118abf',
-  CHN: 'prestige/118chn',
-  TEM: 'prestige/118tem',
-  SGA: 'prestige/118sga',
-  // 素人TV系 (数字プレフィックス付き)
-  '261SIRO': 'shiroutotv/261siro',
-  '261ARA': 'shiroutotv/261ara',
-  '259LUXU': 'shiroutotv/259luxu',
-  '300MIUM': 'shiroutotv/300mium',
-  '300MAAN': 'shiroutotv/300maan',
-  '300NTK': 'shiroutotv/300ntk',
-  '300ORETD': 'shiroutotv/300oretd',
-  // その他
-  MFCS: 'faleno/h_1530mfcs',
-};
 
 /**
  * MGS商品IDをパース
@@ -86,7 +54,7 @@ function generateMgsImageUrlFallback(originalProductId: string): string | null {
   if (!parsed) return null;
 
   const { series, num } = parsed;
-  const makerPath = makerMap[series];
+  const makerPath = getMgsPath(series);
 
   if (!makerPath) {
     return null;
@@ -118,12 +86,16 @@ interface MgsProduct {
   thumbnailUrl?: string; // サムネイル画像URL
   sampleImages?: string[]; // サンプル画像URL配列
   sampleVideoUrl?: string; // サンプル動画URL
-  price?: number; // 価格
+  price?: number; // 代表価格
+  downloadPrice?: number; // ダウンロード版価格
+  streamingPrice?: number; // ストリーミング版価格
+  hdPrice?: number; // HD版価格
   saleInfo?: SaleInfo; // セール情報
   reviews?: MgsReview[]; // レビュー情報
   ratingSummary?: MgsRatingSummary; // 評価サマリー
   description?: string; // 元の説明文
   genres?: string[]; // ジャンル
+  duration?: number; // 再生時間（分）
   // AI生成データ
   aiDescription?: GeneratedDescription;
   aiTags?: {
@@ -369,20 +341,23 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     // Pattern: <input type="radio" name="price" value="download_hd,0,...,SIRO-5561,1480">
     // Also: <span id="download_hd_price">1,480円(税込)</span>
     let price: number | undefined;
+    let downloadPrice: number | undefined;
+    let streamingPrice: number | undefined;
+    let hdPrice: number | undefined;
     let saleInfo: SaleInfo | undefined;
 
-    // Try to extract price from download_hd_price span (primary price)
+    // HD版ダウンロード価格
     const downloadHdPriceText = $('#download_hd_price').text().trim();
     if (downloadHdPriceText) {
       const priceMatch = downloadHdPriceText.match(/(\d+(?:,\d+)*)/);
       if (priceMatch) {
-        price = parseInt(priceMatch[1].replace(/,/g, ''));
-        console.log(`  💰 Found HD download price: ¥${price.toLocaleString()}`);
+        hdPrice = parseInt(priceMatch[1].replace(/,/g, ''));
+        console.log(`  💰 HD download price: ¥${hdPrice.toLocaleString()}`);
       }
     }
 
-    // Fallback: extract from radio button value
-    if (!price) {
+    // radio buttonからHD価格を抽出（フォールバック）
+    if (!hdPrice) {
       const priceInput = $('input[name="price"][id="download_hd_btn"]');
       const priceValue = priceInput.attr('value');
       if (priceValue) {
@@ -391,23 +366,54 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
         if (parts.length >= 5) {
           const extractedPrice = parseInt(parts[4]);
           if (!isNaN(extractedPrice) && extractedPrice > 0) {
-            price = extractedPrice;
-            console.log(`  💰 Extracted price from radio: ¥${price.toLocaleString()}`);
+            hdPrice = extractedPrice;
+            console.log(`  💰 HD price from radio: ¥${hdPrice.toLocaleString()}`);
           }
         }
       }
     }
 
-    // Fallback 2: try streaming price if no download price
-    if (!price) {
-      const streamingPriceText = $('#streaming_price').text().trim();
-      if (streamingPriceText) {
-        const priceMatch = streamingPriceText.match(/(\d+(?:,\d+)*)/);
-        if (priceMatch) {
-          price = parseInt(priceMatch[1].replace(/,/g, ''));
-          console.log(`  💰 Found streaming price: ¥${price.toLocaleString()}`);
+    // 通常ダウンロード価格（SD版）
+    const downloadSdPriceText = $('#download_sd_price').text().trim();
+    if (downloadSdPriceText) {
+      const priceMatch = downloadSdPriceText.match(/(\d+(?:,\d+)*)/);
+      if (priceMatch) {
+        downloadPrice = parseInt(priceMatch[1].replace(/,/g, ''));
+        console.log(`  💰 SD download price: ¥${downloadPrice.toLocaleString()}`);
+      }
+    }
+
+    // radio buttonからSD価格を抽出（フォールバック）
+    if (!downloadPrice) {
+      const priceInput = $('input[name="price"][id="download_sd_btn"]');
+      const priceValue = priceInput.attr('value');
+      if (priceValue) {
+        const parts = priceValue.split(',');
+        if (parts.length >= 5) {
+          const extractedPrice = parseInt(parts[4]);
+          if (!isNaN(extractedPrice) && extractedPrice > 0) {
+            downloadPrice = extractedPrice;
+          }
         }
       }
+    }
+
+    // ストリーミング価格
+    const streamingPriceText = $('#streaming_price').text().trim();
+    if (streamingPriceText) {
+      const priceMatch = streamingPriceText.match(/(\d+(?:,\d+)*)/);
+      if (priceMatch) {
+        streamingPrice = parseInt(priceMatch[1].replace(/,/g, ''));
+        console.log(`  💰 Streaming price: ¥${streamingPrice.toLocaleString()}`);
+      }
+    }
+
+    // 代表価格を決定: HD > SD > Streaming
+    price = hdPrice || downloadPrice || streamingPrice;
+
+    // 価格ログ出力（デバッグ用）
+    if (downloadPrice || streamingPrice || hdPrice) {
+      console.log(`  💴 価格: DL=${downloadPrice || '-'}, Stream=${streamingPrice || '-'}, HD=${hdPrice || '-'}円`);
     }
 
     // Check for sale prices (del/strike elements with original price)
@@ -420,14 +426,73 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       if (price < regularPrice) {
         // This is a sale
         const discountPercent = Math.round((1 - price / regularPrice) * 100);
+
+        // セール終了日時を抽出
+        let saleEndAt: Date | undefined;
+
+        // パターン1: "○月○日まで" または "M/D まで"
+        const endDatePattern1 = html.match(/(\d{1,2})[月\/](\d{1,2})日?\s*(まで|迄)/);
+        if (endDatePattern1) {
+          const month = parseInt(endDatePattern1[1], 10);
+          const day = parseInt(endDatePattern1[2], 10);
+          const now = new Date();
+          let year = now.getFullYear();
+          // 過去の日付なら来年
+          const candidateDate = new Date(year, month - 1, day, 23, 59, 59);
+          if (candidateDate < now) {
+            year += 1;
+          }
+          saleEndAt = new Date(year, month - 1, day, 23, 59, 59);
+        }
+
+        // パターン2: "YYYY/MM/DD" または "YYYY-MM-DD"
+        if (!saleEndAt) {
+          const endDatePattern2 = html.match(/(20\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2}).*?(まで|迄|終了)/);
+          if (endDatePattern2) {
+            const year = parseInt(endDatePattern2[1], 10);
+            const month = parseInt(endDatePattern2[2], 10);
+            const day = parseInt(endDatePattern2[3], 10);
+            saleEndAt = new Date(year, month - 1, day, 23, 59, 59);
+          }
+        }
+
+        // パターン3: "○日○時間" の残り時間表示
+        if (!saleEndAt) {
+          const remainingPattern = html.match(/残り\s*(\d+)\s*日\s*(\d+)?\s*時間?/);
+          if (remainingPattern) {
+            const days = parseInt(remainingPattern[1], 10);
+            const hours = remainingPattern[2] ? parseInt(remainingPattern[2], 10) : 0;
+            saleEndAt = new Date(Date.now() + (days * 24 + hours) * 60 * 60 * 1000);
+          }
+        }
+
+        // パターン4: セールバナー/アイコン内のテキスト
+        if (!saleEndAt) {
+          const saleBannerText = $('.sale_end, .campaign_end, .timesale_end, .sale_period').text();
+          const bannerMatch = saleBannerText.match(/(\d{1,2})[月\/](\d{1,2})/);
+          if (bannerMatch) {
+            const month = parseInt(bannerMatch[1], 10);
+            const day = parseInt(bannerMatch[2], 10);
+            const now = new Date();
+            let year = now.getFullYear();
+            const candidateDate = new Date(year, month - 1, day, 23, 59, 59);
+            if (candidateDate < now) {
+              year += 1;
+            }
+            saleEndAt = new Date(year, month - 1, day, 23, 59, 59);
+          }
+        }
+
         saleInfo = {
           regularPrice,
           salePrice: price,
           discountPercent,
           saleType: 'timesale',
-          endAt: undefined,
+          endAt: saleEndAt,
         };
-        console.log(`  💰 Sale detected: ¥${regularPrice.toLocaleString()} → ¥${price.toLocaleString()} (${discountPercent}% OFF)`);
+
+        const endAtStr = saleEndAt ? ` (〜${saleEndAt.toLocaleDateString('ja-JP')})` : '';
+        console.log(`  💰 Sale detected: ¥${regularPrice.toLocaleString()} → ¥${price.toLocaleString()} (${discountPercent}% OFF)${endAtStr}`);
       }
     }
 
@@ -522,6 +587,39 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
 
     console.log(`  Found ${genres.length} genre(s): ${genres.join(', ')}`);
 
+    // 再生時間を抽出
+    let duration: number | undefined;
+    // パターン1: th:contains("収録時間") から抽出
+    const durationCell = $('th:contains("収録時間")').next('td').text().trim();
+    if (durationCell) {
+      const durationMatch = durationCell.match(/(\d+)\s*分/);
+      if (durationMatch) {
+        duration = parseInt(durationMatch[1], 10);
+      }
+    }
+    // パターン2: HTMLテキストから正規表現でフォールバック
+    if (!duration) {
+      const durationRegex = /収録時間[：:]\s*(\d+)\s*分/;
+      const match = html.match(durationRegex);
+      if (match) {
+        duration = parseInt(match[1], 10);
+      }
+    }
+    // パターン3: "再生時間" 表記のフォールバック
+    if (!duration) {
+      const playTimeCell = $('th:contains("再生時間")').next('td').text().trim();
+      if (playTimeCell) {
+        const playTimeMatch = playTimeCell.match(/(\d+)\s*分/);
+        if (playTimeMatch) {
+          duration = parseInt(playTimeMatch[1], 10);
+        }
+      }
+    }
+
+    if (duration) {
+      console.log(`  Duration: ${duration} minutes`);
+    }
+
     return {
       productId,
       url: productUrl, // Keep original product URL for reference
@@ -532,11 +630,15 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       sampleImages: sampleImages.length > 0 ? sampleImages : undefined,
       sampleVideoUrl,
       price,
+      downloadPrice,
+      streamingPrice,
+      hdPrice,
       saleInfo,
       reviews: reviews.length > 0 ? reviews : undefined,
       ratingSummary,
       description,
       genres: genres.length > 0 ? genres : undefined,
+      duration,
     };
   } catch (error) {
     console.error('Error crawling MGS product:', error);
@@ -645,13 +747,22 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
           normalizedProductId,
           title: mgsProduct.title,
           releaseDate: mgsProduct.releaseDate || undefined,
+          duration: mgsProduct.duration,
         })
         .returning();
 
       productId = newProduct.id;
-      console.log(`Created new product: ${normalizedProductId}`);
+      console.log(`Created new product: ${normalizedProductId}${mgsProduct.duration ? ` (${mgsProduct.duration}分)` : ''}`);
     } else {
       productId = productRecord[0].id;
+      // 既存作品のdurationが未設定の場合は更新
+      if (mgsProduct.duration && !productRecord[0].duration) {
+        await db
+          .update(products)
+          .set({ duration: mgsProduct.duration })
+          .where(eq(products.id, productId));
+        console.log(`  Updated duration: ${mgsProduct.duration}分`);
+      }
     }
 
     // Generate affiliate URL for MGS
@@ -669,8 +780,10 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
       )
       .limit(1);
 
+    let sourceId: number;
     if (existing.length > 0) {
       // 更新
+      sourceId = existing[0].id;
       await db
         .update(productSources)
         .set({
@@ -679,21 +792,33 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
           price: mgsProduct.price,
           lastUpdated: new Date(),
         })
-        .where(eq(productSources.id, existing[0].id));
+        .where(eq(productSources.id, sourceId));
 
       console.log(`Updated affiliate link for product ${productId}${mgsProduct.price ? ` (¥${mgsProduct.price.toLocaleString()})` : ''}`);
     } else {
       // 新規挿入
-      await db.insert(productSources).values({
+      const [inserted] = await db.insert(productSources).values({
         productId,
         aspName: SOURCE_NAME,
         originalProductId: mgsProduct.productId,
         affiliateUrl: affiliateUrl,
         price: mgsProduct.price,
         dataSource: 'HTML',
-      });
+      }).returning({ id: productSources.id });
+      sourceId = inserted.id;
 
       console.log(`Saved affiliate link for product ${productId}${mgsProduct.price ? ` (¥${mgsProduct.price.toLocaleString()})` : ''}`);
+    }
+
+    // product_prices に価格タイプ別の価格を保存
+    const priceList = buildPriceInfoList({
+      downloadPrice: mgsProduct.downloadPrice,
+      streamingPrice: mgsProduct.streamingPrice,
+      hdPrice: mgsProduct.hdPrice,
+    });
+    if (priceList.length > 0) {
+      const priceResult = await saveProductPricesBySourceId(sourceId, priceList);
+      console.log(`  ✓ 価格 ${priceResult.success}件を保存`);
     }
   } catch (error) {
     console.error('Error saving affiliate link:', error);

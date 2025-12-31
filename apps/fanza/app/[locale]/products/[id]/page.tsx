@@ -41,6 +41,10 @@ const SceneTimeline = nextDynamic(() => import('@/components/SceneTimeline'), {
 const EnhancedAiReview = nextDynamic(() => import('@/components/EnhancedAiReview'), {
   loading: () => <div className="h-48 bg-gray-100 rounded-lg animate-pulse" />,
 });
+const ProductPriceSection = nextDynamic(() => import('@/components/ProductPriceSection'), {
+  loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />,
+  ssr: false,
+});
 
 interface PageProps {
   params: Promise<{ id: string; locale: string }>;
@@ -306,7 +310,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <div className="space-y-6">
                 <div>
                   <div className="flex items-start gap-3 mb-2">
-                    <h1 className="text-3xl font-bold theme-text flex-1">{product.title}</h1>
+                    {/* SEO強化: H1に品番を含める（Google検索で品番検索時にヒット率向上） */}
+                    <h1 className="text-3xl font-bold theme-text flex-1">
+                      {product.normalizedProductId && (
+                        <span className="text-rose-600">{product.normalizedProductId}</span>
+                      )}
+                      {product.normalizedProductId && ' '}
+                      {product.title}
+                    </h1>
                     <FavoriteButton
                       type="product"
                       id={productId}
@@ -353,7 +364,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <SocialShareButtons
                       title={`${product.normalizedProductId || product.id} ${product.title}`}
                       productId={String(product.id)}
-                      theme="light"
                       compact
                     />
                   </div>
@@ -500,6 +510,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 tagCount={product.tags?.length || 0}
               />
             </div>
+          )}
+
+          {/* 価格追跡・セールアラートセクション */}
+          {product.price && (
+            <ProductPriceSection
+              productId={productId}
+              normalizedProductId={product.normalizedProductId || productId}
+              title={product.title}
+              thumbnailUrl={product.imageUrl ?? undefined}
+              currentPrice={product.price}
+              salePrice={product.salePrice ?? undefined}
+              locale={locale}
+            />
           )}
 
           {/* AI分析レビューセクション */}

@@ -948,6 +948,16 @@ export function getProductPageFAQs(
 
   const faqsByLocale: Record<string, { question: string; answer: string }[]> = {
     ja: [
+      // SEO強化: 品番検索向けFAQ（「SSIS-865とは」などのクエリ対応）
+      ...(productId ? [{
+        question: `${productId}とは何ですか？`,
+        answer: `${productId}は「${title.substring(0, 30)}${title.length > 30 ? '...' : ''}」の品番（製品コード）です。${actressName ? `${actressName}が出演しています。` : ''}${provider ? `${provider}で購入・視聴できます。` : ''}`,
+      }] : []),
+      // SEO強化: 商品名検索向けFAQ
+      ...(title ? [{
+        question: `「${title.substring(0, 25)}${title.length > 25 ? '...' : ''}」の詳細情報は？`,
+        answer: `${productId ? `品番は${productId}です。` : ''}${duration ? `収録時間は約${duration}分。` : ''}${actressName ? `${actressName}出演。` : ''}${releaseDate ? `${releaseDate}配信開始。` : ''}複数サイトで価格比較してお得に購入できます。`,
+      }] : []),
       ...(duration ? [{
         question: `「${title}」の収録時間は？`,
         answer: `この作品の収録時間は約${duration}分です。${duration >= 120 ? '長編作品なのでじっくりお楽しみいただけます。' : duration >= 60 ? '見応えのある内容となっています。' : '短時間でお楽しみいただける作品です。'}`,
@@ -970,6 +980,11 @@ export function getProductPageFAQs(
       }] : []),
     ],
     en: [
+      // SEO: Product code search FAQ
+      ...(productId ? [{
+        question: `What is ${productId}?`,
+        answer: `${productId} is the product code for "${title.substring(0, 30)}${title.length > 30 ? '...' : ''}". ${actressName ? `Featuring ${actressName}.` : ''}${provider ? `Available on ${provider}.` : ''}`,
+      }] : []),
       ...(duration ? [{
         question: `What is the runtime of "${title}"?`,
         answer: `This video is approximately ${duration} minutes long. ${duration >= 120 ? 'It\'s a feature-length work you can enjoy thoroughly.' : duration >= 60 ? 'It has substantial content.' : 'A quick video for your enjoyment.'}`,

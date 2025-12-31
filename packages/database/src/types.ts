@@ -18,7 +18,7 @@ import {
   performers,
   performerAliases,
   tags,
-} from './schema.js';
+} from './schema';
 
 // ============================================================
 // テーブル型（DIで使用）

@@ -31,6 +31,8 @@ import { validateProductData, savePerformersWithWikiPriority } from '../lib/craw
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
 import { getAIHelper } from '../lib/crawler';
 import { translateProductLingva } from '../lib/translate';
+import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
+import { buildPriceInfoList, saveProductPricesBySourceId } from '../lib/price-helper';
 import {
   upsertRawHtmlDataWithGcs,
   markRawDataAsProcessed,
@@ -85,7 +87,12 @@ interface FanzaProduct {
   label: string | null;
   series: string | null;
   genres: string[];
-  price: number | null;
+  price: number | null; // 代表価格
+  downloadPrice?: number | null; // ダウンロード版価格
+  streamingPrice?: number | null; // ストリーミング版価格
+  hdPrice?: number | null; // HD版価格
+  fourKPrice?: number | null; // 4K/UHD版価格
+  saleInfo?: SaleInfo;
   reviews?: FanzaReview[];
   ratingSummary?: FanzaRatingSummary;
 }
@@ -628,32 +635,70 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // 価格（HTMLから取得）- FANZAの価格表示構造に基づく
     // 注意: JSON-LDのoffers.priceは月額見放題の最安価格（300円など）のため使用しない
     let price: number | null = null;
+    let downloadPrice: number | null = null;
+    let streamingPrice: number | null = null;
+    let hdPrice: number | null = null;
+    let fourKPrice: number | null = null;
 
-    // HTMLから価格を取得（購入価格・配信価格を優先）
-    // 複数の販売形態があるため、「円」表記からすべて抽出し、適切なものを選択
-    const priceMatches = [...html.matchAll(/(\d{1,3}(?:,\d{3})*)円/g)];
-    if (priceMatches.length > 0) {
-      // 500円〜10000円の範囲の価格を抽出（月額300円や高額セット除外）
-      const validPrices = priceMatches
-        .map(m => parseInt(m[1].replace(/,/g, ''), 10))
-        .filter(p => p >= 500 && p <= 10000);
+    // FANZAの価格パターンを個別に抽出
+    // パターン1: 4K価格 - 「4K」「UHD」などの表記
+    const fourKPriceMatch = html.match(/(?:4K|UHD|2160p)[^0-9]*?(\d{1,3}(?:,\d{3})*)\s*円/i);
+    if (fourKPriceMatch) {
+      const p = parseInt(fourKPriceMatch[1].replace(/,/g, ''), 10);
+      if (p >= 500 && p <= 20000) {
+        fourKPrice = p;
+      }
+    }
 
-      if (validPrices.length > 0) {
-        // 一般的なFANZA価格帯（980〜3000円）に近いものを優先
-        // 980, 1480, 1980, 2480, 2980円などが一般的
-        const typicalPrices = validPrices.filter(p => p >= 800 && p <= 3500);
-        if (typicalPrices.length > 0) {
-          // 複数ある場合は最も高い価格（HD版など）を選択
-          price = Math.max(...typicalPrices);
-        } else {
-          // 範囲外でも有効な価格があれば最大値を使用
-          price = Math.max(...validPrices);
+    // パターン2: HD版価格 - 「HD版ダウンロード」「HD版」などの表記
+    const hdPriceMatch = html.match(/(?:HD版|HD\s*ダウンロード|ハイビジョン)[^0-9]*?(\d{1,3}(?:,\d{3})*)\s*円/i);
+    if (hdPriceMatch) {
+      const p = parseInt(hdPriceMatch[1].replace(/,/g, ''), 10);
+      if (p >= 500 && p <= 15000) {
+        hdPrice = p;
+      }
+    }
+
+    // パターン3: 通常ダウンロード価格 - 「ダウンロード」表記（HD版以外）
+    const dlPriceMatch = html.match(/(?:ダウンロード|DL版|購入)[^0-9HD4K]*?(\d{1,3}(?:,\d{3})*)\s*円/i);
+    if (dlPriceMatch) {
+      const p = parseInt(dlPriceMatch[1].replace(/,/g, ''), 10);
+      if (p >= 500 && p <= 10000) {
+        downloadPrice = p;
+      }
+    }
+
+    // パターン4: ストリーミング価格
+    const streamPriceMatch = html.match(/(?:ストリーミング|視聴|再生)[^0-9]*?(\d{1,3}(?:,\d{3})*)\s*円/i);
+    if (streamPriceMatch) {
+      const p = parseInt(streamPriceMatch[1].replace(/,/g, ''), 10);
+      if (p >= 300 && p <= 8000) {
+        streamingPrice = p;
+      }
+    }
+
+    // フォールバック: 汎用価格抽出（販売形態が特定できない場合）
+    if (!fourKPrice && !hdPrice && !downloadPrice && !streamingPrice) {
+      const priceMatches = [...html.matchAll(/(\d{1,3}(?:,\d{3})*)円/g)];
+      if (priceMatches.length > 0) {
+        // 500円〜10000円の範囲の価格を抽出（月額300円や高額セット除外）
+        const validPrices = priceMatches
+          .map(m => parseInt(m[1].replace(/,/g, ''), 10))
+          .filter(p => p >= 500 && p <= 10000);
+
+        if (validPrices.length > 0) {
+          const typicalPrices = validPrices.filter(p => p >= 800 && p <= 3500);
+          if (typicalPrices.length > 0) {
+            price = Math.max(...typicalPrices);
+          } else {
+            price = Math.max(...validPrices);
+          }
         }
       }
     }
 
     // フォールバック: data-price属性（一部のページで使用）
-    if (!price) {
+    if (!price && !fourKPrice && !hdPrice && !downloadPrice) {
       const dataPriceMatch = html.match(/data-price="(\d+)"/i);
       if (dataPriceMatch) {
         const p = parseInt(dataPriceMatch[1], 10);
@@ -663,11 +708,140 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       }
     }
 
-    // 説明文（☆マーク付きテキスト）
+    // 代表価格を決定: 4K > HD > ダウンロード > ストリーミング > 汎用
+    price = fourKPrice || hdPrice || downloadPrice || streamingPrice || price;
+
+    // 価格のログ出力（デバッグ用）
+    if (downloadPrice || streamingPrice || hdPrice || fourKPrice) {
+      console.log(`  💴 価格: DL=${downloadPrice || '-'}, Stream=${streamingPrice || '-'}, HD=${hdPrice || '-'}, 4K=${fourKPrice || '-'}円`);
+    }
+
+    // セール価格検出
+    let saleInfo: SaleInfo | undefined;
+
+    // パターン1: 取り消し線付き元値 + 現在価格（FANZA典型パターン）
+    // 例: <del>1,980円</del> → <span>980円</span> または %OFF表記
+    const strikeMatch = html.match(/<(?:del|s|strike)[^>]*>\s*[¥￥]?\s*(\d{1,3}(?:,\d{3})*)\s*円\s*<\/(?:del|s|strike)>/i);
+    if (strikeMatch && price) {
+      const regularPrice = parseInt(strikeMatch[1].replace(/,/g, ''), 10);
+      if (regularPrice > price && regularPrice >= 500 && regularPrice <= 15000) {
+        const discountPercent = Math.round((1 - price / regularPrice) * 100);
+        saleInfo = {
+          regularPrice,
+          salePrice: price,
+          discountPercent,
+          saleType: 'timesale',
+        };
+      }
+    }
+
+    // パターン2: %OFF表記から逆算
+    if (!saleInfo && price) {
+      const offMatch = html.match(/(\d+)\s*%\s*(?:OFF|オフ|off)/i);
+      if (offMatch) {
+        const discountPercent = parseInt(offMatch[1], 10);
+        if (discountPercent >= 10 && discountPercent <= 80) {
+          const regularPrice = Math.round(price / (1 - discountPercent / 100));
+          if (regularPrice >= 500 && regularPrice <= 15000) {
+            saleInfo = {
+              regularPrice,
+              salePrice: price,
+              discountPercent,
+              saleType: 'timesale',
+            };
+          }
+        }
+      }
+    }
+
+    // パターン3: 定価 / 通常価格 表記
+    if (!saleInfo && price) {
+      const regularPriceMatch = html.match(/(?:定価|通常価格|希望小売価格)[：:\s]*[¥￥]?\s*(\d{1,3}(?:,\d{3})*)\s*円/i);
+      if (regularPriceMatch) {
+        const regularPrice = parseInt(regularPriceMatch[1].replace(/,/g, ''), 10);
+        if (regularPrice > price && regularPrice >= 500 && regularPrice <= 15000) {
+          const discountPercent = Math.round((1 - price / regularPrice) * 100);
+          saleInfo = {
+            regularPrice,
+            salePrice: price,
+            discountPercent,
+            saleType: 'sale',
+          };
+        }
+      }
+    }
+
+    // セール終了日時を抽出（パターン: ○月○日まで、YYYY/MM/DD まで等）
+    if (saleInfo) {
+      // パターン1: "○月○日まで" または "M/Dまで"
+      const endDatePattern1 = html.match(/(\d{1,2})[月\/](\d{1,2})日?\s*(?:\d{1,2}:\d{2})?\s*(?:まで|迄)/);
+      if (endDatePattern1) {
+        const month = parseInt(endDatePattern1[1], 10);
+        const day = parseInt(endDatePattern1[2], 10);
+        const now = new Date();
+        let year = now.getFullYear();
+        const candidateDate = new Date(year, month - 1, day, 23, 59, 59);
+        if (candidateDate < now) {
+          year += 1;
+        }
+        saleInfo.endAt = new Date(year, month - 1, day, 23, 59, 59);
+      }
+    }
+
+    if (saleInfo) {
+      const endAtStr = saleInfo.endAt ? ` (〜${saleInfo.endAt.toLocaleDateString('ja-JP')})` : '';
+      console.log(`  💰 FANZA Sale detected: ¥${saleInfo.regularPrice.toLocaleString()} → ¥${price!.toLocaleString()} (${saleInfo.discountPercent}% OFF)${endAtStr}`);
+    }
+
+    // 説明文（複数パターンでフォールバック）
     let description = '';
-    const descMatch = html.match(/☆[★☆]*([^<]{50,500})/);
-    if (descMatch) {
-      description = descMatch[0].replace(/\s+/g, ' ').trim();
+
+    // パターン1: JSON-LDのdescription（最優先）
+    if (jsonLdData?.description && typeof jsonLdData.description === 'string' && jsonLdData.description.length >= 30) {
+      description = jsonLdData.description.replace(/\s+/g, ' ').trim();
+    }
+
+    // パターン2: ☆マーク付きテキスト（従来方式）
+    if (!description) {
+      const descMatch = html.match(/☆[★☆]*([^<]{50,500})/);
+      if (descMatch) {
+        description = descMatch[0].replace(/\s+/g, ' ').trim();
+      }
+    }
+
+    // パターン3: 商品説明セクション（class="summary__txt"など）
+    if (!description) {
+      const summaryMatch = html.match(/<p[^>]*class="[^"]*summary[^"]*"[^>]*>([\s\S]{30,800}?)<\/p>/i);
+      if (summaryMatch) {
+        description = summaryMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      }
+    }
+
+    // パターン4: 商品紹介・内容紹介セクション
+    if (!description) {
+      const introMatch = html.match(/(?:商品紹介|内容紹介|あらすじ)[：:・]?\s*<\/[^>]+>[\s\S]{0,100}?<[^>]*>([^<]{30,800})/i);
+      if (introMatch) {
+        description = introMatch[1].replace(/\s+/g, ' ').trim();
+      }
+    }
+
+    // パターン5: 長めのpタグ（100文字以上、価格情報を含まないもの）
+    if (!description) {
+      const paragraphs = html.match(/<p[^>]*>([^<]{100,600})<\/p>/gi);
+      if (paragraphs) {
+        for (const p of paragraphs) {
+          const text = p.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+          // 価格・日付・技術情報を除外
+          if (text.length >= 100 && !text.match(/円|￥|\d{4}[\/年]\d{1,2}[\/月]|ダウンロード|ストリーミング|HD版|4K|収録時間/)) {
+            description = text;
+            break;
+          }
+        }
+      }
+    }
+
+    if (description) {
+      console.log(`  📝 説明文取得: ${description.substring(0, 50)}...`);
     }
 
     // レビュー・評価サマリーの抽出
@@ -767,6 +941,11 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       series,
       genres,
       price,
+      downloadPrice,
+      streamingPrice,
+      hdPrice,
+      fourKPrice,
+      saleInfo,
       reviews: reviews.length > 0 ? reviews : undefined,
       ratingSummary,
     };
@@ -835,14 +1014,26 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
 
       // product_sources作成
       const affiliateUrl = generateAffiliateUrl(product.cid);
-      await db.insert(productSources).values({
+      const [insertedSource] = await db.insert(productSources).values({
         productId,
         aspName: 'FANZA',
         originalProductId: product.cid,
         affiliateUrl,
         price: product.price,
         dataSource: 'CRAWL',
+      }).returning({ id: productSources.id });
+
+      // product_prices に価格タイプ別の価格を保存
+      const priceList = buildPriceInfoList({
+        downloadPrice: product.downloadPrice,
+        streamingPrice: product.streamingPrice,
+        hdPrice: product.hdPrice,
+        fourKPrice: product.fourKPrice,
       });
+      if (priceList.length > 0) {
+        const priceResult = await saveProductPricesBySourceId(insertedSource.id, priceList);
+        console.log(`    ✓ 価格 ${priceResult.success}件を保存`);
+      }
 
       // 出演者登録（wiki_crawl_data優先）
       // クローラーから取得した演者名をバリデーション
@@ -946,6 +1137,19 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
       }
       if (savedReviews > 0) {
         console.log(`    📝 レビュー保存: ${savedReviews}件`);
+      }
+    }
+
+    // セール情報の保存
+    if (product.saleInfo) {
+      try {
+        const saved = await saveSaleInfo('FANZA', product.cid, product.saleInfo);
+        if (saved) {
+          console.log(`    💰 セール情報保存: ¥${product.saleInfo.regularPrice.toLocaleString()} → ¥${product.saleInfo.salePrice.toLocaleString()} (${product.saleInfo.discountPercent}% OFF)`);
+        }
+      } catch (saleError: unknown) {
+        const errorMessage = saleError instanceof Error ? saleError.message : String(saleError);
+        console.log(`    ⚠️ セール情報保存失敗: ${errorMessage}`);
       }
     }
 

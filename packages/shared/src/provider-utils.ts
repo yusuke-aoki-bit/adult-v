@@ -1,4 +1,4 @@
-import type { ProviderId } from './types/product.js';
+import type { ProviderId } from './types/product';
 
 /**
  * Valid provider IDs

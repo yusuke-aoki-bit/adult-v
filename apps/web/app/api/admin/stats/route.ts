@@ -43,6 +43,8 @@ export async function GET() {
       tableRowCounts,
       aspTotals,
       aliasResult,
+      seoIndexingByStatus,
+      seoIndexingSummary,
     ] = await Promise.all([
       // 1. ASP別 総合収集状況（DTIはサブサービスに分割）
       db.execute(sql`
@@ -279,6 +281,28 @@ export async function GET() {
 
       // performer_aliasesテーブルが存在しない場合があるため別クエリで取得
       db.execute(sql`SELECT COUNT(*) as cnt FROM performer_aliases`).catch(() => ({ rows: [{ cnt: 0 }] })),
+
+      // 28. SEO Indexing Status
+      safeQuery(db, () => db.execute(sql`
+        SELECT
+          status,
+          COUNT(*) as count
+        FROM seo_indexing_status
+        GROUP BY status
+        ORDER BY count DESC
+      `)),
+
+      // 29. SEO Indexing Summary
+      safeQuery(db, () => db.execute(sql`
+        SELECT
+          (SELECT COUNT(*) FROM seo_indexing_status) as total_indexed,
+          (SELECT COUNT(*) FROM seo_indexing_status WHERE status = 'requested') as requested,
+          (SELECT COUNT(*) FROM seo_indexing_status WHERE status = 'pending') as pending,
+          (SELECT COUNT(*) FROM seo_indexing_status WHERE status = 'error') as errors,
+          (SELECT COUNT(*) FROM seo_indexing_status WHERE status = 'ownership_required') as ownership_required,
+          (SELECT MAX(last_requested_at) FROM seo_indexing_status) as last_requested_at,
+          (SELECT COUNT(*) FROM products) - (SELECT COUNT(*) FROM seo_indexing_status) as not_requested
+      `)),
     ]);
 
     // total_aliasesを追加
@@ -332,6 +356,8 @@ export async function GET() {
       performerAiStats,
       translationStats,
       tableRowCounts,
+      seoIndexingByStatus,
+      seoIndexingSummary: seoIndexingSummary.length > 0 ? seoIndexingSummary[0] : null,
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {

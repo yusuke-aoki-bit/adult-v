@@ -33,7 +33,37 @@ const MAIN_CRAWLER_JOBS = [
   'caribbeancompr-crawler',
   'japanska-crawler',
   'performer-info-crawler',
+  'run-migration',
+  'generate-reviews',
+  'crawl-avwiki-net',
 ];
+
+// 主要なスケジューラーのリスト
+const MAIN_SCHEDULERS = [
+  'mgs-parallel-all',
+  'mgs-parallel-all-2',
+  'mgs-parallel-all-3',
+  'duga-crawler-daily',
+  'sokmil-crawler-daily',
+  'fc2-crawler-daily',
+  'performer-pipeline-daily',
+  'content-enrichment-daily',
+  'seo-enhance-daily',
+  'backfill-images-daily',
+  'backfill-videos-daily',
+  'crawl-avwiki-scheduler',
+  'generate-reviews-weekly',
+];
+
+export interface SchedulerStatus {
+  name: string;
+  schedule: string;
+  timeZone: string;
+  state: 'ENABLED' | 'PAUSED' | 'UNKNOWN';
+  lastAttemptTime?: string;
+  lastAttemptStatus?: 'SUCCEEDED' | 'FAILED' | 'UNKNOWN';
+  nextRunTime?: string;
+}
 
 const PROJECT_ID = 'adult-v';
 const REGION = 'us-central1';
@@ -129,9 +159,84 @@ export async function GET() {
       unknown: jobStatuses.filter((j) => j.status === 'unknown').length,
     };
 
+    // スケジューラー状態も取得
+    let schedulerStatuses: SchedulerStatus[] = [];
+    let schedulerSummary = { enabled: 0, paused: 0, failed: 0, succeeded: 0 };
+
+    try {
+      const { stdout: schedulerStdout } = await execAsync(
+        `gcloud scheduler jobs list --project=${PROJECT_ID} --location=asia-northeast1 --format="json(name,schedule,timeZone,state,status.lastAttemptTime,status.lastAttemptResult.message,scheduleTime)" 2>/dev/null || echo "[]"`,
+        { timeout: 30000 }
+      );
+
+      let allSchedulers: Array<{
+        name: string;
+        schedule?: string;
+        timeZone?: string;
+        state?: string;
+        status?: {
+          lastAttemptTime?: string;
+          lastAttemptResult?: { message?: string };
+        };
+        scheduleTime?: string;
+      }> = [];
+
+      try {
+        allSchedulers = JSON.parse(schedulerStdout);
+      } catch {
+        allSchedulers = [];
+      }
+
+      schedulerStatuses = MAIN_SCHEDULERS.map((schedulerName) => {
+        const scheduler = allSchedulers.find((s) => s.name?.endsWith(`/${schedulerName}`));
+
+        if (!scheduler) {
+          return {
+            name: schedulerName,
+            schedule: '',
+            timeZone: 'Asia/Tokyo',
+            state: 'UNKNOWN' as const,
+          };
+        }
+
+        // lastAttemptResultのmessageから成功/失敗を判定
+        let lastAttemptStatus: SchedulerStatus['lastAttemptStatus'] = 'UNKNOWN';
+        const lastMessage = scheduler.status?.lastAttemptResult?.message || '';
+        if (lastMessage.toLowerCase().includes('success') || lastMessage === '') {
+          // 空のメッセージは成功として扱う（実行されていない場合）
+          if (scheduler.status?.lastAttemptTime) {
+            lastAttemptStatus = 'SUCCEEDED';
+          }
+        } else if (lastMessage.toLowerCase().includes('fail') || lastMessage.toLowerCase().includes('error')) {
+          lastAttemptStatus = 'FAILED';
+        }
+
+        return {
+          name: schedulerName,
+          schedule: scheduler.schedule || '',
+          timeZone: scheduler.timeZone || 'Asia/Tokyo',
+          state: (scheduler.state === 'ENABLED' ? 'ENABLED' : scheduler.state === 'PAUSED' ? 'PAUSED' : 'UNKNOWN') as SchedulerStatus['state'],
+          lastAttemptTime: scheduler.status?.lastAttemptTime,
+          lastAttemptStatus,
+          nextRunTime: scheduler.scheduleTime,
+        };
+      });
+
+      schedulerSummary = {
+        enabled: schedulerStatuses.filter((s) => s.state === 'ENABLED').length,
+        paused: schedulerStatuses.filter((s) => s.state === 'PAUSED').length,
+        failed: schedulerStatuses.filter((s) => s.lastAttemptStatus === 'FAILED').length,
+        succeeded: schedulerStatuses.filter((s) => s.lastAttemptStatus === 'SUCCEEDED').length,
+      };
+    } catch (schedulerError) {
+      console.error('Failed to fetch scheduler status:', schedulerError);
+    }
+
     return NextResponse.json({
       jobs: jobStatuses,
       summary,
+      schedulers: schedulerStatuses,
+      schedulerSummary,
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
@@ -148,6 +253,8 @@ export async function GET() {
     return NextResponse.json({
       jobs: dummyJobs,
       summary: { running: 0, succeeded: 0, failed: 0, unknown: MAIN_CRAWLER_JOBS.length },
+      schedulers: [],
+      schedulerSummary: { enabled: 0, paused: 0, failed: 0, succeeded: 0 },
       generatedAt: new Date().toISOString(),
       error: 'Failed to fetch jobs status',
     });

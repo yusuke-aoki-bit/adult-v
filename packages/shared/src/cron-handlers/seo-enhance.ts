@@ -65,8 +65,10 @@ async function requestIndexingForProducts(
   let ownershipVerificationRequired = false;
   const siteBaseUrl = deps.siteBaseUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://adult-v.com';
 
+  // サイトマップとの整合性を保つため、数値IDベースのURLを使用
+  // 品番URLはcanonicalで数値IDにリダイレクトされるため、Indexing APIには数値IDを送信
   const productsResult = await db.execute(sql`
-    SELECT p.id, p.normalized_product_id, p.updated_at
+    SELECT p.id, p.updated_at
     FROM products p
     LEFT JOIN seo_indexing_status sis ON p.id = sis.product_id
     WHERE sis.product_id IS NULL
@@ -77,14 +79,14 @@ async function requestIndexingForProducts(
 
   const products = productsResult.rows as Array<{
     id: number;
-    normalized_product_id: string;
     updated_at: Date;
   }>;
 
   for (const product of products) {
     stats.totalProcessed++;
 
-    const productUrl = `${siteBaseUrl}/products/${product.normalized_product_id}`;
+    // 数値IDベースのURL（サイトマップと同じ形式）
+    const productUrl = `${siteBaseUrl}/products/${product.id}`;
 
     try {
       const result = await deps.requestIndexing(productUrl, 'URL_UPDATED');
@@ -332,10 +334,10 @@ async function getSitemapData(
 ): Promise<{ stats: Stats; results: any[] }> {
   const stats: Stats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
 
+  // サイトマップとの整合性を保つため、数値IDベースのURLを使用
   const productsResult = await db.execute(sql`
     SELECT
       p.id,
-      p.normalized_product_id,
       p.title,
       p.updated_at,
       sis.status as indexing_status,
@@ -348,7 +350,6 @@ async function getSitemapData(
 
   const products = productsResult.rows as Array<{
     id: number;
-    normalized_product_id: string;
     title: string;
     updated_at: Date;
     indexing_status: string | null;
@@ -361,7 +362,7 @@ async function getSitemapData(
   return {
     stats,
     results: products.map(p => ({
-      url: `${siteBaseUrl}/products/${p.normalized_product_id}`,
+      url: `${siteBaseUrl}/products/${p.id}`,
       lastmod: p.updated_at,
       indexingStatus: p.indexing_status || 'not_requested',
       lastRequestedAt: p.last_requested_at,

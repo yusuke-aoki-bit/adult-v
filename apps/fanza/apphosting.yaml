@@ -68,8 +68,22 @@ env:
   # Sentry Configuration
   - variable: SENTRY_DSN
     secret: sentry-dsn-fanza
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_SENTRY_DSN
     secret: sentry-dsn-fanza
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: SENTRY_ORG
+    value: avviewer-lab
+    availability:
+      - BUILD
+  - variable: SENTRY_PROJECT
+    value: fanza
+    availability:
+      - BUILD
   # Upstash Redis Cache
   - variable: UPSTASH_REDIS_REST_URL
     secret: upstash-redis-url

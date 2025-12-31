@@ -9,6 +9,23 @@ import { Pool } from 'pg';
 
 // マイグレーションSQL - 完全版
 const MIGRATION_SQL = `
+-- product_prices テーブル作成 (2024-12-31)
+CREATE TABLE IF NOT EXISTS product_prices (
+    id SERIAL PRIMARY KEY,
+    product_source_id INTEGER NOT NULL REFERENCES product_sources(id) ON DELETE CASCADE,
+    price_type VARCHAR(30) NOT NULL,
+    price INTEGER NOT NULL,
+    currency VARCHAR(3) DEFAULT 'JPY',
+    is_default BOOLEAN DEFAULT FALSE,
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_prices_source_type ON product_prices(product_source_id, price_type);
+CREATE INDEX IF NOT EXISTS idx_prices_source ON product_prices(product_source_id);
+CREATE INDEX IF NOT EXISTS idx_prices_type ON product_prices(price_type);
+
 -- 追加パフォーマンスインデックス (2024-12)
 
 -- 1. 価格範囲検索用

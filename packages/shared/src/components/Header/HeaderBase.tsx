@@ -125,6 +125,18 @@ const FavoritesIcon = () => (
   </svg>
 );
 
+const StatisticsIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+  </svg>
+);
+
+const CalendarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+  </svg>
+);
+
 const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     {isOpen ? (
@@ -312,47 +324,70 @@ export function HeaderBase({
             <SearchBar />
           </div>
 
-          {/* デスクトップナビゲーション - 右端固定 */}
+          {/* デスクトップナビゲーション - 3カラム×2行レイアウト */}
           <nav
-            className="hidden md:flex items-center space-x-3 flex-shrink-0 theme-nav ml-auto"
+            className="hidden md:flex items-center gap-4 flex-shrink-0 theme-nav ml-auto"
           >
-            <Link
-              href={localizedHref('/products', locale)}
-              className="theme-nav-products transition-colors font-medium flex items-center gap-1 text-sm"
-            >
-              <ProductsIcon />
-              {t.products}
-            </Link>
-            <Link
-              href={localizedHref('/', locale)}
-              className="theme-nav-actresses transition-colors font-medium flex items-center gap-1 text-sm"
-            >
-              <ActressesIcon />
-              {t.actresses}
-            </Link>
-            <NotificationSubscriber />
-            <Link
-              href={localizedHref('/diary', locale)}
-              className="theme-nav-diary transition-colors font-medium flex items-center gap-1 text-sm"
-            >
-              <DiaryIcon />
-              {t.diary}
-            </Link>
-            <Link
-              href={localizedHref('/profile', locale)}
-              className="theme-nav-profile transition-colors font-medium flex items-center gap-1 text-sm"
-            >
-              <ProfileIcon />
-              {t.profile}
-            </Link>
-            <Link
-              href={localizedHref('/favorites', locale)}
-              className="theme-nav-favorites transition-colors font-medium flex items-center gap-1 text-sm"
-            >
-              <FavoritesIcon />
-              {t.favorites}
-            </Link>
-            <LanguageSwitcher />
+            {/* 4カラム×2行グリッド */}
+            <div className="grid grid-cols-4 gap-x-3 gap-y-0.5 text-right">
+              {/* 1行目: 作品一覧 / 女優一覧 / カレンダー / 統計 */}
+              <Link
+                href={localizedHref('/products', locale)}
+                className="theme-nav-products transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+              >
+                <ProductsIcon />
+                {t.products}
+              </Link>
+              <Link
+                href={localizedHref('/', locale)}
+                className="theme-nav-actresses transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+              >
+                <ActressesIcon />
+                {t.actresses}
+              </Link>
+              <Link
+                href={localizedHref('/calendar', locale)}
+                className="theme-nav-calendar transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+              >
+                <CalendarIcon />
+                {t.calendar}
+              </Link>
+              <Link
+                href={localizedHref('/statistics', locale)}
+                className="theme-nav-statistics transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+              >
+                <StatisticsIcon />
+                {t.statistics}
+              </Link>
+              {/* 2行目: 視聴日記 / DNA分析 / お気に入り / 空 */}
+              <Link
+                href={localizedHref('/diary', locale)}
+                className="theme-nav-diary transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+              >
+                <DiaryIcon />
+                {t.diary}
+              </Link>
+              <Link
+                href={localizedHref('/profile', locale)}
+                className="theme-nav-profile transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+              >
+                <ProfileIcon />
+                {t.profile}
+              </Link>
+              <Link
+                href={localizedHref('/favorites', locale)}
+                className="theme-nav-favorites transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+              >
+                <FavoritesIcon />
+                {t.favorites}
+              </Link>
+              <div />
+            </div>
+            {/* 通知・言語切り替え */}
+            <div className="flex items-center gap-2">
+              <NotificationSubscriber />
+              <LanguageSwitcher />
+            </div>
           </nav>
 
           {/* モバイルメニューボタン - 48x48pxタッチターゲット確保 */}
@@ -401,6 +436,24 @@ export function HeaderBase({
               >
                 <ActressesIcon />
                 <span className="ml-2">{t.actresses}</span>
+              </Link>
+              <Link
+                href={localizedHref('/calendar', locale)}
+                className="py-3 min-h-[48px] flex items-center theme-nav-calendar transition-colors text-sm"
+                onClick={handleMobileMenuClose}
+                role="listitem"
+              >
+                <CalendarIcon />
+                <span className="ml-2">{t.calendar}</span>
+              </Link>
+              <Link
+                href={localizedHref('/statistics', locale)}
+                className="py-3 min-h-[48px] flex items-center theme-nav-statistics transition-colors text-sm"
+                onClick={handleMobileMenuClose}
+                role="listitem"
+              >
+                <StatisticsIcon />
+                <span className="ml-2">{t.statistics}</span>
               </Link>
               <Link
                 href={localizedHref('/diary', locale)}

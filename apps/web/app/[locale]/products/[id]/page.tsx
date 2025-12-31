@@ -45,6 +45,10 @@ const SceneTimeline = nextDynamic(() => import('@/components/SceneTimeline'), {
 const EnhancedAiReview = nextDynamic(() => import('@/components/EnhancedAiReview'), {
   loading: () => <div className="h-48 bg-gray-800 rounded-lg animate-pulse" />,
 });
+const ProductPriceSection = nextDynamic(() => import('@/components/ProductPriceSection'), {
+  loading: () => <div className="h-64 bg-gray-800 rounded-lg animate-pulse" />,
+  ssr: false,
+});
 
 interface PageProps {
   params: Promise<{ id: string; locale: string }>;
@@ -322,7 +326,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <div className="space-y-6">
                 <div>
                   <div className="flex items-start gap-3 mb-2">
-                    <h1 className="text-3xl font-bold text-white flex-1">{product.title}</h1>
+                    {/* SEO強化: H1に品番を含める（Google検索で品番検索時にヒット率向上） */}
+                    <h1 className="text-3xl font-bold text-white flex-1">
+                      {product.normalizedProductId && (
+                        <span className="text-rose-400">{product.normalizedProductId}</span>
+                      )}
+                      {product.normalizedProductId && ' '}
+                      {product.title}
+                    </h1>
                     <ProductActions
                       productId={productId}
                       title={product.title}
@@ -373,7 +384,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <SocialShareButtons
                       title={`${product.normalizedProductId || product.id} ${product.title}`}
                       productId={String(product.id)}
-                      theme="dark"
                       compact
                     />
                   </div>
@@ -572,6 +582,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <div id="price-comparison" className="mt-8 scroll-mt-20">
               <PriceComparisonServer sources={sourcesWithSales} locale={locale} />
             </div>
+          )}
+
+          {/* 価格追跡・セールアラートセクション */}
+          {product.price && (
+            <ProductPriceSection
+              productId={String(productId)}
+              normalizedProductId={product.normalizedProductId || String(productId)}
+              title={product.title}
+              thumbnailUrl={product.imageUrl ?? undefined}
+              currentPrice={product.price}
+              salePrice={product.salePrice ?? undefined}
+              locale={locale}
+            />
           )}
 
           {/* コスパ分析セクション */}

@@ -76,7 +76,7 @@ export const productSources = pgTable(
     aspName: varchar('asp_name', { length: 50 }).notNull(), // 'DMM', 'MGS', 'DUGA' など
     originalProductId: varchar('original_product_id', { length: 100 }).notNull(),
     affiliateUrl: text('affiliate_url').notNull(),
-    price: integer('price'),
+    price: integer('price'), // 代表価格（後方互換性のため残す）
     currency: varchar('currency', { length: 3 }).default('JPY'), // 'JPY' or 'USD'
     isSubscription: boolean('is_subscription').default(false), // 月額制かどうか
     dataSource: varchar('data_source', { length: 10 }).notNull(), // 'API' or 'CSV'
@@ -88,6 +88,31 @@ export const productSources = pgTable(
     aspIdx: index('idx_sources_asp').on(table.aspName),
     originalProductIdIdx: index('idx_sources_original_product_id').on(table.originalProductId),
     aspOriginalIdIdx: index('idx_sources_asp_original_id').on(table.aspName, table.originalProductId),
+  }),
+);
+
+/**
+ * 商品価格テーブル（価格タイプ別）
+ * 各商品ソースの価格タイプ別価格を保持
+ * 価格タイプ: download, streaming, hd, 4k, sd, rental など
+ */
+export const productPrices = pgTable(
+  'product_prices',
+  {
+    id: serial('id').primaryKey(),
+    productSourceId: integer('product_source_id').notNull().references(() => productSources.id, { onDelete: 'cascade' }),
+    priceType: varchar('price_type', { length: 30 }).notNull(), // 'download', 'streaming', 'hd', '4k', 'sd', 'rental', 'subscription'
+    price: integer('price').notNull(), // 価格（円）
+    currency: varchar('currency', { length: 3 }).default('JPY'),
+    isDefault: boolean('is_default').default(false), // この価格タイプがデフォルト（代表価格）かどうか
+    displayOrder: integer('display_order').default(0), // 表示順（小さいほど優先）
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => ({
+    sourceTypeUnique: uniqueIndex('idx_prices_source_type').on(table.productSourceId, table.priceType),
+    sourceIdx: index('idx_prices_source').on(table.productSourceId),
+    priceTypeIdx: index('idx_prices_type').on(table.priceType),
   }),
 );
 
@@ -672,11 +697,84 @@ export const wikiPerformerIndex = pgTable(
   }),
 );
 
+/**
+ * 価格履歴テーブル
+ * セールアラート＆価格追跡機能用
+ */
+export const priceHistory = pgTable(
+  'price_history',
+  {
+    id: serial('id').primaryKey(),
+    productSourceId: integer('product_source_id').notNull().references(() => productSources.id, { onDelete: 'cascade' }),
+    price: integer('price').notNull(),
+    salePrice: integer('sale_price'),
+    discountPercent: integer('discount_percent'),
+    recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productSourceIdx: index('idx_price_history_product_source').on(table.productSourceId),
+    recordedAtIdx: index('idx_price_history_recorded_at').on(table.recordedAt),
+    productSourceRecordedIdx: index('idx_price_history_product_source_recorded').on(table.productSourceId, table.recordedAt),
+  }),
+);
+
+/**
+ * セールパターンテーブル
+ * 購入タイミング最適化機能用
+ */
+export const salePatterns = pgTable(
+  'sale_patterns',
+  {
+    id: serial('id').primaryKey(),
+    productSourceId: integer('product_source_id').references(() => productSources.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id').references(() => performers.id, { onDelete: 'cascade' }),
+    makerId: integer('maker_id').references(() => tags.id, { onDelete: 'cascade' }),
+    patternType: varchar('pattern_type', { length: 50 }).notNull(), // 'product', 'performer', 'maker', 'global'
+    monthDistribution: jsonb('month_distribution'), // {1: 0.05, ..., 12: 0.15}
+    dayOfWeekDistribution: jsonb('day_of_week_distribution'), // {0: 0.1, ..., 6: 0.12}
+    avgDiscountPercent: decimal('avg_discount_percent', { precision: 5, scale: 2 }),
+    avgSaleDurationDays: decimal('avg_sale_duration_days', { precision: 5, scale: 2 }),
+    saleFrequencyPerYear: decimal('sale_frequency_per_year', { precision: 5, scale: 2 }),
+    totalSalesCount: integer('total_sales_count').default(0),
+    lastSaleDate: date('last_sale_date'),
+    lastCalculatedAt: timestamp('last_calculated_at').defaultNow().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    patternTypeIdx: index('idx_sale_patterns_type').on(table.patternType),
+    performerIdx: index('idx_sale_patterns_performer').on(table.performerId),
+    makerIdx: index('idx_sale_patterns_maker').on(table.makerId),
+    productSourceIdx: index('idx_sale_patterns_product_source').on(table.productSourceId),
+  }),
+);
+
+/**
+ * 動画タイムスタンプテーブル
+ * 試聴→購入コンバージョン強化機能用
+ */
+export const videoTimestamps = pgTable(
+  'video_timestamps',
+  {
+    id: serial('id').primaryKey(),
+    productVideoId: integer('product_video_id').notNull().references(() => productVideos.id, { onDelete: 'cascade' }),
+    timestampSeconds: integer('timestamp_seconds').notNull(),
+    label: varchar('label', { length: 100 }),
+    voteCount: integer('vote_count').default(0),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productVideoIdx: index('idx_video_timestamps_video').on(table.productVideoId),
+    votesIdx: index('idx_video_timestamps_votes').on(table.voteCount),
+  }),
+);
+
 // 型エクスポート
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 export type ProductSource = typeof productSources.$inferSelect;
 export type NewProductSource = typeof productSources.$inferInsert;
+export type ProductPrice = typeof productPrices.$inferSelect;
+export type NewProductPrice = typeof productPrices.$inferInsert;
 export type Performer = typeof performers.$inferSelect;
 export type NewPerformer = typeof performers.$inferInsert;
 export type PerformerAlias = typeof performerAliases.$inferSelect;
@@ -711,3 +809,9 @@ export type WikiPerformerIndex = typeof wikiPerformerIndex.$inferSelect;
 export type NewWikiPerformerIndex = typeof wikiPerformerIndex.$inferInsert;
 export type ProductTranslation = typeof productTranslations.$inferSelect;
 export type NewProductTranslation = typeof productTranslations.$inferInsert;
+export type PriceHistory = typeof priceHistory.$inferSelect;
+export type NewPriceHistory = typeof priceHistory.$inferInsert;
+export type SalePattern = typeof salePatterns.$inferSelect;
+export type NewSalePattern = typeof salePatterns.$inferInsert;
+export type VideoTimestamp = typeof videoTimestamps.$inferSelect;
+export type NewVideoTimestamp = typeof videoTimestamps.$inferInsert;
