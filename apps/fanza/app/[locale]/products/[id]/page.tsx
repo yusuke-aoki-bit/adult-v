@@ -520,8 +520,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* 価格追跡・セールアラートセクション */}
           {product.price && (
             <ProductPriceSection
-              productId={productId}
-              normalizedProductId={product.normalizedProductId || productId}
+              productId={String(productId)}
+              normalizedProductId={product.normalizedProductId || String(productId)}
               title={product.title}
               thumbnailUrl={product.imageUrl ?? undefined}
               currentPrice={product.price}

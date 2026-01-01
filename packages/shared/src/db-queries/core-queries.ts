@@ -4,12 +4,14 @@
  * 依存性注入パターンでDBとスキーマを外部から受け取る
  */
 import { eq, and, sql, inArray, desc, asc, SQL, or, ilike } from 'drizzle-orm';
-import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
+import type { PgTableWithColumns } from 'drizzle-orm/pg-core';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 // DI用の型エイリアス（anyを回避しつつ柔軟性を保つ）
-type DrizzleDb = NodePgDatabase;
-type AnyTable = PgTableWithColumns<TableConfig>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DrizzleDb = NodePgDatabase<any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyTable = PgTableWithColumns<any>;
 
 /**
  * LIKE/ILIKE用のワイルドカード文字をエスケープ

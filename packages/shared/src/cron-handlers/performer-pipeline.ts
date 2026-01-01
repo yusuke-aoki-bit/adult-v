@@ -16,12 +16,13 @@
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { sql } from 'drizzle-orm';
+import { sql } from '@adult-v/database';
 
 interface PipelineDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => ReturnType<typeof import('../lib/db').getDb>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getDb: () => any;
 }
 
 interface PipelineStats {
@@ -136,7 +137,7 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
  * ソースからlookupデータをクロール
  */
 async function crawlSource(
-  db: ReturnType<typeof import('../lib/db').getDb>,
+  db: any,
   source: string
 ): Promise<{ source: string; entriesFound: number; entriesSaved: number }> {
   // 簡易的なクロール（詳細は各専用クローラーに委譲）
@@ -158,7 +159,7 @@ async function crawlSource(
  * lookupテーブルから演者を紐付け
  */
 async function linkPerformersFromLookup(
-  db: ReturnType<typeof import('../lib/db').getDb>,
+  db: any,
   asp: string | undefined,
   limit: number
 ): Promise<{ productsProcessed: number; newLinks: number }> {
@@ -306,7 +307,7 @@ function normalizeProductCodeForSearch(code: string): string[] {
  * wiki_crawl_dataから演者名を検索
  */
 async function getPerformersFromWiki(
-  db: ReturnType<typeof import('../lib/db').getDb>,
+  db: any,
   productCode: string
 ): Promise<string[]> {
   const searchCodes = normalizeProductCodeForSearch(productCode);
@@ -329,7 +330,7 @@ async function getPerformersFromWiki(
  * FANZAで同じ品番の商品から演者を検索
  */
 async function findPerformersFromFanza(
-  db: ReturnType<typeof import('../lib/db').getDb>,
+  db: any,
   productCode: string
 ): Promise<{ id: number; name: string }[]> {
   const searchCodes = normalizeProductCodeForSearch(productCode);
@@ -362,7 +363,7 @@ async function findPerformersFromFanza(
  * 仮名演者を正しい演者にマージ
  */
 async function mergePerformerIntoCorrect(
-  db: ReturnType<typeof import('../lib/db').getDb>,
+  db: any,
   wrongPerformerId: number,
   wrongPerformerName: string,
   correctPerformerId: number,
@@ -454,7 +455,7 @@ async function mergePerformerIntoCorrect(
  * 仮名演者をマージする処理
  */
 async function mergeFakePerformers(
-  db: ReturnType<typeof import('../lib/db').getDb>,
+  db: any,
   limit: number
 ): Promise<{
   fakePerformersFound: number;

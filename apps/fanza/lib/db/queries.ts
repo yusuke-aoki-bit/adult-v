@@ -188,7 +188,16 @@ const productListQueries = createProductListQueries({
   },
   fetchProductRelatedData: fetchProductRelatedDataShared,
   mapProductToType: (product, performersData, tagsData, source, cache, images, videos, locale) =>
-    mapProductToType(product as DbProduct, performersData, tagsData, source as SourceData, cache, images, videos, locale),
+    mapProductToType(
+      product as DbProduct,
+      performersData as { id: number; name: string; nameKana: string | null }[],
+      tagsData as { id: number; name: string; category: string | null }[],
+      source as SourceData,
+      cache as CacheData | undefined,
+      images as { productId: number; imageUrl: string; imageType: string; displayOrder: number | null }[],
+      videos as { productId: number; videoUrl: string; videoType: string | null; quality: string | null; duration: number | null }[],
+      locale
+    ),
 });
 
 // 商品リストクエリ関数を取得
@@ -828,7 +837,18 @@ function getProductQueries() {
       productImages,
       productVideos,
       productSales,
-      mapProductToType,
+      mapProductToType: (product, performers, tags, source, cache, images, videos, locale, saleData) =>
+        mapProductToType(
+          product as DbProduct,
+          performers as { id: number; name: string; nameKana: string | null }[],
+          tags as { id: number; name: string; category: string | null }[],
+          source as SourceData,
+          cache as CacheData | undefined,
+          images as { imageUrl: string; imageType: string; displayOrder: number | null }[],
+          videos as { videoUrl: string; videoType: string | null; quality: string | null; duration: number | null }[],
+          locale,
+          saleData
+        ),
       fetchProductRelatedData: fetchProductRelatedDataShared,
       isValidPerformer,
       generateProductIdVariations,

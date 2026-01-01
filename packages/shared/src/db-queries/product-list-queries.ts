@@ -12,12 +12,14 @@ import { normalizeTitle, deduplicateProductsByTitle, type DeduplicatableProduct 
 import type { BatchRelatedDataResult } from './core-queries';
 import type { MapProductsWithBatchDataDeps, DbProduct } from './mappers';
 import { mapProductsWithBatchData } from './mappers';
-import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
+import type { PgTableWithColumns } from 'drizzle-orm/pg-core';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 // Drizzle ORM型定義（DIパターン用）
-type DrizzleDb = NodePgDatabase;
-type AnyTable = PgTableWithColumns<TableConfig>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DrizzleDb = NodePgDatabase<any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyTable = PgTableWithColumns<any>;
 
 // ============================================================
 // Types

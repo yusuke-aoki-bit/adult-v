@@ -14,12 +14,13 @@
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { sql } from 'drizzle-orm';
+import { sql } from '@adult-v/database';
 
 interface PipelineDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
   unauthorizedResponse: () => NextResponse;
-  getDb: () => ReturnType<typeof import('../lib/db').getDb>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getDb: () => any;
   // Translation deps (optional)
   translateText?: (text: string, targetLang: string) => Promise<string | null>;
   // SEO deps (optional)
@@ -120,7 +121,7 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
  * 翻訳バックフィルフェーズ
  */
 async function runTranslationPhase(
-  db: ReturnType<typeof import('../lib/db').getDb>,
+  db: any,
   limit: number,
   deps: PipelineDeps
 ): Promise<PhaseResult> {
@@ -197,7 +198,7 @@ async function runTranslationPhase(
  * SEOインデックス登録フェーズ
  */
 async function runSeoPhase(
-  db: ReturnType<typeof import('../lib/db').getDb>,
+  db: any,
   limit: number,
   deps: PipelineDeps
 ): Promise<PhaseResult> {
@@ -268,7 +269,7 @@ async function runSeoPhase(
  * 演者紐付けフェーズ
  */
 async function runPerformerPhase(
-  db: ReturnType<typeof import('../lib/db').getDb>,
+  db: any,
   limit: number
 ): Promise<PhaseResult> {
   const result: PhaseResult = {
