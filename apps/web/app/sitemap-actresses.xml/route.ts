@@ -38,11 +38,11 @@ export async function GET() {
     const topPerformers = await db
       .select({
         id: performers.id,
-        updatedAt: performers.updatedAt,
+        createdAt: performers.createdAt,
       })
       .from(performers)
       .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
-      .groupBy(performers.id, performers.updatedAt)
+      .groupBy(performers.id, performers.createdAt)
       .orderBy(desc(sql`COUNT(DISTINCT ${productPerformers.productId})`))
       .limit(3000);
 
@@ -51,7 +51,7 @@ export async function GET() {
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${topPerformers.map(performer => {
   const path = `/actress/${performer.id}`;
-  const lastmod = performer.updatedAt ? new Date(performer.updatedAt).toISOString() : new Date().toISOString();
+  const lastmod = performer.createdAt ? new Date(performer.createdAt).toISOString() : new Date().toISOString();
   return `  <url>
     <loc>${BASE_URL}${path}</loc>
 ${getHreflangLinks(path)}
