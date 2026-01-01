@@ -49,7 +49,7 @@ describe('Image Container Styles', () => {
 
   describe('ProductCardBase Image Container', () => {
     test('should have height style in full mode', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       const mockProduct = {
         id: 12345,
@@ -87,7 +87,7 @@ describe('Image Container Styles', () => {
     });
 
     test('should have aspectRatio style in compact mode', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       const mockProduct = {
         id: 12345,

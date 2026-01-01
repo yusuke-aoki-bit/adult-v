@@ -36,6 +36,8 @@
     "./contexts": "./src/contexts/index.ts",
     "./components": "./src/components/index.ts",
     "./components/*": "./src/components/*.tsx",
+    "./components/ProductCard": "./src/components/ProductCard/index.ts",
+    "./components/ProductCard/*": "./src/components/ProductCard/*.ts",
     "./api-handlers": "./src/api-handlers/index.ts",
     "./cron-handlers": "./src/cron-handlers/index.ts",
     "./db-queries": "./src/db-queries/index.ts",

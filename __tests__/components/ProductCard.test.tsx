@@ -57,7 +57,7 @@ describe('ProductCard Component', () => {
   describe('Rendering', () => {
     test('renders product title', async () => {
       // We'll test the shared ProductCardBase since it contains the actual logic
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       render(
         <ProductCardBase
@@ -66,9 +66,9 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }) => <div>{children}</div>}
+          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
           StarRating={() => <div>★★★★☆</div>}
-          formatPrice={(price) => `¥${price.toLocaleString()}`}
+          formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
         />
@@ -78,7 +78,7 @@ describe('ProductCard Component', () => {
     });
 
     test('renders product price', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       const { container } = render(
         <ProductCardBase
@@ -87,9 +87,9 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }) => <div>{children}</div>}
+          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
           StarRating={() => <div>★★★★☆</div>}
-          formatPrice={(price) => `¥${price.toLocaleString()}`}
+          formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
         />
@@ -101,7 +101,7 @@ describe('ProductCard Component', () => {
     });
 
     test('renders product image', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       render(
         <ProductCardBase
@@ -110,9 +110,9 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }) => <div>{children}</div>}
+          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
           StarRating={() => <div>★★★★☆</div>}
-          formatPrice={(price) => `¥${price.toLocaleString()}`}
+          formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
         />
@@ -123,7 +123,7 @@ describe('ProductCard Component', () => {
     });
 
     test('renders FavoriteButton component', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       render(
         <ProductCardBase
@@ -132,9 +132,9 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button data-testid="favorite-btn">Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }) => <div>{children}</div>}
+          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
           StarRating={() => <div>★★★★☆</div>}
-          formatPrice={(price) => `¥${price.toLocaleString()}`}
+          formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
         />
@@ -144,7 +144,7 @@ describe('ProductCard Component', () => {
     });
 
     test('renders rank badge when rankPosition is provided', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       const { container } = render(
         <ProductCardBase
@@ -154,9 +154,9 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }) => <div>{children}</div>}
+          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
           StarRating={() => <div>★★★★☆</div>}
-          formatPrice={(price) => `¥${price.toLocaleString()}`}
+          formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
         />
@@ -169,7 +169,7 @@ describe('ProductCard Component', () => {
 
   describe('Theme Support', () => {
     test('applies dark theme classes', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       const { container } = render(
         <ProductCardBase
@@ -178,9 +178,9 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }) => <div>{children}</div>}
+          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
           StarRating={() => <div>★★★★☆</div>}
-          formatPrice={(price) => `¥${price.toLocaleString()}`}
+          formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
         />
@@ -194,7 +194,7 @@ describe('ProductCard Component', () => {
     });
 
     test('applies light theme classes', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       const { container } = render(
         <ProductCardBase
@@ -203,9 +203,9 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }) => <div>{children}</div>}
+          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
           StarRating={() => <div>★★★★☆</div>}
-          formatPrice={(price) => `¥${price.toLocaleString()}`}
+          formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
         />
@@ -217,7 +217,7 @@ describe('ProductCard Component', () => {
 
   describe('Compact Mode', () => {
     test('renders in compact mode', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       const { container } = render(
         <ProductCardBase
@@ -227,9 +227,9 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }) => <div>{children}</div>}
+          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
           StarRating={() => <div>★★★★☆</div>}
-          formatPrice={(price) => `¥${price.toLocaleString()}`}
+          formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
         />
