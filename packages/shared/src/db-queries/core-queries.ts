@@ -146,6 +146,20 @@ export interface BatchSaleData {
 }
 
 /**
+ * ソースデータ（バッチ取得用）
+ */
+export interface BatchSourceData {
+  id: number;
+  productId: number;
+  aspName: string;
+  originalProductId: string | null;
+  affiliateUrl: string | null;
+  price: number | null;
+  currency: string | null;
+  productType: string | null;
+}
+
+/**
  * 商品関連データのバッチ取得結果型
  */
 export interface BatchRelatedDataResult {
@@ -153,6 +167,8 @@ export interface BatchRelatedDataResult {
   tagsMap: Map<number, BatchTagData[]>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sourcesMap: Map<number, any>;
+  /** 全ソースのマップ（alternativeSources生成用） */
+  allSourcesMap: Map<number, BatchSourceData[]>;
   imagesMap: Map<number, BatchImageData[]>;
   videosMap: Map<number, BatchVideoData[]>;
   salesMap: Map<number, BatchSaleData>;
@@ -874,6 +890,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         performersMap: new Map(),
         tagsMap: new Map(),
         sourcesMap: new Map(),
+        allSourcesMap: new Map(),
         imagesMap: new Map(),
         videosMap: new Map(),
         salesMap: new Map(),
@@ -1093,7 +1110,17 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       }
     }
 
-    return { performersMap, tagsMap, sourcesMap, imagesMap, videosMap, salesMap };
+    // 全ソースのマップを作成（alternativeSources生成用）
+    const allSourcesMap = new Map<number, BatchSourceData[]>();
+    for (const s of typedSources) {
+      const productId = s.productId;
+      if (!allSourcesMap.has(productId)) {
+        allSourcesMap.set(productId, []);
+      }
+      allSourcesMap.get(productId)!.push(s);
+    }
+
+    return { performersMap, tagsMap, sourcesMap, allSourcesMap, imagesMap, videosMap, salesMap };
   }
 
   /**

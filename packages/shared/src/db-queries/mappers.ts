@@ -395,17 +395,44 @@ export function mapProductsWithBatchData(
     const imagesData = batchData.imagesMap.get(product.id);
     const videosData = batchData.videosMap.get(product.id);
     const saleData = batchData.salesMap.get(product.id);
-    return mapProductToType(
+    const mainSource = batchData.sourcesMap.get(product.id);
+
+    const mappedProduct = mapProductToType(
       product,
       productMapperDeps,
       performerData,
       tagData,
-      batchData.sourcesMap.get(product.id),
+      mainSource,
       undefined,
       imagesData,
       videosData,
       locale,
       saleData
     );
+
+    // 他ASPソースを alternativeSources として追加
+    const allSources = batchData.allSourcesMap?.get(product.id) || [];
+    if (allSources.length > 1 && mainSource) {
+      const mainAspName = mainSource.aspName?.toUpperCase();
+      // メインソース以外のソースをalternativeSourcesに追加（FANZAは除外）
+      const alternatives = allSources
+        .filter(s =>
+          s.aspName.toUpperCase() !== mainAspName &&
+          s.aspName.toUpperCase() !== 'FANZA'
+        )
+        .map(s => ({
+          aspName: s.aspName,
+          price: s.price ?? 0,
+          salePrice: undefined as number | undefined,
+          affiliateUrl: s.affiliateUrl || '',
+          productId: product.id,
+        }));
+
+      if (alternatives.length > 0) {
+        mappedProduct.alternativeSources = alternatives;
+      }
+    }
+
+    return mappedProduct;
   });
 }
