@@ -49,7 +49,7 @@ describe('Image Container Styles', () => {
 
   describe('ProductCardBase Image Container', () => {
     test('should have height style in full mode', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
 
       const mockProduct = {
         id: 12345,
@@ -69,7 +69,7 @@ describe('Image Container Styles', () => {
           ViewedButton={() => <button>Viewed</button>}
           ImageLightbox={() => <div />}
           StarRating={() => <div>★★★★☆</div>}
-          formatPrice={(price) => `¥${price.toLocaleString()}`}
+          formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
         />
@@ -87,7 +87,7 @@ describe('Image Container Styles', () => {
     });
 
     test('should have aspectRatio style in compact mode', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
 
       const mockProduct = {
         id: 12345,
@@ -108,7 +108,7 @@ describe('Image Container Styles', () => {
           ViewedButton={() => <button>Viewed</button>}
           ImageLightbox={() => <div />}
           StarRating={() => <div>★★★★☆</div>}
-          formatPrice={(price) => `¥${price.toLocaleString()}`}
+          formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
         />
@@ -128,7 +128,7 @@ describe('Image Container Styles', () => {
 
   describe('ProductSkeleton Styles', () => {
     test('should have height style in normal mode', async () => {
-      const ProductSkeleton = (await import('@adult-v/shared/components/ProductSkeleton')).default;
+      const { ProductSkeleton } = await import('@adult-v/shared/components');
 
       const { container } = render(<ProductSkeleton count={1} compact={false} />);
 
@@ -144,7 +144,7 @@ describe('Image Container Styles', () => {
     });
 
     test('should have aspectRatio style in compact mode', async () => {
-      const ProductSkeleton = (await import('@adult-v/shared/components/ProductSkeleton')).default;
+      const { ProductSkeleton } = await import('@adult-v/shared/components');
 
       const { container } = render(<ProductSkeleton count={1} compact={true} />);
 
@@ -162,7 +162,7 @@ describe('Image Container Styles', () => {
 
   describe('ActressCardSkeleton Styles', () => {
     test('should have aspectRatio 3/4 in compact mode', async () => {
-      const ActressCardSkeleton = (await import('@adult-v/shared/components/ActressCardSkeleton')).default;
+      const { ActressCardSkeleton } = await import('@adult-v/shared/components');
 
       const { container } = render(<ActressCardSkeleton compact={true} />);
 
@@ -177,7 +177,7 @@ describe('Image Container Styles', () => {
     });
 
     test('should have aspectRatio 4/5 in full mode', async () => {
-      const ActressCardSkeleton = (await import('@adult-v/shared/components/ActressCardSkeleton')).default;
+      const { ActressCardSkeleton } = await import('@adult-v/shared/components');
 
       const { container } = render(<ActressCardSkeleton compact={false} />);
 

@@ -13,7 +13,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Import after mocks
-import { FanzaSiteBanner } from '@adult-v/shared/components/FanzaSiteBanner';
+import { FanzaSiteBanner } from '@adult-v/shared/components';
 
 describe('FanzaSiteBanner Component', () => {
   const FANZA_SITE_URL = 'https://www.f.adult-v.com';

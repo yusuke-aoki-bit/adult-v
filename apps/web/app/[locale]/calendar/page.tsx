@@ -12,7 +12,7 @@ import { getCalendarDetailData, getDailyReleases } from '@adult-v/shared/db-quer
 import { CalendarGridWrapper } from '@adult-v/shared/components/stats';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { getSaleProducts, getAspStats, getPopularTags } from '@/lib/db/queries';
-import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
+import { isServerFanzaSite } from '@/lib/server/site-mode';
 
 export async function generateMetadata({
   params,

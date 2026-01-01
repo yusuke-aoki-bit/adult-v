@@ -11,16 +11,7 @@ import {
   getMonthlyReleaseStats,
 } from '@adult-v/shared/db-queries';
 
-// 許可するオリジン（本番では環境変数で管理）
-const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  process.env.NEXT_PUBLIC_SITE_URL,
-].filter(Boolean);
-
-function getCorsHeaders(request: NextRequest) {
-  const origin = request.headers.get('origin');
-
+function getCorsHeaders() {
   // 任意のオリジンを許可（埋め込みウィジェット用）
   return {
     'Access-Control-Allow-Origin': '*',
@@ -30,10 +21,10 @@ function getCorsHeaders(request: NextRequest) {
   };
 }
 
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
-    headers: getCorsHeaders(request),
+    headers: getCorsHeaders(),
   });
 }
 
@@ -76,7 +67,7 @@ export async function GET(request: NextRequest) {
       default:
         return NextResponse.json(
           { error: 'Invalid type parameter. Use: overview, top-performers, top-genres, monthly-releases, or all' },
-          { status: 400, headers: getCorsHeaders(request) }
+          { status: 400, headers: getCorsHeaders() }
         );
     }
 
@@ -90,13 +81,13 @@ export async function GET(request: NextRequest) {
           source: process.env.NEXT_PUBLIC_SITE_URL || 'Adult Viewer Lab',
         },
       },
-      { headers: getCorsHeaders(request) }
+      { headers: getCorsHeaders() }
     );
   } catch (error) {
     console.error('Embed stats API error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch statistics' },
-      { status: 500, headers: getCorsHeaders(request) }
+      { status: 500, headers: getCorsHeaders() }
     );
   }
 }

@@ -178,7 +178,7 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
   const [data, setData] = useState<CalendarData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [_selectedMonth, _setSelectedMonth] = useState(new Date().getMonth());
 
   const t = TRANSLATIONS[locale as keyof typeof TRANSLATIONS] || TRANSLATIONS.ja;
 

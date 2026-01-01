@@ -57,7 +57,7 @@ describe('ProductCard Component', () => {
   describe('Rendering', () => {
     test('renders product title', async () => {
       // We'll test the shared ProductCardBase since it contains the actual logic
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
 
       render(
         <ProductCardBase
@@ -78,7 +78,7 @@ describe('ProductCard Component', () => {
     });
 
     test('renders product price', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
 
       const { container } = render(
         <ProductCardBase
@@ -101,7 +101,7 @@ describe('ProductCard Component', () => {
     });
 
     test('renders product image', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
 
       render(
         <ProductCardBase
@@ -123,7 +123,7 @@ describe('ProductCard Component', () => {
     });
 
     test('renders FavoriteButton component', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
 
       render(
         <ProductCardBase
@@ -144,7 +144,7 @@ describe('ProductCard Component', () => {
     });
 
     test('renders rank badge when rankPosition is provided', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
 
       const { container } = render(
         <ProductCardBase
@@ -169,7 +169,7 @@ describe('ProductCard Component', () => {
 
   describe('Theme Support', () => {
     test('applies dark theme classes', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
 
       const { container } = render(
         <ProductCardBase
@@ -194,7 +194,7 @@ describe('ProductCard Component', () => {
     });
 
     test('applies light theme classes', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
 
       const { container } = render(
         <ProductCardBase
@@ -217,7 +217,7 @@ describe('ProductCard Component', () => {
 
   describe('Compact Mode', () => {
     test('renders in compact mode', async () => {
-      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
+      const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard/ProductCardBase');
 
       const { container } = render(
         <ProductCardBase
@@ -242,7 +242,7 @@ describe('ProductCard Component', () => {
 
 describe('ProductCard Helper Functions', () => {
   test('normalizeMgsProductId adds hyphen correctly', async () => {
-    const { normalizeMgsProductId } = await import('@adult-v/shared/components/ProductCard/helpers');
+    const { normalizeMgsProductId } = await import('@adult-v/shared/components/ProductCard');
 
     expect(normalizeMgsProductId('ABC123')).toBe('ABC-123');
     expect(normalizeMgsProductId('ABC-123')).toBe('ABC-123');
@@ -250,7 +250,7 @@ describe('ProductCard Helper Functions', () => {
   });
 
   test('convertFanzaToDirectUrl extracts direct URL', async () => {
-    const { convertFanzaToDirectUrl } = await import('@adult-v/shared/components/ProductCard/helpers');
+    const { convertFanzaToDirectUrl } = await import('@adult-v/shared/components/ProductCard');
 
     const affiliateUrl = 'https://al.dmm.co.jp/?lurl=https%3A%2F%2Fwww.dmm.co.jp%2Fdigital%2F&af_id=test';
     const directUrl = convertFanzaToDirectUrl(affiliateUrl);
@@ -259,7 +259,7 @@ describe('ProductCard Helper Functions', () => {
   });
 
   test('getAffiliateUrl returns null for empty input', async () => {
-    const { getAffiliateUrl } = await import('@adult-v/shared/components/ProductCard/helpers');
+    const { getAffiliateUrl } = await import('@adult-v/shared/components/ProductCard');
 
     expect(getAffiliateUrl('')).toBeNull();
     expect(getAffiliateUrl(null)).toBeNull();
@@ -267,7 +267,7 @@ describe('ProductCard Helper Functions', () => {
   });
 
   test('getAffiliateUrl returns valid URL', async () => {
-    const { getAffiliateUrl } = await import('@adult-v/shared/components/ProductCard/helpers');
+    const { getAffiliateUrl } = await import('@adult-v/shared/components/ProductCard');
 
     const url = 'https://example.com/product';
     expect(getAffiliateUrl(url)).toBe(url);
