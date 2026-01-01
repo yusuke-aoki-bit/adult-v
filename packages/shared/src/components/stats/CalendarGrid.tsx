@@ -326,7 +326,8 @@ export default function CalendarGrid({
                           key={product.id}
                           type="button"
                           onClick={() => handleProductClick(product)}
-                          className="block aspect-[3/4] relative rounded overflow-hidden hover:ring-2 hover:ring-indigo-400 transition-all cursor-pointer"
+                          className="block relative rounded overflow-hidden hover:ring-2 hover:ring-indigo-400 transition-all cursor-pointer"
+                          style={{ aspectRatio: '3/4' }}
                           title={product.title}
                         >
                           {isValidUrl(product.thumbnailUrl) ? (

@@ -173,7 +173,7 @@ export default function ForYouSales({
         <div className="h-6 bg-gray-700 rounded w-1/4 mb-4 animate-pulse" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="aspect-[3/4] bg-gray-700 rounded-lg animate-pulse" />
+            <div key={i} className="bg-gray-700 rounded-lg animate-pulse" style={{ aspectRatio: '3/4' }} />
           ))}
         </div>
       </div>
@@ -218,7 +218,7 @@ export default function ForYouSales({
             className={`group rounded-lg overflow-hidden transition-transform hover:scale-[1.02] ${isDark ? 'bg-gray-800/50' : 'bg-white shadow-sm'}`}
           >
             {/* Image */}
-            <div className="relative aspect-[3/4]">
+            <div className="relative" style={{ aspectRatio: '3/4' }}>
               {product.thumbnailUrl ? (
                 <Image
                   src={product.thumbnailUrl}

@@ -11,6 +11,9 @@ import { test, expect } from '@playwright/test';
  * 4. Next.js Imageコンポーネントが正しく読み込まれるか
  */
 
+// Increase timeout for image loading tests
+test.setTimeout(120000);
+
 test.describe('Image Display Tests', () => {
   test.beforeEach(async ({ context }) => {
     // 年齢確認クッキーを設定

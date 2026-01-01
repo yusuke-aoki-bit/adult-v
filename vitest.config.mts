@@ -15,6 +15,9 @@ export default defineConfig({
       '.next/**',
       '__tests__/legacy/**',
     ],
+    // Increase timeout for tests that use dynamic imports (slower on Windows)
+    testTimeout: 30000,
+    hookTimeout: 30000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

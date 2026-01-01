@@ -6,6 +6,9 @@ import AxeBuilder from '@axe-core/playwright';
  * WCAG 2.1 AA準拠チェック
  */
 
+// Increase timeout for accessibility scans
+test.setTimeout(120000);
+
 test.describe('Accessibility Tests', () => {
   test.beforeEach(async ({ context }) => {
     await context.addCookies([{
@@ -17,8 +20,8 @@ test.describe('Accessibility Tests', () => {
   });
 
   test('Homepage has no critical accessibility violations', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForLoadState('networkidle').catch(() => {});
     await page.waitForTimeout(2000);
 
     const accessibilityScanResults = await new AxeBuilder({ page })

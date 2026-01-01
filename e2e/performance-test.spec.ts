@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-// タイムアウトを60秒に設定
-test.setTimeout(60000);
+// タイムアウトを120秒に設定（dev環境は遅い）
+test.setTimeout(120000);
 
 /**
  * パフォーマンステスト

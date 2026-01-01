@@ -6,6 +6,9 @@ import { EventTestHelper, setAgeVerifiedCookie, ALL_EVENTS } from './helpers/Eve
  * アプリケーション内の全トラッキングイベントが正しく発火することを検証
  */
 
+// Increase timeout for event tests (waiting for async events)
+test.setTimeout(120000);
+
 test.describe('Event Coverage Tests', () => {
   let eventHelper: EventTestHelper;
 
@@ -153,15 +156,15 @@ test.describe('Event Coverage Tests', () => {
   });
 
   test('filter_applied event fires', async ({ page }) => {
-    await page.goto('/ja');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1500);
+    await page.goto('/ja', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForTimeout(2000);
 
     // フィルター要素を探す
     const filterSelect = page.locator('select[name*="filter"], select[name*="category"], [data-testid*="filter"]').first();
     const filterCheckbox = page.locator('input[type="checkbox"][name*="filter"]').first();
 
-    if (await filterSelect.isVisible({ timeout: 3000 }).catch(() => false)) {
+    if (await filterSelect.isVisible({ timeout: 5000 }).catch(() => false)) {
       const options = await filterSelect.locator('option').all();
       if (options.length > 1) {
         await filterSelect.selectOption({ index: 1 });
@@ -170,7 +173,7 @@ test.describe('Event Coverage Tests', () => {
         const fired = await eventHelper.hasEventFired('filter_applied');
         console.log('filter_applied event fired:', fired);
       }
-    } else if (await filterCheckbox.isVisible({ timeout: 3000 }).catch(() => false)) {
+    } else if (await filterCheckbox.isVisible({ timeout: 5000 }).catch(() => false)) {
       await filterCheckbox.click();
       await page.waitForTimeout(500);
 

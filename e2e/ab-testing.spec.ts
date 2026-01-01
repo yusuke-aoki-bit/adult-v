@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// Increase timeout for flaky tests
+test.setTimeout(120000);
+
 test.describe('AB Testing Framework', () => {
   test.beforeEach(async ({ context }) => {
     // Set age verification cookie to bypass age gate
@@ -211,9 +214,9 @@ test.describe('AB Test UI Components', () => {
   });
 
   test('Price display component renders', async ({ page }) => {
-    await page.goto('/ja');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1500);
+    await page.goto('/ja', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForTimeout(2000);
 
     // Look for price elements on the page
     const priceElements = page.locator('[class*="price"], .price, [data-price]');

@@ -209,7 +209,7 @@ export default function ActressBundleCalculator({
                 href={`${productLinkPrefix}/${product.normalizedProductId || product.id}`}
                 className={`group p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-gray-700' : 'hover:bg-white'}`}
               >
-                <div className="relative aspect-[3/4] rounded overflow-hidden mb-1">
+                <div className="relative rounded overflow-hidden mb-1" style={{ aspectRatio: '3/4' }}>
                   {product.thumbnailUrl ? (
                     <img
                       src={product.thumbnailUrl}

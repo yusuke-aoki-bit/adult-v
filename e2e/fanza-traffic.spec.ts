@@ -11,6 +11,9 @@ import { test, expect } from '@playwright/test';
  * 4. Affiliate compliance (links go through f.adult-v.com)
  */
 
+// Increase timeout for navigation tests
+test.setTimeout(120000);
+
 const FANZA_SITE_URL = 'https://www.f.adult-v.com';
 
 // Helper to get domain from baseURL

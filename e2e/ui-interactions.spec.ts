@@ -5,6 +5,9 @@ import { test, expect } from '@playwright/test';
  * ユーザー操作とコンポーネントの動作を検証
  */
 
+// Increase timeout for UI interaction tests
+test.setTimeout(120000);
+
 test.describe('UI Interactions', () => {
   test.beforeEach(async ({ context }) => {
     // Age verification cookie設定

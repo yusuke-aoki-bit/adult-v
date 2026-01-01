@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-// Increase timeout for all tests in this file
-test.setTimeout(60000);
+// Increase timeout for all tests in this file (dev environment is slower)
+test.setTimeout(120000);
 
 // Helper to get domain from baseURL
 function getDomain(baseURL: string | undefined): string {
@@ -104,20 +104,20 @@ test.describe('Basic Navigation & SEO', () => {
       path: '/',
     }]);
 
-    // Test default Japanese
-    await page.goto('/');
+    // Test default Japanese - use waitUntil: 'domcontentloaded' for faster navigation
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await expect(page).not.toHaveURL(/age-verification/);
 
     // Test English with ?hl=en
-    await page.goto('/?hl=en');
+    await page.goto('/?hl=en', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await expect(page).toHaveURL(/hl=en/);
 
     // Test Chinese with ?hl=zh
-    await page.goto('/?hl=zh');
+    await page.goto('/?hl=zh', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await expect(page).toHaveURL(/hl=zh/);
 
     // Test Korean with ?hl=ko
-    await page.goto('/?hl=ko');
+    await page.goto('/?hl=ko', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await expect(page).toHaveURL(/hl=ko/);
   });
 

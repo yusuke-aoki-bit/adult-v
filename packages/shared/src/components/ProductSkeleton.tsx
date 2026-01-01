@@ -25,7 +25,7 @@ export default function ProductSkeleton({ count = 8, size, compact = false }: Pr
       <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} className="theme-skeleton-card rounded-lg overflow-hidden animate-pulse">
-            <div className="theme-skeleton-image aspect-[2/3]" />
+            <div className="theme-skeleton-image" style={{ aspectRatio: '2/3' }} />
             <div className="p-1.5 space-y-1">
               <div className="h-2.5 theme-skeleton-image rounded w-full" />
               <div className="h-2.5 theme-skeleton-image rounded w-2/3" />
@@ -42,7 +42,7 @@ export default function ProductSkeleton({ count = 8, size, compact = false }: Pr
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} className="theme-skeleton-card rounded-lg overflow-hidden animate-pulse">
-            <div className="theme-skeleton-image aspect-[2/3]" />
+            <div className="theme-skeleton-image" style={{ aspectRatio: '2/3' }} />
             <div className="p-2 space-y-1">
               <div className="h-3 theme-skeleton-image rounded w-3/4" />
               <div className="h-2 theme-skeleton-image rounded w-1/2" />

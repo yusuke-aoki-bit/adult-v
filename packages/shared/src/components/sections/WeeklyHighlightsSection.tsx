@@ -206,7 +206,7 @@ export function WeeklyHighlightsSection({
                       <div className="grid grid-cols-3 gap-2">
                         {[1, 2, 3].map((j) => (
                           <div key={j} className={`${styles.cardBgClass} rounded-lg overflow-hidden animate-pulse`}>
-                            <div className={`aspect-[2/3] ${styles.skeletonBgClass}`} />
+                            <div className={styles.skeletonBgClass} style={{ aspectRatio: '2/3' }} />
                             <div className="p-1.5 space-y-1">
                               <div className={`h-2.5 ${styles.skeletonBgClass} rounded w-3/4`} />
                             </div>
