@@ -201,28 +201,39 @@ export default function CrossAspInfo({
                 ? `${fanzaSiteUrl}/${locale}/actress/${performerId}`
                 : `/${locale}/actress/${performerId}?asp=${asp.aspName.toLowerCase()}`;
 
-              // 外部リンクの場合はaタグ、内部リンクの場合はLinkを使用
-              const LinkComponent = isFanza ? 'a' : Link;
-              const linkProps = isFanza
-                ? { href: aspLinkHref, target: '_blank', rel: 'noopener noreferrer' }
-                : { href: aspLinkHref };
+              const linkContent = (
+                <>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                      meta?.accentClass?.replace('from-', 'bg-').split(' ')[0] || 'bg-gray-600'
+                    } text-white`}
+                  >
+                    {meta?.label || asp.aspName}
+                  </span>
+                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </>
+              );
 
               return (
                 <div key={asp.aspName} className="group">
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <LinkComponent
-                      {...linkProps}
-                      className="flex items-center gap-2 hover:text-cyan-400 transition-colors"
-                    >
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                          meta?.accentClass?.replace('from-', 'bg-').split(' ')[0] || 'bg-gray-600'
-                        } text-white`}
+                    {isFanza ? (
+                      <a
+                        href={aspLinkHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 hover:text-cyan-400 transition-colors"
                       >
-                        {meta?.label || asp.aspName}
-                      </span>
-                      <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </LinkComponent>
+                        {linkContent}
+                      </a>
+                    ) : (
+                      <Link
+                        href={aspLinkHref}
+                        className="flex items-center gap-2 hover:text-cyan-400 transition-colors"
+                      >
+                        {linkContent}
+                      </Link>
+                    )}
                     <span className="text-gray-300">
                       <span className="font-medium text-white">{asp.count.toLocaleString()}</span>
                       <span className="text-gray-500 text-xs ml-1">({percentage.toFixed(0)}%)</span>
