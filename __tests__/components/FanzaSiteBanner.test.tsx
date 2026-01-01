@@ -58,7 +58,8 @@ describe('FanzaSiteBanner Component', () => {
       const { container } = render(<FanzaSiteBanner locale="ja" variant="card" />);
 
       const link = container.querySelector('a');
-      expect(link?.className).toContain('gradient');
+      // Tailwind 4 uses bg-linear-to-* instead of bg-gradient-to-*
+      expect(link?.className).toContain('bg-linear-to-');
     });
   });
 
