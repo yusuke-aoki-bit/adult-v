@@ -106,20 +106,23 @@ function ActressCardBaseComponent({
   // Check if uncensored thumbnail (for blur)
   const shouldBlur = isUncensoredThumbnail(rawImageUrl);
 
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
     if (retryCount < MAX_RETRIES && initialSrc) {
-      // タイムアウトやネットワークエラーの場合は再試行
-      setRetryCount(prev => prev + 1);
-      // キャッシュ回避のためタイムスタンプを付与
-      const retryUrl = initialSrc.includes('?')
-        ? `${initialSrc}&_retry=${retryCount + 1}`
-        : `${initialSrc}?_retry=${retryCount + 1}`;
-      setImgSrc(retryUrl);
+      // タイムアウトやネットワークエラーの場合は遅延後に再試行
+      const delay = (retryCount + 1) * 500; // 500ms, 1000ms
+      setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        // キャッシュ回避のためタイムスタンプを付与
+        const retryUrl = initialSrc.includes('?')
+          ? `${initialSrc}&_retry=${retryCount + 1}&_t=${Date.now()}`
+          : `${initialSrc}?_retry=${retryCount + 1}&_t=${Date.now()}`;
+        setImgSrc(retryUrl);
+      }, delay);
     } else if (!hasError) {
       setHasError(true);
       setImgSrc(themeConfig.placeholderImage);
     }
-  };
+  }, [retryCount, initialSrc, hasError, themeConfig.placeholderImage]);
 
   // Image click/keydown handler for lightbox
   const handleImageClick = useCallback(async (e: React.MouseEvent | React.KeyboardEvent) => {
