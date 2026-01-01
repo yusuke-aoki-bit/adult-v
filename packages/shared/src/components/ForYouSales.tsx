@@ -185,7 +185,7 @@ export default function ForYouSales({
   }
 
   return (
-    <div className={`rounded-lg p-6 ${isDark ? 'bg-gradient-to-br from-rose-900/20 to-orange-900/20 border border-rose-700/30' : 'bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-200'}`}>
+    <div className={`rounded-lg p-6 ${isDark ? 'bg-linear-to-br from-rose-900/20 to-orange-900/20 border border-rose-700/30' : 'bg-linear-to-br from-rose-50 to-orange-50 border border-rose-200'}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className={`text-xl font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>

@@ -74,13 +74,13 @@ function BadgeCard({ badge, locale }: { badge: Badge; locale: string }) {
     <div
       className={`relative p-3 rounded-lg border transition-all ${
         isEarned
-          ? 'bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-300'
+          ? 'bg-linear-to-br from-yellow-50 to-amber-50 border-yellow-300'
           : 'bg-gray-50 border-gray-200 opacity-60'
       }`}
     >
       <div className="flex items-start gap-3">
         <div
-          className={`text-2xl flex-shrink-0 ${
+          className={`text-2xl shrink-0 ${
             isEarned ? '' : 'grayscale'
           }`}
         >
@@ -97,7 +97,7 @@ function BadgeCard({ badge, locale }: { badge: Badge; locale: string }) {
             <div className="mt-2">
               <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-yellow-400 to-amber-400 rounded-full transition-all duration-500"
+                  className="h-full bg-linear-to-r from-yellow-400 to-amber-400 rounded-full transition-all duration-500"
                   style={{ width: `${badge.progress}%` }}
                 />
               </div>
@@ -106,7 +106,7 @@ function BadgeCard({ badge, locale }: { badge: Badge; locale: string }) {
           )}
         </div>
         {isEarned && (
-          <Trophy className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+          <Trophy className="w-4 h-4 text-yellow-500 shrink-0" />
         )}
       </div>
     </div>

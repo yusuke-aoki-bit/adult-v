@@ -171,7 +171,7 @@ export default function RankingWidget({
               >
                 {/* Rank badge */}
                 <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${getRankBadgeColor(
+                  className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${getRankBadgeColor(
                     item.rank
                   )}`}
                 >
@@ -180,7 +180,7 @@ export default function RankingWidget({
 
                 {/* Thumbnail */}
                 {(item.thumbnail || item.image) && (
-                  <div className="flex-shrink-0 w-16 h-16 relative rounded overflow-hidden bg-gray-200">
+                  <div className="shrink-0 w-16 h-16 relative rounded overflow-hidden bg-gray-200">
                     <Image
                       src={item.thumbnail || item.image || ''}
                       alt={item.title || item.name || ''}

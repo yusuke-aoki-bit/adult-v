@@ -70,7 +70,7 @@ function CampaignCardComponent({ campaign, theme = 'light' }: Props) {
 
   return (
     <div className={colors.container}>
-      <div className={`p-4 rounded-t-2xl text-white bg-gradient-to-r ${provider.accentClass}`}>
+      <div className={`p-4 rounded-t-2xl text-white bg-linear-to-r ${provider.accentClass}`}>
         <p className="text-sm uppercase tracking-wide text-white/80">{provider.label}</p>
         <h3 className="text-xl font-semibold">{campaign.title}</h3>
       </div>

@@ -31,7 +31,7 @@ const themeConfig = {
     barLabelClass: 'text-gray-300',
     barValueClass: 'text-rose-400',
     barBgClass: 'bg-gray-700',
-    barFillClass: 'bg-gradient-to-r from-rose-600 to-rose-400',
+    barFillClass: 'bg-linear-to-r from-rose-600 to-rose-400',
   },
   light: {
     gridStroke: 'rgba(0, 0, 0, 0.1)',
@@ -45,7 +45,7 @@ const themeConfig = {
     barLabelClass: 'text-gray-700',
     barValueClass: 'text-pink-500',
     barBgClass: 'bg-gray-200',
-    barFillClass: 'bg-gradient-to-r from-pink-500 to-pink-400',
+    barFillClass: 'bg-linear-to-r from-pink-500 to-pink-400',
   },
 } as const;
 

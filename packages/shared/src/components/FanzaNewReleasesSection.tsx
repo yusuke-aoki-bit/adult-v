@@ -102,7 +102,7 @@ export function FanzaNewReleasesSection({
         {/* ヘッダー */}
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-linear-to-br from-pink-500 to-rose-500 flex items-center justify-center shrink-0">
               <span className="text-white font-bold text-lg sm:text-xl">F</span>
             </div>
             <h2 className="text-lg sm:text-xl font-bold text-white">
@@ -156,14 +156,14 @@ export function FanzaNewReleasesSection({
                       {t.sale}
                     </span>
                     {product.discount && product.discount >= 30 && (
-                      <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[8px] sm:text-[10px] font-bold px-1 py-0.5 rounded">
+                      <span className="bg-linear-to-r from-yellow-400 to-orange-500 text-black text-[8px] sm:text-[10px] font-bold px-1 py-0.5 rounded">
                         -{product.discount}%
                       </span>
                     )}
                   </div>
                 )}
                 {/* ホバーオーバーレイ */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
                   <span className="text-white text-[10px] sm:text-xs font-medium bg-pink-500/80 px-1.5 py-0.5 rounded">
                     FANZAで見る
                   </span>
@@ -184,7 +184,7 @@ export function FanzaNewReleasesSection({
             href={fanzaSiteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full p-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 rounded-lg text-center text-white font-medium text-sm transition-all shadow hover:shadow-lg"
+            className="block w-full p-3 bg-linear-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 rounded-lg text-center text-white font-medium text-sm transition-all shadow hover:shadow-lg"
           >
             <span className="flex items-center justify-center gap-2">
               FANZA専門サイトで全作品を見る

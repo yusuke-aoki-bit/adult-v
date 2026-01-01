@@ -327,20 +327,20 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
         {/* Summary Cards */}
         {data && data.summary && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 border border-blue-700/30 rounded-lg p-6">
+            <div className="bg-linear-to-br from-blue-900/50 to-blue-800/30 border border-blue-700/30 rounded-lg p-6">
               <p className="text-blue-400 text-sm">{t.summary.totalSaleDays}</p>
               <p className="text-3xl font-bold text-white mt-1">
                 {data.summary.totalSaleDays}
                 <span className="text-lg text-gray-400 ml-1">{t.summary.days}</span>
               </p>
             </div>
-            <div className="bg-gradient-to-br from-green-900/50 to-green-800/30 border border-green-700/30 rounded-lg p-6">
+            <div className="bg-linear-to-br from-green-900/50 to-green-800/30 border border-green-700/30 rounded-lg p-6">
               <p className="text-green-400 text-sm">{t.summary.avgDiscount}</p>
               <p className="text-3xl font-bold text-white mt-1">
                 {data.summary.avgMonthlyDiscount}%
               </p>
             </div>
-            <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 border border-purple-700/30 rounded-lg p-6">
+            <div className="bg-linear-to-br from-purple-900/50 to-purple-800/30 border border-purple-700/30 rounded-lg p-6">
               <p className="text-purple-400 text-sm">{t.summary.peakMonth}</p>
               <p className="text-3xl font-bold text-white mt-1">
                 {data.summary.peakMonth ? t.monthNames[data.summary.peakMonth - 1] : '-'}
@@ -351,7 +351,7 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
 
         {/* Next Big Sale Prediction */}
         {data?.nextBigSale && (
-          <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-700/30 rounded-lg p-6 mb-8">
+          <div className="bg-linear-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-700/30 rounded-lg p-6 mb-8">
             <h2 className="text-xl font-bold text-yellow-400 flex items-center gap-2 mb-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

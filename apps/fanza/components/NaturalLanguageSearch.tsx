@@ -253,7 +253,7 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
                     href={localizedHref(`/products/${result.id}`, locale)}
                     className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
                   >
-                    <div className="w-10 h-14 flex-shrink-0 rounded overflow-hidden bg-gray-200">
+                    <div className="w-10 h-14 shrink-0 rounded overflow-hidden bg-gray-200">
                       {result.imageUrl ? (
                         <img
                           src={result.imageUrl}
@@ -271,7 +271,7 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
                         {result.title}
                       </p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 shrink-0" />
                   </Link>
                 ))}
               </div>

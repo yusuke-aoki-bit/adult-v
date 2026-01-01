@@ -165,7 +165,7 @@ export default function MakerDetailPage() {
         {/* Header */}
         <div className="bg-gray-800 rounded-xl p-6 mb-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
               {maker.category === 'maker' ? (
                 <Building2 className="w-8 h-8 text-white" />
               ) : (
@@ -215,7 +215,7 @@ export default function MakerDetailPage() {
                       <span className="text-gray-400 w-12 text-sm">{stat.year}</span>
                       <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-end pr-2"
+                          className="h-full bg-linear-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-end pr-2"
                           style={{ width: `${(stat.count / maxYearlyCount) * 100}%` }}
                         >
                           <span className="text-xs text-white font-medium">

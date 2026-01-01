@@ -135,7 +135,7 @@ export default function ActressBundleCalculator({
   }
 
   return (
-    <div className={`rounded-lg p-6 ${isDark ? 'bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-700/30' : 'bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200'}`}>
+    <div className={`rounded-lg p-6 ${isDark ? 'bg-linear-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-700/30' : 'bg-linear-to-br from-emerald-50 to-teal-50 border border-emerald-200'}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className={`text-lg font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>

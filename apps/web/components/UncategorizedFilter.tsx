@@ -131,7 +131,7 @@ export default function UncategorizedFilter({
                       isSelected
                         ? 'ring-2 ring-yellow-400'
                         : 'hover:opacity-80'
-                    } bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
+                    } bg-linear-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
                   >
                     {meta?.label || asp.aspName}
                     <span className="ml-1.5 text-xs opacity-80">({asp.count.toLocaleString()})</span>

@@ -278,7 +278,7 @@ export default function SearchAutocomplete({
                 } ${index > 0 ? 'border-t border-gray-100' : ''}`}
               >
                 {result.image && (
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <Image
                       src={result.image}
                       alt={result.name}

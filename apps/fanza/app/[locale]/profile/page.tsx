@@ -101,7 +101,7 @@ export default function ProfilePage() {
 
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* レーダーチャート */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               {analysis.radarData.length >= 3 ? (
                 <PreferenceChart data={analysis.radarData} size={280} />
               ) : (
@@ -137,7 +137,7 @@ export default function ProfilePage() {
                           </div>
                           <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-rose-600 to-rose-400 rounded-full"
+                              className="h-full bg-linear-to-r from-rose-600 to-rose-400 rounded-full"
                               style={{ width: `${pref.score}%` }}
                             />
                           </div>

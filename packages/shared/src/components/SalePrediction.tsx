@@ -176,7 +176,7 @@ export default function SalePrediction({
   }
 
   return (
-    <div className={`rounded-lg p-6 ${isDark ? 'bg-gradient-to-br from-purple-900/30 to-indigo-900/30 border border-purple-700/30' : 'bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200'}`}>
+    <div className={`rounded-lg p-6 ${isDark ? 'bg-linear-to-br from-purple-900/30 to-indigo-900/30 border border-purple-700/30' : 'bg-linear-to-br from-purple-50 to-indigo-50 border border-purple-200'}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className={`text-lg font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>

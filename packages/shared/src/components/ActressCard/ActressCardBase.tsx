@@ -307,7 +307,7 @@ function ActressCardBaseComponent({
           onError={handleImageError}
           unoptimized
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent" />
         {FavoriteButton && (
           <div className="absolute top-4 right-4 bg-white rounded-full shadow-md">
             <FavoriteButton type="actress" id={actress.id} />

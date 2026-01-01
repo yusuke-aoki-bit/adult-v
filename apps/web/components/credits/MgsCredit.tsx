@@ -12,7 +12,7 @@ export function MgsCredit({ className = '' }: MgsCreditProps) {
       href="https://www.mgstage.com/ppv/?aff_id=6CS5PGEBQDUYPZLHYEM33TBZFJ"
       target="_blank"
       rel="noopener"
-      className={`inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-pink-600 to-red-600 text-white font-bold text-sm rounded hover:from-pink-700 hover:to-red-700 transition-all h-[50px] ${className}`}
+      className={`inline-flex items-center justify-center px-6 py-3 bg-linear-to-r from-pink-600 to-red-600 text-white font-bold text-sm rounded hover:from-pink-700 hover:to-red-700 transition-all h-[50px] ${className}`}
       aria-label="MGS動画"
     >
       MGS動画

@@ -168,7 +168,7 @@ export function RetirementAlert({
   return (
     <div className={`rounded-lg border p-4 ${bgColor}`}>
       <div className="flex items-start gap-3">
-        <AlertTriangle className={`w-5 h-5 ${iconColor} flex-shrink-0 mt-0.5`} />
+        <AlertTriangle className={`w-5 h-5 ${iconColor} shrink-0 mt-0.5`} />
         <div className="flex-1">
           <h4 className={`font-bold ${textColor}`}>
             {t.retirementAlert}

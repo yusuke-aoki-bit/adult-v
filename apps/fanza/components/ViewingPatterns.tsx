@@ -152,7 +152,7 @@ export default function ViewingPatterns({
               className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors group"
             >
               {/* Thumbnail */}
-              <div className="relative w-12 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-200">
+              <div className="relative w-12 h-16 shrink-0 rounded overflow-hidden bg-gray-200">
                 {product.imageUrl ? (
                   <img
                     src={product.imageUrl}
@@ -192,7 +192,7 @@ export default function ViewingPatterns({
                 </div>
               </div>
 
-              <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 flex-shrink-0 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 shrink-0 transition-colors" />
             </Link>
           );
         })}

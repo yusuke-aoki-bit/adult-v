@@ -77,7 +77,7 @@ export function useSiteStyles() {
       primaryBg: 'bg-pink-600',
       primaryHover: 'hover:bg-pink-700',
       accentGradient: 'from-rose-500 to-red-500',
-      headerBg: 'bg-gradient-to-r from-pink-700 to-rose-600',
+      headerBg: 'bg-linear-to-r from-pink-700 to-rose-600',
       linkColor: 'text-pink-600 hover:text-pink-800',
     };
   }
@@ -89,7 +89,7 @@ export function useSiteStyles() {
     primaryBg: 'bg-indigo-600',
     primaryHover: 'hover:bg-indigo-700',
     accentGradient: 'from-violet-500 to-purple-500',
-    headerBg: 'bg-gradient-to-r from-indigo-700 to-violet-600',
+    headerBg: 'bg-linear-to-r from-indigo-700 to-violet-600',
     linkColor: 'text-indigo-600 hover:text-indigo-800',
   };
 }

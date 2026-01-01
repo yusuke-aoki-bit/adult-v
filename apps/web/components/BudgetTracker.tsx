@@ -232,7 +232,7 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
           </div>
           <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
             <div
-              className={`h-full bg-gradient-to-r ${progressColor} rounded-full transition-all duration-500`}
+              className={`h-full bg-linear-to-r ${progressColor} rounded-full transition-all duration-500`}
               style={{ width: `${Math.min(stats.percentUsed, 100)}%` }}
             />
           </div>

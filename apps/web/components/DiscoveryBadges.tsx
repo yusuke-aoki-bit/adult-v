@@ -74,7 +74,7 @@ const BadgeCard = memo(function BadgeCard({ badge, locale }: { badge: Badge; loc
     <div
       className={`relative p-3 rounded-lg border transition-all ${
         isEarned
-          ? 'bg-gradient-to-br from-yellow-900/30 to-amber-900/20 border-yellow-600/50'
+          ? 'bg-linear-to-br from-yellow-900/30 to-amber-900/20 border-yellow-600/50'
           : 'bg-gray-750 border-gray-700 opacity-60'
       }`}
     >
@@ -97,7 +97,7 @@ const BadgeCard = memo(function BadgeCard({ badge, locale }: { badge: Badge; loc
             <div className="mt-2">
               <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-yellow-600 to-amber-500 rounded-full transition-all duration-500"
+                  className="h-full bg-linear-to-r from-yellow-600 to-amber-500 rounded-full transition-all duration-500"
                   style={{ width: `${badge.progress}%` }}
                 />
               </div>

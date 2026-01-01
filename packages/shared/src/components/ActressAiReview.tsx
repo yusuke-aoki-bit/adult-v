@@ -41,7 +41,7 @@ const translations = {
 // Theme configuration
 const themeConfig = {
   dark: {
-    container: 'bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl',
+    container: 'bg-linear-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl',
     title: 'text-xl font-bold text-white flex items-center gap-2',
     titleIcon: 'w-5 h-5 text-purple-400',
     overview: 'text-gray-300 leading-relaxed',
@@ -50,7 +50,7 @@ const themeConfig = {
     appealCard: 'bg-gray-700/50 rounded-xl p-4',
     appealTitle: 'text-sm font-semibold text-pink-300 mb-2 flex items-center gap-2',
     cardText: 'text-gray-300 text-sm',
-    recommendCard: 'bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-4',
+    recommendCard: 'bg-linear-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-4',
     recommendTitle: 'text-sm font-semibold text-blue-300 mb-2 flex items-center gap-2',
     keywordBadge: 'text-xs px-3 py-1 rounded-full bg-gray-700 text-gray-300 border border-gray-600',
     updatedAt: 'text-xs text-gray-500 pt-2 border-t border-gray-700 flex items-center gap-1',

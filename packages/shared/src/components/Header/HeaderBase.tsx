@@ -253,7 +253,7 @@ export function HeaderBase({
   const defaultLogo = (
     <Link
       href={localizedHref('/', locale)}
-      className="header-logo flex items-center space-x-2 flex-shrink-0"
+      className="header-logo flex items-center space-x-2 shrink-0"
     >
       {isFanzaSite ? (
         <div className="text-2xl font-bold tracking-tight">
@@ -300,7 +300,7 @@ export function HeaderBase({
 
           {/* デスクトップナビゲーション - 3カラム×2行レイアウト */}
           <nav
-            className="hidden md:flex items-center gap-4 flex-shrink-0 theme-nav ml-auto"
+            className="hidden md:flex items-center gap-4 shrink-0 theme-nav ml-auto"
           >
             {/* 4カラム×2行グリッド */}
             <div className="grid grid-cols-4 gap-x-3 gap-y-0.5 text-right">

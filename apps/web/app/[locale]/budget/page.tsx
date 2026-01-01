@@ -443,7 +443,7 @@ function ProductRow({
       className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors"
     >
       {/* Thumbnail */}
-      <div className="w-12 h-16 relative rounded overflow-hidden bg-gray-600 flex-shrink-0">
+      <div className="w-12 h-16 relative rounded overflow-hidden bg-gray-600 shrink-0">
         {product.thumbnail ? (
           <Image
             src={product.thumbnail}
@@ -470,7 +470,7 @@ function ProductRow({
       </div>
 
       {/* Price */}
-      <div className="text-right flex-shrink-0">
+      <div className="text-right shrink-0">
         <p className="text-white font-semibold">¥{effectivePrice.toLocaleString()}</p>
         {product.salePrice && product.price && product.salePrice < product.price && (
           <p className="text-xs text-gray-500 line-through">

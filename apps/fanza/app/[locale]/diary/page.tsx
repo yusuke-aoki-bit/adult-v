@@ -228,7 +228,7 @@ function DiaryEntryCard({
     <div className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors group">
       <div className="flex gap-4">
         {/* サムネイル */}
-        <Link href={localizedHref(`/products/${entry.productId}`, locale)} className="flex-shrink-0">
+        <Link href={localizedHref(`/products/${entry.productId}`, locale)} className="shrink-0">
           <div className="relative w-20 h-28 rounded overflow-hidden">
             <Image
               src={imageUrl}

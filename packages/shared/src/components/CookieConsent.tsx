@@ -178,7 +178,7 @@ export default function CookieConsent({ gaId, locale = 'ja' }: CookieConsentProp
                 {t.learnMore}
               </a>
             </p>
-            <div className="flex gap-3 flex-shrink-0">
+            <div className="flex gap-3 shrink-0">
               <button
                 onClick={handleDecline}
                 className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors"

@@ -104,7 +104,7 @@ async function TopGenresWidget({ theme, limit }: { theme: string; limit: number 
             </div>
             <div className={`h-2 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
               <div
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                className="h-full bg-linear-to-r from-indigo-500 to-purple-500 rounded-full"
                 style={{ width: `${(genre.productCount / maxCount) * 100}%` }}
               />
             </div>
@@ -130,7 +130,7 @@ async function MonthlyReleasesWidget({ theme }: { theme: string }) {
         {releases.map((month) => (
           <div key={month.month} className="flex-1 flex flex-col items-center">
             <div
-              className="w-full bg-gradient-to-t from-indigo-500 to-purple-500 rounded-t"
+              className="w-full bg-linear-to-t from-indigo-500 to-purple-500 rounded-t"
               style={{ height: `${(month.releaseCount / maxCount) * 100}%`, minHeight: '4px' }}
             />
             <span className="text-xs text-gray-500 mt-1">{month.month.slice(5)}</span>
@@ -219,8 +219,8 @@ export default async function EmbedStatsPage({ searchParams }: WidgetProps) {
           .h-24 { height: 6rem; }
           .w-6 { width: 1.5rem; }
           .w-full { width: 100%; }
-          .bg-gradient-to-r { background: linear-gradient(to right, #6366f1, #a855f7); }
-          .bg-gradient-to-t { background: linear-gradient(to top, #6366f1, #a855f7); }
+          .bg-linear-to-r { background: linear-gradient(to right, #6366f1, #a855f7); }
+          .bg-linear-to-t { background: linear-gradient(to top, #6366f1, #a855f7); }
           ol { list-style: none; }
         `}</style>
       </head>

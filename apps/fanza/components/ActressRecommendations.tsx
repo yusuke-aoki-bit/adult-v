@@ -117,7 +117,7 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
   const displayedRecommendations = showAll ? recommendations : recommendations.slice(0, 6);
 
   return (
-    <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-xl p-4 sm:p-6 border border-pink-200">
+    <div className="bg-linear-to-r from-pink-50 to-rose-50 rounded-xl p-4 sm:p-6 border border-pink-200">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}

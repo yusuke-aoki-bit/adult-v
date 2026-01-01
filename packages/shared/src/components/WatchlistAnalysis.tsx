@@ -268,7 +268,7 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
       {/* Urgent Alert */}
       {analysis.urgentCount > 0 && (
         <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-4 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+          <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
           <span className="text-red-300 text-sm">{t.saleAlert}</span>
         </div>
       )}
@@ -287,7 +287,7 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
             className="flex items-center gap-3 bg-gray-750 hover:bg-gray-700 rounded-lg p-2 transition-colors group"
           >
             {/* Thumbnail */}
-            <div className="w-12 h-16 sm:w-14 sm:h-[72px] relative flex-shrink-0 bg-gray-700 rounded overflow-hidden">
+            <div className="w-12 h-16 sm:w-14 sm:h-[72px] relative shrink-0 bg-gray-700 rounded overflow-hidden">
               {product.thumbnail ? (
                 <Image
                   src={product.thumbnail}

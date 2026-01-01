@@ -310,7 +310,7 @@ export default function ActressProductFilter({
                           onChange={() => handleAspChange(asp.aspName)}
                           className="w-5 h-5 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
                         />
-                        <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
+                        <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-linear-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
                           {meta?.label || asp.aspName}
                           <span className="ml-1.5 sm:ml-1 text-sm sm:text-xs opacity-80">({asp.count.toLocaleString()})</span>
                         </span>
@@ -342,7 +342,7 @@ export default function ActressProductFilter({
                           onChange={() => handleExcludeAspChange(aspName)}
                           className="w-5 h-5 rounded border-gray-500 text-red-600 focus:ring-red-500"
                         />
-                        <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
+                        <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-linear-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
                           {meta?.label || aspName}
                           {count > 0 && <span className="ml-1.5 sm:ml-1 text-sm sm:text-xs opacity-80">({count.toLocaleString()})</span>}
                         </span>

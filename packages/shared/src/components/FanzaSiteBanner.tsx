@@ -62,7 +62,7 @@ export function FanzaSiteBanner({
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-sm font-medium rounded-full transition-all shadow hover:shadow-md ${className}`}
+        className={`inline-flex items-center gap-2 px-3 py-1.5 bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-sm font-medium rounded-full transition-all shadow hover:shadow-md ${className}`}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -78,10 +78,10 @@ export function FanzaSiteBanner({
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`block p-4 bg-gradient-to-br from-pink-500/10 to-rose-500/10 hover:from-pink-500/20 hover:to-rose-500/20 border border-pink-500/30 rounded-xl transition-all group ${className}`}
+        className={`block p-4 bg-linear-to-br from-pink-500/10 to-rose-500/10 hover:from-pink-500/20 hover:to-rose-500/20 border border-pink-500/30 rounded-xl transition-all group ${className}`}
       >
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-lg bg-linear-to-br from-pink-500 to-rose-500 flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-lg">F</span>
           </div>
           <div className="flex-1 min-w-0">
@@ -106,11 +106,11 @@ export function FanzaSiteBanner({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`block p-4 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 rounded-xl transition-all shadow-lg hover:shadow-xl group ${className}`}
+      className={`block p-4 bg-linear-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 rounded-xl transition-all shadow-lg hover:shadow-xl group ${className}`}
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-xl">F</span>
           </div>
           <div>

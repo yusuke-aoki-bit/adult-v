@@ -336,7 +336,7 @@ function ProductCardBase({
             {showMiniCta && (
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                 <span className={`text-white text-[10px] font-bold px-2 py-1 rounded ${
-                  product.salePrice ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-pink-500 to-rose-500'
+                  product.salePrice ? 'bg-linear-to-r from-orange-500 to-red-500' : 'bg-linear-to-r from-pink-500 to-rose-500'
                 }`}>
                   {product.salePrice ? t('viewSale') : t('viewDetails')}
                 </span>
@@ -357,7 +357,7 @@ function ProductCardBase({
             rel="noopener noreferrer sponsored"
             onClick={(e) => e.stopPropagation()}
             className={`absolute bottom-0 left-0 right-0 py-1.5 text-center text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
-              product.salePrice ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-pink-500 to-rose-500'
+              product.salePrice ? 'bg-linear-to-r from-orange-500 to-red-500' : 'bg-linear-to-r from-pink-500 to-rose-500'
             }`}
           >
             {product.providerLabel}で見る
@@ -376,7 +376,7 @@ function ProductCardBase({
       <>
         <div className={`relative block ${themeConfig.cardBg} rounded-lg overflow-hidden hover:ring-2 ${themeConfig.cardHoverRing} transition-all group`}>
           <Link href={`/${locale}/products/${product.id}`}>
-            <div className={`relative bg-gradient-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
+            <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
               <Image
                 src={imgSrc}
                 alt={product.title}
@@ -399,7 +399,7 @@ function ProductCardBase({
                     SALE
                   </span>
                   {product.discount && product.discount >= 30 && (
-                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    <span className="bg-linear-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded">
                       お得
                     </span>
                   )}
@@ -475,10 +475,10 @@ function ProductCardBase({
               onClick={(e) => e.stopPropagation()}
               className={`absolute bottom-0 left-0 right-0 py-1.5 text-center text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 ${
                 product.salePrice
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500'
+                  ? 'bg-linear-to-r from-orange-500 to-red-500'
                   : theme === 'dark'
-                    ? 'bg-gradient-to-r from-rose-500 to-pink-500'
-                    : 'bg-gradient-to-r from-pink-500 to-rose-500'
+                    ? 'bg-linear-to-r from-rose-500 to-pink-500'
+                    : 'bg-linear-to-r from-pink-500 to-rose-500'
               }`}
             >
               {product.providerLabel}で{product.salePrice ? 'お得に' : ''}見る
@@ -524,7 +524,7 @@ function ProductCardBase({
   // Full mode
   return (
     <div className={`${themeConfig.cardBg} rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300 border ${themeConfig.cardBorder}`}>
-      <div className={`relative bg-gradient-to-br ${themeConfig.gradient}`} style={{ height: '18rem' }}>
+      <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ height: '18rem' }}>
         <div className="relative block h-full group">
           {/* Action buttons - positioned at top right of image container */}
           {(FavoriteButton || ViewedButton) && (
@@ -611,7 +611,7 @@ function ProductCardBase({
             </div>
           )}
           {(hasError || imgSrc === resolvedPlaceholder || !hasValidImageUrl) && (
-            <div className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br ${themeConfig.noImageGradient}`}>
+            <div className={`absolute inset-0 flex flex-col items-center justify-center bg-linear-to-br ${themeConfig.noImageGradient}`}>
               <div className={`text-7xl mb-3 ${themeConfig.noImageEmoji}`}>📷</div>
               <span className={`inline-block px-4 py-1.5 ${themeConfig.noImageBadgeBg} ${themeConfig.noImageBadgeText} text-xs font-bold rounded-full shadow-md`}>
                 NO IMAGE
@@ -667,9 +667,9 @@ function ProductCardBase({
         {rankPosition && rankPosition <= 10 && (
           <div className="absolute top-14 right-4 z-20">
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full shadow-lg ${
-              rankPosition === 1 ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black' :
-              rankPosition === 2 ? 'bg-gradient-to-r from-gray-300 to-gray-400 text-black' :
-              rankPosition === 3 ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white' :
+              rankPosition === 1 ? 'bg-linear-to-r from-yellow-400 to-amber-500 text-black' :
+              rankPosition === 2 ? 'bg-linear-to-r from-gray-300 to-gray-400 text-black' :
+              rankPosition === 3 ? 'bg-linear-to-r from-amber-600 to-amber-700 text-white' :
               `${themeConfig.rankingDefaultBg} ${themeConfig.rankingDefaultText} border ${themeConfig.rankingDefaultBorder}`
             }`}>
               {rankPosition <= 3 ? `🏆 ${rankPosition}位` : `${rankPosition}位`}
@@ -701,7 +701,7 @@ function ProductCardBase({
                           -{product.discount}%
                         </span>
                         {product.discount >= 30 && (
-                          <span className="font-bold text-black bg-gradient-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 rounded text-[10px]">
+                          <span className="font-bold text-black bg-linear-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 rounded text-[10px]">
                             お得
                           </span>
                         )}
@@ -799,7 +799,7 @@ function ProductCardBase({
             )}
             {/* 人気バッジ: 高評価かつレビュー多数 */}
             {product.rating && product.rating >= 4.5 && product.reviewCount && product.reviewCount >= 20 && (
-              <span className="text-[10px] font-bold text-white bg-gradient-to-r from-pink-500 to-rose-500 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+              <span className="text-[10px] font-bold text-white bg-linear-to-r from-pink-500 to-rose-500 px-1.5 py-0.5 rounded flex items-center gap-0.5">
                 <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                 </svg>
@@ -826,7 +826,7 @@ function ProductCardBase({
                       -{product.discount}%
                     </span>
                     {product.discount >= 30 && (
-                      <span className="text-[10px] font-bold text-black bg-gradient-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] font-bold text-black bg-linear-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 rounded">
                         お得
                       </span>
                     )}
@@ -876,8 +876,8 @@ function ProductCardBase({
                 onClick={handleCtaClick}
                 className={`inline-flex items-center justify-center gap-1.5 rounded-lg w-full px-3 py-2.5 text-sm font-bold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all ${
                   isSale
-                    ? `bg-gradient-to-r ${themeConfig.ctaSaleGradient} text-white ${themeConfig.ctaSaleGradientHover}`
-                    : `bg-gradient-to-r ${themeConfig.ctaGradient} text-white ${themeConfig.ctaGradientHover}`
+                    ? `bg-linear-to-r ${themeConfig.ctaSaleGradient} text-white ${themeConfig.ctaSaleGradientHover}`
+                    : `bg-linear-to-r ${themeConfig.ctaGradient} text-white ${themeConfig.ctaGradientHover}`
                 }`}
                 title={`${product.providerLabel}で購入`}
                 aria-label={`${product.providerLabel}で購入（外部リンク）`}

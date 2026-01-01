@@ -239,7 +239,7 @@ export default function CrossAspInfo({
                     <div
                       className={`h-full rounded-full transition-all ${
                         meta?.accentClass?.includes('from-')
-                          ? `bg-gradient-to-r ${meta.accentClass}`
+                          ? `bg-linear-to-r ${meta.accentClass}`
                           : 'bg-cyan-500'
                       }`}
                       style={{ width: `${percentage}%` }}

@@ -40,19 +40,19 @@ function getRankStyle(rank: number, theme: 'dark' | 'light'): { bg: string; text
   switch (rank) {
     case 1:
       return {
-        bg: 'bg-gradient-to-br from-yellow-400 to-yellow-600',
+        bg: 'bg-linear-to-br from-yellow-400 to-yellow-600',
         text: 'text-black font-bold',
         border: isDark ? 'ring-yellow-400' : 'ring-yellow-500',
       };
     case 2:
       return {
-        bg: 'bg-gradient-to-br from-gray-300 to-gray-500',
+        bg: 'bg-linear-to-br from-gray-300 to-gray-500',
         text: 'text-black font-bold',
         border: isDark ? 'ring-gray-400' : 'ring-gray-500',
       };
     case 3:
       return {
-        bg: 'bg-gradient-to-br from-amber-600 to-amber-800',
+        bg: 'bg-linear-to-br from-amber-600 to-amber-800',
         text: 'text-white font-bold',
         border: isDark ? 'ring-amber-600' : 'ring-amber-700',
       };
@@ -79,7 +79,7 @@ export default function PerformerTopProducts({
   const isDark = theme === 'dark';
 
   return (
-    <div className={`mt-8 rounded-lg p-6 ${isDark ? 'bg-gradient-to-br from-amber-900/30 to-orange-900/30' : 'bg-gradient-to-br from-amber-50 to-orange-50'}`}>
+    <div className={`mt-8 rounded-lg p-6 ${isDark ? 'bg-linear-to-br from-amber-900/30 to-orange-900/30' : 'bg-linear-to-br from-amber-50 to-orange-50'}`}>
       <h2 className={`text-xl font-bold mb-2 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
         <svg className={`w-6 h-6 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`} fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -104,12 +104,12 @@ export default function PerformerTopProducts({
               }`}
             >
               {/* ランキングバッジ */}
-              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${rankStyle.bg} ${rankStyle.text}`}>
+              <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${rankStyle.bg} ${rankStyle.text}`}>
                 {product.rank}
               </div>
 
               {/* サムネイル */}
-              <div className={`relative flex-shrink-0 w-24 h-16 rounded overflow-hidden ring-2 ${rankStyle.border}`}>
+              <div className={`relative shrink-0 w-24 h-16 rounded overflow-hidden ring-2 ${rankStyle.border}`}>
                 <Image
                   src={product.imageUrl || PLACEHOLDER_IMAGE}
                   alt={product.title}

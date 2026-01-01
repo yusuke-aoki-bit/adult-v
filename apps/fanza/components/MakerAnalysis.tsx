@@ -166,7 +166,7 @@ export default function MakerAnalysis({ locale, className = '' }: MakerAnalysisP
               className="block group"
             >
               <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
                   index === 0 ? 'bg-yellow-400 text-yellow-900' :
                   index === 1 ? 'bg-gray-300 text-gray-700' :
                   index === 2 ? 'bg-amber-500 text-white' :
@@ -209,7 +209,7 @@ export default function MakerAnalysis({ locale, className = '' }: MakerAnalysisP
                   </div>
                 </div>
 
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors flex-shrink-0" />
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors shrink-0" />
               </div>
             </Link>
           );

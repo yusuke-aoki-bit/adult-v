@@ -334,7 +334,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   return (
                     <span
                       key={asp.aspName}
-                      className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap bg-gradient-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
+                      className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap bg-linear-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
                     >
                       {meta?.label || asp.aspName}: {asp.count}
                     </span>

@@ -200,7 +200,7 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
             >
               {/* Provider badge */}
               <div
-                className="px-2 py-1 rounded text-xs font-bold flex-shrink-0 text-white"
+                className="px-2 py-1 rounded text-xs font-bold shrink-0 text-white"
                 style={meta?.gradientColors
                   ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
                   : { backgroundColor: '#4b5563' }
@@ -256,7 +256,7 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
               </div>
 
               {/* Badges */}
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 {isMultiple && isCheapest && (
                   <span className="flex items-center gap-1 text-xs bg-emerald-600 text-white px-2 py-1 rounded">
                     <Crown className="w-3 h-3" />
