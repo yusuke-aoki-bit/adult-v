@@ -1399,7 +1399,7 @@ export async function getRandomProduct(options?: {
  * シリーズ情報を取得（シリーズ完走ガイド用）
  * seriesタイプのタグからシリーズを特定し、関連作品を取得
  */
-export type { SeriesBasicInfo } from '@adult-v/shared';
+export type { SeriesBasicInfo, SeriesProduct } from '@adult-v/shared';
 
 export async function getSeriesByTagId(tagId: number, locale: string = 'ja') {
   return getSeriesByTagIdShared(tagId, locale);

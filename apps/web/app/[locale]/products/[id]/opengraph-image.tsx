@@ -27,7 +27,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
       .select({
         id: products.id,
         title: products.title,
-        thumbnailUrl: products.thumbnailUrl,
+        defaultThumbnailUrl: products.defaultThumbnailUrl,
       })
       .from(products)
       .where(eq(products.id, parseInt(id, 10)))
@@ -35,7 +35,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
     if (productData[0]) {
       productTitle = productData[0].title || '作品詳細';
-      productImage = productData[0].thumbnailUrl;
+      productImage = productData[0].defaultThumbnailUrl;
 
       // ソース情報を取得（価格・プロバイダー）
       const sourceData = await db

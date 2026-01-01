@@ -6,7 +6,8 @@
     "dev": "cross-env SITE_MODE=fanza NEXT_PUBLIC_SITE_MODE=fanza next dev --turbopack -p 3001",
     "build": "cross-env SITE_MODE=fanza NEXT_PUBLIC_SITE_MODE=fanza next build",
     "start": "cross-env SITE_MODE=fanza NEXT_PUBLIC_SITE_MODE=fanza next start -p 3001",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@adult-v/database": "workspace:*",

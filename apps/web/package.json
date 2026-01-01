@@ -6,7 +6,8 @@
     "dev": "cross-env SITE_MODE=adult-v NEXT_PUBLIC_SITE_MODE=adult-v next dev --turbopack -p 3000",
     "build": "cross-env SITE_MODE=adult-v NEXT_PUBLIC_SITE_MODE=adult-v next build",
     "start": "cross-env SITE_MODE=adult-v NEXT_PUBLIC_SITE_MODE=adult-v next start -p 3000",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@adult-v/database": "workspace:*",

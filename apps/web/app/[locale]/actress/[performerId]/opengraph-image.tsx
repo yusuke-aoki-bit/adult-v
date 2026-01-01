@@ -26,8 +26,7 @@ export default async function Image({ params }: { params: Promise<{ performerId:
       .select({
         id: performers.id,
         name: performers.name,
-        thumbnail: performers.thumbnail,
-        heroImage: performers.heroImage,
+        profileImageUrl: performers.profileImageUrl,
       })
       .from(performers)
       .where(eq(performers.id, parseInt(performerId, 10)))
@@ -35,7 +34,7 @@ export default async function Image({ params }: { params: Promise<{ performerId:
 
     if (performerData[0]) {
       actressName = performerData[0].name || '女優プロフィール';
-      actressImage = performerData[0].heroImage || performerData[0].thumbnail;
+      actressImage = performerData[0].profileImageUrl;
 
       // 作品数を取得
       const countResult = await db.execute(sql`
