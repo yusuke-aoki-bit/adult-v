@@ -80,4 +80,11 @@ adult-v-*.json
 
 # Temporary files
 tmp/
-docs/
+test-results/
+playwright-report/
+
+# Debug files
+*.log
+*.html
+!apps/**/*.html
+!packages/**/*.html

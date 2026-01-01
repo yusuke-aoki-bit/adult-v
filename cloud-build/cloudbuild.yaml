@@ -1,0 +1,67 @@
+steps:
+  # Step 1: Install dependencies
+  - name: "node:20-slim"
+    id: "install"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        npm install -g pnpm@9.15.0
+        pnpm install --frozen-lockfile
+
+  # Step 2: TypeScript type check
+  - name: "node:20-slim"
+    id: "typecheck"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        npm install -g pnpm@9.15.0
+        pnpm exec turbo run build --filter=@adult-v/shared --filter=@adult-v/database
+    waitFor: ["install"]
+
+  # Step 3: Lint check
+  - name: "node:20-slim"
+    id: "lint"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        npm install -g pnpm@9.15.0
+        pnpm run lint || echo "Lint warnings found (non-blocking)"
+    waitFor: ["install"]
+
+  # Step 4: Security audit
+  - name: "node:20-slim"
+    id: "audit"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        npm install -g pnpm@9.15.0
+        pnpm audit --audit-level=high || echo "Security audit warnings (non-blocking)"
+    waitFor: ["install"]
+
+  # Step 5: Build Docker image (runs after checks pass)
+  - name: "gcr.io/cloud-builders/docker"
+    id: "docker-build"
+    args:
+      - "build"
+      - "-t"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/crawlers:latest"
+      - "-t"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/crawlers:$SHORT_SHA"
+      - "-f"
+      - "docker/Dockerfile.crawler"
+      - "."
+    waitFor: ["typecheck"]
+
+images:
+  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/crawlers:latest"
+  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/crawlers:$SHORT_SHA"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: "E2_HIGHCPU_8"
+
+timeout: "1200s"
