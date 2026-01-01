@@ -211,7 +211,7 @@ const actressListQueries = createActressListQueries({
   productImages,
   productVideos,
   siteMode: 'all',
-  enableActressFeatureFilter: false,
+  enableActressFeatureFilter: true, // 女優プロフィールフィルター（カップ、身長、血液型）を有効化
   mapPerformerToActress: (performer, productCount, thumbnail, services, aliases, locale) =>
     mapPerformerToActressTypeSync(performer as DbPerformer, productCount, thumbnail, services, aliases, locale),
   batchGetPerformerThumbnails,
@@ -1068,7 +1068,7 @@ export async function getProviderProductCounts(): Promise<Record<string, number>
 
 /**
  * ASP別商品数統計を取得 - 内部実装
- * DTIも含めて全ASPの統計を返す（UIレベルでフィルタリング可能）
+ * DTIも含めて全ASPの統計を返す（FANZAは除外 - f.adult-v.comで提供）
  */
 async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCount: number; actressCount: number }>> {
   const db = getDb();
@@ -1089,6 +1089,7 @@ async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCo
     LEFT JOIN products p ON ps.product_id = p.id
     LEFT JOIN product_performers pp ON ps.product_id = pp.product_id
     WHERE ps.asp_name IS NOT NULL
+      AND UPPER(ps.asp_name) != 'FANZA'
     GROUP BY ${sql.raw(aspNormalizeSql)}
     ORDER BY product_count DESC
   `);
@@ -1096,9 +1097,12 @@ async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCo
   if (!result.rows) return [];
 
   // 同じ正規化名のエントリを統合（normalizeAspName関数を使用）
+  // FANZAを除外（f.adult-v.comで提供するため）
   const merged = new Map<string, { productCount: number; actressCount: number }>();
   for (const row of result.rows) {
     const normalized = normalizeAspName(row.asp_name);
+    // FANZAを除外（念のため二重チェック）
+    if (normalized === 'fanza') continue;
     const existing = merged.get(normalized);
     if (existing) {
       existing.productCount += parseInt(row.product_count, 10);
