@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import ActressCard from '@/components/ActressCard';
-import { SortDropdown, FanzaNewReleasesSection } from '@adult-v/shared/components';
+import { SortDropdown, FanzaNewReleasesSection, FanzaSiteBanner } from '@adult-v/shared/components';
 import Pagination from '@/components/Pagination';
 import ActressListFilter from '@/components/ActressListFilter';
 import RecentlyViewed from '@/components/RecentlyViewed';
@@ -406,6 +406,13 @@ export default async function Home({ params, searchParams }: PageProps) {
               ...(hasReview ? { hasReview: 'true' } : {}),
             }}
           />
+
+          {/* FANZAサイトへのバナー（女優一覧セクション内） */}
+          {!isFanzaSite && (
+            <div className="mt-6">
+              <FanzaSiteBanner locale={locale} variant="card" />
+            </div>
+          )}
 
           {/* 商品一覧へのリンク */}
           <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t theme-section-border">
