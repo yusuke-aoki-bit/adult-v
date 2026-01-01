@@ -54,8 +54,9 @@ export default function ActressProductFilter({
   const performerType = searchParams.get('performerType') as 'solo' | 'multi' | null;
   const includeTags = searchParams.get('include')?.split(',').filter(Boolean) || [];
   const excludeTags = searchParams.get('exclude')?.split(',').filter(Boolean) || [];
-  const includeAsps = searchParams.get('asp')?.split(',').filter(Boolean) || [];
-  const excludeAsps = searchParams.get('excludeAsp')?.split(',').filter(Boolean) || [];
+  // apps/webではFANZAをASPフィルターから除外（URLパラメータに含まれていても無視）
+  const includeAsps = searchParams.get('asp')?.split(',').filter(asp => asp.toUpperCase() !== 'FANZA') || [];
+  const excludeAsps = searchParams.get('excludeAsp')?.split(',').filter(asp => asp.toUpperCase() !== 'FANZA') || [];
 
   // フィルター更新関数
   const updateFilter = (key: string, value: string | null, isArray = false, currentArray: string[] = []) => {

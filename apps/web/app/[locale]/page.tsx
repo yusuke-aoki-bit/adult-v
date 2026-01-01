@@ -48,7 +48,11 @@ export async function generateMetadata({
     searchParamsData.excludeAsp ||
     searchParamsData.hasVideo ||
     searchParamsData.hasImage ||
-    searchParamsData.hasReview
+    searchParamsData.hasReview ||
+    searchParamsData.cup ||
+    searchParamsData.heightMin ||
+    searchParamsData.heightMax ||
+    searchParamsData.bloodType
   );
   const hasPageParam = !!searchParamsData.page && searchParamsData.page !== '1';
   // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
@@ -140,6 +144,20 @@ export default async function Home({ params, searchParams }: PageProps) {
   const hasImage = searchParamsData.hasImage === 'true';
   const hasReview = searchParamsData.hasReview === 'true';
 
+  // 女優特徴フィルターを取得
+  const cupSizes = typeof searchParamsData.cup === 'string'
+    ? searchParamsData.cup.split(',').filter(Boolean)
+    : [];
+  const heightMin = typeof searchParamsData.heightMin === 'string'
+    ? parseInt(searchParamsData.heightMin, 10)
+    : undefined;
+  const heightMax = typeof searchParamsData.heightMax === 'string'
+    ? parseInt(searchParamsData.heightMax, 10)
+    : undefined;
+  const bloodTypes = typeof searchParamsData.bloodType === 'string'
+    ? searchParamsData.bloodType.split(',').filter(Boolean)
+    : [];
+
   const offset = (page - 1) * PER_PAGE;
 
   // "etc"の場合は特別処理（50音・アルファベット以外）
@@ -162,6 +180,11 @@ export default async function Home({ params, searchParams }: PageProps) {
     hasVideo: hasVideo || undefined,
     hasImage: hasImage || undefined,
     hasReview: hasReview || undefined,
+    // 女優特徴フィルター
+    cupSizes: cupSizes.length > 0 ? cupSizes : undefined,
+    heightMin,
+    heightMax,
+    bloodTypes: bloodTypes.length > 0 ? bloodTypes : undefined,
   };
 
   // 並列クエリ実行（パフォーマンス最適化）
@@ -198,7 +221,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   // serverAspFilterが設定されている場合、それは自動適用されるフィルターなのでTOPページ判定には含めない
   const userSetIncludeAsps = serverAspFilter ? [] : includeAsps;
   const userSetExcludeAsps = serverAspFilter ? [] : excludeAsps;
-  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && sortBy === 'recent' && page === 1;
+  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && cupSizes.length === 0 && !heightMin && !heightMax && bloodTypes.length === 0 && sortBy === 'recent' && page === 1;
 
   if (isTopPage) {
     try {
