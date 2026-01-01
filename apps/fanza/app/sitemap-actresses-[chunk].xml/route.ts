@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getDb } from '@/lib/db';
-import { performers } from '@/lib/db/schema';
-import { desc, sql } from 'drizzle-orm';
+import { performers, productPerformers } from '@/lib/db/schema';
+import { desc, sql, eq } from 'drizzle-orm';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 const CHUNK_SIZE = 5000;
@@ -24,13 +24,10 @@ export async function GET(
     const performerList = await db
       .select({
         id: performers.id,
-        productCount: sql<number>`COUNT(DISTINCT pp.product_id)`.as('product_count'),
+        productCount: sql<number>`COUNT(DISTINCT ${productPerformers.productId})`.as('product_count'),
       })
       .from(performers)
-      .leftJoin(
-        sql`product_performers pp`,
-        sql`${performers.id} = pp.performer_id`
-      )
+      .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
       .groupBy(performers.id)
       .orderBy(desc(sql`product_count`))
       .limit(CHUNK_SIZE)

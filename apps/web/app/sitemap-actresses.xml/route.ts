@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { performers } from '@/lib/db/schema';
-import { desc, sql } from 'drizzle-orm';
+import { performers, productPerformers } from '@/lib/db/schema';
+import { desc, sql, eq } from 'drizzle-orm';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.adult-v.com';
 
@@ -41,12 +41,9 @@ export async function GET() {
         updatedAt: performers.updatedAt,
       })
       .from(performers)
-      .leftJoin(
-        sql`product_performers pp`,
-        sql`${performers.id} = pp.performer_id`
-      )
+      .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
       .groupBy(performers.id, performers.updatedAt)
-      .orderBy(desc(sql`COUNT(DISTINCT pp.product_id)`))
+      .orderBy(desc(sql`COUNT(DISTINCT ${productPerformers.productId})`))
       .limit(3000);
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>

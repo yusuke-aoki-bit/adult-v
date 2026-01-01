@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { getDb } from '@/lib/db';
-import { products, performers, tags, productTags } from '@/lib/db/schema';
+import { products, performers, tags, productTags, productPerformers } from '@/lib/db/schema';
 import { desc, sql, eq } from 'drizzle-orm';
 
 // サイトマップ設定 - インデックス対象件数
@@ -120,13 +120,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const topPerformers = await db
       .select({
         id: performers.id,
-        productCount: sql<number>`COUNT(DISTINCT pp.product_id)`.as('product_count'),
+        productCount: sql<number>`COUNT(DISTINCT ${productPerformers.productId})`.as('product_count'),
       })
       .from(performers)
-      .leftJoin(
-        sql`product_performers pp`,
-        sql`${performers.id} = pp.performer_id`
-      )
+      .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
       .groupBy(performers.id)
       .orderBy(desc(sql`product_count`))
       .limit(SITEMAP_CONFIG.performers);
