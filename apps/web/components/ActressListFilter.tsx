@@ -1,13 +1,15 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useTransition } from 'react';
+import { useTransition, useCallback } from 'react';
 import { providerMeta } from '@/lib/providers';
 import {
   HIRAGANA_GROUPS,
   ALPHABET,
   ASP_TO_PROVIDER_ID,
 } from '@/lib/constants/filters';
+import { FilterPresetManager } from '@adult-v/shared/components';
+import { filtersToSearchParams, type FilterValues } from '@adult-v/shared/lib/filter-presets';
 
 interface Tag {
   id: number;
@@ -64,6 +66,38 @@ export default function ActressListFilter({
   const includeAsps = searchParams.get('includeAsp')?.split(',').filter(Boolean) || [];
   const excludeAsps = searchParams.get('excludeAsp')?.split(',').filter(Boolean) || [];
   const initialFilter = searchParams.get('initial');
+
+  // 女優特徴フィルター
+  const cupSizes = searchParams.get('cup')?.split(',').filter(Boolean) || [];
+  const heightMin = searchParams.get('heightMin');
+  const heightMax = searchParams.get('heightMax');
+  const bloodTypes = searchParams.get('bloodType')?.split(',').filter(Boolean) || [];
+
+  // 現在のフィルター値をFilterValues形式で取得
+  const currentFilters: FilterValues = {
+    hasVideo: hasVideo || undefined,
+    hasImage: hasImage || undefined,
+    onSale: onSale || undefined,
+    hasReview: hasReview || undefined,
+    initial: initialFilter || undefined,
+    includeTags: includeTags.length > 0 ? includeTags : undefined,
+    excludeTags: excludeTags.length > 0 ? excludeTags : undefined,
+    includeAsps: includeAsps.length > 0 ? includeAsps : undefined,
+    excludeAsps: excludeAsps.length > 0 ? excludeAsps : undefined,
+    cupSizes: cupSizes.length > 0 ? cupSizes : undefined,
+    heightMin: heightMin ? parseInt(heightMin, 10) : undefined,
+    heightMax: heightMax ? parseInt(heightMax, 10) : undefined,
+    bloodTypes: bloodTypes.length > 0 ? bloodTypes : undefined,
+  };
+
+  // プリセット適用ハンドラー
+  const handleApplyPreset = useCallback((filters: FilterValues) => {
+    const params = filtersToSearchParams(filters);
+    const queryString = params.toString();
+    startTransition(() => {
+      router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
+    });
+  }, [pathname, router]);
 
   // 頭文字フィルター変更ハンドラー
   const handleInitialChange = (initial: string | null) => {
@@ -146,6 +180,39 @@ export default function ActressListFilter({
     updateFilter('excludeAsp', aspId, true, excludeAsps);
   };
 
+  // カップサイズフィルター
+  const handleCupSizeChange = (cup: string) => {
+    updateFilter('cup', cup, true, cupSizes);
+  };
+
+  // 身長範囲フィルター
+  const handleHeightRangeChange = (min: number | undefined, max: number | undefined) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('page');
+
+    if (min !== undefined) {
+      params.set('heightMin', String(min));
+    } else {
+      params.delete('heightMin');
+    }
+
+    if (max !== undefined) {
+      params.set('heightMax', String(max));
+    } else {
+      params.delete('heightMax');
+    }
+
+    const queryString = params.toString();
+    startTransition(() => {
+      router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
+    });
+  };
+
+  // 血液型フィルター
+  const handleBloodTypeChange = (bloodType: string) => {
+    updateFilter('bloodType', bloodType, true, bloodTypes);
+  };
+
   // クリアボタン
   const handleClear = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -159,6 +226,10 @@ export default function ActressListFilter({
     params.delete('includeAsp');
     params.delete('excludeAsp');
     params.delete('initial');
+    params.delete('cup');
+    params.delete('heightMin');
+    params.delete('heightMax');
+    params.delete('bloodType');
     params.delete('page');
 
     const queryString = params.toString();
@@ -167,8 +238,8 @@ export default function ActressListFilter({
     });
   };
 
-  const hasActiveFilters = hasVideo || hasImage || onSale || hasReview || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0 || !!initialFilter;
-  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0) + (onSale ? 1 : 0) + (hasReview ? 1 : 0) + (initialFilter ? 1 : 0);
+  const hasActiveFilters = hasVideo || hasImage || onSale || hasReview || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0 || !!initialFilter || cupSizes.length > 0 || !!heightMin || !!heightMax || bloodTypes.length > 0;
+  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0) + (onSale ? 1 : 0) + (hasReview ? 1 : 0) + (initialFilter ? 1 : 0) + cupSizes.length + (heightMin || heightMax ? 1 : 0) + bloodTypes.length;
 
   return (
     <details
@@ -189,13 +260,20 @@ export default function ActressListFilter({
         )}
       </summary>
       <div className={`px-4 pb-4 space-y-5 sm:space-y-6 ${isPending ? 'opacity-60 pointer-events-none' : ''}`}>
-        {/* ローディングインジケーター */}
-        {isPending && (
-          <div className="flex items-center justify-center py-2">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-rose-500 mr-2" />
-            <span className="text-sm text-gray-400">{t.loading}</span>
-          </div>
-        )}
+        {/* プリセット管理 + ローディングインジケーター */}
+        <div className="flex items-center justify-between">
+          <FilterPresetManager
+            currentFilters={currentFilters}
+            onApplyPreset={handleApplyPreset}
+            theme="dark"
+          />
+          {isPending && (
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-rose-500 mr-2" />
+              <span className="text-sm text-gray-400">{t.loading}</span>
+            </div>
+          )}
+        </div>
 
         {/* 頭文字検索 */}
         <div>
@@ -359,6 +437,97 @@ export default function ActressListFilter({
           </div>
         )}
 
+        {/* 女優特徴フィルター */}
+        <div className="space-y-4">
+          <h3 className="text-base sm:text-sm font-semibold text-white">女優の特徴</h3>
+
+          {/* カップサイズ */}
+          <div>
+            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">カップサイズ</p>
+            <div className="flex flex-wrap gap-1.5 sm:gap-1">
+              {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'].map((cup) => (
+                <button
+                  key={cup}
+                  type="button"
+                  onClick={() => handleCupSizeChange(cup)}
+                  className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded text-sm font-medium transition-colors ${
+                    cupSizes.includes(cup)
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  }`}
+                >
+                  {cup}カップ
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 身長 */}
+          <div>
+            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">身長</p>
+            <div className="flex flex-wrap gap-1.5 sm:gap-1">
+              {[
+                { label: '150cm未満', min: undefined, max: 149 },
+                { label: '150-154cm', min: 150, max: 154 },
+                { label: '155-159cm', min: 155, max: 159 },
+                { label: '160-164cm', min: 160, max: 164 },
+                { label: '165-169cm', min: 165, max: 169 },
+                { label: '170cm以上', min: 170, max: undefined },
+              ].map((range, index) => {
+                const isSelected = (
+                  (range.min === undefined && heightMin === null && range.max !== undefined && heightMax === String(range.max)) ||
+                  (range.max === undefined && heightMax === null && range.min !== undefined && heightMin === String(range.min)) ||
+                  (range.min !== undefined && range.max !== undefined && heightMin === String(range.min) && heightMax === String(range.max))
+                );
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleHeightRangeChange(range.min, range.max)}
+                    className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded text-sm font-medium transition-colors ${
+                      isSelected
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                    }`}
+                  >
+                    {range.label}
+                  </button>
+                );
+              })}
+              {(heightMin || heightMax) && (
+                <button
+                  type="button"
+                  onClick={() => handleHeightRangeChange(undefined, undefined)}
+                  className="px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium bg-gray-600 text-gray-200 hover:bg-gray-500 transition-colors"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 血液型 */}
+          <div>
+            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">血液型</p>
+            <div className="flex flex-wrap gap-1.5 sm:gap-1">
+              {['A', 'B', 'O', 'AB'].map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handleBloodTypeChange(type)}
+                  className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded text-sm font-medium transition-colors ${
+                    bloodTypes.includes(type)
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  }`}
+                >
+                  {type}型
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* ジャンルタグ */}
         {genreTags.length > 0 && (
           <div>
@@ -443,7 +612,10 @@ export default function ActressListFilter({
                           onChange={() => handleIncludeAspChange(asp.id)}
                           className="w-5 h-5 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
                         />
-                        <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-linear-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
+                        <span
+                          className="text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded text-white"
+                          style={{ background: meta?.gradientColors ? `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` : 'linear-gradient(to right, #4b5563, #374151)' }}
+                        >
                           {meta?.label || asp.name}
                           {count !== undefined && <span className="ml-1.5 sm:ml-1 text-sm sm:text-xs opacity-80">({count.toLocaleString()})</span>}
                         </span>
@@ -474,7 +646,10 @@ export default function ActressListFilter({
                           onChange={() => handleExcludeAspChange(asp.id)}
                           className="w-5 h-5 rounded border-gray-500 text-red-600 focus:ring-red-500"
                         />
-                        <span className={`text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded bg-linear-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}>
+                        <span
+                          className="text-base sm:text-sm font-medium px-3 sm:px-2 py-1 sm:py-0.5 rounded text-white"
+                          style={{ background: meta?.gradientColors ? `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` : 'linear-gradient(to right, #4b5563, #374151)' }}
+                        >
                           {meta?.label || asp.name}
                           {count !== undefined && <span className="ml-1.5 sm:ml-1 text-sm sm:text-xs opacity-80">({count.toLocaleString()})</span>}
                         </span>

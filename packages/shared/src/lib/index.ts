@@ -7,6 +7,7 @@ export * from './cache';
 export * from './categories';
 export * from './fetch-dedup';
 export * from './filter-storage';
+export * from './filter-presets';
 export * from './firebase';
 export * from './image-utils';
 export * from './localization';

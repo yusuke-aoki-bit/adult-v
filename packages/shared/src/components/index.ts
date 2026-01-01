@@ -34,6 +34,7 @@ export { JsonLD } from './JsonLD';
 // Persistence components
 export { default as FilterPersistence } from './FilterPersistence';
 export { default as PerPagePersistence } from './PerPagePersistence';
+export { default as FilterPresetManager } from './FilterPresetManager';
 
 // Analytics and SEO components
 export { default as GoogleAnalytics } from './GoogleAnalytics';
