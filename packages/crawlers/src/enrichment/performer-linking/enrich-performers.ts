@@ -12,7 +12,7 @@ import { getDb } from '../../lib/db';
 import { products, productSources, performers, productPerformers } from '../../lib/db/schema';
 import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../../lib/performer-validation';
-import { getSokmilClient } from '../../lib/providers/sokmil-client';
+import type { SokmilClient } from '../../lib/providers/sokmil-client';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import type { Browser, Page } from 'puppeteer';
@@ -20,7 +20,17 @@ import type { Browser, Page } from 'puppeteer';
 puppeteer.use(StealthPlugin());
 
 const db = getDb();
-const sokmilClient = getSokmilClient();
+
+// Lazy initialization for SOKMIL client
+let sokmilClient: SokmilClient | null = null;
+function getSokmilClientLazy(): SokmilClient {
+  if (!sokmilClient) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getSokmilClient } = require('../../lib/providers/sokmil-client');
+    sokmilClient = getSokmilClient();
+  }
+  return sokmilClient;
+}
 
 let browser: Browser | null = null;
 
@@ -177,7 +187,7 @@ async function getPerformersFromMgs(productId: string): Promise<string[]> {
  */
 async function getPerformersFromSokmil(itemId: string): Promise<string[]> {
   try {
-    const product = await sokmilClient.getItemById(itemId);
+    const product = await getSokmilClientLazy().getItemById(itemId);
     if (product && product.actors && product.actors.length > 0) {
       return product.actors.map(a => a.name);
     }
