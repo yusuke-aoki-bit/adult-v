@@ -96,6 +96,8 @@ function ActressCardBaseComponent({
   const initialSrc = normalizeImageUrl(rawImageUrl);
   const [imgSrc, setImgSrc] = useState(initialSrc || themeConfig.placeholderImage);
   const [hasError, setHasError] = useState(!initialSrc);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 2;
 
   // Lightbox state
   const [showLightbox, setShowLightbox] = useState(false);
@@ -105,7 +107,15 @@ function ActressCardBaseComponent({
   const shouldBlur = isUncensoredThumbnail(rawImageUrl);
 
   const handleImageError = () => {
-    if (!hasError) {
+    if (retryCount < MAX_RETRIES && initialSrc) {
+      // タイムアウトやネットワークエラーの場合は再試行
+      setRetryCount(prev => prev + 1);
+      // キャッシュ回避のためタイムスタンプを付与
+      const retryUrl = initialSrc.includes('?')
+        ? `${initialSrc}&_retry=${retryCount + 1}`
+        : `${initialSrc}?_retry=${retryCount + 1}`;
+      setImgSrc(retryUrl);
+    } else if (!hasError) {
       setHasError(true);
       setImgSrc(themeConfig.placeholderImage);
     }
