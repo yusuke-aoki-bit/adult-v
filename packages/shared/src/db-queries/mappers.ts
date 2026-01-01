@@ -414,19 +414,25 @@ export function mapProductsWithBatchData(
     const allSources = batchData.allSourcesMap?.get(product.id) || [];
     if (allSources.length > 1 && mainSource) {
       const mainAspName = mainSource.aspName?.toUpperCase();
-      // メインソース以外のソースをalternativeSourcesに追加（FANZAは除外）
+      // メインソース以外のソースをalternativeSourcesに追加
+      // FANZAは含めるが、リンク先はf.adult-v.comの商品詳細ページにする
       const alternatives = allSources
-        .filter(s =>
-          s.aspName.toUpperCase() !== mainAspName &&
-          s.aspName.toUpperCase() !== 'FANZA'
-        )
-        .map(s => ({
-          aspName: s.aspName,
-          price: s.price ?? 0,
-          salePrice: undefined as number | undefined,
-          affiliateUrl: s.affiliateUrl || '',
-          productId: product.id,
-        }));
+        .filter(s => s.aspName.toUpperCase() !== mainAspName)
+        .map(s => {
+          const isFanza = s.aspName.toUpperCase() === 'FANZA';
+          // FANZAの場合はf.adult-v.comの商品詳細ページへのリンクを生成
+          // localeはgetパラメータ（?hl=）で渡す
+          const affiliateUrl = isFanza
+            ? `https://www.f.adult-v.com/products/${product.id}${locale !== 'ja' ? `?hl=${locale}` : ''}`
+            : (s.affiliateUrl || '');
+          return {
+            aspName: s.aspName,
+            price: s.price ?? 0,
+            salePrice: undefined as number | undefined,
+            affiliateUrl,
+            productId: product.id,
+          };
+        });
 
       if (alternatives.length > 0) {
         mappedProduct.alternativeSources = alternatives;
