@@ -94,7 +94,7 @@ export function FanzaNewReleasesSection({
     return null;
   }
 
-  const fanzaSiteUrl = `${FANZA_SITE_URL}/products?hl=${locale}`;
+  const fanzaSiteUrl = `${FANZA_SITE_URL}?hl=${locale}`;
 
   return (
     <section className={`py-4 sm:py-6 ${className}`}>
@@ -127,7 +127,7 @@ export function FanzaNewReleasesSection({
           {products.slice(0, 8).map((product) => (
             <a
               key={product.id}
-              href={`${FANZA_SITE_URL}/${locale}/products/${product.id}`}
+              href={`${FANZA_SITE_URL}/products/${product.id}?hl=${locale}`}
               target="_blank"
               rel="noopener noreferrer"
               className="group relative bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-pink-500/50 transition-all"

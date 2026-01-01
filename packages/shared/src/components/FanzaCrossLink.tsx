@@ -34,7 +34,7 @@ export default function FanzaCrossLink({
 
   // apps/fanza経由のURL（直接FANZAではなく自社サイト経由）
   const url = productId
-    ? `${FANZA_SITE_URL}/${locale}/products/${productId}`
+    ? `${FANZA_SITE_URL}/products/${productId}?hl=${locale}`
     : null;
 
   // URLがない場合は表示しない
@@ -91,9 +91,10 @@ export function FanzaSiteLink({
   className = '',
   compact = false,
 }: FanzaSiteLinkProps) {
-  // パスにロケールが含まれていない場合は追加
-  const fullPath = path.startsWith(`/${locale}`) ? path : `/${locale}${path.startsWith('/') ? path : `/${path}`}`;
-  const url = `${FANZA_SITE_URL}${fullPath}`;
+  // パスからロケールプレフィックスを除去し、?hl=パラメータで言語指定
+  const cleanPath = path.replace(/^\/(ja|en|zh|zh-TW|ko)/, '');
+  const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+  const url = `${FANZA_SITE_URL}${normalizedPath}?hl=${locale}`;
 
   if (compact) {
     return (
