@@ -187,15 +187,16 @@ export default function CrossAspInfo({
           </h4>
           <div className="space-y-2">
             {sortedAspCounts
-              // hideFanzaLinkがtrueの場合はFANZAを除外
-              .filter(asp => !(hideFanzaLink && asp.aspName === 'FANZA'))
+              // hideFanzaLinkがtrueの場合はFANZAを除外（大文字小文字を正規化して比較）
+              .filter(asp => !(hideFanzaLink && asp.aspName.toUpperCase() === 'FANZA'))
               .map((asp) => {
               const providerId = ASP_TO_PROVIDER[asp.aspName];
               const meta = providerId ? providerMeta[providerId] : null;
               const percentage = totalWorks > 0 ? (asp.count / totalWorks) * 100 : 0;
 
               // FANZAの場合は常に外部リンク（f.adult-v.com）
-              const isFanza = asp.aspName === 'FANZA';
+              // aspNameは大文字小文字が混在する可能性があるため正規化して比較
+              const isFanza = asp.aspName.toUpperCase() === 'FANZA';
               // 演者詳細ページに asp パラメータでフィルターするリンクを生成
               const aspLinkHref = isFanza
                 ? `${fanzaSiteUrl}/actress/${performerId}?hl=${locale}`

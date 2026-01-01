@@ -557,7 +557,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 )}
 
                 {/* FANZAで見る（apps/fanza経由、直リンクは規約違反） */}
-                {sources.find(s => s.aspName === 'FANZA') && (
+                {sources.find(s => s.aspName?.toUpperCase() === 'FANZA') && (
                   <FanzaCrossLink
                     productId={product.normalizedProductId || product.id}
                     locale={locale}

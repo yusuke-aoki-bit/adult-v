@@ -341,7 +341,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   );
                 })}
                 {/* FANZAサイトへのクロスリンク */}
-                {productCountByAsp.some(asp => asp.aspName === 'FANZA') && (
+                {productCountByAsp.some(asp => asp.aspName.toUpperCase() === 'FANZA') && (
                   <FanzaSiteLink
                     path={`/actress/${actress.id}`}
                     locale={locale}
