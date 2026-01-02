@@ -218,3 +218,64 @@ export function productIdToLikePattern(id: string): string {
   // 英字と数字の間にワイルドカードを挿入
   return normalized.replace(/([a-z]+)[-_]?(\d+)/, '$1%$2');
 }
+
+/**
+ * 品番を表示用にフォーマット（正規化）
+ *
+ * 様々なフォーマットの品番を「PREFIX-NUMBER」形式に統一
+ * 先頭の数字プレフィックス（メーカーコード）を除去
+ *
+ * @example
+ * formatProductCodeForDisplay('107START-470')  // 'START-470'
+ * formatProductCodeForDisplay('ssis00865')     // 'SSIS-865'
+ * formatProductCodeForDisplay('h_1234abc00123') // 'ABC-123'
+ * formatProductCodeForDisplay('300mium01359')  // '300MIUM-1359'
+ */
+export function formatProductCodeForDisplay(code: string | null | undefined): string | null {
+  if (!code || typeof code !== 'string') return null;
+
+  let input = code.trim().toUpperCase();
+  if (!input) return null;
+
+  // h_XXXX プレフィックス除去 (FANZA特有)
+  // 例: H_1234ABC00123 → ABC00123
+  input = input.replace(/^H_\d+/, '');
+
+  // 3桁数字+英字 の場合は数字プレフィックスを除去しない（シロウトTV系）
+  // 例: 300MIUM-1359 → そのまま
+  const is300series = input.match(/^300[A-Z]+/);
+
+  if (!is300series) {
+    // その他の数字プレフィックスを除去
+    // 例: 107START-470 → START-470
+    // 例: 118ABW00123 → ABW00123
+    input = input.replace(/^\d+(?=[A-Z])/, '');
+  }
+
+  // パターン1: 既にハイフン区切り (SSIS-865, 300MIUM-1359, START-470)
+  let match = input.match(/^(\d*[A-Z]+)-(\d+)$/);
+  if (match) {
+    const prefix = match[1];
+    const number = match[2].replace(/^0+/, '') || '0';
+    return `${prefix}-${number}`;
+  }
+
+  // パターン2: ハイフンなし、数字プレフィックス付き (300MIUM1359)
+  match = input.match(/^(\d+[A-Z]+)(\d+)$/);
+  if (match) {
+    const prefix = match[1];
+    const number = match[2].replace(/^0+/, '') || '0';
+    return `${prefix}-${number}`;
+  }
+
+  // パターン3: ハイフンなし、英字のみプレフィックス (SSIS00865 → SSIS-865)
+  match = input.match(/^([A-Z]+)(\d+)$/);
+  if (match) {
+    const prefix = match[1];
+    const number = match[2].replace(/^0+/, '') || '0';
+    return `${prefix}-${number}`;
+  }
+
+  // 解析失敗 - 元の値をそのまま返す
+  return code.toUpperCase();
+}

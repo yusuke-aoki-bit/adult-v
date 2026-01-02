@@ -18,6 +18,7 @@ import {
   ViewTracker,
   SocialShareButtons,
   productDetailTranslations,
+  CopyButton,
 } from '@adult-v/shared/components';
 // AffiliateButton is available but currently unused - keeping import for future use
 // import AffiliateButton from '@/components/AffiliateButton';
@@ -33,6 +34,25 @@ import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * 配列をシャッフル（Fisher-Yates algorithm）
+ * seed値を使って同じページビューでは同じ順序を保持
+ */
+function shuffleArray<T>(array: T[], seed: number): T[] {
+  const result = [...array];
+  let m = result.length;
+  while (m) {
+    const i = Math.floor(seededRandom(seed + m) * m--);
+    [result[m], result[i]] = [result[i], result[m]];
+  }
+  return result;
+}
+
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
 
 // Dynamic imports for heavy components to reduce initial bundle size
 const SceneTimeline = nextDynamic(() => import('@/components/SceneTimeline'), {
@@ -332,11 +352,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     />
                   </div>
                   <p className="theme-text-secondary">{product.providerLabel}</p>
-                  {/* SEO強化: 品番を目立つ形で表示 */}
+                  {/* SEO強化: 品番を目立つ形で表示 + コピーボタン */}
                   <div className="flex flex-wrap items-center gap-2 mt-2">
-                    <span className="inline-flex items-center px-3 py-1 bg-rose-100 border border-rose-300 rounded-md text-rose-700 text-sm font-mono">
-                      {product.normalizedProductId || product.id}
-                    </span>
+                    <div className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center px-3 py-1 bg-rose-100 border border-rose-300 rounded-md text-rose-700 text-sm font-mono">
+                        {product.normalizedProductId || product.id}
+                      </span>
+                      <CopyButton text={product.normalizedProductId || String(product.id)} label="品番" iconOnly size="xs" />
+                    </div>
+                    <div className="inline-flex items-center gap-1">
+                      <CopyButton text={product.title} label="タイトル" size="xs" />
+                    </div>
                     {sources.length > 0 && sources[0].originalProductId && sources[0].originalProductId !== product.normalizedProductId && (
                       <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded-md text-gray-600 text-xs font-mono">
                         {sources[0].originalProductId}
@@ -383,17 +409,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       {product.performers.length === 1 ? tCommon('actress') : t.performers}
                     </h2>
                     <div className="flex flex-wrap gap-2">
-                      {product.performers.map((performer) => (
-                        <Link
-                          key={performer.id}
-                          href={localizedHref(`/actress/${performer.id}`, locale)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-sm font-medium transition-colors"
-                        >
-                          <span>{performer.name}</span>
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </Link>
+                      {/* 日付ベースのシードでランダム化（1日ごとに順序変更） */}
+                      {shuffleArray(product.performers, Math.floor(Date.now() / 86400000)).map((performer) => (
+                        <div key={performer.id} className="inline-flex items-center gap-1">
+                          <Link
+                            href={localizedHref(`/actress/${performer.id}`, locale)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-sm font-medium transition-colors"
+                          >
+                            <span>{performer.name}</span>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </Link>
+                          <CopyButton text={performer.name} iconOnly size="xs" />
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -405,19 +434,22 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       </svg>
                       {tCommon('actress')}
                     </h2>
-                    {product.actressId ? (
-                      <Link
-                        href={localizedHref(`/actress/${product.actressId}`, locale)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-sm font-medium transition-colors"
-                      >
-                        <span>{product.actressName}</span>
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
-                    ) : (
-                      <p className="theme-text">{product.actressName}</p>
-                    )}
+                    <div className="inline-flex items-center gap-1">
+                      {product.actressId ? (
+                        <Link
+                          href={localizedHref(`/actress/${product.actressId}`, locale)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-sm font-medium transition-colors"
+                        >
+                          <span>{product.actressName}</span>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      ) : (
+                        <span className="theme-text">{product.actressName}</span>
+                      )}
+                      <CopyButton text={product.actressName} iconOnly size="xs" />
+                    </div>
                   </div>
                 ) : null}
 

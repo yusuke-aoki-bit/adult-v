@@ -5,7 +5,7 @@
 
 set -e
 
-PROJECT_ID="adult-v-446607"
+PROJECT_ID="adult-v"
 REGION="asia-northeast1"
 LOCATION="asia-northeast1"
 SERVICE_ACCOUNT="646431984228-compute@developer.gserviceaccount.com"
@@ -98,16 +98,32 @@ setup_scheduler "crawl-fc2-scheduler" "0 20 * * *" "crawl-fc2" "FC2クローラ�
 setup_scheduler "crawl-sales-scheduler" "0 8,14,20 * * *" "crawl-sales" "セールクローラー"
 
 # ========================================
+# エンリッチメントジョブ
+# ========================================
+
+# 14. 品番抽出（毎日23:00 - 全クローラー終了後）
+setup_scheduler "extract-product-codes-daily" "0 23 * * *" "extract-product-codes" "品番抽出ジョブ"
+
+# 15. 演者紐づけ（毎日23:30 - 品番抽出後）
+setup_scheduler "performer-pipeline-daily" "30 23 * * *" "performer-pipeline" "演者紐づけパイプライン"
+
+# 16. コンテンツエンリッチメント（毎日0:00 - 演者紐づけ後）
+setup_scheduler "content-enrichment-daily" "0 0 * * *" "content-enrichment" "コンテンツエンリッチメント"
+
+# 17. MGS description バックフィル（週1回）
+setup_scheduler "mgs-description-backfill-weekly" "0 22 * * 0" "mgs-description-backfill" "MGS descriptionバックフィル"
+
+# ========================================
 # その他のジョブ
 # ========================================
 
-# 14. Wiki出演者クローラー（週1回）
+# 16. Wiki出演者クローラー（週1回）
 setup_scheduler "wiki-weekly" "0 1 * * 0" "wiki-crawler" "Wiki出演者クローラー"
 
-# 15. GSC Fetcher
+# 17. GSC Fetcher
 setup_scheduler "gsc-fetcher-daily" "0 7 * * *" "gsc-fetcher" "GSC Fetcherジョブ"
 
-# 16. PageSpeed Checker
+# 18. PageSpeed Checker
 setup_scheduler "pagespeed-checker-daily" "0 9 * * *" "pagespeed-checker" "PageSpeed Checkerジョブ"
 
 # 現在のスケジューラー一覧を表示

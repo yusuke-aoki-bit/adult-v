@@ -21,11 +21,13 @@ import {
   FanzaCrossLink,
   SocialShareButtons,
   productDetailTranslations,
+  CopyButton,
 } from '@adult-v/shared/components';
 // AffiliateButton is available but currently unused - keeping import for future use
 // import AffiliateButton from '@/components/AffiliateButton';
 import StickyCta from '@/components/StickyCta';
 import { getProductById, searchProductByProductId, getProductSources, getActressAvgPricePerMin, getSampleImagesByMakerCode, getProductMakerCode, getAllProductSources } from '@/lib/db/queries';
+import { formatProductCodeForDisplay } from '@adult-v/shared';
 import { isSubscriptionSite } from '@/lib/image-utils';
 import { getRelatedProducts, getPerformerOtherProducts, getProductMaker, getSameMakerProducts, getProductGenreTags, getProductSeries, getSameSeriesProducts } from '@/lib/db/recommendations';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema, generateFAQSchema, getProductPageFAQs, generateReviewSchema } from '@/lib/seo';
@@ -37,6 +39,25 @@ import { localizedHref } from '@adult-v/shared/i18n';
 // ISR: Revalidate every 10 minutes for product details
 // Product data changes rarely, cache improves performance significantly
 export const revalidate = 600;
+
+/**
+ * 配列をシャッフル（Fisher-Yates algorithm）
+ * seed値を使って同じページビューでは同じ順序を保持
+ */
+function shuffleArray<T>(array: T[], seed: number): T[] {
+  const result = [...array];
+  let m = result.length;
+  while (m) {
+    const i = Math.floor(seededRandom(seed + m) * m--);
+    [result[m], result[i]] = [result[i], result[m]];
+  }
+  return result;
+}
+
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
 
 // Dynamic imports for heavy components (494 + 469 lines) to reduce initial bundle size
 const SceneTimeline = nextDynamic(() => import('@/components/SceneTimeline'), {
@@ -227,8 +248,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
 
   // 最後に商品タイトル（品番付き）を追加（リンクなし）
-  const displayTitle = product.normalizedProductId
-    ? `${product.normalizedProductId}`
+  // originalProductIdを正規化して表示用品番を生成
+  // 優先順位: makerProductCode > formatProductCodeForDisplay(originalProductId) > normalizedProductId
+  const formattedCode = formatProductCodeForDisplay(product.originalProductId);
+  const displayProductCode = product.makerProductCode || formattedCode || product.normalizedProductId;
+  const displayTitle = displayProductCode
+    ? displayProductCode
     : product.title.length > 30 ? product.title.substring(0, 30) + '...' : product.title;
   breadcrumbItems.push({ label: displayTitle });
 
@@ -332,11 +357,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <div>
                   <div className="flex items-start gap-3 mb-2">
                     {/* SEO強化: H1に品番を含める（Google検索で品番検索時にヒット率向上） */}
+                    {/* 正規化された品番を使用 */}
                     <h1 className="text-3xl font-bold text-white flex-1">
-                      {product.normalizedProductId && (
-                        <span className="text-rose-400">{product.normalizedProductId}</span>
+                      {displayProductCode && (
+                        <span className="text-rose-400">{displayProductCode}</span>
                       )}
-                      {product.normalizedProductId && ' '}
+                      {displayProductCode && ' '}
                       {product.title}
                     </h1>
                     <ProductActions
@@ -352,12 +378,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     />
                   </div>
                   <p className="text-gray-300">{product.providerLabel}</p>
-                  {/* SEO強化: 品番を目立つ形で表示 */}
+                  {/* SEO強化: 品番を目立つ形で表示 + コピーボタン */}
+                  {/* 正規化された品番を使用 */}
                   <div className="flex flex-wrap items-center gap-2 mt-2">
-                    <span className="inline-flex items-center px-3 py-1 bg-rose-900/50 border border-rose-700 rounded-md text-rose-200 text-sm font-mono">
-                      {product.normalizedProductId || product.id}
-                    </span>
-                    {sources.length > 0 && sources[0].originalProductId && sources[0].originalProductId !== product.normalizedProductId && (
+                    <div className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center px-3 py-1 bg-rose-900/50 border border-rose-700 rounded-md text-rose-200 text-sm font-mono">
+                        {displayProductCode || product.id}
+                      </span>
+                      <CopyButton text={displayProductCode || String(product.id)} label="品番" iconOnly size="xs" />
+                    </div>
+                    <div className="inline-flex items-center gap-1">
+                      <CopyButton text={product.title} label="タイトル" size="xs" />
+                    </div>
+                    {sources.length > 0 && sources[0].originalProductId &&
+                     sources[0].originalProductId !== displayProductCode && (
                       <span className="inline-flex items-center px-2 py-1 bg-gray-700 rounded-md text-gray-300 text-xs font-mono">
                         {sources[0].originalProductId}
                       </span>
@@ -387,7 +421,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   {/* SNSシェアボタン */}
                   <div className="mt-3">
                     <SocialShareButtons
-                      title={`${product.normalizedProductId || product.id} ${product.title}`}
+                      title={`${displayProductCode || product.id} ${product.title}`}
                       productId={String(product.id)}
                       compact
                     />
@@ -403,17 +437,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       {product.performers.length === 1 ? tCommon('actress') : t.performers}
                     </h2>
                     <div className="flex flex-wrap gap-2">
-                      {product.performers.map((performer) => (
-                        <Link
-                          key={performer.id}
-                          href={localizedHref(`/actress/${performer.id}`, locale)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-sm font-medium transition-colors"
-                        >
-                          <span>{performer.name}</span>
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </Link>
+                      {/* 日付ベースのシードでランダム化（1日ごとに順序変更） */}
+                      {shuffleArray(product.performers, Math.floor(Date.now() / 86400000)).map((performer) => (
+                        <div key={performer.id} className="inline-flex items-center gap-1">
+                          <Link
+                            href={localizedHref(`/actress/${performer.id}`, locale)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-sm font-medium transition-colors"
+                          >
+                            <span>{performer.name}</span>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </Link>
+                          <CopyButton text={performer.name} iconOnly size="xs" />
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -425,19 +462,22 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       </svg>
                       {tCommon('actress')}
                     </h2>
-                    {product.actressId ? (
-                      <Link
-                        href={localizedHref(`/actress/${product.actressId}`, locale)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-sm font-medium transition-colors"
-                      >
-                        <span>{product.actressName}</span>
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
-                    ) : (
-                      <p className="text-white">{product.actressName}</p>
-                    )}
+                    <div className="inline-flex items-center gap-1">
+                      {product.actressId ? (
+                        <Link
+                          href={localizedHref(`/actress/${product.actressId}`, locale)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-sm font-medium transition-colors"
+                        >
+                          <span>{product.actressName}</span>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      ) : (
+                        <span className="text-white">{product.actressName}</span>
+                      )}
+                      <CopyButton text={product.actressName} iconOnly size="xs" />
+                    </div>
                   </div>
                 ) : null}
 

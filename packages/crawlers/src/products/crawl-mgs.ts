@@ -746,6 +746,7 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
         .values({
           normalizedProductId,
           title: mgsProduct.title,
+          description: mgsProduct.description || undefined,
           releaseDate: mgsProduct.releaseDate || undefined,
           duration: mgsProduct.duration,
         })
@@ -755,13 +756,21 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
       console.log(`Created new product: ${normalizedProductId}${mgsProduct.duration ? ` (${mgsProduct.duration}分)` : ''}`);
     } else {
       productId = productRecord[0].id;
-      // 既存作品のdurationが未設定の場合は更新
+      // 既存作品のduration・descriptionが未設定の場合は更新
+      const updateData: { duration?: number; description?: string } = {};
       if (mgsProduct.duration && !productRecord[0].duration) {
+        updateData.duration = mgsProduct.duration;
+      }
+      if (mgsProduct.description && !productRecord[0].description) {
+        updateData.description = mgsProduct.description;
+      }
+      if (Object.keys(updateData).length > 0) {
         await db
           .update(products)
-          .set({ duration: mgsProduct.duration })
+          .set(updateData)
           .where(eq(products.id, productId));
-        console.log(`  Updated duration: ${mgsProduct.duration}分`);
+        if (updateData.duration) console.log(`  Updated duration: ${updateData.duration}分`);
+        if (updateData.description) console.log(`  Updated description: ${updateData.description.substring(0, 50)}...`);
       }
     }
 

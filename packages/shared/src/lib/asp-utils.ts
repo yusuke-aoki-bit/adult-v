@@ -378,3 +378,46 @@ export function buildAspMatchSql(
   const quoted = aspNames.map(name => `'${name}'`).join(', ');
   return `(${buildAspNormalizationSql(aspColumnRef, urlColumnRef)}) IN (${quoted})`;
 }
+
+// ============================================================
+// ASPバッジカラー（統一された色定義）
+// ============================================================
+
+/**
+ * ASPバッジの背景色（Tailwind CSSクラス）
+ */
+export const ASP_BADGE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  // 大手サイト
+  fanza: { bg: 'bg-pink-600', text: 'text-white', border: 'border-pink-500' },
+  mgs: { bg: 'bg-blue-600', text: 'text-white', border: 'border-blue-500' },
+  duga: { bg: 'bg-orange-600', text: 'text-white', border: 'border-orange-500' },
+  sokmil: { bg: 'bg-purple-600', text: 'text-white', border: 'border-purple-500' },
+  fc2: { bg: 'bg-red-600', text: 'text-white', border: 'border-red-500' },
+
+  // DTI系（カリビアン・無修正系）
+  caribbeancom: { bg: 'bg-teal-600', text: 'text-white', border: 'border-teal-500' },
+  caribbeancompr: { bg: 'bg-teal-700', text: 'text-white', border: 'border-teal-600' },
+  '1pondo': { bg: 'bg-cyan-600', text: 'text-white', border: 'border-cyan-500' },
+  heyzo: { bg: 'bg-sky-600', text: 'text-white', border: 'border-sky-500' },
+  '10musume': { bg: 'bg-rose-600', text: 'text-white', border: 'border-rose-500' },
+  pacopacomama: { bg: 'bg-fuchsia-600', text: 'text-white', border: 'border-fuchsia-500' },
+  tokyohot: { bg: 'bg-red-700', text: 'text-white', border: 'border-red-600' },
+
+  // その他
+  heydouga: { bg: 'bg-amber-600', text: 'text-white', border: 'border-amber-500' },
+  japanska: { bg: 'bg-indigo-600', text: 'text-white', border: 'border-indigo-500' },
+  b10f: { bg: 'bg-emerald-600', text: 'text-white', border: 'border-emerald-500' },
+
+  // デフォルト
+  default: { bg: 'bg-gray-600', text: 'text-white', border: 'border-gray-500' },
+};
+
+/**
+ * ASPバッジカラーを取得
+ * @param aspName - ASP名（正規化済みまたは元の名前）
+ * @returns Tailwind CSSクラス
+ */
+export function getAspBadgeColor(aspName: string): { bg: string; text: string; border: string } {
+  const normalized = normalizeAspName(aspName);
+  return ASP_BADGE_COLORS[normalized] || ASP_BADGE_COLORS.default;
+}

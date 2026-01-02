@@ -40,8 +40,9 @@ export type CurrencyCode = 'JPY' | 'USD';
 // 作品（商品）の型定義
 export interface Product {
   id: string;
-  normalizedProductId?: string; // 正規化された商品ID
-  originalProductId?: string; // メーカー品番（ASPごと）
+  normalizedProductId?: string; // 正規化された商品ID (例: 107start-470)
+  makerProductCode?: string; // メーカー品番 (例: START-470, SSIS-865)
+  originalProductId?: string; // ASPごとのオリジナル商品ID
   title: string;
   description?: string;
   price: number;

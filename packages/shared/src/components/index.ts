@@ -232,3 +232,7 @@ export { default as PriceHistoryChart } from './PriceHistoryChart';
 export { default as ActressBundleCalculator } from './ActressBundleCalculator';
 export { default as ForYouSales } from './ForYouSales';
 export { default as SalePrediction } from './SalePrediction';
+
+// Copy button (clipboard)
+export { CopyButton } from './CopyButton';
+export type { CopyButtonProps } from './CopyButton';

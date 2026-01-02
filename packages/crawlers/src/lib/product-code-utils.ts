@@ -64,9 +64,16 @@ export function parseProductCode(code: string): ParsedProductCode | null {
   // 例: h_1234abc00123 → abc00123
   input = input.replace(/^H_\d+/, '');
 
-  // その他の一般的なプレフィックス除去
-  // 例: 118abw00123 → abw00123
-  input = input.replace(/^\d{3}(?=[A-Z])/, '');
+  // 3桁数字+英字 で始まる場合は数字プレフィックスを保持（シロウトTV系）
+  // 例: 300MIUM-1359 → そのまま
+  const is300series = input.match(/^300[A-Z]+/);
+
+  if (!is300series) {
+    // その他の数字プレフィックス除去（メーカーコード）
+    // 例: 107START-470 → START-470
+    // 例: 118ABW00123 → ABW00123
+    input = input.replace(/^\d+(?=[A-Z])/, '');
+  }
 
   // パターン1: 既にハイフン区切り (SSIS-865, 300MIUM-1359)
   let match = input.match(/^(\d*[A-Z]+)-(\d+)$/);

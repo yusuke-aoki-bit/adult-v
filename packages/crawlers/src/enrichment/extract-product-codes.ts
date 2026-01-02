@@ -29,6 +29,7 @@ const ASP_PROCESSORS: Record<string, (db: ReturnType<typeof getDb>, limit: numbe
   fanza: extractFanzaCodes,
   mgs: extractMgsCodes,
   duga: extractDugaCodes,
+  sokmil: extractSokmilCodes,
 };
 
 async function main() {
@@ -291,6 +292,85 @@ async function extractDugaCodes(
       if (stats.errors <= 5) {
         console.error(`  エラー (product_id=${row.product_id}):`, error);
       }
+    }
+  }
+
+  return stats;
+}
+
+/**
+ * SOKMILの品番抽出
+ * 画像URLから品番パターンを抽出
+ * 例: https://img.sokmil.com/image/product/pe_sdd0723_01_T...jpg → SDD-723
+ */
+async function extractSokmilCodes(
+  db: ReturnType<typeof getDb>,
+  limit: number,
+  dryRun: boolean
+): Promise<ExtractStats> {
+  const stats: ExtractStats = { total: 0, extracted: 0, updated: 0, skipped: 0, errors: 0 };
+
+  // SOKMILのproduct_sourcesからmaker_product_codeがnullの商品を取得
+  // 画像URLも取得して品番抽出に使用
+  const rows = await db.execute<{
+    product_id: number;
+    original_product_id: string;
+    current_code: string | null;
+    image_url: string | null;
+  }>(sql`
+    SELECT
+      ps.product_id,
+      ps.original_product_id,
+      p.maker_product_code as current_code,
+      p.default_thumbnail_url as image_url
+    FROM product_sources ps
+    JOIN products p ON p.id = ps.product_id
+    WHERE ps.asp_name = 'SOKMIL'
+      AND p.maker_product_code IS NULL
+    LIMIT ${limit}
+  `);
+
+  stats.total = rows.rows.length;
+  console.log(`📦 SOKMIL商品 ${stats.total}件を処理...`);
+
+  for (const row of rows.rows) {
+    try {
+      let productCode: string | null = null;
+
+      // 画像URLから品番を抽出
+      // パターン: pe_XXX000_01 または cs_XXX000_01
+      // 例: pe_sdd0723_01 → SDD-723
+      if (row.image_url) {
+        const urlMatch = row.image_url.match(/(?:pe|cs|pb)_([a-z]+)(\d+)_/i);
+        if (urlMatch) {
+          const prefix = urlMatch[1].toUpperCase();
+          const number = urlMatch[2].replace(/^0+/, '') || '0';
+          productCode = `${prefix}-${number}`;
+        }
+      }
+
+      if (productCode) {
+        stats.extracted++;
+
+        if (!dryRun) {
+          await db.execute(sql`
+            UPDATE products
+            SET maker_product_code = ${productCode},
+                updated_at = NOW()
+            WHERE id = ${row.product_id}
+          `);
+          stats.updated++;
+        }
+
+        if (stats.extracted <= 10) {
+          console.log(`  ${row.original_product_id} (${row.image_url?.substring(0, 60)}...) → ${productCode}`);
+        }
+      } else {
+        stats.skipped++;
+      }
+    } catch (error) {
+      stats.errors++;
+      console.error(`  エラー (product_id=${row.product_id}):`, error);
     }
   }
 

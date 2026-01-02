@@ -59,6 +59,7 @@ export interface MapperDeps {
 export interface DbProduct {
   id: number;
   normalizedProductId?: string | null;
+  makerProductCode?: string | null;  // メーカー品番 (例: SSIS-865, START-470)
   title: string;
   releaseDate?: string | null;
   description?: string | null;
@@ -259,6 +260,7 @@ export function mapProductToType(
   return {
     id: String(product.id),
     normalizedProductId: product.normalizedProductId || undefined,
+    makerProductCode: product.makerProductCode || undefined,  // メーカー品番
     originalProductId: source?.originalProductId || undefined,
     title: getLocalizedTitle(product, locale),
     description: getLocalizedDescription(product, locale),
