@@ -63,8 +63,8 @@ export function CopyButton({
           ? 'bg-green-600 text-white'
           : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'
       } ${sizeClasses[size]} ${className}`}
-      title={`${label || text} をコピー`}
-      aria-label={`${label || text} をコピー`}
+      title={`${label || text} をクリップボードにコピー`}
+      aria-label={`${label || text} をクリップボードにコピー`}
     >
       {copied ? (
         <svg className={iconSizes[size]} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +77,7 @@ export function CopyButton({
       )}
       {!iconOnly && (
         <span className="truncate max-w-[120px]">
-          {copied ? 'コピー済み' : (label || text)}
+          {copied ? 'クリップボードにコピー済み' : (label || text)}
         </span>
       )}
     </button>

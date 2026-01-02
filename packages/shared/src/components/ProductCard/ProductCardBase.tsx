@@ -9,6 +9,7 @@ import { normalizeImageUrl, getFullSizeImageUrl, isDtiUncensoredSite, isSubscrip
 import { generateAltText } from '../../lib/seo-utils';
 import { getThemeConfig, type ProductCardTheme } from './themes';
 import { getAffiliateUrl, type GetAffiliateUrlOptions } from './helpers';
+import { CopyButton } from '../CopyButton';
 
 // Default translations (Japanese) for ProductCard
 const DEFAULT_TRANSLATIONS: Record<string, string> = {
@@ -762,10 +763,20 @@ function ProductCardBase({
             <span className={`${themeConfig.separatorColor} shrink-0`}>|</span>
             <span className={`${themeConfig.textMuted} shrink-0`}>{product.releaseDate ?? t('releaseDateTbd')}</span>
           </div>
+          <div className="flex items-center gap-1 mt-0.5">
+            <Link href={`/${locale}/products/${product.id}`}>
+              <p className={`text-[10px] sm:text-xs ${themeConfig.textMuted} truncate`}>
+                {product.normalizedProductId || product.id}
+              </p>
+            </Link>
+            <CopyButton
+              text={product.normalizedProductId || String(product.id)}
+              iconOnly
+              size="xs"
+              className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+            />
+          </div>
           <Link href={`/${locale}/products/${product.id}`}>
-            <p className={`text-[10px] sm:text-xs ${themeConfig.textMuted} mt-0.5 truncate`}>
-              {product.normalizedProductId || product.id}
-            </p>
             <h3 className={`font-semibold text-sm sm:text-base leading-tight mt-0.5 line-clamp-2 ${themeConfig.textPrimary} hover:opacity-80`}>
               {product.title}
             </h3>
