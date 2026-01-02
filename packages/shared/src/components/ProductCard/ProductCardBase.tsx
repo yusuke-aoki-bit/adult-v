@@ -348,6 +348,18 @@ function ProductCardBase({
             <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-orange-300' : 'text-gray-800 group-hover:text-orange-600'} text-xs font-medium line-clamp-2 transition-colors`}>
               {product.title}
             </p>
+            {/* 品番 + コピーボタン */}
+            <div className="flex items-center gap-1 mt-0.5">
+              <span className={`text-[9px] ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} truncate`}>
+                {product.normalizedProductId || product.id}
+              </span>
+              <CopyButton
+                text={product.normalizedProductId || String(product.id)}
+                iconOnly
+                size="xs"
+                className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+              />
+            </div>
           </div>
         </Link>
         {/* 外部リンクCTA（ホバー時のみ表示） */}
@@ -418,9 +430,21 @@ function ProductCardBase({
             </div>
             <div className="p-1.5">
               <h3 className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-tight`}>{product.title}</h3>
+              {/* 品番 + コピーボタン */}
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className={`text-[10px] ${themeConfig.textMuted} truncate`}>
+                  {product.normalizedProductId || product.id}
+                </span>
+                <CopyButton
+                  text={product.normalizedProductId || String(product.id)}
+                  iconOnly
+                  size="xs"
+                  className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+                />
+              </div>
               {/* 女優名リンク（導線強化） */}
               {product.performers && product.performers.length > 0 && (
-                <div className="mt-1 truncate">
+                <div className="mt-0.5 truncate">
                   <Link
                     href={`/${locale}/actress/${product.performers[0].id}`}
                     className={`text-[10px] ${themeConfig.accentColor} hover:underline`}

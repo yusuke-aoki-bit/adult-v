@@ -8,6 +8,7 @@ import type { Actress, ProviderId } from '../../types/product';
 import { providerMeta } from '../../lib/providers';
 import { normalizeImageUrl, isUncensoredThumbnail } from '../../lib/image-utils';
 import ImageLightbox from '../ImageLightbox';
+import { CopyButton } from '../CopyButton';
 import { getActressCardThemeConfig, filterServicesForSite, type ActressCardTheme } from './themes';
 
 // Client-side translations
@@ -183,9 +184,17 @@ function ActressCardBaseComponent({
           )}
         </div>
         <div className="p-1.5">
-          <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-amber-300' : 'text-gray-800 group-hover:text-amber-600'} text-xs font-medium truncate transition-colors`}>
-            {actress.name}
-          </p>
+          <div className="flex items-center gap-1">
+            <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-amber-300' : 'text-gray-800 group-hover:text-amber-600'} text-xs font-medium truncate transition-colors flex-1`}>
+              {actress.name}
+            </p>
+            <CopyButton
+              text={actress.name}
+              iconOnly
+              size="xs"
+              className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+            />
+          </div>
         </div>
       </Link>
     );
@@ -237,13 +246,21 @@ function ActressCardBaseComponent({
 
           {/* Name and info section */}
           <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
-            {/* Name - link to detail page */}
-            <Link
-              href={`/${locale}/actress/${actress.id}`}
-              className={`block text-sm sm:text-base font-semibold truncate leading-tight ${themeConfig.hoverColor} transition-colors`}
-            >
-              {actress.name}
-            </Link>
+            {/* Name - link to detail page with copy button */}
+            <div className="flex items-center gap-1">
+              <Link
+                href={`/${locale}/actress/${actress.id}`}
+                className={`text-sm sm:text-base font-semibold truncate leading-tight ${themeConfig.hoverColor} transition-colors flex-1`}
+              >
+                {actress.name}
+              </Link>
+              <CopyButton
+                text={actress.name}
+                iconOnly
+                size="xs"
+                className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+              />
+            </div>
             {/* Aliases (desktop only) */}
             {actress.aliases && actress.aliases.length > 0 && (
               <p className="hidden sm:block text-[10px] theme-text-muted truncate">
@@ -317,7 +334,14 @@ function ActressCardBaseComponent({
           <p className="text-sm uppercase tracking-widest text-white/70">
             {actress.catchcopy}
           </p>
-          <h3 className="text-3xl font-semibold">{actress.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-3xl font-semibold">{actress.name}</h3>
+            <CopyButton
+              text={actress.name}
+              iconOnly
+              size="sm"
+            />
+          </div>
           {/* Aliases */}
           {actress.aliases && actress.aliases.length > 0 && (
             <p className="text-sm text-white/60 mt-1">
