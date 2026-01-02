@@ -32,7 +32,8 @@ import '@/lib/constants/filters';
 import ActressFavoriteButton from '@/components/ActressFavoriteButton';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-export const dynamic = 'force-dynamic';
+// ISRキャッシュ: 10分（SEO改善のため、検索エンジンクローラーの効率を向上）
+export const revalidate = 600;
 
 interface PageProps {
   params: Promise<{ performerId: string; locale: string }>;

@@ -4,9 +4,8 @@ import { sql } from 'drizzle-orm';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
-// Force dynamic generation
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // Revalidate every hour
+// ISRキャッシュ: 1時間（DBクエリを毎回実行しないように）
+export const revalidate = 3600;
 
 /**
  * Sitemap Index - Lists all sitemap files
