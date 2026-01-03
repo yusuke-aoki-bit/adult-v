@@ -11,9 +11,9 @@ vi.mock('next/link', () => ({
     React.createElement('a', { href, ...props }, children),
 }));
 
-// Mock next/image
+// Mock next/image - filter out Next.js specific props that aren't valid DOM attributes
 vi.mock('next/image', () => ({
-  default: ({ src, alt, ...props }: { src: string; alt: string }) =>
+  default: ({ src, alt, blurDataURL: _blur, priority: _priority, fill: _fill, placeholder: _placeholder, loader: _loader, quality: _quality, sizes: _sizes, unoptimized: _unoptimized, onLoadingComplete: _onLoadingComplete, ...props }: { src: string; alt: string; [key: string]: unknown }) =>
     React.createElement('img', { src, alt, ...props }),
 }));
 

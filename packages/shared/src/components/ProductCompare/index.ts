@@ -1,0 +1,1 @@
+export { ProductCompare } from './ProductCompare';

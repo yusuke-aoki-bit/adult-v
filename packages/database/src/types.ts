@@ -18,6 +18,14 @@ import {
   performers,
   performerAliases,
   tags,
+  userReviews,
+  userTagSuggestions,
+  userCorrections,
+  publicFavoriteLists,
+  publicFavoriteListItems,
+  userReviewVotes,
+  userTagVotes,
+  publicListLikes,
 } from './schema';
 
 // ============================================================
@@ -56,6 +64,34 @@ export type PerformerAliasesTable = typeof performerAliases;
 
 /** tagsテーブルの型 */
 export type TagsTable = typeof tags;
+
+// ============================================================
+// ユーザー参加型プラットフォームテーブル型
+// ============================================================
+
+/** userReviewsテーブルの型 */
+export type UserReviewsTable = typeof userReviews;
+
+/** userTagSuggestionsテーブルの型 */
+export type UserTagSuggestionsTable = typeof userTagSuggestions;
+
+/** userCorrectionsテーブルの型 */
+export type UserCorrectionsTable = typeof userCorrections;
+
+/** publicFavoriteListsテーブルの型 */
+export type PublicFavoriteListsTable = typeof publicFavoriteLists;
+
+/** publicFavoriteListItemsテーブルの型 */
+export type PublicFavoriteListItemsTable = typeof publicFavoriteListItems;
+
+/** userReviewVotesテーブルの型 */
+export type UserReviewVotesTable = typeof userReviewVotes;
+
+/** userTagVotesテーブルの型 */
+export type UserTagVotesTable = typeof userTagVotes;
+
+/** publicListLikesテーブルの型 */
+export type PublicListLikesTable = typeof publicListLikes;
 
 // ============================================================
 // データベース型

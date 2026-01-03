@@ -28,6 +28,7 @@ import {
 import { processProductPerformers, ensureTags, linkProductToTags, saveProductImages } from './batch-helpers';
 import { CrawlerAIHelper, getAIHelper } from './ai-helper';
 import { saveSaleInfo } from '../sale-helper';
+import { processProductIdentity, type ProductForMatching } from '../product-identity';
 
 // ============================================================
 // Types
@@ -438,12 +439,15 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       // 6. 関連データ保存
       await this.saveRelatedData(productId, parsed);
 
-      // 7. AI処理
+      // 7. 商品同一性マッチング
+      await this.processIdentity(productId, parsed);
+
+      // 8. AI処理
       if (this.getEffectiveEnableAI()) {
         await this.processAI(productId, parsed);
       }
 
-      // 8. 処理済みマーク
+      // 9. 処理済みマーク
       await markRawDataAsProcessed(this.options.sourceType, upsertResult.id);
 
       console.log();
@@ -600,6 +604,39 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     // 集計評価
     if (data.aggregateRating) {
       await this.saveAggregateRating(productId, data.aggregateRating);
+    }
+  }
+
+  /**
+   * 商品同一性マッチングを処理
+   */
+  protected async processIdentity(productId: number, data: ParsedProductData): Promise<void> {
+    try {
+      // ProductForMatching 形式に変換
+      const productForMatching: ProductForMatching = {
+        id: productId,
+        normalizedProductId: data.normalizedProductId,
+        makerProductCode: null, // maker_product_code は後でDBから取得するか、parsedに追加する必要がある
+        title: data.title,
+        releaseDate: data.releaseDate ? new Date(data.releaseDate) : null,
+        duration: data.duration || null,
+        aspName: this.options.aspName,
+        performers: data.performers || [],
+      };
+
+      const result = await processProductIdentity(productForMatching);
+
+      if (result.action === 'created') {
+        console.log(`  🔗 同一性グループ作成 (group_id: ${result.groupId})`);
+      } else if (result.action === 'added') {
+        const method = result.matchResult?.matchingMethod || 'unknown';
+        const confidence = result.matchResult?.confidenceScore || 0;
+        console.log(`  🔗 既存グループに追加 (group_id: ${result.groupId}, method: ${method}, confidence: ${confidence}%)`);
+      }
+      // 'skipped' の場合は既にグループに所属しているためログなし
+    } catch (error) {
+      // 同一性マッチングエラーはクローラー処理を止めない
+      console.log(`  ⚠️ 同一性マッチングエラー: ${error instanceof Error ? error.message : error}`);
     }
   }
 

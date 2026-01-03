@@ -3,15 +3,13 @@ import { getTranslations } from 'next-intl/server';
 import { generateBaseMetadata } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import SalesSection from '@/components/SalesSection';
-import RecentlyViewed from '@/components/RecentlyViewed';
-import ForYouRecommendations from '@/components/ForYouRecommendations';
+import PageLayout from '@/components/PageLayout';
 import ProductListFilter from '@/components/ProductListFilter';
 import ActiveFiltersChips from '@/components/ActiveFiltersChips';
 import { getCalendarDetailData, getDailyReleases } from '@adult-v/shared/db-queries';
 import { CalendarGridWrapper } from '@adult-v/shared/components/stats';
 import { localizedHref } from '@adult-v/shared/i18n';
-import { getSaleProducts, getAspStats, getPopularTags } from '@/lib/db/queries';
+import { getSaleProducts, getAspStats, getPopularTags, getUncategorizedProductsCount } from '@/lib/db/queries';
 import { isServerFanzaSite } from '@/lib/server/site-mode';
 
 export async function generateMetadata({
@@ -64,12 +62,13 @@ export default async function CalendarPage({
   const isFanzaSite = await isServerFanzaSite();
 
   // カレンダー詳細データ、日別リリース数、セール情報、フィルター用データを並列取得
-  const [calendarData, dailyReleases, saleProducts, aspStats, popularTags] = await Promise.all([
+  const [calendarData, dailyReleases, saleProducts, aspStats, popularTags, uncategorizedCount] = await Promise.all([
     getCalendarDetailData(targetYear, targetMonth, 4, 2),
     getDailyReleases(targetYear, targetMonth),
-    getSaleProducts({ limit: 24, minDiscount: 30 }),
+    getSaleProducts({ limit: 24, minDiscount: 30, aspName: isFanzaSite ? 'FANZA' : undefined }),
     isFanzaSite ? Promise.resolve([]) : getAspStats(),
     getPopularTags({ limit: 50 }),
+    getUncategorizedProductsCount({ includeAsp: isFanzaSite ? ['FANZA'] : undefined }),
   ]);
 
   const structuredData = {
@@ -119,25 +118,27 @@ export default async function CalendarPage({
     count: tag.count,
   }));
 
+  // PageLayout用の翻訳
+  const tUncategorized = await getTranslations({ locale, namespace: 'uncategorized' });
+  const layoutTranslations = {
+    viewProductList: '作品一覧',
+    viewProductListDesc: '全ての配信サイトの作品を横断検索',
+    uncategorizedBadge: tUncategorized('badge'),
+    uncategorizedDescription: tUncategorized('shortDescription'),
+    uncategorizedCount: tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() }),
+  };
+
   return (
-    <div className="theme-body min-h-screen">
+    <PageLayout
+      locale={locale}
+      saleProducts={saleProductsForDisplay}
+      uncategorizedCount={uncategorizedCount}
+      isTopPage={false}
+      isFanzaSite={isFanzaSite}
+      translations={layoutTranslations}
+    >
       {/* 構造化データ */}
       <JsonLD data={structuredData} />
-
-      {/* セール情報セクション */}
-      {saleProductsForDisplay.length > 0 && (
-        <section className="py-3 sm:py-4">
-          <div className="container mx-auto px-3 sm:px-4">
-            <SalesSection saleProducts={saleProductsForDisplay} locale={locale} defaultOpen={true} />
-          </div>
-        </section>
-      )}
-
-      {/* 最近見た作品 */}
-      <RecentlyViewed locale={locale} />
-
-      {/* あなたへのおすすめ（閲覧履歴に基づく） */}
-      <ForYouRecommendations locale={locale} />
 
       <section className="py-3 sm:py-4 md:py-6">
         <div className="container mx-auto px-3 sm:px-4">
@@ -186,6 +187,6 @@ export default async function CalendarPage({
           </section>
         </div>
       </section>
-    </div>
+    </PageLayout>
   );
 }

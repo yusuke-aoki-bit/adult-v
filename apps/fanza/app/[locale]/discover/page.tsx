@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, X, ExternalLink, RefreshCw, Sparkles, Clock, User } from 'lucide-react';
-import { useFavorites } from '@adult-v/ui-common/hooks';
+import { useFavorites } from '@adult-v/shared/hooks';
 import { localizedHref } from '@adult-v/shared/i18n';
 
 interface DiscoverProduct {

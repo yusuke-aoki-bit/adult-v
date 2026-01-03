@@ -353,6 +353,9 @@
     "videoLoadError": "動画を読み込めませんでした",
     "securityRestriction": "配信元サイトのセキュリティ制限により、直接再生できない場合があります",
     "playAtSource": "配信元で再生",
+    "playInNewTab": "新しいタブで再生",
+    "externalVideoTitle": "外部サイトの動画",
+    "externalVideoDescription": "この動画は配信元サイトのセキュリティ制限により、埋め込み再生ができません。新しいタブで直接再生できます。",
     "close": "閉じる",
     "preview": "プレビュー",
     "trailer": "予告編",
@@ -432,5 +435,135 @@
     "addedToDiary": "視聴日記に追加しました",
     "removedFromDiary": "視聴日記から削除しました",
     "viewCount": "{count}回視聴"
+  },
+  "userContributions": {
+    "sectionTitle": "ユーザー投稿",
+    "reviewForm": {
+      "title": "レビューを投稿",
+      "loginRequired": "レビューを投稿するにはログインが必要です",
+      "ratingLabel": "評価",
+      "reviewTitleLabel": "タイトル",
+      "reviewTitlePlaceholder": "レビューのタイトル（任意）",
+      "contentLabel": "レビュー内容",
+      "contentPlaceholder": "この作品の感想を書いてください...",
+      "submit": "投稿",
+      "submitting": "投稿中...",
+      "success": "レビューを投稿しました",
+      "error": "レビューの投稿に失敗しました",
+      "alreadyReviewed": "この作品には既にレビューを投稿しています",
+      "minLength": "レビューは10文字以上で入力してください"
+    },
+    "reviewList": {
+      "title": "ユーザーレビュー",
+      "noReviews": "まだレビューがありません",
+      "helpful": "参考になった",
+      "notHelpful": "参考にならなかった",
+      "helpfulCount": "{count}人が参考になった",
+      "loading": "読み込み中...",
+      "error": "レビューの取得に失敗しました"
+    },
+    "tagForm": {
+      "title": "タグを提案",
+      "loginRequired": "タグを提案するにはログインが必要です",
+      "placeholder": "新しいタグ名を入力...",
+      "submit": "提案",
+      "submitting": "送信中...",
+      "success": "タグを提案しました",
+      "error": "タグの提案に失敗しました",
+      "alreadySuggested": "このタグは既に提案されています",
+      "tooShort": "タグは2文字以上で入力してください"
+    },
+    "tagList": {
+      "title": "提案されたタグ",
+      "noSuggestions": "まだ提案されたタグがありません",
+      "approved": "承認済み",
+      "pending": "審査中",
+      "loginToVote": "投票するにはログインが必要です"
+    },
+    "performerForm": {
+      "title": "出演者を提案",
+      "loginRequired": "出演者を提案するにはログインが必要です",
+      "placeholder": "出演者名を入力...",
+      "submit": "提案",
+      "submitting": "送信中...",
+      "success": "出演者を提案しました",
+      "error": "出演者の提案に失敗しました",
+      "alreadySuggested": "この出演者は既に登録または提案されています",
+      "tooShort": "名前は2文字以上で入力してください",
+      "selectExisting": "既存の出演者を選択",
+      "orEnterNew": "または新しい出演者名を入力"
+    },
+    "performerList": {
+      "title": "提案された出演者",
+      "noSuggestions": "まだ提案された出演者がいません",
+      "approved": "承認済み",
+      "pending": "審査中",
+      "linkedToExisting": "既存データと紐付け済み",
+      "loginToVote": "投票するにはログインが必要です"
+    }
+  },
+  "favoriteLists": {
+    "pageTitle": "公開リスト",
+    "myLists": "マイリスト",
+    "publicLists": "みんなのリスト",
+    "createList": "新規リスト作成",
+    "noLists": "リストがありません",
+    "loginRequired": "リストを作成するにはログインが必要です",
+    "card": {
+      "items": "{count}件",
+      "views": "{count}",
+      "likes": "{count}",
+      "private": "非公開",
+      "public": "公開",
+      "edit": "編集",
+      "delete": "削除",
+      "deleteConfirm": "このリストを削除しますか？"
+    },
+    "modal": {
+      "createTitle": "新しいリストを作成",
+      "editTitle": "リストを編集",
+      "titleLabel": "タイトル",
+      "titlePlaceholder": "リスト名を入力...",
+      "descriptionLabel": "説明（任意）",
+      "descriptionPlaceholder": "リストの説明を入力...",
+      "visibilityLabel": "公開設定",
+      "public": "公開",
+      "publicDescription": "誰でも閲覧・いいねできます",
+      "private": "非公開",
+      "privateDescription": "自分だけが閲覧できます",
+      "cancel": "キャンセル",
+      "create": "作成",
+      "save": "保存",
+      "creating": "作成中...",
+      "saving": "保存中..."
+    },
+    "detail": {
+      "loading": "読み込み中...",
+      "error": "リストの読み込みに失敗しました",
+      "notFound": "リストが見つかりません",
+      "back": "戻る",
+      "views": "{count}回閲覧",
+      "likes": "{count}いいね",
+      "items": "{count}件の作品",
+      "private": "非公開",
+      "public": "公開",
+      "share": "共有",
+      "copied": "コピーしました",
+      "emptyList": "リストに作品がありません",
+      "removeItem": "削除"
+    },
+    "addToList": {
+      "addToList": "リストに追加",
+      "selectList": "追加するリストを選択",
+      "createNew": "新しいリストを作成",
+      "noLists": "リストがありません",
+      "added": "追加しました",
+      "removed": "削除しました",
+      "loading": "読み込み中...",
+      "newListTitle": "リスト名",
+      "create": "作成",
+      "cancel": "キャンセル",
+      "loginRequired": "ログインが必要です"
+    }
   }
 }

@@ -1,2 +1,2 @@
-// Re-export from @adult-v/ui-common
-export { default } from '@adult-v/ui-common/components/NavigationProgress';
+// Re-export from @adult-v/shared
+export { default } from '@adult-v/shared/components/NavigationProgress';

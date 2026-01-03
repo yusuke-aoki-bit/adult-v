@@ -3,15 +3,13 @@ import { getTranslations } from 'next-intl/server';
 import { generateBaseMetadata } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import SalesSection from '@/components/SalesSection';
-import RecentlyViewed from '@/components/RecentlyViewed';
-import ForYouRecommendations from '@/components/ForYouRecommendations';
+import PageLayout from '@/components/PageLayout';
 import ProductListFilter from '@/components/ProductListFilter';
 import ActiveFiltersChips from '@/components/ActiveFiltersChips';
 import { getCalendarDetailData, getDailyReleases } from '@adult-v/shared/db-queries';
 import { CalendarGridWrapper } from '@adult-v/shared/components/stats';
 import { localizedHref } from '@adult-v/shared/i18n';
-import { getSaleProducts, getPopularTags } from '@/lib/db/queries';
+import { getSaleProducts, getPopularTags, getUncategorizedProductsCount } from '@/lib/db/queries';
 
 export async function generateMetadata({
   params,
@@ -59,12 +57,13 @@ export default async function CalendarPage({
   const targetYear = year ? parseInt(year, 10) : currentDate.getFullYear();
   const targetMonth = month ? parseInt(month, 10) : currentDate.getMonth() + 1;
 
-  // カレンダー詳細データ、日別リリース数、セール情報、フィルター用データを並列取得
-  const [calendarData, dailyReleases, saleProducts, popularTags] = await Promise.all([
+  // カレンダー詳細データ、日別リリース数、セール情報、フィルター用データ、未整理商品数を並列取得
+  const [calendarData, dailyReleases, saleProducts, popularTags, uncategorizedCount] = await Promise.all([
     getCalendarDetailData(targetYear, targetMonth, 4, 2),
     getDailyReleases(targetYear, targetMonth),
     getSaleProducts({ limit: 24, minDiscount: 30, aspName: 'FANZA' }),
     getPopularTags({ limit: 50 }),
+    getUncategorizedProductsCount({ includeAsp: ['FANZA'] }),
   ]);
 
   const structuredData = {
@@ -108,25 +107,25 @@ export default async function CalendarPage({
     count: tag.count,
   }));
 
+  // PageLayout用の翻訳
+  const layoutTranslations = {
+    viewProductList: pageTitle[locale] || pageTitle.ja,
+    viewProductListDesc: '',
+    uncategorizedBadge: '未整理',
+    uncategorizedDescription: '未整理作品',
+    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
+  };
+
   return (
-    <div className="theme-body min-h-screen">
+    <PageLayout
+      locale={locale}
+      saleProducts={saleProductsForDisplay}
+      uncategorizedCount={uncategorizedCount}
+      isTopPage={false}
+      translations={layoutTranslations}
+    >
       {/* 構造化データ */}
       <JsonLD data={structuredData} />
-
-      {/* セール情報セクション */}
-      {saleProductsForDisplay.length > 0 && (
-        <section className="py-3 sm:py-4">
-          <div className="container mx-auto px-3 sm:px-4">
-            <SalesSection saleProducts={saleProductsForDisplay} locale={locale} defaultOpen={true} />
-          </div>
-        </section>
-      )}
-
-      {/* 最近見た作品 */}
-      <RecentlyViewed locale={locale} />
-
-      {/* あなたへのおすすめ（閲覧履歴に基づく） */}
-      <ForYouRecommendations locale={locale} />
 
       <section className="py-3 sm:py-4 md:py-6">
         <div className="container mx-auto px-3 sm:px-4">
@@ -139,7 +138,7 @@ export default async function CalendarPage({
           />
 
           <div className="mb-2 sm:mb-3">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-0.5">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold theme-text mb-0.5">
               {pageTitle[locale] || pageTitle.ja}
             </h1>
           </div>
@@ -175,6 +174,6 @@ export default async function CalendarPage({
           </section>
         </div>
       </section>
-    </div>
+    </PageLayout>
   );
 }

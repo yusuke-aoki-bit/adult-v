@@ -126,10 +126,13 @@ setup_scheduler "gsc-fetcher-daily" "0 7 * * *" "gsc-fetcher" "GSC Fetcherジョ
 # 18. PageSpeed Checker
 setup_scheduler "pagespeed-checker-daily" "0 9 * * *" "pagespeed-checker" "PageSpeed Checkerジョブ"
 
+# 19. Sitemap Submit（週1回）
+setup_scheduler "sitemap-submit-weekly" "0 6 * * 0" "sitemap-submit" "サイトマップ送信ジョブ"
+
 # 現在のスケジューラー一覧を表示
 echo ""
 echo "=== 全スケジューラー一覧 ==="
-gcloud scheduler jobs list --location=$LOCATION --format="table(name,schedule,state)" | grep -E "(crawl|fanza|mgs|wiki|gsc|pagespeed|sales)" || echo "スケジューラーが見つかりません"
+gcloud scheduler jobs list --location=$LOCATION --format="table(name,schedule,state)" | grep -E "(crawl|fanza|mgs|wiki|gsc|pagespeed|sales|sitemap)" || echo "スケジューラーが見つかりません"
 
 echo ""
 echo "✅ すべてのクローラーのスケジューラー設定が完了しました！"

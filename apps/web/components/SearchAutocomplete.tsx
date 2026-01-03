@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Search, X } from 'lucide-react';
-import { useDebounce } from '@adult-v/ui-common/hooks';
+import { useDebounce } from '@adult-v/shared/hooks';
 
 // Client-side translations
 const translations = {

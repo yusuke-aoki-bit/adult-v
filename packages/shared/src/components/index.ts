@@ -35,6 +35,7 @@ export { JsonLD } from './JsonLD';
 export { default as FilterPersistence } from './FilterPersistence';
 export { default as PerPagePersistence } from './PerPagePersistence';
 export { default as FilterPresetManager } from './FilterPresetManager';
+export { default as QuickFilterRestore } from './QuickFilterRestore';
 
 // Analytics and SEO components
 export { default as GoogleAnalytics } from './GoogleAnalytics';
@@ -51,6 +52,7 @@ export { default as SortDropdown } from './SortDropdown';
 export type { SortDropdownTheme, SortByValue } from './SortDropdown';
 export { default as NotificationSubscriber } from './NotificationSubscriber';
 export type { NotificationSubscriberTheme } from './NotificationSubscriber';
+export { default as NotificationPreferences } from './NotificationPreferences';
 
 // E-commerce components
 export { default as PriceComparison } from './PriceComparison';
@@ -117,8 +119,9 @@ export { ClientProviders } from './ClientProviders';
 // Firebase provider (Analytics, Performance Monitoring, Remote Config)
 export { FirebaseProvider } from './FirebaseProvider';
 
-// ProductCard utilities (themes and helpers)
+// ProductCard utilities (themes and helpers) and base component
 export {
+  ProductCardBase,
   getThemeConfig as getProductCardThemeConfig,
   themes as productCardThemes,
   getAffiliateUrl,
@@ -130,6 +133,8 @@ export type {
   ProductCardTheme,
   ThemeConfig as ProductCardThemeConfig,
   GetAffiliateUrlOptions,
+  ProductCardBaseProps,
+  ProductCardSize,
 } from './ProductCard';
 
 // Actress career components
@@ -162,7 +167,7 @@ export type { FilterSortBarBaseProps, FilterSortBarTheme, SortOption } from './F
 
 // SearchBar (shared between apps)
 export { SearchBarBase, searchBarTranslations } from './SearchBar';
-export type { SearchBarTheme, SearchBarBaseProps } from './SearchBar';
+export type { SearchBarTheme, SearchBarBaseProps, AiSearchResult } from './SearchBar';
 
 // OptimizedImage (shared between apps)
 export { OptimizedImageBase } from './OptimizedImage';
@@ -226,13 +231,115 @@ export { SkipLink } from './SkipLink';
 // TODO: Enable after fixing build issues
 // export { VirtualProductGridBase } from './VirtualProductGrid';
 
+// Mobile UX components
+export { default as SwipeableCarousel } from './SwipeableCarousel';
+export { default as PullToRefresh } from './PullToRefresh';
+
 // Price alert and tracking components
 export { default as SaleAlertButton } from './SaleAlertButton';
 export { default as PriceHistoryChart } from './PriceHistoryChart';
 export { default as ActressBundleCalculator } from './ActressBundleCalculator';
 export { default as ForYouSales } from './ForYouSales';
 export { default as SalePrediction } from './SalePrediction';
+export { default as PricePrediction } from './PricePrediction';
 
 // Copy button (clipboard)
 export { CopyButton } from './CopyButton';
 export type { CopyButtonProps } from './CopyButton';
+
+// Bulk selection components
+export { BulkActionBar } from './BulkActionBar';
+export type { BulkActionBarProps, BulkAction } from './BulkActionBar';
+export { SelectableCard } from './SelectableCard';
+export type { SelectableCardProps } from './SelectableCard';
+
+// ChatBot (AI assistant)
+export { ChatBot } from './ChatBot';
+
+// Search suggestions (AI-powered)
+export { SearchSuggestions } from './SearchSuggestions';
+
+// AI-generated content components
+export { AiProductDescription } from './AiProductDescription';
+export { AiActressProfile } from './AiActressProfile';
+
+// AI Search (natural language search)
+export { AiSearchBar } from './AiSearchBar';
+
+// Personalized recommendations (based on viewing history)
+export { PersonalizedRecommendations } from './PersonalizedRecommendations';
+export { default as RecommendationReason } from './RecommendationReason';
+
+// Also viewed (collaborative filtering)
+export { AlsoViewed } from './AlsoViewed';
+
+// User preference profile (AI-generated taste profile)
+export { UserPreferenceProfile } from './UserPreferenceProfile';
+
+// Image search (visual similarity search)
+export { ImageSearch } from './ImageSearch';
+
+// Product comparison
+export { ProductCompare } from './ProductCompare';
+export { default as CompareButton } from './CompareButton';
+export { default as CompareFloatingBar } from './CompareFloatingBar';
+
+// Price alert button (shared between apps)
+export { default as PriceAlertButton } from './PriceAlertButton';
+
+// Performer relation map (costar visualization)
+export { PerformerRelationMap } from './PerformerRelationMap';
+
+// Similar performer map (similarity visualization)
+export { SimilarPerformerMap } from './SimilarPerformerMap';
+
+// Similar product map (product network visualization)
+export { SimilarProductMap } from './SimilarProductMap';
+
+// Trend analysis
+export { TrendAnalysis } from './TrendAnalysis';
+
+// Home customization
+export { default as HomeSectionManager } from './HomeSectionManager';
+
+// Viewing habits dashboard
+export { ViewingHabitsDashboard } from './ViewingHabitsDashboard';
+export type { ViewingHabitsDashboardProps } from './ViewingHabitsDashboard';
+
+// Admin components
+export { default as AdminStatsContent } from './AdminStatsContent';
+export type { AdminStatsContentProps } from './AdminStatsContent';
+
+// TopPage menu components
+export { LinkMenuItem, AccordionMenuItem, TopPageMenuSection } from './TopPageMenu';
+export type { LinkMenuItemProps, AccordionMenuItemProps, TopPageMenuItemProps, TopPageMenuSectionProps, MenuType } from './TopPageMenu';
+
+// Section navigation
+export { SectionNav } from './SectionNav';
+export type { SectionItem } from './SectionNav';
+
+// User contributions (reviews, tag suggestions, performer suggestions)
+export {
+  UserReviewForm,
+  UserReviewList,
+  TagSuggestionForm,
+  TagSuggestionList,
+  PerformerSuggestionForm,
+  PerformerSuggestionList,
+  UserContributionsSection,
+} from './UserContributions';
+export type { UserContributionsSectionTranslations } from './UserContributions';
+
+// Public favorite lists
+export {
+  PublicListCard,
+  CreateListModal,
+  PublicListDetail,
+  AddToListButton,
+} from './PublicFavoriteLists';
+export type {
+  PublicListCardProps,
+  CreateListModalProps,
+  PublicListDetailProps,
+  AddToListButtonProps,
+} from './PublicFavoriteLists';

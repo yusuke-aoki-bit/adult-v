@@ -24,6 +24,7 @@ WORKDIR /app/packages/crawlers
 # GSC_TASK環境変数で実行するタスクを切り替え
 # migrate: マイグレーション実行
 # fetch: GSCデータ取得（デフォルト）
+# sitemap: サイトマップ送信
 ENV GSC_TASK=fetch
 
-CMD ["sh", "-c", "if [ \"$GSC_TASK\" = \"migrate\" ]; then npx tsx src/seo/migrate-seo-tables.ts; else npx tsx src/seo/fetch-gsc-data.ts; fi"]
+CMD ["sh", "-c", "case \"$GSC_TASK\" in migrate) npx tsx src/seo/migrate-seo-tables.ts ;; sitemap) npx tsx src/seo/submit-sitemaps.ts ;; *) npx tsx src/seo/fetch-gsc-data.ts ;; esac"]

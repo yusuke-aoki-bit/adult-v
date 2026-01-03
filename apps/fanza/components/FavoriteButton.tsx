@@ -1,6 +1,6 @@
 'use client';
 
-import { useFavorites } from '@adult-v/ui-common/hooks';
+import { useFavorites } from '@adult-v/shared/hooks';
 import { useTranslations } from 'next-intl';
 import SharedFavoriteButton from '@adult-v/shared/components/FavoriteButton';
 

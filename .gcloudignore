@@ -1,6 +1,8 @@
 node_modules/
-.next/
+**/.next/
 .git/
+.turbo/
+**/.turbo/
 *.log
 .env*
 data/

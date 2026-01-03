@@ -1,2 +1,2 @@
-// Re-export from @adult-v/ui-common
-export { ToastProvider, useToast } from '@adult-v/ui-common/components/Toast';
+// Re-export from @adult-v/shared
+export { ToastProvider, useToast } from '@adult-v/shared/components/Toast';

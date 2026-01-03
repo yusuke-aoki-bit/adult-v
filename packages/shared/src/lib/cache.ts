@@ -28,11 +28,10 @@ const CACHE_KEYS = {
 } as const;
 
 // Upstash Redis クライアント（動的インポートで遅延読み込み）
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let redisClient: any = null;
+let redisClient: RedisClientType | null = null;
 let redisInitialized = false;
 
-async function getRedisClient(): Promise<unknown | null> {
+async function getRedisClient(): Promise<RedisClientType | null> {
   if (redisInitialized) return redisClient;
   redisInitialized = true;
 
@@ -43,7 +42,7 @@ async function getRedisClient(): Promise<unknown | null> {
     try {
       // 動的インポートでビルド時の問題を回避
       const { Redis } = await import('@upstash/redis');
-      redisClient = new Redis({ url, token });
+      redisClient = new Redis({ url, token }) as unknown as RedisClientType;
       console.log('✅ Upstash Redis client initialized');
       return redisClient;
     } catch (error) {
@@ -139,7 +138,7 @@ if (typeof setInterval !== 'undefined') {
  */
 export async function getCache<T>(key: string): Promise<T | null> {
   try {
-    const redis = await getRedisClient() as RedisClientType | null;
+    const redis = await getRedisClient();
 
     if (redis) {
       // Upstash Redisから取得
@@ -166,7 +165,7 @@ export async function setCache<T>(
   ttl: number = CACHE_TTL
 ): Promise<void> {
   try {
-    const redis = await getRedisClient() as RedisClientType | null;
+    const redis = await getRedisClient();
 
     if (redis) {
       // Upstash Redisに保存（EXオプションでTTL設定）
@@ -188,7 +187,7 @@ export async function setCache<T>(
  */
 export async function deleteCache(key: string): Promise<void> {
   try {
-    const redis = await getRedisClient() as RedisClientType | null;
+    const redis = await getRedisClient();
 
     if (redis) {
       await redis.del(key);
@@ -208,7 +207,7 @@ export async function deleteCache(key: string): Promise<void> {
  */
 export async function deleteCachePattern(pattern: string): Promise<void> {
   try {
-    const redis = await getRedisClient() as RedisClientType | null;
+    const redis = await getRedisClient();
 
     if (redis) {
       // Upstash RedisでSCANを使用してキーを取得して削除

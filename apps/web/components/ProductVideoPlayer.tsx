@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Play, Film, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Play, Film, ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface VideoInfo {
@@ -16,6 +16,13 @@ interface ProductVideoPlayerProps {
   productTitle: string;
 }
 
+// 動画URLからソースを判定
+function getVideoSource(url: string): 'dmm' | 'mgs' | 'other' {
+  if (url.includes('dmm.co.jp') || url.includes('dmm.com')) return 'dmm';
+  if (url.includes('mgstage.com')) return 'mgs';
+  return 'other';
+}
+
 export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerProps) {
   const t = useTranslations('productVideoPlayer');
   const [selectedVideo, setSelectedVideo] = useState<VideoInfo | null>(
@@ -23,6 +30,13 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
   );
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [videoLoadAttempted, setVideoLoadAttempted] = useState(false);
+
+  // 選択動画が変わったらリセット
+  useEffect(() => {
+    setHasError(false);
+    setVideoLoadAttempted(false);
+  }, [selectedVideo]);
 
   if (!sampleVideos || sampleVideos.length === 0) {
     return null; // 動画がない場合は何も表示しない
@@ -30,6 +44,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
 
   const handlePlayClick = () => {
     setHasError(false);
+    setVideoLoadAttempted(true);
     setIsPlaying(true);
   };
 
@@ -50,8 +65,19 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
       trailer: t('trailer'),
       streaming: t('streaming'),
       download: t('download'),
+      sample: t('preview'),
     };
     return labels[type] || type;
+  };
+
+  // 動画ソースに応じたラベル
+  const getSourceLabel = (url: string) => {
+    const source = getVideoSource(url);
+    switch (source) {
+      case 'dmm': return 'FANZA';
+      case 'mgs': return 'MGS';
+      default: return '';
+    }
   };
 
   return (
@@ -72,38 +98,44 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
         )}
         {isPlaying && selectedVideo && !hasError && (
           <video
+            key={selectedVideo.url}
             src={selectedVideo.url}
             controls
             autoPlay
+            playsInline
             className="w-full h-full"
             controlsList="nodownload"
             onError={handleVideoError}
+            onLoadedData={() => setHasError(false)}
           >
             {t('browserNotSupported')}
           </video>
         )}
-        {hasError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95">
-            <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-            <p className="text-white text-lg mb-2">{t('videoLoadError')}</p>
-            <p className="text-gray-400 text-sm mb-4 text-center px-4">
-              {t('securityRestriction')}
+        {hasError && selectedVideo && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 p-4">
+            <ExternalLink className="w-12 h-12 text-gray-400 mb-4" />
+            <p className="text-white text-lg mb-2 text-center">{t('externalVideoTitle')}</p>
+            <p className="text-gray-400 text-sm mb-6 text-center max-w-md">
+              {t('externalVideoDescription')}
             </p>
-            <div className="flex gap-3">
-              {selectedVideo && (
-                <a
-                  href={selectedVideo.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-colors"
-                >
-                  {t('playAtSource')}
-                </a>
-              )}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a
+                href={selectedVideo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-colors flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-5 h-5" />
+                {t('playInNewTab')}
+                {getSourceLabel(selectedVideo.url) && (
+                  <span className="text-rose-200 text-sm">({getSourceLabel(selectedVideo.url)})</span>
+                )}
+              </a>
               <button
                 onClick={() => {
                   setHasError(false);
                   setIsPlaying(false);
+                  setVideoLoadAttempted(false);
                 }}
                 className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
               >

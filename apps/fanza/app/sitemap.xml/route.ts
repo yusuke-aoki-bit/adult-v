@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://f.adult-v.com';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.f.adult-v.com';
 
 /**
  * サイトマップインデックス - 大規模サイト対応

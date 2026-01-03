@@ -84,3 +84,6 @@ env:
   # Google Service Account for Indexing API
   - variable: GOOGLE_SERVICE_ACCOUNT_KEY
     secret: google-service-account-key
+  # Gemini API Key for LLM features
+  - variable: GEMINI_API_KEY
+    secret: gemini-api-key

@@ -1,13 +1,10 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import ActressCard from '@/components/ActressCard';
 import SortDropdown from '@/components/SortDropdown';
 import { Pagination } from '@adult-v/shared/components';
 import ActressListFilter from '@/components/ActressListFilter';
-import RecentlyViewed from '@/components/RecentlyViewed';
-import ForYouRecommendations from '@/components/ForYouRecommendations';
-import SalesSection from '@/components/SalesSection';
-import WeeklyHighlights from '@/components/WeeklyHighlights';
+import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
+import TopPageSectionNav from '@/components/TopPageSectionNav';
 import { getActresses, getActressesCount, getTags, getUncategorizedProductsCount, getAspStats, getSaleProducts, SaleProduct } from '@/lib/db/queries';
 import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
@@ -270,6 +267,16 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   return (
     <div className="theme-body min-h-screen">
+      {/* セクションナビゲーション（トップページのみ） */}
+      {isTopPage && (
+        <TopPageSectionNav
+          locale={locale}
+          hasSaleProducts={saleProducts.length > 0}
+          hasRecentlyViewed={true}
+          hasRecommendations={true}
+        />
+      )}
+
       {/* LCP最適化: 最初の画像をpreload */}
       {firstActressImageUrl && (
         <link
@@ -281,48 +288,18 @@ export default async function Home({ params, searchParams }: PageProps) {
       )}
       {/* FAQスキーマ（トップページのみ） */}
       {faqSchema && <JsonLD data={faqSchema} />}
-      {/* セール情報セクション */}
-      {saleProducts.length > 0 && (
-        <section className="py-3 sm:py-4">
+
+      {/* 上部セクション（セール中・最近見た作品）- 女優一覧の前 */}
+      {isTopPage && (
+        <section id="sale" className="py-3 sm:py-4 scroll-mt-20">
           <div className="container mx-auto px-3 sm:px-4">
-            <SalesSection saleProducts={saleProducts.map(p => ({
-              ...p,
-              endAt: p.endAt ? p.endAt.toISOString() : null,
-            }))} locale={locale} defaultOpen={true} />
-          </div>
-        </section>
-      )}
-
-      {/* 最近見た作品 */}
-      <RecentlyViewed locale={locale} />
-
-      {/* あなたへのおすすめ（閲覧履歴に基づく） */}
-      <ForYouRecommendations locale={locale} />
-
-      {/* 今週の注目（自動キュレーション） */}
-      <WeeklyHighlights locale={locale} />
-
-      {/* 未整理作品へのリンク */}
-      {uncategorizedCount > 0 && (
-        <section className="py-3 sm:py-6">
-          <div className="container mx-auto px-3 sm:px-4">
-            <Link
-              href={localizedHref('/products?uncategorized=true', locale)}
-              className="flex items-center justify-between p-3 sm:p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-yellow-600 transition-colors group gap-2"
-            >
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <span className="px-2 sm:px-3 py-1 bg-yellow-600 text-white text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap shrink-0">
-                  {tUncategorized('badge')}
-                </span>
-                <div className="min-w-0">
-                  <span className="theme-text font-medium text-sm sm:text-base">{tUncategorized('shortDescription')}</span>
-                  <span className="theme-text-muted ml-1 sm:ml-2 text-xs sm:text-sm">({tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() })})</span>
-                </div>
-              </div>
-              <svg className="w-5 h-5 theme-text-muted group-hover:text-yellow-600 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
+            <TopPageUpperSections
+              locale={locale}
+              saleProducts={saleProducts.map(p => ({
+                ...p,
+                endAt: p.endAt ? p.endAt.toISOString() : null,
+              }))}
+            />
           </div>
         </section>
       )}
@@ -396,8 +373,8 @@ export default async function Home({ params, searchParams }: PageProps) {
           />
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-            {actresses.map((actress) => (
-              <ActressCard key={actress.id} actress={actress} compact />
+            {actresses.map((actress, index) => (
+              <ActressCard key={actress.id} actress={actress} compact priority={index < 6} />
             ))}
           </div>
 
@@ -425,25 +402,25 @@ export default async function Home({ params, searchParams }: PageProps) {
               ...(bloodTypes.length > 0 ? { bloodType: bloodTypes.join(',') } : {}),
             }}
           />
+        </div>
+      </section>
 
-          {/* 商品一覧へのリンク */}
-          <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t theme-section-border">
-            <Link
-              href={localizedHref('/products', locale)}
-              className="flex items-center justify-between p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-pink-500 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🎬</span>
-                <div>
-                  <span className="theme-text font-medium">{t('viewProductList')}</span>
-                  <p className="theme-text-muted text-sm mt-0.5">{t('viewProductListDesc')}</p>
-                </div>
-              </div>
-              <svg className="w-5 h-5 theme-text-muted group-hover:text-pink-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
+      {/* === 以下はメインコンテンツ（女優一覧）の後に表示 === */}
+      {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}
+      <section id="recommendations" className="py-3 sm:py-4 scroll-mt-20">
+        <div className="container mx-auto px-3 sm:px-4">
+          <TopPageLowerSections
+            locale={locale}
+            uncategorizedCount={uncategorizedCount}
+            isTopPage={isTopPage}
+            translations={{
+              viewProductList: t('viewProductList'),
+              viewProductListDesc: t('viewProductListDesc'),
+              uncategorizedBadge: tUncategorized('badge'),
+              uncategorizedDescription: tUncategorized('shortDescription'),
+              uncategorizedCount: tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() }),
+            }}
+          />
         </div>
       </section>
     </div>

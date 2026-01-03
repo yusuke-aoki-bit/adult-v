@@ -6,17 +6,15 @@ import {
   FanzaSiteLink,
   CrossAspInfo,
   ActressAiReview,
-  SimilarActresses,
   PerformerTopProducts,
   PerformerOnSaleProducts,
 } from '@adult-v/shared/components';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import RelatedActresses from '@/components/RelatedActresses';
 import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis } from '@/lib/db/queries';
 import ActressCareerTimeline from '@/components/ActressCareerTimeline';
 import RetirementAlert from '@/components/RetirementAlert';
-import { getRelatedPerformersWithGenreMatch, getSimilarActresses, getPerformerTopProducts, getPerformerOnSaleProducts } from '@/lib/db/recommendations';
+import { getPerformerTopProducts, getPerformerOnSaleProducts } from '@/lib/db/recommendations';
 import {
   generateBaseMetadata,
   generatePersonSchema,
@@ -32,6 +30,10 @@ import { providerMeta } from '@/lib/providers';
 import ActressProductFilter from '@/components/ActressProductFilter';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
 import ActressFavoriteButton from '@/components/ActressFavoriteButton';
+import AiActressProfileWrapper from '@/components/AiActressProfileWrapper';
+import PerformerRelationMap from '@/components/PerformerRelationMap';
+import SimilarPerformerMap from '@/components/SimilarPerformerMap';
+import ActressSectionNav from '@/components/ActressSectionNav';
 import { localizedHref } from '@adult-v/shared/i18n';
 
 // ISRキャッシュ: 10分（SEO改善のため、検索エンジンクローラーの効率を向上）
@@ -163,10 +165,8 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const { performerId, locale } = await params;
   const resolvedSearchParams = await searchParams;
   const t = await getTranslations('actress');
-  const _tc = await getTranslations('common');
   const tf = await getTranslations('filter');
   const tNav = await getTranslations('nav');
-  const tSimilar = await getTranslations('similarActresses');
   const tTopProducts = await getTranslations('performerTopProducts');
   const tOnSale = await getTranslations('performerOnSale');
 
@@ -212,12 +212,6 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
   // Get product count by ASP
   const productCountByAsp = await getActressProductCountByAsp(actress.id);
-
-  // Get related performers (co-stars) with genre match percentage
-  const relatedPerformers = await getRelatedPerformersWithGenreMatch(parseInt(actress.id), 6);
-
-  // Get similar actresses (genre-based, non-co-stars)
-  const similarActresses = await getSimilarActresses(parseInt(actress.id), 6);
 
   // Get career analysis
   const careerAnalysis = await getActressCareerAnalysis(actress.id);
@@ -291,6 +285,15 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
       <JsonLD data={faqSchema} />
 
       <div className="theme-body min-h-screen">
+        {/* セクションナビゲーション */}
+        <ActressSectionNav
+          locale={locale}
+          hasAiReview={!!actress.aiReview}
+          hasCareerAnalysis={!!careerAnalysis}
+          hasTopProducts={topProducts.length > 0}
+          hasOnSaleProducts={onSaleProducts.length > 0}
+        />
+
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumb */}
           <Breadcrumb
@@ -302,7 +305,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           />
 
           {/* Header */}
-          <div className="mb-6 sm:mb-8">
+          <div id="profile" className="mb-6 sm:mb-8">
             <div className="flex items-start gap-3 sm:gap-4">
               <ActressHeroImage
                 src={actress.heroImage || actress.thumbnail}
@@ -333,10 +336,12 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 {productCountByAsp.map((asp) => {
                   const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                   const meta = providerId ? providerMeta[providerId] : null;
+                  const colors = meta?.gradientColors || { from: '#4b5563', to: '#374151' };
                   return (
                     <span
                       key={asp.aspName}
-                      className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap bg-linear-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
+                      className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap text-white"
+                      style={{ background: `linear-gradient(to right, ${colors.from}, ${colors.to})` }}
                     >
                       {meta?.label || asp.aspName}: {asp.count}
                     </span>
@@ -372,7 +377,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* AIレビュー表示 */}
           {actress.aiReview && (
-            <div className="mb-8">
+            <div id="ai-review" className="mb-8">
               <ActressAiReview
                 review={actress.aiReview}
                 updatedAt={actress.aiReviewUpdatedAt}
@@ -381,6 +386,14 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               />
             </div>
           )}
+
+          {/* AI生成のプロフィール */}
+          <div className="mb-8">
+            <AiActressProfileWrapper
+              actressId={actress.id}
+              locale={locale}
+            />
+          </div>
 
           {/* クロスASP情報表示 */}
           {(aliases.length > 0 || productCountByAsp.length > 1) && (
@@ -398,7 +411,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* キャリア分析セクション */}
           {careerAnalysis && (
-            <div className="mb-8">
+            <div id="career" className="mb-8">
               <ActressCareerTimeline
                 career={careerAnalysis}
                 actressName={actress.name}
@@ -409,6 +422,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* 人気作品TOP5セクション */}
           {topProducts.length > 0 && (
+            <div id="top-products">
             <PerformerTopProducts
               products={topProducts}
               performerName={actress.name}
@@ -423,10 +437,12 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 onSale: tTopProducts('onSale'),
               }}
             />
+            </div>
           )}
 
           {/* セール中作品セクション */}
           {onSaleProducts.length > 0 && (
+            <div id="on-sale">
             <PerformerOnSaleProducts
               products={onSaleProducts}
               performerName={actress.name}
@@ -442,9 +458,11 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 yen: tOnSale('yen'),
               }}
             />
+            </div>
           )}
 
           {/* Tag Filters - 即時適用 */}
+          <div id="filmography">
           <ActressProductFilter
             genreTags={genreTags}
             productCountByAsp={productCountByAsp}
@@ -484,31 +502,23 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           ) : (
             <p className="text-center theme-text-muted py-12">{t('noProducts')}</p>
           )}
+          </div>
 
-          {/* 関連女優（共演者）セクション */}
-          {relatedPerformers.length > 0 && (
-            <RelatedActresses
-              actresses={relatedPerformers}
-              currentActressName={actress.name}
-            />
-          )}
-
-          {/* 類似女優セクション（ジャンルベース、共演なし） */}
-          {similarActresses.length > 0 && (
-            <SimilarActresses
-              actresses={similarActresses}
-              currentActressName={actress.name}
+          {/* 共演者マップ（インタラクティブ） */}
+          <div id="costar-network" className="mt-12 mb-8">
+            <PerformerRelationMap
+              performerId={parseInt(actress.id)}
               locale={locale}
-              theme="dark"
-              translations={{
-                title: tSimilar('title', { name: actress.name }),
-                description: tSimilar('description'),
-                genreMatch: tSimilar('genreMatch'),
-                productCount: tSimilar('productCount'),
-                matchingGenres: tSimilar('matchingGenres'),
-              }}
             />
-          )}
+          </div>
+
+          {/* 類似女優マップ（ジャンル・メーカー・プロフィール複合スコア） */}
+          <div id="similar-network" className="mb-8">
+            <SimilarPerformerMap
+              performerId={parseInt(actress.id)}
+              locale={locale}
+            />
+          </div>
         </div>
       </div>
     </>

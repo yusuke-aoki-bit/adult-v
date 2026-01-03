@@ -1,0 +1,29 @@
+# Adult Viewer Lab - robots.txt
+# https://www.adult-v.com
+
+User-agent: *
+Allow: /
+
+# Disallow internal/API routes
+Disallow: /api/
+Disallow: /_next/
+Disallow: /monitoring
+
+# Disallow admin and auth pages
+Disallow: /admin
+Disallow: /auth
+
+# Disallow search result pages with complex queries (avoid duplicate content)
+Disallow: /*?*sort=
+Disallow: /*?*order=
+
+# Allow important query parameters for filtering
+Allow: /*?q=
+Allow: /*?include=
+Allow: /*?hasReview=
+
+# Sitemap location
+Sitemap: https://www.adult-v.com/sitemap.xml
+
+# Crawl-delay for politeness (optional, not all bots respect this)
+# Crawl-delay: 1

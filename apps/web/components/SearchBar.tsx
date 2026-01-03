@@ -2,10 +2,11 @@
 
 import { useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { SearchBarBase } from '@adult-v/shared/components';
+import { SearchBarBase, type AiSearchResult } from '@adult-v/shared/components';
 
 /**
  * SearchBar for adult-v (dark theme)
+ * AI検索機能をヘッダーに統合
  */
 export default function SearchBar() {
   const router = useRouter();
@@ -37,12 +38,36 @@ export default function SearchBar() {
     }
   }, [router, locale]);
 
+  const handleAiSearch = useCallback((result: AiSearchResult) => {
+    // リダイレクト先がある場合（女優ページなど）
+    if (result.redirect) {
+      router.push(result.redirect);
+      return;
+    }
+
+    // 検索パラメータからURLを構築
+    const searchParams = new URLSearchParams();
+
+    Object.entries(result.searchParams).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach(v => searchParams.append(key, v));
+      } else if (value) {
+        searchParams.set(key, value);
+      }
+    });
+
+    const queryString = searchParams.toString();
+    router.push(`/${locale}/products${queryString ? `?${queryString}` : ''}`);
+  }, [router, locale]);
+
   return (
     <SearchBarBase
       theme="dark"
       locale={locale}
       onActressSearch={handleActressSearch}
       onProductSearch={handleProductSearch}
+      onAiSearch={handleAiSearch}
+      aiApiEndpoint="/api/search/ai"
     />
   );
 }

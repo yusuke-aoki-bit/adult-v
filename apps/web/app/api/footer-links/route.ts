@@ -11,18 +11,6 @@ import { desc, sql, eq } from 'drizzle-orm';
 // 1時間キャッシュ
 export const revalidate = 3600;
 
-// フォールバック用データ
-const FALLBACK_GENRES = [
-  { id: 1, name: '巨乳' },
-  { id: 2, name: '美少女' },
-  { id: 3, name: '人妻' },
-  { id: 4, name: '熟女' },
-  { id: 5, name: 'OL' },
-  { id: 6, name: '制服' },
-  { id: 7, name: 'ギャル' },
-  { id: 8, name: 'ナース' },
-];
-
 export async function GET() {
   try {
     const db = getDb();
@@ -83,12 +71,12 @@ export async function GET() {
   } catch (error) {
     console.error('Failed to fetch footer links:', error);
 
-    // エラー時はジャンルのみフォールバック
+    // エラー時は空配列を返す（嘘のデータを返さない）
     return NextResponse.json({
-      genres: FALLBACK_GENRES,
+      genres: [],
       series: [],
       makers: [],
-      source: 'fallback',
+      source: 'error',
       error: 'Database error',
     });
   }

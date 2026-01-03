@@ -1,0 +1,1 @@
+export { AlsoViewed } from './AlsoViewed';

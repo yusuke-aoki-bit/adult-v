@@ -74,9 +74,6 @@ importers:
       '@adult-v/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@adult-v/ui-common':
-        specifier: workspace:*
-        version: link:../../packages/ui-common
       '@google-analytics/data':
         specifier: ^4.0.0
         version: 4.12.1
@@ -182,9 +179,6 @@ importers:
       '@adult-v/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@adult-v/ui-common':
-        specifier: workspace:*
-        version: link:../../packages/ui-common
       '@google-analytics/data':
         specifier: ^4.0.0
         version: 4.12.1
@@ -395,28 +389,6 @@ importers:
         specifier: ^2.12.0
         version: 2.15.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     devDependencies:
-      typescript:
-        specifier: ^5
-        version: 5.9.3
-
-  packages/ui-common:
-    dependencies:
-      lucide-react:
-        specifier: ^0.469.0
-        version: 0.469.0(react@19.2.3)
-      next:
-        specifier: 16.0.7
-        version: 16.0.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      react:
-        specifier: 19.2.3
-        version: 19.2.3
-      react-dom:
-        specifier: 19.2.3
-        version: 19.2.3(react@19.2.3)
-    devDependencies:
-      '@types/react':
-        specifier: ^19
-        version: 19.2.7
       typescript:
         specifier: ^5
         version: 5.9.3

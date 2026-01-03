@@ -1,0 +1,1 @@
+export { AiActressProfile } from './AiActressProfile';

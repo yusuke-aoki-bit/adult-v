@@ -437,7 +437,7 @@ generateFAQSchema(faqs)
 | サンプル動画 | 動的読み込みプレイヤー |
 | 価格比較 | 複数ASP間の価格表示 |
 | セール表示 | 残り時間、割引率 |
-| AIレビュー | AI生成の作品分析 |
+| AIレビュー | AI生成の作品分析（システム事前生成） |
 | シーンタイムライン | シーン情報表示 |
 | コスパ分析 | 分あたり価格計算 |
 | 関連商品 | 同演者・同メーカー・同シリーズ |
@@ -450,7 +450,7 @@ generateFAQSchema(faqs)
 |------|------|
 | ヒーロー画像 | 高解像度プロフィール画像 |
 | キャリアタイムライン | デビュー〜現在/引退 |
-| AI分析レビュー | AI生成の女優分析 |
+| AI分析レビュー | AI生成の女優分析（システム事前生成） |
 | クロスASP情報 | 複数ASPでの出演状況 |
 | 人気作品TOP5 | 評価・レビュー数順 |
 | セール中作品 | 現在セール中の作品 |
@@ -897,3 +897,678 @@ interface MeilisearchProduct {
 | `/api/cron/performer-pipeline` | 演者パイプライン |
 | `/api/cron/content-enrichment-pipeline` | コンテンツ充実パイプライン |
 | `/api/cron/cleanup` | クリーンアップ |
+
+---
+
+## 19. コードベース最適化（2025年1月実施）
+
+### 概要
+
+2サイト間（apps/web、apps/fanza）で発生していた大量のコード重複を解消し、パフォーマンスと保守性を向上。
+
+### Phase 1: ui-common完全廃止
+
+**削除パッケージ**: `packages/ui-common`
+
+**移行先**: `packages/shared`
+
+| 移行コンテンツ | 移行先 |
+|--------------|--------|
+| 5 hooks (useDebounce等) | `packages/shared/src/hooks/` |
+| 7 components | `packages/shared/src/components/` |
+
+### Phase 2: lib共通化
+
+**対象**: 30ファイルの重複lib
+
+**作業内容**:
+- `apps/web/lib/*.ts` と `apps/fanza/lib/*.ts` の共通ファイルを `packages/shared/src/lib/` に統合
+- 各アプリからは re-export 形式で参照
+
+**統合ファイル例**:
+- `affiliate.ts`, `api-utils.ts`, `asp-totals.ts`
+- `bot-detection.ts`, `cache.ts`, `firebase.ts`
+- `google-analytics.ts`, `meilisearch.ts`, `sale-helper.ts`
+- `seo-utils.ts`, `image-utils.ts`, `localization.ts`
+- `provider-utils.ts`, `structured-data.ts`, `translate.ts`
+
+### Phase 3: N+1クエリ修正
+
+**対象API**: `/api/performers/[id]/relations`
+
+**修正内容**:
+```typescript
+// Before: N+1 (costars.map内で個別クエリ)
+const relationsWithProducts = await Promise.all(
+  costars.map(async (costar) => {
+    const products = await db.execute(sql`...`);
+    return { ...costar, products };
+  })
+);
+
+// After: 1クエリでバッチ取得（CTE + ROW_NUMBER）
+const allProducts = await db.execute(sql`
+  WITH ranked_products AS (
+    SELECT DISTINCT
+      pp2.performer_id as costar_id,
+      p.id, p.title, p.release_date,
+      ROW_NUMBER() OVER (PARTITION BY pp2.performer_id ORDER BY p.release_date DESC) as rn
+    FROM products p
+    INNER JOIN product_performers pp1 ON p.id = pp1.product_id
+    INNER JOIN product_performers pp2 ON p.id = pp2.product_id
+    WHERE pp1.performer_id = ${performerId}
+      AND pp2.performer_id = ANY(${costarIds}::int[])
+  )
+  SELECT * FROM ranked_products WHERE rn <= 3
+`);
+```
+
+### Phase 4: APIキャッシュ追加
+
+| API | TTL | キャッシュキー形式 |
+|-----|-----|-------------------|
+| `/api/trends` | 5分 | `trends:{site}:{period}:{locale}` |
+| `/api/products/compare` | 10分 | `compare:{site}:{ids}` |
+| `/api/performers/[id]/relations` | 30分 | `relations:{site}:{performerId}:{limit}` |
+
+**実装**:
+```typescript
+import { getCache, setCache, generateCacheKey } from '@adult-v/shared/lib/cache';
+
+const cacheKey = generateCacheKey('trends:web', { period, locale });
+const cached = await getCache<TrendsResponse>(cacheKey);
+if (cached) return NextResponse.json(cached);
+
+// ... データ取得 ...
+await setCache(cacheKey, response, CACHE_TTL);
+```
+
+### Phase 5: APIルート共通化
+
+**作成ハンドラー数**: 21個
+
+**パッケージ**: `packages/shared/src/api-handlers/`
+
+**パターン**:
+```typescript
+// packages/shared/src/api-handlers/createTrendsHandler.ts
+export function createTrendsHandler(deps: { getDb: () => DbClient }) {
+  return async function GET(request: NextRequest) {
+    // 共通ロジック
+  };
+}
+
+// apps/web/app/api/trends/route.ts
+import { createTrendsHandler } from '@adult-v/shared/api-handlers';
+import { getDb } from '@/lib/db';
+export const GET = createTrendsHandler({ getDb });
+```
+
+**共通化済みハンドラー一覧**:
+- `createActressDetailHandler` - 女優詳細
+- `createActressesHandler` - 女優一覧
+- `createProductsHandler` - 商品一覧
+- `createProductDetailHandler` - 商品詳細
+- `createSearchHandler` - 検索
+- `createRecommendationsHandler` - おすすめ
+- その他15ハンドラー
+
+### Phase 6: 型安全性向上
+
+**修正箇所**:
+
+| ファイル | 修正内容 |
+|---------|---------|
+| `packages/shared/src/lib/cache.ts` | `any` → `RedisClientType \| null` |
+| `packages/shared/src/db-queries/core-queries.ts` | `sourcesMap: Map<number, any>` → `Map<number, BatchSourceData \| undefined>` |
+
+### 削減効果
+
+| 項目 | 削減量 |
+|------|--------|
+| lib重複コード | ~3,000行 |
+| APIルート重複 | ~5,000行 |
+| コンポーネント重複 | ~2,000行 |
+| db/queries重複 | ~1,500行 |
+| **合計** | **~11,500行** |
+
+### パフォーマンス改善
+
+| 改善項目 | 効果 |
+|---------|------|
+| N+1クエリ解消 | relations API: 20+クエリ → 2クエリ |
+| Redisキャッシュ | trends/compare/relations APIのレスポンス高速化 |
+| バッチ取得 | 関連データの一括取得でDB負荷軽減 |
+
+### Tailwind CSS標準化
+
+| 変更前 | 変更後 |
+|--------|--------|
+| `flex-shrink-0` | `shrink-0` |
+| `aspect-[3/4]` | `aspect-3/4` |
+| `bg-gradient-to-*` | `bg-linear-to-*` (Tailwind 4) |
+
+---
+
+## 20. ユーザー向け主要機能（2025年1月追加）
+
+### 概要
+
+ユーザー体験を向上させる7つの主要機能を実装。すべてLocalStorageベースでサーバーレス動作。
+
+### 20.1 商品比較機能
+
+**ファイル**:
+- `packages/shared/src/components/ProductCompare.tsx`
+- `packages/shared/src/components/CompareButton.tsx`
+- `packages/shared/src/components/CompareFloatingBar.tsx`
+- `packages/shared/src/hooks/useCompareList.ts`
+
+**機能**:
+| 項目 | 説明 |
+|------|------|
+| 最大比較数 | 4商品 |
+| 比較項目 | 価格、再生時間、発売日、評価、出演者、ジャンル |
+| 共通ハイライト | 共通出演者・ジャンルを強調表示 |
+| 最安価格表示 | 複数ASP間の最安価格を自動検出 |
+| 永続化 | LocalStorage (`product_compare_list`) |
+
+**ページ**: `/compare`
+
+### 20.2 一括選択機能
+
+**ファイル**:
+- `packages/shared/src/hooks/useBulkSelection.ts`
+- `packages/shared/src/components/BulkActionBar.tsx`
+- `packages/shared/src/components/SelectableCard.tsx`
+
+**機能**:
+| 項目 | 説明 |
+|------|------|
+| 最大選択数 | 50アイテム |
+| 全選択/解除 | ワンクリック操作 |
+| 選択モード | トグルで有効/無効 |
+| アクションバー | 選択時に下部表示 |
+| テーマ対応 | ダーク/ライト |
+
+### 20.3 ホームセクションカスタマイズ
+
+**ファイル**:
+- `packages/shared/src/hooks/useHomeSections.ts`
+- `packages/shared/src/components/HomeSectionManager.tsx`
+
+**デフォルトセクション**:
+| ID | 名称 | デフォルト表示 |
+|----|------|---------------|
+| `sales` | セール情報 | ✓ |
+| `ai-search` | AI検索 | ✓ |
+| `recently-viewed` | 最近見た作品 | ✓ |
+| `profile` | 好みプロファイル | ✓ |
+| `recommendations` | おすすめ | ✓ |
+| `weekly-highlights` | 今週の注目 | ✓ |
+| `trending` | トレンド | ✓ |
+| `new-releases` | 新作 | ✓ |
+
+**機能**:
+- 各セクションの表示/非表示切り替え
+- ドラッグ&ドロップで順序変更
+- デフォルトにリセット
+- LocalStorage永続化 (`home_section_preferences`)
+
+### 20.4 スワイプジェスチャー
+
+**ファイル**:
+- `packages/shared/src/hooks/useSwipeGesture.ts`
+- `packages/shared/src/components/SwipeableCarousel.tsx`
+
+**仕様**:
+| 項目 | 値 |
+|------|-----|
+| 最小スワイプ距離 | 50px |
+| タイムアウト | 500ms |
+| 対応方向 | 4方向（上下左右） |
+| 優先度 | 水平 > 垂直 |
+
+**用途**:
+- 画像ギャラリー
+- 発見モード（Tinder風）
+- カルーセルナビゲーション
+
+### 20.5 視聴習慣ダッシュボード
+
+**ファイル**:
+- `packages/shared/src/hooks/useViewingDiary.ts`
+- `packages/shared/src/components/ViewingHabitsDashboard.tsx`
+
+**記録データ**:
+```typescript
+interface DiaryEntry {
+  productId: string;
+  title: string;
+  imageUrl: string | null;
+  aspName: string;
+  performerName?: string;
+  performerId?: number | string;
+  tags?: string[];
+  duration?: number;      // 分
+  rating?: number;        // 1-5
+  note?: string;
+  viewedAt: number;       // timestamp
+}
+```
+
+**統計機能**:
+| 統計 | 説明 |
+|------|------|
+| 月別集計 | 視聴数、総時間、平均評価 |
+| 年間統計 | 年間視聴数、TOP10出演者/ジャンル |
+| 曜日パターン | 7日間の視聴分布 |
+| ストリーク | 現在/最長連続視聴日数 |
+
+**ストレージ**: LocalStorage (`viewing_diary_{siteMode}`)、最大500件
+
+**ページ**: `/diary`
+
+### 20.6 お気に入り/ウォッチリスト
+
+**ファイル**:
+- `packages/shared/src/hooks/useFavorites.ts`
+- `packages/shared/src/hooks/useWatchLater.ts`
+- `packages/shared/src/components/FavoriteButton.tsx`
+- `packages/shared/src/components/WatchLaterButton.tsx`
+
+**お気に入り**:
+| 項目 | 説明 |
+|------|------|
+| 対象 | 商品/出演者 |
+| タイプ分類 | `product` / `actress` |
+| ストレージ | `adult-v-favorites` |
+
+**ウォッチリスト**:
+| 項目 | 説明 |
+|------|------|
+| 最大数 | 100件 |
+| 超過時 | FIFO（古い順削除） |
+| ストレージ | `watch-later-list` |
+
+**ページ**: `/favorites`, `/watchlist`
+
+### 20.7 価格アラート
+
+**ファイル**:
+- `packages/shared/src/hooks/usePriceAlerts.ts`
+- `packages/shared/src/components/PriceAlertButton.tsx`
+- `packages/shared/src/components/SaleAlertButton.tsx`
+
+**アラート設定**:
+```typescript
+interface PriceAlert {
+  productId: string;
+  normalizedProductId: string;
+  title: string;
+  thumbnailUrl: string | null;
+  currentPrice: number;
+  targetPrice: number;
+  notifyOnAnySale: boolean;
+  createdAt: number;
+}
+```
+
+**通知設定（useNotificationPreferences）**:
+- セールアラート（有効/無効）
+- 価格低下通知
+- 新作通知
+- おすすめ通知
+
+**ページ**: `/alerts`
+
+### 20.8 DBスキーマ追加（2025年1月）
+
+**マイグレーション実施済み**:
+
+| ファイル | 内容 |
+|---------|------|
+| `0032_add_price_history.sql` | 価格履歴テーブル |
+| `0033_add_sale_patterns.sql` | セールパターンテーブル |
+
+**price_history テーブル**:
+```sql
+CREATE TABLE price_history (
+    id SERIAL PRIMARY KEY,
+    product_source_id INTEGER REFERENCES product_sources(id),
+    price INTEGER NOT NULL,
+    sale_price INTEGER,
+    discount_percent INTEGER,
+    recorded_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+**sale_patterns テーブル**:
+```sql
+CREATE TABLE sale_patterns (
+    id SERIAL PRIMARY KEY,
+    product_source_id INTEGER REFERENCES product_sources(id),
+    performer_id INTEGER REFERENCES performers(id),
+    maker_id INTEGER REFERENCES tags(id),
+    pattern_type VARCHAR(50) NOT NULL,
+    month_distribution JSONB,
+    day_of_week_distribution JSONB,
+    avg_discount_percent DECIMAL(5,2),
+    sale_frequency_per_year DECIMAL(5,2),
+    last_sale_date DATE
+);
+```
+
+**product_views 追加カラム**:
+```sql
+ALTER TABLE product_views ADD COLUMN session_id VARCHAR(255);
+CREATE INDEX idx_product_views_session_id ON product_views(session_id);
+```
+
+### 20.9 テスト追加
+
+**新規テストファイル**:
+
+| ファイル | テスト数 | 内容 |
+|---------|---------|------|
+| `useCompareList.test.ts` | 16 | 比較リストフック |
+| `useBulkSelection.test.ts` | 19 | 一括選択フック |
+| `useHomeSections.test.ts` | 15 | ホームセクションフック |
+| `useSwipeGesture.test.ts` | 13 | スワイプジェスチャー |
+| `BulkActionBar.test.tsx` | 17 | アクションバー |
+| `ViewingHabitsDashboard.test.tsx` | 18 | ダッシュボード |
+| `CompareButton.test.tsx` | 16 | 比較ボタン |
+| `price-history.test.ts` | 15 | 価格履歴クエリ |
+| `schema-consistency.test.ts` | 9 | DBスキーマ整合性 |
+
+**総テスト数**: 680テスト（32ファイル）
+
+---
+
+## 21. 開発環境
+
+### ローカルサーバー起動
+
+```bash
+npm run dev:web    # MGS版 (localhost:3000)
+npm run dev:fanza  # FANZA版 (localhost:3001)
+```
+
+### 言語設定
+
+GETパラメータ `hl` で指定：
+
+| 言語 | URL |
+|------|-----|
+| 日本語 | http://localhost:3000?hl=ja |
+| 英語 | http://localhost:3000?hl=en |
+| 中国語(簡) | http://localhost:3000?hl=zh |
+| 中国語(繁) | http://localhost:3000?hl=zh-TW |
+| 韓国語 | http://localhost:3000?hl=ko |
+
+### テスト実行
+
+```bash
+npm test                           # 全テスト
+npm test -- --run __tests__/unit/  # ユニットテストのみ
+```
+
+### ビルド
+
+```bash
+npm run build:web    # MGS版
+npm run build:fanza  # FANZA版
+```
+
+---
+
+## 22. ユーザー貢献機能（2025年1月追加）
+
+### 概要
+
+ユーザー参加型プラットフォームとして、レビュー投稿・タグ提案・出演者提案機能を実装。AI自動審査により不適切なコンテンツを自動検出。
+
+### 22.1 ユーザーレビュー機能
+
+**ファイル**:
+- `packages/shared/src/api-handlers/user-reviews.ts`
+- `packages/shared/src/components/UserContributions/UserReviewForm.tsx`
+- `packages/shared/src/components/UserContributions/UserReviewList.tsx`
+
+**DBスキーマ**:
+```sql
+CREATE TABLE user_reviews (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id),
+    user_id VARCHAR(255) NOT NULL,
+    rating DECIMAL(3, 1) NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    title VARCHAR(200),
+    content TEXT NOT NULL,
+    helpful_count INTEGER DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE user_review_votes (
+    id SERIAL PRIMARY KEY,
+    review_id INTEGER NOT NULL REFERENCES user_reviews(id),
+    user_id VARCHAR(255) NOT NULL,
+    vote_type VARCHAR(20) NOT NULL, -- 'helpful', 'not_helpful'
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (review_id, user_id)
+);
+```
+
+**機能**:
+| 項目 | 説明 |
+|------|------|
+| 評価範囲 | 1〜5（0.5刻み対応） |
+| 最小文字数 | 10文字以上 |
+| 重複防止 | 同一ユーザーは1商品につき1レビュー |
+| 投票機能 | 「参考になった」投票 |
+| AI審査 | Gemini APIによる不適切コンテンツ検出 |
+| ステータス | pending → approved / rejected |
+
+**API**:
+| エンドポイント | メソッド | 説明 |
+|---------------|---------|------|
+| `/api/products/[id]/reviews` | GET | レビュー一覧取得 |
+| `/api/products/[id]/reviews` | POST | レビュー投稿 |
+| `/api/products/[id]/reviews` | PATCH | レビュー投票 |
+
+### 22.2 タグ提案機能
+
+**ファイル**:
+- `packages/shared/src/api-handlers/tag-suggestions.ts`
+- `packages/shared/src/components/UserContributions/TagSuggestionForm.tsx`
+- `packages/shared/src/components/UserContributions/TagSuggestionList.tsx`
+
+**DBスキーマ**:
+```sql
+CREATE TABLE user_tag_suggestions (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id),
+    user_id VARCHAR(255) NOT NULL,
+    suggested_tag_name VARCHAR(100) NOT NULL,
+    existing_tag_id INTEGER REFERENCES tags(id),
+    upvotes INTEGER DEFAULT 0,
+    downvotes INTEGER DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE user_tag_suggestion_votes (
+    id SERIAL PRIMARY KEY,
+    suggestion_id INTEGER NOT NULL REFERENCES user_tag_suggestions(id),
+    user_id VARCHAR(255) NOT NULL,
+    vote_type VARCHAR(10) NOT NULL, -- 'up', 'down'
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (suggestion_id, user_id)
+);
+```
+
+**機能**:
+| 項目 | 説明 |
+|------|------|
+| 最小文字数 | 2文字以上 |
+| 重複チェック | 既存タグとの大文字小文字無視比較 |
+| 投票機能 | Upvote / Downvote |
+| 自動昇格 | 一定投票数で正式タグに昇格（管理者承認） |
+
+**API**:
+| エンドポイント | メソッド | 説明 |
+|---------------|---------|------|
+| `/api/products/[id]/tag-suggestions` | GET | 提案一覧取得 |
+| `/api/products/[id]/tag-suggestions` | POST | タグ提案 |
+| `/api/products/[id]/tag-suggestions` | PATCH | 投票 |
+
+### 22.3 出演者提案機能
+
+**ファイル**:
+- `packages/shared/src/api-handlers/performer-suggestions.ts`
+- `packages/shared/src/components/UserContributions/PerformerSuggestionForm.tsx`
+- `packages/shared/src/components/UserContributions/PerformerSuggestionList.tsx`
+
+**DBスキーマ**:
+```sql
+CREATE TABLE user_performer_suggestions (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id),
+    user_id VARCHAR(255) NOT NULL,
+    performer_name VARCHAR(100) NOT NULL,
+    existing_performer_id INTEGER REFERENCES performers(id),
+    upvotes INTEGER DEFAULT 0,
+    downvotes INTEGER DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE user_performer_suggestion_votes (
+    id SERIAL PRIMARY KEY,
+    suggestion_id INTEGER NOT NULL REFERENCES user_performer_suggestions(id),
+    user_id VARCHAR(255) NOT NULL,
+    vote_type VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (suggestion_id, user_id)
+);
+```
+
+**機能**:
+| 項目 | 説明 |
+|------|------|
+| 最小文字数 | 2文字以上 |
+| 既存リンク | 既存出演者IDとの紐付け可能 |
+| 検索機能 | 出演者名でオートコンプリート |
+| 重複チェック | 既存出演者との重複防止 |
+
+**API**:
+| エンドポイント | メソッド | 説明 |
+|---------------|---------|------|
+| `/api/products/[id]/performer-suggestions` | GET | 提案一覧取得 |
+| `/api/products/[id]/performer-suggestions` | POST | 出演者提案 |
+| `/api/products/[id]/performer-suggestions` | PATCH | 投票 |
+
+### 22.4 統合UIコンポーネント
+
+**ファイル**:
+- `packages/shared/src/components/UserContributions/UserContributionsSection.tsx`
+- `packages/shared/src/components/UserContributions/index.ts`
+
+**機能**:
+- アコーディオン形式で3つの貢献機能を統合
+- ログイン必須コールバック対応
+- 多言語対応（日本語・英語）
+
+---
+
+## 23. 公開お気に入りリスト（2025年1月追加）
+
+### 概要
+
+ユーザーがお気に入り作品のリストを作成・公開・共有できる機能。他ユーザーのリストを閲覧・いいねも可能。
+
+### DBスキーマ
+
+```sql
+CREATE TABLE public_favorite_lists (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    is_public BOOLEAN DEFAULT true,
+    view_count INTEGER DEFAULT 0,
+    like_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE public_favorite_list_items (
+    list_id INTEGER NOT NULL REFERENCES public_favorite_lists(id) ON DELETE CASCADE,
+    product_id INTEGER NOT NULL REFERENCES products(id),
+    display_order INTEGER DEFAULT 0,
+    note TEXT,
+    added_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (list_id, product_id)
+);
+
+CREATE TABLE public_favorite_list_likes (
+    id SERIAL PRIMARY KEY,
+    list_id INTEGER NOT NULL REFERENCES public_favorite_lists(id) ON DELETE CASCADE,
+    user_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (list_id, user_id)
+);
+```
+
+### ファイル
+
+**API ハンドラー**:
+- `packages/shared/src/api-handlers/public-favorite-lists.ts`
+
+**UIコンポーネント**:
+- `packages/shared/src/components/PublicFavoriteLists/PublicListCard.tsx`
+- `packages/shared/src/components/PublicFavoriteLists/CreateListModal.tsx`
+- `packages/shared/src/components/PublicFavoriteLists/PublicListDetail.tsx`
+- `packages/shared/src/components/PublicFavoriteLists/AddToListButton.tsx`
+
+### 機能一覧
+
+| 機能 | 説明 |
+|------|------|
+| リスト作成 | タイトル・説明・公開/非公開設定 |
+| リスト編集 | タイトル・説明・公開設定の変更 |
+| リスト削除 | 所有者のみ削除可（アイテムもカスケード削除） |
+| アイテム追加 | 商品をリストに追加 |
+| アイテム削除 | リストから商品を削除 |
+| いいね | 他ユーザーの公開リストにいいね |
+| いいね解除 | いいねを取り消し |
+| 閲覧数カウント | リスト詳細閲覧時にカウント |
+| ソート | いいね数順、閲覧数順、作成日順 |
+
+### アクセス制御
+
+| 操作 | 条件 |
+|------|------|
+| 公開リスト閲覧 | 誰でも可能 |
+| 非公開リスト閲覧 | 所有者のみ |
+| リスト編集・削除 | 所有者のみ |
+| アイテム追加・削除 | 所有者のみ |
+| いいね | ログインユーザー（所有者以外） |
+
+### API
+
+| エンドポイント | メソッド | 説明 |
+|---------------|---------|------|
+| `/api/favorite-lists` | GET | リスト一覧取得 |
+| `/api/favorite-lists` | POST | リスト作成 |
+| `/api/favorite-lists/[id]` | GET | リスト詳細取得 |
+| `/api/favorite-lists/[id]` | PUT | リスト更新 |
+| `/api/favorite-lists/[id]` | DELETE | リスト削除 |
+| `/api/favorite-lists/[id]/items` | POST | アイテム追加/削除 |
+| `/api/favorite-lists/[id]/like` | POST | いいね/いいね解除 |
+
+### ページ
+
+- `/favorites` - 公開リスト一覧・マイリスト
+- 商品詳細ページにAddToListButton配置

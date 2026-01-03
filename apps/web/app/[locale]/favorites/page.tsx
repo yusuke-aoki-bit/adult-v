@@ -1,15 +1,32 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { Heart, Trash2, Film, User, ChevronDown, ChevronUp } from 'lucide-react';
-import { useFavorites } from '@adult-v/ui-common/hooks';
+import { Heart, Trash2, Film, User, ChevronDown, ChevronUp, CheckSquare } from 'lucide-react';
+import { useFavorites, useBulkSelection } from '@adult-v/shared/hooks';
 import { useWatchlistAnalysis } from '@/hooks';
-import { WatchlistAnalysis } from '@adult-v/shared/components';
+import { WatchlistAnalysis, BulkActionBar, SelectableCard } from '@adult-v/shared/components';
 import FavoriteButton from '@/components/FavoriteButton';
 import ActressRecommendations from '@/components/ActressRecommendations';
+import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
+
+interface SaleProduct {
+  productId: number;
+  normalizedProductId: string | null;
+  title: string;
+  thumbnailUrl: string | null;
+  aspName: string;
+  affiliateUrl: string | null;
+  regularPrice: number;
+  salePrice: number;
+  discountPercent: number;
+  saleName: string | null;
+  saleType: string | null;
+  endAt: string | null;
+  performers: Array<{ id: number; name: string }>;
+}
 
 const translations = {
   ja: {
@@ -30,6 +47,8 @@ const translations = {
     showAnalysis: '分析を表示',
     hideAnalysis: '分析を非表示',
     recommendations: 'おすすめ',
+    selectMode: '選択モード',
+    deleteSelected: '選択削除',
   },
   en: {
     title: 'Favorites',
@@ -49,6 +68,8 @@ const translations = {
     showAnalysis: 'Show Analysis',
     hideAnalysis: 'Hide Analysis',
     recommendations: 'Recommendations',
+    selectMode: 'Select mode',
+    deleteSelected: 'Delete selected',
   },
   zh: {
     title: '收藏夹',
@@ -68,6 +89,8 @@ const translations = {
     showAnalysis: '显示分析',
     hideAnalysis: '隐藏分析',
     recommendations: '推荐',
+    selectMode: '选择模式',
+    deleteSelected: '删除所选',
   },
   ko: {
     title: '즐겨찾기',
@@ -87,6 +110,8 @@ const translations = {
     showAnalysis: '분석 보기',
     hideAnalysis: '분석 숨기기',
     recommendations: '추천',
+    selectMode: '선택 모드',
+    deleteSelected: '선택 삭제',
   },
 } as const;
 
@@ -130,11 +155,48 @@ export default function FavoritesPage() {
   const locale = (params?.locale as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
-  const { favorites, isLoaded, clearFavorites, getFavoritesByType } = useFavorites();
+  const { favorites, isLoaded, clearFavorites, getFavoritesByType, removeFavorite } = useFavorites();
   const { products: enrichedProducts, isLoading: isLoadingAnalysis } = useWatchlistAnalysis();
   const [activeTab, setActiveTab] = useState<'all' | 'product' | 'actress'>('all');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(true);
+
+  // バルク選択機能
+  const {
+    selectedItems,
+    selectedCount,
+    isSelectionMode,
+    isSelected,
+    toggleItem,
+    selectAll,
+    deselectAll,
+    toggleSelectionMode,
+    disableSelectionMode,
+  } = useBulkSelection({ maxItems: 100 });
+
+  // PageLayout用のデータ
+  const [saleProducts, setSaleProducts] = useState<SaleProduct[]>([]);
+  const [uncategorizedCount, setUncategorizedCount] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/products/on-sale?limit=24&minDiscount=30')
+      .then(res => res.json())
+      .then(data => setSaleProducts(data.products || []))
+      .catch(() => {});
+
+    fetch('/api/products/uncategorized-count')
+      .then(res => res.json())
+      .then(data => setUncategorizedCount(data.count || 0))
+      .catch(() => {});
+  }, []);
+
+  const layoutTranslations = {
+    viewProductList: '作品一覧',
+    viewProductListDesc: '全ての配信サイトの作品を横断検索',
+    uncategorizedBadge: '未整理',
+    uncategorizedDescription: '未整理作品',
+    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
+  };
 
   const filteredFavorites = activeTab === 'all'
     ? favorites
@@ -152,22 +214,48 @@ export default function FavoritesPage() {
   // ロケール別の日付フォーマット
   const dateLocale = locale === 'ko' ? 'ko-KR' : locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-US' : 'ja-JP';
 
+  // 選択したアイテムを一括削除
+  const handleBulkDelete = useCallback(() => {
+    for (const itemKey of selectedItems) {
+      // itemKeyは "type-id" 形式
+      const [type, id] = itemKey.split('-');
+      if (type && id) {
+        removeFavorite(type as 'product' | 'actress', id);
+      }
+    }
+    disableSelectionMode();
+  }, [selectedItems, removeFavorite, disableSelectionMode]);
+
+  // 現在表示中のアイテムをすべて選択
+  const handleSelectAll = useCallback(() => {
+    const ids = filteredFavorites.map(item => `${item.type}-${item.id}`);
+    selectAll(ids);
+  }, [filteredFavorites, selectAll]);
+
   if (!isLoaded) {
     return <FavoritesSkeleton />;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-          <Heart className="h-8 w-8 text-rose-600 fill-current" />
-          {t.title}
-        </h1>
-        <p className="text-gray-400">
-          {t.itemCount.replace('{count}', String(favorites.length))}
-        </p>
-      </div>
+    <div className="theme-body min-h-screen">
+      {/* 上部セクション（セール中・最近見た作品） */}
+      <section className="py-3 sm:py-4">
+        <div className="container mx-auto px-3 sm:px-4">
+          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+            <Heart className="h-8 w-8 text-rose-600 fill-current" />
+            {t.title}
+          </h1>
+          <p className="text-gray-400">
+            {t.itemCount.replace('{count}', String(favorites.length))}
+          </p>
+        </div>
 
       {/* Watchlist Analysis Section */}
       {productCount > 0 && (
@@ -247,16 +335,34 @@ export default function FavoritesPage() {
           {t.actresses} ({actressCount})
         </button>
 
-        {/* Clear all button */}
-        {favorites.length > 0 && (
-          <button
-            onClick={() => setShowClearConfirm(true)}
-            className="ml-auto px-4 py-2 rounded-lg font-medium bg-gray-800 text-gray-300 hover:bg-red-900 hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Trash2 className="h-4 w-4" />
-            {t.clearAll}
-          </button>
-        )}
+        {/* Actions */}
+        <div className="ml-auto flex items-center gap-2">
+          {/* 選択モードボタン */}
+          {favorites.length > 0 && (
+            <button
+              onClick={toggleSelectionMode}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                isSelectionMode
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <CheckSquare className="h-4 w-4" />
+              {t.selectMode}
+            </button>
+          )}
+
+          {/* Clear all button */}
+          {favorites.length > 0 && !isSelectionMode && (
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="px-4 py-2 rounded-lg font-medium bg-gray-800 text-gray-300 hover:bg-red-900 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t.clearAll}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Clear confirmation dialog */}
@@ -308,61 +414,103 @@ export default function FavoritesPage() {
             const href = item.type === 'product'
               ? `/${locale}/products/${item.id}`
               : `/${locale}/actress/${item.id}`;
+            const itemKey = `${item.type}-${item.id}`;
 
             return (
-              <div
-                key={`${item.type}-${item.id}`}
-                className="bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-600 transition-all group relative"
+              <SelectableCard
+                key={itemKey}
+                isSelected={isSelected(itemKey)}
+                isSelectionMode={isSelectionMode}
+                onToggle={() => toggleItem(itemKey)}
+                theme="dark"
               >
-                <Link href={href}>
-                  {/* Thumbnail */}
-                  <div className="aspect-3/4 relative bg-gray-700">
-                    {(item.thumbnail || item.image) ? (
-                      <Image
-                        src={item.thumbnail || item.image || ''}
-                        alt={item.title || item.name || ''}
-                        fill
-                        className="object-cover"
+                <div className="bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-600 transition-all group relative">
+                  <Link href={href}>
+                    {/* Thumbnail */}
+                    <div className="aspect-3/4 relative bg-gray-700">
+                      {(item.thumbnail || item.image) ? (
+                        <Image
+                          src={item.thumbnail || item.image || ''}
+                          alt={item.title || item.name || ''}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          {item.type === 'product' ? (
+                            <Film className="h-12 w-12 text-gray-600" />
+                          ) : (
+                            <User className="h-12 w-12 text-gray-600" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Title/Name */}
+                    <div className="p-3">
+                      <h3 className="text-white text-sm font-medium line-clamp-2 mb-1">
+                        {item.title || item.name}
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        {new Date(item.addedAt).toLocaleDateString(dateLocale)}
+                      </p>
+                    </div>
+                  </Link>
+
+                  {/* Favorite button overlay - 選択モード中は非表示 */}
+                  {!isSelectionMode && (
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <FavoriteButton
+                        type={item.type}
+                        id={item.id}
+                        title={item.title}
+                        name={item.name}
+                        thumbnail={item.thumbnail}
+                        image={item.image}
+                        size="sm"
                       />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        {item.type === 'product' ? (
-                          <Film className="h-12 w-12 text-gray-600" />
-                        ) : (
-                          <User className="h-12 w-12 text-gray-600" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Title/Name */}
-                  <div className="p-3">
-                    <h3 className="text-white text-sm font-medium line-clamp-2 mb-1">
-                      {item.title || item.name}
-                    </h3>
-                    <p className="text-xs text-gray-500">
-                      {new Date(item.addedAt).toLocaleDateString(dateLocale)}
-                    </p>
-                  </div>
-                </Link>
-
-                {/* Favorite button overlay */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <FavoriteButton
-                    type={item.type}
-                    id={item.id}
-                    title={item.title}
-                    name={item.name}
-                    thumbnail={item.thumbnail}
-                    image={item.image}
-                    size="sm"
-                  />
+                    </div>
+                  )}
                 </div>
-              </div>
+              </SelectableCard>
             );
           })}
         </div>
       )}
+      </div>
+
+      {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}
+      <section className="py-3 sm:py-4">
+        <div className="container mx-auto px-3 sm:px-4">
+          <TopPageLowerSections
+            locale={locale}
+            uncategorizedCount={uncategorizedCount}
+            isTopPage={false}
+            isFanzaSite={false}
+            translations={layoutTranslations}
+          />
+        </div>
+      </section>
+
+      {/* バルク選択アクションバー */}
+      <BulkActionBar
+        selectedCount={selectedCount}
+        selectedIds={selectedItems}
+        actions={[
+          {
+            id: 'delete',
+            label: t.deleteSelected,
+            icon: <Trash2 className="w-4 h-4" />,
+            variant: 'danger',
+            onClick: handleBulkDelete,
+          },
+        ]}
+        onClearSelection={deselectAll}
+        onSelectAll={handleSelectAll}
+        totalCount={filteredFavorites.length}
+        locale={locale}
+        theme="dark"
+      />
     </div>
   );
 }

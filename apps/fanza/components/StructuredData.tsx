@@ -1,2 +1,2 @@
-// Re-export from @adult-v/ui-common
-export { default } from '@adult-v/ui-common/components/StructuredData';
+// Re-export from @adult-v/shared
+export { default } from '@adult-v/shared/components/StructuredData';

@@ -1,0 +1,1 @@
+export { AiProductDescription } from './AiProductDescription';

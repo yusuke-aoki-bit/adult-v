@@ -14,7 +14,7 @@ export async function GET(
       SELECT ps.id as product_source_id, ps.asp_name
       FROM product_sources ps
       JOIN products p ON ps.product_id = p.id
-      WHERE p.normalized_id = ${id}
+      WHERE p.normalized_product_id = ${id}
       LIMIT 1
     `);
 

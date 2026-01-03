@@ -69,3 +69,50 @@ export { createDiscoverHandler } from './discover';
 // Notifications handlers
 export type { NotificationsHandlerDeps, PushSubscription, SubscriptionKeys } from './notifications';
 export { createNotificationsSubscribeHandler, createNotificationsUnsubscribeHandler } from './notifications';
+
+// Product Auto Tags handlers
+export type { AutoTagsHandlerDeps } from './product-auto-tags';
+export { createAutoTagsHandler } from './product-auto-tags';
+
+// Product Keywords handlers
+export type { KeywordsHandlerDeps } from './product-keywords';
+export { createKeywordsHandler } from './product-keywords';
+
+// Product SNS Summary handlers
+export type { SNSSummaryHandlerDeps } from './product-sns-summary';
+export { createSNSSummaryHandler } from './product-sns-summary';
+
+// Admin Stats handlers
+export type { AdminStatsHandlerDeps, AdminStatsHandlerOptions, ASPTotal as AdminASPTotal } from './admin-stats';
+export { createAdminStatsHandler } from './admin-stats';
+
+// Performer Similar handlers
+export type { PerformerSimilarHandlerDeps, PerformerSimilarHandlerOptions } from './performer-similar';
+export { createPerformerSimilarHandler } from './performer-similar';
+
+// Product Similar handlers
+export type { ProductSimilarHandlerDeps, ProductSimilarHandlerOptions } from './product-similar';
+export { createProductSimilarHandler } from './product-similar';
+
+// User Reviews handlers
+export type { UserReviewsHandlerDeps, UserReview, UserReviewWithVote } from './user-reviews';
+export { createUserReviewsGetHandler, createUserReviewsPostHandler, createUserReviewVoteHandler } from './user-reviews';
+
+// User Tag Suggestions handlers
+export type { UserTagSuggestionsHandlerDeps, UserTagSuggestion, UserTagSuggestionWithVote } from './user-tag-suggestions';
+export { createUserTagSuggestionsGetHandler, createUserTagSuggestionsPostHandler, createUserTagVoteHandler } from './user-tag-suggestions';
+
+// User Performer Suggestions handlers
+export type { UserPerformerSuggestionsHandlerDeps, UserPerformerSuggestion, UserPerformerSuggestionWithVote } from './user-performer-suggestions';
+export { createUserPerformerSuggestionsGetHandler, createUserPerformerSuggestionsPostHandler, createUserPerformerVoteHandler } from './user-performer-suggestions';
+
+// Public Favorite Lists handlers
+export type { PublicFavoriteListsHandlerDeps, PublicFavoriteList, PublicFavoriteListItem } from './public-favorite-lists';
+export {
+  createPublicFavoriteListsGetHandler,
+  createPublicFavoriteListsPostHandler,
+  createPublicFavoriteListsPutHandler,
+  createPublicFavoriteListsDeleteHandler,
+  createPublicFavoriteListItemsHandler,
+  createPublicFavoriteListLikeHandler,
+} from './public-favorite-lists';

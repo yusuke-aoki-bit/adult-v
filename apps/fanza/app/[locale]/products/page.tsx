@@ -6,11 +6,10 @@ import ProductListFilter from '@/components/ProductListFilter';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import Breadcrumb from '@/components/Breadcrumb';
 import ActiveFiltersChips from '@/components/ActiveFiltersChips';
-import RecentlyViewed from '@/components/RecentlyViewed';
-import ForYouRecommendations from '@/components/ForYouRecommendations';
-import SalesSection from '@/components/SalesSection';
-import WeeklyHighlights from '@/components/WeeklyHighlights';
+import PageLayout from '@/components/PageLayout';
+import ProductListSectionNav from '@/components/ProductListSectionNav';
 import { JsonLD } from '@/components/JsonLD';
+import SearchSuggestionsWrapper from '@/components/SearchSuggestionsWrapper';
 import { getProducts, getProductsCount, getAspStats, getPopularTags, getUncategorizedProductsCount, getSaleProducts, SaleProduct } from '@/lib/db/queries';
 import { generateBaseMetadata, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { Metadata } from 'next';
@@ -260,59 +259,34 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     { name: t('title'), url: basePath },
   ]);
 
+  // PageLayout用の翻訳
+  const layoutTranslations = {
+    viewProductList: t('title'),
+    viewProductListDesc: t('viewActressListDesc'),
+    uncategorizedBadge: tUncategorized('badge'),
+    uncategorizedDescription: tUncategorized('shortDescription'),
+    uncategorizedCount: tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() }),
+  };
+
   return (
-    <div className="theme-body min-h-screen">
+    <PageLayout
+      locale={locale}
+      saleProducts={saleProducts.map(p => ({
+        ...p,
+        endAt: p.endAt ? p.endAt.toISOString() : null,
+      }))}
+      uncategorizedCount={uncategorizedCount}
+      isTopPage={false}
+      translations={layoutTranslations}
+    >
+      {/* セクションナビゲーション */}
+      <ProductListSectionNav locale={locale} hasSaleProducts={saleProducts.length > 0} />
+
       {/* 構造化データ */}
       <JsonLD data={itemListSchema} />
       <JsonLD data={breadcrumbSchema} />
 
-      {/* セール情報セクション */}
-      {saleProducts.length > 0 && (
-        <section className="py-3 sm:py-4">
-          <div className="container mx-auto px-3 sm:px-4">
-            <SalesSection saleProducts={saleProducts.map(p => ({
-              ...p,
-              endAt: p.endAt ? p.endAt.toISOString() : null,
-            }))} locale={locale} defaultOpen={true} />
-          </div>
-        </section>
-      )}
-
-      {/* 最近見た作品 */}
-      <RecentlyViewed locale={locale} />
-
-      {/* あなたへのおすすめ（閲覧履歴に基づく） */}
-      <ForYouRecommendations locale={locale} />
-
-      {/* 今週の注目（自動キュレーション） */}
-      <WeeklyHighlights locale={locale} />
-
-      {/* 未整理作品へのリンク */}
-      {uncategorizedCount > 0 && (
-        <section className="py-3 sm:py-6">
-          <div className="container mx-auto px-3 sm:px-4">
-            <Link
-              href={localizedHref('/products?uncategorized=true', locale)}
-              className="flex items-center justify-between p-3 sm:p-4 theme-content hover:opacity-90 rounded-lg border theme-border hover:border-yellow-600 transition-colors group gap-2"
-            >
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <span className="px-2 sm:px-3 py-1 bg-yellow-600 text-white text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap shrink-0">
-                  {tUncategorized('badge')}
-                </span>
-                <div className="min-w-0">
-                  <span className="theme-text font-medium text-sm sm:text-base">{tUncategorized('shortDescription')}</span>
-                  <span className="theme-text-muted ml-1 sm:ml-2 text-xs sm:text-sm">({tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() })})</span>
-                </div>
-              </div>
-              <svg className="w-5 h-5 theme-text-muted group-hover:text-yellow-600 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-        </section>
-      )}
-
-      <section className="py-3 sm:py-4 md:py-6">
+      <section id="products" className="py-3 sm:py-4 md:py-6 scroll-mt-20">
         <div className="container mx-auto px-3 sm:px-4">
           <Breadcrumb
             items={[
@@ -330,6 +304,11 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
               {t('description', { count: totalCount.toLocaleString() })}
             </p>
           </div>
+
+          {/* AI検索拡張（検索クエリがある場合のみ） */}
+          {query && (
+            <SearchSuggestionsWrapper query={query} locale={locale} />
+          )}
 
           {/* アクティブフィルターチップ */}
           <ActiveFiltersChips />
@@ -415,6 +394,6 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           </div>
         </div>
       </section>
-    </div>
+    </PageLayout>
   );
 }

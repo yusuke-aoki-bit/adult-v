@@ -2,7 +2,8 @@
 
 import FavoriteButton from '@/components/FavoriteButton';
 import WatchLaterButton from '@/components/WatchLaterButton';
-import { MarkAsViewedButton } from '@adult-v/shared/components';
+import PriceAlertButton from '@/components/PriceAlertButton';
+import { MarkAsViewedButton, CompareButton } from '@adult-v/shared/components';
 
 interface ProductActionsProps {
   productId: number | string;
@@ -14,6 +15,7 @@ interface ProductActionsProps {
   tags?: string[];
   duration?: number;
   locale: string;
+  currentPrice?: number;
 }
 
 export default function ProductActions({
@@ -26,6 +28,7 @@ export default function ProductActions({
   tags,
   duration,
   locale,
+  currentPrice,
 }: ProductActionsProps) {
   return (
     <div className="flex items-center gap-2">
@@ -48,12 +51,30 @@ export default function ProductActions({
         provider={provider}
         size="md"
       />
+      <PriceAlertButton
+        productId={productId}
+        title={title}
+        thumbnail={imageUrl ?? undefined}
+        provider={provider}
+        currentPrice={currentPrice}
+        size="md"
+        locale={locale}
+      />
       <FavoriteButton
         type="product"
         id={productId}
         title={title}
         thumbnail={imageUrl ?? undefined}
         size="lg"
+      />
+      <CompareButton
+        product={{
+          id: productId,
+          title,
+          imageUrl,
+        }}
+        locale={locale}
+        size="md"
       />
     </div>
   );

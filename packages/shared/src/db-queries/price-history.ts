@@ -94,7 +94,7 @@ export function createPriceHistoryQueries(getDb: () => any) {
         FROM price_history ph
         INNER JOIN product_sources ps ON ph.product_source_id = ps.id
         INNER JOIN products p ON ps.product_id = p.id
-        WHERE p.normalized_id = ${normalizedProductId}
+        WHERE p.normalized_product_id = ${normalizedProductId}
           AND ph.recorded_at >= NOW() - INTERVAL '${sql.raw(String(daysBack))} days'
           ${aspFilter}
         ORDER BY ph.recorded_at DESC
@@ -137,7 +137,7 @@ export function createPriceHistoryQueries(getDb: () => any) {
         FROM price_history ph
         INNER JOIN product_sources ps ON ph.product_source_id = ps.id
         INNER JOIN products p ON ps.product_id = p.id
-        WHERE p.normalized_id = ${normalizedProductId}
+        WHERE p.normalized_product_id = ${normalizedProductId}
           ${aspFilter}
       `);
 

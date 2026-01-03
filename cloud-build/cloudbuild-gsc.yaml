@@ -1,4 +1,4 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/adult-v/gsc-fetcher', '-f', 'Dockerfile.gsc', '.']
+  args: ['build', '-t', 'gcr.io/adult-v/gsc-fetcher', '-f', 'docker/Dockerfile.gsc', '.']
 images: ['gcr.io/adult-v/gsc-fetcher']

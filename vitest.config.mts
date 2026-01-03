@@ -8,12 +8,11 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
-    include: ['__tests__/**/*.{test,spec}.{ts,tsx}'],
+    include: ['__tests__/unit/**/*.{test,spec}.{ts,tsx}', '__tests__/integration/**/*.{test,spec}.{ts,tsx}'],
     exclude: [
       'node_modules/**',
-      'e2e/**',
+      '__tests__/e2e/**',
       '.next/**',
-      '__tests__/legacy/**',
     ],
     // Increase timeout for tests that use dynamic imports (slower on Windows)
     testTimeout: 30000,
@@ -43,7 +42,6 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './'),
       '@adult-v/shared': path.resolve(__dirname, './packages/shared/src'),
-      '@adult-v/ui-common': path.resolve(__dirname, './packages/ui-common/src'),
       '@adult-v/database': path.resolve(__dirname, './packages/database/src'),
       // Mock Next.js modules
       'next/link': path.resolve(__dirname, './__mocks__/next/link.tsx'),

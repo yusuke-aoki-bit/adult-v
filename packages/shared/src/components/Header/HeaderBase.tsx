@@ -97,6 +97,19 @@ const FavoritesIcon = () => (
   </svg>
 );
 
+const WatchlistIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+  </svg>
+);
+
+const CompareIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+  </svg>
+);
+
 const StatisticsIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
     <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
@@ -298,13 +311,13 @@ export function HeaderBase({
             <SearchBar />
           </div>
 
-          {/* デスクトップナビゲーション - 3カラム×2行レイアウト */}
+          {/* デスクトップナビゲーション - 5カラム×2行レイアウト */}
           <nav
             className="hidden md:flex items-center gap-4 shrink-0 theme-nav ml-auto"
           >
-            {/* 4カラム×2行グリッド */}
-            <div className="grid grid-cols-4 gap-x-3 gap-y-0.5 text-right">
-              {/* 1行目: 作品一覧 / 女優一覧 / カレンダー / 統計 */}
+            {/* 5カラム×2行グリッド */}
+            <div className="grid grid-cols-5 gap-x-3 gap-y-0.5 text-right">
+              {/* 1行目: 作品一覧 / 女優一覧 / カレンダー / 統計 / 比較 */}
               <Link
                 href={localizedHref('/products', locale)}
                 className="theme-nav-products transition-colors font-medium flex items-center gap-1 text-sm justify-end"
@@ -333,7 +346,14 @@ export function HeaderBase({
                 <StatisticsIcon />
                 {t.statistics}
               </Link>
-              {/* 2行目: 視聴日記 / DNA分析 / お気に入り / 空 */}
+              <Link
+                href={localizedHref('/compare', locale)}
+                className="theme-nav-compare transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+              >
+                <CompareIcon />
+                {t.compare}
+              </Link>
+              {/* 2行目: 視聴日記 / DNA分析 / お気に入り / あとで見る / 空 */}
               <Link
                 href={localizedHref('/diary', locale)}
                 className="theme-nav-diary transition-colors font-medium flex items-center gap-1 text-sm justify-end"
@@ -354,6 +374,13 @@ export function HeaderBase({
               >
                 <FavoritesIcon />
                 {t.favorites}
+              </Link>
+              <Link
+                href={localizedHref('/watchlist', locale)}
+                className="theme-nav-watchlist transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+              >
+                <WatchlistIcon />
+                {t.watchlist}
               </Link>
               <div />
             </div>
@@ -455,6 +482,24 @@ export function HeaderBase({
               >
                 <FavoritesIcon />
                 <span className="ml-2">{t.favorites}</span>
+              </Link>
+              <Link
+                href={localizedHref('/watchlist', locale)}
+                className="py-3 min-h-[48px] flex items-center theme-nav-watchlist transition-colors text-sm"
+                onClick={handleMobileMenuClose}
+                role="listitem"
+              >
+                <WatchlistIcon />
+                <span className="ml-2">{t.watchlist}</span>
+              </Link>
+              <Link
+                href={localizedHref('/compare', locale)}
+                className="py-3 min-h-[48px] flex items-center theme-nav-compare transition-colors text-sm"
+                onClick={handleMobileMenuClose}
+                role="listitem"
+              >
+                <CompareIcon />
+                <span className="ml-2">{t.compare}</span>
               </Link>
             </div>
 

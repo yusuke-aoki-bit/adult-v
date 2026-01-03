@@ -376,6 +376,9 @@
     "videoLoadError": "Failed to load video",
     "securityRestriction": "Due to security restrictions on the source site, direct playback may not be available",
     "playAtSource": "Play at source",
+    "playInNewTab": "Play in new tab",
+    "externalVideoTitle": "External site video",
+    "externalVideoDescription": "This video cannot be embedded due to security restrictions. You can play it directly in a new tab.",
     "close": "Close",
     "preview": "Preview",
     "trailer": "Trailer",
@@ -462,5 +465,135 @@
     "addedToDiary": "Added to viewing diary",
     "removedFromDiary": "Removed from diary",
     "viewCount": "Viewed {count}x"
+  },
+  "userContributions": {
+    "sectionTitle": "User Contributions",
+    "reviewForm": {
+      "title": "Write a Review",
+      "loginRequired": "Please log in to write a review",
+      "ratingLabel": "Rating",
+      "reviewTitleLabel": "Title",
+      "reviewTitlePlaceholder": "Review title (optional)",
+      "contentLabel": "Review",
+      "contentPlaceholder": "Share your thoughts about this product...",
+      "submit": "Submit",
+      "submitting": "Submitting...",
+      "success": "Review submitted successfully",
+      "error": "Failed to submit review",
+      "alreadyReviewed": "You have already reviewed this product",
+      "minLength": "Review must be at least 10 characters"
+    },
+    "reviewList": {
+      "title": "User Reviews",
+      "noReviews": "No reviews yet",
+      "helpful": "Helpful",
+      "notHelpful": "Not helpful",
+      "helpfulCount": "{count} found helpful",
+      "loading": "Loading...",
+      "error": "Failed to load reviews"
+    },
+    "tagForm": {
+      "title": "Suggest a Tag",
+      "loginRequired": "Please log in to suggest tags",
+      "placeholder": "Enter new tag name...",
+      "submit": "Suggest",
+      "submitting": "Submitting...",
+      "success": "Tag suggestion submitted",
+      "error": "Failed to submit tag suggestion",
+      "alreadySuggested": "This tag has already been suggested",
+      "tooShort": "Tag must be at least 2 characters"
+    },
+    "tagList": {
+      "title": "Suggested Tags",
+      "noSuggestions": "No tag suggestions yet",
+      "approved": "Approved",
+      "pending": "Pending",
+      "loginToVote": "Please log in to vote"
+    },
+    "performerForm": {
+      "title": "Suggest a Performer",
+      "loginRequired": "Please log in to suggest performers",
+      "placeholder": "Enter performer name...",
+      "submit": "Suggest",
+      "submitting": "Submitting...",
+      "success": "Performer suggestion submitted",
+      "error": "Failed to submit performer suggestion",
+      "alreadySuggested": "This performer is already registered or suggested",
+      "tooShort": "Name must be at least 2 characters",
+      "selectExisting": "Select existing performer",
+      "orEnterNew": "Or enter a new performer name"
+    },
+    "performerList": {
+      "title": "Suggested Performers",
+      "noSuggestions": "No performer suggestions yet",
+      "approved": "Approved",
+      "pending": "Pending",
+      "linkedToExisting": "Linked to existing data",
+      "loginToVote": "Please log in to vote"
+    }
+  },
+  "favoriteLists": {
+    "pageTitle": "Public Lists",
+    "myLists": "My Lists",
+    "publicLists": "Community Lists",
+    "createList": "Create New List",
+    "noLists": "No lists found",
+    "loginRequired": "Please log in to create lists",
+    "card": {
+      "items": "{count} items",
+      "views": "{count}",
+      "likes": "{count}",
+      "private": "Private",
+      "public": "Public",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Are you sure you want to delete this list?"
+    },
+    "modal": {
+      "createTitle": "Create New List",
+      "editTitle": "Edit List",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Enter list name...",
+      "descriptionLabel": "Description (optional)",
+      "descriptionPlaceholder": "Enter list description...",
+      "visibilityLabel": "Visibility",
+      "public": "Public",
+      "publicDescription": "Anyone can view and like this list",
+      "private": "Private",
+      "privateDescription": "Only you can see this list",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "creating": "Creating...",
+      "saving": "Saving..."
+    },
+    "detail": {
+      "loading": "Loading...",
+      "error": "Failed to load list",
+      "notFound": "List not found",
+      "back": "Back",
+      "views": "{count} views",
+      "likes": "{count} likes",
+      "items": "{count} items",
+      "private": "Private",
+      "public": "Public",
+      "share": "Share",
+      "copied": "Copied!",
+      "emptyList": "This list is empty",
+      "removeItem": "Remove"
+    },
+    "addToList": {
+      "addToList": "Add to List",
+      "selectList": "Select a list",
+      "createNew": "Create new list",
+      "noLists": "No lists yet",
+      "added": "Added",
+      "removed": "Removed",
+      "loading": "Loading...",
+      "newListTitle": "List name",
+      "create": "Create",
+      "cancel": "Cancel",
+      "loginRequired": "Please log in"
+    }
   }
 }

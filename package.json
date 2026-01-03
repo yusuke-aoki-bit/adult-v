@@ -22,7 +22,8 @@
     "crawl:b10f": "pnpm --filter=@adult-v/crawlers crawl:b10f",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:unit": "vitest run __tests__",
+    "test:unit": "vitest run __tests__/unit",
+    "test:integration": "vitest run __tests__/integration",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",
     "test:e2e": "playwright test",
@@ -31,11 +32,12 @@
     "test:e2e:web": "playwright test --project=web",
     "test:e2e:fanza": "playwright test --project=fanza",
     "test:e2e:debug": "playwright test --debug",
-    "test:a11y": "playwright test e2e/accessibility.spec.ts",
-    "test:visual": "playwright test e2e/visual-regression.spec.ts",
-    "test:visual:update": "playwright test e2e/visual-regression.spec.ts --update-snapshots",
-    "test:api": "playwright test e2e/api-routes.spec.ts",
-    "test:all": "npm run test:run && npm run test:e2e"
+    "test:a11y": "playwright test __tests__/e2e/accessibility.spec.ts",
+    "test:visual": "playwright test __tests__/e2e/visual-regression.spec.ts",
+    "test:visual:update": "playwright test __tests__/e2e/visual-regression.spec.ts --update-snapshots",
+    "test:api": "playwright test __tests__/e2e/api-routes.spec.ts",
+    "test:perf": "playwright test __tests__/e2e/performance.spec.ts",
+    "test:all": "npm run test:unit && npm run test:e2e"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.32.1",

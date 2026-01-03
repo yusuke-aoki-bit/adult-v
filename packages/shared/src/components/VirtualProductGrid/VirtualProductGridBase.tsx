@@ -1,8 +1,8 @@
 'use client';
 
-import { memo, useCallback, useRef, useEffect, useState } from 'react';
-import { FixedSizeGrid as Grid, GridChildComponentProps } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { memo, useCallback, useRef, useState, type CSSProperties, type ReactElement } from 'react';
+import { Grid, type GridImperativeAPI } from 'react-window';
+import { AutoSizer } from 'react-virtualized-auto-sizer';
 
 interface Product {
   id: string | number;
@@ -27,7 +27,7 @@ interface Product {
 
 interface VirtualProductGridBaseProps {
   products: Product[];
-  renderProduct: (product: Product, index: number, style: React.CSSProperties) => React.ReactNode;
+  renderProduct: (product: Product, index: number, style: CSSProperties) => React.ReactNode;
   columnCount?: number;
   rowHeight?: number;
   gap?: number;
@@ -39,27 +39,44 @@ interface VirtualProductGridBaseProps {
   loadingComponent?: React.ReactNode;
 }
 
-interface CellProps extends GridChildComponentProps {
-  data: {
-    products: Product[];
-    columnCount: number;
-    gap: number;
-    renderProduct: (product: Product, index: number, style: React.CSSProperties) => React.ReactNode;
-  };
+// react-window v2のcellPropsとして渡すカスタムデータ
+interface CellCustomProps {
+  products: Product[];
+  columnCount: number;
+  gap: number;
+  renderProduct: (product: Product, index: number, style: CSSProperties) => React.ReactNode;
 }
 
-const Cell = memo(({ columnIndex, rowIndex, style, data }: CellProps) => {
-  const { products, columnCount, gap, renderProduct } = data;
+// react-window v2のcellComponentが受け取るprops
+interface CellComponentProps extends CellCustomProps {
+  ariaAttributes: {
+    'aria-colindex': number;
+    role: 'gridcell';
+  };
+  columnIndex: number;
+  rowIndex: number;
+  style: CSSProperties;
+}
+
+const CellComponent = ({
+  columnIndex,
+  rowIndex,
+  style,
+  products,
+  columnCount,
+  gap,
+  renderProduct,
+}: CellComponentProps): ReactElement => {
   const index = rowIndex * columnCount + columnIndex;
 
   if (index >= products.length) {
-    return null;
+    return <div style={style} />;
   }
 
   const product = products[index];
 
   // Gap調整したスタイル
-  const adjustedStyle: React.CSSProperties = {
+  const adjustedStyle: CSSProperties = {
     ...style,
     left: Number(style.left) + gap / 2,
     top: Number(style.top) + gap / 2,
@@ -67,10 +84,8 @@ const Cell = memo(({ columnIndex, rowIndex, style, data }: CellProps) => {
     height: Number(style.height) - gap,
   };
 
-  return renderProduct(product, index, adjustedStyle);
-});
-
-Cell.displayName = 'VirtualGridCell';
+  return <>{renderProduct(product, index, adjustedStyle)}</>;
+};
 
 function VirtualProductGridBase({
   products,
@@ -85,7 +100,7 @@ function VirtualProductGridBase({
   isLoading = false,
   loadingComponent,
 }: VirtualProductGridBaseProps) {
-  const gridRef = useRef<Grid>(null);
+  const gridRef = useRef<GridImperativeAPI>(null);
   const [actualColumnCount, setActualColumnCount] = useState(defaultColumnCount);
 
   // レスポンシブ対応：画面幅に応じてカラム数を調整
@@ -97,8 +112,8 @@ function VirtualProductGridBase({
     return 6;                        // 2xl
   }, []);
 
-  // 無限スクロール：最後に近づいたらロード
-  const handleScroll = useCallback(
+  // 無限スクロール：最後に近づいたらロード - 現在のAPIではonScrollがサポートされていないため未使用
+  const _handleScroll = useCallback(
     ({ scrollTop, scrollHeight, clientHeight }: { scrollTop: number; scrollHeight: number; clientHeight: number }) => {
       if (!onLoadMore || !hasMore || isLoading) return;
 
@@ -110,16 +125,16 @@ function VirtualProductGridBase({
     [onLoadMore, hasMore, isLoading]
   );
 
-  const rowCount = Math.ceil(products.length / actualColumnCount);
-
   if (products.length === 0) {
     return null;
   }
 
   return (
     <div className={`w-full ${className}`} style={{ height: '80vh', minHeight: 600 }}>
-      <AutoSizer>
-        {({ height, width }) => {
+      <AutoSizer
+        renderProp={({ height, width }) => {
+          if (!height || !width) return null;
+
           const columns = getColumnCount(width);
           if (columns !== actualColumnCount) {
             setActualColumnCount(columns);
@@ -128,30 +143,26 @@ function VirtualProductGridBase({
           const columnWidth = (width - gap) / columns;
           const rows = Math.ceil(products.length / columns);
 
+          const cellProps: CellCustomProps = {
+            products,
+            columnCount: columns,
+            gap,
+            renderProduct,
+          };
+
           return (
             <>
-              <Grid
-                ref={gridRef}
+              <Grid<CellCustomProps>
+                gridRef={gridRef}
                 columnCount={columns}
                 columnWidth={columnWidth}
-                height={height}
                 rowCount={rows}
                 rowHeight={rowHeight}
-                width={width}
-                overscanRowCount={overscanRowCount}
-                onScroll={({ scrollTop }) => {
-                  const scrollHeight = rows * rowHeight;
-                  handleScroll({ scrollTop, scrollHeight, clientHeight: height });
-                }}
-                itemData={{
-                  products,
-                  columnCount: columns,
-                  gap,
-                  renderProduct,
-                }}
-              >
-                {Cell}
-              </Grid>
+                overscanCount={overscanRowCount}
+                cellProps={cellProps}
+                cellComponent={CellComponent}
+                style={{ height, width }}
+              />
               {isLoading && loadingComponent && (
                 <div className="absolute bottom-0 left-0 right-0 flex justify-center py-4">
                   {loadingComponent}
@@ -160,7 +171,7 @@ function VirtualProductGridBase({
             </>
           );
         }}
-      </AutoSizer>
+      />
     </div>
   );
 }

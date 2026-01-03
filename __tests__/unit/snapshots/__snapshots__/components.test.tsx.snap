@@ -1,0 +1,611 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Component Snapshots > Pagination > matches snapshot for first page 1`] = `
+<div>
+  <nav
+    aria-label="ページ 1 / 10"
+    class="flex flex-col items-center gap-2 sm:gap-3 mt-6 sm:mt-8"
+  >
+    <div
+      class="flex flex-nowrap items-center justify-center gap-1 sm:gap-2"
+      role="group"
+    >
+      <a
+        href="/products"
+      >
+        最初
+      </a>
+      <a
+        href="/products"
+      >
+        前へ
+      </a>
+      <div
+        class="flex items-center gap-0.5 sm:gap-1"
+      >
+        <a
+          href="/products"
+        >
+          1
+        </a>
+        <a
+          href="/products?page=2"
+        >
+          2
+        </a>
+        <a
+          href="/products?page=3"
+        >
+          3
+        </a>
+        <span
+          class="hidden sm:inline px-2 sm:px-3 py-2 text-sm text-gray-500"
+        >
+          ...
+        </span>
+        <a
+          href="/products?page=10"
+        >
+          10
+        </a>
+      </div>
+      <a
+        href="/products?page=2"
+      >
+        次へ
+      </a>
+      <a
+        href="/products?page=10"
+      >
+        最後
+      </a>
+    </div>
+    <div
+      class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
+    >
+      <div
+        class="text-gray-500"
+      >
+        <span
+          class="hidden sm:inline"
+        >
+          1
+           - 
+          10
+           / 
+          100
+           
+          件
+        </span>
+        <span
+          class="sm:hidden"
+        >
+          1
+           / 
+          10
+        </span>
+      </div>
+      <form
+        class="hidden sm:flex items-center gap-1"
+      >
+        <input
+          aria-label="ページへ移動"
+          class="w-20 px-2 py-1.5 text-center border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
+          max="10"
+          min="1"
+          placeholder="ページ番号"
+          type="number"
+          value=""
+        />
+        <button
+          class="px-3 py-1.5 rounded-md text-sm font-medium disabled:cursor-not-allowed transition-colors bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
+          disabled=""
+          type="submit"
+        >
+          移動
+        </button>
+      </form>
+    </div>
+  </nav>
+</div>
+`;
+
+exports[`Component Snapshots > Pagination > matches snapshot for last page 1`] = `
+<div>
+  <nav
+    aria-label="ページ 10 / 10"
+    class="flex flex-col items-center gap-2 sm:gap-3 mt-6 sm:mt-8"
+  >
+    <div
+      class="flex flex-nowrap items-center justify-center gap-1 sm:gap-2"
+      role="group"
+    >
+      <a
+        href="/products"
+      >
+        最初
+      </a>
+      <a
+        href="/products?page=9"
+      >
+        前へ
+      </a>
+      <div
+        class="flex items-center gap-0.5 sm:gap-1"
+      >
+        <a
+          href="/products"
+        >
+          1
+        </a>
+        <span
+          class="hidden sm:inline px-2 sm:px-3 py-2 text-sm text-gray-500"
+        >
+          ...
+        </span>
+        <a
+          href="/products?page=8"
+        >
+          8
+        </a>
+        <a
+          href="/products?page=9"
+        >
+          9
+        </a>
+        <a
+          href="/products?page=10"
+        >
+          10
+        </a>
+      </div>
+      <a
+        href="/products?page=11"
+      >
+        次へ
+      </a>
+      <a
+        href="/products?page=10"
+      >
+        最後
+      </a>
+    </div>
+    <div
+      class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
+    >
+      <div
+        class="text-gray-500"
+      >
+        <span
+          class="hidden sm:inline"
+        >
+          91
+           - 
+          100
+           / 
+          100
+           
+          件
+        </span>
+        <span
+          class="sm:hidden"
+        >
+          10
+           / 
+          10
+        </span>
+      </div>
+      <form
+        class="hidden sm:flex items-center gap-1"
+      >
+        <input
+          aria-label="ページへ移動"
+          class="w-20 px-2 py-1.5 text-center border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
+          max="10"
+          min="1"
+          placeholder="ページ番号"
+          type="number"
+          value=""
+        />
+        <button
+          class="px-3 py-1.5 rounded-md text-sm font-medium disabled:cursor-not-allowed transition-colors bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
+          disabled=""
+          type="submit"
+        >
+          移動
+        </button>
+      </form>
+    </div>
+  </nav>
+</div>
+`;
+
+exports[`Component Snapshots > Pagination > matches snapshot for middle page 1`] = `
+<div>
+  <nav
+    aria-label="ページ 5 / 10"
+    class="flex flex-col items-center gap-2 sm:gap-3 mt-6 sm:mt-8"
+  >
+    <div
+      class="flex flex-nowrap items-center justify-center gap-1 sm:gap-2"
+      role="group"
+    >
+      <a
+        href="/products"
+      >
+        最初
+      </a>
+      <a
+        href="/products?page=4"
+      >
+        前へ
+      </a>
+      <div
+        class="flex items-center gap-0.5 sm:gap-1"
+      >
+        <a
+          href="/products"
+        >
+          1
+        </a>
+        <span
+          class="hidden sm:inline px-2 sm:px-3 py-2 text-sm text-gray-500"
+        >
+          ...
+        </span>
+        <a
+          href="/products?page=3"
+        >
+          3
+        </a>
+        <a
+          href="/products?page=4"
+        >
+          4
+        </a>
+        <a
+          href="/products?page=5"
+        >
+          5
+        </a>
+        <a
+          href="/products?page=6"
+        >
+          6
+        </a>
+        <a
+          href="/products?page=7"
+        >
+          7
+        </a>
+        <span
+          class="hidden sm:inline px-2 sm:px-3 py-2 text-sm text-gray-500"
+        >
+          ...
+        </span>
+        <a
+          href="/products?page=10"
+        >
+          10
+        </a>
+      </div>
+      <a
+        href="/products?page=6"
+      >
+        次へ
+      </a>
+      <a
+        href="/products?page=10"
+      >
+        最後
+      </a>
+    </div>
+    <div
+      class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
+    >
+      <div
+        class="text-gray-500"
+      >
+        <span
+          class="hidden sm:inline"
+        >
+          41
+           - 
+          50
+           / 
+          100
+           
+          件
+        </span>
+        <span
+          class="sm:hidden"
+        >
+          5
+           / 
+          10
+        </span>
+      </div>
+      <form
+        class="hidden sm:flex items-center gap-1"
+      >
+        <input
+          aria-label="ページへ移動"
+          class="w-20 px-2 py-1.5 text-center border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
+          max="10"
+          min="1"
+          placeholder="ページ番号"
+          type="number"
+          value=""
+        />
+        <button
+          class="px-3 py-1.5 rounded-md text-sm font-medium disabled:cursor-not-allowed transition-colors bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
+          disabled=""
+          type="submit"
+        >
+          移動
+        </button>
+      </form>
+    </div>
+  </nav>
+</div>
+`;
+
+exports[`Component Snapshots > Pagination > matches snapshot with many pages (shows jump buttons) 1`] = `
+<div>
+  <nav
+    aria-label="ページ 25 / 50"
+    class="flex flex-col items-center gap-2 sm:gap-3 mt-6 sm:mt-8"
+  >
+    <div
+      class="flex flex-nowrap items-center justify-center gap-1 sm:gap-2"
+      role="group"
+    >
+      <a
+        href="/products"
+      >
+        最初
+      </a>
+      <a
+        href="/products?page=15"
+      >
+        -10
+      </a>
+      <a
+        href="/products?page=24"
+      >
+        前へ
+      </a>
+      <div
+        class="flex items-center gap-0.5 sm:gap-1"
+      >
+        <a
+          href="/products"
+        >
+          1
+        </a>
+        <span
+          class="hidden sm:inline px-2 sm:px-3 py-2 text-sm text-gray-500"
+        >
+          ...
+        </span>
+        <a
+          href="/products?page=23"
+        >
+          23
+        </a>
+        <a
+          href="/products?page=24"
+        >
+          24
+        </a>
+        <a
+          href="/products?page=25"
+        >
+          25
+        </a>
+        <a
+          href="/products?page=26"
+        >
+          26
+        </a>
+        <a
+          href="/products?page=27"
+        >
+          27
+        </a>
+        <span
+          class="hidden sm:inline px-2 sm:px-3 py-2 text-sm text-gray-500"
+        >
+          ...
+        </span>
+        <a
+          href="/products?page=50"
+        >
+          50
+        </a>
+      </div>
+      <a
+        href="/products?page=26"
+      >
+        次へ
+      </a>
+      <a
+        href="/products?page=35"
+      >
+        +10
+      </a>
+      <a
+        href="/products?page=50"
+      >
+        最後
+      </a>
+    </div>
+    <div
+      class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
+    >
+      <div
+        class="text-gray-500"
+      >
+        <span
+          class="hidden sm:inline"
+        >
+          241
+           - 
+          250
+           / 
+          500
+           
+          件
+        </span>
+        <span
+          class="sm:hidden"
+        >
+          25
+           / 
+          50
+        </span>
+      </div>
+      <form
+        class="hidden sm:flex items-center gap-1"
+      >
+        <input
+          aria-label="ページへ移動"
+          class="w-20 px-2 py-1.5 text-center border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
+          max="50"
+          min="1"
+          placeholder="ページ番号"
+          type="number"
+          value=""
+        />
+        <button
+          class="px-3 py-1.5 rounded-md text-sm font-medium disabled:cursor-not-allowed transition-colors bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
+          disabled=""
+          type="submit"
+        >
+          移動
+        </button>
+      </form>
+    </div>
+  </nav>
+</div>
+`;
+
+exports[`Component Snapshots > Pagination > matches snapshot with query params 1`] = `
+<div>
+  <nav
+    aria-label="ページ 3 / 10"
+    class="flex flex-col items-center gap-2 sm:gap-3 mt-6 sm:mt-8"
+  >
+    <div
+      class="flex flex-nowrap items-center justify-center gap-1 sm:gap-2"
+      role="group"
+    >
+      <a
+        href="/products?sort=date&filter=new"
+      >
+        最初
+      </a>
+      <a
+        href="/products?sort=date&filter=new&page=2"
+      >
+        前へ
+      </a>
+      <div
+        class="flex items-center gap-0.5 sm:gap-1"
+      >
+        <a
+          href="/products?sort=date&filter=new"
+        >
+          1
+        </a>
+        <a
+          href="/products?sort=date&filter=new&page=2"
+        >
+          2
+        </a>
+        <a
+          href="/products?sort=date&filter=new&page=3"
+        >
+          3
+        </a>
+        <a
+          href="/products?sort=date&filter=new&page=4"
+        >
+          4
+        </a>
+        <a
+          href="/products?sort=date&filter=new&page=5"
+        >
+          5
+        </a>
+        <span
+          class="hidden sm:inline px-2 sm:px-3 py-2 text-sm text-gray-500"
+        >
+          ...
+        </span>
+        <a
+          href="/products?sort=date&filter=new&page=10"
+        >
+          10
+        </a>
+      </div>
+      <a
+        href="/products?sort=date&filter=new&page=4"
+      >
+        次へ
+      </a>
+      <a
+        href="/products?sort=date&filter=new&page=10"
+      >
+        最後
+      </a>
+    </div>
+    <div
+      class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
+    >
+      <div
+        class="text-gray-500"
+      >
+        <span
+          class="hidden sm:inline"
+        >
+          21
+           - 
+          30
+           / 
+          100
+           
+          件
+        </span>
+        <span
+          class="sm:hidden"
+        >
+          3
+           / 
+          10
+        </span>
+      </div>
+      <form
+        class="hidden sm:flex items-center gap-1"
+      >
+        <input
+          aria-label="ページへ移動"
+          class="w-20 px-2 py-1.5 text-center border rounded-md text-sm focus:outline-none focus:ring-2 focus:border-transparent border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
+          max="10"
+          min="1"
+          placeholder="ページ番号"
+          type="number"
+          value=""
+        />
+        <button
+          class="px-3 py-1.5 rounded-md text-sm font-medium disabled:cursor-not-allowed transition-colors bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
+          disabled=""
+          type="submit"
+        >
+          移動
+        </button>
+      </form>
+    </div>
+  </nav>
+</div>
+`;

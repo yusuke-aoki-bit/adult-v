@@ -8,10 +8,6 @@ import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
 const ProductVideoPlayer = nextDynamic(() => import('@/components/ProductVideoPlayer'), {
   loading: () => <div className="h-48 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center text-gray-400">動画を読み込み中...</div>,
 });
-// LCP最適化: RelatedProductsを遅延読み込み（ファーストビュー外のコンポーネント）
-const RelatedProducts = nextDynamic(() => import('@/components/RelatedProducts'), {
-  loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />,
-});
 import ProductDetailInfo from '@/components/ProductDetailInfo';
 import '@/components/ProductActions';
 import {
@@ -24,9 +20,13 @@ import {
 // import AffiliateButton from '@/components/AffiliateButton';
 import FavoriteButton from '@/components/FavoriteButton';
 import StickyCta from '@/components/StickyCta';
+import AiProductDescriptionWrapper from '@/components/AiProductDescriptionWrapper';
+import AlsoViewedWrapper from '@/components/AlsoViewedWrapper';
+import SimilarProductMapWrapper from '@/components/SimilarProductMapWrapper';
+import ProductSectionNav from '@/components/ProductSectionNav';
 import { getProductById, searchProductByProductId, getProductSources } from '@/lib/db/queries';
 import { isSubscriptionSite } from '@/lib/image-utils';
-import { getRelatedProducts, getPerformerOtherProducts, getProductMaker, getSameMakerProducts, getProductGenreTags, getProductSeries, getSameSeriesProducts } from '@/lib/db/recommendations';
+import { getPerformerOtherProducts, getProductMaker, getSameMakerProducts, getProductGenreTags, getProductSeries, getSameSeriesProducts } from '@/lib/db/recommendations';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema, generateFAQSchema, getProductPageFAQs, generateReviewSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import Link from 'next/link';
@@ -60,9 +60,6 @@ const SceneTimeline = nextDynamic(() => import('@/components/SceneTimeline'), {
 });
 const EnhancedAiReview = nextDynamic(() => import('@/components/EnhancedAiReview'), {
   loading: () => <div className="h-48 bg-gray-100 rounded-lg animate-pulse" />,
-});
-const ProductPriceSection = nextDynamic(() => import('@/components/ProductPriceSection'), {
-  loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />,
 });
 
 interface PageProps {
@@ -254,13 +251,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   // Phase 1: 基本データの並列取得（FANZAの商品のみ）
   const [
-    relatedProducts,
     maker,
     series,
     genreTags,
     sources,
   ] = await Promise.all([
-    getRelatedProducts(product.id, 12, 'fanza'),
     getProductMaker(productId),
     getProductSeries(productId),
     getProductGenreTags(productId),
@@ -296,13 +291,26 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {reviewSchema && <JsonLD data={reviewSchema} />}
 
       <div className="theme-body min-h-screen">
+        {/* セクションナビゲーション */}
+        <ProductSectionNav
+          locale={locale}
+          hasSampleVideo={!!(product.sampleVideos && product.sampleVideos.length > 0)}
+          hasPriceComparison={false}
+          hasCostPerformance={false}
+          hasAiReview={!!product.aiReview}
+          hasPerformerProducts={performerOtherProducts.length > 0 && !!primaryPerformerId}
+          hasSeriesProducts={sameSeriesProducts.length > 0 && !!series}
+          hasMakerProducts={sameMakerProducts.length > 0 && !!maker}
+          hasAlsoViewed={true}
+        />
+
         <div className="container mx-auto px-4 py-8">
           {/* パンくずリスト */}
           <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
           {/* サンプル動画セクション */}
           {product.sampleVideos && product.sampleVideos.length > 0 && (
-            <details className="theme-content rounded-lg shadow-sm border theme-border mb-6 group" open>
+            <details id="sample-video" className="theme-content rounded-lg shadow-sm border theme-border mb-6 group scroll-mt-20" open>
               <summary className="p-4 cursor-pointer list-none flex items-center gap-2 hover:bg-gray-100 rounded-lg transition-colors">
                 <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -322,7 +330,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </details>
           )}
 
-          <div className="theme-content rounded-lg shadow-sm border theme-border overflow-hidden">
+          <div id="product-info" className="theme-content rounded-lg shadow-sm border theme-border overflow-hidden scroll-mt-20">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
               {/* Product Image Gallery */}
               <ProductImageGallery
@@ -460,6 +468,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
+                {/* AI生成の作品紹介 */}
+                <AiProductDescriptionWrapper
+                  productId={String(product.id)}
+                  locale={locale}
+                />
+
                 {product.price && (
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <div className="flex items-center justify-between mb-2">
@@ -549,22 +563,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           )}
 
-          {/* 価格追跡・セールアラートセクション */}
-          {product.price && (
-            <ProductPriceSection
-              productId={String(productId)}
-              normalizedProductId={product.normalizedProductId || String(productId)}
-              title={product.title}
-              thumbnailUrl={product.imageUrl ?? undefined}
-              currentPrice={product.price}
-              salePrice={product.salePrice ?? undefined}
-              locale={locale}
-            />
-          )}
-
           {/* AI分析レビューセクション */}
           {product.aiReview && (
-            <div className="mt-8">
+            <div id="ai-review" className="mt-8 scroll-mt-20">
               <EnhancedAiReview
                 aiReview={product.aiReview}
                 rating={product.rating}
@@ -575,7 +576,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           )}
 
           {/* シーン情報セクション（ユーザー参加型） */}
-          <div className="mt-8">
+          <div id="scene-timeline" className="mt-8 scroll-mt-20">
             <SceneTimeline
               productId={productId}
               totalDuration={product.duration || undefined}
@@ -585,7 +586,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* この出演者の他作品セクション */}
           {performerOtherProducts.length > 0 && primaryPerformerId && primaryPerformerName && (
-            <div className="mt-8">
+            <div id="performer-products" className="mt-8 scroll-mt-20">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold theme-text flex items-center gap-2">
                   <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -648,7 +649,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 同じシリーズの作品セクション */}
           {sameSeriesProducts.length > 0 && series && (
-            <div className="mt-8">
+            <div id="series-products" className="mt-8 scroll-mt-20">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold theme-text flex items-center gap-2">
                   <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -711,7 +712,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 同じメーカー/レーベルの作品セクション */}
           {sameMakerProducts.length > 0 && maker && (
-            <div className="mt-8">
+            <div id="maker-products" className="mt-8 scroll-mt-20">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold theme-text flex items-center gap-2">
                   <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -772,10 +773,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           )}
 
-          {/* 関連作品セクション */}
-          {relatedProducts.length > 0 && (
-            <RelatedProducts products={relatedProducts} title={t.relatedProducts} />
-          )}
+          {/* 類似作品ネットワーク */}
+          <div id="similar-network" className="mt-8 scroll-mt-20">
+            <SimilarProductMapWrapper productId={productId} locale={locale} />
+          </div>
+
+          {/* この作品を見た人はこちらも見ています */}
+          <div id="also-viewed" className="mt-8 scroll-mt-20">
+            <AlsoViewedWrapper productId={product.id} locale={locale} />
+          </div>
         </div>
       </div>
 

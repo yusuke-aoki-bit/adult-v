@@ -16,6 +16,7 @@ import { FirebaseProvider } from '@adult-v/shared/components';
 import { JsonLD } from '@/components/JsonLD';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import { Metadata } from 'next';
+import ChatBotWrapper from '@/components/ChatBotWrapper';
 
 // ロケール別のデフォルトメタデータ（PageSpeed対策）
 const localeDescriptions: Record<string, string> = {
@@ -82,6 +83,7 @@ export default async function LocaleLayout({
                 {children}
               </AgeVerification>
               <ScrollToTop />
+              <ChatBotWrapper locale={locale} />
             </FirebaseProvider>
           </ToastProvider>
         </FavoritesProvider>

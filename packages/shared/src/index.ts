@@ -182,3 +182,18 @@ export type {
   ProductSortOption,
   GetProductsOptions,
 } from './db-queries/types';
+
+// LLM Service
+export {
+  LLMService,
+  analyzeSearchQuery,
+  generateProductDescription,
+  generateRecommendationExplanation,
+  generateActressProfile,
+  generateChatResponse,
+  type SearchQueryAnalysis,
+  type GeneratedProductDescription,
+  type RecommendationExplanation,
+  type GeneratedActressProfile,
+  type ChatResponse,
+} from './lib/llm-service';

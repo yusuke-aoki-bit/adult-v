@@ -84,8 +84,145 @@ interface CrawlStats {
   errors: number;
 }
 
+// 並列処理の設定
+const CONCURRENCY = 5; // 同時実行数
+const BATCH_DELAY_MS = 200; // バッチ間の待機時間
+
+/**
+ * 配列をチャンクに分割
+ */
+function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
+
 // MGS商品タイプ
 type MgsProductType = 'haishin' | 'dvd' | 'monthly';
+
+interface CrawlResult {
+  success: boolean;
+  isNew: boolean;
+  isUpdated: boolean;
+  isSkipped: boolean;
+  error?: string;
+}
+
+/**
+ * 単一商品をクロール（並列処理用）
+ */
+async function crawlSingleProduct(
+  url: string,
+  productType: MgsProductType,
+  enableAI: boolean,
+): Promise<CrawlResult> {
+  const productIdMatch = url.match(/product_detail\/([^\/]+)/);
+  const productId = productIdMatch ? productIdMatch[1] : 'unknown';
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Cookie': 'adc=1',
+      },
+    });
+
+    if (!response.ok) {
+      return { success: false, isNew: false, isUpdated: false, isSkipped: false, error: `HTTP ${response.status}` };
+    }
+
+    const html = await response.text();
+    const mgsProduct = parseMgsProductPage(html, url);
+
+    if (!mgsProduct) {
+      return { success: false, isNew: false, isUpdated: false, isSkipped: false, error: 'Failed to parse' };
+    }
+
+    mgsProduct.productType = productType;
+
+    // saveProductの結果を取得するためにstatsオブジェクトを使用
+    const stats: CrawlStats = {
+      totalFetched: 0,
+      newProducts: 0,
+      updatedProducts: 0,
+      skippedUnchanged: 0,
+      errors: 0,
+    };
+
+    await saveProduct(mgsProduct, html, enableAI, stats);
+
+    return {
+      success: stats.errors === 0,
+      isNew: stats.newProducts > 0,
+      isUpdated: stats.updatedProducts > 0,
+      isSkipped: stats.skippedUnchanged > 0,
+    };
+
+  } catch (error) {
+    return { success: false, isNew: false, isUpdated: false, isSkipped: false, error: String(error) };
+  }
+}
+
+/**
+ * 並列でバッチ処理
+ */
+async function processBatchParallel(
+  urls: string[],
+  productType: MgsProductType,
+  enableAI: boolean,
+  stats: CrawlStats,
+  startIndex: number,
+  totalCount: number,
+): Promise<void> {
+  const chunks = chunkArray(urls, CONCURRENCY);
+
+  for (let chunkIdx = 0; chunkIdx < chunks.length; chunkIdx++) {
+    const chunk = chunks[chunkIdx];
+    const chunkStartIdx = startIndex + chunkIdx * CONCURRENCY;
+
+    // 並列実行
+    const results = await Promise.all(
+      chunk.map(async (url, idx) => {
+        const globalIdx = chunkStartIdx + idx + 1;
+        const productIdMatch = url.match(/product_detail\/([^\/]+)/);
+        const productId = productIdMatch ? productIdMatch[1] : 'unknown';
+
+        const result = await crawlSingleProduct(url, productType, enableAI);
+
+        // 結果をログ出力
+        if (result.success) {
+          if (result.isNew) {
+            console.log(`  [${globalIdx}/${totalCount}] ${productId} ✓ New`);
+          } else if (result.isUpdated) {
+            console.log(`  [${globalIdx}/${totalCount}] ${productId} ✓ Updated`);
+          } else if (result.isSkipped) {
+            console.log(`  [${globalIdx}/${totalCount}] ${productId} ⏭️ Skipped`);
+          }
+        } else {
+          console.log(`  [${globalIdx}/${totalCount}] ${productId} ⚠️ ${result.error}`);
+        }
+
+        return result;
+      })
+    );
+
+    // 統計を集計
+    for (const result of results) {
+      stats.totalFetched++;
+      if (result.isNew) stats.newProducts++;
+      if (result.isUpdated) stats.updatedProducts++;
+      if (result.isSkipped) stats.skippedUnchanged++;
+      if (!result.success) stats.errors++;
+    }
+
+    // バッチ間の待機（レート制限）
+    if (chunkIdx < chunks.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+    }
+  }
+}
 
 interface MgsProduct {
   productId: string;
@@ -319,8 +456,9 @@ async function runCategoryCrawl(
       const newUrls = Array.from(seenUrls).filter(url => !allProcessedUrls.has(url));
       console.log(`\n  📦 Unique URLs for ${category.name}: ${seenUrls.size}`);
       console.log(`  📦 New URLs (excluding previous): ${newUrls.length}`);
+      console.log(`  🚀 Processing with ${CONCURRENCY} parallel workers...`);
 
-      // 各商品をクロール
+      // 各商品をクロール（並列処理）
       const stats: CrawlStats = {
         totalFetched: 0,
         newProducts: 0,
@@ -329,52 +467,20 @@ async function runCategoryCrawl(
         errors: 0,
       };
 
-      for (let i = 0; i < newUrls.length; i++) {
-        const url = newUrls[i];
+      // URLを処理済みとしてマーク
+      for (const url of newUrls) {
         allProcessedUrls.add(url);
-
-        const productIdMatch = url.match(/product_detail\/([^\/]+)/);
-        const productId = productIdMatch ? productIdMatch[1] : 'unknown';
-
-        console.log(`  [${i + 1}/${newUrls.length}] ${productId}`);
-        stats.totalFetched++;
-
-        try {
-          const response = await fetch(url, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Cookie': 'adc=1',
-            },
-          });
-
-          if (!response.ok) {
-            console.log(`      ⚠️ HTTP ${response.status}`);
-            stats.errors++;
-            continue;
-          }
-
-          const html = await response.text();
-          const mgsProduct = parseMgsProductPage(html, url);
-
-          if (!mgsProduct) {
-            console.log(`      ⚠️ Failed to parse`);
-            stats.errors++;
-            continue;
-          }
-
-          // カテゴリからproductTypeを設定
-          mgsProduct.productType = category.type as MgsProductType;
-
-          await saveProduct(mgsProduct, html, enableAI, stats);
-
-          // レート制限
-          await new Promise(resolve => setTimeout(resolve, 800));
-
-        } catch (error) {
-          console.error(`      ❌ Error:`, error);
-          stats.errors++;
-        }
       }
+
+      // 並列処理でクロール
+      await processBatchParallel(
+        newUrls,
+        category.type as MgsProductType,
+        enableAI,
+        stats,
+        0,
+        newUrls.length,
+      );
 
       // 統計を累積
       overallStats.totalFetched += stats.totalFetched;
@@ -430,6 +536,7 @@ async function runCategoryCrawl(
 
         const newUrls = Array.from(seenUrls).filter(url => !allProcessedUrls.has(url));
         console.log(`\n  📦 New URLs for ${channel.name}: ${newUrls.length}`);
+        console.log(`  🚀 Processing with ${CONCURRENCY} parallel workers...`);
 
         const stats: CrawlStats = {
           totalFetched: 0,
@@ -439,50 +546,20 @@ async function runCategoryCrawl(
           errors: 0,
         };
 
-        for (let i = 0; i < newUrls.length; i++) {
-          const url = newUrls[i];
+        // URLを処理済みとしてマーク
+        for (const url of newUrls) {
           allProcessedUrls.add(url);
-
-          const productIdMatch = url.match(/product_detail\/([^\/]+)/);
-          const productId = productIdMatch ? productIdMatch[1] : 'unknown';
-
-          console.log(`  [${i + 1}/${newUrls.length}] ${productId}`);
-          stats.totalFetched++;
-
-          try {
-            const response = await fetch(url, {
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Cookie': 'adc=1',
-              },
-            });
-
-            if (!response.ok) {
-              console.log(`      ⚠️ HTTP ${response.status}`);
-              stats.errors++;
-              continue;
-            }
-
-            const html = await response.text();
-            const mgsProduct = parseMgsProductPage(html, url);
-
-            if (!mgsProduct) {
-              console.log(`      ⚠️ Failed to parse`);
-              stats.errors++;
-              continue;
-            }
-
-            // 月額チャンネルはmonthlyタイプ
-            mgsProduct.productType = 'monthly';
-
-            await saveProduct(mgsProduct, html, enableAI, stats);
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-          } catch (error) {
-            console.error(`      ❌ Error:`, error);
-            stats.errors++;
-          }
         }
+
+        // 並列処理でクロール
+        await processBatchParallel(
+          newUrls,
+          'monthly',
+          enableAI,
+          stats,
+          0,
+          newUrls.length,
+        );
 
         overallStats.totalFetched += stats.totalFetched;
         overallStats.newProducts += stats.newProducts;
@@ -1333,8 +1410,9 @@ async function runFullScan(
       // 重複を除外
       const newUrls = seriesUrls.filter(url => !allProcessedUrls.has(url));
       console.log(`  📊 New URLs (excluding duplicates): ${newUrls.length}`);
+      console.log(`  🚀 Processing with ${CONCURRENCY} parallel workers...`);
 
-      // 各商品をクロール
+      // 各商品をクロール（並列処理）
       const stats: CrawlStats = {
         totalFetched: 0,
         newProducts: 0,
@@ -1343,49 +1421,20 @@ async function runFullScan(
         errors: 0,
       };
 
-      for (let i = 0; i < newUrls.length; i++) {
-        const url = newUrls[i];
+      // URLを処理済みとしてマーク
+      for (const url of newUrls) {
         allProcessedUrls.add(url);
-
-        const productIdMatch = url.match(/product_detail\/([^\/]+)/);
-        const productId = productIdMatch ? productIdMatch[1] : 'unknown';
-
-        console.log(`  [${i + 1}/${newUrls.length}] ${productId}`);
-        stats.totalFetched++;
-
-        try {
-          const response = await fetch(url, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Cookie': 'adc=1',
-            },
-          });
-
-          if (!response.ok) {
-            console.log(`      ⚠️ HTTP ${response.status}`);
-            stats.errors++;
-            continue;
-          }
-
-          const html = await response.text();
-          const mgsProduct = parseMgsProductPage(html, url);
-
-          if (!mgsProduct) {
-            console.log(`      ⚠️ Failed to parse`);
-            stats.errors++;
-            continue;
-          }
-
-          await saveProduct(mgsProduct, html, enableAI, stats);
-
-          // レート制限
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-        } catch (error) {
-          console.error(`      ❌ Error:`, error);
-          stats.errors++;
-        }
       }
+
+      // 並列処理でクロール（フルスキャンはhaishinタイプとして扱う）
+      await processBatchParallel(
+        newUrls,
+        'haishin',
+        enableAI,
+        stats,
+        0,
+        newUrls.length,
+      );
 
       // シリーズ統計を累積
       overallStats.totalFetched += stats.totalFetched;
@@ -1493,50 +1542,18 @@ async function main() {
   }
 
   const productUrls = allProductUrls.slice(0, limit);
-  console.log(`\n📦 Total products to process: ${productUrls.length}\n`);
+  console.log(`\n📦 Total products to process: ${productUrls.length}`);
+  console.log(`🚀 Processing with ${CONCURRENCY} parallel workers...\n`);
 
-  // 各商品をクロール
-  for (let i = 0; i < productUrls.length; i++) {
-    const url = productUrls[i];
-    const productIdMatch = url.match(/product_detail\/([^\/]+)/);
-    const productId = productIdMatch ? productIdMatch[1] : 'unknown';
-
-    console.log(`[${i + 1}/${productUrls.length}] ${productId}`);
-    stats.totalFetched++;
-
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Cookie': 'adc=1',
-        },
-      });
-
-      if (!response.ok) {
-        console.log(`    ⚠️ HTTP ${response.status}`);
-        stats.errors++;
-        continue;
-      }
-
-      const html = await response.text();
-      const mgsProduct = parseMgsProductPage(html, url);
-
-      if (!mgsProduct) {
-        console.log(`    ⚠️ Failed to parse`);
-        stats.errors++;
-        continue;
-      }
-
-      await saveProduct(mgsProduct, html, enableAI, stats);
-
-      // レート制限
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-    } catch (error) {
-      console.error(`    ❌ Error:`, error);
-      stats.errors++;
-    }
-  }
+  // 各商品をクロール（並列処理）
+  await processBatchParallel(
+    productUrls,
+    'haishin',
+    enableAI,
+    stats,
+    0,
+    productUrls.length,
+  );
 
   console.log('\n=== Crawl Complete ===\n');
   console.log('Statistics:');

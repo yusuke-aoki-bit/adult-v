@@ -19,7 +19,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@adult-v/shared": ["./packages/shared/src/index.ts"],
+      "@adult-v/shared/*": ["./packages/shared/src/*"],
+      "@adult-v/database": ["./packages/database/src/index.ts"],
+      "@adult-v/database/*": ["./packages/database/src/*"]
     }
   },
   "include": [

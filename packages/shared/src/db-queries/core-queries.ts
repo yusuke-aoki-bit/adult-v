@@ -167,8 +167,7 @@ export interface BatchSourceData {
 export interface BatchRelatedDataResult {
   performersMap: Map<number, BatchPerformerData[]>;
   tagsMap: Map<number, BatchTagData[]>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sourcesMap: Map<number, any>;
+  sourcesMap: Map<number, BatchSourceData | undefined>;
   /** 全ソースのマップ（alternativeSources生成用） */
   allSourcesMap: Map<number, BatchSourceData[]>;
   imagesMap: Map<number, BatchImageData[]>;

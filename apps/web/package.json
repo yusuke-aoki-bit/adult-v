@@ -12,7 +12,6 @@
   "dependencies": {
     "@adult-v/database": "workspace:*",
     "@adult-v/shared": "workspace:*",
-    "@adult-v/ui-common": "workspace:*",
     "@google-analytics/data": "^4.0.0",
     "@google-cloud/storage": "^7.0.0",
     "@google/generative-ai": "^0.21.0",

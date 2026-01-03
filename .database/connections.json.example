@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "connections": [
+    {
+      "id": "google-cloud-sql",
+      "name": "Google Cloud SQL",
+      "driver": "PostgreSQL",
+      "host": "localhost",
+      "port": 5432,
+      "database": "your-database-name",
+      "username": "your-username",
+      "password": "your-password",
+      "ssl": {
+        "mode": "prefer",
+        "rejectUnauthorized": false
+      },
+      "comment": "Cloud SQL Proxy経由で接続する場合はhost: localhost, port: プロキシのポート（通常5432）を使用"
+    },
+    {
+      "id": "google-cloud-sql-direct",
+      "name": "Google Cloud SQL (Direct)",
+      "driver": "PostgreSQL",
+      "host": "your-instance-ip",
+      "port": 5432,
+      "database": "your-database-name",
+      "username": "your-username",
+      "password": "your-password",
+      "ssl": {
+        "mode": "require",
+        "rejectUnauthorized": false,
+        "ca": "",
+        "cert": "",
+        "key": ""
+      },
+      "comment": "パブリックIP経由で直接接続する場合（SSL証明書が必要な場合があります）"
+    }
+  ]
+}

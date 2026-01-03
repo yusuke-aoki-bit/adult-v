@@ -48,20 +48,11 @@ COPY scripts/generate-product-reviews.ts ./scripts/
 COPY scripts/generate-performer-aliases.ts ./scripts/
 COPY scripts/generate-performer-aliases-batch.ts ./scripts/
 COPY scripts/update-performer-tags.ts ./scripts/
-COPY scripts/run-performer-tags-all.ts ./scripts/
 COPY scripts/run-mgs-continuous.ts ./scripts/
 COPY scripts/run-fanza-continuous.ts ./scripts/
 COPY scripts/link-performers.ts ./scripts/
-COPY scripts/migrate-raw-html-to-gcs.ts ./scripts/
-COPY scripts/update-minnano-details.ts ./scripts/
 COPY scripts/db-stats.ts ./scripts/
-COPY scripts/analyze-wiki-product-codes.ts ./scripts/
-COPY scripts/run-ai-review-migration.ts ./scripts/
-COPY scripts/check-prices-table.ts ./scripts/
-COPY scripts/run-prices-migration.ts ./scripts/
-COPY scripts/fix-malformed-image-urls.ts ./scripts/
 COPY scripts/crawlers/ ./scripts/crawlers/
-COPY scripts/backfill/ ./scripts/backfill/
 
 # Copy apps/web/lib for scripts that reference ../lib from scripts/
 COPY apps/web/lib/ ./lib/

@@ -5,29 +5,6 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { localizedHref, locales, defaultLocale, type Locale } from '../../i18n';
 
-// フォールバック用: GSCデータがない場合の静的リスト
-const FALLBACK_ACTRESSES = [
-  { id: 61646, name: '新城由衣' },
-  { id: 61645, name: '緒方千乃' },
-  { id: 20898, name: '羽田真里' },
-  { id: 25188, name: '仲間あずみ' },
-  { id: 66312, name: '白杞りり' },
-  { id: 30618, name: '吉岡蓮美' },
-  { id: 14631, name: '青木桃' },
-  { id: 47684, name: '森田みゆ' },
-];
-
-const FALLBACK_GENRES = [
-  { id: 1, name: '巨乳' },
-  { id: 2, name: '美少女' },
-  { id: 3, name: '人妻' },
-  { id: 4, name: '熟女' },
-  { id: 5, name: 'OL' },
-  { id: 6, name: '制服' },
-  { id: 7, name: 'ギャル' },
-  { id: 8, name: 'ナース' },
-];
-
 interface FooterActress {
   id: number;
   name: string;
@@ -45,8 +22,10 @@ interface FooterLinksData {
 }
 
 // カスタムフック: フッター女優データを取得（キャッシュ付き）
-function useFooterActresses(): FooterActress[] {
-  const [actresses, setActresses] = useState<FooterActress[]>(FALLBACK_ACTRESSES);
+// Hydration対策: isReadyがtrueになるまでレンダリングしない
+function useFooterActresses(): { actresses: FooterActress[]; isReady: boolean } {
+  const [actresses, setActresses] = useState<FooterActress[]>([]);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     // APIからデータを取得（1時間キャッシュ）
@@ -62,22 +41,26 @@ function useFooterActresses(): FooterActress[] {
           }
         }
       } catch {
-        // エラー時はフォールバックを維持
+        // エラー時は空配列を維持
+      } finally {
+        setIsReady(true);
       }
     };
     fetchData();
   }, []);
 
-  return actresses;
+  return { actresses, isReady };
 }
 
 // カスタムフック: フッター内部リンクデータを取得
-function useFooterLinks(): FooterLinksData {
+// Hydration対策: isReadyがtrueになるまでレンダリングしない
+function useFooterLinks(): { links: FooterLinksData; isReady: boolean } {
   const [links, setLinks] = useState<FooterLinksData>({
-    genres: FALLBACK_GENRES,
+    genres: [],
     series: [],
     makers: [],
   });
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,19 +71,21 @@ function useFooterLinks(): FooterLinksData {
         if (res.ok) {
           const data = await res.json();
           setLinks({
-            genres: data.genres?.length > 0 ? data.genres : FALLBACK_GENRES,
+            genres: data.genres || [],
             series: data.series || [],
             makers: data.makers || [],
           });
         }
       } catch {
-        // エラー時はフォールバックを維持
+        // エラー時は空配列を維持
+      } finally {
+        setIsReady(true);
       }
     };
     fetchData();
   }, []);
 
-  return links;
+  return { links, isReady };
 }
 
 // 共通翻訳インターフェース
@@ -159,8 +144,8 @@ export function FooterBase({
   const locale = (hlParam && locales.includes(hlParam as Locale) ? hlParam : defaultLocale) as string;
   const t = getTranslation(locale);
 
-  const actresses = useFooterActresses();
-  const footerLinks = useFooterLinks();
+  const { actresses, isReady: actressesReady } = useFooterActresses();
+  const { links: footerLinks, isReady: linksReady } = useFooterLinks();
 
   const gridCols = columns === 4
     ? 'grid-cols-1 md:grid-cols-4'
@@ -179,7 +164,7 @@ export function FooterBase({
           </div>
 
           {/* 人気女優リンク（SEO用内部リンク強化・GSCデータで動的更新） */}
-          {showActressList && t.popularActresses && (
+          {showActressList && t.popularActresses && actressesReady && actresses.length > 0 && (
             <div>
               <h3 className="theme-footer-heading font-semibold mb-3">{t.popularActresses}</h3>
               <ul className="space-y-1.5 text-sm">
@@ -198,7 +183,7 @@ export function FooterBase({
           )}
 
           {/* 人気ジャンルリンク（SEO内部リンク強化） */}
-          {showInternalLinks && (
+          {showInternalLinks && linksReady && footerLinks.genres.length > 0 && (
             <div>
               <h3 className="theme-footer-heading font-semibold mb-3">
                 {t.popularGenres || (locale === 'ja' ? '人気ジャンル' : 'Popular Genres')}
@@ -256,7 +241,7 @@ export function FooterBase({
         </div>
 
         {/* 人気シリーズ・メーカーセクション（SEO内部リンク強化） */}
-        {showInternalLinks && (footerLinks.series.length > 0 || footerLinks.makers.length > 0) && (
+        {showInternalLinks && linksReady && (footerLinks.series.length > 0 || footerLinks.makers.length > 0) && (
           <div className="border-t theme-footer-border mt-6 pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 人気シリーズ */}

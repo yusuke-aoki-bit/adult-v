@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
@@ -21,6 +21,8 @@ import { useViewingDiary } from '@/hooks';
 import type { DiaryEntry } from '@adult-v/shared/hooks';
 import { normalizeImageUrl } from '@/lib/image-utils';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
+import UserPreferenceProfileWrapper from '@/components/UserPreferenceProfileWrapper';
 
 const translations = {
   ja: {
@@ -318,6 +320,22 @@ function DiaryEntryCard({
   );
 }
 
+interface SaleProduct {
+  productId: number;
+  normalizedProductId: string | null;
+  title: string;
+  thumbnailUrl: string | null;
+  aspName: string;
+  affiliateUrl: string | null;
+  regularPrice: number;
+  salePrice: number;
+  discountPercent: number;
+  saleName: string | null;
+  saleType: string | null;
+  endAt: string | null;
+  performers: Array<{ id: number; name: string }>;
+}
+
 export default function DiaryPage() {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
@@ -333,6 +351,24 @@ export default function DiaryPage() {
 
   const [activeTab, setActiveTab] = useState<'history' | 'stats'>('history');
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
+
+  // PageLayout用のデータ
+  const [saleProducts, setSaleProducts] = useState<SaleProduct[]>([]);
+  const [uncategorizedCount, setUncategorizedCount] = useState(0);
+
+  useEffect(() => {
+    // セール商品を取得
+    fetch('/api/products/on-sale?limit=24&minDiscount=30')
+      .then(res => res.json())
+      .then(data => setSaleProducts(data.products || []))
+      .catch(() => {});
+
+    // 未整理商品数を取得
+    fetch('/api/products/uncategorized-count')
+      .then(res => res.json())
+      .then(data => setUncategorizedCount(data.count || 0))
+      .catch(() => {});
+  }, []);
 
   // 年間統計
   const yearStats = useMemo(() => {
@@ -354,20 +390,37 @@ export default function DiaryPage() {
     return `${mins}${t.minutes}`;
   };
 
+  // PageLayout用の翻訳
+  const layoutTranslations = {
+    viewProductList: '作品一覧',
+    viewProductListDesc: '全ての配信サイトの作品を横断検索',
+    uncategorizedBadge: '未整理',
+    uncategorizedDescription: '未整理作品',
+    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
+  };
+
   if (isLoading) {
     return <DiarySkeleton />;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* ヘッダー */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-          <BookOpen className="h-8 w-8 text-rose-600" />
-          {t.title}
-        </h1>
-        <p className="text-gray-400">{t.subtitle}</p>
-      </div>
+    <div className="theme-body min-h-screen">
+      {/* 上部セクション（セール中・最近見た作品） */}
+      <section className="py-3 sm:py-4">
+        <div className="container mx-auto px-3 sm:px-4">
+          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-8">
+        {/* ヘッダー */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+            <BookOpen className="h-8 w-8 text-rose-600" />
+            {t.title}
+          </h1>
+          <p className="text-gray-400">{t.subtitle}</p>
+        </div>
 
       {/* タブ */}
       <div className="flex gap-2 mb-6">
@@ -420,6 +473,9 @@ export default function DiaryPage() {
 
           {/* サイドバー統計 */}
           <div className="space-y-4">
+            {/* あなたの好みプロファイル */}
+            <UserPreferenceProfileWrapper locale={locale} />
+
             {/* 概要カード */}
             <div className="bg-gray-800 rounded-lg p-4">
               <h3 className="text-white font-medium mb-4 flex items-center gap-2">
@@ -603,6 +659,20 @@ export default function DiaryPage() {
           </div>
         </div>
       )}
+      </div>
+
+      {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}
+      <section className="py-3 sm:py-4">
+        <div className="container mx-auto px-3 sm:px-4">
+          <TopPageLowerSections
+            locale={locale}
+            uncategorizedCount={uncategorizedCount}
+            isTopPage={false}
+            isFanzaSite={false}
+            translations={layoutTranslations}
+          />
+        </div>
+      </section>
     </div>
   );
 }

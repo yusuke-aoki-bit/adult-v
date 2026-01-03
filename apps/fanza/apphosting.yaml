@@ -89,3 +89,6 @@ env:
     secret: upstash-redis-url
   - variable: UPSTASH_REDIS_REST_TOKEN
     secret: upstash-redis-token
+  # Gemini API Key for LLM features
+  - variable: GEMINI_API_KEY
+    secret: gemini-api-key
