@@ -3,8 +3,8 @@
 export default function ProductCardSkeleton() {
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse border border-gray-200">
-      {/* 画像プレースホルダー */}
-      <div className="relative bg-linear-to-br from-gray-200 to-gray-100" style={{ aspectRatio: '3/4' }} />
+      {/* 画像プレースホルダー - ProductCardBase(full)と同じ高さ */}
+      <div className="relative bg-linear-to-br from-gray-200 to-gray-100" style={{ height: '18rem' }} />
 
       {/* テキストプレースホルダー */}
       <div className="p-4 space-y-3">
