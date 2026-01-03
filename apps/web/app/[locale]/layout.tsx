@@ -12,7 +12,8 @@ import AgeVerification from '@/components/AgeVerification';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import ScrollToTop from '@/components/ScrollToTop';
 import NavigationProgress from '@/components/NavigationProgress';
-import { FirebaseProvider } from '@adult-v/shared/components';
+import { FirebaseProvider, OfflineIndicator } from '@adult-v/shared/components';
+import { SiteThemeProvider } from '@adult-v/shared/contexts';
 import { JsonLD } from '@/components/JsonLD';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import { Metadata } from 'next';
@@ -70,23 +71,26 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <SiteProvider mode={siteMode}>
-        <FavoritesProvider>
-          <ToastProvider>
-            <FirebaseProvider>
-              <Suspense fallback={null}>
-                <NavigationProgress />
-              </Suspense>
-              <JsonLD data={webSiteSchema} />
-              <JsonLD data={organizationSchema} />
-              <PerformanceMonitor />
-              <AgeVerification locale={locale} initialVerified={ageVerified}>
-                {children}
-              </AgeVerification>
-              <ScrollToTop />
-              <ChatBotWrapper locale={locale} />
-            </FirebaseProvider>
-          </ToastProvider>
-        </FavoritesProvider>
+        <SiteThemeProvider theme="dark" primaryColor="rose">
+          <FavoritesProvider>
+            <ToastProvider>
+              <FirebaseProvider>
+                <Suspense fallback={null}>
+                  <NavigationProgress />
+                </Suspense>
+                <JsonLD data={webSiteSchema} />
+                <JsonLD data={organizationSchema} />
+                <PerformanceMonitor />
+                <AgeVerification locale={locale} initialVerified={ageVerified}>
+                  {children}
+                </AgeVerification>
+                <ScrollToTop />
+                <OfflineIndicator locale={locale} />
+                <ChatBotWrapper locale={locale} />
+              </FirebaseProvider>
+            </ToastProvider>
+          </FavoritesProvider>
+        </SiteThemeProvider>
       </SiteProvider>
     </NextIntlClientProvider>
   );

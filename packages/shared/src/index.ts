@@ -3,6 +3,9 @@
 // Types
 export * from './types/index';
 
+// Contexts
+export * from './contexts';
+
 // Providers
 export * from './providers';
 export * from './provider-utils';

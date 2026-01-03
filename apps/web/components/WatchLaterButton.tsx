@@ -1,7 +1,6 @@
 'use client';
 
-import { useWatchLater } from '@adult-v/shared/hooks';
-import SharedWatchLaterButton from '@adult-v/shared/components/WatchLaterButton';
+import { ConnectedWatchLaterButton } from '@adult-v/shared/components';
 
 interface WatchLaterButtonProps {
   productId: number | string;
@@ -20,32 +19,14 @@ export default function WatchLaterButton({
   size = 'md',
   className = '',
 }: WatchLaterButtonProps) {
-  const { hasItem, toggleItem, isLoaded } = useWatchLater();
-
-  const productIdStr = String(productId);
-  const isAdded = hasItem(productIdStr);
-
-  const handleToggle = () => {
-    toggleItem({
-      productId: productIdStr,
-      title,
-      thumbnail,
-      provider,
-    });
-  };
-
   return (
-    <SharedWatchLaterButton
+    <ConnectedWatchLaterButton
       productId={productId}
       title={title}
       thumbnail={thumbnail}
       provider={provider}
       size={size}
       className={className}
-      theme="dark"
-      isAdded={isAdded}
-      isLoaded={isLoaded}
-      onToggle={handleToggle}
     />
   );
 }

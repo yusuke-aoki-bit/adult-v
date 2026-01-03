@@ -18,3 +18,5 @@ export * from './useCompareList';
 export * from './useSwipeGesture';
 export * from './useHomeSections';
 export * from './useBulkSelection';
+export * from './useOnlineStatus';
+export * from './useKeyboardShortcuts';

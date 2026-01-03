@@ -1,8 +1,7 @@
 'use client';
 
-import { useFavorites } from '@adult-v/shared/hooks';
 import { useTranslations } from 'next-intl';
-import SharedFavoriteButton from '@adult-v/shared/components/FavoriteButton';
+import { ConnectedFavoriteButton } from '@adult-v/shared/components';
 
 interface FavoriteButtonProps {
   type: 'product' | 'actress';
@@ -26,23 +25,9 @@ export default function FavoriteButton({
   size = 'md',
 }: FavoriteButtonProps) {
   const t = useTranslations('favoriteButton');
-  const { isFavorite, toggleFavorite, isLoaded } = useFavorites();
-
-  const favorite = isFavorite(type, id);
-
-  const handleToggle = () => {
-    toggleFavorite({
-      type,
-      id,
-      title,
-      name,
-      thumbnail,
-      image,
-    });
-  };
 
   return (
-    <SharedFavoriteButton
+    <ConnectedFavoriteButton
       type={type}
       id={id}
       title={title}
@@ -51,11 +36,6 @@ export default function FavoriteButton({
       image={image}
       className={className}
       size={size}
-      isFavorite={favorite}
-      isLoaded={isLoaded}
-      onToggle={handleToggle}
-      theme="light"
-      primaryColor="pink"
       labels={{
         addToFavorites: t('addToFavorites'),
         removeFromFavorites: t('removeFromFavorites'),

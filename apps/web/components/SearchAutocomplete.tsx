@@ -12,6 +12,8 @@ const translations = {
     placeholder: '作品・女優・ジャンル・品番で検索...',
     searching: '検索中...',
     videos: '作品',
+    recentSearches: '最近の検索',
+    clearHistory: 'クリア',
     categories: {
       productId: '品番',
       actress: '女優',
@@ -24,6 +26,8 @@ const translations = {
     placeholder: 'Search products, actresses, genres, IDs...',
     searching: 'Searching...',
     videos: 'videos',
+    recentSearches: 'Recent Searches',
+    clearHistory: 'Clear',
     categories: {
       productId: 'ID',
       actress: 'Actress',
@@ -36,6 +40,8 @@ const translations = {
     placeholder: '搜索作品、女优、类型、编号...',
     searching: '搜索中...',
     videos: '部作品',
+    recentSearches: '最近搜索',
+    clearHistory: '清除',
     categories: {
       productId: '编号',
       actress: '女优',
@@ -48,6 +54,8 @@ const translations = {
     placeholder: '작품, 여배우, 장르, 제품번호 검색...',
     searching: '검색 중...',
     videos: '개 작품',
+    recentSearches: '최근 검색',
+    clearHistory: '삭제',
     categories: {
       productId: '제품번호',
       actress: '여배우',
@@ -57,6 +65,9 @@ const translations = {
     },
   },
 } as const;
+
+const RECENT_SEARCHES_KEY = 'adult-v-recent-searches';
+const MAX_RECENT_SEARCHES = 5;
 
 interface AutocompleteResult {
   type: 'product' | 'actress' | 'tag' | 'product_id';
@@ -85,10 +96,50 @@ export default function SearchAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showRecentSearches, setShowRecentSearches] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+      if (stored) {
+        setRecentSearches(JSON.parse(stored));
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, []);
+
+  // Save recent search
+  const saveRecentSearch = useCallback((searchQuery: string) => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed || trimmed.length < 2) return;
+
+    setRecentSearches((prev) => {
+      const updated = [trimmed, ...prev.filter((s) => s !== trimmed)].slice(0, MAX_RECENT_SEARCHES);
+      try {
+        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+      } catch {
+        // Ignore localStorage errors
+      }
+      return updated;
+    });
+  }, []);
+
+  // Clear recent searches
+  const clearRecentSearches = useCallback(() => {
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem(RECENT_SEARCHES_KEY);
+    } catch {
+      // Ignore
+    }
+  }, []);
 
   // Fetch autocomplete results
   useEffect(() => {
@@ -151,6 +202,8 @@ export default function SearchAutocomplete({
   const handleResultClick = useCallback(
     (result: AutocompleteResult) => {
       setIsOpen(false);
+      setShowRecentSearches(false);
+      saveRecentSearch(result.name);
       setQuery('');
 
       switch (result.type) {
@@ -166,6 +219,16 @@ export default function SearchAutocomplete({
           break;
       }
     },
+    [locale, router, saveRecentSearch]
+  );
+
+  // Handle recent search click
+  const handleRecentSearchClick = useCallback(
+    (searchQuery: string) => {
+      setQuery(searchQuery);
+      setShowRecentSearches(false);
+      router.push(`/${locale}/search?q=${encodeURIComponent(searchQuery)}`);
+    },
     [locale, router]
   );
 
@@ -173,8 +236,10 @@ export default function SearchAutocomplete({
     if (!isOpen || results.length === 0) {
       if (e.key === 'Enter' && query) {
         // Direct search on Enter without selection
+        saveRecentSearch(query);
         router.push(`/${locale}/search?q=${encodeURIComponent(query)}`);
         setIsOpen(false);
+        setShowRecentSearches(false);
       }
       return;
     }
@@ -193,12 +258,15 @@ export default function SearchAutocomplete({
         if (selectedIndex >= 0) {
           handleResultClick(results[selectedIndex]);
         } else if (query) {
+          saveRecentSearch(query);
           router.push(`/${locale}/search?q=${encodeURIComponent(query)}`);
           setIsOpen(false);
+          setShowRecentSearches(false);
         }
         break;
       case 'Escape':
         setIsOpen(false);
+        setShowRecentSearches(false);
         setSelectedIndex(-1);
         break;
     }
@@ -208,9 +276,17 @@ export default function SearchAutocomplete({
     setQuery('');
     setResults([]);
     setIsOpen(false);
+    setShowRecentSearches(false);
     setSelectedIndex(-1);
     inputRef.current?.focus();
   };
+
+  // Clock icon for recent searches
+  const ClockIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+    </svg>
+  );
 
   const getCategoryColor = (category?: string) => {
     switch (category) {
@@ -241,7 +317,11 @@ export default function SearchAutocomplete({
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            if (results.length > 0) setIsOpen(true);
+            if (results.length > 0) {
+              setIsOpen(true);
+            } else if (query.length < 2 && recentSearches.length > 0) {
+              setShowRecentSearches(true);
+            }
           }}
           placeholder={resolvedPlaceholder}
           className="block w-full pl-10 pr-10 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
@@ -256,6 +336,35 @@ export default function SearchAutocomplete({
         )}
       </div>
 
+      {/* Recent searches dropdown */}
+      {showRecentSearches && !isOpen && recentSearches.length > 0 && (
+        <div
+          ref={dropdownRef}
+          className="absolute z-50 w-full mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl"
+        >
+          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
+            <span className="text-sm text-gray-400">{t.recentSearches}</span>
+            <button
+              onClick={clearRecentSearches}
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              {t.clearHistory}
+            </button>
+          </div>
+          {recentSearches.map((search, index) => (
+            <div
+              key={index}
+              onClick={() => handleRecentSearchClick(search)}
+              className="px-4 py-3 cursor-pointer hover:bg-gray-700 transition-colors flex items-center gap-3"
+            >
+              <ClockIcon />
+              <span className="text-white truncate">{search}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Autocomplete results dropdown */}
       {isOpen && (results.length > 0 || isLoading) && (
         <div
           ref={dropdownRef}

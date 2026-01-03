@@ -1,7 +1,6 @@
 'use client';
 
-import { usePriceAlerts } from '@adult-v/shared/hooks';
-import SharedPriceAlertButton from '@adult-v/shared/components/PriceAlertButton';
+import { ConnectedPriceAlertButton } from '@adult-v/shared/components';
 
 interface PriceAlertButtonProps {
   productId: string | number;
@@ -22,42 +21,15 @@ export default function PriceAlertButton({
   size = 'md',
   locale = 'ja',
 }: PriceAlertButtonProps) {
-  const { hasAlert, getAlert, addAlert, removeAlert } = usePriceAlerts();
-
-  const productIdStr = String(productId);
-  const alert = getAlert(productIdStr);
-
-  const handleSetAlert = (targetPrice: number) => {
-    addAlert({
-      productId: productIdStr,
-      normalizedProductId: productIdStr,
-      title,
-      thumbnailUrl: thumbnail,
-      currentPrice: currentPrice || 0,
-      targetPrice,
-      notifyOnAnySale: true,
-    });
-  };
-
-  const handleRemoveAlert = () => {
-    removeAlert(productIdStr);
-  };
-
   return (
-    <SharedPriceAlertButton
+    <ConnectedPriceAlertButton
       productId={productId}
       title={title}
       thumbnail={thumbnail}
       provider={provider}
       currentPrice={currentPrice}
-      hasAlert={hasAlert(productIdStr)}
-      existingTargetPrice={alert?.targetPrice}
-      isLoaded={true}
       size={size}
-      theme="light"
       locale={locale}
-      onSetAlert={handleSetAlert}
-      onRemoveAlert={handleRemoveAlert}
     />
   );
 }

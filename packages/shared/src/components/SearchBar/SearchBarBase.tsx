@@ -8,7 +8,7 @@ export const searchBarTranslations = {
     actressPlaceholder: '女優名・プロフィールで検索...',
     productPlaceholder: '作品名・作品ID・説明文で検索...',
     aiPlaceholder: 'AIに聞く：「巨乳の人妻作品」など自然な言葉で...',
-    shortcutHint: '/ キーで検索',
+    shortcutHint: 'Ctrl+K',
     clear: 'クリア',
     aiMode: 'AI',
     normalMode: '通常',
@@ -18,7 +18,7 @@ export const searchBarTranslations = {
     actressPlaceholder: 'Search by actress name or profile...',
     productPlaceholder: 'Search by title, product ID, or description...',
     aiPlaceholder: 'Ask AI: "busty married woman videos" etc...',
-    shortcutHint: 'Press / to search',
+    shortcutHint: 'Ctrl+K',
     clear: 'Clear',
     aiMode: 'AI',
     normalMode: 'Normal',
@@ -28,7 +28,7 @@ export const searchBarTranslations = {
     actressPlaceholder: '按女优名称或简介搜索...',
     productPlaceholder: '按标题、产品ID或描述搜索...',
     aiPlaceholder: '问AI："巨乳人妻作品"等自然语言...',
-    shortcutHint: '按 / 键搜索',
+    shortcutHint: 'Ctrl+K',
     clear: '清除',
     aiMode: 'AI',
     normalMode: '普通',
@@ -38,7 +38,7 @@ export const searchBarTranslations = {
     actressPlaceholder: '여배우 이름 또는 프로필로 검색...',
     productPlaceholder: '제목, 제품 ID 또는 설명으로 검색...',
     aiPlaceholder: 'AI에게 물어보세요: "거유 유부녀 작품" 등...',
-    shortcutHint: '/ 키로 검색',
+    shortcutHint: 'Ctrl+K',
     clear: '지우기',
     aiMode: 'AI',
     normalMode: '일반',
@@ -104,11 +104,26 @@ export function SearchBarBase({ theme, locale, onActressSearch, onProductSearch,
   const actressDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const productDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Keyboard shortcut (/ key to focus search)
+  // Keyboard shortcuts (/ or Ctrl+K to focus search)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      const isInputElement = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+      // Ctrl+K / Cmd+K: 入力欄でも発火
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        if (isAiMode && aiInputRef.current) {
+          aiInputRef.current.focus();
+        } else if (actressInputRef.current) {
+          actressInputRef.current.focus();
+        }
+        setShowShortcutHint(false);
+        return;
+      }
+
+      // / キー: 入力欄では発火しない
+      if (isInputElement) {
         return;
       }
 

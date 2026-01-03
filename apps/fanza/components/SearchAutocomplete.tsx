@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Search, X } from 'lucide-react';
 import { useDebounce } from '@adult-v/shared/hooks';
-import { localizedHref } from '@adult-v/shared/i18n';
 
 // Client-side translations
 const translations = {
@@ -13,6 +12,8 @@ const translations = {
     placeholder: '作品・女優・ジャンル・品番で検索...',
     searching: '検索中...',
     videos: '作品',
+    recentSearches: '最近の検索',
+    clearHistory: 'クリア',
     categories: {
       productId: '品番',
       actress: '女優',
@@ -25,6 +26,8 @@ const translations = {
     placeholder: 'Search products, actresses, genres, IDs...',
     searching: 'Searching...',
     videos: 'videos',
+    recentSearches: 'Recent Searches',
+    clearHistory: 'Clear',
     categories: {
       productId: 'ID',
       actress: 'Actress',
@@ -37,6 +40,8 @@ const translations = {
     placeholder: '搜索作品、女优、类型、编号...',
     searching: '搜索中...',
     videos: '部作品',
+    recentSearches: '最近搜索',
+    clearHistory: '清除',
     categories: {
       productId: '编号',
       actress: '女优',
@@ -49,6 +54,8 @@ const translations = {
     placeholder: '작품, 여배우, 장르, 제품번호 검색...',
     searching: '검색 중...',
     videos: '개 작품',
+    recentSearches: '최근 검색',
+    clearHistory: '삭제',
     categories: {
       productId: '제품번호',
       actress: '여배우',
@@ -58,6 +65,9 @@ const translations = {
     },
   },
 } as const;
+
+const RECENT_SEARCHES_KEY = 'adult-v-recent-searches';
+const MAX_RECENT_SEARCHES = 5;
 
 interface AutocompleteResult {
   type: 'product' | 'actress' | 'tag' | 'product_id';
@@ -86,10 +96,50 @@ export default function SearchAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showRecentSearches, setShowRecentSearches] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+      if (stored) {
+        setRecentSearches(JSON.parse(stored));
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, []);
+
+  // Save recent search
+  const saveRecentSearch = useCallback((searchQuery: string) => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed || trimmed.length < 2) return;
+
+    setRecentSearches((prev) => {
+      const updated = [trimmed, ...prev.filter((s) => s !== trimmed)].slice(0, MAX_RECENT_SEARCHES);
+      try {
+        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+      } catch {
+        // Ignore localStorage errors
+      }
+      return updated;
+    });
+  }, []);
+
+  // Clear recent searches
+  const clearRecentSearches = useCallback(() => {
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem(RECENT_SEARCHES_KEY);
+    } catch {
+      // Ignore
+    }
+  }, []);
 
   // Fetch autocomplete results
   useEffect(() => {
@@ -152,20 +202,32 @@ export default function SearchAutocomplete({
   const handleResultClick = useCallback(
     (result: AutocompleteResult) => {
       setIsOpen(false);
+      setShowRecentSearches(false);
+      saveRecentSearch(result.name);
       setQuery('');
 
       switch (result.type) {
         case 'product':
         case 'product_id':
-          router.push(localizedHref(`/products/${result.id}`, locale));
+          router.push(`/${locale}/products/${result.id}`);
           break;
         case 'actress':
-          router.push(localizedHref(`/actress/${result.id}`, locale));
+          router.push(`/${locale}/actress/${result.id}`);
           break;
         case 'tag':
-          router.push(localizedHref(`/search?tags=${result.id}`, locale));
+          router.push(`/${locale}/search?tags=${result.id}`);
           break;
       }
+    },
+    [locale, router, saveRecentSearch]
+  );
+
+  // Handle recent search click
+  const handleRecentSearchClick = useCallback(
+    (searchQuery: string) => {
+      setQuery(searchQuery);
+      setShowRecentSearches(false);
+      router.push(`/${locale}/search?q=${encodeURIComponent(searchQuery)}`);
     },
     [locale, router]
   );
@@ -174,8 +236,10 @@ export default function SearchAutocomplete({
     if (!isOpen || results.length === 0) {
       if (e.key === 'Enter' && query) {
         // Direct search on Enter without selection
-        router.push(localizedHref(`/search?q=${encodeURIComponent(query)}`, locale));
+        saveRecentSearch(query);
+        router.push(`/${locale}/search?q=${encodeURIComponent(query)}`);
         setIsOpen(false);
+        setShowRecentSearches(false);
       }
       return;
     }
@@ -194,12 +258,15 @@ export default function SearchAutocomplete({
         if (selectedIndex >= 0) {
           handleResultClick(results[selectedIndex]);
         } else if (query) {
-          router.push(localizedHref(`/search?q=${encodeURIComponent(query)}`, locale));
+          saveRecentSearch(query);
+          router.push(`/${locale}/search?q=${encodeURIComponent(query)}`);
           setIsOpen(false);
+          setShowRecentSearches(false);
         }
         break;
       case 'Escape':
         setIsOpen(false);
+        setShowRecentSearches(false);
         setSelectedIndex(-1);
         break;
     }
@@ -209,9 +276,17 @@ export default function SearchAutocomplete({
     setQuery('');
     setResults([]);
     setIsOpen(false);
+    setShowRecentSearches(false);
     setSelectedIndex(-1);
     inputRef.current?.focus();
   };
+
+  // Clock icon for recent searches
+  const ClockIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+    </svg>
+  );
 
   const getCategoryColor = (category?: string) => {
     switch (category) {
@@ -242,28 +317,61 @@ export default function SearchAutocomplete({
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            if (results.length > 0) setIsOpen(true);
+            if (results.length > 0) {
+              setIsOpen(true);
+            } else if (query.length < 2 && recentSearches.length > 0) {
+              setShowRecentSearches(true);
+            }
           }}
           placeholder={resolvedPlaceholder}
-          className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent"
+          className="block w-full pl-10 pr-10 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
         />
         {query && (
           <button
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-700"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
           >
             <X className="h-5 w-5" />
           </button>
         )}
       </div>
 
+      {/* Recent searches dropdown */}
+      {showRecentSearches && !isOpen && recentSearches.length > 0 && (
+        <div
+          ref={dropdownRef}
+          className="absolute z-50 w-full mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl"
+        >
+          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
+            <span className="text-sm text-gray-400">{t.recentSearches}</span>
+            <button
+              onClick={clearRecentSearches}
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              {t.clearHistory}
+            </button>
+          </div>
+          {recentSearches.map((search, index) => (
+            <div
+              key={index}
+              onClick={() => handleRecentSearchClick(search)}
+              className="px-4 py-3 cursor-pointer hover:bg-gray-700 transition-colors flex items-center gap-3"
+            >
+              <ClockIcon />
+              <span className="text-white truncate">{search}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Autocomplete results dropdown */}
       {isOpen && (results.length > 0 || isLoading) && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto"
+          className="absolute z-50 w-full mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-96 overflow-y-auto"
         >
           {isLoading ? (
-            <div className="px-4 py-3 text-center text-gray-500">
+            <div className="px-4 py-3 text-center text-gray-400">
               {t.searching}
             </div>
           ) : (
@@ -273,9 +381,9 @@ export default function SearchAutocomplete({
                 onClick={() => handleResultClick(result)}
                 className={`px-4 py-3 cursor-pointer transition-colors flex items-center gap-3 ${
                   index === selectedIndex
-                    ? 'bg-gray-100'
-                    : 'hover:bg-gray-50'
-                } ${index > 0 ? 'border-t border-gray-100' : ''}`}
+                    ? 'bg-gray-700'
+                    : 'hover:bg-gray-700'
+                } ${index > 0 ? 'border-t border-gray-700' : ''}`}
               >
                 {result.image && (
                   <div className="shrink-0">
@@ -299,10 +407,10 @@ export default function SearchAutocomplete({
                         {result.category}
                       </span>
                     )}
-                    <span className="text-gray-800 truncate">{result.name}</span>
+                    <span className="text-white truncate">{result.name}</span>
                   </div>
                   {result.count !== undefined && (
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-400 mt-1">
                       {result.count}{t.videos}
                     </div>
                   )}

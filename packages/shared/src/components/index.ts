@@ -4,6 +4,7 @@ export { default as ActressCardSkeleton, ActressCardSkeletonGrid } from './Actre
 // Favorite and interaction components
 export { default as ViewedButton } from './ViewedButton';
 export { default as FavoriteButton } from './FavoriteButton';
+export { default as ConnectedFavoriteButton } from './ConnectedFavoriteButton';
 
 // Cookie consent
 export { default as CookieConsent } from './CookieConsent';
@@ -219,6 +220,7 @@ export { default as PerformerOnSaleProducts } from './PerformerOnSaleProducts';
 
 // Watch Later button (shared between apps)
 export { default as WatchLaterButton } from './WatchLaterButton';
+export { default as ConnectedWatchLaterButton } from './ConnectedWatchLaterButton';
 
 // StickyCta (shared between apps)
 export { StickyCtaBase } from './StickyCta';
@@ -269,6 +271,7 @@ export { AiSearchBar } from './AiSearchBar';
 // Personalized recommendations (based on viewing history)
 export { PersonalizedRecommendations } from './PersonalizedRecommendations';
 export { default as RecommendationReason } from './RecommendationReason';
+export { default as ConnectedForYouRecommendations } from './ConnectedForYouRecommendations';
 
 // Also viewed (collaborative filtering)
 export { AlsoViewed } from './AlsoViewed';
@@ -286,6 +289,7 @@ export { default as CompareFloatingBar } from './CompareFloatingBar';
 
 // Price alert button (shared between apps)
 export { default as PriceAlertButton } from './PriceAlertButton';
+export { default as ConnectedPriceAlertButton } from './ConnectedPriceAlertButton';
 
 // Performer relation map (costar visualization)
 export { PerformerRelationMap } from './PerformerRelationMap';
@@ -343,3 +347,6 @@ export type {
   PublicListDetailProps,
   AddToListButtonProps,
 } from './PublicFavoriteLists';
+
+// Offline indicator
+export { OfflineIndicator } from './OfflineIndicator';

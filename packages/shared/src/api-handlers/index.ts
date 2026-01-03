@@ -116,3 +116,15 @@ export {
   createPublicFavoriteListItemsHandler,
   createPublicFavoriteListLikeHandler,
 } from './public-favorite-lists';
+
+// Footer Actresses handlers
+export type { FooterActressesHandlerDeps } from './footer-actresses';
+export { createFooterActressesHandler } from './footer-actresses';
+
+// Footer Links handlers
+export type { FooterLinksHandlerDeps } from './footer-links';
+export { createFooterLinksHandler } from './footer-links';
+
+// Sale Prediction handlers
+export type { SalePredictionHandlerDeps } from './sale-prediction';
+export { createSalePredictionHandler } from './sale-prediction';
