@@ -5,8 +5,8 @@
 # 使用方法: bash scripts/deploy/run-mgs-fanza-parallel.sh [--create-only] [--mgs-only] [--fanza-only]
 
 PROJECT=adult-v
-REGION=us-central1
-IMAGE=us-central1-docker.pkg.dev/adult-v/adult-v-crawlers/crawler:latest
+REGION=asia-northeast1
+IMAGE=asia-northeast1-docker.pkg.dev/adult-v/cloud-run-source-deploy/crawlers:latest
 
 CREATE_ONLY=false
 MGS_ONLY=false
