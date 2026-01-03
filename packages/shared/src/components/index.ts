@@ -356,3 +356,11 @@ export { SceneTimeline } from './SceneInfo';
 
 // Rookie ranking (new performers)
 export { RookieRanking } from './RookieRanking';
+
+// Performer comparison
+export { default as PerformerCompareFloatingBar } from './PerformerCompareFloatingBar';
+export { default as PerformerCompareButton } from './PerformerCompareButton';
+
+// List with selection (for bulk comparison)
+export { ProductListWithSelection } from './ProductListWithSelection';
+export { PerformerListWithSelection } from './PerformerListWithSelection';

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import ProductCard from '@/components/ProductCard';
 import { Pagination } from '@adult-v/shared/components';
+import ProductGridWithComparison from '@/components/ProductGridWithComparison';
 import ProductListFilter from '@/components/ProductListFilter';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -352,15 +352,11 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
                 queryParams={queryParams}
               />
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {products.map((product, index) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    priority={index < 6}
-                  />
-                ))}
-              </div>
+              <ProductGridWithComparison
+                products={products}
+                locale={locale}
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+              />
 
               {/* ページネーション（下部） */}
               <Pagination

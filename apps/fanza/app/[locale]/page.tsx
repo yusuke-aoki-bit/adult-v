@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
-import ActressCard from '@/components/ActressCard';
 import SortDropdown from '@/components/SortDropdown';
 import { Pagination } from '@adult-v/shared/components';
+import PerformerGridWithComparison from '@/components/PerformerGridWithComparison';
 import ActressListFilter from '@/components/ActressListFilter';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 import TopPageSectionNav from '@/components/TopPageSectionNav';
@@ -372,11 +372,11 @@ export default async function Home({ params, searchParams }: PageProps) {
             }}
           />
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-            {actresses.map((actress, index) => (
-              <ActressCard key={actress.id} actress={actress} compact priority={index < 6} />
-            ))}
-          </div>
+          <PerformerGridWithComparison
+            performers={actresses}
+            locale={locale}
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4"
+          />
 
           {/* ページネーション（下部） */}
           <Pagination
