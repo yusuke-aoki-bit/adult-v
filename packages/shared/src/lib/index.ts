@@ -29,5 +29,8 @@ export * from './cursor-pagination';
 // Note: google-apis has translateBatch/translateText which conflicts with translate.ts
 // Import directly from '@adult-v/shared/lib/google-apis' if needed
 
+// Push notification service
+export * from './push-notification-service';
+
 // Hooks
 export * from './hooks/useHeaderStats';

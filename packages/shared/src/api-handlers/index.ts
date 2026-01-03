@@ -132,3 +132,7 @@ export { createSalePredictionHandler } from './sale-prediction';
 // Rookie Performers handlers
 export type { RookiePerformersHandlerDeps, RookiePerformer } from './rookie-performers';
 export { createRookiePerformersHandler } from './rookie-performers';
+
+// Price Alerts handlers
+export type { PriceAlertsHandlerDeps, PriceAlertInput } from './price-alerts';
+export { createPriceAlertsHandler } from './price-alerts';

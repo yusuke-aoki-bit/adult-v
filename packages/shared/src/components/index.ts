@@ -291,6 +291,9 @@ export { default as CompareFloatingBar } from './CompareFloatingBar';
 export { default as PriceAlertButton } from './PriceAlertButton';
 export { default as ConnectedPriceAlertButton } from './ConnectedPriceAlertButton';
 
+// Purchase history importer
+export { default as PurchaseHistoryImporter } from './PurchaseHistoryImporter';
+
 // Performer relation map (costar visualization)
 export { PerformerRelationMap } from './PerformerRelationMap';
 

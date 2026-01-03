@@ -13,9 +13,11 @@ import {
   ChevronUp,
   AlertTriangle,
   CheckCircle2,
+  Upload,
 } from 'lucide-react';
 import { useBudgetTracker } from '@/hooks';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { PurchaseHistoryImporter } from '@adult-v/shared/components';
 
 const translations = {
   ja: {
@@ -38,6 +40,7 @@ const translations = {
     tips: '節約のヒント',
     waitForSale: 'セール中の作品をチェック',
     checkCostPerformance: 'コスパの良い作品を探す',
+    import: 'インポート',
   },
   en: {
     title: 'Monthly Budget',
@@ -59,6 +62,7 @@ const translations = {
     tips: 'Saving Tips',
     waitForSale: 'Check for sales',
     checkCostPerformance: 'Find value picks',
+    import: 'Import',
   },
   zh: {
     title: '本月预算',
@@ -80,6 +84,7 @@ const translations = {
     tips: '省钱技巧',
     waitForSale: '查看打折商品',
     checkCostPerformance: '寻找高性价比',
+    import: '导入',
   },
   ko: {
     title: '이번 달 예산',
@@ -101,6 +106,7 @@ const translations = {
     tips: '절약 팁',
     waitForSale: '세일 상품 확인',
     checkCostPerformance: '가성비 좋은 작품 찾기',
+    import: '가져오기',
   },
 } as const;
 
@@ -115,9 +121,11 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
     stats,
     isLoading,
     setMonthlyBudget,
+    importPurchases,
     removePurchase,
     clearPurchases,
   } = useBudgetTracker();
+  const [showImporter, setShowImporter] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [budgetInput, setBudgetInput] = useState(String(stats.monthlyBudget));
@@ -182,13 +190,23 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
           <Wallet className="w-5 h-5 text-green-500" />
           {t.title}
         </h3>
-        <button
-          onClick={handleToggleEdit}
-          className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-          aria-label={t.editBudget}
-        >
-          <Settings className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowImporter(true)}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            aria-label={t.import}
+            title={t.import}
+          >
+            <Upload className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleToggleEdit}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            aria-label={t.editBudget}
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Budget Edit Mode */}
@@ -374,6 +392,18 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
           </div>
         </div>
       </div>
+
+      {/* Import Modal */}
+      {showImporter && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <PurchaseHistoryImporter
+            locale={locale}
+            theme="light"
+            onImport={importPurchases}
+            onClose={() => setShowImporter(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

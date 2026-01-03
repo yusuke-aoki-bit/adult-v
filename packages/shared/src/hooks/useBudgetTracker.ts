@@ -81,19 +81,50 @@ export function useBudgetTracker() {
   }, [budgetData, saveBudgetData]);
 
   // Add purchase
-  const addPurchase = useCallback((productId: string, title: string, price: number) => {
+  const addPurchase = useCallback((productId: string, title: string, price: number, date?: string) => {
     const purchase: Purchase = {
       id: `${productId}-${Date.now()}`,
       productId,
       title,
       price,
-      date: new Date().toISOString(),
+      date: date || new Date().toISOString(),
     };
 
     saveBudgetData({
       ...budgetData,
       purchases: [...budgetData.purchases, purchase],
     });
+  }, [budgetData, saveBudgetData]);
+
+  // Import multiple purchases (for bulk import from DMM/FANZA)
+  const importPurchases = useCallback((purchasesToImport: Array<{
+    productId: string;
+    title: string;
+    price: number;
+    date: string;
+  }>) => {
+    const newPurchases: Purchase[] = purchasesToImport.map((p) => ({
+      id: `${p.productId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      productId: p.productId,
+      title: p.title,
+      price: p.price,
+      date: p.date,
+    }));
+
+    // Merge with existing purchases and remove duplicates by productId+date
+    const existingKeys = new Set(
+      budgetData.purchases.map(p => `${p.productId}-${p.date.split('T')[0]}`)
+    );
+    const uniqueNewPurchases = newPurchases.filter(
+      p => !existingKeys.has(`${p.productId}-${p.date.split('T')[0]}`)
+    );
+
+    saveBudgetData({
+      ...budgetData,
+      purchases: [...budgetData.purchases, ...uniqueNewPurchases],
+    });
+
+    return uniqueNewPurchases.length;
   }, [budgetData, saveBudgetData]);
 
   // Remove purchase
@@ -133,6 +164,7 @@ export function useBudgetTracker() {
     isLoading,
     setMonthlyBudget,
     addPurchase,
+    importPurchases,
     removePurchase,
     clearPurchases,
   };
