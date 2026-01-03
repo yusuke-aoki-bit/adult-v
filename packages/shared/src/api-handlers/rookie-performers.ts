@@ -47,7 +47,7 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
       const rookiePerformersQuery = await (db.select as CallableFunction)({
         id: (performers as Record<string, unknown>).id,
         name: (performers as Record<string, unknown>).name,
-        imageUrl: (performers as Record<string, unknown>).imageUrl,
+        imageUrl: (performers as Record<string, unknown>).profileImageUrl,
         debutYear: (performers as Record<string, unknown>).debutYear,
         productCount: (sql as CallableFunction)`CAST(COUNT(DISTINCT ${(productPerformers as Record<string, unknown>).productId}) AS INTEGER)`,
       })
@@ -57,15 +57,12 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
           eq((productPerformers as Record<string, unknown>).performerId, (performers as Record<string, unknown>).id)
         )
         .where(
-          and(
-            gte((performers as Record<string, unknown>).debutYear, rookieYear),
-            eq((performers as Record<string, unknown>).isRetired, false)
-          )
+          gte((performers as Record<string, unknown>).debutYear, rookieYear)
         )
         .groupBy(
           (performers as Record<string, unknown>).id,
           (performers as Record<string, unknown>).name,
-          (performers as Record<string, unknown>).imageUrl,
+          (performers as Record<string, unknown>).profileImageUrl,
           (performers as Record<string, unknown>).debutYear
         )
         .orderBy(desc((sql as CallableFunction)`COUNT(DISTINCT ${(productPerformers as Record<string, unknown>).productId})`))
@@ -128,10 +125,7 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
       })
         .from(performers)
         .where(
-          and(
-            gte((performers as Record<string, unknown>).debutYear, rookieYear),
-            eq((performers as Record<string, unknown>).isRetired, false)
-          )
+          gte((performers as Record<string, unknown>).debutYear, rookieYear)
         );
 
       const totalCount = Number(totalCountResult[0]?.count || 0);
