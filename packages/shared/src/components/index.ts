@@ -350,3 +350,9 @@ export type {
 
 // Offline indicator
 export { OfflineIndicator } from './OfflineIndicator';
+
+// Scene info (user-contributed scene markers)
+export { SceneTimeline } from './SceneInfo';
+
+// Rookie ranking (new performers)
+export { RookieRanking } from './RookieRanking';

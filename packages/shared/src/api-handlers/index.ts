@@ -128,3 +128,7 @@ export { createFooterLinksHandler } from './footer-links';
 // Sale Prediction handlers
 export type { SalePredictionHandlerDeps } from './sale-prediction';
 export { createSalePredictionHandler } from './sale-prediction';
+
+// Rookie Performers handlers
+export type { RookiePerformersHandlerDeps, RookiePerformer } from './rookie-performers';
+export { createRookiePerformersHandler } from './rookie-performers';
