@@ -24,6 +24,7 @@ import {
 import StickyCta from '@/components/StickyCta';
 import AiProductDescriptionWrapper from '@/components/AiProductDescriptionWrapper';
 import AlsoViewedWrapper from '@/components/AlsoViewedWrapper';
+import UserContributionsWrapper from '@/components/UserContributionsWrapper';
 import SimilarProductMapWrapper from '@/components/SimilarProductMapWrapper';
 import ProductSectionNav from '@/components/ProductSectionNav';
 import { getProductById, searchProductByProductId, getProductSources, getActressAvgPricePerMin, getSampleImagesByMakerCode, getProductMakerCode, getAllProductSources } from '@/lib/db/queries';
@@ -874,6 +875,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* この作品を見た人はこちらも見ています */}
           <div id="also-viewed" className="mt-8 scroll-mt-20">
             <AlsoViewedWrapper productId={String(product.id)} locale={locale} />
+          </div>
+
+          {/* ユーザー投稿セクション（レビュー、タグ提案、出演者提案） */}
+          <div id="user-contributions" className="mt-8 scroll-mt-20">
+            <UserContributionsWrapper
+              productId={productId}
+              locale={locale}
+              existingTags={genreTags.map((t) => t.name)}
+              existingPerformers={product.performers?.map((p) => p.name) || (product.actressName ? [product.actressName] : [])}
+            />
           </div>
         </div>
       </div>
