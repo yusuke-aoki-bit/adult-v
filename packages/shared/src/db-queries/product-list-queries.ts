@@ -3,6 +3,7 @@
  * getProducts/getProductsCount共通化
  */
 import { eq, and, or, desc, asc, sql, inArray, SQL, lt, gt } from 'drizzle-orm';
+import { logDbErrorAndReturn, logDbErrorAndThrow, logDbWarning } from '../lib/db-logger';
 import type { GetProductsOptions, ProductSortOption, CursorPaginatedResult, CursorData } from './types';
 import type { SiteMode } from './asp-filter';
 import { decodeCursor, encodeCursor, createCursorFromProduct } from '../lib/cursor-pagination';
@@ -498,10 +499,27 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       // 通常のソート処理
       const orderByClause = buildOrderByClause(options?.sortBy);
 
+      // パフォーマンス最適化: ASPフィルタはJOINで処理
+      // buildConditionsからASP条件を除外してJOINで処理
+      const nonAspConditions = conditions.filter(c => {
+        const sqlStr = c.queryChunks?.toString() || '';
+        return !sqlStr.includes('ps_fanza') && !sqlStr.includes('ps_check');
+      });
+      const optimizedWhereClause = nonAspConditions.length > 0 ? and(...nonAspConditions) : undefined;
+
+      // サイトモードに応じてJOIN条件を構築
+      const aspCondition = siteMode === 'fanza-only'
+        ? sql`${productSources}.asp_name = 'FANZA'`
+        : sql`${productSources}.asp_name != 'FANZA'`;
+
       const results = await db
-        .select()
+        .selectDistinct({ product: products })
         .from(products)
-        .where(whereClause)
+        .innerJoin(productSources, and(
+          sql`${productSources}.product_id = ${products}.id`,
+          aspCondition
+        ))
+        .where(optimizedWhereClause)
         .orderBy(...orderByClause)
         .limit(options?.limit || 100)
         .offset(options?.offset || 0);
@@ -509,37 +527,23 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       // バッチでデータを取得
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const typedResults = results as any[];
-      const productIds = typedResults.map((p) => p.id as number);
+      // JOINの結果は { product: ... } 形式
+      const productList = typedResults.map((r) => r.product as unknown as DbProduct);
+      const productIds = productList.map((p) => p.id);
       if (productIds.length === 0) return [];
 
       // サイトモードに応じてプロバイダーフィルターを渡す
-      // 一覧表示では画像1枚、動画1件で十分（パフォーマンス最適化）
-      const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1 };
+      // 一覧表示では画像1枚、動画1件で十分、タグ・セール情報もスキップ（パフォーマンス最適化）
+      const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1, lightMode: true };
       const batchData = siteMode === 'all'
         ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
         : await batchFetchProductRelatedData(productIds, undefined, listLimits);
-      const dbProducts = typedResults.map((p) => ({
-        id: p.id as number,
-        title: p.title as string,
-        normalizedProductId: p.normalizedProductId as string | null,
-        defaultThumbnailUrl: p.defaultThumbnailUrl as string | null,
-        releaseDate: p.releaseDate as Date | null,
-        duration: p.duration as number | null,
-        makerName: p.makerName as string | null,
-        labelName: p.labelName as string | null,
-        description: p.description as string | null,
-        reviewCount: p.reviewCount as number | null,
-        reviewAverage: p.reviewAverage as number | null,
-        createdAt: p.createdAt as Date | null,
-        updatedAt: p.updatedAt as Date | null,
-      })) as DbProduct[];
-      const mappedProducts = mapProductsWithBatchData(dbProducts, batchData, mapperDeps, options?.locale || 'ja') as T[];
+      const mappedProducts = mapProductsWithBatchData(productList, batchData, mapperDeps, options?.locale || 'ja') as T[];
 
       // タイトルベースの重複排除（共通関数使用）
       return deduplicateProductsByTitle(mappedProducts, siteMode) as T[];
     } catch (error) {
-      console.error('Error fetching products:', error);
-      throw error;
+      logDbErrorAndThrow(error, 'getProducts');
     }
   }
 
@@ -567,8 +571,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
   /**
    * 商品数を取得
    * パフォーマンス最適化:
-   * - フィルターなし: 単純COUNT（高速）
-   * - フィルターあり: 条件付きCOUNT（重複排除なし）
+   * - JOINベースでASPフィルタを適用（EXISTS よりも高速）
    *
    * 注: 重複排除はgetProducts側で行うため、カウントは概算値となる
    */
@@ -576,38 +579,44 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
     try {
       const db = getDb();
 
-      // フィルターなしの場合は単純カウント（最速）
+      // サイトモードに応じたASP条件
+      const aspCondition = siteMode === 'fanza-only'
+        ? sql`${productSources}.asp_name = 'FANZA'`
+        : sql`${productSources}.asp_name != 'FANZA'`;
+
+      // フィルターなしの場合でもサイトモード条件は必要
       if (hasNoFilters(options)) {
         const result = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(products);
+          .select({ count: sql<number>`count(DISTINCT ${products.id})` })
+          .from(products)
+          .innerJoin(productSources, and(
+            sql`${productSources}.product_id = ${products}.id`,
+            aspCondition
+          ));
         return Number(result[0]?.count || 0);
       }
 
       // フィルターありの場合
       const conditions = buildConditions(options as GetProductsOptions);
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      // ASP条件を除外（JOINで処理）
+      const nonAspConditions = conditions.filter(c => {
+        const sqlStr = c.queryChunks?.toString() || '';
+        return !sqlStr.includes('ps_fanza') && !sqlStr.includes('ps_check');
+      });
+      const whereClause = nonAspConditions.length > 0 ? and(...nonAspConditions) : undefined;
 
-      // プロバイダーフィルターがある場合はproduct_sourcesとJOIN
-      if (options?.providers?.length || options?.excludeProviders?.length) {
-        const result = await db
-          .select({ count: sql<number>`count(DISTINCT ${products.id})` })
-          .from(products)
-          .innerJoin(productSources, eq(products.id, productSources.productId))
-          .where(whereClause);
-        return Number(result[0]?.count || 0);
-      }
-
-      // その他のフィルター: 単純カウント
       const result = await db
-        .select({ count: sql<number>`count(*)` })
+        .select({ count: sql<number>`count(DISTINCT ${products.id})` })
         .from(products)
+        .innerJoin(productSources, and(
+          sql`${productSources}.product_id = ${products}.id`,
+          aspCondition
+        ))
         .where(whereClause);
 
       return Number(result[0]?.count || 0);
     } catch (error) {
-      console.error('Error counting products:', error);
-      return 0;
+      return logDbErrorAndReturn(error, 0, 'getProductsCount');
     }
   }
 
@@ -620,7 +629,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
   ): Promise<T[]> {
     // fetchProductRelatedData と mapProductToType が必須
     if (!deps.fetchProductRelatedData || !deps.mapProductToType) {
-      console.error('getProductsByCategory requires fetchProductRelatedData and mapProductToType in deps');
+      logDbWarning('getProductsByCategory requires fetchProductRelatedData and mapProductToType in deps', 'getProductsByCategory');
       return [];
     }
 
@@ -768,8 +777,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       const mappedProducts = mapProductsWithBatchData(dbProducts, batchData, mapperDeps, locale);
       return mappedProducts as T[];
     } catch (error) {
-      console.error('Error getting products by category:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getProductsByCategory');
     }
   }
 
@@ -931,8 +939,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         hasMore,
       };
     } catch (error) {
-      console.error('Error fetching products with cursor:', error);
-      throw error;
+      logDbErrorAndThrow(error, 'getProductsWithCursor');
     }
   }
 

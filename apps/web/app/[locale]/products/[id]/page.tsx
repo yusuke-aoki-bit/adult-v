@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import nextDynamic from 'next/dynamic';
 import { JsonLD } from '@/components/JsonLD';
 import ProductImageGallery from '@/components/ProductImageGallery';
@@ -31,7 +32,7 @@ import { getProductById, searchProductByProductId, getProductSources, getActress
 import { formatProductCodeForDisplay } from '@adult-v/shared';
 import { isSubscriptionSite } from '@/lib/image-utils';
 import { getPerformerOtherProducts, getProductMaker, getSameMakerProducts, getProductGenreTags, getProductSeries, getSameSeriesProducts } from '@/lib/db/recommendations';
-import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema, generateFAQSchema, getProductPageFAQs, generateReviewSchema } from '@/lib/seo';
+import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema, generateFAQSchema, getProductPageFAQs, generateReviewSchema, generateHowToSchema, generateAggregateOfferSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
@@ -72,6 +73,23 @@ interface PageProps {
   params: Promise<{ id: string; locale: string }>;
 }
 
+/**
+ * ビルド時に人気商品をプリレンダリング
+ * 最新の1000件の商品IDを生成（日本語版のみ）
+ */
+export async function generateStaticParams(): Promise<Array<{ id: string; locale: string }>> {
+  try {
+    const { getRecentProducts } = await import('@/lib/db/queries');
+    const recentProducts = await getRecentProducts({ limit: 1000 });
+    return recentProducts.map((product) => ({
+      id: product.id.toString(),
+      locale: 'ja',
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   try {
     const { id, locale } = await params;
@@ -104,16 +122,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // SEO: Titleに品番を含める（Google検索で品番検索時にヒットさせる）
     const seoTitle = productId ? `${productId} ${product.title}` : product.title;
 
-    // canonical URLは現在のロケールに応じて設定（日本語はパラメータなし）
+    // canonical URLは全言語で統一（パラメータなし）
     const productPath = `/products/${product.id}`;
-    const canonicalUrl = locale === 'ja' ? `${baseUrl}${productPath}` : `${baseUrl}${productPath}?hl=${locale}`;
+    const canonicalUrl = `${baseUrl}${productPath}`;
 
     return {
       ...generateBaseMetadata(
         seoTitle,
         optimizedDescription,
         product.imageUrl,
-        `/${locale}/products/${product.id}`,
+        localizedHref(`/products/${product.id}`, locale),
         undefined,
         locale,
       ),
@@ -154,7 +172,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   // canonical URLで正規URLを指定（重複コンテンツ対策）
   // これにより /products/SSIS-865 でもページが表示され、Googleにインデックスされる
 
-  const basePath = `/${locale}/products/${product.id}`;
+  const basePath = localizedHref(`/products/${product.id}`, locale);
 
   // Structured data（レーティング情報含む）
   const productSchema = generateProductSchema(
@@ -214,6 +232,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
           productId: product.normalizedProductId || undefined,
           datePublished: product.releaseDate || undefined,
         }
+      )
+    : null;
+
+  // HowTo Schema（視聴方法ガイド - リッチスニペット表示）
+  const howToSchema = product.providerLabel && product.affiliateUrl
+    ? generateHowToSchema(
+        product.title,
+        product.providerLabel,
+        product.affiliateUrl,
+        locale,
       )
     : null;
 
@@ -303,6 +331,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
       : Promise.resolve(null),
   ]);
 
+  // AggregateOffer Schema（複数ASP価格比較 - リッチスニペット表示）
+  const aggregateOfferSchema = sourcesWithSales.length > 1
+    ? generateAggregateOfferSchema(
+        sourcesWithSales.map(source => ({
+          providerName: source.aspName,
+          price: source.price ?? 0,
+          salePrice: source.salePrice ?? undefined,
+          url: source.affiliateUrl || source.productUrl || '',
+          availability: 'InStock' as const,
+        })),
+        'JPY',
+      )
+    : null;
+
   return (
     <>
       <JsonLD data={productSchema} />
@@ -310,6 +352,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {videoSchema && <JsonLD data={videoSchema} />}
       <JsonLD data={faqSchema} />
       {reviewSchema && <JsonLD data={reviewSchema} />}
+      {howToSchema && <JsonLD data={howToSchema} />}
+      {aggregateOfferSchema && <JsonLD data={aggregateOfferSchema} />}
 
       <div className="theme-body min-h-screen">
         {/* セクションナビゲーション */}
@@ -869,22 +913,28 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 類似作品ネットワーク */}
           <div id="similar-network" className="mt-8 scroll-mt-20">
-            <SimilarProductMapWrapper productId={productId} locale={locale} />
+            <Suspense fallback={<div className="h-64 bg-gray-800 rounded-lg animate-pulse" />}>
+              <SimilarProductMapWrapper productId={productId} locale={locale} />
+            </Suspense>
           </div>
 
           {/* この作品を見た人はこちらも見ています */}
           <div id="also-viewed" className="mt-8 scroll-mt-20">
-            <AlsoViewedWrapper productId={String(product.id)} locale={locale} />
+            <Suspense fallback={<div className="h-48 bg-gray-800 rounded-lg animate-pulse" />}>
+              <AlsoViewedWrapper productId={String(product.id)} locale={locale} />
+            </Suspense>
           </div>
 
           {/* ユーザー投稿セクション（レビュー、タグ提案、出演者提案） */}
           <div id="user-contributions" className="mt-8 scroll-mt-20">
-            <UserContributionsWrapper
-              productId={productId}
-              locale={locale}
-              existingTags={genreTags.map((t) => t.name)}
-              existingPerformers={product.performers?.map((p) => p.name) || (product.actressName ? [product.actressName] : [])}
-            />
+            <Suspense fallback={<div className="h-32 bg-gray-800 rounded-lg animate-pulse" />}>
+              <UserContributionsWrapper
+                productId={productId}
+                locale={locale}
+                existingTags={genreTags.map((t) => t.name)}
+                existingPerformers={product.performers?.map((p) => p.name) || (product.actressName ? [product.actressName] : [])}
+              />
+            </Suspense>
           </div>
         </div>
       </div>

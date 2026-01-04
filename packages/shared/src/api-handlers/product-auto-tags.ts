@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAutoTags } from '../lib/llm-service';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 export interface AutoTagsHandlerDeps {
   getProductWithTags: (normalizedId: string) => Promise<{
@@ -45,8 +46,9 @@ export function createAutoTagsHandler(deps: AutoTagsHandlerDeps) {
         ...result,
       });
     } catch (error) {
-      console.error('[Auto Tags API] Error:', error);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return createApiErrorResponse(error, 'Internal server error', 500, {
+        endpoint: '/api/products/[id]/auto-tags',
+      });
     }
   };
 }

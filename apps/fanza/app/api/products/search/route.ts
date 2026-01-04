@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getProducts, type SortOption } from '@/lib/db/queries';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60; // 1分キャッシュ
 
 // 許可されたソートオプション
 const VALID_SORT_OPTIONS: SortOption[] = [

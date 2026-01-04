@@ -4,7 +4,7 @@ exports[`Component Snapshots > Pagination > matches snapshot for first page 1`] 
 <div>
   <nav
     aria-label="ページ 1 / 10"
-    class="flex flex-col items-center gap-2 sm:gap-3 mt-6 sm:mt-8"
+    class="flex flex-col items-center gap-2 sm:gap-3 min-h-[88px] sm:min-h-[104px] mt-6 sm:mt-8"
   >
     <div
       class="flex flex-nowrap items-center justify-center gap-1 sm:gap-2"
@@ -114,7 +114,7 @@ exports[`Component Snapshots > Pagination > matches snapshot for last page 1`] =
 <div>
   <nav
     aria-label="ページ 10 / 10"
-    class="flex flex-col items-center gap-2 sm:gap-3 mt-6 sm:mt-8"
+    class="flex flex-col items-center gap-2 sm:gap-3 min-h-[88px] sm:min-h-[104px] mt-6 sm:mt-8"
   >
     <div
       class="flex flex-nowrap items-center justify-center gap-1 sm:gap-2"
@@ -224,7 +224,7 @@ exports[`Component Snapshots > Pagination > matches snapshot for middle page 1`]
 <div>
   <nav
     aria-label="ページ 5 / 10"
-    class="flex flex-col items-center gap-2 sm:gap-3 mt-6 sm:mt-8"
+    class="flex flex-col items-center gap-2 sm:gap-3 min-h-[88px] sm:min-h-[104px] mt-6 sm:mt-8"
   >
     <div
       class="flex flex-nowrap items-center justify-center gap-1 sm:gap-2"
@@ -354,7 +354,7 @@ exports[`Component Snapshots > Pagination > matches snapshot with many pages (sh
 <div>
   <nav
     aria-label="ページ 25 / 50"
-    class="flex flex-col items-center gap-2 sm:gap-3 mt-6 sm:mt-8"
+    class="flex flex-col items-center gap-2 sm:gap-3 min-h-[88px] sm:min-h-[104px] mt-6 sm:mt-8"
   >
     <div
       class="flex flex-nowrap items-center justify-center gap-1 sm:gap-2"
@@ -494,7 +494,7 @@ exports[`Component Snapshots > Pagination > matches snapshot with query params 1
 <div>
   <nav
     aria-label="ページ 3 / 10"
-    class="flex flex-col items-center gap-2 sm:gap-3 mt-6 sm:mt-8"
+    class="flex flex-col items-center gap-2 sm:gap-3 min-h-[88px] sm:min-h-[104px] mt-6 sm:mt-8"
   >
     <div
       class="flex flex-nowrap items-center justify-center gap-1 sm:gap-2"

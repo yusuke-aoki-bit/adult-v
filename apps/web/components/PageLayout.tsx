@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { TopPageUpperSections, TopPageLowerSections } from './TopPageSections';
+import { PageSectionNav, type PageSectionNavConfig } from '@adult-v/shared/components';
 
 interface SaleProduct {
   productId: number;
@@ -44,6 +45,11 @@ interface PageLayoutProps {
   showUpperSections?: boolean;
   /** 下部セクションを表示するか */
   showLowerSections?: boolean;
+  /** セクションナビゲーションの設定（指定しない場合はナビなし） */
+  sectionNavConfig?: Omit<PageSectionNavConfig, 'hasSale' | 'hasRecentlyViewed' | 'hasRecommendations' | 'hasWeeklyHighlights' | 'hasTrending' | 'hasAllProducts'> & {
+    mainSectionId: string;
+    mainSectionLabel: string;
+  };
 }
 
 /**
@@ -64,6 +70,7 @@ export default function PageLayout({
   translations,
   showUpperSections = true,
   showLowerSections = true,
+  sectionNavConfig,
 }: PageLayoutProps) {
   const defaultTranslations = translations || {
     viewProductList: '作品一覧',
@@ -75,6 +82,24 @@ export default function PageLayout({
 
   return (
     <div className="theme-body min-h-screen">
+      {/* セクションナビゲーション */}
+      {sectionNavConfig && (
+        <PageSectionNav
+          locale={locale}
+          config={{
+            hasSale: showUpperSections && saleProducts.length > 0,
+            hasRecentlyViewed: showUpperSections,
+            mainSectionId: sectionNavConfig.mainSectionId,
+            mainSectionLabel: sectionNavConfig.mainSectionLabel,
+            hasRecommendations: showLowerSections,
+            hasWeeklyHighlights: showLowerSections,
+            hasTrending: showLowerSections,
+            hasAllProducts: showLowerSections,
+          }}
+          theme="dark"
+        />
+      )}
+
       {/* 上部セクション（セール中・最近見た作品） */}
       {showUpperSections && (
         <section id="sale" className="py-3 sm:py-4 scroll-mt-20">

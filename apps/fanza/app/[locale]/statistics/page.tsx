@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { generateBaseMetadata } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
+import PageLayout from '@/components/PageLayout';
 import {
   getMonthlyReleaseStats,
   getTopPerformersByProductCount,
@@ -15,16 +16,20 @@ import {
   getGenreTrends,
   getDebutTrends,
 } from '@adult-v/shared/db-queries';
+import { getSaleProducts, getUncategorizedProductsCount } from '@/lib/db/queries';
 import {
-  ReleasesTrendChart,
-  GenreDistributionChart,
-  YearlyStatsChart,
-  MakerShareChart,
-  GenreTrendChart,
-  DebutTrendChart,
+  DynamicReleasesTrendChart,
+  DynamicGenreDistributionChart,
+  DynamicYearlyStatsChart,
+  DynamicMakerShareChart,
+  DynamicGenreTrendChart,
+  DynamicDebutTrendChart,
 } from '@adult-v/shared/components/stats';
 import { SocialShareButtons } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
+
+// 統計ページは変更頻度が低いためISRで1時間キャッシュ
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
@@ -79,6 +84,8 @@ export default async function StatisticsPage({
     makerStats,
     genreTrends,
     debutTrends,
+    saleProducts,
+    uncategorizedCount,
   ] = await Promise.all([
     getMonthlyReleaseStats(24),
     getTopPerformersByProductCount(20),
@@ -90,7 +97,32 @@ export default async function StatisticsPage({
     getMakerShareStats(20),
     getGenreTrends(12, 10),
     getDebutTrends(10),
+    getSaleProducts({ limit: 24, minDiscount: 30, aspName: 'FANZA' }),
+    getUncategorizedProductsCount({ includeAsp: ['FANZA'] }),
   ]);
+
+  // SalesSection用にDateをstringに変換
+  const saleProductsForDisplay = saleProducts.map(p => ({
+    ...p,
+    endAt: p.endAt ? p.endAt.toISOString() : null,
+  }));
+
+  // PageLayout用の翻訳
+  const layoutTranslations = {
+    viewProductList: '作品一覧',
+    viewProductListDesc: 'FANZA作品を横断検索',
+    uncategorizedBadge: '未整理',
+    uncategorizedDescription: '未整理作品',
+    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
+  };
+
+  // セクションナビゲーション用の翻訳
+  const sectionLabels: Record<string, string> = {
+    ja: '統計・ランキング',
+    en: 'Statistics & Rankings',
+    zh: '统计与排名',
+    ko: '통계 및 순위',
+  };
 
   // 構造化データ
   const structuredData = {
@@ -116,10 +148,23 @@ export default async function StatisticsPage({
   ];
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-7xl">
-      <JsonLD data={structuredData} />
+    <PageLayout
+      locale={locale}
+      saleProducts={saleProductsForDisplay}
+      uncategorizedCount={uncategorizedCount}
+      isTopPage={false}
+      isFanzaSite={true}
+      translations={layoutTranslations}
+      sectionNavConfig={{
+        mainSectionId: 'statistics',
+        mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
+      }}
+    >
+      <section id="statistics" className="scroll-mt-20">
+        <main className="container mx-auto px-4 py-8 max-w-7xl">
+          <JsonLD data={structuredData} />
 
-      <Breadcrumb items={breadcrumbItems} />
+          <Breadcrumb items={breadcrumbItems} />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-4 mb-8">
         <div>
@@ -171,7 +216,7 @@ export default async function StatisticsPage({
           過去24ヶ月間の新作リリース数の推移を表示しています。
         </p>
         <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
-          <ReleasesTrendChart data={monthlyStats} />
+          <DynamicReleasesTrendChart data={monthlyStats} />
         </div>
       </section>
 
@@ -182,7 +227,7 @@ export default async function StatisticsPage({
           2015年以降の年別作品数と出演女優数の推移。
         </p>
         <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
-          <YearlyStatsChart data={yearlyStats} />
+          <DynamicYearlyStatsChart data={yearlyStats} />
         </div>
       </section>
 
@@ -236,7 +281,7 @@ export default async function StatisticsPage({
             作品数の多いジャンルランキング。
           </p>
           <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
-            <GenreDistributionChart data={topGenres} />
+            <DynamicGenreDistributionChart data={topGenres} />
           </div>
         </section>
       </div>
@@ -248,7 +293,7 @@ export default async function StatisticsPage({
           作品数が多いメーカーのランキング。業界シェアを可視化。
         </p>
         <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
-          <MakerShareChart data={makerStats} />
+          <DynamicMakerShareChart data={makerStats} />
         </div>
       </section>
 
@@ -259,7 +304,7 @@ export default async function StatisticsPage({
           人気TOP10ジャンルの月別推移。トレンドの変化を分析。
         </p>
         <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
-          <GenreTrendChart data={genreTrends} />
+          <DynamicGenreTrendChart data={genreTrends} />
         </div>
       </section>
 
@@ -270,7 +315,7 @@ export default async function StatisticsPage({
           過去10年間の新人デビュー数の推移。
         </p>
         <div className="theme-content rounded-lg p-4 shadow-sm border theme-border">
-          <DebutTrendChart data={debutTrends} />
+          <DynamicDebutTrendChart data={debutTrends} />
         </div>
       </section>
 
@@ -333,8 +378,10 @@ export default async function StatisticsPage({
         <p className="mt-4 text-xs text-gray-500">
           最終更新: {new Date().toLocaleDateString('ja-JP')}
         </p>
-      </section>
-    </main>
+        </section>
+      </main>
+    </section>
+  </PageLayout>
   );
 }
 

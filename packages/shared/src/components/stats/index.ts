@@ -8,3 +8,13 @@ export { default as ReleaseCalendar } from './ReleaseCalendar';
 export { default as ReleaseCalendarWrapper } from './ReleaseCalendarWrapper';
 export { default as CalendarGrid } from './CalendarGrid';
 export { default as CalendarGridWrapper } from './CalendarGridWrapper';
+
+// Dynamic imports for code splitting (reduces initial bundle size)
+export {
+  DynamicReleasesTrendChart,
+  DynamicGenreDistributionChart,
+  DynamicYearlyStatsChart,
+  DynamicMakerShareChart,
+  DynamicGenreTrendChart,
+  DynamicDebutTrendChart,
+} from './DynamicCharts';

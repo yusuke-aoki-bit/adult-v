@@ -79,7 +79,13 @@ export function ChatBot({
   onSearch,
   apiEndpoint = '/api/chat'
 }: ChatBotProps) {
+  const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  // クライアントサイドでのみレンダリング（Hydration対策）
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // チャット開閉時にカスタムイベントを発火
   useEffect(() => {
@@ -179,12 +185,17 @@ export function ChatBot({
     }
   };
 
+  // SSR時とマウント前は何も表示しない（Hydration対策）
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <>
       {/* Floating button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center ${isOpen ? 'scale-0' : 'scale-100'}`}
+        className={`fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full bg-linear-to-r from-rose-500 to-pink-500 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center ${isOpen ? 'scale-0' : 'scale-100'}`}
         aria-label={t.title}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,7 +207,7 @@ export function ChatBot({
       {isOpen && (
         <div className="fixed bottom-4 right-4 z-50 w-80 sm:w-96 h-[500px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white">
+          <div className="flex items-center justify-between px-4 py-3 bg-linear-to-r from-rose-500 to-pink-500 text-white">
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />

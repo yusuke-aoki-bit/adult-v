@@ -6,6 +6,7 @@ import { sql, type SQL } from 'drizzle-orm';
 import type { SiteMode } from './asp-filter';
 import { buildAspNormalizationSql } from '../lib/asp-utils';
 import { getLocalizedTitle, getLocalizedDescription } from '../localization';
+import { logDbErrorAndThrow } from '../lib/db-logger';
 import type { ProductRelatedData } from './core-queries';
 
 // ============================================================
@@ -319,8 +320,7 @@ export function createUncategorizedQueries(deps: UncategorizedQueryDeps): Uncate
 
       return productsWithData;
     } catch (error) {
-      console.error('Error getting uncategorized products:', error);
-      throw error;
+      logDbErrorAndThrow(error, 'getUncategorizedProducts');
     }
   }
 
@@ -378,8 +378,7 @@ export function createUncategorizedQueries(deps: UncategorizedQueryDeps): Uncate
 
       return count;
     } catch (error) {
-      console.error('Error getting uncategorized products count:', error);
-      throw error;
+      logDbErrorAndThrow(error, 'getUncategorizedProductsCount');
     }
   }
 

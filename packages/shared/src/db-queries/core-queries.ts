@@ -4,6 +4,7 @@
  * 依存性注入パターンでDBとスキーマを外部から受け取る
  */
 import { eq, and, sql, inArray, desc, asc, SQL, or, ilike } from 'drizzle-orm';
+import { logDbErrorAndReturn, logDbErrorAndThrow } from '../lib/db-logger';
 import type { PgTableWithColumns } from 'drizzle-orm/pg-core';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
@@ -622,8 +623,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
       return sources;
     } catch (error) {
-      console.error(`Error fetching product sources for product ${productId}:`, error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getProductSources', { productId });
     }
   }
 
@@ -675,8 +675,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         category: r.category as string | null,
       }));
     } catch (error) {
-      console.error('Error fetching tags for actress:', error);
-      throw error;
+      logDbErrorAndThrow(error, 'getActressTags');
     }
   }
 
@@ -708,8 +707,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         createdAt: a.createdAt as Date,
       }));
     } catch (error) {
-      console.error(`Error fetching aliases for performer ${performerId}:`, error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getPerformerAliases', { performerId });
     }
   }
 
@@ -750,8 +748,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         count: Number(r.count),
       }));
     } catch (error) {
-      console.error(`Error fetching product count by site for actress ${actressId}:`, error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getActressProductCountBySite', { actressId });
     }
   }
 
@@ -884,6 +881,8 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     options?: {
       limitImagesPerProduct?: number;
       limitVideosPerProduct?: number;
+      /** 一覧表示用軽量モード: タグ・セール情報をスキップ */
+      lightMode?: boolean;
     }
   ): Promise<BatchRelatedDataResult> {
     if (productIds.length === 0) {
@@ -957,7 +956,11 @@ export function createCoreQueries(deps: CoreQueryDeps) {
           .from(productVideos)
           .where(inArray(productVideos.productId, productIds));
 
-    const [allPerformers, allTags, allSources, allImages, allVideos, allSales] = await Promise.all([
+    const lightMode = options?.lightMode ?? false;
+
+    // 必須クエリ: 演者、ソース、画像、動画
+    const coreQueries = [
+      // 演者
       db
         .select({
           productId: productPerformers.productId,
@@ -968,16 +971,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         .from(productPerformers)
         .innerJoin(performers, eq(productPerformers.performerId, performers.id))
         .where(inArray(productPerformers.productId, productIds)),
-      db
-        .select({
-          productId: productTags.productId,
-          id: tags.id,
-          name: tags.name,
-          category: tags.category,
-        })
-        .from(productTags)
-        .innerJoin(tags, eq(productTags.tagId, tags.id))
-        .where(inArray(productTags.productId, productIds)),
+      // ソース
       db
         .select({
           id: productSources.id,
@@ -991,9 +985,26 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         })
         .from(productSources)
         .where(inArray(productSources.productId, productIds)),
+      // 画像
       imagesQuery,
+      // 動画
       videosQuery,
-      // アクティブなセール情報を取得
+    ];
+
+    // 軽量モードではタグとセール情報をスキップ
+    const optionalQueries = lightMode ? [] : [
+      // タグ
+      db
+        .select({
+          productId: productTags.productId,
+          id: tags.id,
+          name: tags.name,
+          category: tags.category,
+        })
+        .from(productTags)
+        .innerJoin(tags, eq(productTags.tagId, tags.id))
+        .where(inArray(productTags.productId, productIds)),
+      // アクティブなセール情報
       db
         .select({
           productId: productSources.productId,
@@ -1011,7 +1022,14 @@ export function createCoreQueries(deps: CoreQueryDeps) {
             sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
           )
         ),
-    ]);
+    ];
+
+    const allResults = await Promise.all([...coreQueries, ...optionalQueries]);
+
+    // 結果を分解
+    const [allPerformers, allSources, allImages, allVideos] = allResults.slice(0, 4);
+    const allTags = lightMode ? [] : allResults[4];
+    const allSales = lightMode ? [] : allResults[5];
 
     // Map by productId
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1177,8 +1195,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         productCount: parseInt(row.product_count, 10),
       }));
     } catch (error) {
-      console.error('Error getting categories:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getCategories');
     }
   }
 
@@ -1261,8 +1278,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         totalCount: parseInt(totalRows[0]?.count || '0', 10),
       };
     } catch (error) {
-      console.error('Error getting uncategorized stats:', error);
-      return { aspStats: [], patternStats: [], totalCount: 0 };
+      return logDbErrorAndReturn(error, { aspStats: [], patternStats: [], totalCount: 0 }, 'getUncategorizedStats');
     }
   }
 
@@ -1290,8 +1306,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         source: row.source,
       }));
     } catch (error) {
-      console.error('Error getting candidate performers:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getCandidatePerformers');
     }
   }
 
@@ -1374,8 +1389,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       const rows = result.rows as { count: string }[];
       return parseInt(rows?.[0]?.count || '0', 10);
     } catch (error) {
-      console.error('Error getting product count by category:', error);
-      return 0;
+      return logDbErrorAndReturn(error, 0, 'getProductCountByCategory');
     }
   }
 
@@ -1407,8 +1421,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         count: parseInt(row.count, 10),
       }));
     } catch (error) {
-      console.error('Error getting ASP stats by category:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getAspStatsByCategory');
     }
   }
 
@@ -1481,8 +1494,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         averageRating: stats.avg_rating ? Number(stats.avg_rating) : null,
       };
     } catch (error) {
-      console.error('Error getting series info:', error);
-      return null;
+      return logDbErrorAndReturn(error, null, 'getSeriesInfo');
     }
   }
 
@@ -1522,8 +1534,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         latestReleaseDate: row.latest_release ? String(row.latest_release) : null,
       }));
     } catch (error) {
-      console.error('Error getting popular series:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getPopularSeries');
     }
   }
 
@@ -1572,8 +1583,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         productCount: Number(row.product_count),
       }));
     } catch (error) {
-      console.error('Error fetching popular makers:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getPopularMakers');
     }
   }
 
@@ -1618,8 +1628,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         averageRating: row.avg_rating ? parseFloat(String(row.avg_rating)) : null,
       }));
     } catch (error) {
-      console.error('Error analyzing maker preference:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'analyzeMakerPreference');
     }
   }
 
@@ -1766,8 +1775,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         recentProducts,
       };
     } catch (error) {
-      console.error(`Error fetching maker ${makerId}:`, error);
-      return null;
+      return logDbErrorAndReturn(error, null, 'getMakerById', { makerId });
     }
   }
 
@@ -1841,8 +1849,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         products: seriesProducts,
       };
     } catch (error) {
-      console.error(`Error fetching series ${tagId}:`, error);
-      return null;
+      return logDbErrorAndReturn(error, null, 'getSeriesById', { tagId });
     }
   }
 
@@ -1933,8 +1940,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         aiCatchphrase: row.ai_catchphrase ? String(row.ai_catchphrase) : undefined,
       }));
     } catch (error) {
-      console.error('Error getting series products:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getSeriesProducts');
     }
   }
 

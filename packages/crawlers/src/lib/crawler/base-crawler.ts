@@ -11,7 +11,7 @@
  */
 
 import { sql, SQL } from 'drizzle-orm';
-import { getDb } from '../db';
+import { getDb, type DbContext, type DbInstance } from '../db';
 import type { ExtendedCrawlStats, IdRow, CrawlOptions, CrawlResult } from './types';
 import { getFirstRow } from './types';
 import { RateLimiter, getRateLimiterForSite } from './rate-limiter';
@@ -29,6 +29,7 @@ import { processProductPerformers, ensureTags, linkProductToTags, saveProductIma
 import { CrawlerAIHelper, getAIHelper } from './ai-helper';
 import { saveSaleInfo } from '../sale-helper';
 import { processProductIdentity, type ProductForMatching } from '../product-identity';
+import { DatabaseError, CrawlerErrorCode, wrapError } from '../errors/crawler-errors';
 
 // ============================================================
 // Types
@@ -175,7 +176,7 @@ export interface ParsedCliArgs {
  * ```
  */
 export abstract class BaseCrawler<TRawItem = unknown> {
-  protected db: ReturnType<typeof getDb>;
+  protected db: DbInstance;
   protected rateLimiter: RateLimiter;
   protected stats: CrawlerStats;
   protected options: BaseCrawlerOptions;
@@ -383,6 +384,11 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
   /**
    * 単一アイテムを処理
+   *
+   * トランザクションを使用してデータの整合性を保証:
+   * - 生データ保存（GCS/重複チェック）はトランザクション外
+   * - 商品保存、リンク作成、関連データ保存はトランザクション内
+   * - AI処理はトランザクション外（長時間処理のため）
    */
   protected async processItem(rawItem: TRawItem, index: number, total: number): Promise<void> {
     try {
@@ -408,7 +414,8 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         return;
       }
 
-      // 3. 生データ保存（重複チェック）
+      // 3. 生データ保存（重複チェック） - トランザクション外
+      // GCS保存を含むため、トランザクションの外で実行
       const rawDataJson = this.getRawDataJson(rawItem);
       const upsertResult = await this.saveRawData(parsed.originalId, rawDataJson);
 
@@ -424,31 +431,51 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         console.log(`  ✓ 生データ${upsertResult.isNew ? '保存' : '更新'} (raw_id: ${upsertResult.id}) ${storageType}`);
       }
 
-      // 4. 商品保存
-      const productId = await this.saveProduct(parsed);
+      // 4-7. DB操作をトランザクションで実行
+      let productId: number;
+      try {
+        productId = await this.db.transaction(async (tx) => {
+          // 4. 商品保存
+          const pId = await this.saveProduct(parsed, tx);
 
-      // 5. リンク作成
-      await linkProductToRawData(
-        productId,
-        this.options.sourceType,
-        upsertResult.id,
-        this.getTableName(),
-        upsertResult.gcsUrl || `hash:${upsertResult.id}`
-      );
+          // 5. リンク作成
+          await linkProductToRawData(
+            pId,
+            this.options.sourceType,
+            upsertResult.id,
+            this.getTableName(),
+            upsertResult.gcsUrl || `hash:${upsertResult.id}`,
+            tx
+          );
 
-      // 6. 関連データ保存
-      await this.saveRelatedData(productId, parsed);
+          // 6. 関連データ保存
+          await this.saveRelatedData(pId, parsed, tx);
 
-      // 7. 商品同一性マッチング
-      await this.processIdentity(productId, parsed);
+          // 7. 商品同一性マッチング
+          await this.processIdentity(pId, parsed, tx);
 
-      // 8. AI処理
+          // 9. 処理済みマーク
+          await markRawDataAsProcessed(this.options.sourceType, upsertResult.id, tx);
+
+          return pId;
+        });
+      } catch (error) {
+        // トランザクションエラーをラップ
+        const crawlerError = wrapError(error, {
+          operation: 'processItem.transaction',
+          productId: parsed.normalizedProductId,
+        });
+        throw new DatabaseError(
+          `トランザクション失敗: ${crawlerError.message}`,
+          CrawlerErrorCode.DB_TRANSACTION,
+          { operation: 'processItem', originalError: error instanceof Error ? error : undefined }
+        );
+      }
+
+      // 8. AI処理（トランザクション外 - 長時間処理のため）
       if (this.getEffectiveEnableAI()) {
         await this.processAI(productId, parsed);
       }
-
-      // 9. 処理済みマーク
-      await markRawDataAsProcessed(this.options.sourceType, upsertResult.id);
 
       console.log();
 
@@ -469,9 +496,11 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
   /**
    * 商品をDB保存
+   * @param tx - オプションのトランザクションコンテキスト
    */
-  protected async saveProduct(data: ParsedProductData): Promise<number> {
-    const result = await this.db.execute(sql`
+  protected async saveProduct(data: ParsedProductData, tx?: DbContext): Promise<number> {
+    const dbCtx = tx || this.db;
+    const result = await dbCtx.execute(sql`
       INSERT INTO products (
         normalized_product_id,
         title,
@@ -514,7 +543,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     }
 
     // product_sources保存
-    await this.db.execute(sql`
+    await dbCtx.execute(sql`
       INSERT INTO product_sources (
         product_id,
         asp_name,
@@ -547,21 +576,22 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
   /**
    * 関連データを保存（画像、出演者、カテゴリ、セール情報）
+   * @param tx - オプションのトランザクションコンテキスト
    */
-  protected async saveRelatedData(productId: number, data: ParsedProductData): Promise<void> {
+  protected async saveRelatedData(productId: number, data: ParsedProductData, tx?: DbContext): Promise<void> {
     // サンプル画像
     if (data.sampleImages && data.sampleImages.length > 0) {
-      await this.saveSampleImages(productId, data.sampleImages);
+      await this.saveSampleImages(productId, data.sampleImages, tx);
     }
 
     // パッケージ画像
     if (data.packageUrl) {
-      await this.savePackageImage(productId, data.packageUrl);
+      await this.savePackageImage(productId, data.packageUrl, tx);
     }
 
     // サンプル動画
     if (data.sampleVideos && data.sampleVideos.length > 0) {
-      await this.saveSampleVideos(productId, data.sampleVideos);
+      await this.saveSampleVideos(productId, data.sampleVideos, tx);
     }
 
     // 出演者（wiki_crawl_data優先）
@@ -571,14 +601,15 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         data.performers,
         data.title,
         data.originalId, // 品番（wiki検索用）
-        this.options.aspName // ASPプレフィックス
+        this.options.aspName, // ASPプレフィックス
+        tx
       );
       console.log(`  ✓ 出演者保存完了 (${result.added}/${result.total}人)`);
     }
 
     // カテゴリ/タグ
     if (data.categories && data.categories.length > 0) {
-      await this.saveCategories(productId, data.categories);
+      await this.saveCategories(productId, data.categories, tx);
     }
 
     // セール情報
@@ -598,19 +629,20 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
     // レビュー
     if (!this.getEffectiveSkipReviews() && data.reviews && data.reviews.length > 0) {
-      await this.saveReviews(productId, data.reviews);
+      await this.saveReviews(productId, data.reviews, tx);
     }
 
     // 集計評価
     if (data.aggregateRating) {
-      await this.saveAggregateRating(productId, data.aggregateRating);
+      await this.saveAggregateRating(productId, data.aggregateRating, tx);
     }
   }
 
   /**
    * 商品同一性マッチングを処理
+   * @param tx - オプションのトランザクションコンテキスト（将来的に使用予定）
    */
-  protected async processIdentity(productId: number, data: ParsedProductData): Promise<void> {
+  protected async processIdentity(productId: number, data: ParsedProductData, _tx?: DbContext): Promise<void> {
     try {
       // ProductForMatching 形式に変換
       const productForMatching: ProductForMatching = {
@@ -624,6 +656,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         performers: data.performers || [],
       };
 
+      // TODO: processProductIdentity もトランザクション対応が必要
       const result = await processProductIdentity(productForMatching);
 
       if (result.action === 'created') {
@@ -642,12 +675,14 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
   /**
    * サンプル画像を保存
+   * @param tx - オプションのトランザクションコンテキスト
    */
-  protected async saveSampleImages(productId: number, imageUrls: string[]): Promise<void> {
+  protected async saveSampleImages(productId: number, imageUrls: string[], tx?: DbContext): Promise<void> {
+    const dbCtx = tx || this.db;
     console.log(`  📷 サンプル画像保存中 (${imageUrls.length}枚)...`);
 
     // 既存の画像を削除
-    await this.db.execute(sql`
+    await dbCtx.execute(sql`
       DELETE FROM product_images
       WHERE product_id = ${productId}
       AND asp_name = ${this.options.aspName}
@@ -657,7 +692,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     // 新しい画像を挿入
     for (let index = 0; index < imageUrls.length; index++) {
       const imageUrl = imageUrls[index];
-      await this.db.execute(sql`
+      await dbCtx.execute(sql`
         INSERT INTO product_images (
           product_id,
           asp_name,
@@ -680,9 +715,11 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
   /**
    * パッケージ画像を保存
+   * @param tx - オプションのトランザクションコンテキスト
    */
-  protected async savePackageImage(productId: number, imageUrl: string): Promise<void> {
-    await this.db.execute(sql`
+  protected async savePackageImage(productId: number, imageUrl: string, tx?: DbContext): Promise<void> {
+    const dbCtx = tx || this.db;
+    await dbCtx.execute(sql`
       INSERT INTO product_images (
         product_id,
         asp_name,
@@ -705,12 +742,14 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
   /**
    * サンプル動画を保存
+   * @param tx - オプションのトランザクションコンテキスト
    */
-  protected async saveSampleVideos(productId: number, videoUrls: string[]): Promise<void> {
+  protected async saveSampleVideos(productId: number, videoUrls: string[], tx?: DbContext): Promise<void> {
+    const dbCtx = tx || this.db;
     console.log(`  🎬 サンプル動画保存中 (${videoUrls.length}件)...`);
 
     // 既存の動画を削除
-    await this.db.execute(sql`
+    await dbCtx.execute(sql`
       DELETE FROM product_videos
       WHERE product_id = ${productId}
       AND asp_name = ${this.options.aspName}
@@ -719,7 +758,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     // 新しい動画を挿入
     for (let index = 0; index < videoUrls.length; index++) {
       const videoUrl = videoUrls[index];
-      await this.db.execute(sql`
+      await dbCtx.execute(sql`
         INSERT INTO product_videos (
           product_id,
           asp_name,
@@ -742,13 +781,15 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
   /**
    * カテゴリ/タグを保存
+   * @param tx - オプションのトランザクションコンテキスト
    */
-  protected async saveCategories(productId: number, categories: string[]): Promise<void> {
+  protected async saveCategories(productId: number, categories: string[], tx?: DbContext): Promise<void> {
+    const dbCtx = tx || this.db;
     console.log(`  🏷️ カテゴリ/タグ保存中 (${categories.length}件)...`);
 
     for (const categoryName of categories) {
       // categoriesテーブルにupsert
-      const categoryResult = await this.db.execute(sql`
+      const categoryResult = await dbCtx.execute(sql`
         INSERT INTO categories (name)
         VALUES (${categoryName})
         ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
@@ -759,14 +800,14 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       const categoryId = categoryRow!.id;
 
       // product_categoriesにリレーション作成
-      await this.db.execute(sql`
+      await dbCtx.execute(sql`
         INSERT INTO product_categories (product_id, category_id)
         VALUES (${productId}, ${categoryId})
         ON CONFLICT DO NOTHING
       `);
 
       // tagsテーブルにも保存
-      const tagResult = await this.db.execute(sql`
+      const tagResult = await dbCtx.execute(sql`
         INSERT INTO tags (name, category)
         VALUES (${categoryName}, 'genre')
         ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
@@ -777,7 +818,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       const tagId = tagRow!.id;
 
       // product_tagsにリレーション作成
-      await this.db.execute(sql`
+      await dbCtx.execute(sql`
         INSERT INTO product_tags (product_id, tag_id)
         VALUES (${productId}, ${tagId})
         ON CONFLICT DO NOTHING
@@ -789,15 +830,18 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
   /**
    * レビューを保存
+   * @param tx - オプションのトランザクションコンテキスト
    */
   protected async saveReviews(
     productId: number,
-    reviews: NonNullable<ParsedProductData['reviews']>
+    reviews: NonNullable<ParsedProductData['reviews']>,
+    tx?: DbContext
   ): Promise<void> {
+    const dbCtx = tx || this.db;
     console.log(`  📝 レビュー保存中 (${reviews.length}件)...`);
 
     for (const review of reviews) {
-      await this.db.execute(sql`
+      await dbCtx.execute(sql`
         INSERT INTO product_reviews (
           product_id,
           asp_name,
@@ -844,12 +888,15 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
   /**
    * 集計評価を保存
+   * @param tx - オプションのトランザクションコンテキスト
    */
   protected async saveAggregateRating(
     productId: number,
-    rating: NonNullable<ParsedProductData['aggregateRating']>
+    rating: NonNullable<ParsedProductData['aggregateRating']>,
+    tx?: DbContext
   ): Promise<void> {
-    await this.db.execute(sql`
+    const dbCtx = tx || this.db;
+    await dbCtx.execute(sql`
       INSERT INTO product_rating_summary (
         product_id,
         asp_name,
@@ -1057,23 +1104,103 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
 /**
  * 年月範囲を生成（フルスキャン用）
+ * @param format - 'YYYYMMDD' または 'ISO' (YYYY-MM-DDThh:mm:ss形式)
  */
 export function generateDateRanges(
   startYear: number,
-  endYear: number
+  endYear: number,
+  format: 'YYYYMMDD' | 'ISO' = 'YYYYMMDD'
 ): Array<{ start: string; end: string }> {
   const ranges: Array<{ start: string; end: string }> = [];
 
   for (let year = endYear; year >= startYear; year--) {
     for (let month = 12; month >= 1; month--) {
-      const start = `${year}${month.toString().padStart(2, '0')}01`;
       const lastDay = new Date(year, month, 0).getDate();
-      const end = `${year}${month.toString().padStart(2, '0')}${lastDay}`;
-      ranges.push({ start, end });
+
+      if (format === 'ISO') {
+        const start = `${year}-${month.toString().padStart(2, '0')}-01T00:00:00`;
+        const end = `${year}-${month.toString().padStart(2, '0')}-${lastDay}T23:59:59`;
+        ranges.push({ start, end });
+      } else {
+        const start = `${year}${month.toString().padStart(2, '0')}01`;
+        const end = `${year}${month.toString().padStart(2, '0')}${lastDay}`;
+        ranges.push({ start, end });
+      }
     }
   }
 
   return ranges;
+}
+
+/**
+ * CLI引数をパース（スタンドアロン関数版）
+ * BaseCrawlerを継承しないスクリプトから使用可能
+ */
+export function parseCliArgs(): ParsedCliArgs {
+  const args = process.argv.slice(2);
+
+  const getArg = (name: string): string | undefined => {
+    const arg = args.find((a) => a.startsWith(`--${name}=`));
+    return arg ? arg.split('=')[1] : undefined;
+  };
+
+  const hasFlag = (name: string): boolean => args.includes(`--${name}`);
+
+  // カスタム引数を収集
+  const customArgs: Record<string, string | boolean> = {};
+  args.forEach((arg) => {
+    if (arg.startsWith('--')) {
+      const [key, value] = arg.slice(2).split('=');
+      if (
+        !['limit', 'offset', 'no-ai', 'force', 'skip-reviews', 'full-scan', 'year', 'month', 'start-id'].includes(key)
+      ) {
+        customArgs[key] = value !== undefined ? value : true;
+      }
+    }
+  });
+
+  return {
+    limit: parseInt(getArg('limit') || '100', 10),
+    offset: parseInt(getArg('offset') || '0', 10),
+    enableAI: !hasFlag('no-ai'),
+    forceReprocess: hasFlag('force'),
+    skipReviews: hasFlag('skip-reviews'),
+    fullScan: hasFlag('full-scan'),
+    year: getArg('year') ? parseInt(getArg('year')!, 10) : undefined,
+    month: getArg('month') ? parseInt(getArg('month')!, 10) : undefined,
+    startId: getArg('start-id'),
+    customArgs,
+  };
+}
+
+/**
+ * 共通のヘッダーを出力
+ */
+export function printCrawlerHeader(
+  name: string,
+  options: {
+    limit?: number;
+    offset?: number;
+    enableAI?: boolean;
+    forceReprocess?: boolean;
+    fullScan?: boolean;
+    customInfo?: Record<string, string | number | boolean>;
+  }
+): void {
+  console.log('========================================');
+  console.log(`=== ${name} ===`);
+  console.log('========================================');
+  if (options.limit !== undefined) console.log(`取得件数上限: ${options.limit}`);
+  if (options.offset !== undefined && options.offset > 0) console.log(`オフセット: ${options.offset}`);
+  if (options.enableAI !== undefined) console.log(`AI機能: ${options.enableAI ? '有効' : '無効'}`);
+  if (options.forceReprocess) console.log('強制再処理: 有効');
+  if (options.fullScan) console.log('フルスキャン: 有効');
+  if (options.customInfo) {
+    for (const [key, value] of Object.entries(options.customInfo)) {
+      console.log(`${key}: ${value}`);
+    }
+  }
+  console.log('========================================\n');
 }
 
 /**

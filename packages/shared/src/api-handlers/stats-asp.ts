@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
 export interface ASPTotal {
   asp: string;
@@ -79,7 +80,7 @@ export function createStatsAspHandler(
 
       return NextResponse.json(enrichedStats);
     } catch (error) {
-      console.error('Failed to fetch ASP stats:', error);
+      logDbErrorAndReturn(error, [], 'getAspStats');
       return NextResponse.json([], { status: 500 });
     }
   };

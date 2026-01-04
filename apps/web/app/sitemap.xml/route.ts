@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.adult-v.com';
 
+export const revalidate = 3600; // 1時間キャッシュ
+
 /**
  * サイトマップインデックス - 大規模サイト対応
  * Googleの推奨: 1ファイル50,000URL以下、50MB以下

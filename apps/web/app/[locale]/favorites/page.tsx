@@ -11,6 +11,7 @@ import { WatchlistAnalysis, BulkActionBar, SelectableCard } from '@adult-v/share
 import FavoriteButton from '@/components/FavoriteButton';
 import ActressRecommendations from '@/components/ActressRecommendations';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
+import { PageSectionNav } from '@adult-v/shared/components';
 
 interface SaleProduct {
   productId: number;
@@ -236,8 +237,32 @@ export default function FavoritesPage() {
     return <FavoritesSkeleton />;
   }
 
+  // セクションナビゲーション用の翻訳
+  const sectionLabels: Record<string, Record<string, string>> = {
+    ja: { favorites: 'お気に入り' },
+    en: { favorites: 'Favorites' },
+    zh: { favorites: '收藏夹' },
+    ko: { favorites: '즐겨찾기' },
+  };
+
   return (
     <div className="theme-body min-h-screen">
+      {/* セクションナビゲーション */}
+      <PageSectionNav
+        locale={locale}
+        config={{
+          hasSale: saleProducts.length > 0,
+          hasRecentlyViewed: true,
+          mainSectionId: 'favorites',
+          mainSectionLabel: sectionLabels[locale]?.favorites || sectionLabels.ja.favorites,
+          hasRecommendations: true,
+          hasWeeklyHighlights: true,
+          hasTrending: true,
+          hasAllProducts: true,
+        }}
+        theme="dark"
+      />
+
       {/* 上部セクション（セール中・最近見た作品） */}
       <section className="py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
@@ -245,7 +270,7 @@ export default function FavoritesPage() {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-8">
+      <div id="favorites" className="container mx-auto px-4 py-8 scroll-mt-20">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">

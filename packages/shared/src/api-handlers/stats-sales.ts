@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
 export interface SaleStats {
   totalSales: number;
@@ -23,7 +24,7 @@ export function createStatsSalesHandler(
       const stats = await deps.getSaleStats(options.aspFilter);
       return NextResponse.json(stats);
     } catch (error) {
-      console.error('Failed to fetch sale stats:', error);
+      logDbErrorAndReturn(error, { totalSales: 0, byAsp: [] }, 'getSaleStats');
       return NextResponse.json({ totalSales: 0, byAsp: [] }, { status: 500 });
     }
   };

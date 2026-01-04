@@ -3,7 +3,26 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import React from 'react';
 import { useWatchLater, useWatchLaterItem, type WatchLaterItem } from '@adult-v/shared/hooks/useWatchLater';
+
+// FirebaseAuthContextのモック
+vi.mock('@adult-v/shared/contexts/FirebaseAuthContext', () => ({
+  useFirebaseAuth: () => ({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+  }),
+}));
+
+// Firebase functionsのモック
+vi.mock('@adult-v/shared/lib/firebase', () => ({
+  saveWatchlistItemToFirestore: vi.fn(),
+  removeWatchlistItemFromFirestore: vi.fn(),
+  getWatchlistFromFirestore: vi.fn().mockResolvedValue([]),
+}));
 
 // localStorageのモック
 const localStorageMock = (() => {

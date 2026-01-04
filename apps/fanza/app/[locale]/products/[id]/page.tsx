@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import nextDynamic from 'next/dynamic';
 import { JsonLD } from '@/components/JsonLD';
 import ProductImageGallery from '@/components/ProductImageGallery';
@@ -28,13 +29,13 @@ import ProductSectionNav from '@/components/ProductSectionNav';
 import { getProductById, searchProductByProductId, getProductSources } from '@/lib/db/queries';
 import { isSubscriptionSite } from '@/lib/image-utils';
 import { getPerformerOtherProducts, getProductMaker, getSameMakerProducts, getProductGenreTags, getProductSeries, getSameSeriesProducts } from '@/lib/db/recommendations';
-import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema, generateFAQSchema, getProductPageFAQs, generateReviewSchema } from '@/lib/seo';
+import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema, generateFAQSchema, getProductPageFAQs, generateReviewSchema, generateHowToSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 600; // 10分キャッシュ
 
 /**
  * 配列をシャッフル（Fisher-Yates algorithm）
@@ -65,6 +66,23 @@ const EnhancedAiReview = nextDynamic(() => import('@/components/EnhancedAiReview
 
 interface PageProps {
   params: Promise<{ id: string; locale: string }>;
+}
+
+/**
+ * ビルド時に人気商品をプリレンダリング
+ * 最新の1000件の商品IDを生成（日本語版のみ）
+ */
+export async function generateStaticParams(): Promise<Array<{ id: string; locale: string }>> {
+  try {
+    const { getRecentProducts } = await import('@/lib/db/queries');
+    const recentProducts = await getRecentProducts({ limit: 1000 });
+    return recentProducts.map((product) => ({
+      id: product.id.toString(),
+      locale: 'ja',
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -99,9 +117,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // SEO: Titleに品番を含める（Google検索で品番検索時にヒットさせる）
     const seoTitle = productId ? `${productId} ${product.title}` : product.title;
 
-    // canonical URLは現在のロケールに応じて設定（日本語はパラメータなし）
+    // canonical URLは全言語で統一（パラメータなし）
     const productPath = `/products/${product.id}`;
-    const canonicalUrl = locale === 'ja' ? `${baseUrl}${productPath}` : `${baseUrl}${productPath}?hl=${locale}`;
+    const canonicalUrl = `${baseUrl}${productPath}`;
 
     return {
       ...generateBaseMetadata(
@@ -212,6 +230,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
       )
     : null;
 
+  // HowTo Schema（視聴方法ガイド - リッチスニペット表示）
+  const howToSchema = product.providerLabel && product.affiliateUrl
+    ? generateHowToSchema(
+        product.title,
+        product.providerLabel,
+        product.affiliateUrl,
+        locale,
+      )
+    : null;
+
   // パンくずリスト用のアイテム作成（SEO・ナビゲーション強化）
   const breadcrumbItems: BreadcrumbItem[] = [
     { label: tNav('home'), href: localizedHref('/', locale) },
@@ -290,6 +318,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {videoSchema && <JsonLD data={videoSchema} />}
       <JsonLD data={faqSchema} />
       {reviewSchema && <JsonLD data={reviewSchema} />}
+      {howToSchema && <JsonLD data={howToSchema} />}
 
       <div className="theme-body min-h-screen">
         {/* セクションナビゲーション */}
@@ -776,22 +805,28 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 類似作品ネットワーク */}
           <div id="similar-network" className="mt-8 scroll-mt-20">
-            <SimilarProductMapWrapper productId={productId} locale={locale} />
+            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse" />}>
+              <SimilarProductMapWrapper productId={productId} locale={locale} />
+            </Suspense>
           </div>
 
           {/* この作品を見た人はこちらも見ています */}
           <div id="also-viewed" className="mt-8 scroll-mt-20">
-            <AlsoViewedWrapper productId={product.id} locale={locale} />
+            <Suspense fallback={<div className="h-48 bg-gray-100 rounded-lg animate-pulse" />}>
+              <AlsoViewedWrapper productId={product.id} locale={locale} />
+            </Suspense>
           </div>
 
           {/* ユーザー投稿セクション（レビュー、タグ提案、出演者提案） */}
           <div id="user-contributions" className="mt-8 scroll-mt-20">
-            <UserContributionsWrapper
-              productId={productId}
-              locale={locale}
-              existingTags={genreTags.map((t) => t.name)}
-              existingPerformers={product.performers?.map((p) => p.name) || (product.actressName ? [product.actressName] : [])}
-            />
+            <Suspense fallback={<div className="h-32 bg-gray-100 rounded-lg animate-pulse" />}>
+              <UserContributionsWrapper
+                productId={productId}
+                locale={locale}
+                existingTags={genreTags.map((t) => t.name)}
+                existingPerformers={product.performers?.map((p) => p.name) || (product.actressName ? [product.actressName] : [])}
+              />
+            </Suspense>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql, or, ilike, desc } from 'drizzle-orm';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 interface AutocompleteResult {
   type: 'product' | 'actress' | 'tag' | 'product_id';
@@ -256,11 +257,9 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
         query,
       });
     } catch (error) {
-      console.error('Autocomplete error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch autocomplete results' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to fetch autocomplete results', 500, {
+        endpoint: '/api/search/autocomplete',
+      });
     }
   };
 }

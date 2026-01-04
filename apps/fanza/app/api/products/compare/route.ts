@@ -47,17 +47,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const normalizedIds = idsParam.split(',').slice(0, 4); // 最大4件
+    const idsInput = idsParam.split(',').slice(0, 4); // 最大4件
 
-    if (normalizedIds.length < 2) {
+    if (idsInput.length < 2) {
       return NextResponse.json(
         { error: 'At least 2 products are required for comparison' },
         { status: 400 }
       );
     }
 
+    // 数値IDかnormalizedProductIdかを判定
+    const isNumericIds = idsInput.every(id => /^\d+$/.test(id));
+    const numericIds = isNumericIds ? idsInput.map(id => parseInt(id, 10)) : [];
+
     // キャッシュチェック
-    const cacheKey = generateCacheKey('compare:fanza', { ids: normalizedIds.sort().join(',') });
+    const cacheKey = generateCacheKey('compare:fanza', { ids: idsInput.sort().join(',') });
     const cached = await getCache(cacheKey);
     if (cached) {
       return NextResponse.json(cached);
@@ -65,7 +69,7 @@ export async function GET(request: NextRequest) {
 
     const db = getDb();
 
-    // 作品基本情報を取得（FANZAソースのみ）
+    // 作品基本情報を取得（FANZAソースのみ、数値IDまたはnormalizedProductIdで検索）
     const productsData = await db
       .select({
         id: products.id,
@@ -77,7 +81,11 @@ export async function GET(request: NextRequest) {
       })
       .from(products)
       .innerJoin(productSources, sql`${products.id} = ${productSources.productId}`)
-      .where(sql`${products.normalizedProductId} = ANY(${normalizedIds}) AND ${productSources.aspName} = 'FANZA'`);
+      .where(
+        isNumericIds
+          ? sql`${inArray(products.id, numericIds)} AND ${productSources.aspName} = 'FANZA'`
+          : sql`${inArray(products.normalizedProductId, idsInput)} AND ${productSources.aspName} = 'FANZA'`
+      );
 
     if (productsData.length === 0) {
       return NextResponse.json(
@@ -133,25 +141,27 @@ export async function GET(request: NextRequest) {
         affiliateUrl: productSources.affiliateUrl,
       })
       .from(productSources)
-      .where(sql`${productSources.productId} = ANY(${productIds}) AND ${productSources.aspName} = 'FANZA'`);
+      .where(sql`${inArray(productSources.productId, productIds)} AND ${productSources.aspName} = 'FANZA'`);
 
     // セール情報を取得
-    const salesResult = await db.execute(sql`
-      SELECT
-        ps.product_id as "productId",
-        ps.asp_name as "aspName",
-        psl.sale_price as "salePrice",
-        psl.discount_percent as "discountPercent"
-      FROM ${productSources} ps
-      INNER JOIN ${productSales} psl ON ps.id = psl.product_source_id
-      WHERE ps.product_id = ANY(${productIds})
-        AND ps.asp_name = 'FANZA'
-        AND psl.is_active = true
-        AND (psl.end_at IS NULL OR psl.end_at > NOW())
-    `);
+    const salesResult = await db
+      .select({
+        productId: productSources.productId,
+        aspName: productSources.aspName,
+        salePrice: productSales.salePrice,
+        discountPercent: productSales.discountPercent,
+      })
+      .from(productSources)
+      .innerJoin(productSales, sql`${productSources.id} = ${productSales.productSourceId}`)
+      .where(
+        sql`${inArray(productSources.productId, productIds)}
+          AND ${productSources.aspName} = 'FANZA'
+          AND ${productSales.isActive} = true
+          AND (${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
+      );
 
-    const salesByProductAsp = new Map<string, { salePrice: number; discountPercent: number }>();
-    for (const sale of salesResult.rows as Array<{ productId: number; aspName: string; salePrice: number; discountPercent: number }>) {
+    const salesByProductAsp = new Map<string, { salePrice: number; discountPercent: number | null }>();
+    for (const sale of salesResult) {
       salesByProductAsp.set(`${sale.productId}-${sale.aspName}`, {
         salePrice: sale.salePrice,
         discountPercent: sale.discountPercent,
@@ -181,7 +191,7 @@ export async function GET(request: NextRequest) {
         totalReviews: productRatingSummary.totalReviews,
       })
       .from(productRatingSummary)
-      .where(sql`${productRatingSummary.productId} = ANY(${productIds}) AND ${productRatingSummary.aspName} = 'FANZA'`);
+      .where(sql`${inArray(productRatingSummary.productId, productIds)} AND ${productRatingSummary.aspName} = 'FANZA'`);
 
     const ratingsByProduct = new Map<number, { average: number | null; count: number }>();
     for (const r of ratingsData) {
@@ -205,8 +215,13 @@ export async function GET(request: NextRequest) {
     }));
 
     // リクエストされた順序で並べ替え
-    const orderedProducts = normalizedIds
-      .map(id => compareProducts.find(p => p.normalizedProductId === id))
+    const orderedProducts = idsInput
+      .map(id => {
+        if (isNumericIds) {
+          return compareProducts.find(p => p.id === parseInt(id, 10));
+        }
+        return compareProducts.find(p => p.normalizedProductId === id);
+      })
       .filter((p): p is CompareProduct => p !== undefined);
 
     // 共通タグと共通出演者を計算

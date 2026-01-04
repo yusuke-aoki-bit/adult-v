@@ -37,6 +37,6 @@ export {
 
 // 別ファイルから re-export
 export { getProductsByTag } from '../recommendations';
-export { getRandomProduct } from '../discover-queries';
+export { getRandomProducts } from '../discover-queries';
 
 export type { SortOption, GetProductsOptions } from '../queries';

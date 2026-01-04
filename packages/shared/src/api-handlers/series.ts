@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 interface SeriesData {
   id: number;
@@ -29,8 +30,9 @@ export function createSeriesHandler(deps: SeriesHandlerDeps) {
 
       return NextResponse.json({ series });
     } catch (error) {
-      console.error('Error fetching series:', error);
-      return NextResponse.json({ error: 'Failed to fetch series' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to fetch series', 500, {
+        endpoint: '/api/series/[seriesId]',
+      });
     }
   };
 }

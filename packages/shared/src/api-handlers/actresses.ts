@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validatePagination, validateSearchQuery } from '../lib/api-utils';
-
-// Cache durations
-const CACHE_1_HOUR = 'public, s-maxage=3600, stale-while-revalidate=86400';
-const CACHE_5_MIN = 'public, s-maxage=300, stale-while-revalidate=3600';
+import { CACHE } from './constants/cache';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 export interface ActressesHandlerDeps {
   getActresses: (params: { limit: number; offset: number; query?: string; ids?: number[] }) => Promise<unknown[]>;
@@ -22,7 +20,7 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
         const actresses = await deps.getFeaturedActresses(limit);
         return NextResponse.json(
           { actresses, total: actresses.length },
-          { headers: { 'Cache-Control': CACHE_1_HOUR } }
+          { headers: { 'Cache-Control': CACHE.ONE_HOUR } }
         );
       }
 
@@ -41,7 +39,7 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
         const actresses = await deps.getActresses({ limit: ids.length, offset: 0, ids });
         return NextResponse.json(
           { actresses, total: actresses.length },
-          { headers: { 'Cache-Control': CACHE_1_HOUR } }
+          { headers: { 'Cache-Control': CACHE.ONE_HOUR } }
         );
       }
 
@@ -57,18 +55,16 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
       const actresses = await deps.getActresses({ limit, offset, query });
 
       // Search results cache shorter, static lists cache longer
-      const cacheControl = query ? CACHE_5_MIN : CACHE_1_HOUR;
+      const cacheControl = query ? CACHE.FIVE_MIN : CACHE.ONE_HOUR;
 
       return NextResponse.json(
         { actresses, total: actresses.length, limit, offset },
         { headers: { 'Cache-Control': cacheControl } }
       );
     } catch (error) {
-      console.error('Error fetching actresses:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch actresses' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to fetch actresses', 500, {
+        endpoint: '/api/actresses',
+      });
     }
   };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 
 export interface SelectableCardProps {
   children: ReactNode;
@@ -10,7 +10,7 @@ export interface SelectableCardProps {
   theme?: 'dark' | 'light';
 }
 
-export function SelectableCard({
+function SelectableCardInner({
   children,
   isSelected,
   isSelectionMode,
@@ -69,5 +69,16 @@ export function SelectableCard({
     </div>
   );
 }
+
+// React.memo で不要な再レンダリングを防止
+// isSelected, isSelectionMode, theme のみを比較（onToggle は安定した参照である前提）
+export const SelectableCard = memo(SelectableCardInner, (prevProps, nextProps) => {
+  return (
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isSelectionMode === nextProps.isSelectionMode &&
+    prevProps.theme === nextProps.theme &&
+    prevProps.children === nextProps.children
+  );
+});
 
 export default SelectableCard;

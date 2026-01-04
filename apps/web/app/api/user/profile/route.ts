@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { products, productPerformers, productTags, performers, tags } from '@/lib/db/schema';
 import { inArray, eq } from 'drizzle-orm';
-import { generateUserPreferenceProfile, type UserPreferenceProfile } from '@adult-v/shared/lib/llm-service';
+import { generateUserPreferenceProfile } from '@adult-v/shared/lib/llm-service';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

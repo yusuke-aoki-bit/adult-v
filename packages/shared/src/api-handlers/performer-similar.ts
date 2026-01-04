@@ -1,4 +1,5 @@
 import { sql, eq } from 'drizzle-orm';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
 export interface PerformerSimilarHandlerDeps {
   getDb: () => {
@@ -516,7 +517,7 @@ export function createPerformerSimilarHandler(
       return { data: response, status: 200 };
 
     } catch (error) {
-      console.error('[Performer Similar API] Error:', error);
+      logDbErrorAndReturn(error, null, 'getPerformerSimilar');
       return { error: 'Internal server error', status: 500 };
     }
   };

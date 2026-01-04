@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { searchProductByProductId } from '@/lib/db/queries';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300; // 5分キャッシュ
 
 /**
  * メーカー品番(originalProductId)またはnormalizedProductIdで商品を検索

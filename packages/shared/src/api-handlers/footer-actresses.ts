@@ -1,32 +1,15 @@
-/**
- * フッター用女優リストAPIハンドラ
- * GSCデータに基づいて動的に更新される女優リストを返す
- */
-
 import { NextResponse } from 'next/server';
-import { desc } from 'drizzle-orm';
+import { desc, type AnyColumn } from 'drizzle-orm';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
 export interface FooterActressesHandlerDeps {
-  getDb: () => {
-    select: (columns: Record<string, unknown>) => {
-      from: (table: unknown) => {
-        orderBy: (column: unknown) => {
-          limit: (n: number) => Promise<Array<{
-            id: number;
-            name: string;
-            impressions: number | null;
-            position: number | null;
-          }>>;
-        };
-      };
-    };
-  };
+  getDb: () => unknown;
   footerFeaturedActresses: {
-    performerId: unknown;
-    performerName: unknown;
-    impressions: unknown;
-    position: unknown;
-    priorityScore: unknown;
+    performerId: AnyColumn;
+    performerName: AnyColumn;
+    impressions: AnyColumn;
+    position: AnyColumn;
+    priorityScore: AnyColumn;
   };
 }
 
@@ -35,7 +18,15 @@ export function createFooterActressesHandler(deps: FooterActressesHandlerDeps) {
     const { getDb, footerFeaturedActresses } = deps;
 
     try {
-      const db = getDb();
+      const db = getDb() as {
+        select: (cols: Record<string, unknown>) => {
+          from: (table: unknown) => {
+            orderBy: (col: unknown) => {
+              limit: (n: number) => Promise<Array<{ id: number; name: string; impressions: number | null; position: number | null }>>;
+            };
+          };
+        };
+      };
 
       // DBから優先度順で取得
       const actresses = await db
@@ -58,9 +49,9 @@ export function createFooterActressesHandler(deps: FooterActressesHandlerDeps) {
         },
       });
     } catch (error) {
-      console.error('Failed to fetch footer actresses:', error);
+      logDbErrorAndReturn(error, [], 'getFooterActresses');
 
-      // エラー時は空配列を返す（嘘のデータを返さない）
+      // エラー時は空配列を返す
       return NextResponse.json({
         actresses: [],
         source: 'error',

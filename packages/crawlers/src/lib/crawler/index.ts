@@ -101,6 +101,8 @@ export {
 export {
   BaseCrawler,
   generateDateRanges,
+  parseCliArgs,
+  printCrawlerHeader,
   runCrawler,
   type BaseCrawlerOptions,
   type CrawlerStats,

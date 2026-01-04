@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePriceAlerts, type PriceAlert } from '@adult-v/shared/hooks';
 
@@ -194,11 +194,7 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
 }
 
 export default function AlertsPage({ params }: { params: Promise<{ locale: string }> }) {
-  const [locale, setLocale] = useState('ja');
-
-  useEffect(() => {
-    params.then(p => setLocale(p.locale));
-  }, [params]);
+  const { locale } = use(params);
 
   return <AlertsPageClient locale={locale} />;
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
 interface WeeklyHighlightsResult {
   trendingActresses: unknown[];
@@ -17,12 +18,13 @@ export function createWeeklyHighlightsHandler(deps: WeeklyHighlightsHandlerDeps)
 
       return NextResponse.json(highlights);
     } catch (error) {
-      console.error('Failed to get weekly highlights:', error);
-      return NextResponse.json({
+      const defaultHighlights = {
         trendingActresses: [],
         hotNewReleases: [],
         rediscoveredClassics: [],
-      }, { status: 500 });
+      };
+      logDbErrorAndReturn(error, defaultHighlights, 'getWeeklyHighlights');
+      return NextResponse.json(defaultHighlights, { status: 500 });
     }
   };
 }

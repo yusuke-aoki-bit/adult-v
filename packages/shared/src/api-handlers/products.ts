@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validatePagination, validateSearchQuery, validatePriceRange } from '../lib/api-utils';
-
-// Cache durations
-const CACHE_1_HOUR = 'public, s-maxage=3600, stale-while-revalidate=86400';
-const CACHE_5_MIN = 'public, s-maxage=300, stale-while-revalidate=3600';
-const CACHE_1_MIN = 'public, s-maxage=60, stale-while-revalidate=300';
+import { CACHE, CacheControl } from './constants/cache';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 export type SortOption =
   | 'releaseDateDesc'
@@ -42,6 +39,7 @@ export interface GetProductsParams {
   sortBy?: SortOption;
   minPrice?: number;
   maxPrice?: number;
+  locale?: string;
 }
 
 export interface ProductsHandlerDeps {
@@ -109,6 +107,9 @@ export function createProductsHandler(
       // Validate price range
       const { minPrice, maxPrice } = validatePriceRange(searchParams.get('priceRange'));
 
+      // Parse locale parameter (hl or locale)
+      const locale = searchParams.get('hl') || searchParams.get('locale') || 'ja';
+
       // Adjust limit/offset for IDs if option is set
       const finalLimit = options.adjustLimitOffsetForIds && ids ? ids.length : limit;
       const finalOffset = options.adjustLimitOffsetForIds && ids ? 0 : offset;
@@ -130,20 +131,21 @@ export function createProductsHandler(
         sortBy: sortBy || undefined,
         minPrice,
         maxPrice,
+        locale,
       });
 
       // Determine cache duration based on request type
       // ID-based requests are stable - cache longer
       // Search/filter requests change more frequently
-      let cacheControl = CACHE_5_MIN;
+      let cacheControl: CacheControl = CACHE.FIVE_MIN;
       if (ids && ids.length > 0) {
-        cacheControl = CACHE_1_HOUR; // Stable product IDs
+        cacheControl = CACHE.ONE_HOUR; // Stable product IDs
       } else if (query) {
-        cacheControl = CACHE_1_MIN; // Search results more dynamic
+        cacheControl = CACHE.ONE_MIN; // Search results more dynamic
       } else if (actressId) {
-        cacheControl = CACHE_1_HOUR; // Actress-specific results are stable
+        cacheControl = CACHE.ONE_HOUR; // Actress-specific results are stable
       } else if (!category && !provider && !providers) {
-        cacheControl = CACHE_5_MIN; // General list
+        cacheControl = CACHE.FIVE_MIN; // General list
       }
 
       return NextResponse.json(
@@ -151,17 +153,14 @@ export function createProductsHandler(
         {
           headers: {
             'Cache-Control': cacheControl,
-            // Ensure different query params result in different cache entries
             'Vary': 'Accept-Encoding',
           }
         }
       );
     } catch (error) {
-      console.error('Error fetching products:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch products' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to fetch products', 500, {
+        endpoint: '/api/products',
+      });
     }
   };
 }

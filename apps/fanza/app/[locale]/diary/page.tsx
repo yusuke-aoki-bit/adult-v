@@ -23,6 +23,7 @@ import type { DiaryEntry } from '@adult-v/shared/hooks';
 import { normalizeImageUrl } from '@/lib/image-utils';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 import UserPreferenceProfileWrapper from '@/components/UserPreferenceProfileWrapper';
+import { PageSectionNav } from '@adult-v/shared/components';
 
 interface SaleProduct {
   productId: number;
@@ -400,8 +401,32 @@ export default function DiaryPage() {
     return <DiarySkeleton />;
   }
 
+  // セクションナビゲーション用の翻訳
+  const sectionLabels: Record<string, Record<string, string>> = {
+    ja: { diary: '視聴日記' },
+    en: { diary: 'Viewing Diary' },
+    zh: { diary: '观看日记' },
+    ko: { diary: '시청 일기' },
+  };
+
   return (
     <div className="theme-body min-h-screen">
+      {/* セクションナビゲーション */}
+      <PageSectionNav
+        locale={locale}
+        config={{
+          hasSale: saleProducts.length > 0,
+          hasRecentlyViewed: true,
+          mainSectionId: 'diary',
+          mainSectionLabel: sectionLabels[locale]?.diary || sectionLabels.ja.diary,
+          hasRecommendations: true,
+          hasWeeklyHighlights: true,
+          hasTrending: true,
+          hasAllProducts: true,
+        }}
+        theme="light"
+      />
+
       {/* 上部セクション（セール中・最近見た作品） */}
       <section className="py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
@@ -409,7 +434,7 @@ export default function DiaryPage() {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-8">
+      <div id="diary" className="container mx-auto px-4 py-8 scroll-mt-20">
       {/* ヘッダー */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">

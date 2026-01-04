@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { TopPageUpperSections, TopPageLowerSections } from './TopPageSections';
+import { PageSectionNav, type PageSectionNavConfig } from '@adult-v/shared/components';
 
 interface SaleProduct {
   productId: number;
@@ -30,6 +31,8 @@ interface PageLayoutProps {
   uncategorizedCount?: number;
   /** TOPページかどうか（トレンド表示制御用） */
   isTopPage?: boolean;
+  /** FANZAサイトかどうか（FANZA版では常にtrue） */
+  isFanzaSite?: boolean;
   /** 翻訳（下部セクション用） */
   translations?: {
     viewProductList: string;
@@ -42,6 +45,11 @@ interface PageLayoutProps {
   showUpperSections?: boolean;
   /** 下部セクションを表示するか */
   showLowerSections?: boolean;
+  /** セクションナビゲーションの設定（指定しない場合はナビなし） */
+  sectionNavConfig?: Omit<PageSectionNavConfig, 'hasSale' | 'hasRecentlyViewed' | 'hasRecommendations' | 'hasWeeklyHighlights' | 'hasTrending' | 'hasAllProducts'> & {
+    mainSectionId: string;
+    mainSectionLabel: string;
+  };
 }
 
 /**
@@ -58,10 +66,14 @@ export default function PageLayout({
   saleProducts = [],
   uncategorizedCount = 0,
   isTopPage = false,
+  isFanzaSite = true,
   translations,
   showUpperSections = true,
   showLowerSections = true,
+  sectionNavConfig,
 }: PageLayoutProps) {
+  // isFanzaSiteは将来的な拡張用（FANZA版では常にtrue）
+  void isFanzaSite;
   const defaultTranslations = translations || {
     viewProductList: '作品一覧',
     viewProductListDesc: 'FANZA作品を横断検索',
@@ -72,6 +84,24 @@ export default function PageLayout({
 
   return (
     <div className="theme-body min-h-screen">
+      {/* セクションナビゲーション */}
+      {sectionNavConfig && (
+        <PageSectionNav
+          locale={locale}
+          config={{
+            hasSale: showUpperSections && saleProducts.length > 0,
+            hasRecentlyViewed: showUpperSections,
+            mainSectionId: sectionNavConfig.mainSectionId,
+            mainSectionLabel: sectionNavConfig.mainSectionLabel,
+            hasRecommendations: showLowerSections,
+            hasWeeklyHighlights: showLowerSections,
+            hasTrending: showLowerSections,
+            hasAllProducts: showLowerSections,
+          }}
+          theme="light"
+        />
+      )}
+
       {/* 上部セクション（セール中・最近見た作品） */}
       {showUpperSections && (
         <section id="sale" className="py-3 sm:py-4 scroll-mt-20">

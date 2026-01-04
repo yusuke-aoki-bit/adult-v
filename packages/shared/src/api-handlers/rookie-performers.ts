@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createApiErrorResponse } from '../lib/api-logger';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface RookiePerformersHandlerDeps {
-  getDb: () => Promise<unknown>;
+  getDb: () => unknown;
   performers: unknown;
   productPerformers: unknown;
   products: unknown;
-  eq: (column: unknown, value: unknown) => unknown;
-  desc: (column: unknown) => unknown;
-  gte: (column: unknown, value: unknown) => unknown;
-  and: (...conditions: unknown[]) => unknown;
+  eq: (column: any, value: any) => unknown;
+  desc: (column: any) => unknown;
+  gte: (column: any, value: any) => unknown;
+  and: (...conditions: any[]) => unknown;
   sql: unknown;
   count?: unknown;
 }
@@ -33,7 +35,7 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
     const { getDb, performers, productPerformers, products, eq, desc, gte, and, sql } = deps;
 
     try {
-      const db = await getDb() as Record<string, unknown>;
+      const db = getDb() as Record<string, unknown>;
       const { searchParams } = new URL(request.url);
       const limit = parseInt(searchParams.get('limit') || '20', 10);
       const page = parseInt(searchParams.get('page') || '1', 10);
@@ -144,8 +146,9 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
         },
       });
     } catch (error) {
-      console.error('Failed to fetch rookie performers:', error);
-      return NextResponse.json({ error: 'Failed to fetch rookie performers' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to fetch rookie performers', 500, {
+        endpoint: '/api/ranking/rookies',
+      });
     }
   };
 }

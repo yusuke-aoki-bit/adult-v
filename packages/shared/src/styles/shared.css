@@ -293,6 +293,29 @@ html {
     color: var(--nav-hover-favorites);
   }
 
+  .theme-nav-link {
+    color: var(--nav-text);
+  }
+
+  .theme-nav-link:hover {
+    color: var(--nav-text);
+    opacity: 0.8;
+  }
+
+  /* Dropdown Menu */
+  .theme-dropdown {
+    background-color: var(--header-bg);
+    border-color: var(--header-border);
+  }
+
+  .theme-dropdown-item {
+    color: var(--nav-text);
+  }
+
+  .theme-dropdown-item:hover {
+    background-color: var(--accordion-hover);
+  }
+
   /* ASP Stats */
   .theme-asp-bar {
     background-color: var(--asp-bar-bg);

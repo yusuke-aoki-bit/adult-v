@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import ProductCard from '@/components/ProductCard';
 import {
   ActressHeroImage,
@@ -50,6 +51,23 @@ interface PageProps {
     asp?: string | string[];
     limit?: string;
   }>;
+}
+
+/**
+ * ビルド時に人気女優をプリレンダリング
+ * 作品数上位1000名（日本語版のみ）
+ */
+export async function generateStaticParams(): Promise<Array<{ performerId: string; locale: string }>> {
+  try {
+    const { getActresses } = await import('@/lib/db/queries');
+    const topActresses = await getActresses({ limit: 1000, sortBy: 'productCountDesc' });
+    return topActresses.map((actress) => ({
+      performerId: actress.id.toString(),
+      locale: 'ja',
+    }));
+  } catch {
+    return [];
+  }
 }
 
 const PER_PAGE = 96;
@@ -128,9 +146,10 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       locale,
     );
 
-    // hreflang/canonical設定（日本語はパラメータなし、他言語は?hl=付き）
+    // hreflang/canonical設定（?hl=パラメータ方式）
+    // canonical URLは全言語で統一（パラメータなし）
     const actressPath = `/actress/${actress.id}`;
-    const canonicalUrl = locale === 'ja' ? `${baseUrl}${actressPath}` : `${baseUrl}${actressPath}?hl=${locale}`;
+    const canonicalUrl = `${baseUrl}${actressPath}`;
     const alternates = {
       canonical: canonicalUrl,
       languages: {
@@ -309,6 +328,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 alt={actress.name}
                 size={64}
                 className="w-14 h-14 sm:w-16 sm:h-16 shrink-0"
+                priority
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -460,18 +480,22 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* 共演者マップ */}
           <div id="costar-network" className="mt-12 mb-8">
-            <PerformerRelationMap
-              performerId={parseInt(actress.id)}
-              locale={locale}
-            />
+            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse" />}>
+              <PerformerRelationMap
+                performerId={parseInt(actress.id)}
+                locale={locale}
+              />
+            </Suspense>
           </div>
 
           {/* 類似女優マップ */}
           <div id="similar-network" className="mb-8">
-            <SimilarPerformerMap
-              performerId={parseInt(actress.id)}
-              locale={locale}
-            />
+            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse" />}>
+              <SimilarPerformerMap
+                performerId={parseInt(actress.id)}
+                locale={locale}
+              />
+            </Suspense>
           </div>
         </div>
       </div>

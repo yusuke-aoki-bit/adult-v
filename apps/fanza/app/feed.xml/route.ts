@@ -7,8 +7,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 const SITE_NAME = 'FANZA VIEWER LAB';
 const SITE_DESCRIPTION = 'FANZAの作品情報を整理し、ヘビー視聴者のための女優ベースの検索・比較サービス';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 1800; // 30 minutes
+export const revalidate = 1800; // 30分キャッシュ
 
 function escapeXml(unsafe: string): string {
   return unsafe

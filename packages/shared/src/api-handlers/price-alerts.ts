@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 export interface PriceAlertsHandlerDeps {
   getDb: () => Promise<unknown>;
@@ -171,8 +172,9 @@ export function createPriceAlertsHandler(deps: PriceAlertsHandlerDeps) {
 
       return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
     } catch (error) {
-      console.error('Price alerts API error:', error);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return createApiErrorResponse(error, 'Internal server error', 500, {
+        endpoint: '/api/price-alerts',
+      });
     }
   };
 }

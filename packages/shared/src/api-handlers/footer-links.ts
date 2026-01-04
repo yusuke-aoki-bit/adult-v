@@ -1,26 +1,23 @@
-/**
- * フッター用内部リンクAPIハンドラ
- * 人気ジャンル、シリーズ、メーカーを返す（SEO内部リンク強化用）
- */
-
 import { NextResponse } from 'next/server';
 import { desc, sql, eq } from 'drizzle-orm';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type DbType = any;
 
 export interface FooterLinksHandlerDeps {
   getDb: () => DbType;
   tags: {
-    id: unknown;
-    name: unknown;
-    category: unknown;
+    id: any;
+    name: any;
+    category: any;
   };
   productTags: {
-    tagId: unknown;
-    productId: unknown;
+    tagId: any;
+    productId: any;
   };
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export function createFooterLinksHandler(deps: FooterLinksHandlerDeps) {
   return async function GET() {
@@ -83,9 +80,9 @@ export function createFooterLinksHandler(deps: FooterLinksHandlerDeps) {
         },
       });
     } catch (error) {
-      console.error('Failed to fetch footer links:', error);
+      logDbErrorAndReturn(error, { genres: [], series: [], makers: [] }, 'getFooterLinks');
 
-      // エラー時は空配列を返す（嘘のデータを返さない）
+      // エラー時は空配列を返す
       return NextResponse.json({
         genres: [],
         series: [],

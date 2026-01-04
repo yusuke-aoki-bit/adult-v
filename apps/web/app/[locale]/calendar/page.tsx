@@ -12,6 +12,9 @@ import { localizedHref } from '@adult-v/shared/i18n';
 import { getSaleProducts, getAspStats, getPopularTags, getUncategorizedProductsCount } from '@/lib/db/queries';
 import { isServerFanzaSite } from '@/lib/server/site-mode';
 
+// ISR: 5分キャッシュ
+export const revalidate = 300;
+
 export async function generateMetadata({
   params,
 }: {
@@ -128,6 +131,14 @@ export default async function CalendarPage({
     uncategorizedCount: tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() }),
   };
 
+  // セクションナビゲーション用の翻訳
+  const sectionLabels: Record<string, string> = {
+    ja: 'リリースカレンダー',
+    en: 'Release Calendar',
+    zh: '发行日历',
+    ko: '출시 캘린더',
+  };
+
   return (
     <PageLayout
       locale={locale}
@@ -136,11 +147,15 @@ export default async function CalendarPage({
       isTopPage={false}
       isFanzaSite={isFanzaSite}
       translations={layoutTranslations}
+      sectionNavConfig={{
+        mainSectionId: 'calendar',
+        mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
+      }}
     >
       {/* 構造化データ */}
       <JsonLD data={structuredData} />
 
-      <section className="py-3 sm:py-4 md:py-6">
+      <section id="calendar" className="py-3 sm:py-4 md:py-6 scroll-mt-20">
         <div className="container mx-auto px-3 sm:px-4">
           <Breadcrumb
             items={[

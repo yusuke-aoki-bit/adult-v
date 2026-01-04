@@ -92,6 +92,8 @@ export const headerTranslations = {
     compare: '比較',
     statistics: '統計',
     calendar: 'カレンダー',
+    discover: '発見',
+    categories: 'カテゴリ',
     menu: 'メニュー',
     closeMenu: 'メニューを閉じる',
     mobileNav: 'モバイルナビゲーション',
@@ -99,6 +101,10 @@ export const headerTranslations = {
     saleItems: '件セール中',
     fanzaSite: 'FANZA専用',
     adultNotice: '※このページは成人向けコンテンツを含みます。表示価格は税込みです。販売サイトにより価格が異なる場合がありますので、購入前に各サイトで最新価格をご確認ください。',
+    // ドロップダウンメニュー
+    menuBrowse: 'コンテンツ',
+    menuTools: 'ツール',
+    menuMy: 'マイページ',
   },
   en: {
     subtitle: 'heavy user guide',
@@ -111,6 +117,8 @@ export const headerTranslations = {
     compare: 'Compare',
     statistics: 'Stats',
     calendar: 'Calendar',
+    discover: 'Discover',
+    categories: 'Categories',
     menu: 'Menu',
     closeMenu: 'Close menu',
     mobileNav: 'Mobile navigation',
@@ -118,6 +126,10 @@ export const headerTranslations = {
     saleItems: 'items on sale',
     fanzaSite: 'FANZA Site',
     adultNotice: '※This page contains adult content. Prices shown include tax. Prices may vary by retailer, so please check the latest prices on each site before purchasing.',
+    // Dropdown menus
+    menuBrowse: 'Browse',
+    menuTools: 'Tools',
+    menuMy: 'My Page',
   },
   zh: {
     subtitle: 'heavy user guide',
@@ -130,6 +142,8 @@ export const headerTranslations = {
     compare: '比较',
     statistics: '统计',
     calendar: '日历',
+    discover: '发现',
+    categories: '分类',
     menu: '菜单',
     closeMenu: '关闭菜单',
     mobileNav: '移动导航',
@@ -137,6 +151,10 @@ export const headerTranslations = {
     saleItems: '件特卖中',
     fanzaSite: 'FANZA专区',
     adultNotice: '※本页面包含成人内容。显示价格含税。价格可能因销售网站而异，请在购买前确认各网站的最新价格。',
+    // 下拉菜单
+    menuBrowse: '浏览',
+    menuTools: '工具',
+    menuMy: '我的',
   },
   ko: {
     subtitle: 'heavy user guide',
@@ -149,6 +167,8 @@ export const headerTranslations = {
     compare: '비교',
     statistics: '통계',
     calendar: '캘린더',
+    discover: '발견',
+    categories: '카테고리',
     menu: '메뉴',
     closeMenu: '메뉴 닫기',
     mobileNav: '모바일 내비게이션',
@@ -156,6 +176,10 @@ export const headerTranslations = {
     saleItems: '개 세일 중',
     fanzaSite: 'FANZA 전용',
     adultNotice: '※이 페이지는 성인용 콘텐츠를 포함합니다. 표시 가격은 세금 포함입니다. 판매 사이트에 따라 가격이 다를 수 있으니 구매 전 각 사이트에서 최신 가격을 확인하세요.',
+    // 드롭다운 메뉴
+    menuBrowse: '둘러보기',
+    menuTools: '도구',
+    menuMy: '마이페이지',
   },
 } as const;
 

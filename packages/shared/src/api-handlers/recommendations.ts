@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 export interface RecommendationsHandlerDeps {
   getRecommendationsFromFavorites: (productIds: number[], limit: number) => Promise<unknown[]>;
@@ -29,8 +30,9 @@ export function createRecommendationsHandler(deps: RecommendationsHandlerDeps) {
         basedOn: numericIds.length,
       });
     } catch (error) {
-      console.error('Failed to get recommendations:', error);
-      return NextResponse.json({ recommendations: [], error: 'Failed to get recommendations' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to get recommendations', 500, {
+        endpoint: '/api/recommendations',
+      });
     }
   };
 }

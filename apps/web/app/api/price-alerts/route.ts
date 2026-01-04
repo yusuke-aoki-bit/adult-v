@@ -8,23 +8,23 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { eq, and, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
-// DBテーブル定義（マイグレーション後に使用可能）
-// 現時点ではsql rawクエリで対応
+// DB型定義
+type DbInstance = ReturnType<typeof getDb>;
 
-async function getSubscriptionByEndpoint(db: ReturnType<typeof getDb> extends Promise<infer T> ? T : never, endpoint: string) {
-  const result = await (db as unknown as { execute: (query: unknown) => Promise<{ rows: { id: number; endpoint: string; keys: unknown }[] }> }).execute(
+async function getSubscriptionByEndpoint(db: DbInstance, endpoint: string) {
+  const result = await db.execute(
     sql`SELECT id, endpoint, keys FROM push_subscriptions WHERE endpoint = ${endpoint} LIMIT 1`
   );
-  return result.rows[0] || null;
+  return (result.rows[0] as { id: number; endpoint: string; keys: unknown } | undefined) || null;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const db = await getDb();
+    const db = getDb();
     const body = await request.json();
     const { endpoint, productId, targetPrice, notifyOnAnySale = true } = body;
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const subscriptionId = subscription.id;
 
     // 既存のアラートをチェック
-    const existingResult = await (db as unknown as { execute: (query: unknown) => Promise<{ rows: { id: number }[] }> }).execute(
+    const existingResult = await db.execute(
       sql`
         SELECT id FROM price_alerts
         WHERE subscription_id = ${subscriptionId}
@@ -52,22 +52,23 @@ export async function POST(request: NextRequest) {
     );
 
     if (existingResult.rows.length > 0) {
+      const existingId = (existingResult.rows[0] as { id: number }).id;
       // 更新
-      await (db as unknown as { execute: (query: unknown) => Promise<void> }).execute(
+      await db.execute(
         sql`
           UPDATE price_alerts
           SET target_price = ${targetPrice || null},
               notify_on_any_sale = ${notifyOnAnySale},
               is_active = true,
               updated_at = NOW()
-          WHERE id = ${existingResult.rows[0].id}
+          WHERE id = ${existingId}
         `
       );
 
-      return NextResponse.json({ success: true, action: 'updated', alertId: existingResult.rows[0].id });
+      return NextResponse.json({ success: true, action: 'updated', alertId: existingId });
     } else {
       // 新規登録
-      const insertResult = await (db as unknown as { execute: (query: unknown) => Promise<{ rows: { id: number }[] }> }).execute(
+      const insertResult = await db.execute(
         sql`
           INSERT INTO price_alerts (subscription_id, product_id, target_price, notify_on_any_sale)
           VALUES (${subscriptionId}, ${productId}, ${targetPrice || null}, ${notifyOnAnySale})
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
         `
       );
 
-      return NextResponse.json({ success: true, action: 'created', alertId: insertResult.rows[0].id });
+      return NextResponse.json({ success: true, action: 'created', alertId: (insertResult.rows[0] as { id: number }).id });
     }
   } catch (error) {
     console.error('Price alerts POST error:', error);
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const db = await getDb();
+    const db = getDb();
     const { searchParams } = new URL(request.url);
     const endpoint = searchParams.get('endpoint');
 
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
     }
 
     // アラート一覧を取得
-    const alertsResult = await (db as unknown as { execute: (query: unknown) => Promise<{ rows: unknown[] }> }).execute(
+    const alertsResult = await db.execute(
       sql`
         SELECT
           pa.id,
@@ -129,7 +130,7 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const db = await getDb();
+    const db = getDb();
     const body = await request.json();
     const { endpoint, productId } = body;
 
@@ -145,7 +146,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // アラートを非アクティブ化
-    await (db as unknown as { execute: (query: unknown) => Promise<void> }).execute(
+    await db.execute(
       sql`
         UPDATE price_alerts
         SET is_active = false, updated_at = NOW()

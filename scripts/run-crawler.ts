@@ -511,8 +511,10 @@ async function main() {
 
       case 'update-performer-tags':
         {
-          // 演者タグ更新（繰り返し実行）
-          const command = `npx tsx scripts/run-performer-tags-all.ts`;
+          // 演者タグ更新
+          const limitArg = args.find(a => a.startsWith('--limit='));
+          const limit = limitArg ? limitArg.split('=')[1] : '200';
+          const command = `npx tsx scripts/update-performer-tags.ts --limit=${limit}`;
           console.log(`Executing: ${command}`);
           execSync(command, { stdio: 'inherit', env: process.env });
         }

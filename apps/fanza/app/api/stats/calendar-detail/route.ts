@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCalendarDetailData } from '@adult-v/shared/db-queries';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300; // 5分キャッシュ
 
 export async function GET(request: NextRequest) {
   try {

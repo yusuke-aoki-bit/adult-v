@@ -7,7 +7,6 @@ import ProductSortDropdown from '@/components/ProductSortDropdown';
 import Breadcrumb from '@/components/Breadcrumb';
 import ActiveFiltersChips from '@/components/ActiveFiltersChips';
 import PageLayout from '@/components/PageLayout';
-import ProductListSectionNav from '@/components/ProductListSectionNav';
 import { JsonLD } from '@/components/JsonLD';
 import SearchSuggestionsWrapper from '@/components/SearchSuggestionsWrapper';
 import { getProducts, getProductsCount, getAspStats, getPopularTags, getUncategorizedProductsCount, getSaleProducts, SaleProduct } from '@/lib/db/queries';
@@ -51,20 +50,21 @@ export async function generateMetadata({
     t('title'),
     t('metaDescription'),
     undefined,
-    `/${locale}/products`,
+    localizedHref('/products', locale),
     undefined,
     locale,
   );
 
-  // hreflang/canonical設定
+  // hreflang/canonical設定（?hl=形式）
   const alternates = {
-    canonical: `${baseUrl}/${locale}/products`,
+    canonical: `${baseUrl}/products`,
     languages: {
-      'ja': `${baseUrl}/ja/products`,
-      'en': `${baseUrl}/en/products`,
-      'zh': `${baseUrl}/zh/products`,
-      'ko': `${baseUrl}/ko/products`,
-      'x-default': `${baseUrl}/ja/products`,
+      'ja': `${baseUrl}/products`,
+      'en': `${baseUrl}/products?hl=en`,
+      'zh': `${baseUrl}/products?hl=zh`,
+      'zh-TW': `${baseUrl}/products?hl=zh-TW`,
+      'ko': `${baseUrl}/products?hl=ko`,
+      'x-default': `${baseUrl}/products`,
     },
   };
 
@@ -83,14 +83,15 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-export const dynamic = 'force-dynamic';
+// ISR: 1分キャッシュ（searchParamsで自動的に動的になるが、キャッシュを有効化）
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const PER_PAGE = 96;
+const PER_PAGE = 48;
 
 export default async function ProductsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -266,6 +267,14 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     uncategorizedCount: tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() }),
   };
 
+  // セクションナビゲーション用の翻訳
+  const sectionLabels: Record<string, string> = {
+    ja: '商品一覧',
+    en: 'Products',
+    zh: '商品列表',
+    ko: '상품 목록',
+  };
+
   return (
     <PageLayout
       locale={locale}
@@ -277,9 +286,11 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
       isTopPage={false}
       isFanzaSite={isFanzaSite}
       translations={layoutTranslations}
+      sectionNavConfig={{
+        mainSectionId: 'products',
+        mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
+      }}
     >
-      {/* セクションナビゲーション */}
-      <ProductListSectionNav locale={locale} hasSaleProducts={saleProducts.length > 0} />
 
       {/* 構造化データ */}
       <JsonLD data={itemListSchema} />

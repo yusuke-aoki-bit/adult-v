@@ -28,4 +28,9 @@ export {
   getActressPageFAQs,
   generateReviewSchema,
   generateCriticReviewSchema,
+  // 新規追加: SEO強化用スキーマ
+  generateHowToSchema,
+  generateAggregateOfferSchema,
+  generateProductItemListSchema,
+  generatePerformerItemListSchema,
 } from '@adult-v/shared/lib/seo';

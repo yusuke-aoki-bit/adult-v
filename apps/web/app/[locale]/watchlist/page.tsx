@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWatchLater } from '@adult-v/shared/hooks';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
+import { PageSectionNav } from '@adult-v/shared/components';
 
 interface SaleProduct {
   productId: number;
@@ -92,8 +93,32 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
     );
   }
 
+  // セクションナビゲーション用の翻訳
+  const sectionLabels: Record<string, Record<string, string>> = {
+    ja: { watchlist: '後で見る' },
+    en: { watchlist: 'Watch Later' },
+    zh: { watchlist: '稍后观看' },
+    ko: { watchlist: '나중에 보기' },
+  };
+
   return (
     <div className="theme-body min-h-screen">
+      {/* セクションナビゲーション */}
+      <PageSectionNav
+        locale={locale}
+        config={{
+          hasSale: saleProducts.length > 0,
+          hasRecentlyViewed: true,
+          mainSectionId: 'watchlist',
+          mainSectionLabel: sectionLabels[locale]?.watchlist || sectionLabels.ja.watchlist,
+          hasRecommendations: true,
+          hasWeeklyHighlights: true,
+          hasTrending: true,
+          hasAllProducts: true,
+        }}
+        theme="dark"
+      />
+
       {/* 上部セクション（セール中・最近見た作品） */}
       <section className="py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
@@ -101,7 +126,7 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
         </div>
       </section>
 
-      <main className="min-h-screen theme-bg">
+      <main id="watchlist" className="min-h-screen theme-bg scroll-mt-20">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             {/* ヘッダー */}
@@ -247,11 +272,7 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
 }
 
 export default function WatchlistPage({ params }: { params: Promise<{ locale: string }> }) {
-  const [locale, setLocale] = useState('ja');
-
-  useEffect(() => {
-    params.then(p => setLocale(p.locale));
-  }, [params]);
+  const { locale } = use(params);
 
   return <WatchlistPageClient locale={locale} />;
 }

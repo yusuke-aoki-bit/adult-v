@@ -55,7 +55,7 @@ export default function NavigationProgress() {
   if (!isNavigating && progress === 0) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] h-0.5 bg-transparent">
+    <div className="fixed top-0 left-0 right-0 z-100 h-0.5 bg-transparent">
       <div
         className="h-full bg-linear-to-r from-pink-500 to-rose-500 transition-all duration-300 ease-out"
         style={{

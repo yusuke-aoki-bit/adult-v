@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { useCompareList, CompareItem } from '../hooks/useCompareList';
 
 interface CompareButtonProps {
@@ -8,6 +9,7 @@ interface CompareButtonProps {
   theme?: 'dark' | 'light';
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
+  showToast?: boolean;
   className?: string;
 }
 
@@ -17,9 +19,11 @@ export function CompareButton({
   theme = 'dark',
   size = 'md',
   showLabel = false,
+  showToast = true,
   className = '',
 }: CompareButtonProps) {
   const { toggleItem, isInCompareList, isFull, count, maxItems } = useCompareList();
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
   const isInList = isInCompareList(product.id);
   const isDark = theme === 'dark';
@@ -40,17 +44,29 @@ export function CompareButton({
     addToCompare: locale === 'ja' ? '比較に追加' : 'Add to compare',
     removeFromCompare: locale === 'ja' ? '比較から削除' : 'Remove from compare',
     compareFull: locale === 'ja' ? `比較リストが満杯（${maxItems}件）` : `Compare list full (${maxItems} items)`,
+    added: locale === 'ja' ? '比較リストに追加しました' : 'Added to compare list',
+    removed: locale === 'ja' ? '比較リストから削除しました' : 'Removed from compare list',
+    checkBottom: locale === 'ja' ? '画面下部で比較できます' : 'Compare at the bottom of screen',
   };
+
+  const showToastMessage = useCallback((message: string, type: 'success' | 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 2500);
+  }, []);
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!isInList && isFull) {
-      // 満杯の場合は最も古いものを削除して追加
-      toggleItem(product);
-    } else {
-      toggleItem(product);
+    const wasInList = isInList;
+    toggleItem(product);
+
+    if (showToast) {
+      if (wasInList) {
+        showToastMessage(t.removed, 'info');
+      } else {
+        showToastMessage(`${t.added} (${count + 1}/${maxItems})`, 'success');
+      }
     }
   };
 
@@ -63,6 +79,7 @@ export function CompareButton({
       title={label}
       aria-label={label}
       className={`
+        relative
         ${sizeClasses[size]}
         ${showLabel ? 'flex items-center gap-1.5 px-3' : ''}
         rounded-lg transition-all duration-200
@@ -90,6 +107,23 @@ export function CompareButton({
         <span className="text-sm font-medium whitespace-nowrap">
           {isInList ? t.removeFromCompare : t.addToCompare}
         </span>
+      )}
+
+      {/* インライントースト通知 */}
+      {toast && (
+        <div
+          className={`absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg animate-fade-in z-50 ${
+            toast.type === 'success'
+              ? isDark
+                ? 'bg-green-600 text-white'
+                : 'bg-green-500 text-white'
+              : isDark
+                ? 'bg-gray-600 text-white'
+                : 'bg-gray-500 text-white'
+          }`}
+        >
+          {toast.message}
+        </div>
       )}
     </button>
   );

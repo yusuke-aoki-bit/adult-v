@@ -31,7 +31,7 @@ const MAINTENANCE_TASKS: MaintenanceTask[] = [
   },
   {
     name: 'Performer Tags Update',
-    command: 'npx tsx scripts/run-performer-tags-all.ts',
+    command: 'npx tsx scripts/update-performer-tags.ts --limit=500',
     timeout: 14400,
     critical: false,
   },

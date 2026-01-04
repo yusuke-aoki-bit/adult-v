@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { products, productTags, tags, productPerformers, performers, productSources } from '@/lib/db/schema';
+import '@/lib/db/schema';
 import { sql } from 'drizzle-orm';
 import { getCache, setCache, generateCacheKey } from '@adult-v/shared/lib/cache';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60; // 1分キャッシュ
 export const runtime = 'nodejs';
 
 const CACHE_TTL = 60 * 5; // 5分

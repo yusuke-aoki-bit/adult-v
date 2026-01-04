@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql, SQL } from 'drizzle-orm';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 type RankingPeriod = 'daily' | 'weekly' | 'monthly' | 'all';
 
@@ -63,11 +64,9 @@ export function createRankingActressesHandler(deps: RankingActressesHandlerDeps)
         })),
       });
     } catch (error) {
-      console.error('Error fetching actress ranking:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch ranking' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to fetch ranking', 500, {
+        endpoint: '/api/ranking/actresses',
+      });
     }
   };
 }

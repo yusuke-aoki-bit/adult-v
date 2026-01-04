@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 // 型定義
 export interface UserPerformerSuggestion {
@@ -23,17 +24,18 @@ export interface UserPerformerSuggestionWithVote extends UserPerformerSuggestion
 }
 
 // 依存性の型定義
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface UserPerformerSuggestionsHandlerDeps {
   getDb: () => unknown;
   userPerformerSuggestions: unknown;
   userPerformerVotes: unknown;
   products: unknown;
   performers: unknown;
-  eq: (a: unknown, b: unknown) => unknown;
-  and: (...args: unknown[]) => unknown;
-  or: (...args: unknown[]) => unknown;
-  desc: (col: unknown) => unknown;
-  ilike: (col: unknown, pattern: string) => unknown;
+  eq: (a: any, b: any) => unknown;
+  and: (...args: any[]) => unknown;
+  or: (...args: any[]) => unknown;
+  desc: (col: any) => unknown;
+  ilike: (col: any, pattern: string) => unknown;
   sql: unknown;
 }
 
@@ -113,8 +115,9 @@ export function createUserPerformerSuggestionsGetHandler(deps: UserPerformerSugg
         total: suggestionsWithVotes.length,
       });
     } catch (error) {
-      console.error('[UserPerformerSuggestions GET] Error:', error);
-      return NextResponse.json({ error: 'Failed to fetch performer suggestions' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to fetch performer suggestions', 500, {
+        endpoint: '/api/products/[id]/performer-suggestions',
+      });
     }
   };
 }
@@ -227,8 +230,9 @@ export function createUserPerformerSuggestionsPostHandler(deps: UserPerformerSug
         matchedPerformer: existingPerformer || null,
       }, { status: 201 });
     } catch (error) {
-      console.error('[UserPerformerSuggestions POST] Error:', error);
-      return NextResponse.json({ error: 'Failed to create performer suggestion' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to create performer suggestion', 500, {
+        endpoint: '/api/products/[id]/performer-suggestions',
+      });
     }
   };
 }
@@ -366,8 +370,9 @@ export function createUserPerformerVoteHandler(deps: UserPerformerSuggestionsHan
 
       return NextResponse.json({ success: true, voteType });
     } catch (error) {
-      console.error('[UserPerformerVote] Error:', error);
-      return NextResponse.json({ error: 'Failed to vote' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to vote', 500, {
+        endpoint: '/api/products/[id]/performer-suggestions/vote',
+      });
     }
   };
 }

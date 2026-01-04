@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDailyReleases } from '@adult-v/shared/db-queries';
 
+export const revalidate = 3600; // 1時間キャッシュ
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const year = parseInt(searchParams.get('year') || String(new Date().getFullYear()), 10);

@@ -308,100 +308,136 @@ function ActressCardBaseComponent({
     );
   }
 
-  // Full display mode
+  // Full display mode - same interaction as compact (image click = lightbox, name click = detail)
   return (
-    <div className="theme-card theme-text rounded-2xl overflow-hidden">
-      <div className="relative aspect-4/5">
-        <Image
-          src={imgSrc}
-          alt={actress.name}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className={`object-cover opacity-90 ${shouldBlur ? 'blur-[1px]' : ''}`}
-          loading="lazy"
-          placeholder="blur"
-          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-          onError={handleImageError}
-          unoptimized
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent" />
-        {FavoriteButton && (
-          <div className="absolute top-4 right-4 bg-white rounded-full shadow-md">
-            <FavoriteButton type="actress" id={actress.id} />
-          </div>
-        )}
-        <div className="absolute bottom-4 left-4 text-white">
-          <p className="text-sm uppercase tracking-widest text-white/70">
-            {actress.catchcopy}
-          </p>
+    <>
+      <div className="theme-card theme-text rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-200">
+        {/* Image section - click for lightbox */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={fetchProductImages ? handleImageClick : undefined}
+          onKeyDown={(e) => {
+            if (fetchProductImages && (e.key === 'Enter' || e.key === ' ')) {
+              handleImageClick(e);
+            }
+          }}
+          className={`relative aspect-4/5 ${fetchProductImages ? 'cursor-pointer' : ''} group`}
+        >
+          <Image
+            src={imgSrc}
+            alt={actress.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className={`object-cover opacity-90 group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
+            loading="lazy"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+            onError={handleImageError}
+            unoptimized
+          />
+          {/* Favorite button */}
+          {FavoriteButton && (
+            <div
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white rounded-full shadow-md z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FavoriteButton type="actress" id={actress.id} />
+            </div>
+          )}
+          {/* Hover overlay */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+        </div>
+
+        {/* Name and info section - below image */}
+        <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+          {/* Name - link to detail page */}
           <div className="flex items-center gap-2">
-            <h3 className="text-3xl font-semibold">{actress.name}</h3>
+            <Link
+              href={`/${locale}/actress/${actress.id}`}
+              className={`text-xl sm:text-2xl font-bold truncate leading-tight ${themeConfig.hoverColor} transition-colors flex-1`}
+            >
+              {actress.name}
+            </Link>
             <CopyButton
               text={actress.name}
               iconOnly
               size="sm"
+              className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
             />
           </div>
+
+          {/* Catchcopy */}
+          {actress.catchcopy && (
+            <p className="text-sm theme-text-muted">{actress.catchcopy}</p>
+          )}
+
           {/* Aliases */}
           {actress.aliases && actress.aliases.length > 0 && (
-            <p className="text-sm text-white/60 mt-1">
+            <p className="text-xs theme-text-muted">
               ({actress.aliases.slice(0, 3).join(', ')}{actress.aliases.length > 3 ? ' ...' : ''})
             </p>
+          )}
+
+          {/* AI review or description */}
+          {actress.aiReview?.overview ? (
+            <p className="text-sm theme-text-secondary line-clamp-3">{actress.aiReview.overview}</p>
+          ) : actress.description && (
+            <p className="text-sm theme-text-secondary line-clamp-3">{actress.description}</p>
+          )}
+
+          {actress.tags && actress.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {actress.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs uppercase tracking-wide theme-content theme-text-secondary px-3 py-1 rounded-full border theme-border"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {actress.metrics && (
+            <div className="grid grid-cols-3 gap-3 sm:gap-4 text-center">
+              <Stat label={t.releaseCount} value={`${actress.metrics.releaseCount || 0}${t.videos}`} />
+              <Stat label={t.trend} value={actress.metrics.trendingScore || 0} />
+              <Stat label={t.fanScore} value={`${actress.metrics.fanScore || 0}%`} />
+            </div>
+          )}
+
+          {displayServices.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              {displayServices.map((service) => {
+                const meta = providerMeta[service as ProviderId];
+                if (!meta) return null;
+                const gradientStyle = meta.gradientColors
+                  ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
+                  : { backgroundColor: '#4b5563' };
+                return (
+                  <span
+                    key={service}
+                    className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
+                    style={gradientStyle}
+                  >
+                    {meta.label}
+                  </span>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
 
-      <div className="p-6 space-y-4">
-        {/* AI review or description */}
-        {actress.aiReview?.overview ? (
-          <p className="text-sm theme-text-secondary line-clamp-3">{actress.aiReview.overview}</p>
-        ) : actress.description && (
-          <p className="text-sm theme-text-secondary line-clamp-3">{actress.description}</p>
-        )}
-
-        {actress.tags && actress.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {actress.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs uppercase tracking-wide theme-content theme-text-secondary px-3 py-1 rounded-full border theme-border"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {actress.metrics && (
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <Stat label={t.releaseCount} value={`${actress.metrics.releaseCount || 0}${t.videos}`} />
-            <Stat label={t.trend} value={actress.metrics.trendingScore || 0} />
-            <Stat label={t.fanScore} value={`${actress.metrics.fanScore || 0}%`} />
-          </div>
-        )}
-
-        {displayServices.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {displayServices.map((service) => {
-              const meta = providerMeta[service as ProviderId];
-              if (!meta) return null;
-              const gradientStyle = meta.gradientColors
-                ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
-                : { backgroundColor: '#4b5563' };
-              return (
-                <span
-                  key={service}
-                  className="text-xs font-semibold px-3 py-1 rounded-full text-white"
-                  style={gradientStyle}
-                >
-                  {meta.label}
-                </span>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+      {/* Product images lightbox */}
+      <ImageLightbox
+        images={productImages}
+        isOpen={showLightbox}
+        onClose={handleCloseLightbox}
+        alt={actress.name}
+      />
+    </>
   );
 }
 

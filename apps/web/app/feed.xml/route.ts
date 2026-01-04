@@ -7,8 +7,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 const SITE_NAME = 'Adult Viewer Lab';
 const SITE_DESCRIPTION = '複数のプラットフォームを横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 1800; // 30 minutes
+export const revalidate = 1800; // 30分キャッシュ
 
 function escapeXml(unsafe: string): string {
   return unsafe

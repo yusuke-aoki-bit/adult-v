@@ -34,6 +34,8 @@ const eslintConfig = [
       "@next/next/no-before-interactive-script-outside-document": "off",
       // External images from multiple CDNs require <img> tag
       "@next/next/no-img-element": "off",
+      // Use structured logging (db-logger, api-logger) instead of console
+      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
 ];

@@ -512,29 +512,33 @@ export function TopPageUpperSections({
     <div className="space-y-3">
       {/* セール情報 */}
       {saleProducts.length > 0 && (
-        <TopPageMenuSection
-          type="accordion"
-          icon={<Tag className="w-5 h-5" />}
-          title="セール中"
-          subtitle="お得な割引商品をチェック"
-          theme="dark"
-          defaultOpen={false}
-        >
-          <SaleProductsContent products={saleProducts} />
-        </TopPageMenuSection>
+        <div id="sale" className="scroll-mt-20">
+          <TopPageMenuSection
+            type="accordion"
+            icon={<Tag className="w-5 h-5" />}
+            title="セール中"
+            subtitle="お得な割引商品をチェック"
+            theme="dark"
+            defaultOpen={false}
+          >
+            <SaleProductsContent products={saleProducts} />
+          </TopPageMenuSection>
+        </div>
       )}
 
       {/* 最近見た作品 */}
-      <TopPageMenuSection
-        type="accordion"
-        icon={<Clock className="w-5 h-5" />}
-        title="最近見た作品"
-        subtitle="閲覧履歴から"
-        theme="dark"
-        defaultOpen={false}
-      >
-        <RecentlyViewedContent locale={locale} />
-      </TopPageMenuSection>
+      <div id="recently-viewed" className="scroll-mt-20">
+        <TopPageMenuSection
+          type="accordion"
+          icon={<Clock className="w-5 h-5" />}
+          title="最近見た作品"
+          subtitle="閲覧履歴から"
+          theme="dark"
+          defaultOpen={false}
+        >
+          <RecentlyViewedContent locale={locale} />
+        </TopPageMenuSection>
+      </div>
     </div>
   );
 }
@@ -558,55 +562,63 @@ export function TopPageLowerSections({
   return (
     <div className="space-y-3">
       {/* あなたへのおすすめ */}
-      <TopPageMenuSection
-        type="accordion"
-        icon={<Sparkles className="w-5 h-5" />}
-        title="あなたへのおすすめ"
-        subtitle="閲覧履歴に基づくレコメンド"
-        theme="dark"
-        defaultOpen={false}
-      >
-        <RecommendationsContent locale={locale} />
-      </TopPageMenuSection>
-
-      {/* 今週の注目 */}
-      <TopPageMenuSection
-        type="accordion"
-        icon={<TrendingUp className="w-5 h-5" />}
-        title="今週の注目"
-        subtitle="話題の女優と作品"
-        theme="dark"
-        defaultOpen={false}
-      >
-        <WeeklyHighlightsContent locale={locale} />
-      </TopPageMenuSection>
-
-      {/* トレンド分析 */}
-      {isTopPage && (
+      <div id="recommendations" className="scroll-mt-20">
         <TopPageMenuSection
           type="accordion"
-          icon={<BarChart3 className="w-5 h-5" />}
-          title="トレンド分析"
-          subtitle="人気ジャンル・女優ランキング"
+          icon={<Sparkles className="w-5 h-5" />}
+          title="あなたへのおすすめ"
+          subtitle="閲覧履歴に基づくレコメンド"
           theme="dark"
           defaultOpen={false}
         >
-          <TrendingContent locale={locale} />
+          <RecommendationsContent locale={locale} />
         </TopPageMenuSection>
+      </div>
+
+      {/* 今週の注目 */}
+      <div id="weekly-highlights" className="scroll-mt-20">
+        <TopPageMenuSection
+          type="accordion"
+          icon={<TrendingUp className="w-5 h-5" />}
+          title="今週の注目"
+          subtitle="話題の女優と作品"
+          theme="dark"
+          defaultOpen={false}
+        >
+          <WeeklyHighlightsContent locale={locale} />
+        </TopPageMenuSection>
+      </div>
+
+      {/* トレンド分析 */}
+      {isTopPage && (
+        <div id="trending" className="scroll-mt-20">
+          <TopPageMenuSection
+            type="accordion"
+            icon={<BarChart3 className="w-5 h-5" />}
+            title="トレンド分析"
+            subtitle="人気ジャンル・女優ランキング"
+            theme="dark"
+            defaultOpen={false}
+          >
+            <TrendingContent locale={locale} />
+          </TopPageMenuSection>
+        </div>
       )}
 
       {/* 分割線 */}
       <div className="border-t border-gray-700/50 my-2" />
 
       {/* 商品一覧へのリンク */}
-      <TopPageMenuSection
-        type="link"
-        href={localizedHref('/products', locale)}
-        icon={<Film className="w-5 h-5" />}
-        title={t.viewProductList}
-        subtitle={t.viewProductListDesc}
-        theme="dark"
-      />
+      <div id="all-products" className="scroll-mt-20">
+        <TopPageMenuSection
+          type="link"
+          href={localizedHref('/products', locale)}
+          icon={<Film className="w-5 h-5" />}
+          title={t.viewProductList}
+          subtitle={t.viewProductListDesc}
+          theme="dark"
+        />
+      </div>
 
       {/* 未整理作品へのリンク */}
       {uncategorizedCount > 0 && (

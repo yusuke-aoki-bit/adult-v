@@ -122,6 +122,77 @@ const CalendarIcon = () => (
   </svg>
 );
 
+const DiscoverIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" />
+  </svg>
+);
+
+const CategoriesIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+  </svg>
+);
+
+const ChevronDownIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-0.5" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+  </svg>
+);
+
+// ドロップダウンメニューコンポーネント
+interface DropdownMenuProps {
+  label: string;
+  children: ReactNode;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+}
+
+const DropdownMenu = memo(function DropdownMenu({ label, children, isOpen, onToggle, onClose }: DropdownMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        onClick={onToggle}
+        className="theme-nav-link transition-colors font-medium flex items-center text-sm px-2 py-1 rounded hover:bg-white/10"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+      >
+        {label}
+        <ChevronDownIcon />
+      </button>
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 py-1 min-w-[160px] theme-dropdown rounded-lg shadow-lg border theme-border z-50">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+});
+
 const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     {isOpen ? (
@@ -139,6 +210,8 @@ export interface HeaderBaseProps {
   LanguageSwitcher: ComponentType;
   /** NotificationSubscriberコンポーネント */
   NotificationSubscriber: ComponentType;
+  /** UserMenuコンポーネント（ログイン/アバター表示） */
+  UserMenu: ComponentType<{ locale: string }>;
   /** FANZAサイトかどうか */
   isFanzaSite: boolean;
   /** ロゴをカスタマイズする場合 */
@@ -149,20 +222,31 @@ export interface HeaderBaseProps {
  * 共有Headerベースコンポーネント
  * 言語取得は?hl=パラメータから統一的に行う
  */
-export function HeaderBase({
+export const HeaderBase = memo(function HeaderBase({
   SearchBar,
   LanguageSwitcher,
   NotificationSubscriber,
+  UserMenu,
   isFanzaSite,
   renderLogo,
 }: HeaderBaseProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<'browse' | 'tools' | 'my' | null>(null);
   const lastScrollY = useRef(0);
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLElement>(null);
+
+  // ドロップダウン制御
+  const handleDropdownToggle = useCallback((menu: 'browse' | 'tools' | 'my') => {
+    setOpenDropdown(prev => prev === menu ? null : menu);
+  }, []);
+
+  const handleDropdownClose = useCallback(() => {
+    setOpenDropdown(null);
+  }, []);
 
   // ?hl= パラメータから現在の言語を取得
   const hlParam = searchParams.get('hl');
@@ -311,83 +395,130 @@ export function HeaderBase({
             <SearchBar />
           </div>
 
-          {/* デスクトップナビゲーション - 5カラム×2行レイアウト */}
+          {/* デスクトップナビゲーション - ドロップダウンメニュー形式 */}
           <nav
-            className="hidden md:flex items-center gap-4 shrink-0 theme-nav ml-auto"
+            className="hidden md:flex items-center gap-1 shrink-0 theme-nav ml-auto"
           >
-            {/* 5カラム×2行グリッド */}
-            <div className="grid grid-cols-5 gap-x-3 gap-y-0.5 text-right">
-              {/* 1行目: 作品一覧 / 女優一覧 / カレンダー / 統計 / 比較 */}
-              <Link
-                href={localizedHref('/products', locale)}
-                className="theme-nav-products transition-colors font-medium flex items-center gap-1 text-sm justify-end"
-              >
-                <ProductsIcon />
-                {t.products}
-              </Link>
+            {/* コンテンツメニュー */}
+            <DropdownMenu
+              label={t.menuBrowse}
+              isOpen={openDropdown === 'browse'}
+              onToggle={() => handleDropdownToggle('browse')}
+              onClose={handleDropdownClose}
+            >
               <Link
                 href={localizedHref('/', locale)}
-                className="theme-nav-actresses transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
               >
                 <ActressesIcon />
                 {t.actresses}
               </Link>
               <Link
+                href={localizedHref('/products', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                <ProductsIcon />
+                {t.products}
+              </Link>
+              <Link
+                href={localizedHref('/categories', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                <CategoriesIcon />
+                {t.categories}
+              </Link>
+              <Link
                 href={localizedHref('/calendar', locale)}
-                className="theme-nav-calendar transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
               >
                 <CalendarIcon />
                 {t.calendar}
               </Link>
               <Link
+                href={localizedHref('/discover', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                <DiscoverIcon />
+                {t.discover}
+              </Link>
+            </DropdownMenu>
+
+            {/* ツールメニュー */}
+            <DropdownMenu
+              label={t.menuTools}
+              isOpen={openDropdown === 'tools'}
+              onToggle={() => handleDropdownToggle('tools')}
+              onClose={handleDropdownClose}
+            >
+              <Link
                 href={localizedHref('/statistics', locale)}
-                className="theme-nav-statistics transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
               >
                 <StatisticsIcon />
                 {t.statistics}
               </Link>
               <Link
                 href={localizedHref('/compare', locale)}
-                className="theme-nav-compare transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
               >
                 <CompareIcon />
                 {t.compare}
               </Link>
-              {/* 2行目: 視聴日記 / DNA分析 / お気に入り / あとで見る / 空 */}
-              <Link
-                href={localizedHref('/diary', locale)}
-                className="theme-nav-diary transition-colors font-medium flex items-center gap-1 text-sm justify-end"
-              >
-                <DiaryIcon />
-                {t.diary}
-              </Link>
               <Link
                 href={localizedHref('/profile', locale)}
-                className="theme-nav-profile transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
               >
                 <ProfileIcon />
                 {t.profile}
               </Link>
+            </DropdownMenu>
+
+            {/* マイページメニュー */}
+            <DropdownMenu
+              label={t.menuMy}
+              isOpen={openDropdown === 'my'}
+              onToggle={() => handleDropdownToggle('my')}
+              onClose={handleDropdownClose}
+            >
               <Link
                 href={localizedHref('/favorites', locale)}
-                className="theme-nav-favorites transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
               >
                 <FavoritesIcon />
                 {t.favorites}
               </Link>
               <Link
                 href={localizedHref('/watchlist', locale)}
-                className="theme-nav-watchlist transition-colors font-medium flex items-center gap-1 text-sm justify-end"
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
               >
                 <WatchlistIcon />
                 {t.watchlist}
               </Link>
-              <div />
-            </div>
-            {/* 通知・言語切り替え */}
-            <div className="flex items-center gap-2">
+              <Link
+                href={localizedHref('/diary', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                <DiaryIcon />
+                {t.diary}
+              </Link>
+            </DropdownMenu>
+
+            {/* 通知・言語切り替え・ユーザーメニュー */}
+            <div className="flex items-center gap-2 ml-2">
               <NotificationSubscriber />
               <LanguageSwitcher />
+              <UserMenu locale={locale} />
             </div>
           </nav>
 
@@ -418,95 +549,131 @@ export function HeaderBase({
               <SearchBar />
             </div>
 
-            {/* ナビゲーションリンク - 48pxタッチターゲット確保 */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-0 theme-nav" role="list">
-              <Link
-                href={localizedHref('/products', locale)}
-                className="py-3 min-h-[48px] flex items-center theme-nav-products transition-colors text-sm"
-                onClick={handleMobileMenuClose}
-                role="listitem"
-              >
-                <ProductsIcon />
-                <span className="ml-2">{t.products}</span>
-              </Link>
-              <Link
-                href={localizedHref('/', locale)}
-                className="py-3 min-h-[48px] flex items-center theme-nav-actresses transition-colors text-sm"
-                onClick={handleMobileMenuClose}
-                role="listitem"
-              >
-                <ActressesIcon />
-                <span className="ml-2">{t.actresses}</span>
-              </Link>
-              <Link
-                href={localizedHref('/calendar', locale)}
-                className="py-3 min-h-[48px] flex items-center theme-nav-calendar transition-colors text-sm"
-                onClick={handleMobileMenuClose}
-                role="listitem"
-              >
-                <CalendarIcon />
-                <span className="ml-2">{t.calendar}</span>
-              </Link>
-              <Link
-                href={localizedHref('/statistics', locale)}
-                className="py-3 min-h-[48px] flex items-center theme-nav-statistics transition-colors text-sm"
-                onClick={handleMobileMenuClose}
-                role="listitem"
-              >
-                <StatisticsIcon />
-                <span className="ml-2">{t.statistics}</span>
-              </Link>
-              <Link
-                href={localizedHref('/diary', locale)}
-                className="py-3 min-h-[48px] flex items-center theme-nav-diary transition-colors text-sm"
-                onClick={handleMobileMenuClose}
-                role="listitem"
-              >
-                <DiaryIcon />
-                <span className="ml-2">{t.diary}</span>
-              </Link>
-              <Link
-                href={localizedHref('/profile', locale)}
-                className="py-3 min-h-[48px] flex items-center theme-nav-profile transition-colors text-sm"
-                onClick={handleMobileMenuClose}
-                role="listitem"
-              >
-                <ProfileIcon />
-                <span className="ml-2">{t.profile}</span>
-              </Link>
-              <Link
-                href={localizedHref('/favorites', locale)}
-                className="py-3 min-h-[48px] flex items-center theme-nav-favorites transition-colors text-sm"
-                onClick={handleMobileMenuClose}
-                role="listitem"
-              >
-                <FavoritesIcon />
-                <span className="ml-2">{t.favorites}</span>
-              </Link>
-              <Link
-                href={localizedHref('/watchlist', locale)}
-                className="py-3 min-h-[48px] flex items-center theme-nav-watchlist transition-colors text-sm"
-                onClick={handleMobileMenuClose}
-                role="listitem"
-              >
-                <WatchlistIcon />
-                <span className="ml-2">{t.watchlist}</span>
-              </Link>
-              <Link
-                href={localizedHref('/compare', locale)}
-                className="py-3 min-h-[48px] flex items-center theme-nav-compare transition-colors text-sm"
-                onClick={handleMobileMenuClose}
-                role="listitem"
-              >
-                <CompareIcon />
-                <span className="ml-2">{t.compare}</span>
-              </Link>
+            {/* コンテンツ */}
+            <div className="theme-nav" role="list">
+              <p className="text-xs font-semibold theme-text-muted uppercase tracking-wider px-1 py-1">{t.menuBrowse}</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+                <Link
+                  href={localizedHref('/', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-actresses transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <ActressesIcon />
+                  <span className="ml-2">{t.actresses}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/products', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-products transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <ProductsIcon />
+                  <span className="ml-2">{t.products}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/categories', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <CategoriesIcon />
+                  <span className="ml-2">{t.categories}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/calendar', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-calendar transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <CalendarIcon />
+                  <span className="ml-2">{t.calendar}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/discover', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-discover transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <DiscoverIcon />
+                  <span className="ml-2">{t.discover}</span>
+                </Link>
+              </div>
             </div>
 
-            {/* 通知と言語切り替え */}
+            {/* ツール */}
+            <div className="theme-nav pt-2 border-t theme-border" role="list">
+              <p className="text-xs font-semibold theme-text-muted uppercase tracking-wider px-1 py-1">{t.menuTools}</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+                <Link
+                  href={localizedHref('/statistics', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-statistics transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <StatisticsIcon />
+                  <span className="ml-2">{t.statistics}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/compare', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-compare transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <CompareIcon />
+                  <span className="ml-2">{t.compare}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/profile', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-profile transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <ProfileIcon />
+                  <span className="ml-2">{t.profile}</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* マイページ */}
+            <div className="theme-nav pt-2 border-t theme-border" role="list">
+              <p className="text-xs font-semibold theme-text-muted uppercase tracking-wider px-1 py-1">{t.menuMy}</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+                <Link
+                  href={localizedHref('/favorites', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-favorites transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <FavoritesIcon />
+                  <span className="ml-2">{t.favorites}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/watchlist', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-watchlist transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <WatchlistIcon />
+                  <span className="ml-2">{t.watchlist}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/diary', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-diary transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <DiaryIcon />
+                  <span className="ml-2">{t.diary}</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* 通知・言語切り替え・ユーザーメニュー */}
             <div className="flex items-center gap-4 py-2">
               <NotificationSubscriber />
               <LanguageSwitcher />
+              <UserMenu locale={locale} />
             </div>
 
             {/* ASPリンク（モバイル用） */}
@@ -542,6 +709,6 @@ export function HeaderBase({
       </div>
     </header>
   );
-}
+});
 
 export default HeaderBase;

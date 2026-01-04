@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState, ReactNode, useMemo, useCallback, memo } from 'react';
 import { useCompareList } from '../hooks/useCompareList';
 import { SelectableCard } from './SelectableCard';
 import { CompareFloatingBar } from './CompareFloatingBar';
@@ -20,6 +20,57 @@ interface ProductListWithSelectionProps {
   className?: string;
 }
 
+// 個別の商品アイテムをメモ化するコンポーネント
+interface ProductItemProps {
+  product: Product;
+  index: number;
+  isSelected: boolean;
+  isSelectionMode: boolean;
+  theme: 'dark' | 'light';
+  onToggle: (product: Product) => void;
+  renderChild: (product: Product, index: number) => ReactNode;
+}
+
+const ProductItem = memo(function ProductItem({
+  product,
+  index,
+  isSelected,
+  isSelectionMode,
+  theme,
+  onToggle,
+  renderChild,
+}: ProductItemProps) {
+  const handleToggle = useCallback(() => {
+    onToggle(product);
+  }, [onToggle, product]);
+
+  // 選択モードでない場合はSelectableCardをスキップ
+  if (!isSelectionMode) {
+    return <>{renderChild(product, index)}</>;
+  }
+
+  return (
+    <SelectableCard
+      isSelected={isSelected}
+      isSelectionMode={isSelectionMode}
+      onToggle={handleToggle}
+      theme={theme}
+    >
+      {renderChild(product, index)}
+    </SelectableCard>
+  );
+}, (prevProps, nextProps) => {
+  // 選択モードと選択状態が変わらなければ再レンダリング不要
+  return (
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isSelectionMode === nextProps.isSelectionMode &&
+    prevProps.theme === nextProps.theme &&
+    prevProps.product === nextProps.product &&
+    prevProps.index === nextProps.index &&
+    prevProps.renderChild === nextProps.renderChild
+  );
+});
+
 export function ProductListWithSelection({
   products,
   locale,
@@ -28,23 +79,29 @@ export function ProductListWithSelection({
   className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4',
 }: ProductListWithSelectionProps) {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const { items, toggleItem, isInCompareList, count, maxItems, isFull } = useCompareList();
+  const { toggleItem, compareSet, count, maxItems, isFull } = useCompareList();
   const isDark = theme === 'dark';
 
-  const t = {
+  // 翻訳オブジェクトをメモ化
+  const t = useMemo(() => ({
     selectToCompare: locale === 'ja' ? '比較選択モード' : 'Select to Compare',
     exitSelection: locale === 'ja' ? '選択終了' : 'Exit Selection',
     selected: locale === 'ja' ? '選択中' : 'Selected',
     maxReached: locale === 'ja' ? `最大${maxItems}件まで選択可能` : `Max ${maxItems} items`,
-  };
+  }), [locale, maxItems]);
 
-  const handleToggleProduct = (product: Product) => {
+  // コールバックをメモ化
+  const handleToggleProduct = useCallback((product: Product) => {
     toggleItem({
       id: product.id,
       title: product.title,
       imageUrl: product.thumbnailUrl || product.imageUrl || null,
     });
-  };
+  }, [toggleItem]);
+
+  const handleToggleSelectionMode = useCallback(() => {
+    setIsSelectionMode(prev => !prev);
+  }, []);
 
   return (
     <>
@@ -53,7 +110,7 @@ export function ProductListWithSelection({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setIsSelectionMode(!isSelectionMode)}
+            onClick={handleToggleSelectionMode}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
               isSelectionMode
                 ? isDark
@@ -87,20 +144,21 @@ export function ProductListWithSelection({
       {/* 商品グリッド */}
       <div className={className}>
         {products.map((product, index) => (
-          <SelectableCard
+          <ProductItem
             key={product.id}
-            isSelected={isInCompareList(product.id)}
+            product={product}
+            index={index}
+            isSelected={compareSet.has(String(product.id))}
             isSelectionMode={isSelectionMode}
-            onToggle={() => handleToggleProduct(product)}
             theme={theme}
-          >
-            {children(product, index)}
-          </SelectableCard>
+            onToggle={handleToggleProduct}
+            renderChild={children}
+          />
         ))}
       </div>
 
-      {/* 比較フローティングバー */}
-      <CompareFloatingBar locale={locale} theme={theme} />
+      {/* 比較フローティングバー（選択モード時のみ表示） */}
+      <CompareFloatingBar locale={locale} theme={theme} isSelectionMode={isSelectionMode} />
     </>
   );
 }

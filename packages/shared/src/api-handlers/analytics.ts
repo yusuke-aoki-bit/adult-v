@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 export interface AnalyticsData {
   totalViews: number;
@@ -40,11 +41,9 @@ export function createAnalyticsHandler(deps: AnalyticsHandlerDeps) {
 
       return NextResponse.json(data);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch analytics data' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to fetch analytics data', 500, {
+        endpoint: '/api/analytics',
+      });
     }
   };
 }

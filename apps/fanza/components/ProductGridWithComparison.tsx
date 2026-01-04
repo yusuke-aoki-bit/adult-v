@@ -9,7 +9,6 @@ interface Product {
   title: string;
   thumbnailUrl?: string | null;
   imageUrl?: string | null;
-  [key: string]: unknown;
 }
 
 interface ProductGridWithComparisonProps {

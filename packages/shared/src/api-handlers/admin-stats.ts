@@ -1,9 +1,7 @@
-/**
- * Admin Stats API Handler
- * 管理画面用の統計情報を取得するハンドラー
- */
 import { NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
+import { logDbErrorAndReturn, logDbWarning } from '../lib/db-logger';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 // Types
 export interface ASPTotal {
@@ -37,7 +35,7 @@ async function safeQuery<T>(
     const result = await queryFn();
     return result.rows as T[];
   } catch (error) {
-    console.error('Query error:', error);
+    logDbWarning('Query failed in safeQuery', 'safeQuery', { error: error instanceof Error ? error.message : String(error) });
     return defaultValue;
   }
 }
@@ -421,11 +419,9 @@ export function createAdminStatsHandler(
 
       return NextResponse.json(response);
     } catch (error) {
-      console.error('Stats API error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch stats' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to fetch stats', 500, {
+        endpoint: '/api/admin/stats',
+      });
     }
   };
 }

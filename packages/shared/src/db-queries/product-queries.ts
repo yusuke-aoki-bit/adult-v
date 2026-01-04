@@ -3,6 +3,7 @@
  * 依存性注入パターンでDBとスキーマを外部から受け取る
  */
 import { eq, and, sql, inArray, desc, asc, SQL } from 'drizzle-orm';
+import { logDbErrorAndReturn, logDbErrorAndThrow } from '../lib/db-logger';
 
 // ============================================================
 // Types
@@ -155,8 +156,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         saleData
       ) as T;
     } catch (error) {
-      console.error(`Error fetching product ${id}:`, error);
-      throw error;
+      logDbErrorAndThrow(error, 'getProductById', { productId: id });
     }
   }
 
@@ -288,8 +288,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         saleData
       ) as T;
     } catch (error) {
-      console.error(`Error searching product by product ID ${productId}:`, error);
-      throw error;
+      logDbErrorAndThrow(error, 'searchByProductId', { productId });
     }
   }
 
@@ -456,8 +455,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
       return productDetails.filter((p): p is NonNullable<typeof p> => p !== null) as T[];
     } catch (error) {
-      console.error('Error in fuzzy search:', error);
-      throw error;
+      logDbErrorAndThrow(error, 'fuzzySearchProducts');
     }
   }
 
@@ -503,8 +501,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
       return productsWithData as T[];
     } catch (error) {
-      console.error('Error getting recent products:', error);
-      throw error;
+      logDbErrorAndThrow(error, 'getRecentProducts');
     }
   }
 
@@ -590,8 +587,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         }));
       }
     } catch (error) {
-      console.error(`Error fetching sample images by maker code ${makerProductCode}:`, error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getSampleImagesByMakerCode', { makerProductCode });
     }
   }
 

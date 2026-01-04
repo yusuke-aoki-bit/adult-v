@@ -47,45 +47,19 @@ export function generateOptimizedDescription(
   const locale = options?.locale || 'ja';
 
   // ロケール別テンプレート
-  if (locale === 'ja') {
-    return generateJapaneseProductDescription(title, actressName, tags, productId, options);
+  switch (locale) {
+    case 'ja':
+      return generateJapaneseProductDescription(title, actressName, tags, productId, options);
+    case 'en':
+      return generateEnglishProductDescription(title, actressName, tags, productId, options);
+    case 'zh':
+    case 'zh-TW':
+      return generateChineseProductDescription(title, actressName, tags, productId, options, locale);
+    case 'ko':
+      return generateKoreanProductDescription(title, actressName, tags, productId, options);
+    default:
+      return generateEnglishProductDescription(title, actressName, tags, productId, options);
   }
-
-  // 他言語は既存ロジック
-  const parts: string[] = [];
-
-  if (productId) {
-    parts.push(`【${productId}】`);
-  }
-
-  if (options?.salePrice && options?.regularPrice && options.discount) {
-    parts.push(`[SALE] ${options.discount}%OFF`);
-  }
-
-  if (options?.rating && options.rating >= 4.0 && options?.reviewCount && options.reviewCount >= 5) {
-    parts.push(`★${options.rating.toFixed(1)}(${options.reviewCount})`);
-  }
-
-  if (actressName) {
-    parts.push(actressName);
-  }
-
-  if (title) {
-    const maxTitleLength = 50;
-    const trimmedTitle = title.length > maxTitleLength
-      ? title.substring(0, maxTitleLength) + '...'
-      : title;
-    parts.push(trimmedTitle);
-  }
-
-  if (tags && tags.length > 0) {
-    parts.push(tags.slice(0, 3).join(', '));
-  }
-
-  const description = parts.join(' | ');
-  return description.length > 160
-    ? description.substring(0, 157) + '...'
-    : description;
 }
 
 /**
@@ -142,6 +116,194 @@ function generateJapaneseProductDescription(
   // 評価（高評価のみ）
   if (options?.rating && options.rating >= 4.0 && options?.reviewCount && options.reviewCount >= 3) {
     parts.push(`★${options.rating.toFixed(1)}評価`);
+  }
+
+  const description = parts.join(' - ');
+  return description.length > 160
+    ? description.substring(0, 157) + '...'
+    : description;
+}
+
+/**
+ * 英語商品ページ用CTR最適化ディスクリプション
+ */
+function generateEnglishProductDescription(
+  title: string,
+  actressName?: string,
+  tags?: string[],
+  productId?: string,
+  options?: {
+    salePrice?: number;
+    regularPrice?: number;
+    discount?: number;
+    rating?: number;
+    reviewCount?: number;
+    duration?: number;
+    provider?: string;
+  },
+): string {
+  const parts: string[] = [];
+
+  // Sale first for CTR
+  if (options?.discount && options.discount > 0) {
+    parts.push(`[${options.discount}% OFF]`);
+  }
+
+  // Product code for search
+  if (productId) {
+    parts.push(productId);
+  }
+
+  // Title (shortened)
+  if (title) {
+    const maxLen = options?.discount ? 30 : 40;
+    parts.push(title.length > maxLen ? title.substring(0, maxLen) + '…' : title);
+  }
+
+  // Actress
+  if (actressName) {
+    parts.push(`feat. ${actressName}`);
+  }
+
+  // Duration
+  if (options?.duration && options.duration > 0) {
+    parts.push(`${options.duration}min`);
+  }
+
+  // Provider + CTA
+  if (options?.provider) {
+    parts.push(`Watch now on ${options.provider}`);
+  }
+
+  // Rating (only high)
+  if (options?.rating && options.rating >= 4.0 && options?.reviewCount && options.reviewCount >= 3) {
+    parts.push(`★${options.rating.toFixed(1)}`);
+  }
+
+  const description = parts.join(' - ');
+  return description.length > 160
+    ? description.substring(0, 157) + '...'
+    : description;
+}
+
+/**
+ * 中国語商品ページ用CTR最適化ディスクリプション
+ */
+function generateChineseProductDescription(
+  title: string,
+  actressName?: string,
+  tags?: string[],
+  productId?: string,
+  options?: {
+    salePrice?: number;
+    regularPrice?: number;
+    discount?: number;
+    rating?: number;
+    reviewCount?: number;
+    duration?: number;
+    provider?: string;
+  },
+  locale: string = 'zh',
+): string {
+  const parts: string[] = [];
+  const isTraditional = locale === 'zh-TW';
+
+  // Sale first
+  if (options?.discount && options.discount > 0) {
+    parts.push(isTraditional ? `【${options.discount}%折扣】` : `【${options.discount}%优惠】`);
+  }
+
+  // Product code
+  if (productId) {
+    parts.push(productId);
+  }
+
+  // Title
+  if (title) {
+    const maxLen = options?.discount ? 25 : 35;
+    parts.push(title.length > maxLen ? title.substring(0, maxLen) + '…' : title);
+  }
+
+  // Actress
+  if (actressName) {
+    parts.push(isTraditional ? `${actressName}出演` : `${actressName}出演`);
+  }
+
+  // Duration
+  if (options?.duration && options.duration > 0) {
+    parts.push(`${options.duration}${isTraditional ? '分鐘' : '分钟'}`);
+  }
+
+  // Provider + CTA
+  if (options?.provider) {
+    parts.push(isTraditional ? `立即在${options.provider}觀看` : `立即在${options.provider}观看`);
+  }
+
+  // Rating
+  if (options?.rating && options.rating >= 4.0 && options?.reviewCount && options.reviewCount >= 3) {
+    parts.push(`★${options.rating.toFixed(1)}`);
+  }
+
+  const description = parts.join(' - ');
+  return description.length > 160
+    ? description.substring(0, 157) + '...'
+    : description;
+}
+
+/**
+ * 韓国語商品ページ用CTR最適化ディスクリプション
+ */
+function generateKoreanProductDescription(
+  title: string,
+  actressName?: string,
+  tags?: string[],
+  productId?: string,
+  options?: {
+    salePrice?: number;
+    regularPrice?: number;
+    discount?: number;
+    rating?: number;
+    reviewCount?: number;
+    duration?: number;
+    provider?: string;
+  },
+): string {
+  const parts: string[] = [];
+
+  // Sale first
+  if (options?.discount && options.discount > 0) {
+    parts.push(`[${options.discount}% 할인]`);
+  }
+
+  // Product code
+  if (productId) {
+    parts.push(productId);
+  }
+
+  // Title
+  if (title) {
+    const maxLen = options?.discount ? 25 : 35;
+    parts.push(title.length > maxLen ? title.substring(0, maxLen) + '…' : title);
+  }
+
+  // Actress
+  if (actressName) {
+    parts.push(`${actressName} 출연`);
+  }
+
+  // Duration
+  if (options?.duration && options.duration > 0) {
+    parts.push(`${options.duration}분`);
+  }
+
+  // Provider + CTA
+  if (options?.provider) {
+    parts.push(`${options.provider}에서 바로 시청`);
+  }
+
+  // Rating
+  if (options?.rating && options.rating >= 4.0 && options?.reviewCount && options.reviewCount >= 3) {
+    parts.push(`★${options.rating.toFixed(1)}`);
   }
 
   const description = parts.join(' - ');
@@ -339,10 +501,11 @@ export function generateBaseMetadata(
   // 例: /en → '' (ルートページ)
   const localePattern = /^\/(ja|en|zh|zh-TW|ko)(\/|$)/;
   const basePath = path ? path.replace(localePattern, '/').replace(/^\/$/, '') : '';
-  // canonical URLは現在のロケールの?hl=パラメータ付きURL
-  // 日本語がデフォルトの場合でも?hl=jaを付けて統一（Googleの重複判定を回避）
+  // canonical URLは全言語で統一（パラメータなし）
+  // Googleはcanonicalを「正規URL」として認識するため、全言語で同じURLを指定
+  // alternatesのhreflangで各言語版を示す
   const baseWithPath = `${siteUrl}${basePath || '/'}`;
-  const canonicalUrl = locale === 'ja' ? baseWithPath : `${baseWithPath}?hl=${locale}`;
+  const canonicalUrl = baseWithPath;
 
   return {
     title: pageTitle,
@@ -687,7 +850,7 @@ export function generateAggregateOfferSchema(
   }>,
   currency: string = 'JPY',
 ) {
-  if (offers.length === 0) return null;
+  if (!offers || offers.length === 0) return null;
 
   const prices = offers.map(o => o.salePrice ?? o.price);
   const lowPrice = Math.min(...prices);
@@ -728,6 +891,81 @@ export function generateItemListSchema(items: { name: string; url: string }[], l
       position: index + 1,
       name: item.name,
       item: `${siteUrl}${item.url}`,
+    })),
+  };
+}
+
+/**
+ * 構造化データ: ItemList for Products（関連商品・類似商品用）
+ * Product型を含むItemListでSEO効果を向上
+ */
+export function generateProductItemListSchema(
+  products: Array<{
+    id: string | number;
+    title: string;
+    imageUrl?: string | null;
+    price?: number;
+    salePrice?: number;
+  }>,
+  listName: string,
+  locale: string = 'ja',
+) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: listName,
+    numberOfItems: products.length,
+    itemListElement: products.map((product, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Product',
+        name: product.title,
+        url: `${siteUrl}/${locale}/products/${product.id}`,
+        ...(product.imageUrl && { image: product.imageUrl }),
+        ...(product.price || product.salePrice) && {
+          offers: {
+            '@type': 'Offer',
+            price: product.salePrice ?? product.price,
+            priceCurrency: 'JPY',
+            availability: 'https://schema.org/InStock',
+          },
+        },
+      },
+    })),
+  };
+}
+
+/**
+ * 構造化データ: ItemList for Performers（類似女優・関連女優用）
+ * Person型を含むItemListでSEO効果を向上
+ */
+export function generatePerformerItemListSchema(
+  performers: Array<{
+    id: string | number;
+    name: string;
+    imageUrl?: string | null;
+    productCount?: number;
+  }>,
+  listName: string,
+  locale: string = 'ja',
+) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: listName,
+    numberOfItems: performers.length,
+    itemListElement: performers.map((performer, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Person',
+        name: performer.name,
+        url: `${siteUrl}/${locale}/actress/${performer.id}`,
+        ...(performer.imageUrl && { image: performer.imageUrl }),
+        jobTitle: 'AV女優',
+        ...(performer.productCount && { knowsAbout: `${performer.productCount}作品以上に出演` }),
+      },
     })),
   };
 }

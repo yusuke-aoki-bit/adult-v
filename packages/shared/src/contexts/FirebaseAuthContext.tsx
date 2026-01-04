@@ -15,6 +15,7 @@ import {
   signInAnonymouslyIfNeeded,
   linkWithGoogle,
   linkWithTwitter,
+  signOut,
   onAuthStateChange,
   setAnalyticsUserId,
   fetchRemoteConfig,
@@ -34,6 +35,7 @@ interface FirebaseAuthContextType {
   signInAnonymously: () => Promise<void>;
   linkGoogle: () => Promise<boolean>;
   linkTwitter: () => Promise<boolean>;
+  logout: () => Promise<boolean>;
 
   // Remote Config
   remoteConfig: RemoteConfigDefaults | null;
@@ -89,7 +91,8 @@ export function FirebaseAuthProvider({
     return () => clearTimeout(timer);
   }, [isFirebaseEnabled, autoSignIn, user, isLoading]);
 
-  // Fetch remote config on mount
+  // Fetch remote config with delay to improve FCP
+  // Uses requestIdleCallback when available, falls back to setTimeout
   useEffect(() => {
     if (!isFirebaseEnabled) return;
 
@@ -105,7 +108,27 @@ export function FirebaseAuthProvider({
       });
     };
 
-    loadRemoteConfig();
+    // Delay remote config fetch to avoid blocking initial render
+    // Use requestIdleCallback if available for better performance
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let idleCallbackId: number | undefined;
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      idleCallbackId = window.requestIdleCallback(
+        () => loadRemoteConfig(),
+        { timeout: 5000 } // Max wait 5 seconds
+      );
+    } else {
+      // Fallback: delay 3 seconds after mount
+      timeoutId = setTimeout(loadRemoteConfig, 3000);
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (idleCallbackId && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleCallbackId);
+      }
+    };
   }, [isFirebaseEnabled]);
 
   const handleSignInAnonymously = useCallback(async () => {
@@ -125,6 +148,12 @@ export function FirebaseAuthProvider({
     if (!isFirebaseEnabled) return false;
     const result = await linkWithTwitter();
     return !!result;
+  }, [isFirebaseEnabled]);
+
+  const handleLogout = useCallback(async (): Promise<boolean> => {
+    if (!isFirebaseEnabled) return false;
+    const result = await signOut();
+    return result;
   }, [isFirebaseEnabled]);
 
   const refreshRemoteConfig = useCallback(async () => {
@@ -150,6 +179,7 @@ export function FirebaseAuthProvider({
       signInAnonymously: handleSignInAnonymously,
       linkGoogle: handleLinkGoogle,
       linkTwitter: handleLinkTwitter,
+      logout: handleLogout,
       remoteConfig,
       refreshRemoteConfig,
     }),
@@ -160,6 +190,7 @@ export function FirebaseAuthProvider({
       handleSignInAnonymously,
       handleLinkGoogle,
       handleLinkTwitter,
+      handleLogout,
       remoteConfig,
       refreshRemoteConfig,
     ]

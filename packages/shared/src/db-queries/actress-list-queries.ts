@@ -6,6 +6,7 @@ import { and, or, desc, asc, sql, inArray, notInArray, eq, type SQL } from 'driz
 import type { SiteMode } from './asp-filter';
 import { createActressAspFilterCondition } from './asp-filter';
 import { extractPerformerIds, extractIds } from '../lib/type-guards';
+import { logDbErrorAndThrow } from '../lib/db-logger';
 
 // ============================================================
 // Types
@@ -493,8 +494,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
 
       return count;
     } catch (error) {
-      console.error('Error counting actresses:', error);
-      throw error;
+      logDbErrorAndThrow(error, 'getActressesCount');
     }
   }
 

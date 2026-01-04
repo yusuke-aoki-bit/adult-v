@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, sql } from '@adult-v/database';
 
+export const revalidate = 1800; // 30分キャッシュ
+
 interface SaleEvent {
   date: string;
   productCount: number;

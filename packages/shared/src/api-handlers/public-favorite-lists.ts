@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 // Types for dependency injection
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface PublicFavoriteListsHandlerDeps {
-  getDb: () => Promise<unknown>;
+  getDb: () => unknown;
   publicFavoriteLists: unknown;
   publicFavoriteListItems: unknown;
   publicListLikes: unknown;
   products: unknown;
-  eq: (column: unknown, value: unknown) => unknown;
-  and: (...conditions: unknown[]) => unknown;
-  desc: (column: unknown) => unknown;
-  asc: (column: unknown) => unknown;
+  eq: (column: any, value: any) => unknown;
+  and: (...conditions: any[]) => unknown;
+  desc: (column: any) => unknown;
+  asc: (column: any) => unknown;
   sql: unknown;
   count?: unknown;
 }
@@ -48,7 +50,7 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
     const { getDb, publicFavoriteLists, publicFavoriteListItems, publicListLikes, products, eq, and, desc, sql } = deps;
 
     try {
-      const db = await getDb() as Record<string, unknown>;
+      const db = getDb() as Record<string, unknown>;
       const { searchParams } = new URL(request.url);
       const listId = context?.params?.id;
       const userId = searchParams.get('userId');
@@ -170,8 +172,9 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
 
       return NextResponse.json({ lists });
     } catch (error) {
-      console.error('Failed to fetch lists:', error);
-      return NextResponse.json({ error: 'Failed to fetch lists' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to fetch lists', 500, {
+        endpoint: '/api/public-lists',
+      });
     }
   };
 }
@@ -182,7 +185,7 @@ export function createPublicFavoriteListsPostHandler(deps: PublicFavoriteListsHa
     const { getDb, publicFavoriteLists } = deps;
 
     try {
-      const db = await getDb() as Record<string, unknown>;
+      const db = getDb() as Record<string, unknown>;
       const body = await request.json();
       const { userId, title, description, isPublic = true } = body;
 
@@ -205,8 +208,9 @@ export function createPublicFavoriteListsPostHandler(deps: PublicFavoriteListsHa
 
       return NextResponse.json({ list: result[0] }, { status: 201 });
     } catch (error) {
-      console.error('Failed to create list:', error);
-      return NextResponse.json({ error: 'Failed to create list' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to create list', 500, {
+        endpoint: '/api/public-lists',
+      });
     }
   };
 }
@@ -217,7 +221,7 @@ export function createPublicFavoriteListsPutHandler(deps: PublicFavoriteListsHan
     const { getDb, publicFavoriteLists, eq, and } = deps;
 
     try {
-      const db = await getDb() as Record<string, unknown>;
+      const db = getDb() as Record<string, unknown>;
       const listId = parseInt(context.params.id, 10);
       const body = await request.json();
       const { userId, title, description, isPublic } = body;
@@ -251,8 +255,9 @@ export function createPublicFavoriteListsPutHandler(deps: PublicFavoriteListsHan
 
       return NextResponse.json({ list: result[0] });
     } catch (error) {
-      console.error('Failed to update list:', error);
-      return NextResponse.json({ error: 'Failed to update list' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to update list', 500, {
+        endpoint: '/api/public-lists',
+      });
     }
   };
 }
@@ -263,7 +268,7 @@ export function createPublicFavoriteListsDeleteHandler(deps: PublicFavoriteLists
     const { getDb, publicFavoriteLists, eq, and } = deps;
 
     try {
-      const db = await getDb() as Record<string, unknown>;
+      const db = getDb() as Record<string, unknown>;
       const listId = parseInt(context.params.id, 10);
       const { searchParams } = new URL(request.url);
       const userId = searchParams.get('userId');
@@ -286,8 +291,9 @@ export function createPublicFavoriteListsDeleteHandler(deps: PublicFavoriteLists
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Failed to delete list:', error);
-      return NextResponse.json({ error: 'Failed to delete list' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to delete list', 500, {
+        endpoint: '/api/public-lists',
+      });
     }
   };
 }
@@ -298,7 +304,7 @@ export function createPublicFavoriteListItemsHandler(deps: PublicFavoriteListsHa
     const { getDb, publicFavoriteLists, publicFavoriteListItems, eq, and } = deps;
 
     try {
-      const db = await getDb() as Record<string, unknown>;
+      const db = getDb() as Record<string, unknown>;
       const listId = parseInt(context.params.id, 10);
       const body = await request.json();
       const { userId, productId, action, note } = body;
@@ -344,8 +350,9 @@ export function createPublicFavoriteListItemsHandler(deps: PublicFavoriteListsHa
 
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     } catch (error) {
-      console.error('Failed to modify list items:', error);
-      return NextResponse.json({ error: 'Failed to modify list items' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to modify list items', 500, {
+        endpoint: '/api/public-lists/items',
+      });
     }
   };
 }
@@ -356,7 +363,7 @@ export function createPublicFavoriteListLikeHandler(deps: PublicFavoriteListsHan
     const { getDb, publicFavoriteLists, publicListLikes, eq, and, sql } = deps;
 
     try {
-      const db = await getDb() as Record<string, unknown>;
+      const db = getDb() as Record<string, unknown>;
       const listId = parseInt(context.params.id, 10);
       const body = await request.json();
       const { userId, action } = body;
@@ -418,8 +425,9 @@ export function createPublicFavoriteListLikeHandler(deps: PublicFavoriteListsHan
 
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     } catch (error) {
-      console.error('Failed to toggle like:', error);
-      return NextResponse.json({ error: 'Failed to toggle like' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to toggle like', 500, {
+        endpoint: '/api/public-lists/like',
+      });
     }
   };
 }

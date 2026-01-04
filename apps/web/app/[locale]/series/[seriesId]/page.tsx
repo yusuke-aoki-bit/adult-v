@@ -143,7 +143,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       `${name} - ${t.completionGuide}`,
       t.totalProducts.replace('{count}', String(seriesInfo.totalProducts)),
       undefined,
-      `/${locale}/series/${seriesId}`,
+      localizedHref(`/series/${seriesId}`, locale),
       undefined,
       locale
     ),

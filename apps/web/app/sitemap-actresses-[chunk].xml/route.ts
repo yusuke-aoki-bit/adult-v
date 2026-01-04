@@ -6,8 +6,8 @@ import { desc, sql } from 'drizzle-orm';
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 const CHUNK_SIZE = 5000;
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600;
+export const revalidate = 3600; // 1時間キャッシュ
+export const dynamic = 'force-dynamic'; // ビルド時の静的生成をスキップ
 
 export async function GET(
   request: NextRequest,

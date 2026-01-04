@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       t.title,
       t.description,
       undefined,
-      `/${locale}/series`,
+      localizedHref('/series', locale),
       undefined,
       locale
     ),

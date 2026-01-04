@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState, ReactNode, useMemo, useCallback, memo } from 'react';
 import { usePerformerCompareList } from '../hooks/usePerformerCompareList';
 import { SelectableCard } from './SelectableCard';
 import { PerformerCompareFloatingBar } from './PerformerCompareFloatingBar';
@@ -20,6 +20,56 @@ interface PerformerListWithSelectionProps {
   className?: string;
 }
 
+// 個別の演者アイテムをメモ化するコンポーネント
+interface PerformerItemProps {
+  performer: Performer;
+  index: number;
+  isSelected: boolean;
+  isSelectionMode: boolean;
+  theme: 'dark' | 'light';
+  onToggle: (performer: Performer) => void;
+  renderChild: (performer: Performer, index: number) => ReactNode;
+}
+
+const PerformerItem = memo(function PerformerItem({
+  performer,
+  index,
+  isSelected,
+  isSelectionMode,
+  theme,
+  onToggle,
+  renderChild,
+}: PerformerItemProps) {
+  const handleToggle = useCallback(() => {
+    onToggle(performer);
+  }, [onToggle, performer]);
+
+  // 選択モードでない場合はSelectableCardをスキップ
+  if (!isSelectionMode) {
+    return <>{renderChild(performer, index)}</>;
+  }
+
+  return (
+    <SelectableCard
+      isSelected={isSelected}
+      isSelectionMode={isSelectionMode}
+      onToggle={handleToggle}
+      theme={theme}
+    >
+      {renderChild(performer, index)}
+    </SelectableCard>
+  );
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isSelectionMode === nextProps.isSelectionMode &&
+    prevProps.theme === nextProps.theme &&
+    prevProps.performer === nextProps.performer &&
+    prevProps.index === nextProps.index &&
+    prevProps.renderChild === nextProps.renderChild
+  );
+});
+
 export function PerformerListWithSelection({
   performers,
   locale,
@@ -28,24 +78,30 @@ export function PerformerListWithSelection({
   className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4',
 }: PerformerListWithSelectionProps) {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const { items, toggleItem, isInCompareList, count, maxItems, isFull } = usePerformerCompareList();
+  const { toggleItem, compareSet, count, maxItems, isFull } = usePerformerCompareList();
   const isDark = theme === 'dark';
 
-  const t = {
+  // 翻訳オブジェクトをメモ化
+  const t = useMemo(() => ({
     selectToCompare: locale === 'ja' ? '比較選択モード' : 'Select to Compare',
     exitSelection: locale === 'ja' ? '選択終了' : 'Exit Selection',
     selected: locale === 'ja' ? '選択中' : 'Selected',
     maxReached: locale === 'ja' ? `最大${maxItems}名まで選択可能` : `Max ${maxItems} performers`,
-  };
+  }), [locale, maxItems]);
 
-  const handleTogglePerformer = (performer: Performer) => {
+  // コールバックをメモ化
+  const handleTogglePerformer = useCallback((performer: Performer) => {
     toggleItem({
       id: performer.id,
       name: performer.name,
       imageUrl: performer.imageUrl || null,
       productCount: performer.productCount,
     });
-  };
+  }, [toggleItem]);
+
+  const handleToggleSelectionMode = useCallback(() => {
+    setIsSelectionMode(prev => !prev);
+  }, []);
 
   return (
     <>
@@ -54,7 +110,7 @@ export function PerformerListWithSelection({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setIsSelectionMode(!isSelectionMode)}
+            onClick={handleToggleSelectionMode}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
               isSelectionMode
                 ? isDark
@@ -88,20 +144,21 @@ export function PerformerListWithSelection({
       {/* 演者グリッド */}
       <div className={className}>
         {performers.map((performer, index) => (
-          <SelectableCard
+          <PerformerItem
             key={performer.id}
-            isSelected={isInCompareList(performer.id)}
+            performer={performer}
+            index={index}
+            isSelected={compareSet.has(String(performer.id))}
             isSelectionMode={isSelectionMode}
-            onToggle={() => handleTogglePerformer(performer)}
             theme={theme}
-          >
-            {children(performer, index)}
-          </SelectableCard>
+            onToggle={handleTogglePerformer}
+            renderChild={children}
+          />
         ))}
       </div>
 
-      {/* 比較フローティングバー */}
-      <PerformerCompareFloatingBar locale={locale} theme={theme} />
+      {/* 比較フローティングバー（選択モード時のみ表示） */}
+      <PerformerCompareFloatingBar locale={locale} theme={theme} isSelectionMode={isSelectionMode} />
     </>
   );
 }

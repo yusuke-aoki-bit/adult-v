@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { moderateUserReview, type ContentModerationResult } from '../lib/llm-service';
+import { createApiErrorResponse, logApiWarning } from '../lib/api-logger';
 
 // 型定義
 export interface UserReview {
@@ -25,14 +26,15 @@ export interface UserReviewWithVote extends UserReview {
 }
 
 // 依存性の型定義
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface UserReviewsHandlerDeps {
   getDb: () => unknown;
   userReviews: unknown;
   userReviewVotes: unknown;
   products: unknown;
-  eq: (a: unknown, b: unknown) => unknown;
-  and: (...args: unknown[]) => unknown;
-  desc: (col: unknown) => unknown;
+  eq: (a: any, b: any) => unknown;
+  and: (...args: any[]) => unknown;
+  desc: (col: any) => unknown;
   sql: unknown;
 }
 
@@ -116,8 +118,9 @@ export function createUserReviewsGetHandler(deps: UserReviewsHandlerDeps) {
         total: reviewsWithVotes.length,
       });
     } catch (error) {
-      console.error('[UserReviews GET] Error:', error);
-      return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to fetch reviews', 500, {
+        endpoint: '/api/products/[id]/reviews',
+      });
     }
   };
 }
@@ -226,7 +229,7 @@ export function createUserReviewsPostHandler(deps: UserReviewsHandlerDeps) {
           // 'review' の場合は 'pending' のまま
         }
       } catch (moderationError) {
-        console.error('[UserReviews] Moderation error:', moderationError);
+        logApiWarning(moderationError, 'UserReviews moderation');
         // 審査エラーの場合は pending のまま手動審査へ
       }
 
@@ -254,8 +257,9 @@ export function createUserReviewsPostHandler(deps: UserReviewsHandlerDeps) {
         } : null,
       }, { status: 201 });
     } catch (error) {
-      console.error('[UserReviews POST] Error:', error);
-      return NextResponse.json({ error: 'Failed to create review' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to create review', 500, {
+        endpoint: '/api/products/[id]/reviews',
+      });
     }
   };
 }
@@ -375,8 +379,9 @@ export function createUserReviewVoteHandler(deps: UserReviewsHandlerDeps) {
 
       return NextResponse.json({ success: true, voteType });
     } catch (error) {
-      console.error('[UserReviewVote] Error:', error);
-      return NextResponse.json({ error: 'Failed to vote' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to vote', 500, {
+        endpoint: '/api/products/[id]/reviews/vote',
+      });
     }
   };
 }

@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { moderateTagSuggestion, type ContentModerationResult } from '../lib/llm-service';
+import { createApiErrorResponse, logApiWarning } from '../lib/api-logger';
 
 // 型定義
 export interface UserTagSuggestion {
@@ -24,15 +25,16 @@ export interface UserTagSuggestionWithVote extends UserTagSuggestion {
 }
 
 // 依存性の型定義
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface UserTagSuggestionsHandlerDeps {
   getDb: () => unknown;
   userTagSuggestions: unknown;
   userTagVotes: unknown;
   products: unknown;
   tags: unknown;
-  eq: (a: unknown, b: unknown) => unknown;
-  and: (...args: unknown[]) => unknown;
-  desc: (col: unknown) => unknown;
+  eq: (a: any, b: any) => unknown;
+  and: (...args: any[]) => unknown;
+  desc: (col: any) => unknown;
   sql: unknown;
 }
 
@@ -112,8 +114,9 @@ export function createUserTagSuggestionsGetHandler(deps: UserTagSuggestionsHandl
         total: suggestionsWithVotes.length,
       });
     } catch (error) {
-      console.error('[UserTagSuggestions GET] Error:', error);
-      return NextResponse.json({ error: 'Failed to fetch tag suggestions' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to fetch tag suggestions', 500, {
+        endpoint: '/api/products/[id]/tag-suggestions',
+      });
     }
   };
 }
@@ -231,7 +234,7 @@ export function createUserTagSuggestionsPostHandler(deps: UserTagSuggestionsHand
           }
         }
       } catch (moderationError) {
-        console.error('[UserTagSuggestions] Moderation error:', moderationError);
+        logApiWarning(moderationError, 'UserTagSuggestions moderation');
       }
 
       // タグ提案を保存
@@ -259,8 +262,9 @@ export function createUserTagSuggestionsPostHandler(deps: UserTagSuggestionsHand
         } : null,
       }, { status: 201 });
     } catch (error) {
-      console.error('[UserTagSuggestions POST] Error:', error);
-      return NextResponse.json({ error: 'Failed to create tag suggestion' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to create tag suggestion', 500, {
+        endpoint: '/api/products/[id]/tag-suggestions',
+      });
     }
   };
 }
@@ -398,8 +402,9 @@ export function createUserTagVoteHandler(deps: UserTagSuggestionsHandlerDeps) {
 
       return NextResponse.json({ success: true, voteType });
     } catch (error) {
-      console.error('[UserTagVote] Error:', error);
-      return NextResponse.json({ error: 'Failed to vote' }, { status: 500 });
+      return createApiErrorResponse(error, 'Failed to vote', 500, {
+        endpoint: '/api/products/[id]/tag-suggestions/vote',
+      });
     }
   };
 }

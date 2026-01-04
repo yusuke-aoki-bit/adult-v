@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, Suspense, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ProductCompare } from '@adult-v/shared/components';
+import { useCompareList } from '@adult-v/shared/hooks';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 
 interface SaleProduct {
@@ -28,7 +29,13 @@ interface ComparePageClientProps {
 function ComparePageClient({ locale }: ComparePageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [productIds, setProductIds] = useState<string[]>([]);
+  const { removeItem, clearAll } = useCompareList();
+
+  // URLパラメータから初期値を取得（searchParamsが変わっても初期値は変更しない）
+  const [productIds, setProductIds] = useState<string[]>(() => {
+    const idsParam = searchParams.get('ids');
+    return idsParam ? idsParam.split(',').slice(0, 4) : [];
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Array<{
     id: string;
@@ -61,15 +68,7 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
     uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
   };
 
-  // URLパラメータから初期化
-  useEffect(() => {
-    const idsParam = searchParams.get('ids');
-    if (idsParam) {
-      setProductIds(idsParam.split(',').slice(0, 4));
-    }
-  }, [searchParams]);
-
-  // URLを更新
+  // URLを更新（productIds が変わったときのみ）
   useEffect(() => {
     if (productIds.length > 0) {
       const newUrl = `/${locale}/compare?ids=${productIds.join(',')}`;
@@ -83,7 +82,9 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
 
   const handleRemoveProduct = useCallback((productId: string) => {
     setProductIds(prev => prev.filter(id => id !== productId));
-  }, []);
+    // localStorageの比較リストからも削除
+    removeItem(productId);
+  }, [removeItem]);
 
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
@@ -207,7 +208,10 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
             </span>
             {productIds.length > 0 && (
               <button
-                onClick={() => setProductIds([])}
+                onClick={() => {
+                  setProductIds([]);
+                  clearAll();
+                }}
                 className="text-sm text-red-400 hover:text-red-300"
               >
                 {locale === 'ja' ? 'すべてクリア' : 'Clear All'}
@@ -268,11 +272,34 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
 }
 
 export default function ComparePage({ params }: { params: Promise<{ locale: string }> }) {
-  const [locale, setLocale] = useState('ja');
+  const { locale } = use(params);
 
-  useEffect(() => {
-    params.then(p => setLocale(p.locale));
-  }, [params]);
+  return (
+    <Suspense fallback={<ComparePageSkeleton />}>
+      <ComparePageClient locale={locale} />
+    </Suspense>
+  );
+}
 
-  return <ComparePageClient locale={locale} />;
+// ローディング中のスケルトン
+function ComparePageSkeleton() {
+  return (
+    <div className="theme-body min-h-screen">
+      <main className="min-h-screen theme-bg">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-6">
+              <div className="h-8 w-48 bg-gray-700 rounded animate-pulse mb-2" />
+              <div className="h-4 w-64 bg-gray-600 rounded animate-pulse" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="aspect-3/4 bg-gray-700 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
 }

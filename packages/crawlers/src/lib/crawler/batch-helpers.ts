@@ -4,7 +4,7 @@
  * N+1クエリ問題を解決するためのバッチ処理関数
  */
 
-import { db } from '../db';
+import { db, type DbContext } from '../db';
 import {
   performers,
   productPerformers,
@@ -102,17 +102,21 @@ export async function ensurePerformers(
 
 /**
  * 商品と出演者の関連をバッチで作成
+ * @param tx - オプションのトランザクションコンテキスト
  */
 export async function linkProductToPerformers(
   productId: number,
-  performerIds: number[]
+  performerIds: number[],
+  tx?: DbContext
 ): Promise<void> {
   if (performerIds.length === 0) {
     return;
   }
 
+  const dbCtx = tx || db;
+
   // 既存の関連を取得
-  const existing = await db
+  const existing = await dbCtx
     .select({ performerId: productPerformers.performerId })
     .from(productPerformers)
     .where(eq(productPerformers.productId, productId));
@@ -123,7 +127,7 @@ export async function linkProductToPerformers(
   const toLink = performerIds.filter((id) => !existingIds.has(id));
 
   if (toLink.length > 0) {
-    await db
+    await dbCtx
       .insert(productPerformers)
       .values(toLink.map((performerId) => ({ productId, performerId })))
       .onConflictDoNothing();
@@ -176,14 +180,17 @@ async function getPerformersFromWikiData(
  * @param productTitle - 商品タイトル（バリデーション用）
  * @param productCode - 商品コード（品番）- wiki検索用（省略可能）
  * @param aspPrefix - ASPプレフィックス（省略可能）
+ * @param tx - オプションのトランザクションコンテキスト
  */
 export async function processProductPerformers(
   productId: number,
   performerNames: string[],
   productTitle?: string,
   productCode?: string,
-  aspPrefix?: string
+  aspPrefix?: string,
+  tx?: DbContext
 ): Promise<{ added: number; total: number }> {
+  const dbCtx = tx || db;
   let namesToProcess: string[];
 
   // 1. wiki_crawl_dataから演者名を検索（productCodeが指定されている場合）
@@ -210,7 +217,7 @@ export async function processProductPerformers(
   }
 
   // 3. 出演者を取得または作成（別名検索も含む）
-  const nameToId = await ensurePerformersWithAliases(validNames);
+  const nameToId = await ensurePerformersWithAliases(validNames, dbCtx);
 
   // 4. 商品との関連を作成
   const performerIds = validNames
@@ -218,12 +225,12 @@ export async function processProductPerformers(
     .filter((id): id is number => id !== undefined);
 
   // 既存の関連数を取得
-  const existingCount = await db
+  const existingCount = await dbCtx
     .select({ performerId: productPerformers.performerId })
     .from(productPerformers)
     .where(eq(productPerformers.productId, productId));
 
-  await linkProductToPerformers(productId, performerIds);
+  await linkProductToPerformers(productId, performerIds, dbCtx);
 
   return {
     added: performerIds.length - existingCount.length,
@@ -239,20 +246,24 @@ export async function processProductPerformers(
  * 2. performer_aliases.alias_name で別名を検索
  * 3. 見つからなければ新規作成
  *
+ * @param names - 出演者名の配列
+ * @param tx - オプションのトランザクションコンテキスト
  * @returns name -> id のマッピング
  */
 async function ensurePerformersWithAliases(
-  names: string[]
+  names: string[],
+  tx?: DbContext
 ): Promise<Map<string, number>> {
   if (names.length === 0) {
     return new Map();
   }
 
+  const dbCtx = tx || db;
   const uniqueNames = [...new Set(names)];
   const nameToId = new Map<string, number>();
 
   // 1. 既存の出演者を一括取得
-  const existing = await db
+  const existing = await dbCtx
     .select({ id: performers.id, name: performers.name })
     .from(performers)
     .where(inArray(performers.name, uniqueNames));
@@ -264,7 +275,7 @@ async function ensurePerformersWithAliases(
   // 2. 見つからなかった名前について別名テーブルで検索
   const notFoundNames = uniqueNames.filter((name) => !nameToId.has(name));
   if (notFoundNames.length > 0) {
-    const aliasResults = await db
+    const aliasResults = await dbCtx
       .select({
         aliasName: performerAliases.aliasName,
         performerId: performerAliases.performerId,
@@ -283,7 +294,7 @@ async function ensurePerformersWithAliases(
   // 3. まだ見つからない名前は新規作成
   const stillNotFound = uniqueNames.filter((name) => !nameToId.has(name));
   if (stillNotFound.length > 0) {
-    const created = await db
+    const created = await dbCtx
       .insert(performers)
       .values(stillNotFound.map((name) => ({ name })))
       .onConflictDoNothing()
@@ -296,7 +307,7 @@ async function ensurePerformersWithAliases(
     // onConflictDoNothingで作成されなかった場合、再取得
     const stillMissing = stillNotFound.filter((name) => !nameToId.has(name));
     if (stillMissing.length > 0) {
-      const refetch = await db
+      const refetch = await dbCtx
         .select({ id: performers.id, name: performers.name })
         .from(performers)
         .where(inArray(performers.name, stillMissing));
@@ -316,19 +327,22 @@ async function ensurePerformersWithAliases(
 
 /**
  * タグをバッチで取得または作成
+ * @param tx - オプションのトランザクションコンテキスト
  */
 export async function ensureTags(
   tagNames: string[],
-  category?: string
+  category?: string,
+  tx?: DbContext
 ): Promise<Map<string, number>> {
   if (tagNames.length === 0) {
     return new Map();
   }
 
+  const dbCtx = tx || db;
   const uniqueNames = [...new Set(tagNames)];
 
   // 1. 既存のタグを一括取得
-  const existing = await db
+  const existing = await dbCtx
     .select({ id: tags.id, name: tags.name })
     .from(tags)
     .where(inArray(tags.name, uniqueNames));
@@ -342,7 +356,7 @@ export async function ensureTags(
   const toCreate = uniqueNames.filter((name) => !nameToId.has(name));
 
   if (toCreate.length > 0) {
-    const created = await db
+    const created = await dbCtx
       .insert(tags)
       .values(toCreate.map((name) => ({ name, category })))
       .onConflictDoNothing()
@@ -355,7 +369,7 @@ export async function ensureTags(
     // 再取得が必要な場合
     const stillMissing = toCreate.filter((name) => !nameToId.has(name));
     if (stillMissing.length > 0) {
-      const refetch = await db
+      const refetch = await dbCtx
         .select({ id: tags.id, name: tags.name })
         .from(tags)
         .where(inArray(tags.name, stillMissing));
@@ -371,16 +385,20 @@ export async function ensureTags(
 
 /**
  * 商品とタグの関連をバッチで作成
+ * @param tx - オプションのトランザクションコンテキスト
  */
 export async function linkProductToTags(
   productId: number,
-  tagIds: number[]
+  tagIds: number[],
+  tx?: DbContext
 ): Promise<void> {
   if (tagIds.length === 0) {
     return;
   }
 
-  const existing = await db
+  const dbCtx = tx || db;
+
+  const existing = await dbCtx
     .select({ tagId: productTags.tagId })
     .from(productTags)
     .where(eq(productTags.productId, productId));
@@ -389,7 +407,7 @@ export async function linkProductToTags(
   const toLink = tagIds.filter((id) => !existingIds.has(id));
 
   if (toLink.length > 0) {
-    await db
+    await dbCtx
       .insert(productTags)
       .values(toLink.map((tagId) => ({ productId, tagId })))
       .onConflictDoNothing();
@@ -402,19 +420,23 @@ export async function linkProductToTags(
 
 /**
  * 商品画像をバッチで保存（既存は上書きしない）
+ * @param tx - オプションのトランザクションコンテキスト
  */
 export async function saveProductImages(
   productId: number,
   imageUrls: string[],
   aspName: string,
-  imageType: string = 'sample'
+  imageType: string = 'sample',
+  tx?: DbContext
 ): Promise<{ added: number; skipped: number }> {
   if (imageUrls.length === 0) {
     return { added: 0, skipped: 0 };
   }
 
+  const dbCtx = tx || db;
+
   // 既存の画像URLを取得
-  const existing = await db
+  const existing = await dbCtx
     .select({ imageUrl: productImages.imageUrl })
     .from(productImages)
     .where(
@@ -435,7 +457,7 @@ export async function saveProductImages(
     // 最大のdisplayOrderを取得
     const maxOrder = existing.length;
 
-    await db.insert(productImages).values(
+    await dbCtx.insert(productImages).values(
       toAdd.map((imageUrl, index) => ({
         productId,
         imageUrl,
@@ -454,15 +476,19 @@ export async function saveProductImages(
 
 /**
  * 商品画像を置き換え（既存削除→新規追加）
+ * @param tx - オプションのトランザクションコンテキスト
  */
 export async function replaceProductImages(
   productId: number,
   imageUrls: string[],
   aspName: string,
-  imageType: string = 'sample'
+  imageType: string = 'sample',
+  tx?: DbContext
 ): Promise<number> {
+  const dbCtx = tx || db;
+
   // 既存の画像を削除
-  await db
+  await dbCtx
     .delete(productImages)
     .where(
       and(
@@ -480,7 +506,7 @@ export async function replaceProductImages(
   const uniqueUrls = [...new Set(imageUrls)];
 
   // 新規追加
-  await db.insert(productImages).values(
+  await dbCtx.insert(productImages).values(
     uniqueUrls.map((imageUrl, index) => ({
       productId,
       imageUrl,

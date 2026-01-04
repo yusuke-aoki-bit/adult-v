@@ -9,6 +9,7 @@ import {
 import {
   getAuth,
   signInAnonymously,
+  signOut as firebaseSignOut,
   onAuthStateChanged,
   GoogleAuthProvider,
   TwitterAuthProvider,
@@ -292,6 +293,20 @@ export function isAnonymousUser(): boolean {
   return firebaseAuth?.currentUser?.isAnonymous ?? true;
 }
 
+// Sign out current user
+export async function signOut(): Promise<boolean> {
+  const firebaseAuth = getFirebaseAuth();
+  if (!firebaseAuth) return false;
+
+  try {
+    await firebaseSignOut(firebaseAuth);
+    return true;
+  } catch (error) {
+    console.error('Sign out failed:', error);
+    return false;
+  }
+}
+
 // ============================================
 // Firestore Functions (for favorites/history)
 // ============================================
@@ -405,6 +420,76 @@ export async function getRecentlyViewedFromFirestore(
     return snapshot.docs.map(doc => doc.data() as FirestoreRecentlyViewed);
   } catch (error) {
     console.error('Failed to get recently viewed:', error);
+    return [];
+  }
+}
+
+// ============================================
+// Watchlist (Watch Later) Functions
+// ============================================
+
+export interface FirestoreWatchlistItem {
+  productId: string;
+  title: string;
+  thumbnail?: string;
+  provider?: string;
+  addedAt: ReturnType<typeof serverTimestamp>;
+}
+
+// Save watchlist item to Firestore
+export async function saveWatchlistItemToFirestore(
+  userId: string,
+  item: Omit<FirestoreWatchlistItem, 'addedAt'>
+): Promise<boolean> {
+  const firestore = getFirebaseFirestore();
+  if (!firestore) return false;
+
+  try {
+    const docRef = doc(firestore, 'users', userId, 'watchlist', item.productId);
+    await setDoc(docRef, {
+      ...item,
+      addedAt: serverTimestamp(),
+    });
+    return true;
+  } catch (error) {
+    console.error('Failed to save watchlist item:', error);
+    return false;
+  }
+}
+
+// Remove watchlist item from Firestore
+export async function removeWatchlistItemFromFirestore(
+  userId: string,
+  productId: string
+): Promise<boolean> {
+  const firestore = getFirebaseFirestore();
+  if (!firestore) return false;
+
+  try {
+    const docRef = doc(firestore, 'users', userId, 'watchlist', productId);
+    await deleteDoc(docRef);
+    return true;
+  } catch (error) {
+    console.error('Failed to remove watchlist item:', error);
+    return false;
+  }
+}
+
+// Get all watchlist items from Firestore
+export async function getWatchlistFromFirestore(
+  userId: string,
+  maxItems: number = 100
+): Promise<FirestoreWatchlistItem[]> {
+  const firestore = getFirebaseFirestore();
+  if (!firestore) return [];
+
+  try {
+    const watchlistRef = collection(firestore, 'users', userId, 'watchlist');
+    const q = query(watchlistRef, orderBy('addedAt', 'desc'), limit(maxItems));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => d.data() as FirestoreWatchlistItem);
+  } catch (error) {
+    console.error('Failed to get watchlist:', error);
     return [];
   }
 }

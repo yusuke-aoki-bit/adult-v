@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logApiWarning } from '../lib/api-logger';
 
 interface TrackViewRequest {
   productId?: number;
@@ -25,7 +26,7 @@ export function createTrackViewHandler(deps: TrackViewHandlerDeps) {
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('Error tracking view:', error);
+      logApiWarning(error, 'Error tracking view');
       // Don't fail the request if tracking fails
       return NextResponse.json({ success: false }, { status: 200 });
     }

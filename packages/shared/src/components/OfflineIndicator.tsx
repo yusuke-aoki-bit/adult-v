@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 const translations = {
@@ -54,6 +55,17 @@ interface OfflineIndicatorProps {
 export function OfflineIndicator({ locale = 'ja' }: OfflineIndicatorProps) {
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const { isOnline, offlineDuration } = useOnlineStatus();
+  const [mounted, setMounted] = useState(false);
+
+  // クライアントサイドでのみレンダリング（Hydration対策）
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // SSR時とマウント前は何も表示しない
+  if (!mounted) {
+    return null;
+  }
 
   // オンラインの場合は何も表示しない
   if (isOnline) {
@@ -74,7 +86,7 @@ export function OfflineIndicator({ locale = 'ja' }: OfflineIndicatorProps) {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[9999] bg-amber-600 text-white py-2 px-4 text-center text-sm font-medium flex items-center justify-center gap-2 animate-slide-down"
+      className="fixed top-0 left-0 right-0 z-9999 bg-amber-600 text-white py-2 px-4 text-center text-sm font-medium flex items-center justify-center gap-2 animate-slide-down"
       role="alert"
       aria-live="assertive"
     >

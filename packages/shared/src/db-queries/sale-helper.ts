@@ -4,6 +4,7 @@
  */
 
 import { sql as drizzleSql, eq, and, desc, inArray, gte } from 'drizzle-orm';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
 export interface SaleInfo {
   regularPrice: number;
@@ -197,11 +198,7 @@ export function createSaleHelperQueries(deps: SaleHelperDeps): SaleHelperQueries
 
       return true;
     } catch (error) {
-      console.error(
-        `Error saving sale info for ${aspName}/${originalProductId}:`,
-        error
-      );
-      return false;
+      return logDbErrorAndReturn(error, false, 'saveSaleInfo', { aspName, originalProductId });
     }
   }
 
@@ -225,10 +222,7 @@ export function createSaleHelperQueries(deps: SaleHelperDeps): SaleHelperQueries
         AND ps.is_active = TRUE
       `);
     } catch (error) {
-      console.error(
-        `Error deactivating sale for ${aspName}/${originalProductId}:`,
-        error
-      );
+      logDbErrorAndReturn(error, undefined, 'deactivateSale', { aspName, originalProductId });
     }
   }
 
@@ -383,8 +377,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
       setToMemoryCache(cacheKey, saleProducts);
       return saleProducts;
     } catch (error) {
-      console.error('Error fetching sale products:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getSaleProducts');
     }
   }
 
@@ -472,8 +465,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
         })),
       };
     } catch (error) {
-      console.error('Error fetching sale stats:', error);
-      return { totalSales: 0, byAsp: [] };
+      return logDbErrorAndReturn(error, { totalSales: 0, byAsp: [] }, 'getSaleStats');
     }
   }
 

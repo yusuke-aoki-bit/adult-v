@@ -9,7 +9,6 @@ interface Performer {
   name: string;
   imageUrl?: string | null;
   productCount?: number;
-  [key: string]: unknown;
 }
 
 interface PerformerGridWithComparisonProps {
@@ -17,6 +16,8 @@ interface PerformerGridWithComparisonProps {
   locale: string;
   priority?: number;
   className?: string;
+  /** Card size: 'full', 'compact', or 'mini' */
+  size?: 'full' | 'compact' | 'mini';
 }
 
 export function PerformerGridWithComparison({
@@ -24,6 +25,7 @@ export function PerformerGridWithComparison({
   locale,
   priority = 6,
   className,
+  size,
 }: PerformerGridWithComparisonProps) {
   const theme = useSiteTheme();
 
@@ -39,6 +41,7 @@ export function PerformerGridWithComparison({
           key={performer.id}
           actress={performer as Parameters<typeof ActressCard>[0]['actress']}
           priority={index < priority}
+          size={size}
         />
       )}
     </PerformerListWithSelection>

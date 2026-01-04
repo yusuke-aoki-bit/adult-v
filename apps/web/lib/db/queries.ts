@@ -147,6 +147,12 @@ function getActressQueries() {
       products,
       mapPerformerToActress: (performer, locale) => mapPerformerToActressTypeSync(performer as DbPerformer, 0, undefined, undefined, undefined, locale),
       mapPerformerToActressAsync: (performer, locale) => mapPerformerToActressType(performer as DbPerformer, locale),
+      // N+1解消用バッチ関数
+      batchGetPerformerThumbnails,
+      batchGetPerformerServices,
+      batchGetPerformerAliases,
+      mapPerformerWithBatchData: (performer, thumbnailUrl, services, aliases, productCount, locale) =>
+        mapPerformerToActressTypeSync(performer as DbPerformer, productCount, thumbnailUrl, services, aliases, locale),
     });
   }
   return _actressQueries;

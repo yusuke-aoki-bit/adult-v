@@ -3,6 +3,7 @@
  * 依存性注入パターンでDBとスキーマを外部から受け取る
  */
 import { eq, and, inArray, ne, sql, desc, SQL } from 'drizzle-orm';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
 // DB行結果の型定義
 interface PerformerRow {
@@ -810,8 +811,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         };
       });
     } catch (error) {
-      console.error('Error getting recommended actresses from favorites:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getRecommendedActressesFromFavorites');
     }
   }
 
@@ -958,8 +958,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
 
       return relatedPerformers.rows as RelatedPerformerWithGenre[];
     } catch (error) {
-      console.error('Error getting related performers with genre match:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getRelatedPerformersWithGenreMatch');
     }
   }
 
@@ -1178,8 +1177,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         topMatchingGenres: row.topMatchingGenres ? row.topMatchingGenres.slice(0, 5) : [],
       }));
     } catch (error) {
-      console.error('Error fetching similar actresses:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getSimilarActresses');
     }
   }
 
@@ -1261,8 +1259,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         saleEndAt: row.saleEndAt,
       }));
     } catch (error) {
-      console.error('Error fetching performer top products:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getPerformerTopProducts');
     }
   }
 
@@ -1331,8 +1328,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         discountPercent: Number(row.discountPercent),
       }));
     } catch (error) {
-      console.error('Error fetching performer on-sale products:', error);
-      return [];
+      return logDbErrorAndReturn(error, [], 'getPerformerOnSaleProducts');
     }
   }
 

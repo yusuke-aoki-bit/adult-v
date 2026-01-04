@@ -27,6 +27,16 @@
 | 出演者提案 | 作品への出演者情報提案・投票 | DB |
 | 公開リスト | お気に入りリストの作成・公開・共有 | DB |
 
+## パフォーマンス・SEO
+
+| 最適化項目 | 効果 |
+|-----------|------|
+| Dynamic Import (recharts) | バンドル~70KB削減 |
+| Firebase遅延初期化 | FCP ~300ms改善 |
+| LCP画像priority | LCP ~500ms改善 |
+| HowTo/AggregateOfferスキーマ | リッチスニペット表示 |
+| 多言語メタディスクリプション | 言語別CTR最適化 |
+
 ## 技術スタック
 
 - **フレームワーク**: Next.js 16 (App Router)
@@ -34,6 +44,8 @@
 - **スタイリング**: Tailwind CSS 4
 - **データベース**: PostgreSQL + Drizzle ORM
 - **検索**: Meilisearch
+- **監視**: Sentry (エラー監視)
+- **分析**: Google Analytics 4 + A/Bテスト
 - **デプロイ**: Firebase App Hosting / Google Cloud Run
 
 ## プロジェクト構成
@@ -129,19 +141,21 @@ npm test -- __tests__/unit/db-queries/price-history.test.ts
 
 ### テストファイル構成
 
-| ファイル | 内容 |
-|---------|------|
-| `product-id-utils.test.ts` | 商品ID正規化 |
-| `product-code-utils.test.ts` | 商品コード抽出 |
-| `affiliate-utils.test.ts` | アフィリエイトリンク生成 |
-| `asp-utils.test.ts` | ASP関連ユーティリティ |
-| `mappers.test.ts` | DB→API型変換 |
-| `price-history.test.ts` | 価格履歴クエリ |
-| `schema-consistency.test.ts` | DBスキーマ/APIカラム名一致 |
-| `structured-data.test.ts` | 構造化データ |
-| `user-contributions.test.ts` | ユーザー貢献機能（レビュー/タグ/出演者提案） |
-| `public-favorite-lists.test.ts` | 公開お気に入りリスト |
-| `integration/*.test.ts` | 統合テスト |
+| カテゴリ | テスト数 | 内容 |
+|---------|---------|------|
+| ユニットテスト | 400+ | hooks, components, lib, db-queries |
+| 統合テスト | 50+ | API handlers, DB queries |
+| E2Eテスト | 150+ | ページ遷移, UI操作, パフォーマンス |
+| **合計** | **600+** | |
+
+**主要テストファイル:**
+- `useCompareList.test.ts` - 比較機能
+- `useBulkSelection.test.ts` - 一括選択
+- `useHomeSections.test.ts` - ホームカスタマイズ
+- `seo.test.ts` - SEO構造化データ
+- `user-contributions.test.ts` - レビュー/タグ/出演者提案
+- `price-alerts.test.ts` - 価格アラート
+- `hydration-errors.spec.ts` - ハイドレーションエラー検出
 
 ## ビルド
 

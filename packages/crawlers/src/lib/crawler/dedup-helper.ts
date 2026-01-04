@@ -6,7 +6,7 @@
  */
 
 import { createHash } from 'crypto';
-import { db } from '../db';
+import { db, type DbContext } from '../db';
 import {
   dugaRawResponses,
   sokmilRawResponses,
@@ -642,15 +642,18 @@ export async function upsertRawHtmlDataWithGcs(
 
 /**
  * 商品と生データをリンク
+ * @param tx オプションのトランザクションコンテキスト
  */
 export async function linkProductToRawData(
   productId: number,
   sourceType: SourceType,
   rawDataId: number,
   rawDataTable: RawDataTable,
-  contentHash: string
+  contentHash: string,
+  tx?: DbContext
 ): Promise<LinkProductResult> {
-  const [existing] = await db
+  const dbCtx = tx || db;
+  const [existing] = await dbCtx
     .select()
     .from(productRawDataLinks)
     .where(
@@ -667,7 +670,7 @@ export async function linkProductToRawData(
 
     if (needsReprocessing) {
       // ハッシュが変わった場合は更新
-      await db
+      await dbCtx
         .update(productRawDataLinks)
         .set({ contentHash })
         .where(eq(productRawDataLinks.id, existing.id));
@@ -680,7 +683,7 @@ export async function linkProductToRawData(
     };
   }
 
-  const [inserted] = await db
+  const [inserted] = await dbCtx
     .insert(productRawDataLinks)
     .values({
       productId,
@@ -700,35 +703,38 @@ export async function linkProductToRawData(
 
 /**
  * 生データを処理済みとしてマーク
+ * @param tx オプションのトランザクションコンテキスト
  */
 export async function markRawDataAsProcessed(
   sourceType: SourceType,
-  rawDataId: number
+  rawDataId: number,
+  tx?: DbContext
 ): Promise<void> {
+  const dbCtx = tx || db;
   const now = new Date();
 
   switch (sourceType) {
     case 'duga':
-      await db
+      await dbCtx
         .update(dugaRawResponses)
         .set({ processedAt: now })
         .where(eq(dugaRawResponses.id, rawDataId));
       break;
     case 'sokmil':
-      await db
+      await dbCtx
         .update(sokmilRawResponses)
         .set({ processedAt: now })
         .where(eq(sokmilRawResponses.id, rawDataId));
       break;
     case 'mgs':
-      await db
+      await dbCtx
         .update(mgsRawPages)
         .set({ processedAt: now })
         .where(eq(mgsRawPages.id, rawDataId));
       break;
     default:
       // raw_html_data, raw_csv_data用
-      await db
+      await dbCtx
         .update(rawHtmlData)
         .set({ processedAt: now })
         .where(eq(rawHtmlData.id, rawDataId));

@@ -73,14 +73,14 @@ export function AiSearchBar({
     ? {
         container: 'bg-gray-800/80 border-gray-700',
         input: 'bg-transparent text-white placeholder-gray-400',
-        badge: 'bg-gradient-to-r from-purple-600 to-pink-600 text-white',
+        badge: 'bg-linear-to-r from-purple-600 to-pink-600 text-white',
         examples: 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50',
         spinner: 'border-white',
       }
     : {
         container: 'bg-white border-gray-300',
         input: 'bg-transparent text-gray-900 placeholder-gray-400',
-        badge: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
+        badge: 'bg-linear-to-r from-purple-500 to-pink-500 text-white',
         examples: 'bg-gray-100 text-gray-600 hover:bg-gray-200',
         spinner: 'border-gray-700',
       };
@@ -205,7 +205,7 @@ export function AiSearchBar({
               disabled={query.trim().length < 3}
               className={`p-2 rounded-lg transition-colors ${
                 query.trim().length >= 3
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
+                  ? 'bg-linear-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
                   : theme === 'dark' ? 'bg-gray-700 text-gray-500' : 'bg-gray-200 text-gray-400'
               } disabled:cursor-not-allowed`}
             >

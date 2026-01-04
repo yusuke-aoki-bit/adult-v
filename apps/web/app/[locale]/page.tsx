@@ -55,19 +55,35 @@ export async function generateMetadata({
   // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
   const hasNonDefaultSort = !!searchParamsData.sort && searchParamsData.sort !== 'releaseCount';
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+
   const metadata = generateBaseMetadata(
     t('title'),
     t('description', { count: approximateCount }),
     undefined,
-    `/${locale}`,
+    localizedHref('/', locale),
     undefined,
     locale,
   );
+
+  // hreflang/canonical設定（?hl=形式）
+  const alternates = {
+    canonical: baseUrl,
+    languages: {
+      'ja': baseUrl,
+      'en': `${baseUrl}?hl=en`,
+      'zh': `${baseUrl}?hl=zh`,
+      'zh-TW': `${baseUrl}?hl=zh-TW`,
+      'ko': `${baseUrl}?hl=ko`,
+      'x-default': baseUrl,
+    },
+  };
 
   // 検索・フィルター・2ページ目以降・非デフォルトソートはnoindex（重複コンテンツ防止）
   if (hasQuery || hasFilters || hasPageParam || hasNonDefaultSort) {
     return {
       ...metadata,
+      alternates,
       robots: {
         index: false,
         follow: true,
@@ -75,7 +91,7 @@ export async function generateMetadata({
     };
   }
 
-  return metadata;
+  return { ...metadata, alternates };
 }
 
 // ISR: 60秒ごとに再検証（searchParamsがあるため完全な静的生成は不可）
@@ -276,7 +292,7 @@ export default async function Home({ params, searchParams }: PageProps) {
 
       {/* 上部セクション（セール中・最近見た作品）- 女優一覧の前 */}
       {isTopPage && (
-        <section id="sale" className="py-3 sm:py-4 scroll-mt-20">
+        <section className="py-3 sm:py-4">
           <div className="container mx-auto px-3 sm:px-4">
             <TopPageUpperSections
               locale={locale}
@@ -383,7 +399,7 @@ export default async function Home({ params, searchParams }: PageProps) {
 
       {/* === 以下はメインコンテンツ（女優一覧）の後に表示 === */}
       {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}
-      <section id="recommendations" className="py-3 sm:py-4 scroll-mt-20">
+      <section className="py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
           <TopPageLowerSections
             locale={locale}

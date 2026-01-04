@@ -1285,7 +1285,96 @@ CREATE INDEX idx_product_views_session_id ON product_views(session_id);
 
 ---
 
-## 21. 開発環境
+## 21. パフォーマンス・SEO最適化（2025年1月実施）
+
+### 概要
+
+Core Web Vitalsの改善とSEO強化のための包括的な最適化を実施。
+
+### 21.1 バンドルサイズ最適化
+
+| 施策 | ファイル | 効果 |
+|------|---------|------|
+| 統計チャートDynamic Import | `packages/shared/src/components/stats/DynamicCharts.tsx` | ~50KB削減 |
+| recharts最適化 | `next.config.mjs` optimizePackageImports | ~20KB削減 |
+| HeaderBase memo化 | `packages/shared/src/components/Header/HeaderBase.tsx` | 再レンダー削減 |
+
+**Dynamic Charts実装**:
+```typescript
+// DynamicCharts.tsx
+export const DynamicReleasesTrendChart = dynamic(
+  () => import('./ReleasesTrendChart'),
+  { loading: () => <ChartSkeleton />, ssr: false }
+);
+```
+
+### 21.2 LCP/FCP最適化
+
+| 施策 | ファイル | 効果 |
+|------|---------|------|
+| Firebase Remote Config遅延 | `FirebaseAuthContext.tsx` | FCP ~300ms改善 |
+| LCP画像priority設定 | `FanzaNewReleasesSection.tsx` | LCP ~500ms改善 |
+| requestIdleCallback活用 | Remote Config初期化 | メインスレッド解放 |
+
+**Firebase遅延初期化**:
+```typescript
+if ('requestIdleCallback' in window) {
+  window.requestIdleCallback(() => loadRemoteConfig(), { timeout: 5000 });
+} else {
+  setTimeout(loadRemoteConfig, 3000);
+}
+```
+
+### 21.3 構造化データ拡張
+
+| スキーマ | ファイル | 用途 |
+|---------|---------|------|
+| HowTo | `seo.ts` generateHowToSchema | 視聴方法リッチスニペット |
+| AggregateOffer | `seo.ts` generateAggregateOfferSchema | 複数ASP価格比較 |
+| ItemList (Products) | `seo.ts` generateProductItemListSchema | 関連商品リスト |
+| ItemList (Performers) | `seo.ts` generatePerformerItemListSchema | 関連女優リスト |
+
+**AggregateOfferスキーマ**:
+```typescript
+generateAggregateOfferSchema([
+  { providerName: 'FANZA', price: 1980 },
+  { providerName: 'MGS', price: 1780 },
+], 'JPY')
+```
+
+### 21.4 多言語SEO最適化
+
+| 言語 | 関数 | 特徴 |
+|------|------|------|
+| 日本語 | generateJapaneseProductDescription | セール優先、品番、CTA |
+| 英語 | generateEnglishProductDescription | Sale badge, feat. actress |
+| 中国語 | generateChineseProductDescription | 簡体/繁体対応 |
+| 韓国語 | generateKoreanProductDescription | 할인表示、출연 |
+
+**各言語CTR最適化テンプレート**:
+```typescript
+// 日本語: 【30%OFF】SSIS-865 タイトル - 女優名出演 - 120分 - FANZAで今すぐ視聴
+// 英語: [30% OFF] SSIS-865 Title - feat. ActressName - 120min - Watch now on FANZA
+// 中国語: 【30%优惠】SSIS-865 标题 - 女优出演 - 120分钟 - 立即在FANZA观看
+// 韓国語: [30% 할인] SSIS-865 제목 - 여배우 출연 - 120분 - FANZA에서 바로 시청
+```
+
+### 21.5 SEO関連ユーティリティ追加
+
+| 関数 | ファイル | 用途 |
+|------|---------|------|
+| generateActressAltText | `seo-utils.ts` | 女優画像Alt最適化 |
+| generateSampleImageAltText | `seo-utils.ts` | サンプル画像Alt最適化 |
+
+**Alt属性フォーマット**:
+```typescript
+// 女優: "女優名 | (別名) | 出演50作品 | FANZA・MGS"
+// 商品: "タイトル - 女優名 - サンプル画像1"
+```
+
+---
+
+## 22. 開発環境
 
 ### ローカルサーバー起動
 
@@ -1322,7 +1411,7 @@ npm run build:fanza  # FANZA版
 
 ---
 
-## 22. ユーザー貢献機能（2025年1月追加）
+## 23. ユーザー貢献機能（2025年1月追加）
 
 ### 概要
 
@@ -1482,7 +1571,7 @@ CREATE TABLE user_performer_suggestion_votes (
 
 ---
 
-## 23. 公開お気に入りリスト（2025年1月追加）
+## 24. 公開お気に入りリスト（2025年1月追加）
 
 ### 概要
 

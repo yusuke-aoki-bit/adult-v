@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateSNSSummary } from '../lib/llm-service';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 export interface SNSSummaryHandlerDeps {
   getProductWithDetails: (normalizedId: string) => Promise<{
@@ -40,8 +41,9 @@ export function createSNSSummaryHandler(deps: SNSSummaryHandlerDeps) {
 
       return NextResponse.json({ success: true, productId: id, ...result });
     } catch (error) {
-      console.error('[SNS Summary API] Error:', error);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return createApiErrorResponse(error, 'Internal server error', 500, {
+        endpoint: '/api/products/[id]/sns-summary',
+      });
     }
   };
 }

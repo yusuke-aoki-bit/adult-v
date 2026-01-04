@@ -61,6 +61,7 @@ export function PerformerRelationMap({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('network');
+  const [hoveredNodeId, setHoveredNodeId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchRelations = async () => {
@@ -377,21 +378,27 @@ export function PerformerRelationMap({
                 // ホップ数によってノードサイズを変える（1ホップが大きい）
                 const baseRadius = node.hop === 1 ? 25 : node.hop === 2 ? 20 : 16;
                 const nodeRadius = Math.min(baseRadius + 3, baseRadius + node.costarCount);
+                const isHovered = hoveredNodeId === node.id;
+                const tooltipText = `${node.name}${node.nameEn ? ` (${node.nameEn})` : ''} - ${node.costarCount}${locale === 'ja' ? '作品共演' : ' costars'}`;
 
                 return (
                   <g
                     key={node.id}
                     className="cursor-pointer"
                     onClick={() => onPerformerClick?.(node.id)}
+                    onMouseEnter={() => setHoveredNodeId(node.id)}
+                    onMouseLeave={() => setHoveredNodeId(null)}
+                    style={{ filter: isHovered ? 'drop-shadow(0 0 8px rgba(255,255,255,0.5))' : 'none' }}
                   >
+                    <title>{tooltipText}</title>
                     <circle
                       cx={node.x}
                       cy={node.y}
-                      r={nodeRadius}
+                      r={isHovered ? nodeRadius + 3 : nodeRadius}
                       fill={isDark ? '#374151' : '#F3F4F6'}
                       stroke={hopColor.fill}
-                      strokeWidth="2"
-                      className="transition-all"
+                      strokeWidth={isHovered ? 4 : 2}
+                      style={{ transition: 'all 0.2s ease' }}
                     />
                     <defs>
                       <clipPath id={`clip-3hop-${node.id}`}>
@@ -438,14 +445,15 @@ export function PerformerRelationMap({
                     >
                       {node.costarCount}
                     </text>
-                    {/* 名前ラベル（1ホップ目のみ） */}
-                    {node.hop === 1 && (
+                    {/* 名前ラベル（1ホップ目 or ホバー時） */}
+                    {(node.hop === 1 || isHovered) && (
                       <text
                         x={node.x}
                         y={node.y + nodeRadius + 12}
                         textAnchor="middle"
                         fill={isDark ? '#D1D5DB' : '#374151'}
-                        fontSize="9"
+                        fontSize={isHovered ? 11 : 9}
+                        fontWeight={isHovered ? 'bold' : 'normal'}
                         className="pointer-events-none"
                       >
                         {node.name.length > 6 ? node.name.slice(0, 6) + '...' : node.name}

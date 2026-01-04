@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
 export interface MakersHandlerDeps {
   getPopularMakers: (params?: {
@@ -25,7 +26,7 @@ export function createMakersGetHandler(deps: MakersHandlerDeps) {
 
       return NextResponse.json({ makers });
     } catch (error) {
-      console.error('Error fetching makers:', error);
+      logDbErrorAndReturn(error, [], 'getPopularMakers');
       return NextResponse.json({ makers: [] }, { status: 500 });
     }
   };
@@ -45,7 +46,7 @@ export function createMakersPostHandler(deps: MakersHandlerDeps) {
 
       return NextResponse.json({ makers });
     } catch (error) {
-      console.error('Error analyzing maker preference:', error);
+      logDbErrorAndReturn(error, [], 'analyzeMakerPreference');
       return NextResponse.json({ makers: [] }, { status: 500 });
     }
   };

@@ -226,7 +226,7 @@ export function ViewingHabitsDashboard({
         </div>
 
         {/* ストリーク */}
-        <div className={`p-4 rounded-lg ${isDark ? 'bg-gradient-to-r from-orange-900/30 to-red-900/30 border border-orange-800/50' : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200'}`}>
+        <div className={`p-4 rounded-lg ${isDark ? 'bg-linear-to-r from-orange-900/30 to-red-900/30 border border-orange-800/50' : 'bg-linear-to-r from-orange-50 to-red-50 border border-orange-200'}`}>
           <h3 className={`text-sm font-medium mb-3 ${isDark ? 'text-orange-300' : 'text-orange-700'}`}>
             🔥 {t.viewStreak}
           </h3>

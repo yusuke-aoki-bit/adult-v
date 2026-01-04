@@ -63,7 +63,7 @@ export type { AnalyticsHandlerDeps, AnalyticsData } from './analytics';
 export { createAnalyticsHandler } from './analytics';
 
 // Discover handlers
-export type { DiscoverHandlerDeps, DiscoverProduct } from './discover';
+export type { DiscoverHandlerDeps, DiscoverProduct, DiscoverFilters } from './discover';
 export { createDiscoverHandler } from './discover';
 
 // Notifications handlers
@@ -136,3 +136,12 @@ export { createRookiePerformersHandler } from './rookie-performers';
 // Price Alerts handlers
 export type { PriceAlertsHandlerDeps, PriceAlertInput } from './price-alerts';
 export { createPriceAlertsHandler } from './price-alerts';
+
+// User Corrections handlers
+export type { UserCorrectionsHandlerDeps, UserCorrection } from './user-corrections';
+export {
+  createUserCorrectionsGetHandler,
+  createUserCorrectionsPostHandler,
+  createUserCorrectionsReviewHandler,
+  createUserCorrectionsDeleteHandler,
+} from './user-corrections';

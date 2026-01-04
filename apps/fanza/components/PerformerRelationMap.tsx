@@ -15,17 +15,12 @@ export default function PerformerRelationMap({ performerId, locale }: PerformerR
     router.push(`/${locale}/actress/${id}`);
   };
 
-  const handleProductClick = (productId: string) => {
-    router.push(`/${locale}/products/${productId}`);
-  };
-
   return (
     <SharedPerformerRelationMap
       performerId={performerId}
       locale={locale}
       theme="light"
       onPerformerClick={handlePerformerClick}
-      onProductClick={handleProductClick}
     />
   );
 }

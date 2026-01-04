@@ -191,6 +191,9 @@ export type {
 export { HeaderBase } from './Header';
 export type { HeaderBaseProps } from './Header';
 
+// UserMenu (login/avatar dropdown)
+export { UserMenu } from './UserMenu';
+
 // Footer (shared between apps)
 export { FooterBase } from './Footer';
 export type { FooterBaseProps, FooterTranslation } from './Footer';
@@ -324,6 +327,8 @@ export type { LinkMenuItemProps, AccordionMenuItemProps, TopPageMenuItemProps, T
 // Section navigation
 export { SectionNav } from './SectionNav';
 export type { SectionItem } from './SectionNav';
+export { PageSectionNav } from './PageSectionNav';
+export type { PageSectionNavConfig } from './PageSectionNav';
 
 // User contributions (reviews, tag suggestions, performer suggestions)
 export {
@@ -361,9 +366,14 @@ export { SceneTimeline } from './SceneInfo';
 export { RookieRanking } from './RookieRanking';
 
 // Performer comparison
+export { PerformerCompare } from './PerformerCompare';
 export { default as PerformerCompareFloatingBar } from './PerformerCompareFloatingBar';
 export { default as PerformerCompareButton } from './PerformerCompareButton';
 
 // List with selection (for bulk comparison)
 export { ProductListWithSelection } from './ProductListWithSelection';
 export { PerformerListWithSelection } from './PerformerListWithSelection';
+
+// User corrections (suggest edits to product/performer info)
+export { CorrectionForm, type CorrectionFormProps, type CorrectionFormTranslations } from './CorrectionForm';
+export { CorrectionList, type CorrectionListProps, type CorrectionListTranslations, type Correction } from './CorrectionList';

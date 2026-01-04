@@ -744,3 +744,67 @@ export type SeoMetrics = typeof seoMetrics.$inferSelect;
 export type NewSeoMetrics = typeof seoMetrics.$inferInsert;
 export type FooterFeaturedActress = typeof footerFeaturedActresses.$inferSelect;
 export type NewFooterFeaturedActress = typeof footerFeaturedActresses.$inferInsert;
+
+/**
+ * ユーザー修正提案テーブル
+ * 商品・出演者情報の修正提案を管理
+ */
+export const userCorrections = pgTable(
+  'user_corrections',
+  {
+    id: serial('id').primaryKey(),
+    targetType: varchar('target_type', { length: 50 }).notNull(), // 'product', 'performer'
+    targetId: integer('target_id').notNull(),
+    userId: varchar('user_id', { length: 255 }).notNull(), // Firebase UID
+    fieldName: varchar('field_name', { length: 100 }).notNull(), // 修正対象フィールド名
+    currentValue: text('current_value'), // 現在の値
+    suggestedValue: text('suggested_value').notNull(), // 提案する値
+    reason: text('reason'), // 修正理由
+    status: varchar('status', { length: 50 }).default('pending').notNull(), // pending, approved, rejected
+    reviewedBy: varchar('reviewed_by', { length: 255 }), // 審査者
+    reviewedAt: timestamp('reviewed_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    targetIdx: index('idx_corrections_target').on(table.targetType, table.targetId),
+    userIdx: index('idx_corrections_user').on(table.userId),
+    statusIdx: index('idx_corrections_status').on(table.status),
+    createdIdx: index('idx_corrections_created').on(table.createdAt),
+  }),
+);
+
+/**
+ * ユーザー貢献度サマリーテーブル
+ * ユーザーの貢献度を集計
+ */
+export const userContributionStats = pgTable(
+  'user_contribution_stats',
+  {
+    id: serial('id').primaryKey(),
+    userId: varchar('user_id', { length: 255 }).unique().notNull(), // Firebase UID
+    displayName: varchar('display_name', { length: 100 }),
+    reviewCount: integer('review_count').default(0),
+    tagSuggestionCount: integer('tag_suggestion_count').default(0),
+    tagApprovedCount: integer('tag_approved_count').default(0),
+    performerSuggestionCount: integer('performer_suggestion_count').default(0),
+    performerApprovedCount: integer('performer_approved_count').default(0),
+    correctionCount: integer('correction_count').default(0),
+    correctionApprovedCount: integer('correction_approved_count').default(0),
+    publicListCount: integer('public_list_count').default(0),
+    totalListLikes: integer('total_list_likes').default(0),
+    contributionScore: integer('contribution_score').default(0), // 総合貢献スコア
+    badges: jsonb('badges').default([]), // 獲得バッジ
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index('idx_contribution_stats_user').on(table.userId),
+    scoreIdx: index('idx_contribution_stats_score').on(table.contributionScore),
+  }),
+);
+
+export type UserCorrection = typeof userCorrections.$inferSelect;
+export type NewUserCorrection = typeof userCorrections.$inferInsert;
+export type UserContributionStat = typeof userContributionStats.$inferSelect;
+export type NewUserContributionStat = typeof userContributionStats.$inferInsert;

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-
-// Individual actress data rarely changes - cache 24 hours
-const CACHE_24_HOURS = 'public, s-maxage=86400, stale-while-revalidate=604800';
+import { CACHE } from './constants/cache';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 export interface ActressByIdHandlerDeps {
   getActressById: (id: string, locale?: string) => Promise<unknown | null>;
@@ -32,14 +31,12 @@ export function createActressByIdHandler(deps: ActressByIdHandlerDeps) {
       }
 
       return NextResponse.json(actress, {
-        headers: { 'Cache-Control': CACHE_24_HOURS }
+        headers: { 'Cache-Control': CACHE.ONE_DAY }
       });
     } catch (error) {
-      console.error('Error fetching actress:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch actress' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to fetch actress', 500, {
+        endpoint: '/api/actresses/[id]',
+      });
     }
   };
 }

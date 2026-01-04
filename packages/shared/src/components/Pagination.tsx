@@ -226,7 +226,7 @@ export default function Pagination({
   return (
     <nav
       aria-label={`${t.page} ${page} / ${totalPages}`}
-      className={`flex flex-col items-center gap-2 sm:gap-3 ${position === 'top' ? 'mb-4 sm:mb-6' : 'mt-6 sm:mt-8'}`}
+      className={`flex flex-col items-center gap-2 sm:gap-3 min-h-[88px] sm:min-h-[104px] ${position === 'top' ? 'mb-4 sm:mb-6' : 'mt-6 sm:mt-8'}`}
     >
       {/* メインナビゲーション */}
       <div className="flex flex-nowrap items-center justify-center gap-1 sm:gap-2" role="group">

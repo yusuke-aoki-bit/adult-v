@@ -4,8 +4,10 @@ import { getTranslations } from 'next-intl/server';
 import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateFAQSchema, getCategoryPageFAQs, generateItemListSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import { getPopularTags } from '@/lib/db/queries';
+import PageLayout from '@/components/PageLayout';
+import { getPopularTags, getSaleProducts, getUncategorizedProductsCount } from '@/lib/db/queries';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { isServerFanzaSite } from '@/lib/server/site-mode';
 
 // カテゴリ一覧は変更頻度が低いためISRで1時間キャッシュ
 export const revalidate = 3600;
@@ -24,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     t('metaTitle'),
     t('metaDescription'),
     undefined,
-    `/${locale}/categories`,
+    localizedHref('/categories', locale),
     undefined,
     locale,
   );
@@ -51,9 +53,17 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
   const selectedCategory = resolvedSearchParams.category;
   const t = await getTranslations('categories');
   const tCommon = await getTranslations('common');
+  const tNav = await getTranslations({ locale, namespace: 'nav' });
 
-  // 人気タグを取得（上位100件）
-  const tags = await getPopularTags({ limit: 100, category: selectedCategory });
+  // FANZAサイトかどうかを判定
+  const isFanzaSite = await isServerFanzaSite();
+
+  // 人気タグ、セール情報、未整理数を並列取得
+  const [tags, saleProducts, uncategorizedCount] = await Promise.all([
+    getPopularTags({ limit: 100, category: selectedCategory }),
+    getSaleProducts({ limit: 24, minDiscount: 30, aspName: isFanzaSite ? 'FANZA' : undefined }),
+    getUncategorizedProductsCount({ includeAsp: isFanzaSite ? ['FANZA'] : undefined }),
+  ]);
 
   // カテゴリ別にグループ化
   const tagsByCategory = tags.reduce((acc, tag) => {
@@ -91,8 +101,43 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
     url: localizedHref(`/products?include=${tag.id}`, locale),
   }));
 
+  // SalesSection用にDateをstringに変換
+  const saleProductsForDisplay = saleProducts.map(p => ({
+    ...p,
+    endAt: p.endAt ? p.endAt.toISOString() : null,
+  }));
+
+  // PageLayout用の翻訳
+  const tUncategorized = await getTranslations({ locale, namespace: 'uncategorized' });
+  const layoutTranslations = {
+    viewProductList: '作品一覧',
+    viewProductListDesc: '全ての配信サイトの作品を横断検索',
+    uncategorizedBadge: tUncategorized('badge'),
+    uncategorizedDescription: tUncategorized('shortDescription'),
+    uncategorizedCount: tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() }),
+  };
+
+  // セクションナビゲーション用の翻訳
+  const sectionLabels: Record<string, string> = {
+    ja: 'カテゴリ一覧',
+    en: 'Categories',
+    zh: '分类',
+    ko: '카테고리',
+  };
+
   return (
-    <>
+    <PageLayout
+      locale={locale}
+      saleProducts={saleProductsForDisplay}
+      uncategorizedCount={uncategorizedCount}
+      isTopPage={false}
+      isFanzaSite={isFanzaSite}
+      translations={layoutTranslations}
+      sectionNavConfig={{
+        mainSectionId: 'categories',
+        mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
+      }}
+    >
       <JsonLD
         data={[
           generateBreadcrumbSchema(breadcrumbItems),
@@ -107,104 +152,107 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
         ]}
       />
 
-      <div className="container mx-auto px-4 py-8">
-        <Breadcrumb
-          items={breadcrumbItems.map((item) => ({
-            label: item.name,
-            href: item.url,
-          }))}
-        />
+      <section id="categories" className="py-3 sm:py-4 md:py-6 scroll-mt-20">
+        <div className="container mx-auto px-3 sm:px-4">
+          <Breadcrumb
+            items={[
+              { label: tNav('home'), href: localizedHref('/', locale) },
+              { label: t('title') },
+            ]}
+            className="mb-2 sm:mb-3"
+          />
 
-        <h1 className="text-3xl font-bold text-white mb-4">{t('title')}</h1>
-        <p className="text-gray-400 mb-8">{t('description')}</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">{t('title')}</h1>
+          <p className="text-gray-400 mb-6">{t('description')}</p>
 
-        {/* カテゴリフィルター */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          <Link
-            href={localizedHref('/categories', locale)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              !selectedCategory
-                ? 'bg-rose-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            {t('allCategories')}
-          </Link>
-          {categoryOrder.map((cat) => (
+          {/* カテゴリフィルター */}
+          <div className="flex flex-wrap gap-2 mb-6">
             <Link
-              key={cat}
-              href={localizedHref(`/categories?category=${cat}`, locale)}
+              href={localizedHref('/categories', locale)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === cat
+                !selectedCategory
                   ? 'bg-rose-600 text-white'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
-              {categoryLabels[cat]}
+              {t('allCategories')}
             </Link>
-          ))}
-        </div>
-
-        {tags.length === 0 ? (
-          <p className="text-gray-400 text-center py-12">{t('noCategories')}</p>
-        ) : selectedCategory ? (
-          // 特定カテゴリのみ表示
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {tags.map((tag) => (
+            {categoryOrder.map((cat) => (
               <Link
-                key={tag.id}
-                href={localizedHref(`/products?include=${tag.id}`, locale)}
-                className="group bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors"
+                key={cat}
+                href={localizedHref(`/categories?category=${cat}`, locale)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  selectedCategory === cat
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
               >
-                <h3 className="text-white font-medium group-hover:text-rose-400 transition-colors mb-1">
-                  {tag.name}
-                </h3>
-                <p className="text-sm text-gray-400">
-                  {t('productCount', { count: tag.count })}
-                </p>
+                {categoryLabels[cat]}
               </Link>
             ))}
           </div>
-        ) : (
-          // カテゴリ別に表示
-          <div className="space-y-8">
-            {categoryOrder.map((cat) => {
-              const catTags = tagsByCategory[cat];
-              if (!catTags || catTags.length === 0) return null;
 
-              return (
-                <section key={cat}>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white">{categoryLabels[cat]}</h2>
-                    <Link
-                      href={localizedHref(`/categories?category=${cat}`, locale)}
-                      className="text-sm text-rose-400 hover:text-rose-300"
-                    >
-                      {t('viewProducts')} →
-                    </Link>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                    {catTags.slice(0, 12).map((tag) => (
+          {tags.length === 0 ? (
+            <p className="text-gray-400 text-center py-12">{t('noCategories')}</p>
+          ) : selectedCategory ? (
+            // 特定カテゴリのみ表示
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {tags.map((tag) => (
+                <Link
+                  key={tag.id}
+                  href={localizedHref(`/products?include=${tag.id}`, locale)}
+                  className="group bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors"
+                >
+                  <h3 className="text-white font-medium group-hover:text-rose-400 transition-colors mb-1">
+                    {tag.name}
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    {t('productCount', { count: tag.count })}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            // カテゴリ別に表示
+            <div className="space-y-8">
+              {categoryOrder.map((cat) => {
+                const catTags = tagsByCategory[cat];
+                if (!catTags || catTags.length === 0) return null;
+
+                return (
+                  <section key={cat}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-bold text-white">{categoryLabels[cat]}</h2>
                       <Link
-                        key={tag.id}
-                        href={localizedHref(`/products?include=${tag.id}`, locale)}
-                        className="group bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition-colors"
+                        href={localizedHref(`/categories?category=${cat}`, locale)}
+                        className="text-sm text-rose-400 hover:text-rose-300"
                       >
-                        <h3 className="text-white text-sm font-medium group-hover:text-rose-400 transition-colors truncate">
-                          {tag.name}
-                        </h3>
-                        <p className="text-xs text-gray-400">
-                          {t('productCount', { count: tag.count })}
-                        </p>
+                        {t('viewProducts')} →
                       </Link>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                      {catTags.slice(0, 12).map((tag) => (
+                        <Link
+                          key={tag.id}
+                          href={localizedHref(`/products?include=${tag.id}`, locale)}
+                          className="group bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition-colors"
+                        >
+                          <h3 className="text-white text-sm font-medium group-hover:text-rose-400 transition-colors truncate">
+                            {tag.name}
+                          </h3>
+                          <p className="text-xs text-gray-400">
+                            {t('productCount', { count: tag.count })}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+    </PageLayout>
   );
 }

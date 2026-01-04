@@ -4,6 +4,12 @@ import Link from 'next/link';
 // Due to next-intl middleware, most routes should be locale-prefixed
 // FANZA theme: Light background with rose accent colors
 export default function RootNotFound() {
+  const quickLinks = [
+    { href: '/ja/products', label: '新着作品' },
+    { href: '/ja/actresses', label: '人気女優' },
+    { href: '/ja/discover', label: '今日の発見' },
+  ];
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -38,11 +44,36 @@ export default function RootNotFound() {
             fontWeight: '500',
             padding: '0.5rem 1.5rem',
             borderRadius: '0.5rem',
-            textDecoration: 'none'
+            textDecoration: 'none',
+            marginBottom: '1.5rem'
           }}
         >
           ホームに戻る
         </Link>
+        <div style={{ borderTop: '1px solid #E5E5E5', paddingTop: '1rem', marginTop: '1rem' }}>
+          <p style={{ color: '#6B6B6B', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+            または以下をチェック
+          </p>
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {quickLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                style={{
+                  color: '#B42F5A',
+                  fontSize: '0.875rem',
+                  textDecoration: 'none',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '0.375rem',
+                  backgroundColor: '#FDF2F5',
+                  border: '1px solid #E5E5E5'
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -29,15 +29,16 @@ export async function generateMetadata({
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
   const meta = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
 
-  // hreflang/canonical設定
+  // hreflang/canonical設定（?hl=形式）
   const alternates = {
-    canonical: `${baseUrl}/${locale}/terms`,
+    canonical: `${baseUrl}/terms`,
     languages: {
-      'ja': `${baseUrl}/ja/terms`,
-      'en': `${baseUrl}/en/terms`,
-      'zh': `${baseUrl}/zh/terms`,
-      'ko': `${baseUrl}/ko/terms`,
-      'x-default': `${baseUrl}/ja/terms`,
+      'ja': `${baseUrl}/terms`,
+      'en': `${baseUrl}/terms?hl=en`,
+      'zh': `${baseUrl}/terms?hl=zh`,
+      'zh-TW': `${baseUrl}/terms?hl=zh-TW`,
+      'ko': `${baseUrl}/terms?hl=ko`,
+      'x-default': `${baseUrl}/terms`,
     },
   };
 

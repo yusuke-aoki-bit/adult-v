@@ -13,7 +13,7 @@ const optimizePackageImports = [
   'drizzle-orm', 'lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu',
   '@radix-ui/react-popover', '@radix-ui/react-select', '@radix-ui/react-slot', '@radix-ui/react-tooltip',
   'firebase', 'firebase/app', 'firebase/auth', 'firebase/firestore', '@google-cloud/storage',
-  '@google/generative-ai', 'next-intl', 'cheerio', 'date-fns', 'clsx', 'lodash', 'zod',
+  '@google/generative-ai', 'next-intl', 'cheerio', 'date-fns', 'clsx', 'lodash', 'zod', 'recharts',
 ];
 
 const remotePatterns = [

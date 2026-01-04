@@ -21,6 +21,36 @@ const translations = {
     loginToCreate: 'ログインしてリストを作成',
     error: 'エラーが発生しました',
     deleteConfirm: 'このリストを削除しますか？',
+    // PublicListCard translations
+    card: {
+      items: '{count}件',
+      views: '閲覧',
+      likes: 'いいね',
+      private: '非公開',
+      public: '公開',
+      edit: '編集',
+      delete: '削除',
+      deleteConfirm: 'このリストを削除しますか？',
+    },
+    // CreateListModal translations
+    modal: {
+      createTitle: 'リストを作成',
+      editTitle: 'リストを編集',
+      titleLabel: 'タイトル',
+      titlePlaceholder: 'リストの名前を入力',
+      descriptionLabel: '説明',
+      descriptionPlaceholder: 'リストの説明を入力（任意）',
+      visibilityLabel: '公開設定',
+      public: '公開',
+      publicDescription: '誰でも閲覧可能',
+      private: '非公開',
+      privateDescription: '自分だけが閲覧可能',
+      cancel: 'キャンセル',
+      create: '作成',
+      save: '保存',
+      creating: '作成中...',
+      saving: '保存中...',
+    },
   },
   en: {
     title: 'Public Lists',
@@ -35,6 +65,34 @@ const translations = {
     loginToCreate: 'Login to create lists',
     error: 'An error occurred',
     deleteConfirm: 'Delete this list?',
+    card: {
+      items: '{count} items',
+      views: 'views',
+      likes: 'likes',
+      private: 'Private',
+      public: 'Public',
+      edit: 'Edit',
+      delete: 'Delete',
+      deleteConfirm: 'Delete this list?',
+    },
+    modal: {
+      createTitle: 'Create List',
+      editTitle: 'Edit List',
+      titleLabel: 'Title',
+      titlePlaceholder: 'Enter list name',
+      descriptionLabel: 'Description',
+      descriptionPlaceholder: 'Enter description (optional)',
+      visibilityLabel: 'Visibility',
+      public: 'Public',
+      publicDescription: 'Anyone can view',
+      private: 'Private',
+      privateDescription: 'Only you can view',
+      cancel: 'Cancel',
+      create: 'Create',
+      save: 'Save',
+      creating: 'Creating...',
+      saving: 'Saving...',
+    },
   },
   zh: {
     title: '公开列表',
@@ -49,6 +107,34 @@ const translations = {
     loginToCreate: '登录以创建列表',
     error: '发生错误',
     deleteConfirm: '删除此列表？',
+    card: {
+      items: '{count}个',
+      views: '浏览',
+      likes: '喜欢',
+      private: '私密',
+      public: '公开',
+      edit: '编辑',
+      delete: '删除',
+      deleteConfirm: '删除此列表？',
+    },
+    modal: {
+      createTitle: '创建列表',
+      editTitle: '编辑列表',
+      titleLabel: '标题',
+      titlePlaceholder: '输入列表名称',
+      descriptionLabel: '描述',
+      descriptionPlaceholder: '输入描述（可选）',
+      visibilityLabel: '可见性',
+      public: '公开',
+      publicDescription: '所有人可见',
+      private: '私密',
+      privateDescription: '仅自己可见',
+      cancel: '取消',
+      create: '创建',
+      save: '保存',
+      creating: '创建中...',
+      saving: '保存中...',
+    },
   },
   ko: {
     title: '공개 리스트',
@@ -63,6 +149,34 @@ const translations = {
     loginToCreate: '로그인하여 리스트 만들기',
     error: '오류가 발생했습니다',
     deleteConfirm: '이 리스트를 삭제하시겠습니까?',
+    card: {
+      items: '{count}개',
+      views: '조회',
+      likes: '좋아요',
+      private: '비공개',
+      public: '공개',
+      edit: '편집',
+      delete: '삭제',
+      deleteConfirm: '이 리스트를 삭제하시겠습니까?',
+    },
+    modal: {
+      createTitle: '리스트 만들기',
+      editTitle: '리스트 편집',
+      titleLabel: '제목',
+      titlePlaceholder: '리스트 이름 입력',
+      descriptionLabel: '설명',
+      descriptionPlaceholder: '설명 입력(선택)',
+      visibilityLabel: '공개 설정',
+      public: '공개',
+      publicDescription: '누구나 볼 수 있음',
+      private: '비공개',
+      privateDescription: '나만 볼 수 있음',
+      cancel: '취소',
+      create: '만들기',
+      save: '저장',
+      creating: '만드는 중...',
+      saving: '저장 중...',
+    },
   },
 } as const;
 
@@ -210,12 +324,12 @@ export default function ListsPage() {
               <PublicListCard
                 key={list.id}
                 list={list}
-                locale={locale}
-                theme="dark"
-                isOwner={list.userId === userId}
-                onLike={(id, liked) => toggleLike(id, liked)}
+                currentUserId={userId}
+                onView={(listId) => router.push(`/${locale}/lists/${listId}`)}
+                onLike={(id, action) => toggleLike(id, action === 'like')}
                 onEdit={() => handleEditList(list)}
                 onDelete={handleDeleteList}
+                translations={t.card}
               />
             ))}
           </div>
@@ -230,10 +344,8 @@ export default function ListsPage() {
           setEditingList(null);
         }}
         onSubmit={handleCreateList}
-        locale={locale}
-        theme="dark"
-        mode={editingList ? 'edit' : 'create'}
-        initialData={editingList ?? undefined}
+        editingList={editingList}
+        translations={t.modal}
       />
     </div>
   );

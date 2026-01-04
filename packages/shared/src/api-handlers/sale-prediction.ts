@@ -1,9 +1,5 @@
-/**
- * セール予測APIハンドラ
- * 過去のセール履歴に基づいて将来のセール確率を予測
- */
-
 import { NextRequest, NextResponse } from 'next/server';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DbType = any;
@@ -168,11 +164,9 @@ export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
         totalHistoricalSales,
       });
     } catch (error) {
-      console.error('Failed to calculate sale prediction:', error);
-      return NextResponse.json(
-        { success: false, error: 'Failed to calculate sale prediction' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to calculate sale prediction', 500, {
+        endpoint: '/api/sale-prediction',
+      });
     }
   };
 }

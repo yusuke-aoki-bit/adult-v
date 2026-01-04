@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 export interface ProductByIdHandlerDeps {
   getProductById: (id: string, locale?: string) => Promise<unknown | null>;
@@ -30,11 +31,9 @@ export function createProductByIdHandler(deps: ProductByIdHandlerDeps) {
 
       return NextResponse.json(product);
     } catch (error) {
-      console.error('Error fetching product:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch product' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to fetch product', 500, {
+        endpoint: '/api/products/[id]',
+      });
     }
   };
 }

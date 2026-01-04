@@ -108,6 +108,12 @@ export interface FooterTranslation {
   popularGenres?: string;
   popularSeries?: string;
   popularMakers?: string;
+  // コンテンツ発見セクション用
+  discoverContent?: string;
+  discover?: string;
+  categories?: string;
+  calendar?: string;
+  statistics?: string;
 }
 
 export interface FooterBaseProps {
@@ -202,6 +208,35 @@ export function FooterBase({
               </ul>
             </div>
           )}
+
+          {/* コンテンツ発見セクション */}
+          <div>
+            <h3 className="theme-footer-heading font-semibold mb-3">
+              {t.discoverContent || (locale === 'ja' ? 'コンテンツを探す' : 'Discover Content')}
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href={localizedHref('/discover', locale)} className="theme-footer-link transition-colors">
+                  {t.discover || (locale === 'ja' ? '発見' : 'Discover')}
+                </Link>
+              </li>
+              <li>
+                <Link href={localizedHref('/categories', locale)} className="theme-footer-link transition-colors">
+                  {t.categories || (locale === 'ja' ? 'カテゴリ一覧' : 'Categories')}
+                </Link>
+              </li>
+              <li>
+                <Link href={localizedHref('/calendar', locale)} className="theme-footer-link transition-colors">
+                  {t.calendar || (locale === 'ja' ? 'カレンダー' : 'Calendar')}
+                </Link>
+              </li>
+              <li>
+                <Link href={localizedHref('/statistics', locale)} className="theme-footer-link transition-colors">
+                  {t.statistics || (locale === 'ja' ? '統計' : 'Statistics')}
+                </Link>
+              </li>
+            </ul>
+          </div>
 
           {/* 法的ページリンク */}
           <div>

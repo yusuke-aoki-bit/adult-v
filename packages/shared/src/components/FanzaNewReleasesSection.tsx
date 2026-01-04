@@ -124,7 +124,7 @@ export function FanzaNewReleasesSection({
 
         {/* 商品グリッド */}
         <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
-          {products.slice(0, 8).map((product) => (
+          {products.slice(0, 8).map((product, index) => (
             <a
               key={product.id}
               href={`${FANZA_SITE_URL}/products/${product.id}?hl=${locale}`}
@@ -140,7 +140,8 @@ export function FanzaNewReleasesSection({
                     fill
                     sizes="(max-width: 768px) 25vw, 12.5vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
+                    loading={index < 4 ? undefined : "lazy"}
+                    priority={index < 4}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full bg-gray-700">

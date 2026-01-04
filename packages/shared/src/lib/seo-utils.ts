@@ -173,3 +173,57 @@ export function generateBreadcrumbSchema(
     })),
   };
 }
+
+/**
+ * 女優画像Alt属性を生成（SEO最適化）
+ * フォーマット: "女優名 - 出演作品数 - サービス"
+ */
+export function generateActressAltText(actress: {
+  name: string;
+  productCount?: number;
+  services?: string[];
+  aliases?: string[];
+}): string {
+  const parts: string[] = [];
+
+  // 女優名（必須）
+  parts.push(actress.name);
+
+  // 別名がある場合は追加
+  if (actress.aliases && actress.aliases.length > 0) {
+    parts.push(`(${actress.aliases[0]})`);
+  }
+
+  // 出演作品数
+  if (actress.productCount && actress.productCount > 0) {
+    parts.push(`出演${actress.productCount}作品`);
+  }
+
+  // サービス（最初の2つ）
+  if (actress.services && actress.services.length > 0) {
+    parts.push(actress.services.slice(0, 2).join('・'));
+  }
+
+  return parts.join(' | ');
+}
+
+/**
+ * 商品サンプル画像Alt属性を生成（SEO最適化）
+ * フォーマット: "タイトル - 女優名 - サンプル画像N"
+ */
+export function generateSampleImageAltText(
+  product: { title: string; actressName?: string },
+  index: number
+): string {
+  const parts: string[] = [];
+
+  parts.push(product.title);
+
+  if (product.actressName) {
+    parts.push(product.actressName);
+  }
+
+  parts.push(`サンプル画像${index + 1}`);
+
+  return parts.join(' - ');
+}

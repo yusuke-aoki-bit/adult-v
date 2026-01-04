@@ -73,6 +73,12 @@ async function closeDb() {
 }
 
 export { getDb, closeDb };
+
+// Drizzleトランザクション型
+export type DbInstance = ReturnType<typeof drizzle>;
+export type DbTransaction = Parameters<Parameters<DbInstance['transaction']>[0]>[0];
+export type DbContext = DbInstance | DbTransaction;
+
 // 後方互換性のため
 export const db = new Proxy({} as ReturnType<typeof drizzle>, {
   get(_target, prop) {

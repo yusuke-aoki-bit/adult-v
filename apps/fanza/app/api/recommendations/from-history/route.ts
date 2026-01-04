@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { products, productPerformers, productTags, performers, tags } from '@/lib/db/schema';
-import { eq, inArray, sql, desc, and, ne } from 'drizzle-orm';
+import { eq, inArray, sql, desc, and } from 'drizzle-orm';
 import { analyzeViewingHistory, type ViewingHistoryAnalysis } from '@adult-v/shared/lib/llm-service';
 
 export const dynamic = 'force-dynamic';

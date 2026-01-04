@@ -53,7 +53,7 @@ export async function saveSaleInfo(
       return false;
     }
 
-    const productSourceId = (sourceResult.rows[0] as any).id;
+    const productSourceId = (sourceResult.rows[0] as { id: number }).id;
 
     // 既存のアクティブなセールをチェック
     const existingSale = await db.execute(sql`
@@ -65,7 +65,7 @@ export async function saveSaleInfo(
     `);
 
     if (existingSale.rows.length > 0) {
-      const existing = existingSale.rows[0] as any;
+      const existing = existingSale.rows[0] as { id: number; sale_price: number; discount_percent: number };
       // 価格が同じなら更新不要
       if (existing.sale_price === saleInfo.salePrice) {
         // fetched_atだけ更新
@@ -109,6 +109,9 @@ export async function saveSaleInfo(
         NOW()
       )
     `);
+
+    // 価格履歴を記録
+    await recordPriceHistory(productSourceId, saleInfo.regularPrice, saleInfo.salePrice, discountPercent);
 
     return true;
   } catch (error) {
@@ -159,4 +162,90 @@ export async function deactivateExpiredSales(): Promise<number> {
   `);
 
   return result.rows.length;
+}
+
+/**
+ * 価格履歴を記録
+ * 1日1回のみ記録（重複防止）
+ * @param productSourceId 商品ソースID
+ * @param price 通常価格
+ * @param salePrice セール価格（nullの場合は通常価格）
+ * @param discountPercent 割引率
+ */
+export async function recordPriceHistory(
+  productSourceId: number,
+  price: number,
+  salePrice?: number | null,
+  discountPercent?: number | null
+): Promise<boolean> {
+  const db = getDb();
+
+  try {
+    // ON CONFLICT で同日の重複を防ぐ
+    await db.execute(sql`
+      INSERT INTO price_history (
+        product_source_id,
+        price,
+        sale_price,
+        discount_percent,
+        recorded_at
+      ) VALUES (
+        ${productSourceId},
+        ${price},
+        ${salePrice || null},
+        ${discountPercent || null},
+        NOW()
+      )
+      ON CONFLICT (product_source_id, DATE(recorded_at)) DO UPDATE SET
+        price = EXCLUDED.price,
+        sale_price = EXCLUDED.sale_price,
+        discount_percent = EXCLUDED.discount_percent
+    `);
+    return true;
+  } catch (error) {
+    console.error(`Error recording price history for source ${productSourceId}:`, error);
+    return false;
+  }
+}
+
+/**
+ * 商品の価格履歴を取得（最新30日分）
+ * @param productSourceId 商品ソースID
+ * @param limit 取得件数（デフォルト30）
+ */
+export async function getPriceHistory(
+  productSourceId: number,
+  limit = 30
+): Promise<Array<{
+  price: number;
+  salePrice: number | null;
+  discountPercent: number | null;
+  recordedAt: Date;
+}>> {
+  const db = getDb();
+
+  const result = await db.execute(sql`
+    SELECT price, sale_price, discount_percent, recorded_at
+    FROM price_history
+    WHERE product_source_id = ${productSourceId}
+    ORDER BY recorded_at DESC
+    LIMIT ${limit}
+  `);
+
+  interface PriceHistoryRow {
+    price: number;
+    sale_price: number | null;
+    discount_percent: number | null;
+    recorded_at: Date;
+  }
+
+  return result.rows.map((row) => {
+    const r = row as unknown as PriceHistoryRow;
+    return {
+      price: r.price,
+      salePrice: r.sale_price,
+      discountPercent: r.discount_percent,
+      recordedAt: r.recorded_at,
+    };
+  });
 }

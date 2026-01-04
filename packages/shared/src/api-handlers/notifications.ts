@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createApiErrorResponse } from '../lib/api-logger';
 
 export interface SubscriptionKeys {
   p256dh: string;
@@ -35,11 +36,9 @@ export function createNotificationsSubscribeHandler(deps: NotificationsHandlerDe
         { status: 200 }
       );
     } catch (error) {
-      console.error('Error saving subscription:', error);
-      return NextResponse.json(
-        { error: 'Failed to save subscription' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to save subscription', 500, {
+        endpoint: '/api/notifications/subscribe',
+      });
     }
   };
 }
@@ -64,11 +63,9 @@ export function createNotificationsUnsubscribeHandler(deps: NotificationsHandler
         { status: 200 }
       );
     } catch (error) {
-      console.error('Error removing subscription:', error);
-      return NextResponse.json(
-        { error: 'Failed to remove subscription' },
-        { status: 500 }
-      );
+      return createApiErrorResponse(error, 'Failed to remove subscription', 500, {
+        endpoint: '/api/notifications/unsubscribe',
+      });
     }
   };
 }

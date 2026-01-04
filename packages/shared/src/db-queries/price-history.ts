@@ -1,4 +1,5 @@
 import { sql } from '@adult-v/database';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
 /**
  * 価格履歴クエリ（依存性注入パターン）
@@ -31,8 +32,7 @@ export function createPriceHistoryQueries(getDb: () => any) {
         `);
         return true;
       } catch (error) {
-        console.error('Failed to record price history:', error);
-        return false;
+        return logDbErrorAndReturn(error, false, 'recordPrice');
       }
     },
 
@@ -187,7 +187,7 @@ export function createPriceHistoryQueries(getDb: () => any) {
           }
           success += batch.length;
         } catch (error) {
-          console.error('Batch insert failed:', error);
+          logDbErrorAndReturn(error, null, 'batchRecordPrices');
           failed += batch.length;
         }
       }

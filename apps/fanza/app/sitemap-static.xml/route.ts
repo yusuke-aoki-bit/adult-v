@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://f.adult-v.com';
 
+export const revalidate = 3600; // 1時間キャッシュ
+
 // hreflang用の言語バリエーション
 function getHreflangLinks(path: string): string {
   const languages = [

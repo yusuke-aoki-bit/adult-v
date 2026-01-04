@@ -1,7 +1,7 @@
 'use client';
 
 import { memo } from 'react';
-import { HeaderBase } from '@adult-v/shared/components';
+import { HeaderBase, UserMenu } from '@adult-v/shared/components';
 import SearchBar from './SearchBar';
 import LanguageSwitcher from './LanguageSwitcher';
 import NotificationSubscriber from './NotificationSubscriber';
@@ -15,6 +15,7 @@ const Header = memo(function Header() {
       SearchBar={SearchBar}
       LanguageSwitcher={LanguageSwitcher}
       NotificationSubscriber={NotificationSubscriber}
+      UserMenu={UserMenu}
       isFanzaSite={isFanzaSite}
     />
   );

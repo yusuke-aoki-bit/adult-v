@@ -1,4 +1,5 @@
 import { sql, eq } from 'drizzle-orm';
+import { logDbErrorAndReturn } from '../lib/db-logger';
 
 export interface ProductSimilarHandlerDeps {
   getDb: () => {
@@ -333,7 +334,7 @@ export function createProductSimilarHandler(
       return { data: response, status: 200 };
 
     } catch (error) {
-      console.error('[Product Similar API] Error:', error);
+      logDbErrorAndReturn(error, null, 'getProductSimilar');
       return { error: 'Internal server error', status: 500 };
     }
   };
