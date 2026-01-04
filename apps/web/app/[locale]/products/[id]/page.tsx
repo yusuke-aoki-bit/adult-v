@@ -674,7 +674,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 duration={product.duration || null}
                 releaseDate={product.releaseDate || null}
                 sources={sources}
-                updatedAt={new Date()}
+                updatedAt={null}
                 performerCount={product.performers?.length || 0}
                 tagCount={product.tags?.length || 0}
               />
