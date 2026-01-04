@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { ExternalLink, Tag, Clock, Crown, TrendingDown } from 'lucide-react';
 import { providerMeta, type ProviderId } from '../providers';
 
@@ -116,26 +119,34 @@ const ASP_TO_PROVIDER: Record<string, ProviderId> = {
   tokyohot: 'tokyohot',
 };
 
-function getDaysUntilEnd(endAt: Date | null): number | null {
+function getDaysUntilEnd(endAt: Date | null, now: Date): number | null {
   if (!endAt) return null;
-  const now = new Date();
   const diffMs = endAt.getTime() - now.getTime();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
-function formatSaleEnd(endAt: Date | null, t: Translation): string | null {
-  const days = getDaysUntilEnd(endAt);
+function formatSaleEnd(endAt: Date | null, now: Date, t: Translation): string | null {
+  const days = getDaysUntilEnd(endAt, now);
   if (days === null) return null;
   if (days <= 0) return t.today;
   return t.daysLeft.replace('{days}', String(days));
 }
 
 /**
- * 価格比較コンポーネント（サーバーサイドレンダリング対応）
+ * 価格比較コンポーネント（クライアントサイドで現在時刻を取得）
  * 複数ASPの価格を比較表示
  */
 export default function PriceComparisonServer({ sources, locale }: PriceComparisonServerProps) {
+  const [now, setNow] = useState<Date | null>(null);
   const t = translations[locale as TranslationKey] || translations.ja;
+
+  // クライアントサイドで現在時刻を取得（ハイドレーション後）
+  useEffect(() => {
+    setNow(new Date());
+  }, []);
+
+  // 現在時刻（SSR時はフォールバック値を使用）
+  const currentNow = now || new Date();
 
   // Filter out sources without price
   const sourcesWithPrice = sources.filter(s => s.regularPrice !== null || s.salePrice !== null);
@@ -178,8 +189,8 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
           const providerId = ASP_TO_PROVIDER[source.aspName];
           const meta = providerId ? providerMeta[providerId] : null;
           const isCheapest = index === 0;
-          const saleEndText = formatSaleEnd(source.saleEndAt, t);
-          const daysLeft = getDaysUntilEnd(source.saleEndAt);
+          const saleEndText = formatSaleEnd(source.saleEndAt, currentNow, t);
+          const daysLeft = getDaysUntilEnd(source.saleEndAt, currentNow);
           const isUrgent = daysLeft !== null && daysLeft <= 3;
           // 有効なURLかチェック（http/httpsで始まるもののみ）
           const isValidUrl = source.affiliateUrl && source.affiliateUrl.startsWith('http');
@@ -244,8 +255,8 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
                   )}
                 </div>
 
-                {/* Sale end info */}
-                {source.isOnSale && saleEndText && (
+                {/* Sale end info - nowがnullの場合（SSR時）は表示しない */}
+                {now && source.isOnSale && saleEndText && (
                   <div className={`text-xs flex items-center gap-1 mt-1 ${
                     isUrgent ? 'text-red-400' : 'text-gray-500'
                   }`}>

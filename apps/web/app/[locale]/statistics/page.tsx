@@ -379,9 +379,6 @@ export default async function StatisticsPage({
           <li>• このデータを引用する場合は、出典としてURLを記載してください。</li>
           <li>• ウィジェットの埋め込みは自由に行えます。</li>
         </ul>
-        <p className="mt-4 text-xs text-gray-500">
-          最終更新: {new Date().toLocaleDateString('ja-JP')}
-        </p>
         </section>
       </main>
     </section>
