@@ -490,8 +490,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       {product.performers.length === 1 ? tCommon('actress') : t.performers}
                     </h2>
                     <div className="flex flex-wrap gap-2">
-                      {/* 日付ベースのシードでランダム化（1日ごとに順序変更） */}
-                      {shuffleArray(product.performers, Math.floor(Date.now() / 86400000)).map((performer) => (
+                      {/* 商品IDベースのシードでランダム化（一貫した順序を保持、ビルド時の動的値使用を回避） */}
+                      {shuffleArray(product.performers, productId).map((performer) => (
                         <div key={performer.id} className="inline-flex items-center gap-1">
                           <Link
                             href={localizedHref(`/actress/${performer.id}`, locale)}
