@@ -139,6 +139,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
         mainSectionId: 'categories',
         mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
       }}
+      pageId="categories"
     >
       <JsonLD
         data={[

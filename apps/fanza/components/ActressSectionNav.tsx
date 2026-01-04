@@ -1,6 +1,6 @@
 'use client';
 
-import { SectionNav, type SectionItem } from '@adult-v/shared/components';
+import { SectionNav, HomeSectionManager, type SectionItem } from '@adult-v/shared/components';
 
 interface ActressSectionNavProps {
   locale: string;
@@ -43,5 +43,10 @@ export default function ActressSectionNav({
   sections.push({ id: 'costar-network', label: isJa ? '共演者' : 'Costars' });
   sections.push({ id: 'similar-network', label: isJa ? '類似女優' : 'Similar' });
 
-  return <SectionNav sections={sections} theme="light" position="right" offset={80} />;
+  return (
+    <>
+      <SectionNav sections={sections} theme="light" position="right" offset={80} />
+      <HomeSectionManager locale={locale} theme="light" pageId="actress" />
+    </>
+  );
 }

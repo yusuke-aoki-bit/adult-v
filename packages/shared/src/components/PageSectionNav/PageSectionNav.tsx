@@ -1,6 +1,7 @@
 'use client';
 
 import { SectionNav, type SectionItem } from '../SectionNav';
+import { HomeSectionManager } from '../HomeSectionManager';
 
 export interface PageSectionNavConfig {
   // 上部セクション
@@ -22,6 +23,7 @@ interface PageSectionNavProps {
   theme?: 'light' | 'dark';
   position?: 'left' | 'right';
   offset?: number;
+  pageId?: string;
 }
 
 const translations = {
@@ -65,6 +67,7 @@ export function PageSectionNav({
   theme = 'dark',
   position = 'right',
   offset = 80,
+  pageId,
 }: PageSectionNavProps) {
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
@@ -101,10 +104,15 @@ export function PageSectionNav({
 
   // 1セクションのみの場合はナビゲーションを表示しない
   if (sections.length <= 1) {
-    return null;
+    return pageId ? <HomeSectionManager locale={locale} theme={theme} pageId={pageId} /> : null;
   }
 
-  return <SectionNav sections={sections} theme={theme} position={position} offset={offset} />;
+  return (
+    <>
+      <SectionNav sections={sections} theme={theme} position={position} offset={offset} />
+      {pageId && <HomeSectionManager locale={locale} theme={theme} pageId={pageId} />}
+    </>
+  );
 }
 
 export default PageSectionNav;

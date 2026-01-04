@@ -1,6 +1,6 @@
 'use client';
 
-import { SectionNav, type SectionItem } from '@adult-v/shared/components';
+import { SectionNav, HomeSectionManager, type SectionItem } from '@adult-v/shared/components';
 
 interface ProductSectionNavProps {
   locale: string;
@@ -68,5 +68,10 @@ export default function ProductSectionNav({
     sections.push({ id: 'also-viewed', label: isJa ? 'この作品を見た人' : 'Also Viewed' });
   }
 
-  return <SectionNav sections={sections} theme="light" position="right" offset={80} />;
+  return (
+    <>
+      <SectionNav sections={sections} theme="light" position="right" offset={80} />
+      <HomeSectionManager locale={locale} theme="light" pageId="product" />
+    </>
+  );
 }

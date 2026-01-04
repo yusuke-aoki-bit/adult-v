@@ -50,6 +50,8 @@ interface PageLayoutProps {
     mainSectionId: string;
     mainSectionLabel: string;
   };
+  /** HomeSectionManagerに渡すページID */
+  pageId?: string;
 }
 
 /**
@@ -71,6 +73,7 @@ export default function PageLayout({
   showUpperSections = true,
   showLowerSections = true,
   sectionNavConfig,
+  pageId,
 }: PageLayoutProps) {
   // isFanzaSiteは将来的な拡張用（FANZA版では常にtrue）
   void isFanzaSite;
@@ -99,6 +102,7 @@ export default function PageLayout({
             hasAllProducts: showLowerSections,
           }}
           theme="light"
+          pageId={pageId}
         />
       )}
 

@@ -163,6 +163,7 @@ export default async function StatisticsPage({
         mainSectionId: 'statistics',
         mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
       }}
+      pageId="statistics"
     >
       <section id="statistics" className="scroll-mt-20">
         <main className="container mx-auto px-4 py-8 max-w-7xl">

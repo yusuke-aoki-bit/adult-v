@@ -50,6 +50,8 @@ interface PageLayoutProps {
     mainSectionId: string;
     mainSectionLabel: string;
   };
+  /** HomeSectionManagerに渡すページID */
+  pageId?: string;
 }
 
 /**
@@ -71,6 +73,7 @@ export default function PageLayout({
   showUpperSections = true,
   showLowerSections = true,
   sectionNavConfig,
+  pageId,
 }: PageLayoutProps) {
   const defaultTranslations = translations || {
     viewProductList: '作品一覧',
@@ -97,6 +100,7 @@ export default function PageLayout({
             hasAllProducts: showLowerSections,
           }}
           theme="dark"
+          pageId={pageId}
         />
       )}
 

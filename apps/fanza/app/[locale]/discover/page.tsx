@@ -409,6 +409,7 @@ export default function DiscoverPage() {
           hasAllProducts: true,
         }}
         theme="light"
+        pageId="discover"
       />
 
       {/* Upper Sections */}
