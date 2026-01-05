@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, ExternalLink } from 'lucide-react';
 import { TopPageMenuSection, ProductCardBase, ActressCardBase, HomeSectionManager } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
-import { useRecentlyViewed } from '@adult-v/shared/hooks';
+import { useRecentlyViewed, useHomeSections } from '@adult-v/shared/hooks';
 
 interface SaleProduct {
   productId: number;
@@ -504,14 +504,18 @@ function TrendingContent({ locale }: { locale: string }) {
 export function TopPageUpperSections({
   locale,
   saleProducts,
+  pageId = 'home',
 }: {
   locale: string;
   saleProducts: SaleProduct[];
+  pageId?: string;
 }) {
+  const { isSectionVisible } = useHomeSections({ locale, pageId });
+
   return (
     <div className="space-y-3">
       {/* セール情報 */}
-      {saleProducts.length > 0 && (
+      {saleProducts.length > 0 && isSectionVisible('sale') && (
         <div id="sale" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
@@ -527,18 +531,20 @@ export function TopPageUpperSections({
       )}
 
       {/* 最近見た作品 */}
-      <div id="recently-viewed" className="scroll-mt-20">
-        <TopPageMenuSection
-          type="accordion"
-          icon={<Clock className="w-5 h-5" />}
-          title="最近見た作品"
-          subtitle="閲覧履歴から"
-          theme="dark"
-          defaultOpen={false}
-        >
-          <RecentlyViewedContent locale={locale} />
-        </TopPageMenuSection>
-      </div>
+      {isSectionVisible('recently-viewed') && (
+        <div id="recently-viewed" className="scroll-mt-20">
+          <TopPageMenuSection
+            type="accordion"
+            icon={<Clock className="w-5 h-5" />}
+            title="最近見た作品"
+            subtitle="閲覧履歴から"
+            theme="dark"
+            defaultOpen={false}
+          >
+            <RecentlyViewedContent locale={locale} />
+          </TopPageMenuSection>
+        </div>
+      )}
     </div>
   );
 }
@@ -558,39 +564,46 @@ export function TopPageLowerSections({
   isTopPage,
   isFanzaSite = false,
   translations: t,
-}: Omit<TopPageSectionsProps, 'saleProducts'>) {
+  pageId = 'home',
+}: Omit<TopPageSectionsProps, 'saleProducts'> & { pageId?: string }) {
+  const { isSectionVisible } = useHomeSections({ locale, pageId });
+
   return (
     <div className="space-y-3">
       {/* あなたへのおすすめ */}
-      <div id="recommendations" className="scroll-mt-20">
-        <TopPageMenuSection
-          type="accordion"
-          icon={<Sparkles className="w-5 h-5" />}
-          title="あなたへのおすすめ"
-          subtitle="閲覧履歴に基づくレコメンド"
-          theme="dark"
-          defaultOpen={false}
-        >
-          <RecommendationsContent locale={locale} />
-        </TopPageMenuSection>
-      </div>
+      {isSectionVisible('recommendations') && (
+        <div id="recommendations" className="scroll-mt-20">
+          <TopPageMenuSection
+            type="accordion"
+            icon={<Sparkles className="w-5 h-5" />}
+            title="あなたへのおすすめ"
+            subtitle="閲覧履歴に基づくレコメンド"
+            theme="dark"
+            defaultOpen={false}
+          >
+            <RecommendationsContent locale={locale} />
+          </TopPageMenuSection>
+        </div>
+      )}
 
       {/* 今週の注目 */}
-      <div id="weekly-highlights" className="scroll-mt-20">
-        <TopPageMenuSection
-          type="accordion"
-          icon={<TrendingUp className="w-5 h-5" />}
-          title="今週の注目"
-          subtitle="話題の女優と作品"
-          theme="dark"
-          defaultOpen={false}
-        >
-          <WeeklyHighlightsContent locale={locale} />
-        </TopPageMenuSection>
-      </div>
+      {isSectionVisible('weekly-highlights') && (
+        <div id="weekly-highlights" className="scroll-mt-20">
+          <TopPageMenuSection
+            type="accordion"
+            icon={<TrendingUp className="w-5 h-5" />}
+            title="今週の注目"
+            subtitle="話題の女優と作品"
+            theme="dark"
+            defaultOpen={false}
+          >
+            <WeeklyHighlightsContent locale={locale} />
+          </TopPageMenuSection>
+        </div>
+      )}
 
       {/* トレンド分析 */}
-      {isTopPage && (
+      {isTopPage && isSectionVisible('trending') && (
         <div id="trending" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
@@ -609,19 +622,21 @@ export function TopPageLowerSections({
       <div className="border-t border-gray-700/50 my-2" />
 
       {/* 商品一覧へのリンク */}
-      <div id="all-products" className="scroll-mt-20">
-        <TopPageMenuSection
-          type="link"
-          href={localizedHref('/products', locale)}
-          icon={<Film className="w-5 h-5" />}
-          title={t.viewProductList}
-          subtitle={t.viewProductListDesc}
-          theme="dark"
-        />
-      </div>
+      {isSectionVisible('all-products') && (
+        <div id="all-products" className="scroll-mt-20">
+          <TopPageMenuSection
+            type="link"
+            href={localizedHref('/products', locale)}
+            icon={<Film className="w-5 h-5" />}
+            title={t.viewProductList}
+            subtitle={t.viewProductListDesc}
+            theme="dark"
+          />
+        </div>
+      )}
 
       {/* 未整理作品へのリンク */}
-      {uncategorizedCount > 0 && (
+      {uncategorizedCount > 0 && isSectionVisible('uncategorized') && (
         <TopPageMenuSection
           type="link"
           href={localizedHref('/products?uncategorized=true', locale)}
@@ -633,7 +648,7 @@ export function TopPageLowerSections({
       )}
 
       {/* FANZA専門サイトへのバナー */}
-      {!isFanzaSite && (
+      {!isFanzaSite && isSectionVisible('fanza-site') && (
         <>
           <div className="border-t border-gray-700/50 my-2" />
           <TopPageMenuSection

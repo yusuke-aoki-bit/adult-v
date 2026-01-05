@@ -3,24 +3,6 @@
 import { useState, useCallback, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWatchLater } from '@adult-v/shared/hooks';
-import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
-import { PageSectionNav } from '@adult-v/shared/components';
-
-interface SaleProduct {
-  productId: number;
-  normalizedProductId: string | null;
-  title: string;
-  thumbnailUrl: string | null;
-  aspName: string;
-  affiliateUrl: string | null;
-  regularPrice: number;
-  salePrice: number;
-  discountPercent: number;
-  saleName: string | null;
-  saleType: string | null;
-  endAt: string | null;
-  performers: Array<{ id: number; name: string }>;
-}
 
 interface WatchlistPageClientProps {
   locale: string;
@@ -30,30 +12,6 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
   const router = useRouter();
   const { items, isLoaded, removeItem, clearAll, count } = useWatchLater();
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
-
-  // PageLayout用のデータ
-  const [saleProducts, setSaleProducts] = useState<SaleProduct[]>([]);
-  const [uncategorizedCount, setUncategorizedCount] = useState(0);
-
-  useEffect(() => {
-    fetch('/api/products/on-sale?limit=24&minDiscount=30')
-      .then(res => res.json())
-      .then(data => setSaleProducts(data.products || []))
-      .catch(() => {});
-
-    fetch('/api/products/uncategorized-count')
-      .then(res => res.json())
-      .then(data => setUncategorizedCount(data.count || 0))
-      .catch(() => {});
-  }, []);
-
-  const layoutTranslations = {
-    viewProductList: '作品一覧',
-    viewProductListDesc: '全ての配信サイトの作品を横断検索',
-    uncategorizedBadge: '未整理',
-    uncategorizedDescription: '未整理作品',
-    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
-  };
 
   const sortedItems = [...items].sort((a, b) => {
     if (sortBy === 'newest') {
@@ -93,40 +51,9 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
     );
   }
 
-  // セクションナビゲーション用の翻訳
-  const sectionLabels: Record<string, Record<string, string>> = {
-    ja: { watchlist: '後で見る' },
-    en: { watchlist: 'Watch Later' },
-    zh: { watchlist: '稍后观看' },
-    ko: { watchlist: '나중에 보기' },
-  };
-
   return (
     <div className="theme-body min-h-screen">
-      {/* セクションナビゲーション */}
-      <PageSectionNav
-        locale={locale}
-        config={{
-          hasSale: saleProducts.length > 0,
-          hasRecentlyViewed: true,
-          mainSectionId: 'watchlist',
-          mainSectionLabel: sectionLabels[locale]?.watchlist || sectionLabels.ja.watchlist,
-          hasRecommendations: true,
-          hasWeeklyHighlights: true,
-          hasTrending: true,
-          hasAllProducts: true,
-        }}
-        theme="dark"
-      />
-
-      {/* 上部セクション（セール中・最近見た作品） */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
-        </div>
-      </section>
-
-      <main id="watchlist" className="min-h-screen theme-bg scroll-mt-20">
+      <main id="watchlist" className="min-h-screen theme-bg">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             {/* ヘッダー */}
@@ -254,19 +181,6 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
           </div>
         </div>
       </main>
-
-      {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <TopPageLowerSections
-            locale={locale}
-            uncategorizedCount={uncategorizedCount}
-            isTopPage={false}
-            isFanzaSite={false}
-            translations={layoutTranslations}
-          />
-        </div>
-      </section>
     </div>
   );
 }

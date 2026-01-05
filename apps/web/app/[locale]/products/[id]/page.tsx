@@ -19,6 +19,7 @@ import {
   SocialShareButtons,
   productDetailTranslations,
   CopyButton,
+  SectionVisibility,
 } from '@adult-v/shared/components';
 // AffiliateButton is available but currently unused - keeping import for future use
 // import AffiliateButton from '@/components/AffiliateButton';
@@ -683,47 +684,56 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 価格比較セクション - 複数ASPがある場合は価格比較を表示 */}
           {sourcesWithSales.length > 0 && (
-            <div id="price-comparison" className="mt-8 scroll-mt-20">
-              <PriceComparisonServer sources={sourcesWithSales} locale={locale} />
-            </div>
+            <SectionVisibility sectionId="price-comparison" pageId="product" locale={locale}>
+              <div id="price-comparison" className="mt-8 scroll-mt-20">
+                <PriceComparisonServer sources={sourcesWithSales} locale={locale} />
+              </div>
+            </SectionVisibility>
           )}
 
           {/* コスパ分析セクション */}
           {product.price && product.duration && product.duration > 0 && (
-            <div id="cost-performance" className="mt-8 scroll-mt-20">
-              <CostPerformanceCard
-                price={product.price}
-                salePrice={product.salePrice}
-                duration={product.duration}
-                actressAvgPricePerMin={actressAvgPricePerMin ?? undefined}
-                locale={locale}
-              />
-            </div>
+            <SectionVisibility sectionId="cost-performance" pageId="product" locale={locale}>
+              <div id="cost-performance" className="mt-8 scroll-mt-20">
+                <CostPerformanceCard
+                  price={product.price}
+                  salePrice={product.salePrice}
+                  duration={product.duration}
+                  actressAvgPricePerMin={actressAvgPricePerMin ?? undefined}
+                  locale={locale}
+                />
+              </div>
+            </SectionVisibility>
           )}
 
           {/* AI分析レビューセクション */}
           {product.aiReview && (
-            <div id="ai-review" className="mt-8 scroll-mt-20">
-              <EnhancedAiReview
-                aiReview={product.aiReview}
-                rating={product.rating}
-                ratingCount={product.reviewCount}
-                locale={locale}
-              />
-            </div>
+            <SectionVisibility sectionId="ai-review" pageId="product" locale={locale}>
+              <div id="ai-review" className="mt-8 scroll-mt-20">
+                <EnhancedAiReview
+                  aiReview={product.aiReview}
+                  rating={product.rating}
+                  ratingCount={product.reviewCount}
+                  locale={locale}
+                />
+              </div>
+            </SectionVisibility>
           )}
 
           {/* シーン情報セクション（ユーザー参加型） */}
-          <div id="scene-timeline" className="mt-8 scroll-mt-20">
-            <SceneTimeline
-              productId={productId}
-              totalDuration={product.duration || undefined}
-              locale={locale}
-            />
-          </div>
+          <SectionVisibility sectionId="scene-timeline" pageId="product" locale={locale}>
+            <div id="scene-timeline" className="mt-8 scroll-mt-20">
+              <SceneTimeline
+                productId={productId}
+                totalDuration={product.duration || undefined}
+                locale={locale}
+              />
+            </div>
+          </SectionVisibility>
 
           {/* この出演者の他作品セクション */}
           {performerOtherProducts.length > 0 && primaryPerformerId && primaryPerformerName && (
+            <SectionVisibility sectionId="performer-products" pageId="product" locale={locale}>
             <div id="performer-products" className="mt-8 scroll-mt-20">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -783,10 +793,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 </Link>
               </div>
             </div>
+            </SectionVisibility>
           )}
 
           {/* 同じシリーズの作品セクション */}
           {sameSeriesProducts.length > 0 && series && (
+            <SectionVisibility sectionId="series-products" pageId="product" locale={locale}>
             <div id="series-products" className="mt-8 scroll-mt-20">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -846,10 +858,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 </Link>
               </div>
             </div>
+            </SectionVisibility>
           )}
 
           {/* 同じメーカー/レーベルの作品セクション */}
           {sameMakerProducts.length > 0 && maker && (
+            <SectionVisibility sectionId="maker-products" pageId="product" locale={locale}>
             <div id="maker-products" className="mt-8 scroll-mt-20">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -909,33 +923,40 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 </Link>
               </div>
             </div>
+            </SectionVisibility>
           )}
 
           {/* 類似作品ネットワーク */}
-          <div id="similar-network" className="mt-8 scroll-mt-20">
-            <Suspense fallback={<div className="h-64 bg-gray-800 rounded-lg animate-pulse" />}>
-              <SimilarProductMapWrapper productId={productId} locale={locale} />
-            </Suspense>
-          </div>
+          <SectionVisibility sectionId="similar-network" pageId="product" locale={locale}>
+            <div id="similar-network" className="mt-8 scroll-mt-20">
+              <Suspense fallback={<div className="h-64 bg-gray-800 rounded-lg animate-pulse" />}>
+                <SimilarProductMapWrapper productId={productId} locale={locale} />
+              </Suspense>
+            </div>
+          </SectionVisibility>
 
           {/* この作品を見た人はこちらも見ています */}
-          <div id="also-viewed" className="mt-8 scroll-mt-20">
-            <Suspense fallback={<div className="h-48 bg-gray-800 rounded-lg animate-pulse" />}>
-              <AlsoViewedWrapper productId={String(product.id)} locale={locale} />
-            </Suspense>
-          </div>
+          <SectionVisibility sectionId="also-viewed" pageId="product" locale={locale}>
+            <div id="also-viewed" className="mt-8 scroll-mt-20">
+              <Suspense fallback={<div className="h-48 bg-gray-800 rounded-lg animate-pulse" />}>
+                <AlsoViewedWrapper productId={String(product.id)} locale={locale} />
+              </Suspense>
+            </div>
+          </SectionVisibility>
 
           {/* ユーザー投稿セクション（レビュー、タグ提案、出演者提案） */}
-          <div id="user-contributions" className="mt-8 scroll-mt-20">
-            <Suspense fallback={<div className="h-32 bg-gray-800 rounded-lg animate-pulse" />}>
-              <UserContributionsWrapper
-                productId={productId}
-                locale={locale}
-                existingTags={genreTags.map((t) => t.name)}
-                existingPerformers={product.performers?.map((p) => p.name) || (product.actressName ? [product.actressName] : [])}
-              />
-            </Suspense>
-          </div>
+          <SectionVisibility sectionId="user-contributions" pageId="product" locale={locale}>
+            <div id="user-contributions" className="mt-8 scroll-mt-20">
+              <Suspense fallback={<div className="h-32 bg-gray-800 rounded-lg animate-pulse" />}>
+                <UserContributionsWrapper
+                  productId={productId}
+                  locale={locale}
+                  existingTags={genreTags.map((t) => t.name)}
+                  existingPerformers={product.performers?.map((p) => p.name) || (product.actressName ? [product.actressName] : [])}
+                />
+              </Suspense>
+            </div>
+          </SectionVisibility>
         </div>
       </div>
 

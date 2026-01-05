@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Building2, Tag, Users, Film, Star, TrendingUp, Calendar } from 'lucide-react';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { HomeSectionManager } from '@adult-v/shared/components';
 
 interface MakerInfo {
   id: number;
@@ -342,6 +343,9 @@ export default function MakerDetailPage() {
             </Link>
           </div>
         </div>
+
+        {/* セクションカスタマイズ */}
+        <HomeSectionManager locale={locale} theme="dark" pageId="maker" />
       </div>
     </div>
   );

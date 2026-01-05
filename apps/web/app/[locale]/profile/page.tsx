@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -13,12 +12,11 @@ import {
   Star,
   ChevronRight,
 } from 'lucide-react';
-import { PreferenceChart, PreferenceBarChart, PageSectionNav } from '@adult-v/shared/components';
+import { PreferenceChart, PreferenceBarChart } from '@adult-v/shared/components';
 import DiscoveryBadges from '@/components/DiscoveryBadges';
 import { usePreferenceAnalysis, profileTranslations, useViewingDiary } from '@/hooks';
 import { CloudSyncSettings, cloudSyncTranslations } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
-import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 
 // Dynamic imports for heavy components to reduce initial bundle size
 const BudgetTracker = dynamic(() => import('@/components/BudgetTracker'), {
@@ -38,22 +36,6 @@ const MakerAnalysis = dynamic(() => import('@/components/MakerAnalysis'), {
 type TranslationKey = keyof typeof profileTranslations;
 type Translation = typeof profileTranslations[TranslationKey];
 
-interface SaleProduct {
-  productId: number;
-  normalizedProductId: string | null;
-  title: string;
-  thumbnailUrl: string | null;
-  aspName: string;
-  affiliateUrl: string | null;
-  regularPrice: number;
-  salePrice: number;
-  discountPercent: number;
-  saleName: string | null;
-  saleType: string | null;
-  endAt: string | null;
-  performers: Array<{ id: number; name: string }>;
-}
-
 export default function ProfilePage() {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
@@ -61,38 +43,6 @@ export default function ProfilePage() {
 
   const analysis = usePreferenceAnalysis(locale);
   const { entries, isLoading } = useViewingDiary();
-
-  // PageLayout用のデータ
-  const [saleProducts, setSaleProducts] = useState<SaleProduct[]>([]);
-  const [uncategorizedCount, setUncategorizedCount] = useState(0);
-
-  useEffect(() => {
-    fetch('/api/products/on-sale?limit=24&minDiscount=30')
-      .then(res => res.json())
-      .then(data => setSaleProducts(data.products || []))
-      .catch(() => {});
-
-    fetch('/api/products/uncategorized-count')
-      .then(res => res.json())
-      .then(data => setUncategorizedCount(data.count || 0))
-      .catch(() => {});
-  }, []);
-
-  const layoutTranslations = {
-    viewProductList: '作品一覧',
-    viewProductListDesc: '全ての配信サイトの作品を横断検索',
-    uncategorizedBadge: '未整理',
-    uncategorizedDescription: '未整理作品',
-    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
-  };
-
-  // セクションナビゲーション用の翻訳
-  const sectionLabels: Record<string, string> = {
-    ja: 'DNA分析',
-    en: 'DNA Analysis',
-    zh: 'DNA分析',
-    ko: 'DNA분석',
-  };
 
   if (isLoading) {
     return <ProfileSkeleton />;
@@ -102,30 +52,7 @@ export default function ProfilePage() {
   if (analysis.dataCount === 0) {
     return (
       <div className="theme-body min-h-screen">
-        {/* セクションナビゲーション */}
-        <PageSectionNav
-          locale={locale}
-          config={{
-            hasSale: saleProducts.length > 0,
-            hasRecentlyViewed: true,
-            mainSectionId: 'profile',
-            mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
-            hasRecommendations: true,
-            hasWeeklyHighlights: true,
-            hasTrending: true,
-            hasAllProducts: true,
-          }}
-          theme="dark"
-        />
-
-        {/* 上部セクション */}
-        <section className="py-3 sm:py-4">
-          <div className="container mx-auto px-3 sm:px-4">
-            <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
-          </div>
-        </section>
-
-        <div id="profile" className="container mx-auto px-4 py-8 scroll-mt-20">
+        <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               <Dna className="w-6 h-6 text-rose-500" />
@@ -147,49 +74,13 @@ export default function ProfilePage() {
             </Link>
           </div>
         </div>
-
-        {/* 下部セクション */}
-        <section className="py-3 sm:py-4">
-          <div className="container mx-auto px-3 sm:px-4">
-            <TopPageLowerSections
-              locale={locale}
-              uncategorizedCount={uncategorizedCount}
-              isTopPage={false}
-              isFanzaSite={false}
-              translations={layoutTranslations}
-            />
-          </div>
-        </section>
       </div>
     );
   }
 
   return (
     <div className="theme-body min-h-screen">
-      {/* セクションナビゲーション */}
-      <PageSectionNav
-        locale={locale}
-        config={{
-          hasSale: saleProducts.length > 0,
-          hasRecentlyViewed: true,
-          mainSectionId: 'profile',
-          mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
-          hasRecommendations: true,
-          hasWeeklyHighlights: true,
-          hasTrending: true,
-          hasAllProducts: true,
-        }}
-        theme="dark"
-      />
-
-      {/* 上部セクション */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
-        </div>
-      </section>
-
-      <div id="profile" className="container mx-auto px-4 py-8 scroll-mt-20">
+      <div className="container mx-auto px-4 py-8">
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -337,19 +228,6 @@ export default function ProfilePage() {
         </div>
       </div>
       </div>
-
-      {/* 下部セクション */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <TopPageLowerSections
-            locale={locale}
-            uncategorizedCount={uncategorizedCount}
-            isTopPage={false}
-            isFanzaSite={false}
-            translations={layoutTranslations}
-          />
-        </div>
-      </section>
     </div>
   );
 }

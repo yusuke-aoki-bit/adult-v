@@ -5,7 +5,7 @@ import PerformerGridWithComparison from '@/components/PerformerGridWithCompariso
 import ActressListFilter from '@/components/ActressListFilter';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 import TopPageSectionNav from '@/components/TopPageSectionNav';
-import { getActresses, getActressesCount, getTags, getUncategorizedProductsCount, getAspStats, getSaleProducts, SaleProduct } from '@/lib/db/queries';
+import { getActresses, getActressesCount, getTags, getAspStats, getSaleProducts, getUncategorizedProductsCount, SaleProduct } from '@/lib/db/queries';
 import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
@@ -110,7 +110,6 @@ export default async function Home({ params, searchParams }: PageProps) {
   const t = await getTranslations({ locale, namespace: 'homepage' });
   const tCommon = await getTranslations({ locale, namespace: 'common' });
   const tFilter = await getTranslations({ locale, namespace: 'filter' });
-  const tUncategorized = await getTranslations({ locale, namespace: 'uncategorized' });
 
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
@@ -181,6 +180,12 @@ export default async function Home({ params, searchParams }: PageProps) {
     searchQuery = undefined;
   }
 
+  // TOPページ判定（Promise.allの前で必要）
+  // serverAspFilterが設定されている場合、それは自動適用されるフィルターなのでTOPページ判定には含めない
+  const userSetIncludeAsps = serverAspFilter ? [] : includeAsps;
+  const userSetExcludeAsps = serverAspFilter ? [] : excludeAsps;
+  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && cupSizes.length === 0 && !heightMin && !heightMax && bloodTypes.length === 0 && sortBy === 'recent' && page === 1;
+
   // 共通のクエリオプション
   const actressQueryOptions = {
     query: searchQuery,
@@ -201,8 +206,8 @@ export default async function Home({ params, searchParams }: PageProps) {
   };
 
   // 並列クエリ実行（パフォーマンス最適化）
-  // タグ、ASP統計、女優リスト、女優数を同時に取得
-  const [allTags, aspStatsResult, actresses, totalCount] = await Promise.all([
+  // タグ、ASP統計、女優リスト、女優数、セール商品、未整理作品数を同時に取得
+  const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount] = await Promise.all([
     getTags(),
     !isFanzaSite ? getAspStats().catch((error) => {
       console.error('Failed to fetch ASP stats:', error);
@@ -215,6 +220,8 @@ export default async function Home({ params, searchParams }: PageProps) {
       locale,
     }),
     getActressesCount(actressQueryOptions),
+    isTopPage ? getSaleProducts({ limit: 8 }) : Promise.resolve([] as SaleProduct[]),
+    isTopPage ? getUncategorizedProductsCount() : Promise.resolve(0),
   ]);
 
   const genreTags = allTags.filter(tag => tag.category !== 'site');
@@ -226,32 +233,6 @@ export default async function Home({ params, searchParams }: PageProps) {
     name: stat.aspName,
   }));
 
-  // セール情報を取得（フィルターがない場合のみ）
-  let saleProducts: SaleProduct[] = [];
-  let uncategorizedCount = 0;
-
-  // TOPページのみ表示（検索、フィルター、ソート変更時は非表示）
-  // serverAspFilterが設定されている場合、それは自動適用されるフィルターなのでTOPページ判定には含めない
-  const userSetIncludeAsps = serverAspFilter ? [] : includeAsps;
-  const userSetExcludeAsps = serverAspFilter ? [] : excludeAsps;
-  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && cupSizes.length === 0 && !heightMin && !heightMax && bloodTypes.length === 0 && sortBy === 'recent' && page === 1;
-
-  if (isTopPage) {
-    try {
-      const [sales, uncatCount] = await Promise.all([
-        getSaleProducts({ limit: 24, minDiscount: 30 }), // トップページは24件表示
-        getUncategorizedProductsCount({
-          includeAsp: serverAspFilter || undefined,
-        }),
-      ]);
-      saleProducts = sales;
-      uncategorizedCount = uncatCount;
-    } catch (error) {
-      console.error('Failed to fetch homepage sections:', error);
-      // Gracefully degrade - just don't show these sections
-    }
-  }
-
   // ASP別商品数をマップに変換（フィルター表示用）
   const aspProductCounts: Record<string, number> = {};
   aspStats.forEach(stat => {
@@ -261,6 +242,32 @@ export default async function Home({ params, searchParams }: PageProps) {
   // FAQスキーマ（トップページのみ）
   const faqSchema = isTopPage ? generateFAQSchema(getHomepageFAQs(locale)) : null;
 
+  // セール商品をクライアントコンポーネント用に変換
+  const saleProductsForDisplay = saleProducts.map((p) => ({
+    productId: p.productId,
+    normalizedProductId: p.normalizedProductId,
+    title: p.title,
+    thumbnailUrl: p.thumbnailUrl,
+    aspName: p.aspName,
+    affiliateUrl: p.affiliateUrl,
+    regularPrice: p.regularPrice,
+    salePrice: p.salePrice,
+    discountPercent: p.discountPercent,
+    saleName: p.saleName,
+    saleType: p.saleType,
+    endAt: p.endAt ? p.endAt.toISOString() : null,
+    performers: p.performers,
+  }));
+
+  // 共通セクション用の翻訳
+  const layoutTranslations = {
+    viewProductList: t('viewProductList'),
+    viewProductListDesc: t('viewProductListDesc'),
+    uncategorizedBadge: t('uncategorizedBadge'),
+    uncategorizedDescription: t('uncategorizedDescription'),
+    uncategorizedCount: t('uncategorizedCount', { count: uncategorizedCount }),
+  };
+
   // LCP最適化: 最初の女優画像をpreload（コンパクトモードではthumbnail優先）
   const firstActressImageUrl = actresses.length > 0
     ? normalizeImageUrlForPreload(actresses[0].thumbnail || actresses[0].heroImage)
@@ -268,16 +275,6 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   return (
     <div className="theme-body min-h-screen">
-      {/* セクションナビゲーション（トップページのみ） */}
-      {isTopPage && (
-        <TopPageSectionNav
-          locale={locale}
-          hasSaleProducts={saleProducts.length > 0}
-          hasRecentlyViewed={true}
-          hasRecommendations={true}
-        />
-      )}
-
       {/* LCP最適化: 最初の画像をpreload */}
       {firstActressImageUrl && (
         <link
@@ -290,18 +287,24 @@ export default async function Home({ params, searchParams }: PageProps) {
       {/* FAQスキーマ（トップページのみ） */}
       {faqSchema && <JsonLD data={faqSchema} />}
 
-      {/* 上部セクション（セール中・最近見た作品）- 女優一覧の前 */}
+      {/* セクションナビゲーション */}
       {isTopPage && (
-        <section className="py-3 sm:py-4">
-          <div className="container mx-auto px-3 sm:px-4">
-            <TopPageUpperSections
-              locale={locale}
-              saleProducts={saleProducts.map(p => ({
-                ...p,
-                endAt: p.endAt ? p.endAt.toISOString() : null,
-              }))}
-            />
-          </div>
+        <TopPageSectionNav
+          locale={locale}
+          hasSaleProducts={saleProducts.length > 0}
+          hasRecentlyViewed={true}
+          hasRecommendations={true}
+        />
+      )}
+
+      {/* トップページ上部セクション（セール、最近見た作品） */}
+      {isTopPage && (
+        <section className="container mx-auto px-3 sm:px-4 py-3">
+          <TopPageUpperSections
+            locale={locale}
+            saleProducts={saleProductsForDisplay}
+            pageId="home"
+          />
         </section>
       )}
 
@@ -397,25 +400,19 @@ export default async function Home({ params, searchParams }: PageProps) {
         </div>
       </section>
 
-      {/* === 以下はメインコンテンツ（女優一覧）の後に表示 === */}
-      {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
+      {/* トップページ下部セクション（おすすめ、トレンド等） */}
+      {isTopPage && (
+        <section className="container mx-auto px-3 sm:px-4 py-3">
           <TopPageLowerSections
             locale={locale}
             uncategorizedCount={uncategorizedCount}
             isTopPage={isTopPage}
             isFanzaSite={isFanzaSite}
-            translations={{
-              viewProductList: t('viewProductList'),
-              viewProductListDesc: t('viewProductListDesc'),
-              uncategorizedBadge: tUncategorized('badge'),
-              uncategorizedDescription: tUncategorized('shortDescription'),
-              uncategorizedCount: tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() }),
-            }}
+            translations={layoutTranslations}
+            pageId="home"
           />
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* FANZA新作ピックアップ（FANZA専門サイトへの導線強化） */}
       {!isFanzaSite && isTopPage && (

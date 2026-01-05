@@ -17,6 +17,7 @@ import {
 import { useBudget, useWatchlistAnalysis } from '@/hooks';
 import type { EnrichedProduct } from '@adult-v/shared/hooks';
 import BudgetManager from '@/components/BudgetManager';
+import { HomeSectionManager } from '@adult-v/shared/components';
 
 const translations = {
   ja: {
@@ -414,6 +415,11 @@ export default function BudgetPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* セクションカスタマイズ */}
+      <div className="container mx-auto px-4 pb-8">
+        <HomeSectionManager locale={locale} theme="light" pageId="budget" />
       </div>
     </div>
   );

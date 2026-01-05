@@ -60,7 +60,10 @@
     "viewSeries": "シリーズ一覧",
     "viewSeriesDesc": "人気シリーズから作品を探す",
     "viewMakers": "メーカー一覧",
-    "viewMakersDesc": "メーカー・レーベルから作品を探す"
+    "viewMakersDesc": "メーカー・レーベルから作品を探す",
+    "uncategorizedBadge": "未整理",
+    "uncategorizedDescription": "未整理の作品を見る",
+    "uncategorizedCount": "{count}作品"
   },
   "header": {
     "title": "ADULT VIEWER LAB",

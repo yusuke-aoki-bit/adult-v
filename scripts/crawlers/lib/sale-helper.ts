@@ -110,6 +110,23 @@ export async function saveSaleInfo(
       )
     `);
 
+    // price_historyにも記録（セールカレンダー用）
+    await db.execute(sql`
+      INSERT INTO price_history (
+        product_source_id,
+        price,
+        sale_price,
+        discount_percent,
+        recorded_at
+      ) VALUES (
+        ${productSourceId},
+        ${saleInfo.regularPrice},
+        ${saleInfo.salePrice},
+        ${discountPercent},
+        NOW()
+      )
+    `);
+
     return true;
   } catch (error) {
     console.error(`Error saving sale info for ${aspName}/${originalProductId}:`, error);

@@ -415,7 +415,7 @@ export default function DiscoverPage() {
       {/* Upper Sections */}
       <section className="py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
+          <TopPageUpperSections locale={locale} saleProducts={saleProducts} pageId="discover" />
         </div>
       </section>
 
@@ -861,6 +861,7 @@ export default function DiscoverPage() {
             isTopPage={false}
             isFanzaSite={true}
             translations={layoutTranslations}
+            pageId="discover"
           />
         </div>
       </section>

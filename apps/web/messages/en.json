@@ -60,7 +60,10 @@
     "viewSeries": "Series",
     "viewSeriesDesc": "Find videos by popular series",
     "viewMakers": "Studios",
-    "viewMakersDesc": "Browse by studio and label"
+    "viewMakersDesc": "Browse by studio and label",
+    "uncategorizedBadge": "Uncategorized",
+    "uncategorizedDescription": "View uncategorized products",
+    "uncategorizedCount": "{count} products"
   },
   "header": {
     "title": "ADULT VIEWER LAB",

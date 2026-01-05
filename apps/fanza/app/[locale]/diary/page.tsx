@@ -425,12 +425,13 @@ export default function DiaryPage() {
           hasAllProducts: true,
         }}
         theme="light"
+        pageId="diary"
       />
 
       {/* 上部セクション（セール中・最近見た作品） */}
       <section className="py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
+          <TopPageUpperSections locale={locale} saleProducts={saleProducts} pageId="diary" />
         </div>
       </section>
 
@@ -691,6 +692,7 @@ export default function DiaryPage() {
             uncategorizedCount={uncategorizedCount}
             isTopPage={false}
             translations={layoutTranslations}
+            pageId="diary"
           />
         </div>
       </section>

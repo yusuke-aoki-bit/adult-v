@@ -46,7 +46,7 @@ describe('useHomeSections', () => {
       });
 
       expect(result.current.sections).toHaveLength(8);
-      expect(result.current.sections[0].id).toBe('sales');
+      expect(result.current.sections[0].id).toBe('sale'); // 最初のセクションは'sale'
     });
 
     it('既存の設定をlocalStorageから読み込み', async () => {
@@ -85,8 +85,8 @@ describe('useHomeSections', () => {
         expect(result.current.isLoaded).toBe(true);
       });
 
-      const salesSection = result.current.sections.find(s => s.id === 'sales');
-      expect(salesSection?.label).toBe('Sales');
+      const saleSection = result.current.sections.find(s => s.id === 'sale');
+      expect(saleSection?.label).toBe('On Sale');
     });
   });
 
@@ -181,7 +181,7 @@ describe('useHomeSections', () => {
       });
 
       // デフォルトの順序に戻っていることを確認
-      expect(result.current.sections[0].id).toBe('sales');
+      expect(result.current.sections[0].id).toBe('sale');
       const trending = result.current.sections.find(s => s.id === 'trending');
       expect(trending?.visible).toBe(true);
     });
@@ -258,8 +258,8 @@ describe('useHomeSections', () => {
         expect(result.current.isLoaded).toBe(true);
       });
 
-      expect(result.current.getSectionOrder('sales')).toBe(0);
-      expect(result.current.getSectionOrder('trending')).toBe(6);
+      expect(result.current.getSectionOrder('sale')).toBe(0);
+      expect(result.current.getSectionOrder('trending')).toBe(4);
     });
 
     it('存在しないセクションで0を返す', async () => {

@@ -64,7 +64,7 @@ export function usePublicLists(options: UsePublicListsOptions = {}) {
       });
       if (userId) params.set('userId', userId);
 
-      const res = await fetch(`/api/public-lists?${params}`);
+      const res = await fetch(`/api/favorite-lists?${params}`);
       if (!res.ok) throw new Error('Failed to fetch lists');
 
       const data = await res.json();
@@ -91,7 +91,7 @@ export function usePublicLists(options: UsePublicListsOptions = {}) {
         userId,
       });
 
-      const res = await fetch(`/api/public-lists?${params}`);
+      const res = await fetch(`/api/favorite-lists?${params}`);
       if (!res.ok) throw new Error('Failed to fetch my lists');
 
       const data = await res.json();
@@ -112,7 +112,7 @@ export function usePublicLists(options: UsePublicListsOptions = {}) {
       const params = new URLSearchParams();
       if (userId) params.set('userId', userId);
 
-      const res = await fetch(`/api/public-lists/${listId}?${params}`);
+      const res = await fetch(`/api/favorite-lists/${listId}?${params}`);
       if (!res.ok) {
         if (res.status === 404) return null;
         if (res.status === 403) throw new Error('Access denied');
@@ -136,7 +136,7 @@ export function usePublicLists(options: UsePublicListsOptions = {}) {
     }
 
     try {
-      const res = await fetch('/api/public-lists', {
+      const res = await fetch('/api/favorite-lists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, ...params }),
@@ -165,7 +165,7 @@ export function usePublicLists(options: UsePublicListsOptions = {}) {
     }
 
     try {
-      const res = await fetch(`/api/public-lists/${listId}`, {
+      const res = await fetch(`/api/favorite-lists/${listId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, ...params }),
@@ -195,7 +195,7 @@ export function usePublicLists(options: UsePublicListsOptions = {}) {
 
     try {
       const params = new URLSearchParams({ userId });
-      const res = await fetch(`/api/public-lists/${listId}?${params}`, {
+      const res = await fetch(`/api/favorite-lists/${listId}?${params}`, {
         method: 'DELETE',
       });
 
@@ -221,7 +221,7 @@ export function usePublicLists(options: UsePublicListsOptions = {}) {
     }
 
     try {
-      const res = await fetch(`/api/public-lists/${listId}/items`, {
+      const res = await fetch(`/api/favorite-lists/${listId}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, productId, action: 'add', note }),
@@ -248,7 +248,7 @@ export function usePublicLists(options: UsePublicListsOptions = {}) {
     }
 
     try {
-      const res = await fetch(`/api/public-lists/${listId}/items`, {
+      const res = await fetch(`/api/favorite-lists/${listId}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, productId, action: 'remove' }),
@@ -275,7 +275,7 @@ export function usePublicLists(options: UsePublicListsOptions = {}) {
     }
 
     try {
-      const res = await fetch(`/api/public-lists/${listId}/like`, {
+      const res = await fetch(`/api/favorite-lists/${listId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, action: currentlyLiked ? 'unlike' : 'like' }),

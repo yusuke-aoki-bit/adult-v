@@ -4,23 +4,6 @@ import { useState, useCallback, useEffect, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { usePerformerCompareList } from '@adult-v/shared/hooks';
 import { PerformerCompare } from '@adult-v/shared/components';
-import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
-
-interface SaleProduct {
-  productId: number;
-  normalizedProductId: string | null;
-  title: string;
-  thumbnailUrl: string | null;
-  aspName: string;
-  affiliateUrl: string | null;
-  regularPrice: number;
-  salePrice: number;
-  discountPercent: number;
-  saleName: string | null;
-  saleType: string | null;
-  endAt: string | null;
-  performers: Array<{ id: number; name: string }>;
-}
 
 function PerformerComparePageClient({ locale }: { locale: string }) {
   const router = useRouter();
@@ -39,30 +22,6 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
     imageUrl: string | null;
   }>>([]);
   const [isSearching, setIsSearching] = useState(false);
-
-  // PageLayout用のデータ
-  const [saleProducts, setSaleProducts] = useState<SaleProduct[]>([]);
-  const [uncategorizedCount, setUncategorizedCount] = useState(0);
-
-  useEffect(() => {
-    fetch('/api/products/on-sale?limit=24&minDiscount=30')
-      .then(res => res.json())
-      .then(data => setSaleProducts(data.products || []))
-      .catch(() => {});
-
-    fetch('/api/products/uncategorized-count')
-      .then(res => res.json())
-      .then(data => setUncategorizedCount(data.count || 0))
-      .catch(() => {});
-  }, []);
-
-  const layoutTranslations = {
-    viewProductList: '作品一覧',
-    viewProductListDesc: '全ての配信サイトの作品を横断検索',
-    uncategorizedBadge: '未整理',
-    uncategorizedDescription: '未整理作品',
-    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
-  };
 
   const t = {
     title: locale === 'ja' ? '女優を比較' : 'Compare Performers',
@@ -131,13 +90,6 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
 
   return (
     <div className="theme-body min-h-screen">
-      {/* 上部セクション（セール中・最近見た作品） */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
-        </div>
-      </section>
-
       <main className="min-h-screen theme-bg">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-6xl mx-auto">
@@ -271,19 +223,6 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
           </div>
         </div>
       </main>
-
-      {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <TopPageLowerSections
-            locale={locale}
-            uncategorizedCount={uncategorizedCount}
-            isTopPage={false}
-            isFanzaSite={false}
-            translations={layoutTranslations}
-          />
-        </div>
-      </section>
     </div>
   );
 }

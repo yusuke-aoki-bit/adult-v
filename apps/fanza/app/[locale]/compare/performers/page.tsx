@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { usePerformerCompareList } from '@adult-v/shared/hooks';
-import { PerformerCompare } from '@adult-v/shared/components';
+import { PerformerCompare, HomeSectionManager } from '@adult-v/shared/components';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 
 interface SaleProduct {
@@ -134,7 +134,7 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
       {/* 上部セクション（セール中・最近見た作品） */}
       <section className="py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
+          <TopPageUpperSections locale={locale} saleProducts={saleProducts} pageId="compare-performers" />
         </div>
       </section>
 
@@ -280,9 +280,15 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
             uncategorizedCount={uncategorizedCount}
             isTopPage={false}
             translations={layoutTranslations}
+            pageId="compare-performers"
           />
         </div>
       </section>
+
+      {/* セクションカスタマイズ */}
+      <div className="container mx-auto px-4 pb-8">
+        <HomeSectionManager locale={locale} theme="light" pageId="compare-performers" />
+      </div>
     </div>
   );
 }

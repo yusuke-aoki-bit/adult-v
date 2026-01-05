@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { HomeSectionManager } from '@adult-v/shared/components';
 
 interface SaleEvent {
   date: string;
@@ -437,6 +438,11 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
             </div>
           </div>
         )}
+
+        {/* セクションカスタマイズ */}
+        <div className="mt-8">
+          <HomeSectionManager locale={locale} theme="dark" pageId="sale-calendar" />
+        </div>
       </div>
     </div>
   );

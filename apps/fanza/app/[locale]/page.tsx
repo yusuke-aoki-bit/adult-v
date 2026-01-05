@@ -299,6 +299,7 @@ export default async function Home({ params, searchParams }: PageProps) {
                 ...p,
                 endAt: p.endAt ? p.endAt.toISOString() : null,
               }))}
+              pageId="home"
             />
           </div>
         </section>
@@ -420,6 +421,7 @@ export default async function Home({ params, searchParams }: PageProps) {
               uncategorizedDescription: tUncategorized('shortDescription'),
               uncategorizedCount: tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() }),
             }}
+            pageId="home"
           />
         </div>
       </section>

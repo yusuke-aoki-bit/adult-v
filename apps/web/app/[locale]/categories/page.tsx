@@ -4,10 +4,8 @@ import { getTranslations } from 'next-intl/server';
 import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateFAQSchema, getCategoryPageFAQs, generateItemListSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import PageLayout from '@/components/PageLayout';
-import { getPopularTags, getSaleProducts, getUncategorizedProductsCount } from '@/lib/db/queries';
+import { getPopularTags } from '@/lib/db/queries';
 import { localizedHref } from '@adult-v/shared/i18n';
-import { isServerFanzaSite } from '@/lib/server/site-mode';
 
 // カテゴリ一覧は変更頻度が低いためISRで1時間キャッシュ
 export const revalidate = 3600;
@@ -55,15 +53,8 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
   const tCommon = await getTranslations('common');
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
-  // FANZAサイトかどうかを判定
-  const isFanzaSite = await isServerFanzaSite();
-
-  // 人気タグ、セール情報、未整理数を並列取得
-  const [tags, saleProducts, uncategorizedCount] = await Promise.all([
-    getPopularTags({ limit: 100, category: selectedCategory }),
-    getSaleProducts({ limit: 24, minDiscount: 30, aspName: isFanzaSite ? 'FANZA' : undefined }),
-    getUncategorizedProductsCount({ includeAsp: isFanzaSite ? ['FANZA'] : undefined }),
-  ]);
+  // 人気タグを取得
+  const tags = await getPopularTags({ limit: 100, category: selectedCategory });
 
   // カテゴリ別にグループ化
   const tagsByCategory = tags.reduce((acc, tag) => {
@@ -101,44 +92,8 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
     url: localizedHref(`/products?include=${tag.id}`, locale),
   }));
 
-  // SalesSection用にDateをstringに変換
-  const saleProductsForDisplay = saleProducts.map(p => ({
-    ...p,
-    endAt: p.endAt ? p.endAt.toISOString() : null,
-  }));
-
-  // PageLayout用の翻訳
-  const tUncategorized = await getTranslations({ locale, namespace: 'uncategorized' });
-  const layoutTranslations = {
-    viewProductList: '作品一覧',
-    viewProductListDesc: '全ての配信サイトの作品を横断検索',
-    uncategorizedBadge: tUncategorized('badge'),
-    uncategorizedDescription: tUncategorized('shortDescription'),
-    uncategorizedCount: tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() }),
-  };
-
-  // セクションナビゲーション用の翻訳
-  const sectionLabels: Record<string, string> = {
-    ja: 'カテゴリ一覧',
-    en: 'Categories',
-    zh: '分类',
-    ko: '카테고리',
-  };
-
   return (
-    <PageLayout
-      locale={locale}
-      saleProducts={saleProductsForDisplay}
-      uncategorizedCount={uncategorizedCount}
-      isTopPage={false}
-      isFanzaSite={isFanzaSite}
-      translations={layoutTranslations}
-      sectionNavConfig={{
-        mainSectionId: 'categories',
-        mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
-      }}
-      pageId="categories"
-    >
+    <div className="theme-body min-h-screen">
       <JsonLD
         data={[
           generateBreadcrumbSchema(breadcrumbItems),
@@ -254,6 +209,6 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
           )}
         </div>
       </section>
-    </PageLayout>
+    </div>
   );
 }

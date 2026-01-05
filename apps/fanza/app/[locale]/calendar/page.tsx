@@ -3,13 +3,12 @@ import { getTranslations } from 'next-intl/server';
 import { generateBaseMetadata } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import PageLayout from '@/components/PageLayout';
 import ProductListFilter from '@/components/ProductListFilter';
 import ActiveFiltersChips from '@/components/ActiveFiltersChips';
 import { getCalendarDetailData, getDailyReleases } from '@adult-v/shared/db-queries';
 import { CalendarGridWrapper } from '@adult-v/shared/components/stats';
 import { localizedHref } from '@adult-v/shared/i18n';
-import { getSaleProducts, getPopularTags, getUncategorizedProductsCount } from '@/lib/db/queries';
+import { getPopularTags } from '@/lib/db/queries';
 
 // ISR: 5分キャッシュ
 export const revalidate = 300;
@@ -60,13 +59,11 @@ export default async function CalendarPage({
   const targetYear = year ? parseInt(year, 10) : currentDate.getFullYear();
   const targetMonth = month ? parseInt(month, 10) : currentDate.getMonth() + 1;
 
-  // カレンダー詳細データ、日別リリース数、セール情報、フィルター用データ、未整理商品数を並列取得
-  const [calendarData, dailyReleases, saleProducts, popularTags, uncategorizedCount] = await Promise.all([
+  // カレンダー詳細データ、日別リリース数、フィルター用データを並列取得
+  const [calendarData, dailyReleases, popularTags] = await Promise.all([
     getCalendarDetailData(targetYear, targetMonth, 4, 2),
     getDailyReleases(targetYear, targetMonth),
-    getSaleProducts({ limit: 24, minDiscount: 30, aspName: 'FANZA' }),
     getPopularTags({ limit: 50 }),
-    getUncategorizedProductsCount({ includeAsp: ['FANZA'] }),
   ]);
 
   const structuredData = {
@@ -97,12 +94,6 @@ export default async function CalendarPage({
     ko: '출시 캘린더',
   };
 
-  // SalesSection用にDateをstringに変換
-  const saleProductsForDisplay = saleProducts.map(p => ({
-    ...p,
-    endAt: p.endAt ? p.endAt.toISOString() : null,
-  }));
-
   // タグをProductListFilter用に変換
   const genreTagsForFilter = popularTags.map(tag => ({
     id: tag.id,
@@ -110,35 +101,8 @@ export default async function CalendarPage({
     count: tag.count,
   }));
 
-  // PageLayout用の翻訳
-  const layoutTranslations = {
-    viewProductList: pageTitle[locale] || pageTitle.ja,
-    viewProductListDesc: '',
-    uncategorizedBadge: '未整理',
-    uncategorizedDescription: '未整理作品',
-    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
-  };
-
-  // セクションナビゲーション用の翻訳
-  const sectionLabels: Record<string, string> = {
-    ja: 'リリースカレンダー',
-    en: 'Release Calendar',
-    zh: '发行日历',
-    ko: '출시 캘린더',
-  };
-
   return (
-    <PageLayout
-      locale={locale}
-      saleProducts={saleProductsForDisplay}
-      uncategorizedCount={uncategorizedCount}
-      isTopPage={false}
-      translations={layoutTranslations}
-      sectionNavConfig={{
-        mainSectionId: 'calendar',
-        mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
-      }}
-    >
+    <div className="theme-body min-h-screen">
       {/* 構造化データ */}
       <JsonLD data={structuredData} />
 
@@ -189,6 +153,6 @@ export default async function CalendarPage({
           </section>
         </div>
       </section>
-    </PageLayout>
+    </div>
   );
 }

@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { generateBaseMetadata } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import PageLayout from '@/components/PageLayout';
 import {
   getMonthlyReleaseStats,
   getTopPerformersByProductCount,
@@ -16,7 +15,6 @@ import {
   getGenreTrends,
   getDebutTrends,
 } from '@adult-v/shared/db-queries';
-import { getSaleProducts, getUncategorizedProductsCount } from '@/lib/db/queries';
 import {
   DynamicReleasesTrendChart,
   DynamicGenreDistributionChart,
@@ -84,8 +82,6 @@ export default async function StatisticsPage({
     makerStats,
     genreTrends,
     debutTrends,
-    saleProducts,
-    uncategorizedCount,
   ] = await Promise.all([
     getMonthlyReleaseStats(24),
     getTopPerformersByProductCount(20),
@@ -97,32 +93,7 @@ export default async function StatisticsPage({
     getMakerShareStats(20),
     getGenreTrends(12, 10),
     getDebutTrends(10),
-    getSaleProducts({ limit: 24, minDiscount: 30, aspName: 'FANZA' }),
-    getUncategorizedProductsCount({ includeAsp: ['FANZA'] }),
   ]);
-
-  // SalesSection用にDateをstringに変換
-  const saleProductsForDisplay = saleProducts.map(p => ({
-    ...p,
-    endAt: p.endAt ? p.endAt.toISOString() : null,
-  }));
-
-  // PageLayout用の翻訳
-  const layoutTranslations = {
-    viewProductList: '作品一覧',
-    viewProductListDesc: 'FANZA作品を横断検索',
-    uncategorizedBadge: '未整理',
-    uncategorizedDescription: '未整理作品',
-    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
-  };
-
-  // セクションナビゲーション用の翻訳
-  const sectionLabels: Record<string, string> = {
-    ja: '統計・ランキング',
-    en: 'Statistics & Rankings',
-    zh: '统计与排名',
-    ko: '통계 및 순위',
-  };
 
   // 構造化データ
   const structuredData = {
@@ -148,19 +119,7 @@ export default async function StatisticsPage({
   ];
 
   return (
-    <PageLayout
-      locale={locale}
-      saleProducts={saleProductsForDisplay}
-      uncategorizedCount={uncategorizedCount}
-      isTopPage={false}
-      isFanzaSite={true}
-      translations={layoutTranslations}
-      sectionNavConfig={{
-        mainSectionId: 'statistics',
-        mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
-      }}
-      pageId="statistics"
-    >
+    <div className="theme-body min-h-screen">
       <section id="statistics" className="scroll-mt-20">
         <main className="container mx-auto px-4 py-8 max-w-7xl">
           <JsonLD data={structuredData} />
@@ -379,7 +338,7 @@ export default async function StatisticsPage({
         </section>
       </main>
     </section>
-  </PageLayout>
+    </div>
   );
 }
 

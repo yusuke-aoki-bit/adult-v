@@ -206,12 +206,13 @@ export default function FavoritesPage() {
           hasAllProducts: true,
         }}
         theme="light"
+        pageId="favorites"
       />
 
       {/* 上部セクション（セール中・最近見た作品） */}
       <section className="py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
+          <TopPageUpperSections locale={locale} saleProducts={saleProducts} pageId="favorites" />
         </div>
       </section>
 
@@ -398,6 +399,7 @@ export default function FavoritesPage() {
             uncategorizedCount={uncategorizedCount}
             isTopPage={false}
             translations={layoutTranslations}
+            pageId="favorites"
           />
         </div>
       </section>

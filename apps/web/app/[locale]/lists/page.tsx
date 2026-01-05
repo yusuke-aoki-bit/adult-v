@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { List, Plus, Loader2 } from 'lucide-react';
 import { usePublicLists } from '@adult-v/shared/hooks';
-import { PublicListCard, CreateListModal } from '@adult-v/shared/components';
+import { PublicListCard, CreateListModal, HomeSectionManager } from '@adult-v/shared/components';
 import { useFirebaseAuth } from '@adult-v/shared/contexts';
 
 const translations = {
@@ -347,6 +347,11 @@ export default function ListsPage() {
         editingList={editingList}
         translations={t.modal}
       />
+
+      {/* セクションカスタマイズ */}
+      <div className="container mx-auto px-4 pb-8">
+        <HomeSectionManager locale={locale} theme="dark" pageId="lists" />
+      </div>
     </div>
   );
 }

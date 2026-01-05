@@ -167,8 +167,8 @@ export { FilterSortBarBase } from './FilterSortBar';
 export type { FilterSortBarBaseProps, FilterSortBarTheme, SortOption } from './FilterSortBar';
 
 // SearchBar (shared between apps)
-export { SearchBarBase, searchBarTranslations } from './SearchBar';
-export type { SearchBarTheme, SearchBarBaseProps, AiSearchResult } from './SearchBar';
+export { SearchBarBase, searchBarTranslations, UnifiedSearchBar, unifiedSearchTranslations } from './SearchBar';
+export type { SearchBarTheme, SearchBarBaseProps, AiSearchResult, UnifiedSearchBarProps, SearchMode } from './SearchBar';
 
 // OptimizedImage (shared between apps)
 export { OptimizedImageBase } from './OptimizedImage';
@@ -311,6 +311,14 @@ export { TrendAnalysis } from './TrendAnalysis';
 
 // Home customization
 export { default as HomeSectionManager } from './HomeSectionManager';
+
+// Section settings (全ページのセクション設定)
+export { SectionSettings } from './SectionSettings';
+export type { SectionSettingsProps } from './SectionSettings';
+
+// Section visibility control (Server Component対応)
+export { SectionVisibility } from './SectionVisibility';
+export type { SectionVisibilityProps } from './SectionVisibility';
 
 // Viewing habits dashboard
 export { ViewingHabitsDashboard } from './ViewingHabitsDashboard';

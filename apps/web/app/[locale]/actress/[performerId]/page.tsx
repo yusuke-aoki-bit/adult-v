@@ -9,6 +9,7 @@ import {
   ActressAiReview,
   PerformerTopProducts,
   PerformerOnSaleProducts,
+  SectionVisibility,
 } from '@adult-v/shared/components';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -396,14 +397,16 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* AIレビュー表示 */}
           {actress.aiReview && (
-            <div id="ai-review" className="mb-8">
-              <ActressAiReview
-                review={actress.aiReview}
-                updatedAt={actress.aiReviewUpdatedAt}
-                actressName={actress.name}
-                theme="dark"
-              />
-            </div>
+            <SectionVisibility sectionId="ai-review" pageId="actress" locale={locale}>
+              <div id="ai-review" className="mb-8">
+                <ActressAiReview
+                  review={actress.aiReview}
+                  updatedAt={actress.aiReviewUpdatedAt}
+                  actressName={actress.name}
+                  theme="dark"
+                />
+              </div>
+            </SectionVisibility>
           )}
 
           {/* AI生成のプロフィール */}
@@ -430,57 +433,64 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* キャリア分析セクション */}
           {careerAnalysis && (
-            <div id="career" className="mb-8">
-              <ActressCareerTimeline
-                career={careerAnalysis}
-                actressName={actress.name}
-                locale={locale}
-              />
-            </div>
+            <SectionVisibility sectionId="career" pageId="actress" locale={locale}>
+              <div id="career" className="mb-8">
+                <ActressCareerTimeline
+                  career={careerAnalysis}
+                  actressName={actress.name}
+                  locale={locale}
+                />
+              </div>
+            </SectionVisibility>
           )}
 
           {/* 人気作品TOP5セクション */}
           {topProducts.length > 0 && (
-            <div id="top-products">
-            <PerformerTopProducts
-              products={topProducts}
-              performerName={actress.name}
-              locale={locale}
-              theme="dark"
-              translations={{
-                title: tTopProducts('title', { name: actress.name }),
-                description: tTopProducts('description'),
-                rating: tTopProducts('rating'),
-                reviews: tTopProducts('reviews'),
-                views: tTopProducts('views'),
-                onSale: tTopProducts('onSale'),
-              }}
-            />
-            </div>
+            <SectionVisibility sectionId="top-products" pageId="actress" locale={locale}>
+              <div id="top-products">
+                <PerformerTopProducts
+                  products={topProducts}
+                  performerName={actress.name}
+                  locale={locale}
+                  theme="dark"
+                  translations={{
+                    title: tTopProducts('title', { name: actress.name }),
+                    description: tTopProducts('description'),
+                    rating: tTopProducts('rating'),
+                    reviews: tTopProducts('reviews'),
+                    views: tTopProducts('views'),
+                    onSale: tTopProducts('onSale'),
+                  }}
+                />
+              </div>
+            </SectionVisibility>
           )}
 
           {/* セール中作品セクション */}
           {onSaleProducts.length > 0 && (
-            <div id="on-sale">
-            <PerformerOnSaleProducts
-              products={onSaleProducts}
-              performerName={actress.name}
-              locale={locale}
-              theme="dark"
-              translations={{
-                title: tOnSale('title', { name: actress.name }),
-                description: tOnSale('description'),
-                off: tOnSale('off'),
-                endsIn: tOnSale('endsIn'),
-                endsTomorrow: tOnSale('endsTomorrow'),
-                endsToday: tOnSale('endsToday'),
-                yen: tOnSale('yen'),
-              }}
-            />
-            </div>
+            <SectionVisibility sectionId="on-sale" pageId="actress" locale={locale}>
+              <div id="on-sale">
+                <PerformerOnSaleProducts
+                  products={onSaleProducts}
+                  performerName={actress.name}
+                  locale={locale}
+                  theme="dark"
+                  translations={{
+                    title: tOnSale('title', { name: actress.name }),
+                    description: tOnSale('description'),
+                    off: tOnSale('off'),
+                    endsIn: tOnSale('endsIn'),
+                    endsTomorrow: tOnSale('endsTomorrow'),
+                    endsToday: tOnSale('endsToday'),
+                    yen: tOnSale('yen'),
+                  }}
+                />
+              </div>
+            </SectionVisibility>
           )}
 
           {/* Tag Filters - 即時適用 */}
+          <SectionVisibility sectionId="filmography" pageId="actress" locale={locale}>
           <div id="filmography">
           <ActressProductFilter
             genreTags={genreTags}
@@ -522,26 +532,31 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
             <p className="text-center theme-text-muted py-12">{t('noProducts')}</p>
           )}
           </div>
+          </SectionVisibility>
 
           {/* 共演者マップ（インタラクティブ） */}
-          <div id="costar-network" className="mt-12 mb-8">
-            <Suspense fallback={<div className="h-64 bg-gray-800 rounded-lg animate-pulse" />}>
-              <PerformerRelationMap
-                performerId={parseInt(actress.id)}
-                locale={locale}
-              />
-            </Suspense>
-          </div>
+          <SectionVisibility sectionId="costar-network" pageId="actress" locale={locale}>
+            <div id="costar-network" className="mt-12 mb-8">
+              <Suspense fallback={<div className="h-64 bg-gray-800 rounded-lg animate-pulse" />}>
+                <PerformerRelationMap
+                  performerId={parseInt(actress.id)}
+                  locale={locale}
+                />
+              </Suspense>
+            </div>
+          </SectionVisibility>
 
           {/* 類似女優マップ（ジャンル・メーカー・プロフィール複合スコア） */}
-          <div id="similar-network" className="mb-8">
-            <Suspense fallback={<div className="h-64 bg-gray-800 rounded-lg animate-pulse" />}>
-              <SimilarPerformerMap
-                performerId={parseInt(actress.id)}
-                locale={locale}
-              />
-            </Suspense>
-          </div>
+          <SectionVisibility sectionId="similar-network" pageId="actress" locale={locale}>
+            <div id="similar-network" className="mb-8">
+              <Suspense fallback={<div className="h-64 bg-gray-800 rounded-lg animate-pulse" />}>
+                <SimilarPerformerMap
+                  performerId={parseInt(actress.id)}
+                  locale={locale}
+                />
+              </Suspense>
+            </div>
+          </SectionVisibility>
         </div>
       </div>
     </>

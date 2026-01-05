@@ -2,12 +2,12 @@
 
 import { useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { SearchBarBase, type AiSearchResult } from '@adult-v/shared/components';
+import { UnifiedSearchBar } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
 
 /**
  * SearchBar for FANZA (light theme)
- * AI検索機能をヘッダーに統合
+ * 統合検索バー：作品・女優・画像検索を1つに集約
  */
 export default function SearchBar() {
   const router = useRouter();
@@ -39,36 +39,12 @@ export default function SearchBar() {
     }
   }, [router, locale]);
 
-  const handleAiSearch = useCallback((result: AiSearchResult) => {
-    // リダイレクト先がある場合（女優ページなど）
-    if (result.redirect) {
-      router.push(result.redirect);
-      return;
-    }
-
-    // 検索パラメータからURLを構築
-    const searchParams = new URLSearchParams();
-
-    Object.entries(result.searchParams).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        value.forEach(v => searchParams.append(key, v));
-      } else if (value) {
-        searchParams.set(key, value);
-      }
-    });
-
-    const queryString = searchParams.toString();
-    router.push(localizedHref(`/products${queryString ? `?${queryString}` : ''}`, locale));
-  }, [router, locale]);
-
   return (
-    <SearchBarBase
+    <UnifiedSearchBar
       theme="light"
       locale={locale}
       onActressSearch={handleActressSearch}
       onProductSearch={handleProductSearch}
-      onAiSearch={handleAiSearch}
-      aiApiEndpoint="/api/search/ai"
     />
   );
 }

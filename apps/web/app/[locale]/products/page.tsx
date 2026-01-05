@@ -6,10 +6,9 @@ import ProductListFilter from '@/components/ProductListFilter';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import Breadcrumb from '@/components/Breadcrumb';
 import ActiveFiltersChips from '@/components/ActiveFiltersChips';
-import PageLayout from '@/components/PageLayout';
 import { JsonLD } from '@/components/JsonLD';
 import SearchSuggestionsWrapper from '@/components/SearchSuggestionsWrapper';
-import { getProducts, getProductsCount, getAspStats, getPopularTags, getUncategorizedProductsCount, getSaleProducts, SaleProduct } from '@/lib/db/queries';
+import { getProducts, getProductsCount, getAspStats, getPopularTags } from '@/lib/db/queries';
 import { generateBaseMetadata, generateItemListSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
@@ -97,7 +96,6 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   const { locale } = await params;
   const tNav = await getTranslations({ locale, namespace: 'nav' });
   const t = await getTranslations({ locale, namespace: 'products' });
-  const tUncategorized = await getTranslations({ locale, namespace: 'uncategorized' });
 
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
@@ -170,11 +168,6 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     excludeTags: excludeTags.length > 0 ? excludeTags : undefined,
   };
 
-  // TOPページ（フィルターなし、1ページ目）かどうかを判定
-  const userSetIncludeAsps = isFanzaSite ? [] : includeAsp;
-  const userSetExcludeAsps = isFanzaSite ? [] : excludeAsp;
-  const isTopPage = !query && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !onSale && !uncategorized && !performerType && !releaseDate && includeTags.length === 0 && excludeTags.length === 0 && sortBy === 'releaseDateDesc' && page === 1;
-
   // ASP統計、タグ、総件数、商品を全て並列取得（パフォーマンス最適化）
   const [aspStats, popularTags, totalCount, products] = await Promise.all([
     isFanzaSite ? Promise.resolve([]) : getAspStats(),
@@ -188,29 +181,6 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
       locale,
     }),
   ]);
-
-  // セール情報と未整理商品数を取得（TOPページのみ）
-  let saleProducts: SaleProduct[] = [];
-  let uncategorizedCount = 0;
-
-  if (isTopPage) {
-    try {
-      const [sales, uncatCount] = await Promise.all([
-        getSaleProducts({
-          limit: 24,
-          minDiscount: 30,
-          aspName: isFanzaSite ? 'FANZA' : undefined,
-        }),
-        getUncategorizedProductsCount({
-          includeAsp: isFanzaSite ? ['FANZA'] : undefined,
-        }),
-      ]);
-      saleProducts = sales;
-      uncategorizedCount = uncatCount;
-    } catch (error) {
-      console.error('Failed to fetch homepage sections:', error);
-    }
-  }
 
   // ページネーション用のクエリパラメータ
   const queryParams: Record<string, string> = {};
@@ -258,39 +228,8 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     { name: t('title'), url: basePath },
   ]);
 
-  // PageLayout用の翻訳
-  const layoutTranslations = {
-    viewProductList: t('title'),
-    viewProductListDesc: t('viewActressListDesc'),
-    uncategorizedBadge: tUncategorized('badge'),
-    uncategorizedDescription: tUncategorized('shortDescription'),
-    uncategorizedCount: tUncategorized('itemCount', { count: uncategorizedCount.toLocaleString() }),
-  };
-
-  // セクションナビゲーション用の翻訳
-  const sectionLabels: Record<string, string> = {
-    ja: '商品一覧',
-    en: 'Products',
-    zh: '商品列表',
-    ko: '상품 목록',
-  };
-
   return (
-    <PageLayout
-      locale={locale}
-      saleProducts={saleProducts.map(p => ({
-        ...p,
-        endAt: p.endAt ? p.endAt.toISOString() : null,
-      }))}
-      uncategorizedCount={uncategorizedCount}
-      isTopPage={false}
-      isFanzaSite={isFanzaSite}
-      translations={layoutTranslations}
-      sectionNavConfig={{
-        mainSectionId: 'products',
-        mainSectionLabel: sectionLabels[locale] || sectionLabels.ja,
-      }}
-    >
+    <div className="theme-body min-h-screen">
 
       {/* 構造化データ */}
       <JsonLD data={itemListSchema} />
@@ -400,6 +339,6 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           </div>
         </div>
       </section>
-    </PageLayout>
+    </div>
   );
 }

@@ -117,12 +117,13 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
           hasAllProducts: true,
         }}
         theme="light"
+        pageId="watchlist"
       />
 
       {/* 上部セクション（セール中・最近見た作品） */}
       <section className="py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
+          <TopPageUpperSections locale={locale} saleProducts={saleProducts} pageId="watchlist" />
         </div>
       </section>
 
@@ -263,6 +264,7 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
             uncategorizedCount={uncategorizedCount}
             isTopPage={false}
             translations={layoutTranslations}
+            pageId="watchlist"
           />
         </div>
       </section>

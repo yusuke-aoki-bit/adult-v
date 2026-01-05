@@ -10,8 +10,6 @@ import {
 } from 'lucide-react';
 import { useFavorites } from '@adult-v/shared/hooks';
 import { localizedHref } from '@adult-v/shared/i18n';
-import { PageSectionNav } from '@adult-v/shared/components';
-import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 
 interface DiscoverProduct {
   id: number;
@@ -178,22 +176,6 @@ const translations = {
 
 type TranslationKey = keyof typeof translations;
 
-interface SaleProduct {
-  productId: number;
-  normalizedProductId: string | null;
-  title: string;
-  thumbnailUrl: string | null;
-  aspName: string;
-  affiliateUrl: string | null;
-  regularPrice: number;
-  salePrice: number;
-  discountPercent: number;
-  saleName: string | null;
-  saleType: string | null;
-  endAt: string | null;
-  performers: Array<{ id: number; name: string }>;
-}
-
 export default function DiscoverPage() {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
@@ -210,33 +192,9 @@ export default function DiscoverPage() {
   const [filters, setFilters] = useState<DiscoverFilters>({});
   const [pendingFilters, setPendingFilters] = useState<DiscoverFilters>({});
 
-  // PageLayout用のデータ
-  const [saleProducts, setSaleProducts] = useState<SaleProduct[]>([]);
-  const [uncategorizedCount, setUncategorizedCount] = useState(0);
-
   // Stats
   const likedCount = history.filter(h => h.action === 'like').length;
   const passedCount = history.filter(h => h.action === 'pass').length;
-
-  useEffect(() => {
-    fetch('/api/products/on-sale?limit=24&minDiscount=30')
-      .then(res => res.json())
-      .then(data => setSaleProducts(data.products || []))
-      .catch(() => {});
-
-    fetch('/api/products/uncategorized-count')
-      .then(res => res.json())
-      .then(data => setUncategorizedCount(data.count || 0))
-      .catch(() => {});
-  }, []);
-
-  const layoutTranslations = {
-    viewProductList: '作品一覧',
-    viewProductListDesc: '全ての配信サイトの作品を横断検索',
-    uncategorizedBadge: '未整理',
-    uncategorizedDescription: '未整理作品',
-    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
-  };
 
   const fetchProducts = useCallback(async (newExcludeIds: number[] = excludeIds, currentFilters: DiscoverFilters = filters) => {
     setIsLoading(true);
@@ -369,14 +327,6 @@ export default function DiscoverPage() {
     fetchProducts([], {});
   }, [fetchProducts]);
 
-  // Section navigation labels
-  const sectionLabels: Record<string, Record<string, string>> = {
-    ja: { discover: '発掘モード' },
-    en: { discover: 'Discover Mode' },
-    zh: { discover: '发现模式' },
-    ko: { discover: '발견 모드' },
-  };
-
   // Duration filter options
   const durationOptions = [
     { value: 'any', label: t.filterDurationAny, min: undefined, max: undefined },
@@ -395,31 +345,7 @@ export default function DiscoverPage() {
 
   return (
     <div className="theme-body min-h-screen">
-      {/* Section Navigation */}
-      <PageSectionNav
-        locale={locale}
-        config={{
-          hasSale: saleProducts.length > 0,
-          hasRecentlyViewed: true,
-          mainSectionId: 'discover',
-          mainSectionLabel: sectionLabels[locale]?.discover || sectionLabels.ja.discover,
-          hasRecommendations: true,
-          hasWeeklyHighlights: true,
-          hasTrending: true,
-          hasAllProducts: true,
-        }}
-        theme="dark"
-        pageId="discover"
-      />
-
-      {/* Upper Sections */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
-        </div>
-      </section>
-
-      <div id="discover" className="min-h-screen bg-gray-900 scroll-mt-20">
+      <div id="discover" className="min-h-screen bg-gray-900">
         <div className="container mx-auto px-4 py-6">
           {/* Header */}
           <div className="text-center mb-6">
@@ -851,19 +777,6 @@ export default function DiscoverPage() {
           </div>
         </div>
       )}
-
-      {/* Lower Sections */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <TopPageLowerSections
-            locale={locale}
-            uncategorizedCount={uncategorizedCount}
-            isTopPage={false}
-            isFanzaSite={false}
-            translations={layoutTranslations}
-          />
-        </div>
-      </section>
     </div>
   );
 }

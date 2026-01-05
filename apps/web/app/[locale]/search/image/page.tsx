@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import ImageSearchWrapper from '@/components/ImageSearchWrapper';
+import { HomeSectionManager } from '@adult-v/shared/components';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -63,6 +64,11 @@ export default async function ImageSearchPage({ params }: PageProps) {
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* セクションカスタマイズ */}
+      <div className="container mx-auto px-4 pb-8">
+        <HomeSectionManager locale={locale} theme="dark" pageId="image-search" />
       </div>
     </main>
   );

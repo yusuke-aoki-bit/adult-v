@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useCallback, useMemo, memo, type ReactNode, type ComponentType } from 'react';
+import { useState, useCallback, useMemo, useEffect, memo, type ReactNode, type ComponentType } from 'react';
 import { usePathname, useSearchParams, useParams } from 'next/navigation';
 import type { Product } from '../../types';
 import { normalizeImageUrl, getFullSizeImageUrl, isDtiUncensoredSite, isSubscriptionSite } from '../../lib/image-utils';
@@ -272,14 +272,24 @@ function ProductCardBase({
     setShowVideoModal(false);
   }, []);
 
-  // セール終了日の計算を事前にメモ化（パフォーマンス最適化）
+  // セール終了日の計算（Hydrationエラー回避のため、クライアントサイドでのみ計算）
+  const [clientNow, setClientNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    // クライアントサイドでのみ現在時刻を設定
+    setClientNow(new Date());
+  }, []);
+
   const saleUrgencyInfo = useMemo(() => {
     if (!product.salePrice || !product.saleEndAt) {
       return { diffHours: 0, diffDays: 0, isVeryUrgent: false, isUrgent: false, showBadge: false, showCountdown: false };
     }
+    // Hydration対策: サーバーサイドではセール緊急表示を無効化
+    if (!clientNow) {
+      return { diffHours: 0, diffDays: 0, isVeryUrgent: false, isUrgent: false, showBadge: false, showCountdown: false };
+    }
     const endDate = new Date(product.saleEndAt);
-    const now = new Date();
-    const diffMs = endDate.getTime() - now.getTime();
+    const diffMs = endDate.getTime() - clientNow.getTime();
     const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
     const isVeryUrgent = diffHours > 0 && diffHours <= 6;
@@ -288,7 +298,7 @@ function ProductCardBase({
     const showCountdown = diffDays > 0 && diffDays <= 3;
 
     return { diffHours, diffDays, isVeryUrgent, isUrgent, showBadge, showCountdown };
-  }, [product.salePrice, product.saleEndAt]);
+  }, [product.salePrice, product.saleEndAt, clientNow]);
 
   // CTA click handler - memoized to avoid recreation on each render
   const handleCtaClick = useCallback(() => {

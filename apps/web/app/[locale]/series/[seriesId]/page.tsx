@@ -11,6 +11,7 @@ import { Library, Clock, Film, Star, User, Trophy } from 'lucide-react';
 import SeriesProgressTracker from '@/components/SeriesProgressTracker';
 import { Product } from '@/types/product';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { HomeSectionManager } from '@adult-v/shared/components';
 
 /**
  * SeriesProductをProduct型に変換（ProductCard用）
@@ -360,6 +361,9 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
               &larr; {t.backToList}
             </Link>
           </div>
+
+          {/* セクションカスタマイズ */}
+          <HomeSectionManager locale={locale} theme="dark" pageId="series" />
         </div>
       </div>
     </>

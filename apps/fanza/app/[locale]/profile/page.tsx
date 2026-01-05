@@ -117,12 +117,13 @@ export default function ProfilePage() {
             hasAllProducts: true,
           }}
           theme="light"
+          pageId="profile"
         />
 
         {/* 上部セクション */}
         <section className="py-3 sm:py-4">
           <div className="container mx-auto px-3 sm:px-4">
-            <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
+            <TopPageUpperSections locale={locale} saleProducts={saleProducts} pageId="profile" />
           </div>
         </section>
 
@@ -158,6 +159,7 @@ export default function ProfilePage() {
               isTopPage={false}
               isFanzaSite={true}
               translations={layoutTranslations}
+              pageId="profile"
             />
           </div>
         </section>
@@ -181,12 +183,13 @@ export default function ProfilePage() {
           hasAllProducts: true,
         }}
         theme="light"
+        pageId="profile"
       />
 
       {/* 上部セクション */}
       <section className="py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
+          <TopPageUpperSections locale={locale} saleProducts={saleProducts} pageId="profile" />
         </div>
       </section>
 
@@ -348,6 +351,7 @@ export default function ProfilePage() {
             isTopPage={false}
             isFanzaSite={true}
             translations={layoutTranslations}
+            pageId="profile"
           />
         </div>
       </section>

@@ -21,9 +21,7 @@ import { useViewingDiary } from '@/hooks';
 import type { DiaryEntry } from '@adult-v/shared/hooks';
 import { normalizeImageUrl } from '@/lib/image-utils';
 import { localizedHref } from '@adult-v/shared/i18n';
-import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 import UserPreferenceProfileWrapper from '@/components/UserPreferenceProfileWrapper';
-import { PageSectionNav } from '@adult-v/shared/components';
 
 const translations = {
   ja: {
@@ -321,22 +319,6 @@ function DiaryEntryCard({
   );
 }
 
-interface SaleProduct {
-  productId: number;
-  normalizedProductId: string | null;
-  title: string;
-  thumbnailUrl: string | null;
-  aspName: string;
-  affiliateUrl: string | null;
-  regularPrice: number;
-  salePrice: number;
-  discountPercent: number;
-  saleName: string | null;
-  saleType: string | null;
-  endAt: string | null;
-  performers: Array<{ id: number; name: string }>;
-}
-
 export default function DiaryPage() {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
@@ -352,24 +334,6 @@ export default function DiaryPage() {
 
   const [activeTab, setActiveTab] = useState<'history' | 'stats'>('history');
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
-
-  // PageLayout用のデータ
-  const [saleProducts, setSaleProducts] = useState<SaleProduct[]>([]);
-  const [uncategorizedCount, setUncategorizedCount] = useState(0);
-
-  useEffect(() => {
-    // セール商品を取得
-    fetch('/api/products/on-sale?limit=24&minDiscount=30')
-      .then(res => res.json())
-      .then(data => setSaleProducts(data.products || []))
-      .catch(() => {});
-
-    // 未整理商品数を取得
-    fetch('/api/products/uncategorized-count')
-      .then(res => res.json())
-      .then(data => setUncategorizedCount(data.count || 0))
-      .catch(() => {});
-  }, []);
 
   // 年間統計
   const yearStats = useMemo(() => {
@@ -391,53 +355,13 @@ export default function DiaryPage() {
     return `${mins}${t.minutes}`;
   };
 
-  // PageLayout用の翻訳
-  const layoutTranslations = {
-    viewProductList: '作品一覧',
-    viewProductListDesc: '全ての配信サイトの作品を横断検索',
-    uncategorizedBadge: '未整理',
-    uncategorizedDescription: '未整理作品',
-    uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
-  };
-
   if (isLoading) {
     return <DiarySkeleton />;
   }
 
-  // セクションナビゲーション用の翻訳
-  const sectionLabels: Record<string, Record<string, string>> = {
-    ja: { diary: '視聴日記' },
-    en: { diary: 'Viewing Diary' },
-    zh: { diary: '观看日记' },
-    ko: { diary: '시청 일기' },
-  };
-
   return (
     <div className="theme-body min-h-screen">
-      {/* セクションナビゲーション */}
-      <PageSectionNav
-        locale={locale}
-        config={{
-          hasSale: saleProducts.length > 0,
-          hasRecentlyViewed: true,
-          mainSectionId: 'diary',
-          mainSectionLabel: sectionLabels[locale]?.diary || sectionLabels.ja.diary,
-          hasRecommendations: true,
-          hasWeeklyHighlights: true,
-          hasTrending: true,
-          hasAllProducts: true,
-        }}
-        theme="dark"
-      />
-
-      {/* 上部セクション（セール中・最近見た作品） */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={saleProducts} />
-        </div>
-      </section>
-
-      <div id="diary" className="container mx-auto px-4 py-8 scroll-mt-20">
+      <div className="container mx-auto px-4 py-8">
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
@@ -685,19 +609,6 @@ export default function DiaryPage() {
         </div>
       )}
       </div>
-
-      {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}
-      <section className="py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <TopPageLowerSections
-            locale={locale}
-            uncategorizedCount={uncategorizedCount}
-            isTopPage={false}
-            isFanzaSite={false}
-            translations={layoutTranslations}
-          />
-        </div>
-      </section>
     </div>
   );
 }

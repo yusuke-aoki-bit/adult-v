@@ -70,12 +70,19 @@ export async function GET(request: NextRequest) {
     `);
 
     // セールイベントを整形
-    const saleEvents: SaleEvent[] = saleEventsResult.rows.map(row => ({
-      date: (row.sale_date as Date).toISOString().split('T')[0],
-      productCount: Number(row.product_count),
-      avgDiscount: Number(row.avg_discount),
-      topCategories: [],
-    }));
+    const saleEvents: SaleEvent[] = saleEventsResult.rows.map(row => {
+      // sale_dateはDATEの結果で文字列またはDateオブジェクト
+      const saleDate = row.sale_date;
+      const dateStr = saleDate instanceof Date
+        ? saleDate.toISOString().split('T')[0]
+        : String(saleDate);
+      return {
+        date: dateStr,
+        productCount: Number(row.product_count),
+        avgDiscount: Number(row.avg_discount),
+        topCategories: [],
+      };
+    });
 
     // 月別統計を整形
     const monthStats: MonthStats[] = monthStatsResult.rows.map(row => ({

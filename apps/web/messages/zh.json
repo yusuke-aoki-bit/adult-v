@@ -55,7 +55,10 @@
     "viewSeries": "系列列表",
     "viewSeriesDesc": "按人气系列查找作品",
     "viewMakers": "厂商列表",
-    "viewMakersDesc": "按厂商和厂牌浏览"
+    "viewMakersDesc": "按厂商和厂牌浏览",
+    "uncategorizedBadge": "未分类",
+    "uncategorizedDescription": "查看未分类作品",
+    "uncategorizedCount": "{count}个作品"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
