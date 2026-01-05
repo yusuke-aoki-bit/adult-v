@@ -4,6 +4,7 @@ import { Pagination } from '@adult-v/shared/components';
 import ProductGridWithComparison from '@/components/ProductGridWithComparison';
 import ProductListFilter from '@/components/ProductListFilter';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
+import PerPageDropdown from '@/components/PerPageDropdown';
 import Breadcrumb from '@/components/Breadcrumb';
 import ActiveFiltersChips from '@/components/ActiveFiltersChips';
 import { JsonLD } from '@/components/JsonLD';
@@ -90,18 +91,22 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const PER_PAGE = 48;
+const DEFAULT_PER_PAGE = 36;
+const VALID_PER_PAGE = [24, 36, 48];
 
 export default async function ProductsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
-  const tNav = await getTranslations({ locale, namespace: 'nav' });
-  const t = await getTranslations({ locale, namespace: 'products' });
-
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
 
-  // FANZAサイトかどうかを判定
-  const [serverAspFilter, isFanzaSite] = await Promise.all([
+  // 表示件数（URLパラメータから取得、無効な値はデフォルトに）
+  const perPageParam = Number(searchParamsData.perPage);
+  const perPage = VALID_PER_PAGE.includes(perPageParam) ? perPageParam : DEFAULT_PER_PAGE;
+
+  // 翻訳とサイト設定を並列取得（パフォーマンス最適化）
+  const [tNav, t, serverAspFilter, isFanzaSite] = await Promise.all([
+    getTranslations({ locale, namespace: 'nav' }),
+    getTranslations({ locale, namespace: 'products' }),
     getServerAspFilter(),
     isServerFanzaSite(),
   ]);
@@ -151,7 +156,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     ? searchParamsData.exclude.split(',').filter(Boolean)
     : [];
   const sortBy = typeof searchParamsData.sort === 'string' ? searchParamsData.sort : 'releaseDateDesc';
-  const offset = (page - 1) * PER_PAGE;
+  const offset = (page - 1) * perPage;
 
   // フィルタオプションを共通化
   const filterOptions = {
@@ -176,7 +181,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     getProducts({
       ...filterOptions,
       offset,
-      limit: PER_PAGE,
+      limit: perPage,
       sortBy: sortBy as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'ratingDesc' | 'reviewCountDesc' | 'titleAsc',
       locale,
     }),
@@ -197,6 +202,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   if (includeTags.length > 0) queryParams.include = includeTags.join(',');
   if (excludeTags.length > 0) queryParams.exclude = excludeTags.join(',');
   if (sortBy !== 'releaseDateDesc') queryParams.sort = sortBy;
+  if (perPage !== DEFAULT_PER_PAGE) queryParams.perPage = String(perPage);
 
   // ASP統計をProductListFilter用に変換
   const aspStatsForFilter = aspStats.map(stat => ({
@@ -277,8 +283,12 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
             defaultOpen={false}
           />
 
-          {/* 並び順 */}
-          <div className="flex justify-end mb-2 sm:mb-4">
+          {/* 並び順・表示件数 */}
+          <div className="flex justify-end items-center gap-4 mb-2 sm:mb-4">
+            <PerPageDropdown
+              perPage={perPage}
+              basePath={basePath}
+            />
             <ProductSortDropdown
               sortBy={sortBy}
               basePath={basePath}
@@ -295,7 +305,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
               <Pagination
                 total={totalCount}
                 page={page}
-                perPage={PER_PAGE}
+                perPage={perPage}
                 basePath={basePath}
                 position="top"
                 queryParams={queryParams}
@@ -311,7 +321,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
               <Pagination
                 total={totalCount}
                 page={page}
-                perPage={PER_PAGE}
+                perPage={perPage}
                 basePath={basePath}
                 position="bottom"
                 queryParams={queryParams}

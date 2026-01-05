@@ -103,16 +103,19 @@ export type { SectionTheme, ThemeConfig, Locale } from './sections';
 // Filter components (shared between apps)
 export {
   ProductSortDropdown,
+  PerPageDropdown,
   ActiveFiltersChips,
   getFilterThemeConfig,
   darkFilterTheme,
   lightFilterTheme,
   sortTranslations,
+  perPageTranslations,
   activeFiltersTranslations,
   getSortTranslation,
+  getPerPageTranslation,
   getActiveFiltersTranslation,
 } from './filters';
-export type { FilterTheme, FilterThemeConfig, SortTranslationKey, ActiveFiltersTranslationKey, SupportedLocale } from './filters';
+export type { FilterTheme, FilterThemeConfig, SortTranslationKey, PerPageTranslationKey, ActiveFiltersTranslationKey, SupportedLocale } from './filters';
 
 // Client providers (Firebase auth, etc.)
 export { ClientProviders } from './ClientProviders';

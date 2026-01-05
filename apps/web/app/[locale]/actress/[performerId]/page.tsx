@@ -13,7 +13,7 @@ import {
 } from '@adult-v/shared/components';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import { getActressById, getProducts, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis } from '@/lib/db/queries';
+import { getActressById, getProducts, getProductsCount, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis } from '@/lib/db/queries';
 import ActressCareerTimeline from '@/components/ActressCareerTimeline';
 import RetirementAlert from '@/components/RetirementAlert';
 import { getPerformerTopProducts, getPerformerOnSaleProducts } from '@/lib/db/recommendations';
@@ -222,41 +222,37 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     ? resolvedSearchParams.asp
     : [];
 
-  // Get tags for the actress
-  const genreTags = await getTagsForActress(actress.id, 'genre');
-
-  // Get aliases for the actress
-  const aliases = await getPerformerAliases(parseInt(actress.id));
-  const nonPrimaryAliases = aliases.filter(alias => !alias.isPrimary);
-
-  // Get product count by ASP
-  const productCountByAsp = await getActressProductCountByAsp(actress.id);
-
-  // Get career analysis
-  const careerAnalysis = await getActressCareerAnalysis(actress.id);
-
-  // Get performer's top products (most popular by rating/reviews/views)
-  const topProducts = await getPerformerTopProducts(parseInt(actress.id), 5);
-
-  // Get performer's on-sale products
-  const onSaleProducts = await getPerformerOnSaleProducts(parseInt(actress.id), 6);
-
-  // Get products
-  const allWorks = await getProducts({
+  // Common filter options for products query
+  const productFilterOptions = {
     actressId: actress.id,
-    sortBy,
     tags: includeTags.length > 0 ? includeTags : undefined,
     excludeTags: excludeTags.length > 0 ? excludeTags : undefined,
     hasVideo: hasVideo || undefined,
     hasImage: hasImage || undefined,
     performerType: performerType || undefined,
     providers: includeAsps.length > 0 ? includeAsps : undefined,
-    limit: 1000,
-    locale,
-  });
+  };
 
-  const total = allWorks.length;
-  const works = allWorks.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  // Parallel fetch for all actress data (performance optimization)
+  // Uses DB-level pagination instead of fetching all 1000 products
+  const [genreTags, aliases, productCountByAsp, careerAnalysis, topProducts, onSaleProducts, works, total] =
+    await Promise.all([
+      getTagsForActress(actress.id, 'genre'),
+      getPerformerAliases(parseInt(actress.id)),
+      getActressProductCountByAsp(actress.id),
+      getActressCareerAnalysis(actress.id),
+      getPerformerTopProducts(parseInt(actress.id), 5),
+      getPerformerOnSaleProducts(parseInt(actress.id), 6),
+      getProducts({
+        ...productFilterOptions,
+        sortBy,
+        limit: PER_PAGE,
+        offset: (page - 1) * PER_PAGE,
+        locale,
+      }),
+      getProductsCount(productFilterOptions),
+    ]);
+  const nonPrimaryAliases = aliases.filter(alias => !alias.isPrimary);
 
   const basePath = localizedHref(`/actress/${actress.id}`, locale);
 
@@ -288,7 +284,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     name: actress.name,
     productCount: total,
     debutYear: careerAnalysis?.debutYear ?? undefined,
-    latestReleaseDate: allWorks[0]?.releaseDate ? new Date(allWorks[0].releaseDate).toLocaleDateString('ja-JP') : undefined,
+    latestReleaseDate: works[0]?.releaseDate ? new Date(works[0].releaseDate).toLocaleDateString('ja-JP') : undefined,
     aliases: nonPrimaryAliases.length > 0 ? nonPrimaryAliases.map(a => a.aliasName) : undefined,
     topGenres: genreTags.length > 0 ? genreTags.slice(0, 5).map(t => t.name) : undefined,
     aspNames: productCountByAsp.length > 0 ? productCountByAsp.map(a => a.aspName) : undefined,

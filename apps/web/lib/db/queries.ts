@@ -394,7 +394,46 @@ export async function searchProductByProductId(productId: string, locale: string
 export type SortOption = ProductSortOption;
 export type GetProductsOptions = SharedGetProductsOptions;
 
+/**
+ * フィルターなしの商品一覧をキャッシュ（一覧ページ初期表示用）
+ */
+function getCachedProductsList(offset: number, limit: number, sortBy: string, locale: string) {
+  const cached = unstable_cache(
+    () => getProductsShared<ProductType>({ offset, limit, sortBy: sortBy as ProductSortOption, locale }),
+    [`products-list-${offset}-${limit}-${sortBy}-${locale}`],
+    { revalidate: 60, tags: ['products-list'] }
+  );
+  return cached();
+}
+
 export async function getProducts(options?: GetProductsOptions): Promise<ProductType[]> {
+  // フィルターなしの場合のみキャッシュを使用（一覧ページの初期表示高速化）
+  const hasFilters = options && (
+    options.query ||
+    options.providers?.length ||
+    options.excludeProviders?.length ||
+    options.tags?.length ||
+    options.excludeTags?.length ||
+    options.hasVideo ||
+    options.hasImage ||
+    options.onSale ||
+    options.uncategorized ||
+    options.performerType ||
+    options.actressId ||
+    options.isNew ||
+    options.isFeatured ||
+    options.releaseDate
+  );
+
+  if (!hasFilters && options?.offset !== undefined && options?.limit !== undefined) {
+    return getCachedProductsList(
+      options.offset,
+      options.limit,
+      options.sortBy || 'releaseDateDesc',
+      options.locale || 'ja'
+    );
+  }
+
   return getProductsShared<ProductType>(options);
 }
 
@@ -526,9 +565,9 @@ export async function getTags(category?: string): Promise<Array<{ id: number; na
 }
 
 /**
- * 女優の作品に絞ったタグ一覧を取得（カテゴリ別）
+ * 女優の作品に絞ったタグ一覧を取得（カテゴリ別）- 内部実装
  */
-export async function getTagsForActress(actressId: string, category?: string): Promise<Array<{ id: number; name: string; category: string | null }>> {
+async function getTagsForActressInternal(actressId: string, category?: string): Promise<Array<{ id: number; name: string; category: string | null }>> {
   try {
     const db = getDb();
     const performerId = parseInt(actressId);
@@ -574,6 +613,18 @@ export async function getTagsForActress(actressId: string, category?: string): P
 }
 
 /**
+ * 女優の作品に絞ったタグ一覧を取得（カテゴリ別）- キャッシュ付き
+ */
+export async function getTagsForActress(actressId: string, category?: string): Promise<Array<{ id: number; name: string; category: string | null }>> {
+  const cached = unstable_cache(
+    () => getTagsForActressInternal(actressId, category),
+    [`actress-tags-${actressId}-${category || 'all'}`],
+    { revalidate: 600, tags: ['actress-tags'] }
+  );
+  return cached();
+}
+
+/**
  * 女優の総数を取得
  * 共通ファクトリーを使用
  */
@@ -592,9 +643,9 @@ export async function getActressById(id: string, locale: string = 'ja'): Promise
 }
 
 /**
- * 女優の別名を取得
+ * 女優の別名を取得 - 内部実装
  */
-export async function getPerformerAliases(performerId: number): Promise<Array<{
+async function getPerformerAliasesInternal(performerId: number): Promise<Array<{
   id: number;
   aliasName: string;
   source: string | null;
@@ -615,6 +666,24 @@ export async function getPerformerAliases(performerId: number): Promise<Array<{
     console.error(`Error fetching aliases for performer ${performerId}:`, error);
     return [];
   }
+}
+
+/**
+ * 女優の別名を取得 - キャッシュ付き
+ */
+export async function getPerformerAliases(performerId: number): Promise<Array<{
+  id: number;
+  aliasName: string;
+  source: string | null;
+  isPrimary: boolean | null;
+  createdAt: Date;
+}>> {
+  const cached = unstable_cache(
+    () => getPerformerAliasesInternal(performerId),
+    [`performer-aliases-${performerId}`],
+    { revalidate: 3600, tags: ['performer-aliases'] }
+  );
+  return cached();
 }
 
 /**
@@ -659,9 +728,9 @@ export async function getActressProductCountBySite(actressId: string): Promise<A
 }
 
 /**
- * 女優のASP別作品数を取得（product_sourcesベース）
+ * 女優のASP別作品数を取得（product_sourcesベース）- 内部実装
  */
-export async function getActressProductCountByAsp(actressId: string): Promise<Array<{
+async function getActressProductCountByAspInternal(actressId: string): Promise<Array<{
   aspName: string;
   count: number;
 }>> {
@@ -699,6 +768,21 @@ export async function getActressProductCountByAsp(actressId: string): Promise<Ar
     console.error(`Error fetching product count by ASP for actress ${actressId}:`, error);
     return [];
   }
+}
+
+/**
+ * 女優のASP別作品数を取得（product_sourcesベース）- キャッシュ付き
+ */
+export async function getActressProductCountByAsp(actressId: string): Promise<Array<{
+  aspName: string;
+  count: number;
+}>> {
+  const cached = unstable_cache(
+    () => getActressProductCountByAspInternal(actressId),
+    [`actress-asp-count-${actressId}`],
+    { revalidate: 600, tags: ['actress-asp-count'] }
+  );
+  return cached();
 }
 
 /**

@@ -57,6 +57,25 @@ export const sortTranslations = {
   },
 } as const;
 
+export const perPageTranslations = {
+  ja: {
+    perPageLabel: '表示件数:',
+    items: '件',
+  },
+  en: {
+    perPageLabel: 'Per Page:',
+    items: '',
+  },
+  zh: {
+    perPageLabel: '每页显示:',
+    items: '件',
+  },
+  ko: {
+    perPageLabel: '페이지당:',
+    items: '개',
+  },
+} as const;
+
 export const activeFiltersTranslations = {
   ja: {
     activeFilters: '適用中',
@@ -105,11 +124,16 @@ export const activeFiltersTranslations = {
 } as const;
 
 export type SortTranslationKey = keyof typeof sortTranslations.ja;
+export type PerPageTranslationKey = keyof typeof perPageTranslations.ja;
 export type ActiveFiltersTranslationKey = keyof typeof activeFiltersTranslations.ja;
 export type SupportedLocale = 'ja' | 'en' | 'zh' | 'ko';
 
 export function getSortTranslation(locale: string) {
   return sortTranslations[locale as SupportedLocale] || sortTranslations.ja;
+}
+
+export function getPerPageTranslation(locale: string) {
+  return perPageTranslations[locale as SupportedLocale] || perPageTranslations.ja;
 }
 
 export function getActiveFiltersTranslation(locale: string) {

@@ -149,18 +149,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id, locale } = await params;
-  const tNav = await getTranslations('nav');
-  const tCommon = await getTranslations('common');
-  const tRelated = await getTranslations('relatedProducts');
-  const t = productDetailTranslations[locale as keyof typeof productDetailTranslations] || productDetailTranslations.ja;
 
-  // Try to get product by normalized ID first, then by database ID
-  let product = await searchProductByProductId(id, locale);
-  // foundByProductId is useful for future analytics/redirect logic
-  const _foundByProductId = !!product;
-  if (!product && !isNaN(parseInt(id))) {
-    product = await getProductById(id, locale);
-  }
+  // Parallel fetch translations and product data
+  const [tNav, tCommon, tRelated, product] = await Promise.all([
+    getTranslations('nav'),
+    getTranslations('common'),
+    getTranslations('relatedProducts'),
+    searchProductByProductId(id, locale).then(async (p) => {
+      if (p) return p;
+      if (!isNaN(parseInt(id))) {
+        return getProductById(id, locale);
+      }
+      return null;
+    }),
+  ]);
+  const t = productDetailTranslations[locale as keyof typeof productDetailTranslations] || productDetailTranslations.ja;
   if (!product) notFound();
 
   // 品番でアクセスした場合でもリダイレクトしない（SEO: Google検索で品番URLがインデックスされる）
