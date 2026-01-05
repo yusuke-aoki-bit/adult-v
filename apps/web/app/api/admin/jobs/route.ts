@@ -110,12 +110,18 @@ export async function GET() {
       const execution = job.status?.latestCreatedExecution;
       let status: JobStatus['status'] = 'unknown';
 
-      if (execution?.completionStatus === 'EXECUTION_RUNNING') {
+      // Cloud Run Jobsのステータス（RUNNING, SUCCEEDED, FAILEDなど）
+      // 完了時刻がなく開始時刻がある場合は実行中とみなす
+      const completionStatus = execution?.completionStatus?.toUpperCase() || '';
+      if (completionStatus.includes('RUNNING') || (execution?.startTime && !execution?.completionTime)) {
         status = 'running';
-      } else if (execution?.completionStatus === 'EXECUTION_SUCCEEDED') {
+      } else if (completionStatus.includes('SUCCEEDED') || completionStatus === 'SUCCEEDED') {
         status = 'succeeded';
-      } else if (execution?.completionStatus === 'EXECUTION_FAILED') {
+      } else if (completionStatus.includes('FAILED') || completionStatus.includes('CANCELLED')) {
         status = 'failed';
+      } else if (execution?.completionTime) {
+        // 完了時刻があるが上記に該当しない場合は成功とみなす（古いフォーマット対応）
+        status = 'succeeded';
       }
 
       // 実行時間の計算

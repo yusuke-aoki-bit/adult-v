@@ -349,6 +349,16 @@ export interface UseHomeSectionsOptions {
   customSections?: HomeSection[];
 }
 
+// デフォルトセクションを取得するヘルパー関数（useState初期化用）
+function getInitialSections(locale: string, pageId: string, customSections?: HomeSection[]): HomeSection[] {
+  if (customSections) return customSections;
+  const pageDefaults = pageSectionDefaults[pageId];
+  if (pageDefaults) {
+    return locale === 'ja' ? pageDefaults.ja : pageDefaults.en;
+  }
+  return locale === 'ja' ? defaultSections : defaultSectionsEn;
+}
+
 export function useHomeSections(localeOrOptions: string | UseHomeSectionsOptions = 'ja') {
   // 後方互換性: 文字列の場合はlocaleとして扱う
   const options: UseHomeSectionsOptions = typeof localeOrOptions === 'string'
@@ -357,21 +367,15 @@ export function useHomeSections(localeOrOptions: string | UseHomeSectionsOptions
 
   const { locale = 'ja', pageId = 'home', customSections } = options;
   const storageKey = `${STORAGE_KEY_PREFIX}_${pageId}`;
-  const [sections, setSections] = useState<HomeSection[]>([]);
+
+  // 初期値としてデフォルトセクションを設定（SSR時にも表示される）
+  const [sections, setSections] = useState<HomeSection[]>(() =>
+    getInitialSections(locale, pageId, customSections)
+  );
   const [isLoaded, setIsLoaded] = useState(false);
 
   const getDefaultSections = useCallback(() => {
-    // カスタムセクションが指定されている場合はそれを使用
-    if (customSections) {
-      return customSections;
-    }
-    // ページ固有のデフォルトがあればそれを使用
-    const pageDefaults = pageSectionDefaults[pageId];
-    if (pageDefaults) {
-      return locale === 'ja' ? pageDefaults.ja : pageDefaults.en;
-    }
-    // フォールバック: ホームページのデフォルト
-    return locale === 'ja' ? defaultSections : defaultSectionsEn;
+    return getInitialSections(locale, pageId, customSections);
   }, [locale, pageId, customSections]);
 
   // LocalStorageから読み込み
