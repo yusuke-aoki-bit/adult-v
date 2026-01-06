@@ -94,310 +94,37 @@ export function getFallbackImageUrl(): string {
 
 /**
  * Convert thumbnail URL to full-size image URL
- * Supports all ASPs: DUGA, MGS, DMM/FANZA, Sokmil, DTI系(カリビアンコム、一本道、HEYZO等), b10f, Japanska, FC2
+ *
+ * ⚠️ ASP規約遵守のため、この関数は廃止されました。
+ * 各ASPは「提供されたサンプル画像・HTMLのみ使用可」としており、
+ * URL改変による画像取得は規約違反となる可能性があります。
+ *
+ * この関数は互換性のため残されていますが、元のURLをそのまま返します。
+ * サムネイル画像のみを使用してください。
  *
  * @param thumbnailUrl - The thumbnail URL
- * @returns Full-size image URL or original URL if conversion not possible
+ * @returns Original URL (no conversion for ASP compliance)
+ * @deprecated ASP規約遵守のため、画像URL変換は廃止されました
  */
 export function getFullSizeImageUrl(thumbnailUrl: string): string {
+  // ASP規約遵守: URL改変による画像取得は行わない
+  // 各ASPの提供するサムネイル画像をそのまま使用
   if (!thumbnailUrl) return thumbnailUrl;
 
-  // ========== DUGA ==========
-  // e.g., https://pic.duga.jp/unsecure/xxx-t.jpg -> https://pic.duga.jp/unsecure/xxx-l.jpg
-  // sample -> scap 変換を行う（sampleフォルダが404になる商品が多いため）
-  // ただし、/scap/ が既に含まれている場合はそのまま使用（二重変換防止）
-  // e.g., https://pic.duga.jp/unsecure/mbm/1360/noauth/240x180.jpg -> 480x360.jpg (2x) or 640x480.jpg
-  if (thumbnailUrl.includes('duga.jp')) {
-    // サイズ変換は共通で行う
-    let result = thumbnailUrl
-      .replace(/\/240x180\.jpg$/, '/480x360.jpg')  // サムネイル → 2倍サイズ
-      .replace(/\/noauth\/240x180\.jpg/, '/noauth/480x360.jpg')  // noauthパス含む場合
-      .replace(/-t\./, '-l.')
-      .replace(/_t\./, '_l.')
-      .replace(/\/t\//, '/l/')
-      .replace(/-s\./, '-l.')
-      .replace(/_s\./, '_l.');
-
-    // sample -> scap 変換（sampleが404になる商品が多いため）
-    // DBに /sample/ で保存されている場合、/scap/ に変換して表示
-    if (result.includes('/sample/') && !result.includes('/scap/')) {
-      result = result.replace(/\/sample\//, '/scap/');
-    }
-
-    return result;
-  }
-
-  // ========== MGS動画 ==========
-  // e.g., https://image.mgstage.com/images/xxx/pb_t1_xxx.jpg -> https://image.mgstage.com/images/xxx/pb_e_xxx.jpg
-  if (thumbnailUrl.includes('mgstage.com')) {
+  // DMM/FANZAのみ、ドメイン正規化は許可（awsimgsrc → pics変換）
+  // これはASP規約で許可されている標準的なドメイン変換
+  if (thumbnailUrl.includes('awsimgsrc.dmm.co.jp')) {
     return thumbnailUrl
-      .replace(/pb_t1_/, 'pb_e_')
-      .replace(/pb_t_/, 'pb_e_')
-      .replace(/_t\./, '.')
-      .replace(/\/t\//, '/l/');
+      .replace('awsimgsrc.dmm.co.jp/pics_dig/', 'pics.dmm.co.jp/')
+      .replace('awsimgsrc.dmm.co.jp/pics/', 'pics.dmm.co.jp/');
   }
 
-  // ========== DMM/FANZA ==========
-  // e.g., https://pics.dmm.co.jp/xxx/xxx-ps.jpg -> https://pics.dmm.co.jp/xxx/xxx-pl.jpg
-  // e.g., https://awsimgsrc.dmm.co.jp/pics_dig/digital/video/xxx/xxx-2.jpg -> pics.dmm.co.jp版に変換
-  // e.g., https://pics.dmm.co.jp/digital/video/1rctd00704/1rctd00704-2.jpg -> 1rctd00704jp-2.jpg
-  if (thumbnailUrl.includes('dmm.co.jp') || thumbnailUrl.includes('dmm.com')) {
-    let result = thumbnailUrl
-      .replace(/-ps\./, '-pl.')
-      .replace(/-pt\./, '-pl.')
-      .replace(/ps\.jpg/, 'pl.jpg')
-      .replace(/pt\.jpg/, 'pl.jpg')
-      .replace(/_s\./, '_l.')
-      .replace(/\/s\//, '/l/');
-
-    // awsimgsrc.dmm.co.jp の pics_dig 画像: pics.dmm.co.jp の大きい画像に変換
-    // e.g., https://awsimgsrc.dmm.co.jp/pics_dig/digital/video/mdvr00386/mdvr00386-2.jpg
-    //    -> https://pics.dmm.co.jp/digital/video/mdvr00386/mdvr00386-2.jpg
-    if (result.includes('awsimgsrc.dmm.co.jp') && result.includes('/pics_dig/')) {
-      result = result
-        .replace('awsimgsrc.dmm.co.jp/pics_dig/', 'pics.dmm.co.jp/')
-        .replace('awsimgsrc.dmm.co.jp/pics/', 'pics.dmm.co.jp/');
-    }
-
-    // pics.dmm.com も pics.dmm.co.jp に統一
-    if (result.includes('pics.dmm.com')) {
-      result = result.replace('pics.dmm.com', 'pics.dmm.co.jp');
-    }
-
-    // サンプル画像の番号付きファイル: {id}-{n}.jpg -> {id}jp-{n}.jpg に変換
-    // e.g., 1rctd00704-2.jpg -> 1rctd00704jp-2.jpg (6KB -> 114KB)
-    // パターン: /digital/video/{id}/{id}-{n}.jpg
-    // 注意: 既に jp が含まれている場合は変換しない（二重変換防止）
-    if (result.includes('/digital/video/') && !result.includes('jp-')) {
-      result = result.replace(/\/([a-z0-9]+)-(\d+)\.jpg$/i, '/$1jp-$2.jpg');
-    }
-
-    return result;
+  // pics.dmm.com も pics.dmm.co.jp に統一（ドメイン正規化のみ）
+  if (thumbnailUrl.includes('pics.dmm.com')) {
+    return thumbnailUrl.replace('pics.dmm.com', 'pics.dmm.co.jp');
   }
 
-  // ========== Sokmil ==========
-  // e.g., https://img.sokmil.com/xxx/s/xxx.jpg -> https://img.sokmil.com/xxx/l/xxx.jpg
-  // e.g., pef_tak1656_01_100x142_xxx.jpg -> pef_tak1656_01_250x356_xxx.jpg (フルサイズ)
-  // e.g., https://img.sokmil.com/image/capture/cs_ins0512_01_T1764556060.jpg
-  //    -> https://img.sokmil.com/image/content/cs_ins0512_01_T1764556060.jpg (フルサイズ)
-  if (thumbnailUrl.includes('sokmil.com')) {
-    return thumbnailUrl
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.')
-      .replace(/\/s\//, '/l/')
-      .replace(/\/small\//, '/large/')
-      .replace(/\/thumb\//, '/large/')
-      .replace(/\/capture\//, '/content/')  // capture -> content (フルサイズ画像)
-      .replace(/_100x142_/, '_250x356_')  // サムネイル→フルサイズ
-      .replace(/_200x284_/, '_250x356_'); // 中間サイズ→フルサイズ
-  }
-
-  // ========== b10f.jp ==========
-  // e.g., https://b10f.jp/xxx/thumb/xxx.jpg -> https://b10f.jp/xxx/large/xxx.jpg
-  // e.g., https://ads.b10f.jp/images/100-tfd-001/1s.jpg -> https://ads.b10f.jp/images/100-tfd-001/1.jpg
-  // 注意: 1l.jpg はプレースホルダー（500バイト程度）なので使用不可。1.jpg が正しいフルサイズ（240KB程度）
-  if (thumbnailUrl.includes('b10f.jp') || thumbnailUrl.includes('ads.b10f.jp')) {
-    return thumbnailUrl
-      .replace(/\/thumb\//, '/large/')
-      .replace(/\/small\//, '/large/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.')
-      .replace(/\/s\//, '/l/')
-      .replace(/\/(\d+)s\.jpg$/, '/$1.jpg'); // 1s.jpg -> 1.jpg (1l.jpgはプレースホルダーなので使わない)
-  }
-
-  // ========== Japanska ==========
-  // e.g., https://img01.japanska-xxx.com/xxx/s/xxx.jpg -> https://img01.japanska-xxx.com/xxx/l/xxx.jpg
-  if (thumbnailUrl.includes('japanska-xxx.com') || thumbnailUrl.includes('japanska.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.')
-      .replace(/\/thumb\//, '/large/')
-      .replace(/\/small\//, '/large/');
-  }
-
-  // ========== FC2 ==========
-  // サイズ指定のURLパラメータを除去して元画像を取得
-  if (thumbnailUrl.includes('fc2.com') || thumbnailUrl.includes('contents.fc2.com')) {
-    return thumbnailUrl
-      .replace(/[?&]w=\d+/g, '')
-      .replace(/[?&]h=\d+/g, '')
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/\/thumb\//, '/large/');
-  }
-
-  // ========== DTI系サイト ==========
-  // カリビアンコム (caribbeancom.com)
-  if (thumbnailUrl.includes('caribbeancom.com') && !thumbnailUrl.includes('caribbeancompr')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.')
-      .replace(/\/images\//, '/images/l/')
-      .replace(/\/small\//, '/large/');
-  }
-
-  // カリビアンコムプレミアム (caribbeancompr.com)
-  if (thumbnailUrl.includes('caribbeancompr.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.')
-      .replace(/\/small\//, '/large/');
-  }
-
-  // 一本道 (1pondo.tv)
-  if (thumbnailUrl.includes('1pondo.tv')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.')
-      .replace(/\/small\//, '/large/');
-  }
-
-  // HEYZO (heyzo.com)
-  if (thumbnailUrl.includes('heyzo.com')) {
-    return thumbnailUrl
-      .replace(/_s\./, '_l.')
-      .replace(/\/s\//, '/l/')
-      .replace(/-s\./, '-l.')
-      .replace(/\/small\//, '/large/');
-  }
-
-  // 天然むすめ (10musume.com)
-  if (thumbnailUrl.includes('10musume.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.')
-      .replace(/\/small\//, '/large/');
-  }
-
-  // パコパコママ (pacopacomama.com)
-  if (thumbnailUrl.includes('pacopacomama.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.')
-      .replace(/\/small\//, '/large/');
-  }
-
-  // 人妻斬り (hitozuma-giri.com)
-  if (thumbnailUrl.includes('hitozuma-giri.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // 女体のしんぴ (nyoshin.com)
-  if (thumbnailUrl.includes('nyoshin.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // うんこたれ (unkotare.com)
-  if (thumbnailUrl.includes('unkotare.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // AV-4610 (av-4610.com)
-  if (thumbnailUrl.includes('av-4610.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // H0230 (av-0230.com)
-  if (thumbnailUrl.includes('av-0230.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // E-BODY (av-e-body.com)
-  if (thumbnailUrl.includes('av-e-body.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // 金8天国 (kin8tengoku.com)
-  if (thumbnailUrl.includes('kin8tengoku.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.')
-      .replace(/\/small\//, '/large/');
-  }
-
-  // NOZOX (nozox.com)
-  if (thumbnailUrl.includes('nozox.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // 3D-EROS (3d-eros.net)
-  if (thumbnailUrl.includes('3d-eros.net')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // Pikkur (pikkur.com)
-  if (thumbnailUrl.includes('pikkur.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // JAV Holic (javholic.com)
-  if (thumbnailUrl.includes('javholic.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // DTI共通ドメイン (pics.dtiserv, smovie.1pondo.tv等)
-  if (thumbnailUrl.includes('dtiserv') || thumbnailUrl.includes('smovie.')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
-  }
-
-  // ========== 汎用パターン（最後のフォールバック） ==========
-  // 一般的なサムネイルパターンを試す
-  const result = thumbnailUrl
-    .replace(/\/thumb\//, '/large/')
-    .replace(/\/small\//, '/large/')
-    .replace(/\/thumbnail\//, '/original/')
-    .replace(/_thumb\./, '.')
-    .replace(/_small\./, '.')
-    .replace(/-thumb\./, '.')
-    .replace(/-small\./, '.');
-
-  // 変更があった場合はそれを返す
-  if (result !== thumbnailUrl) {
-    return result;
-  }
-
-  // Return original if no pattern matched
+  // その他のASPは元のURLをそのまま返す
   return thumbnailUrl;
 }
 

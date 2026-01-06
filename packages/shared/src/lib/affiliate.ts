@@ -86,15 +86,22 @@ export function addTrackingParams(url: string, params: Record<string, string>): 
 
 // DUGA アフィリエイト設定
 // 代理店ID-バナーID形式
-const DUGA_AFFILIATE_ID = process.env['NEXT_PUBLIC_DUGA_AFFILIATE_ID'] || '48611-01';
+// 環境変数から取得（.env.localに NEXT_PUBLIC_DUGA_AFFILIATE_ID を設定）
+const DUGA_AFFILIATE_ID = process.env['NEXT_PUBLIC_DUGA_AFFILIATE_ID'] || '';
 
 /**
  * DUGAアフィリエイトリンクを生成
  * 形式: https://click.duga.jp/ppv/{product-id}/{affiliate-id}
  * @param originalUrl 元のDUGA商品URL (例: http://duga.jp/ppv/dopyuch-0014/)
- * @returns アフィリエイトURL (例: https://click.duga.jp/ppv/dopyuch-0014/48611-01)
+ * @returns アフィリエイトURL (例: https://click.duga.jp/ppv/dopyuch-0014/{affiliate-id})
  */
 export function generateDUGALink(originalUrl: string): string {
+  // アフィリエイトIDが設定されていない場合は元のURLを返す
+  if (!DUGA_AFFILIATE_ID) {
+    console.warn('[Affiliate] DUGA affiliate ID not configured. Set NEXT_PUBLIC_DUGA_AFFILIATE_ID in .env.local');
+    return originalUrl;
+  }
+
   try {
     // URLからパス部分を抽出
     // 例: http://duga.jp/ppv/dopyuch-0014/ → /ppv/dopyuch-0014/
@@ -123,32 +130,39 @@ export function generateDUGALink(originalUrl: string): string {
 
 // DTI (HEYZO, カリビアンコムプレミアム等) アフィリエイト設定
 // clear-tv.com経由のアフィリエイトリンク形式
-// HEYZO: 9450999-450-239360
-// カリビアンコムプレミアム: 9290999-290-239360
+// 環境変数から取得（.env.localに設定）
 const DTI_AFFILIATE_CODES = {
-  heyzo: '9450999-450-239360',
-  caribbeancompr: '9290999-290-239360',
-  caribbeancom: '9290999-290-239360', // カリビアンコム
-  '1pondo': '9200999-200-239360', // 一本道
+  heyzo: process.env['NEXT_PUBLIC_DTI_HEYZO_AFFILIATE_ID'] || '',
+  caribbeancompr: process.env['NEXT_PUBLIC_DTI_CARIBBEANCOMPR_AFFILIATE_ID'] || '',
+  caribbeancom: process.env['NEXT_PUBLIC_DTI_CARIBBEANCOM_AFFILIATE_ID'] || '',
+  '1pondo': process.env['NEXT_PUBLIC_DTI_1PONDO_AFFILIATE_ID'] || '',
 } as const;
 
 /**
  * HEYZOアフィリエイトリンクを生成
  * @param movieId 作品ID (例: "0442")
- * @returns アフィリエイトURL
+ * @returns アフィリエイトURL（未設定の場合は公式URL）
  */
 export function generateHEYZOLink(movieId: string): string {
   const affiliateCode = DTI_AFFILIATE_CODES.heyzo;
+  if (!affiliateCode) {
+    console.warn('[Affiliate] HEYZO affiliate ID not configured. Set NEXT_PUBLIC_DTI_HEYZO_AFFILIATE_ID in .env.local');
+    return `https://www.heyzo.com/moviepages/${movieId}/index.html`;
+  }
   return `https://clear-tv.com/Direct/${affiliateCode}/moviepages/${movieId}/index.html`;
 }
 
 /**
  * カリビアンコムプレミアムアフィリエイトリンクを生成
  * @param movieId 作品ID (例: "041924_002")
- * @returns アフィリエイトURL
+ * @returns アフィリエイトURL（未設定の場合は公式URL）
  */
 export function generateCaribbeancomPrLink(movieId: string): string {
   const affiliateCode = DTI_AFFILIATE_CODES.caribbeancompr;
+  if (!affiliateCode) {
+    console.warn('[Affiliate] CaribbeancomPR affiliate ID not configured. Set NEXT_PUBLIC_DTI_CARIBBEANCOMPR_AFFILIATE_ID in .env.local');
+    return `https://www.caribbeancompr.com/moviepages/${movieId}/index.html`;
+  }
   return `https://clear-tv.com/Direct/${affiliateCode}/moviepages/${movieId}/index.html`;
 }
 
@@ -187,7 +201,7 @@ export function detectDTISite(url: string): 'heyzo' | 'caribbeancompr' | 'caribb
 /**
  * DTIサイトのアフィリエイトリンクを生成
  * @param originalUrl 元のDTIサイトURL
- * @returns アフィリエイトURL
+ * @returns アフィリエイトURL（未設定の場合は元のURL）
  */
 export function generateDTILink(originalUrl: string): string {
   const site = detectDTISite(originalUrl);
@@ -198,6 +212,11 @@ export function generateDTILink(originalUrl: string): string {
   }
 
   const affiliateCode = DTI_AFFILIATE_CODES[site];
+  // アフィリエイトIDが設定されていない場合は元のURLを返す
+  if (!affiliateCode) {
+    console.warn(`[Affiliate] DTI ${site} affiliate ID not configured. Set NEXT_PUBLIC_DTI_${site.toUpperCase()}_AFFILIATE_ID in .env.local`);
+    return originalUrl;
+  }
   return `https://clear-tv.com/Direct/${affiliateCode}/moviepages/${movieId}/index.html`;
 }
 
