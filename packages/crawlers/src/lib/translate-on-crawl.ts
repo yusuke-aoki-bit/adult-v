@@ -23,7 +23,7 @@ import { translateBatch, delay } from '@adult-v/shared/lib/translate';
 type DbInstance = ReturnType<typeof getDb>;
 
 // 翻訳が有効かどうか
-const TRANSLATION_ENABLED = !!process.env.DEEPL_API_KEY;
+const TRANSLATION_ENABLED = !!process.env['DEEPL_API_KEY'];
 
 // バッチサイズ（DeepLのレート制限対策）
 const BATCH_SIZE = 10;
@@ -82,9 +82,9 @@ export async function translateProduct(
         translateBatch([description], 'ko', 'ja'),
       ]);
 
-      descEn = descsEn[0] || null;
-      descZh = descsZh[0] || null;
-      descKo = descsKo[0] || null;
+      descEn = descsEn[0] ?? null;
+      descZh = descsZh[0] ?? null;
+      descKo = descsKo[0] ?? null;
     }
 
     let aiReviewEn: string | null = null;
@@ -101,18 +101,18 @@ export async function translateProduct(
         translateBatch([aiReview], 'ko', 'ja'),
       ]);
 
-      aiReviewEn = reviewsEn[0] || null;
-      aiReviewZh = reviewsZh[0] || null;
-      aiReviewKo = reviewsKo[0] || null;
+      aiReviewEn = reviewsEn[0] ?? null;
+      aiReviewZh = reviewsZh[0] ?? null;
+      aiReviewKo = reviewsKo[0] ?? null;
     }
 
     // DB更新
     await db.execute(sql`
       UPDATE products
       SET
-        title_en = ${titlesEn[0] || null},
-        title_zh = ${titlesZh[0] || null},
-        title_ko = ${titlesKo[0] || null},
+        title_en = ${titlesEn[0] ?? null},
+        title_zh = ${titlesZh[0] ?? null},
+        title_ko = ${titlesKo[0] ?? null},
         description_en = ${descEn},
         description_zh = ${descZh},
         description_ko = ${descKo},
@@ -206,25 +206,25 @@ export async function translateProductBatch(
       let descIndex = 0;
       let reviewIndex = 0;
       for (let j = 0; j < batch.length; j++) {
-        const product = batch[j];
-        const hasDesc = product.description && product.description.length > 0;
+        const product = batch[j]!;
+        const hasDesc = product['description'] && product['description'].length > 0;
         const hasReview = product.aiReview && product.aiReview.length > 0;
 
         try {
           await db.execute(sql`
             UPDATE products
             SET
-              title_en = ${titlesEn[j] || null},
-              title_zh = ${titlesZh[j] || null},
-              title_ko = ${titlesKo[j] || null},
-              description_en = ${hasDesc ? descsEn[descIndex] : null},
-              description_zh = ${hasDesc ? descsZh[descIndex] : null},
-              description_ko = ${hasDesc ? descsKo[descIndex] : null},
-              ai_review_en = ${hasReview ? reviewsEn[reviewIndex] : null},
-              ai_review_zh = ${hasReview ? reviewsZh[reviewIndex] : null},
-              ai_review_ko = ${hasReview ? reviewsKo[reviewIndex] : null},
+              title_en = ${titlesEn[j] ?? null},
+              title_zh = ${titlesZh[j] ?? null},
+              title_ko = ${titlesKo[j] ?? null},
+              description_en = ${hasDesc ? (descsEn[descIndex] ?? null) : null},
+              description_zh = ${hasDesc ? (descsZh[descIndex] ?? null) : null},
+              description_ko = ${hasDesc ? (descsKo[descIndex] ?? null) : null},
+              ai_review_en = ${hasReview ? (reviewsEn[reviewIndex] ?? null) : null},
+              ai_review_zh = ${hasReview ? (reviewsZh[reviewIndex] ?? null) : null},
+              ai_review_ko = ${hasReview ? (reviewsKo[reviewIndex] ?? null) : null},
               updated_at = NOW()
-            WHERE id = ${product.id}
+            WHERE id = ${product['id']}
           `);
 
           if (hasDesc) descIndex++;
@@ -345,16 +345,16 @@ export async function translateAiReviews(
 
       // DB更新
       for (let j = 0; j < batch.length; j++) {
-        const product = batch[j];
+        const product = batch[j]!;
         try {
           await db.execute(sql`
             UPDATE products
             SET
-              ai_review_en = ${reviewsEn[j] || null},
-              ai_review_zh = ${reviewsZh[j] || null},
-              ai_review_ko = ${reviewsKo[j] || null},
+              ai_review_en = ${reviewsEn[j] ?? null},
+              ai_review_zh = ${reviewsZh[j] ?? null},
+              ai_review_ko = ${reviewsKo[j] ?? null},
               updated_at = NOW()
-            WHERE id = ${product.id}
+            WHERE id = ${product['id']}
           `);
           stats.translated++;
         } catch {
@@ -430,16 +430,16 @@ export async function translatePerformerAiReviews(
 
       // DB更新
       for (let j = 0; j < batch.length; j++) {
-        const performer = batch[j];
+        const performer = batch[j]!;
         try {
           await db.execute(sql`
             UPDATE performers
             SET
-              ai_review_en = ${reviewsEn[j] || null},
-              ai_review_zh = ${reviewsZh[j] || null},
-              ai_review_ko = ${reviewsKo[j] || null},
+              ai_review_en = ${reviewsEn[j] ?? null},
+              ai_review_zh = ${reviewsZh[j] ?? null},
+              ai_review_ko = ${reviewsKo[j] ?? null},
               updated_at = NOW()
-            WHERE id = ${performer.id}
+            WHERE id = ${performer['id']}
           `);
           stats.translated++;
         } catch {

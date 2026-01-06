@@ -7,8 +7,8 @@
  *   npx tsx scripts/crawlers/crawl-dti-fc2blog.ts [limit]
  */
 
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres';
+if (!process.env['DATABASE_URL']) {
+  process.env['DATABASE_URL'] = 'postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres';
 }
 
 import * as cheerio from 'cheerio';
@@ -51,11 +51,11 @@ async function fetchHtml(url: string): Promise<string | null> {
     });
 
     if (!response.ok) {
-      console.log(`  ✗ HTTP ${response.status} for ${url}`);
+      console.log(`  ✗ HTTP ${response['status']} for ${url}`);
       return null;
     }
 
-    return await response.text();
+    return await response['text']();
   } catch (error) {
     console.error(`  ✗ Error fetching ${url}:`, error);
     return null;
@@ -119,12 +119,12 @@ function extractActressData($: cheerio.CheerioAPI, url: string): ActressData | n
   const nameMatch = title.match(/^([^（(【]+)/);
   if (!nameMatch) return null;
 
-  const mainName = nameMatch[1].trim();
+  const mainName = (nameMatch[1] ?? '').trim();
   const aliases: string[] = [];
 
   // 別名を抽出（括弧内）
   const aliasMatch = title.match(/[（(]([^）)]+)[）)]/);
-  if (aliasMatch) {
+  if (aliasMatch && aliasMatch[1]) {
     const aliasStr = aliasMatch[1];
     aliasStr.split(/[／\/、,]/).forEach(alias => {
       const trimmed = alias.trim();
@@ -141,7 +141,7 @@ function extractActressData($: cheerio.CheerioAPI, url: string): ActressData | n
   // テーブル内の配信サイトと作品を抽出
   $('table tr').each((_, row) => {
     const $row = $(row);
-    const text = $row.text();
+    const text = $row['text']();
 
     // 配信サイト名を検出
     if (text.includes('配信サイト：')) {
@@ -168,7 +168,7 @@ function extractActressData($: cheerio.CheerioAPI, url: string): ActressData | n
       const pattern = PRODUCT_CODE_PATTERNS[currentSite];
       if (pattern) {
         const match = href.match(pattern);
-        if (match) {
+        if (match && match[1]) {
           let code = match[1];
 
           // HEYZO形式を正規化
@@ -228,7 +228,7 @@ async function crawlActressPage(url: string): Promise<number> {
   }
 
   let saved = 0;
-  const allNames = [data.name, ...data.aliases];
+  const allNames = [data['name'], ...data.aliases];
 
   for (const product of data.products) {
     // 主名と別名全てを関連付け
@@ -240,7 +240,7 @@ async function crawlActressPage(url: string): Promise<number> {
   }
 
   if (saved > 0) {
-    console.log(`  ✅ ${data.name}: ${data.products.length} products, ${allNames.length} names, ${saved} saved`);
+    console.log(`  ✅ ${data['name']}: ${data.products.length} products, ${allNames.length} names, ${saved} saved`);
   }
 
   return saved;
@@ -248,7 +248,7 @@ async function crawlActressPage(url: string): Promise<number> {
 
 async function main() {
   const args = process.argv.slice(2);
-  const limit = parseInt(args[0], 10) || 99999;
+  const limit = parseInt(args[0] ?? '99999', 10) || 99999;
 
   console.log('🚀 Starting DTI FC2 Blog crawler');
   console.log(`   Source: ${BASE_URL}`);

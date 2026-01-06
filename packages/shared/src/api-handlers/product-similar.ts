@@ -106,11 +106,10 @@ export function createProductSimilarHandler(
           defaultThumbnailUrl: string | null;
         }>;
 
-      if (productData.length === 0) {
+      const product = productData[0];
+      if (!product) {
         return { error: 'Product not found', status: 404 };
       }
-
-      const product = productData[0];
       const limitPerHop = Math.ceil(safeLimit / 2);
 
       // ASPフィルター
@@ -252,7 +251,7 @@ export function createProductSimilarHandler(
         ? Math.max(...hop1Results.map(r => r.sharedPerformers))
         : 1;
 
-      const isMakerBased = hop1Results.length > 0 && hop1Results[0].similarity_type === 'maker';
+      const isMakerBased = hop1Results.length > 0 && hop1Results[0]?.similarity_type === 'maker';
 
       for (const r of hop1Results) {
         const score = 0.6 + 0.4 * (r.sharedPerformers / maxSharedPerformers);
@@ -316,10 +315,10 @@ export function createProductSimilarHandler(
       const response: ProductSimilarityResponse = {
         success: true,
         product: {
-          id: product.id,
-          title: product.title,
+          id: product['id'],
+          title: product['title'],
           normalizedProductId: product.normalizedProductId,
-          thumbnailUrl: product.defaultThumbnailUrl,
+          thumbnailUrl: product['defaultThumbnailUrl'],
         },
         similar: finalResults,
         edges,

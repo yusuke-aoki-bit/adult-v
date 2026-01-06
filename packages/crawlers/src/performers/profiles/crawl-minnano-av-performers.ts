@@ -48,10 +48,10 @@ async function fetchPage(url: string): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+    throw new Error(`HTTP ${response['status']}`);
   }
 
-  return response.text();
+  return response['text']();
 }
 
 /**
@@ -82,7 +82,7 @@ async function fetchActressList(page: number): Promise<MinnanoPerformer[]> {
 
       // クエリパラメータから名前を取得（より信頼性が高い）
       const queryMatch = href.match(/\?(.+)$/);
-      if (queryMatch) {
+      if (queryMatch && queryMatch[1]) {
         try {
           name = decodeURIComponent(queryMatch[1]);
         } catch {
@@ -115,7 +115,7 @@ async function fetchActressList(page: number): Promise<MinnanoPerformer[]> {
           performers.push({
             name,
             nameKana: null,
-            actressId,
+            actressId: actressId!,
             profileUrl: `${BASE_URL}/actress${actressId}.html`,
             imageUrl,
             workCount: null,
@@ -175,30 +175,30 @@ async function fetchActressDetail(url: string): Promise<PerformerDetailWithImage
       } else if (th.includes('生年月日') || th.includes('誕生日')) {
         // 1990年1月1日 形式をパース
         const match = td.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-        if (match) {
+        if (match && match[1] && match[2] && match[3]) {
           detail.birthday = `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
         }
       } else if (th.includes('血液型')) {
         const match = td.match(/([ABO]|AB)/);
-        detail.bloodType = match ? match[1] : null;
+        detail.bloodType = match?.[1] ?? null;
       } else if (th.includes('身長')) {
         const match = td.match(/(\d+)/);
-        detail.height = match ? parseInt(match[1], 10) : null;
+        detail.height = match?.[1] ? parseInt(match[1], 10) : null;
       } else if (th.includes('スリーサイズ') || th.includes('3サイズ')) {
         // B90 W60 H88 形式をパース
         const bustMatch = td.match(/B(\d+)/);
         const waistMatch = td.match(/W(\d+)/);
         const hipMatch = td.match(/H(\d+)/);
-        detail.bust = bustMatch ? parseInt(bustMatch[1], 10) : null;
-        detail.waist = waistMatch ? parseInt(waistMatch[1], 10) : null;
-        detail.hip = hipMatch ? parseInt(hipMatch[1], 10) : null;
+        detail.bust = bustMatch?.[1] ? parseInt(bustMatch[1], 10) : null;
+        detail.waist = waistMatch?.[1] ? parseInt(waistMatch[1], 10) : null;
+        detail.hip = hipMatch?.[1] ? parseInt(hipMatch[1], 10) : null;
 
         // カップサイズ
         const cupMatch = td.match(/\(([A-Z]+)\)/);
-        detail.cup = cupMatch ? cupMatch[1] : null;
+        detail.cup = cupMatch?.[1] ?? null;
       } else if (th.includes('カップ')) {
         const match = td.match(/([A-Z]+)/);
-        detail.cup = match ? match[1] : null;
+        detail.cup = match?.[1] ?? null;
       } else if (th.includes('出身')) {
         detail.birthplace = td || null;
       } else if (th.includes('趣味')) {
@@ -259,7 +259,7 @@ async function fetchActressDetail(url: string): Promise<PerformerDetailWithImage
  * DBに保存
  */
 async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerDetailWithImage | null): Promise<void> {
-  const name = detail?.name || performer.name;
+  const name = detail?.name || performer['name'];
   // 画像URLは著作権の問題があるため収集しない
   // const imageUrl = detail?.imageUrl || performer.imageUrl;
 
@@ -267,24 +267,24 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
   const existing = await db
     .select()
     .from(performers)
-    .where(eq(performers.name, name))
+    .where(eq(performers['name'], name))
     .limit(1);
 
   if (existing.length > 0) {
     // 既存のperformerを更新（既存のデータがnullの場合のみ更新）
-    const existingPerformer = existing[0];
+    const existingPerformer = existing[0]!;
     const updates: Record<string, unknown> = {};
 
     if (detail) {
-      if (!existingPerformer.nameKana && detail.nameKana) updates.nameKana = detail.nameKana;
-      if (!existingPerformer.height && detail.height) updates.height = detail.height;
-      if (!existingPerformer.bust && detail.bust) updates.bust = detail.bust;
-      if (!existingPerformer.waist && detail.waist) updates.waist = detail.waist;
-      if (!existingPerformer.hip && detail.hip) updates.hip = detail.hip;
-      if (!existingPerformer.cup && detail.cup) updates.cup = detail.cup;
-      if (!existingPerformer.birthday && detail.birthday) updates.birthday = detail.birthday;
-      if (!existingPerformer.bloodType && detail.bloodType) updates.bloodType = detail.bloodType;
-      if (!existingPerformer.birthplace && detail.birthplace) updates.birthplace = detail.birthplace;
+      if (!existingPerformer.nameKana && detail.nameKana) updates['nameKana'] = detail.nameKana;
+      if (!existingPerformer.height && detail.height) updates['height'] = detail.height;
+      if (!existingPerformer.bust && detail.bust) updates['bust'] = detail.bust;
+      if (!existingPerformer.waist && detail.waist) updates['waist'] = detail.waist;
+      if (!existingPerformer.hip && detail.hip) updates['hip'] = detail.hip;
+      if (!existingPerformer.cup && detail.cup) updates['cup'] = detail.cup;
+      if (!existingPerformer.birthday && detail.birthday) updates['birthday'] = detail.birthday;
+      if (!existingPerformer.bloodType && detail.bloodType) updates['bloodType'] = detail.bloodType;
+      if (!existingPerformer.birthplace && detail.birthplace) updates['birthplace'] = detail.birthplace;
     }
 
     // 画像URLは著作権の問題があるため収集しない
@@ -293,7 +293,7 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
       await db
         .update(performers)
         .set(updates)
-        .where(eq(performers.id, existingPerformer.id));
+        .where(eq(performers['id'], existingPerformer.id));
       console.log(`  Updated: ${name} (${Object.keys(updates).join(', ')})`);
     } else {
       console.log(`  Skipped (no new data): ${name}`);
@@ -320,7 +320,7 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
         performerId: existingPerformer.id,
         provider: 'minnano-av',
         externalId: performer.actressId,
-        profileUrl: performer.profileUrl,
+        externalUrl: performer.profileUrl,
       })
       .onConflictDoNothing();
 
@@ -330,7 +330,7 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
     }
   } else {
     // 新規performer作成
-    const [newPerformer] = await db
+    const insertResult = await db
       .insert(performers)
       .values({
         name,
@@ -345,7 +345,13 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
         bloodType: detail?.bloodType,
         birthplace: detail?.birthplace,
       })
-      .returning({ id: performers.id });
+      .returning({ id: performers['id'] });
+
+    const newPerformer = insertResult[0];
+    if (!newPerformer) {
+      console.error(`  Failed to create performer: ${name}`);
+      return;
+    }
 
     console.log(`  Created: ${name}`);
 
@@ -370,7 +376,7 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
         performerId: newPerformer.id,
         provider: 'minnano-av',
         externalId: performer.actressId,
-        profileUrl: performer.profileUrl,
+        externalUrl: performer.profileUrl,
       })
       .onConflictDoNothing();
 
@@ -398,16 +404,21 @@ async function savePerformerTags(performerId: number, tagNames: string[]): Promi
 
       if (tagRecord.length === 0) {
         // 新規タグを作成
-        const [newTag] = await db
+        const insertedTags = await db
           .insert(tags)
           .values({
             name: tagName,
             category: 'performer_trait', // 演者特徴カテゴリ
           })
           .returning({ id: tags.id });
+        const newTag = insertedTags[0];
+        if (!newTag) {
+          console.error(`  Failed to create tag: ${tagName}`);
+          continue;
+        }
         tagId = newTag.id;
       } else {
-        tagId = tagRecord[0].id;
+        tagId = tagRecord[0]!.id;
       }
 
       // 演者-タグ関連を保存
@@ -430,9 +441,9 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const limitArg = args.find(a => a.startsWith('--limit='));
-  const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : 50;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '50', 10) : 50;
   const startPageArg = args.find(a => a.startsWith('--start-page='));
-  const startPage = startPageArg ? parseInt(startPageArg.split('=')[1], 10) : 1;
+  const startPage = startPageArg ? parseInt(startPageArg.split('=')[1] ?? '1', 10) : 1;
   const fetchDetail = args.includes('--detail');
 
   console.log('=== minnano-av.com 女優クローラー ===\n');
@@ -501,9 +512,9 @@ async function main() {
 
   for (const performer of performersToProcess) {
     try {
-      console.log(`\nProcessing: ${performer.name} (${performer.actressId})`);
+      console.log(`\nProcessing: ${performer['name']} (${performer.actressId})`);
 
-      let detail: PerformerDetail | null = null;
+      let detail: PerformerDetailWithImage | null = null;
 
       if (fetchDetail) {
         detail = await fetchActressDetail(performer.profileUrl);

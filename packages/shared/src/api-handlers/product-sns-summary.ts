@@ -28,11 +28,11 @@ export function createSNSSummaryHandler(deps: SNSSummaryHandlerDeps) {
       }
 
       const result = await generateSNSSummary({
-        title: product.title,
+        title: product['title'],
         performers: product.performers,
         tags: product.tags,
-        description: product.description || undefined,
-        releaseDate: product.releaseDate || undefined,
+        ...(product['description'] && { description: product['description'] }),
+        ...(product['releaseDate'] && { releaseDate: product['releaseDate'] }),
       });
 
       if (!result) {

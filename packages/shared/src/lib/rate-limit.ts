@@ -57,10 +57,10 @@ export function checkRateLimit(
   }
 
   // Increment count
-  entry.count++;
+  entry['count']++;
 
   // Check if over limit
-  if (entry.count > config.maxRequests) {
+  if (entry['count'] > config.maxRequests) {
     return {
       allowed: false,
       remaining: 0,
@@ -70,7 +70,7 @@ export function checkRateLimit(
 
   return {
     allowed: true,
-    remaining: config.maxRequests - entry.count,
+    remaining: config.maxRequests - entry['count'],
     resetTime: entry.resetTime,
   };
 }
@@ -82,7 +82,7 @@ export function getClientIP(request: Request): string {
   // Check various headers for real IP (behind proxies)
   const forwardedFor = request.headers.get('x-forwarded-for');
   if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
+    return forwardedFor.split(',')[0]?.trim() ?? 'unknown';
   }
 
   const realIP = request.headers.get('x-real-ip');

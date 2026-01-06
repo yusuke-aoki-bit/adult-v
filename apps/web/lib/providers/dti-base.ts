@@ -981,7 +981,7 @@ export async function saveProduct(
               .values({ name: actorName })
               .returning({ id: performers.id });
 
-            performerId = insertedPerformer.id;
+            performerId = insertedPerformer['id'];
           }
 
           // Link product to performer

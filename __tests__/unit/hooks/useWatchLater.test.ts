@@ -101,9 +101,9 @@ describe('useWatchLater', () => {
       });
 
       expect(result.current.items).toHaveLength(1);
-      expect(result.current.items[0].productId).toBe('123');
-      expect(result.current.items[0].title).toBe('Test Product');
-      expect(result.current.items[0].addedAt).toBeGreaterThan(0);
+      expect(result.current.items[0]!.productId).toBe('123');
+      expect(result.current.items[0]!.title).toBe('Test Product');
+      expect(result.current.items[0]!.addedAt).toBeGreaterThan(0);
     });
 
     it('同じproductIdは重複追加しない', () => {
@@ -118,7 +118,7 @@ describe('useWatchLater', () => {
       });
 
       expect(result.current.items).toHaveLength(1);
-      expect(result.current.items[0].title).toBe('Product 1'); // 更新されない
+      expect(result.current.items[0]!.title).toBe('Product 1'); // 更新されない
     });
 
     it('新しいアイテムは先頭に追加', () => {
@@ -132,8 +132,8 @@ describe('useWatchLater', () => {
         result.current.addItem({ productId: '2', title: 'Second' });
       });
 
-      expect(result.current.items[0].productId).toBe('2');
-      expect(result.current.items[1].productId).toBe('1');
+      expect(result.current.items[0]!.productId).toBe('2');
+      expect(result.current.items[1]!.productId).toBe('1');
     });
 
     it('最大100件を超えると古いものを削除', () => {
@@ -154,7 +154,7 @@ describe('useWatchLater', () => {
       });
 
       expect(result.current.items).toHaveLength(100);
-      expect(result.current.items[0].productId).toBe('new-item');
+      expect(result.current.items[0]!.productId).toBe('new-item');
       // 最後に追加したもの（id-0）が削除されている
       expect(result.current.items.find(i => i.productId === 'id-0')).toBeUndefined();
     });
@@ -187,7 +187,7 @@ describe('useWatchLater', () => {
       });
 
       expect(result.current.items).toHaveLength(1);
-      expect(result.current.items[0].productId).toBe('2');
+      expect(result.current.items[0]!.productId).toBe('2');
     });
 
     it('存在しないIDを削除しても問題なし', () => {

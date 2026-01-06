@@ -998,7 +998,7 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
     // 作品数
     db.select({ count: sql<number>`count(*)` })
       .from(productPerformers)
-      .where(eq(productPerformers.performerId, performer.id)),
+      .where(eq(productPerformers.performerId, performer['id'])),
     // サムネイル（DTI以外の商品を優先、なければDTIから取得）
     // FANZA専用商品は除外（webサイトでは表示禁止のため）
     db.select({ thumbnailUrl: products.defaultThumbnailUrl, aspName: productSources.aspName })
@@ -1007,7 +1007,7 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
       .innerJoin(productSources, eq(productPerformers.productId, productSources.productId))
       .where(
         and(
-          eq(productPerformers.performerId, performer.id),
+          eq(productPerformers.performerId, performer['id']),
           sql`${products.defaultThumbnailUrl} IS NOT NULL`,
           sql`${products.defaultThumbnailUrl} != ''`,
           // FANZA専用商品を除外: 他ASPソースが存在するか、FANZAソースが存在しない
@@ -1036,7 +1036,7 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
       FROM product_performers pp
       INNER JOIN product_sources ps ON pp.product_id = ps.product_id
       INNER JOIN products p ON pp.product_id = p.id
-      WHERE pp.performer_id = ${performer.id}
+      WHERE pp.performer_id = ${performer['id']}
       AND ps.asp_name IS NOT NULL
     `),
   ]);
@@ -1215,11 +1215,11 @@ async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCo
     if (normalized === 'fanza') continue;
     const existing = merged.get(normalized);
     if (existing) {
-      existing.productCount += parseInt(row.product_count, 10);
+      existing.productCount += parseInt(row['product_count'], 10);
       existing.actressCount += parseInt(row.actress_count, 10);
     } else {
       merged.set(normalized, {
-        productCount: parseInt(row.product_count, 10),
+        productCount: parseInt(row['product_count'], 10),
         actressCount: parseInt(row.actress_count, 10),
       });
     }
@@ -1470,14 +1470,14 @@ export async function getRandomProduct(options?: {
 
     const row = result.rows[0] as Record<string, unknown>;
     return {
-      id: row.id as number,
-      title: row.title as string,
-      imageUrl: row.image_url as string,
-      sampleImages: row.sample_images as string[] | null,
-      releaseDate: row.release_date as string | null,
-      duration: row.duration as number | null,
-      price: row.price as number | null,
-      provider: row.provider as string | null,
+      id: row['id'] as number,
+      title: row['title'] as string,
+      imageUrl: row['image_url'] as string,
+      sampleImages: row['sample_images'] as string[] | null,
+      releaseDate: row['release_date'] as string | null,
+      duration: row['duration'] as number | null,
+      price: row['price'] as number | null,
+      provider: row['provider'] as string | null,
     };
   } catch (error) {
     console.error('Error fetching random product:', error);

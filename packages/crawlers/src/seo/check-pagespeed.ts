@@ -76,7 +76,7 @@ async function runPageSpeedCheck(
   apiUrl.searchParams.append('category', 'seo');
 
   // APIキーがあれば使用（レート制限緩和）
-  const apiKey = process.env.PAGESPEED_API_KEY;
+  const apiKey = process.env['PAGESPEED_API_KEY'];
   if (apiKey) {
     apiUrl.searchParams.set('key', apiKey);
   }
@@ -85,7 +85,7 @@ async function runPageSpeedCheck(
 
   const response = await fetch(apiUrl.toString());
   if (!response.ok) {
-    throw new Error(`PageSpeed API error: ${response.status} ${response.statusText}`);
+    throw new Error(`PageSpeed API error: ${response['status']} ${response.statusText}`);
   }
 
   const data: PageSpeedResult = await response.json();
@@ -139,7 +139,7 @@ function formatResult(result: CheckResult): string {
   const statusEmoji = result.passed ? '✅' : '⚠️';
 
   return `
-${statusEmoji} PageSpeed Check: ${result.url} (${result.strategy})
+${statusEmoji} PageSpeed Check: ${result['url']} (${result.strategy})
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📊 Scores:
    Performance:    ${result.scores.performance.toFixed(0)}  ${result.scores.performance >= THRESHOLDS.performance * 100 ? '✓' : '✗'}

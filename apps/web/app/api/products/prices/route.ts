@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       .where(inArray(products.id, numericIds));
 
     // Create product duration map
-    const durationMap = new Map(productRows.map(p => [p.id, p.duration]));
+    const durationMap = new Map(productRows.map(p => [p.id, p.duration as number | null]));
 
     // Fetch source info (price and provider) for each product
     const sourceRows = await db

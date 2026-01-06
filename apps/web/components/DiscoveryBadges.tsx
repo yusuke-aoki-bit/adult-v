@@ -114,7 +114,7 @@ const BadgeCard = memo(function BadgeCard({ badge, locale }: { badge: Badge; loc
 });
 
 export default function DiscoveryBadges({ locale, className = '' }: DiscoveryBadgesProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const { badges, stats, isLoading } = useDiscoveryBadge();
   const [showAll, setShowAll] = useState(false);
 

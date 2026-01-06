@@ -33,7 +33,7 @@ async function fetchVideoFromMgs(productId: string): Promise<string | null> {
       },
     });
     if (!response.ok) return null;
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     // video sourceタグから取得
@@ -63,7 +63,7 @@ async function fetchVideoFromDuga(productId: string): Promise<string | null> {
       },
     });
     if (!response.ok) return null;
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     // video sourceタグから取得
@@ -87,7 +87,7 @@ async function fetchVideoFromSokmil(productId: string): Promise<string | null> {
       },
     });
     if (!response.ok) return null;
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     // video sourceタグから取得
@@ -138,7 +138,7 @@ export function createBackfillVideosHandler(deps: BackfillVideosHandlerDeps) {
     };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const limit = parseInt(url.searchParams.get('limit') || '50');
       const aspFilter = url.searchParams.get('asp')?.toUpperCase();
 
@@ -186,7 +186,7 @@ export function createBackfillVideosHandler(deps: BackfillVideosHandlerDeps) {
           if (videoUrl) {
             await db.execute(sql`
               INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
-              VALUES (${product.id}, ${product.asp_name}, ${videoUrl}, 'sample', 0)
+              VALUES (${product['id']}, ${product.asp_name}, ${videoUrl}, 'sample', 0)
               ON CONFLICT DO NOTHING
             `);
             stats.updated++;

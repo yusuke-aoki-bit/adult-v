@@ -304,11 +304,11 @@ export function ActressCareerTimeline({
                   <div className="ml-16 mt-1 flex flex-wrap gap-1">
                     {yearData.products.slice(0, 3).map((product) => (
                       <Link
-                        key={product.id}
-                        href={`/${locale}/products/${product.id}`}
+                        key={product['id']}
+                        href={`/${locale}/products/${product['id']}`}
                         className={s.productLink}
                       >
-                        {product.title}
+                        {product['title']}
                       </Link>
                     ))}
                     {yearData.products.length > 3 && (

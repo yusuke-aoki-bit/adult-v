@@ -65,13 +65,13 @@ function getDeduplicationKey(product: DeduplicatableProduct): string {
   // FC2/DUGAなど同一タイトルで別動画が多いプロバイダーは
   // originalProductId または id をキーに使用して正確に重複判定
   if (PROVIDERS_WITH_DUPLICATE_TITLES.has(provider)) {
-    const uniqueId = product.originalProductId || product.id;
+    const uniqueId = product.originalProductId || product['id'];
     return `provider:${provider}:id:${uniqueId}`;
   }
 
   // その他のプロバイダーはタイトルベースで重複判定
   // プロバイダー名を含めない → 異なるASP間でも同一タイトルなら同一作品として扱う
-  const normalizedTitle = normalizeTitle(product.title);
+  const normalizedTitle = normalizeTitle(product['title']);
   return `title:${normalizedTitle}`;
 }
 
@@ -106,9 +106,10 @@ export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
     for (const [key, group] of productsByKey) {
       if (group.length === 1) {
         // 重複なし
-        if (!seenKeys.has(key)) {
+        const product = group[0];
+        if (product && !seenKeys.has(key)) {
           seenKeys.add(key);
-          deduplicatedProducts.push(group[0]);
+          deduplicatedProducts.push(product);
         }
       } else {
         // 重複あり - 最安商品を選択し、他を代替ソースに
@@ -119,6 +120,8 @@ export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
         });
 
         const cheapest = sorted[0];
+        if (!cheapest) continue;
+
         const alternatives = sorted.slice(1).filter(p => p.provider !== cheapest.provider);
 
         if (alternatives.length > 0 && !cheapest.alternativeSources) {
@@ -128,7 +131,7 @@ export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
             salePrice: p.salePrice,
             affiliateUrl: p.affiliateUrl || '',
             productId: typeof p.id === 'string' ? parseInt(p.id, 10) : p.id,
-          }));
+          })) as AlternativeSource[];
         }
 
         if (!seenKeys.has(key)) {

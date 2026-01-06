@@ -46,7 +46,7 @@ export function createApiErrorResponse(
   });
 
   // Send to Sentry in production
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env['NODE_ENV'] === 'production') {
     logError(error, { ...context, statusCode });
   }
 

@@ -33,11 +33,11 @@ export async function fetchAVWikiData(actressName: string): Promise<ActressWikiD
     });
 
     if (!response.ok) {
-      console.log(`  ⚠️  AV-Wiki not found: ${actressName} (${response.status})`);
+      console.log(`  ⚠️  AV-Wiki not found: ${actressName} (${response['status']})`);
       return null;
     }
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     // 正式名（h1タイトルから）
@@ -72,7 +72,7 @@ export async function fetchAVWikiData(actressName: string): Promise<ActressWikiD
     $('a[href*="/product/"], a[href*="product_id="]').each((_, link) => {
       const href = $(link).attr('href') || '';
       const match = href.match(/([A-Z]{2,10}-?\d{2,5})/i);
-      if (match) {
+      if (match?.[1]) {
         products.push(match[1]);
       }
     });
@@ -82,13 +82,16 @@ export async function fetchAVWikiData(actressName: string): Promise<ActressWikiD
 
     console.log(`  ✓ AV-Wiki: ${canonicalName}, ${aliases.length} alias(es), ${products.length} product(s)`);
 
-    return {
+    const result: ActressWikiData = {
       canonicalName,
       aliases: [...new Set(aliases)], // 重複削除
       products: [...new Set(products)], // 重複削除
-      profileImageUrl,
       source: 'av-wiki',
     };
+    if (profileImageUrl) {
+      result.profileImageUrl = profileImageUrl;
+    }
+    return result;
   } catch (error) {
     console.error(`  ❌ Error fetching AV-Wiki for ${actressName}:`, error);
     return null;
@@ -114,7 +117,7 @@ export async function fetchSeesaaWikiData(actressName: string): Promise<ActressW
     });
 
     if (!response.ok) {
-      console.log(`  ⚠️  Seesaa Wiki not found: ${actressName} (${response.status})`);
+      console.log(`  ⚠️  Seesaa Wiki not found: ${actressName} (${response['status']})`);
       return null;
     }
 
@@ -134,7 +137,7 @@ export async function fetchSeesaaWikiData(actressName: string): Promise<ActressW
       // 「別名:」「旧名:」などの形式
       if (text.includes('別名') || text.includes('旧名') || text.includes('他名義')) {
         const match = text.match(/(?:別名|旧名|他名義)[：:]\s*(.+)/);
-        if (match) {
+        if (match?.[1]) {
           const names = match[1].split(/[,、/]/).map(n => n.trim()).filter(n => n.length > 0);
           aliases.push(...names);
         }
@@ -150,7 +153,7 @@ export async function fetchSeesaaWikiData(actressName: string): Promise<ActressW
 
       // 品番形式のテキスト
       const match = text.match(/([A-Z]{2,10}-?\d{2,5})/i);
-      if (match) {
+      if (match?.[1]) {
         products.push(match[1]);
       }
     });
@@ -162,7 +165,7 @@ export async function fetchSeesaaWikiData(actressName: string): Promise<ActressW
       cells.each((_, cell) => {
         const text = $(cell).text().trim();
         const match = text.match(/([A-Z]{2,10}-?\d{2,5})/i);
-        if (match) {
+        if (match?.[1]) {
           products.push(match[1]);
         }
       });
@@ -205,9 +208,11 @@ export async function fetchActressWikiData(actressName: string): Promise<Actress
     canonicalName: primary.canonicalName,
     aliases: [...primary.aliases],
     products: [...primary.products],
-    profileImageUrl: primary.profileImageUrl,
     source: primary.source,
   };
+  if (primary.profileImageUrl) {
+    merged.profileImageUrl = primary.profileImageUrl;
+  }
 
   // セカンダリソースがあればマージ
   if (secondary) {

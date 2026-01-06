@@ -48,10 +48,10 @@ export function useNotifications() {
       };
 
       const notification: NotificationPayload = {
-        title: typedPayload.notification?.title,
-        body: typedPayload.notification?.body,
-        image: typedPayload.notification?.image,
-        data: typedPayload.data,
+        ...(typedPayload.notification?.title !== undefined && { title: typedPayload.notification.title }),
+        ...(typedPayload.notification?.body !== undefined && { body: typedPayload.notification.body }),
+        ...(typedPayload.notification?.image !== undefined && { image: typedPayload.notification.image }),
+        ...(typedPayload.data !== undefined && { data: typedPayload.data }),
       };
 
       setLastNotification(notification);
@@ -59,7 +59,7 @@ export function useNotifications() {
       // Show browser notification if permission granted
       if (Notification.permission === 'granted' && notification.title) {
         new Notification(notification.title, {
-          body: notification.body,
+          ...(notification.body !== undefined && { body: notification.body }),
           icon: notification.image || '/icon-192x192.png',
         });
       }

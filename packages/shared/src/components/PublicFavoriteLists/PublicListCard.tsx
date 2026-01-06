@@ -44,7 +44,7 @@ export function PublicListCard({
 }: PublicListCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
-  const isOwner = currentUserId === list.userId;
+  const isOwner = currentUserId === list['userId'];
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -52,7 +52,7 @@ export function PublicListCard({
 
     setIsLiking(true);
     try {
-      await onLike?.(list.id, list.userLiked ? 'unlike' : 'like');
+      await onLike?.(list['id'], list.userLiked ? 'unlike' : 'like');
     } finally {
       setIsLiking(false);
     }
@@ -62,31 +62,31 @@ export function PublicListCard({
     e.stopPropagation();
     setShowMenu(false);
     if (confirm(t.deleteConfirm)) {
-      onDelete?.(list.id);
+      onDelete?.(list['id']);
     }
   };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowMenu(false);
-    onEdit?.(list.id);
+    onEdit?.(list['id']);
   };
 
   return (
     <div
-      onClick={() => onView(list.id)}
+      onClick={() => onView(list['id'])}
       className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow cursor-pointer relative group"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
-          {list.isPublic ? (
+          {list['isPublic'] ? (
             <Globe className="w-4 h-4 text-green-500" />
           ) : (
             <Lock className="w-4 h-4 text-gray-400" />
           )}
           <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1">
-            {list.title}
+            {list['title']}
           </h3>
         </div>
 
@@ -125,9 +125,9 @@ export function PublicListCard({
       </div>
 
       {/* Description */}
-      {list.description && (
+      {list['description'] && (
         <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
-          {list.description}
+          {list['description']}
         </p>
       )}
 
@@ -136,7 +136,7 @@ export function PublicListCard({
         <span>{t.items.replace('{count}', String(list.itemCount || 0))}</span>
         <span className="flex items-center gap-1">
           <Eye className="w-4 h-4" />
-          {list.viewCount}
+          {list['viewCount']}
         </span>
         <button
           onClick={handleLike}
@@ -148,7 +148,7 @@ export function PublicListCard({
           }`}
         >
           <Heart className={`w-4 h-4 ${list.userLiked ? 'fill-rose-500' : ''}`} />
-          {list.likeCount}
+          {list['likeCount']}
         </button>
       </div>
     </div>

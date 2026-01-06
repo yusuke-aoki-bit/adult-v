@@ -45,7 +45,7 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
   let [performer] = await db
     .select()
     .from(performers)
-    .where(eq(performers.name, normalizedName))
+    .where(eq(performers['name'], normalizedName))
     .limit(1);
 
   // 存在しなければエイリアスで検索
@@ -68,13 +68,13 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
         .insert(performers)
         .values({ name: normalizedName })
         .returning();
-      return inserted.id;
+      return inserted!.id;
     } catch {
       // 競合の場合は再取得
       const [existing] = await db
         .select()
         .from(performers)
-        .where(eq(performers.name, normalizedName))
+        .where(eq(performers['name'], normalizedName))
         .limit(1);
       if (existing) {
         return existing.id;
@@ -83,7 +83,7 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
     }
   }
 
-  return performer.id;
+  return performer['id'];
 }
 
 /**
@@ -92,11 +92,11 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
 async function getCurrentPerformers(productId: number): Promise<{ id: number; name: string }[]> {
   const result = await db
     .select({
-      id: performers.id,
-      name: performers.name,
+      id: performers['id'],
+      name: performers['name'],
     })
     .from(productPerformers)
-    .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+    .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
     .where(eq(productPerformers.productId, productId));
 
   return result;
@@ -116,7 +116,7 @@ async function replacePerformers(productId: number, newPerformerIds: number[]): 
 
   // 新しい紐付けを作成
   if (uniquePerformerIds.length > 0) {
-    await db.insert(productPerformers).values(
+    await db['insert'](productPerformers).values(
       uniquePerformerIds.map(performerId => ({
         productId,
         performerId,
@@ -133,13 +133,15 @@ async function main() {
   let specificProductCode: string | undefined;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith('--limit=')) {
-      limit = parseInt(args[i].split('=')[1], 10);
-    } else if (args[i] === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1], 10);
+    const arg = args[i];
+    const nextArg = args[i + 1];
+    if (arg?.startsWith('--limit=')) {
+      limit = parseInt(arg.split('=')[1] ?? '10000', 10);
+    } else if (arg === '--limit' && nextArg) {
+      limit = parseInt(nextArg, 10);
       i++;
-    } else if (args[i].startsWith('--product-code=')) {
-      specificProductCode = args[i].split('=')[1];
+    } else if (arg?.startsWith('--product-code=')) {
+      specificProductCode = arg.split('=')[1];
     }
   }
 
@@ -161,9 +163,9 @@ async function main() {
 
     targetProducts = await db
       .select({
-        id: products.id,
+        id: products['id'],
         normalizedProductId: products.normalizedProductId,
-        title: products.title,
+        title: products['title'],
       })
       .from(products)
       .where(sql`UPPER(${products.normalizedProductId}) = ANY(ARRAY[${sql.join(searchCodes.map(c => sql`${c.toUpperCase()}`), sql`, `)}]::text[])`)
@@ -172,12 +174,12 @@ async function main() {
     // 演者が紐付けられている商品を取得
     targetProducts = await db
       .selectDistinct({
-        id: products.id,
+        id: products['id'],
         normalizedProductId: products.normalizedProductId,
-        title: products.title,
+        title: products['title'],
       })
       .from(products)
-      .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
+      .innerJoin(productPerformers, eq(products['id'], productPerformers.productId))
       .limit(limit);
   }
 
@@ -189,6 +191,7 @@ async function main() {
 
   for (let i = 0; i < targetProducts.length; i++) {
     const product = targetProducts[i];
+    if (!product) continue;
     totalProcessed++;
 
     if (i % 500 === 0 && i > 0) {

@@ -180,7 +180,7 @@ export class DugaApiClient {
     const sixtySecondsAgo = now - 60000;
 
     // 60秒以上前のタイムスタンプを削除
-    while (this.requestTimestamps.length > 0 && this.requestTimestamps[0] < sixtySecondsAgo) {
+    while (this.requestTimestamps.length > 0 && (this.requestTimestamps[0] ?? 0) < sixtySecondsAgo) {
       this.requestTimestamps.shift();
     }
 
@@ -208,7 +208,7 @@ export class DugaApiClient {
       appid: this.appId,
       agentid: this.agentId,
       bannerid: this.bannerId,
-      format: params.format || 'json',
+      format: params['format'] || 'json',
       // timestampは不要（APIでinvalid timestampエラーになる）
       ...(params.keyword && { keyword: params.keyword }),
       ...(params.hits && { hits: params.hits.toString() }),
@@ -248,7 +248,7 @@ export class DugaApiClient {
       });
 
       if (!response.ok) {
-        throw new Error(`DUGA API error: ${response.status} ${response.statusText}`);
+        throw new Error(`DUGA API error: ${response['status']} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -273,7 +273,7 @@ export class DugaApiClient {
     const items = data.items || data.products || [];
     return {
       hits: typeof data.hits === 'string' ? parseInt(data.hits, 10) : (data.hits || 0),
-      count: typeof data.count === 'string' ? parseInt(data.count, 10) : (data.count || 0),
+      count: typeof data['count'] === 'string' ? parseInt(data['count'], 10) : (data['count'] || 0),
       offset: typeof data.offset === 'string' ? parseInt(data.offset, 10) : (data.offset || 0),
       items: items.map((item: any) => this.normalizeProduct(item)),
     };
@@ -294,8 +294,8 @@ export class DugaApiClient {
     //   小: https://pic.duga.jp/unsecure/xxx/noauth/scap/01.jpg
     //   大: https://pic.duga.jp/unsecure/xxx/noauth/sample/01.jpg
     const sampleImages: string[] = [];
-    if (item.thumbnail && Array.isArray(item.thumbnail)) {
-      for (const thumb of item.thumbnail) {
+    if (item['thumbnail'] && Array.isArray(item['thumbnail'])) {
+      for (const thumb of item['thumbnail']) {
         const imageUrl = thumb.large || thumb.midium || thumb.image;
         if (imageUrl) {
           // /scap/ を /sample/ に変換して高解像度版を取得
@@ -344,8 +344,8 @@ export class DugaApiClient {
       for (const p of item.performer) {
         if (p.data) {
           performers.push({
-            id: p.data.id || '',
-            name: p.data.name || '',
+            id: p.data['id'] || '',
+            name: p.data['name'] || '',
           });
         }
       }
@@ -357,8 +357,8 @@ export class DugaApiClient {
       for (const c of item.category) {
         if (c.data) {
           categories.push({
-            id: c.data.id || '',
-            name: c.data.name || '',
+            id: c.data['id'] || '',
+            name: c.data['name'] || '',
           });
         }
       }
@@ -368,16 +368,16 @@ export class DugaApiClient {
     let label: string | undefined;
     let labelId: string | undefined;
     if (item.label && Array.isArray(item.label) && item.label.length > 0) {
-      label = item.label[0].name;
-      labelId = item.label[0].id;
+      label = item.label[0]['name'];
+      labelId = item.label[0]['id'];
     }
 
     // シリーズ情報を抽出
     let series: string | undefined;
     let seriesId: string | undefined;
     if (item.series && Array.isArray(item.series) && item.series.length > 0) {
-      series = item.series[0].name;
-      seriesId = item.series[0].id?.toString();
+      series = item.series[0]['name'];
+      seriesId = item.series[0]['id']?.toString();
     }
 
     // 価格を抽出 (saletype配列から通常版の価格を取得)
@@ -388,7 +388,7 @@ export class DugaApiClient {
       const hdType = item.saletype.find((s: any) => s.data?.type === 'HD版');
       const targetType = normalType || hdType || item.saletype[0];
       if (targetType?.data?.price) {
-        price = parseInt(targetType.data.price, 10);
+        price = parseInt(targetType.data['price'], 10);
       }
 
       // セール情報を抽出 (定価とセール価格が異なる場合)
@@ -417,33 +417,41 @@ export class DugaApiClient {
       return dateStr.replace(/\//g, '-');
     };
 
+    const titleKana = item.title_kana || item.titleKana;
+    const description = item.caption || item['description'];
+    const finalThumbnailUrl = packageUrl || thumbnailUrl;
+    const releaseDate = formatDate(item.releasedate || item.release_date);
+    const openDate = formatDate(item.opendate || item.open_date);
+    const duration = item.volume ? parseInt(item.volume, 10) : undefined;
+    const salesType = item.sales_type || item.salesType;
+
     return {
       productId: item.productid || item.product_id || '',
-      title: item.title || '',
-      titleKana: item.title_kana || item.titleKana,
-      description: item.caption || item.description,
+      title: item['title'] || '',
+      ...(titleKana && { titleKana }),
+      ...(description && { description }),
       // ジャケット画像(packageUrl)を優先して使用（大サイズ）、なければポスター画像(thumbnailUrl)
       // jacketimage.large: 見開き大サイズ
       // posterimage.large: 240x180（最大でも小さい）
-      thumbnailUrl: packageUrl || thumbnailUrl,
-      packageUrl,
-      sampleImages,
-      sampleVideos,
+      ...(finalThumbnailUrl && { thumbnailUrl: finalThumbnailUrl }),
+      ...(packageUrl && { packageUrl }),
+      ...(sampleImages.length > 0 && { sampleImages }),
+      ...(sampleVideos.length > 0 && { sampleVideos }),
       affiliateUrl: item.affiliateurl || item.affiliate_url || '',
-      price,
-      releaseDate: formatDate(item.releasedate || item.release_date),
-      openDate: formatDate(item.opendate || item.open_date),
-      duration: item.volume ? parseInt(item.volume, 10) : undefined,
-      label,
-      labelId,
-      series,
-      seriesId,
-      performers,
-      categories,
-      salesType: item.sales_type || item.salesType,
-      adult: item.adult,
+      ...(price !== undefined && { price }),
+      ...(releaseDate && { releaseDate }),
+      ...(openDate && { openDate }),
+      ...(duration !== undefined && { duration }),
+      ...(label && { label }),
+      ...(labelId && { labelId }),
+      ...(series && { series }),
+      ...(seriesId && { seriesId }),
+      ...(performers.length > 0 && { performers }),
+      ...(categories.length > 0 && { categories }),
+      ...(salesType && { salesType }),
+      ...(item.adult !== undefined && { adult: item.adult }),
       multiDevice: item.multi_device || item.multiDevice || false,
-      saleInfo,
+      ...(saleInfo && { saleInfo }),
     };
   }
 
@@ -518,9 +526,9 @@ export class DugaApiClient {
  * DUGAクライアントのシングルトンインスタンスを取得
  */
 export function getDugaClient(): DugaApiClient {
-  const appId = process.env.DUGA_APP_ID;
-  const agentId = process.env.DUGA_AGENT_ID;
-  const bannerId = process.env.DUGA_BANNER_ID || '01';
+  const appId = process.env['DUGA_APP_ID'];
+  const agentId = process.env['DUGA_AGENT_ID'];
+  const bannerId = process.env['DUGA_BANNER_ID'] || '01';
 
   if (!appId || !agentId) {
     throw new Error('DUGA_APP_ID and DUGA_AGENT_ID must be set in environment variables');

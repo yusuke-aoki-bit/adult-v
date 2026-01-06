@@ -26,7 +26,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
   const meta = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
 
   // hreflang/canonical設定（?hl=形式）

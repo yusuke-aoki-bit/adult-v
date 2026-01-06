@@ -292,7 +292,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
       ];
 
       if (options?.aspName) {
-        conditions.push(eq(productSources.aspName, options.aspName));
+        conditions.push(eq(productSources.aspName, options['aspName']));
       }
 
       if (options?.minDiscount) {
@@ -310,10 +310,10 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
 
       const results = await db
         .select({
-          productId: products.id,
+          productId: products['id'],
           normalizedProductId: products.normalizedProductId,
-          title: products.title,
-          thumbnailUrl: products.defaultThumbnailUrl,
+          title: products['title'],
+          thumbnailUrl: products['defaultThumbnailUrl'],
           aspName: productSources.aspName,
           affiliateUrl: productSources.affiliateUrl,
           regularPrice: productSales.regularPrice,
@@ -325,7 +325,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
         })
         .from(productSales)
         .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
-        .innerJoin(products, eq(productSources.productId, products.id))
+        .innerJoin(products, eq(productSources.productId, products['id']))
         .where(and(...conditions))
         .orderBy(aspPriorityOrder, desc(productSales.discountPercent), desc(productSales.fetchedAt))
         .limit(limit);
@@ -338,11 +338,11 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
         ? await db
             .select({
               productId: productPerformers.productId,
-              performerId: performers.id,
-              performerName: performers.name,
+              performerId: performers['id'],
+              performerName: performers['name'],
             })
             .from(productPerformers)
-            .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+            .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
             .where(inArray(productPerformers.productId, productIds))
         : [];
 

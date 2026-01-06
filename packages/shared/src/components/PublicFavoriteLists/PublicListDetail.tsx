@@ -79,7 +79,7 @@ export function PublicListDetail({
       const response = await fetch(url);
 
       if (!response.ok) {
-        if (response.status === 404) {
+        if (response['status'] === 404) {
           setError(t.notFound);
         } else {
           setError(t.error);
@@ -98,7 +98,7 @@ export function PublicListDetail({
   };
 
   const handleLike = async () => {
-    if (!userId || !list || list.userId === userId || isLiking) return;
+    if (!userId || !list || list['userId'] === userId || isLiking) return;
 
     setIsLiking(true);
     try {
@@ -136,7 +136,7 @@ export function PublicListDetail({
   };
 
   const handleRemoveItem = async (productId: number) => {
-    if (!userId || !list || list.userId !== userId) return;
+    if (!userId || !list || list['userId'] !== userId) return;
 
     try {
       const response = await fetch(`/api/favorite-lists/${listId}/items`, {
@@ -150,7 +150,7 @@ export function PublicListDetail({
       });
 
       if (response.ok) {
-        setItems((prev) => prev.filter((item) => item.productId !== productId));
+        setItems((prev) => prev.filter((item) => item['productId'] !== productId));
         setList((prev) => prev ? { ...prev, itemCount: prev.itemCount - 1 } : null);
         onRemoveItem?.(productId);
       }
@@ -182,7 +182,7 @@ export function PublicListDetail({
     );
   }
 
-  const isOwner = userId === list.userId;
+  const isOwner = userId === list['userId'];
 
   return (
     <div className="space-y-6">
@@ -198,35 +198,35 @@ export function PublicListDetail({
           </button>
 
           <div className="flex items-center gap-2 mb-1">
-            {list.isPublic ? (
+            {list['isPublic'] ? (
               <Globe className="w-5 h-5 text-green-500" />
             ) : (
               <Lock className="w-5 h-5 text-gray-400" />
             )}
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {list.title}
+              {list['title']}
             </h1>
           </div>
 
-          {list.description && (
-            <p className="text-gray-600 dark:text-gray-400 mb-2">{list.description}</p>
+          {list['description'] && (
+            <p className="text-gray-600 dark:text-gray-400 mb-2">{list['description']}</p>
           )}
 
           <div className="flex items-center gap-4 text-sm text-gray-500">
             <span>{t.items.replace('{count}', String(list.itemCount))}</span>
             <span className="flex items-center gap-1">
               <Eye className="w-4 h-4" />
-              {t.views.replace('{count}', String(list.viewCount))}
+              {t.views.replace('{count}', String(list['viewCount']))}
             </span>
             <span className="flex items-center gap-1">
               <Heart className={`w-4 h-4 ${list.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
-              {t.likes.replace('{count}', String(list.likeCount))}
+              {t.likes.replace('{count}', String(list['likeCount']))}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {list.isPublic && (
+          {list['isPublic'] && (
             <button
               onClick={handleShare}
               className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 relative"
@@ -240,7 +240,7 @@ export function PublicListDetail({
             </button>
           )}
 
-          {!isOwner && userId && list.isPublic && (
+          {!isOwner && userId && list['isPublic'] && (
             <button
               onClick={handleLike}
               disabled={isLiking}
@@ -269,17 +269,17 @@ export function PublicListDetail({
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {items.map((item) => (
             <div
-              key={item.productId}
+              key={item['productId']}
               className="group relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
               <button
-                onClick={() => onProductClick(item.productId)}
+                onClick={() => onProductClick(item['productId'])}
                 className="w-full"
               >
-                {item.product.thumbnailUrl ? (
+                {item.product['thumbnailUrl'] ? (
                   <img
-                    src={item.product.thumbnailUrl}
-                    alt={item.product.title}
+                    src={item.product['thumbnailUrl']}
+                    alt={item.product['title']}
                     className="w-full object-cover"
                     style={{ aspectRatio: '3/4' }}
                   />
@@ -293,14 +293,14 @@ export function PublicListDetail({
                 )}
                 <div className="p-2">
                   <p className="text-sm text-gray-900 dark:text-white line-clamp-2">
-                    {item.product.title}
+                    {item.product['title']}
                   </p>
                 </div>
               </button>
 
               {isOwner && (
                 <button
-                  onClick={() => handleRemoveItem(item.productId)}
+                  onClick={() => handleRemoveItem(item['productId'])}
                   className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                   title={t.removeItem}
                 >

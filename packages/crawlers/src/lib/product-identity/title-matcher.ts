@@ -38,17 +38,17 @@ export async function findMatchByTitleAndPerformers(
   const db = getDb();
 
   // タイトルマッチング除外ASPのチェック
-  if (TITLE_MATCH_EXCLUDED_ASPS.has(product.aspName)) {
+  if (TITLE_MATCH_EXCLUDED_ASPS.has(product['aspName'])) {
     return null;
   }
 
-  const normalizedTitle = product.normalizedTitle || normalizeTitle(product.title);
+  const normalizedTitle = product.normalizedTitle || normalizeTitle(product['title']);
 
   // 類似タイトルの商品を検索（pg_trgm使用）
   const similarProducts = await findSimilarTitleProducts(
     normalizedTitle,
-    product.id,
-    product.aspName,
+    product['id'],
+    product['aspName'],
     0.6 // 最低類似度閾値
   );
 
@@ -121,15 +121,19 @@ async function findSimilarTitleProducts(
     LIMIT 20
   `);
 
-  return result.rows.map(row => ({
-    productId: row.product_id,
-    groupId: row.group_id ?? undefined,
-    aspName: row.asp_name,
-    similarity: row.similarity,
-    releaseDate: row.release_date ? new Date(row.release_date) : null,
-    duration: row.duration,
-    performers: row.performers ? row.performers.split(',') : [],
-  }));
+  return result.rows.map(row => {
+    const base = {
+      productId: row.product_id as number,
+      aspName: row.asp_name as string,
+      similarity: row.similarity as number,
+      releaseDate: row.release_date ? new Date(row.release_date as string) : null,
+      duration: row['duration'] as number | null,
+      performers: row.performers ? (row.performers as string).split(',') : [],
+    };
+    return row.group_id !== null
+      ? { ...base, groupId: row.group_id as number }
+      : base;
+  });
 }
 
 /**
@@ -160,7 +164,7 @@ async function evaluateMatch(
   ) {
     return {
       productId: candidate.productId,
-      groupId: candidate.groupId,
+      ...(candidate.groupId !== undefined && { groupId: candidate.groupId }),
       confidenceScore: config.titlePerformerHigh,
       matchingMethod: 'title_performer_high',
       aspName: candidate.aspName,
@@ -173,7 +177,7 @@ async function evaluateMatch(
   if (candidate.similarity >= 0.7 && matchedPerformers >= 2) {
     return {
       productId: candidate.productId,
-      groupId: candidate.groupId,
+      ...(candidate.groupId !== undefined && { groupId: candidate.groupId }),
       confidenceScore: config.titlePerformerMedium,
       matchingMethod: 'title_performer_medium',
       aspName: candidate.aspName,
@@ -186,7 +190,7 @@ async function evaluateMatch(
   if (candidate.similarity >= 0.6 && matchedPerformers >= 1) {
     return {
       productId: candidate.productId,
-      groupId: candidate.groupId,
+      ...(candidate.groupId !== undefined && { groupId: candidate.groupId }),
       confidenceScore: config.titlePerformerLow,
       matchingMethod: 'title_performer_low',
       aspName: candidate.aspName,
@@ -204,7 +208,7 @@ async function evaluateMatch(
   ) {
     return {
       productId: candidate.productId,
-      groupId: candidate.groupId,
+      ...(candidate.groupId !== undefined && { groupId: candidate.groupId }),
       confidenceScore: config.titleOnlyStrict,
       matchingMethod: 'title_only_strict',
       aspName: candidate.aspName,
@@ -221,7 +225,7 @@ async function evaluateMatch(
   ) {
     return {
       productId: candidate.productId,
-      groupId: candidate.groupId,
+      ...(candidate.groupId !== undefined && { groupId: candidate.groupId }),
       confidenceScore: config.titleOnlyRelaxed,
       matchingMethod: 'title_only_relaxed',
       aspName: candidate.aspName,

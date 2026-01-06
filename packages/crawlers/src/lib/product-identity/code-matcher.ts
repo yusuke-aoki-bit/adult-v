@@ -25,11 +25,11 @@ export async function findMatchByProductCode(
 
   // 1. maker_product_code が設定されている場合、完全一致を検索
   if (product.makerProductCode) {
-    const exactMatch = await findByExactCode(product.makerProductCode, product.id);
+    const exactMatch = await findByExactCode(product.makerProductCode, product['id']);
     if (exactMatch) {
       return {
         productId: exactMatch.productId,
-        groupId: exactMatch.groupId,
+        ...(exactMatch.groupId !== undefined && { groupId: exactMatch.groupId }),
         confidenceScore: config.codeExactMatch,
         matchingMethod: 'product_code_exact',
         aspName: exactMatch.aspName,
@@ -41,11 +41,11 @@ export async function findMatchByProductCode(
   // normalizedProductId や makerProductCode から品番を抽出して正規化
   const normalizedCode = extractAndNormalizeCode(product);
   if (normalizedCode) {
-    const normalizedMatch = await findByNormalizedCode(normalizedCode, product.id);
+    const normalizedMatch = await findByNormalizedCode(normalizedCode, product['id']);
     if (normalizedMatch) {
       return {
         productId: normalizedMatch.productId,
-        groupId: normalizedMatch.groupId,
+        ...(normalizedMatch.groupId !== undefined && { groupId: normalizedMatch.groupId }),
         confidenceScore: config.codeNormalizedMatch,
         matchingMethod: 'product_code_normalized',
         aspName: normalizedMatch.aspName,
@@ -86,11 +86,13 @@ async function findByExactCode(
 
   if (groupResult.rows.length > 0) {
     const row = groupResult.rows[0];
-    return {
-      productId: row.product_id,
-      groupId: row.group_id || undefined,
-      aspName: row.asp_name,
-    };
+    if (row) {
+      return {
+        productId: row.product_id,
+        ...(row.group_id && { groupId: row.group_id }),
+        aspName: row.asp_name,
+      };
+    }
   }
 
   return null;
@@ -125,11 +127,13 @@ async function findByNormalizedCode(
 
   if (groupResult.rows.length > 0) {
     const row = groupResult.rows[0];
-    return {
-      productId: row.product_id,
-      groupId: row.group_id,
-      aspName: row.asp_name,
-    };
+    if (row) {
+      return {
+        productId: row.product_id,
+        groupId: row.group_id,
+        aspName: row.asp_name,
+      };
+    }
   }
 
   // グループがない場合、products テーブルから直接検索
@@ -186,13 +190,15 @@ export function extractAndNormalizeCode(product: ProductForMatching): string | n
 
     // 最後の部分だけで試す
     const lastPart = parts[parts.length - 1];
-    const normalizedLast = normalizeProductCode(lastPart);
-    if (normalizedLast) return normalizedLast;
+    if (lastPart) {
+      const normalizedLast = normalizeProductCode(lastPart);
+      if (normalizedLast) return normalizedLast;
+    }
   }
 
   // 3. タイトルから品番を抽出（例: "【SSIS-865】タイトル..."）
-  const titleMatch = product.title.match(/[【\[]?\s*([A-Z0-9]+-\d+)\s*[】\]]?/);
-  if (titleMatch) {
+  const titleMatch = product['title'].match(/[【\[]?\s*([A-Z0-9]+-\d+)\s*[】\]]?/);
+  if (titleMatch && titleMatch[1]) {
     const normalized = normalizeProductCode(titleMatch[1]);
     if (normalized) return normalized;
   }

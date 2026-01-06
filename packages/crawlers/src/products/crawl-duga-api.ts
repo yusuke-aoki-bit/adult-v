@@ -71,10 +71,10 @@ async function main() {
   const yearArg = args.find(arg => arg.startsWith('--year='));
   const monthArg = args.find(arg => arg.startsWith('--month='));
 
-  const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 100;
-  const offset = offsetArg ? parseInt(offsetArg.split('=')[1]) : 0;
-  const targetYear = yearArg ? parseInt(yearArg.split('=')[1]) : null;
-  const targetMonth = monthArg ? parseInt(monthArg.split('=')[1]) : null;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1]!) : 100;
+  const offset = offsetArg ? parseInt(offsetArg.split('=')[1]!) : 0;
+  const targetYear = yearArg ? parseInt(yearArg.split('=')[1]!) : null;
+  const targetMonth = monthArg ? parseInt(monthArg.split('=')[1]!) : null;
 
   console.log('========================================');
   console.log('=== DUGA APIクローラー (GCS対応) ===');
@@ -253,14 +253,14 @@ async function main() {
 
     for (const [index, item] of allItems.entries()) {
       try {
-        console.log(`[${index + 1}/${allItems.length}] 処理中: ${item.title}`);
+        console.log(`[${index + 1}/${allItems.length}] 処理中: ${item['title']}`);
 
         // 商品データの検証
         const validation = validateProductData({
-          title: item.title,
-          description: item.description,
+          title: item['title'],
+          description: item['description'],
           aspName: 'DUGA',
-          originalId: item.productId,
+          originalId: item['productId'],
         });
 
         if (!validation.isValid) {
@@ -271,11 +271,11 @@ async function main() {
 
         // 1. 生データの保存（GCS優先 + 重複チェック）
         const rawData = item as unknown as Record<string, unknown>;
-        const upsertResult = await upsertDugaRawDataWithGcs(item.productId, rawData);
+        const upsertResult = await upsertDugaRawDataWithGcs(item['productId'], rawData);
 
         // 重複チェック: 変更なし＆処理済みならスキップ
         if (upsertResult.shouldSkip && !forceReprocess) {
-          console.log(`  ⏭️ スキップ(処理済み): ${item.productId}`);
+          console.log(`  ⏭️ スキップ(処理済み): ${item['productId']}`);
           stats.skippedUnchanged++;
           continue;
         }
@@ -293,7 +293,7 @@ async function main() {
 
         // 2. 正規化されたデータを保存
         // normalized_product_id生成: DUGA-{productId}
-        const normalizedProductId = `duga-${item.productId}`;
+        const normalizedProductId = `duga-${item['productId']}`;
 
         // productsテーブルにupsert
         const productResult = await db.execute(sql`
@@ -308,11 +308,11 @@ async function main() {
           )
           VALUES (
             ${normalizedProductId},
-            ${item.title || ''},
-            ${item.description || null},
-            ${item.releaseDate || null},
-            ${item.duration || null},
-            ${item.thumbnailUrl || null},
+            ${item['title'] || ''},
+            ${item['description'] || null},
+            ${item['releaseDate'] || null},
+            ${item['duration'] || null},
+            ${item['thumbnailUrl'] || null},
             NOW()
           )
           ON CONFLICT (normalized_product_id)
@@ -352,9 +352,9 @@ async function main() {
           VALUES (
             ${productId},
             'DUGA',
-            ${item.productId},
-            ${item.affiliateUrl || ''},
-            ${item.price || null},
+            ${item['productId']},
+            ${item['affiliateUrl'] || ''},
+            ${item['price'] || null},
             'API',
             NOW()
           )
@@ -474,7 +474,7 @@ async function main() {
           // カテゴリID-名前マップを作成
           const categoryIdMap = new Map<string, number>();
           for (const row of categoryResults.rows as { id: number; name: string }[]) {
-            categoryIdMap.set(row.name, row.id);
+            categoryIdMap.set(row['name'], row['id']);
           }
 
           // バッチでproduct_categoriesにリレーション作成
@@ -501,7 +501,7 @@ async function main() {
           // タグID-名前マップを作成
           const tagIdMap = new Map<string, number>();
           for (const row of tagResults.rows as { id: number; name: string }[]) {
-            tagIdMap.set(row.name, row.id);
+            tagIdMap.set(row['name'], row['id']);
           }
 
           // バッチでproduct_tagsにリレーション作成
@@ -537,7 +537,7 @@ async function main() {
           // 出演者ID-名前マップを作成
           const performerIdMap = new Map<string, number>();
           for (const row of performerResults.rows as { id: number; name: string }[]) {
-            performerIdMap.set(row.name, row.id);
+            performerIdMap.set(row['name'], row['id']);
           }
 
           // バッチでproduct_performersにリレーション作成
@@ -559,7 +559,7 @@ async function main() {
         // 8.5. セール情報保存
         if (item.saleInfo) {
           try {
-            const saved = await saveSaleInfo('DUGA', item.productId, {
+            const saved = await saveSaleInfo('DUGA', item['productId'], {
               regularPrice: item.saleInfo.regularPrice,
               salePrice: item.saleInfo.salePrice,
               discountPercent: item.saleInfo.discountPercent,
@@ -579,7 +579,7 @@ async function main() {
         if (!skipReviews) {
           try {
             console.log(`  📝 レビュー情報取得中...`);
-            const pageData = await scrapeDugaProductPage(item.productId);
+            const pageData = await scrapeDugaProductPage(item['productId']);
 
             // 集計評価を保存
             if (pageData.aggregateRating) {
@@ -693,8 +693,8 @@ async function main() {
             const aiHelper = getAIHelper();
             const aiResult = await aiHelper.processProduct(
               {
-                title: item.title,
-                description: item.description,
+                title: item['title'],
+                description: item['description'],
                 performers: performerNames.length > 0 ? performerNames : undefined,
                 genres: categoryNames.length > 0 ? categoryNames : undefined,
               },

@@ -139,9 +139,9 @@ export function SceneTimeline({
     let timestampSeconds = 0;
 
     if (parts.length === 2 && !parts.some(isNaN)) {
-      timestampSeconds = parts[0] * 60 + parts[1];
+      timestampSeconds = parts[0]! * 60 + parts[1]!;
     } else if (parts.length === 3 && !parts.some(isNaN)) {
-      timestampSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+      timestampSeconds = parts[0]! * 3600 + parts[1]! * 60 + parts[2]!;
     } else {
       setFormError(t.invalidTimestamp);
       return;
@@ -152,11 +152,12 @@ export function SceneTimeline({
       return;
     }
 
+    const trimmedDescription = formData.description.trim();
     addScene({
       timestamp: timestampSeconds,
       label: formData.label.trim(),
-      description: formData.description.trim() || undefined,
       rating: formData.rating,
+      ...(trimmedDescription && { description: trimmedDescription }),
     });
 
     setFormData({ timestamp: '', label: '', description: '', rating: 4 });
@@ -324,9 +325,9 @@ export function SceneTimeline({
               scene={scene}
               theme={theme}
               voteStatus={getVoteStatus(scene.id)}
-              onSeek={onSeek}
+              {...(onSeek && { onSeek })}
               onVote={handleVote}
-              onRemove={canEdit ? () => removeScene(scene.id) : undefined}
+              {...(canEdit && { onRemove: () => removeScene(scene.id) })}
               t={{ votes: t.votes }}
             />
           ))}
@@ -340,9 +341,9 @@ interface SceneItemProps {
   scene: SceneMarker;
   theme: 'light' | 'dark';
   voteStatus: 'up' | 'down' | null;
-  onSeek?: (timestamp: number) => void;
+  onSeek?: ((timestamp: number) => void) | undefined;
   onVote: (sceneId: string, upvote: boolean) => void;
-  onRemove?: () => void;
+  onRemove?: (() => void) | undefined;
   t: { votes: string };
 }
 

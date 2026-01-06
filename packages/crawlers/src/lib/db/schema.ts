@@ -69,7 +69,7 @@ export const productSources = pgTable(
   'product_sources',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').notNull().references(() => products['id'], { onDelete: 'cascade' }),
     aspName: varchar('asp_name', { length: 50 }).notNull(), // 'DMM', 'MGS', 'DUGA' など
     originalProductId: varchar('original_product_id', { length: 100 }).notNull(),
     affiliateUrl: text('affiliate_url').notNull(),
@@ -180,7 +180,7 @@ export const performerAliases = pgTable(
   'performer_aliases',
   {
     id: serial('id').primaryKey(),
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id').notNull().references(() => performers['id'], { onDelete: 'cascade' }),
     aliasName: varchar('alias_name', { length: 200 }).notNull(),
     source: varchar('source', { length: 100 }), // 'av-wiki', 'seesaa-wiki', 'manual' など
     isPrimary: boolean('is_primary').default(false), // 主要な名前かどうか
@@ -201,7 +201,7 @@ export const performerExternalIds = pgTable(
   'performer_external_ids',
   {
     id: serial('id').primaryKey(),
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id').notNull().references(() => performers['id'], { onDelete: 'cascade' }),
     provider: varchar('provider', { length: 50 }).notNull(), // 'sokmil', 'fanza', 'mgs', 'b10f', etc.
     externalId: varchar('external_id', { length: 200 }).notNull(), // そのサイトでの女優ID
     externalUrl: text('external_url'), // そのサイトでの女優ページURL
@@ -222,8 +222,8 @@ export const performerExternalIds = pgTable(
 export const productPerformers = pgTable(
   'product_performers',
   {
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').notNull().references(() => products['id'], { onDelete: 'cascade' }),
+    performerId: integer('performer_id').notNull().references(() => performers['id'], { onDelete: 'cascade' }),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.productId, table.performerId] }),
@@ -269,7 +269,7 @@ export const tags = pgTable(
 export const productTags = pgTable(
   'product_tags',
   {
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').notNull().references(() => products['id'], { onDelete: 'cascade' }),
     tagId: integer('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
   },
   (table) => ({
@@ -286,7 +286,7 @@ export const productTags = pgTable(
 export const performerTags = pgTable(
   'performer_tags',
   {
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id').notNull().references(() => performers['id'], { onDelete: 'cascade' }),
     tagId: integer('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
     source: varchar('source', { length: 50 }), // 'minnano-av', 'gravurefit' など
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -432,7 +432,7 @@ export const productRawDataLinks = pgTable(
   'product_raw_data_links',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').notNull().references(() => products['id'], { onDelete: 'cascade' }),
     sourceType: text('source_type').notNull(), // 'duga', 'sokmil', 'mgs', 'fc2', 'dti', 'b10f'
     rawDataId: integer('raw_data_id').notNull(), // 対応する生データテーブルのID
     rawDataTable: text('raw_data_table').notNull(), // 'duga_raw_responses', 'raw_html_data' など
@@ -458,7 +458,7 @@ export const performerImages = pgTable(
   'performer_images',
   {
     id: serial('id').primaryKey(),
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id').notNull().references(() => performers['id'], { onDelete: 'cascade' }),
     imageUrl: text('image_url').notNull(),
     imageType: varchar('image_type', { length: 50 }), // 'profile', 'thumbnail', 'banner', 'gallery' など
     width: integer('width'), // 画像の幅
@@ -482,7 +482,7 @@ export const productImages = pgTable(
   'product_images',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').notNull().references(() => products['id'], { onDelete: 'cascade' }),
     imageUrl: text('image_url').notNull(),
     imageType: varchar('image_type', { length: 50 }).notNull(), // 'thumbnail', 'cover', 'sample', 'screenshot' など
     displayOrder: integer('display_order').default(0), // 表示順序
@@ -507,7 +507,7 @@ export const productVideos = pgTable(
   'product_videos',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').notNull().references(() => products['id'], { onDelete: 'cascade' }),
     videoUrl: text('video_url').notNull(),
     videoType: varchar('video_type', { length: 50 }).notNull(), // 'streaming', 'download', 'preview', 'trailer', 'sample' など
     quality: varchar('quality', { length: 50 }), // '1080p', '720p', '480p', '4K' など
@@ -565,7 +565,7 @@ export const productReviews = pgTable(
   'product_reviews',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').notNull().references(() => products['id'], { onDelete: 'cascade' }),
     aspName: varchar('asp_name', { length: 50 }).notNull(), // レビュー取得元ASP
     reviewerName: varchar('reviewer_name', { length: 100 }), // レビュワー名（匿名の場合null）
     rating: decimal('rating', { precision: 3, scale: 1 }), // 評価（5段階など、ASPにより異なる）
@@ -599,7 +599,7 @@ export const productRatingSummary = pgTable(
   'product_rating_summary',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').notNull().references(() => products['id'], { onDelete: 'cascade' }),
     aspName: varchar('asp_name', { length: 50 }).notNull(), // ASP名
     averageRating: decimal('average_rating', { precision: 3, scale: 2 }), // 平均評価
     maxRating: decimal('max_rating', { precision: 3, scale: 1 }).default('5'), // 最大評価値

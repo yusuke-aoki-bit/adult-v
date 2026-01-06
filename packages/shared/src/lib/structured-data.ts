@@ -39,8 +39,8 @@ export function generateProductJsonLd(
   product: ProductStructuredData,
   locale: string = 'ja'
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://miraikakaku.com';
-  const productUrl = `${baseUrl}${localizedHref(`/products/${product.id}`, locale)}`;
+  const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
+  const productUrl = `${baseUrl}${localizedHref(`/products/${product['id']}`, locale)}`;
 
   // Find the lowest price from all sources
   const prices = product.productSources
@@ -51,20 +51,20 @@ export function generateProductJsonLd(
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'VideoObject',
-    name: product.title,
-    description: product.description || product.title,
-    uploadDate: product.releaseDate?.toISOString(),
-    thumbnailUrl: product.defaultThumbnailUrl,
-    duration: product.duration ? `PT${product.duration}M` : undefined,
+    name: product['title'],
+    description: product['description'] || product['title'],
+    uploadDate: product['releaseDate']?.toISOString(),
+    thumbnailUrl: product['defaultThumbnailUrl'],
+    duration: product['duration'] ? `PT${product['duration']}M` : undefined,
     contentUrl: productUrl,
     // Actors
     actor: product.performers.map(performer => ({
       '@type': 'Person',
-      name: performer.name,
-      url: `${baseUrl}${localizedHref(`/performers/${performer.id}`, locale)}`,
+      name: performer['name'],
+      url: `${baseUrl}${localizedHref(`/performers/${performer['id']}`, locale)}`,
     })),
     // Tags as keywords
-    keywords: product.tags.map(tag => tag.name).join(', '),
+    keywords: product.tags.map(tag => tag['name']).join(', '),
     // Offers - aggregate from all sources
     offers: minPrice ? {
       '@type': 'AggregateOffer',
@@ -97,7 +97,7 @@ export function generateProductJsonLd(
         {
           '@type': 'ListItem',
           position: 2,
-          name: product.title,
+          name: product['title'],
           item: productUrl,
         },
       ],
@@ -117,14 +117,14 @@ export function generatePerformerJsonLd(
   performer: PerformerStructuredData,
   locale: string = 'ja'
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://miraikakaku.com';
-  const performerUrl = `${baseUrl}${localizedHref(`/performers/${performer.id}`, locale)}`;
+  const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
+  const performerUrl = `${baseUrl}${localizedHref(`/performers/${performer['id']}`, locale)}`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: performer.name,
-    image: performer.profileImageUrl,
+    name: performer['name'],
+    image: performer['profileImageUrl'],
     url: performerUrl,
     // Breadcrumbs
     breadcrumb: {
@@ -145,7 +145,7 @@ export function generatePerformerJsonLd(
         {
           '@type': 'ListItem',
           position: 3,
-          name: performer.name,
+          name: performer['name'],
           item: performerUrl,
         },
       ],
@@ -163,7 +163,7 @@ export function generateListPageJsonLd(
   description: string,
   locale: string = 'ja'
 ): string {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://miraikakaku.com';
+  const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -180,7 +180,7 @@ export function generateListPageJsonLd(
  * Generate JSON-LD for organization
  */
 export function generateOrganizationJsonLd(locale: string = 'ja'): string {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://miraikakaku.com';
+  const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
 
   const jsonLd = {
     '@context': 'https://schema.org',

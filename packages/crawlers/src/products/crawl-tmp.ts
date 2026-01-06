@@ -11,7 +11,7 @@
  * DATABASE_URL="..." npx tsx packages/crawlers/src/products/crawl-tmp.ts --site=heydouga [--pages 10] [--start-page 1]
  */
 
-if (!process.env.DATABASE_URL) {
+if (!process.env['DATABASE_URL']) {
   console.error('ERROR: DATABASE_URL environment variable is not set');
   process.exit(1);
 }
@@ -121,11 +121,11 @@ async function fetchPage(url: string): Promise<string | null> {
     });
 
     if (!response.ok) {
-      console.error(`Failed to fetch ${url}: ${response.status}`);
+      console.error(`Failed to fetch ${url}: ${response['status']}`);
       return null;
     }
 
-    return await response.text();
+    return await response['text']();
   } catch (error) {
     console.error(`Error fetching ${url}:`, error);
     return null;
@@ -205,8 +205,8 @@ async function extractHeydougaProductDetails(
 ): Promise<TmpProduct | null> {
   const [providerId, movieId] = productId.split('-');
   const detailPath = siteConfig.productUrlFormat
-    .replace('{providerId}', providerId)
-    .replace('{movieId}', movieId);
+    .replace('{providerId}', providerId ?? '')
+    .replace('{movieId}', movieId ?? '');
   const url = `${siteConfig.baseUrl}${detailPath}`;
   console.log(`  📦 Fetching detail: ${url}`);
 
@@ -266,14 +266,14 @@ async function extractHeydougaProductDetails(
 
     if (label.includes('配信日') || label.includes('公開日')) {
       const dateMatch = value.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
-      if (dateMatch) {
+      if (dateMatch && dateMatch[1] && dateMatch[2] && dateMatch[3]) {
         releaseDate = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
       }
     }
 
     if (label.includes('再生時間') || label.includes('収録時間')) {
       const durationMatch = value.match(/(\d+)\s*(分|min)/);
-      if (durationMatch) {
+      if (durationMatch && durationMatch[1]) {
         duration = parseInt(durationMatch[1]);
       }
     }
@@ -377,14 +377,14 @@ async function extractTmpProductDetails(
 
     if (label.includes('配信日') || label.includes('公開日') || label.includes('発売日')) {
       const dateMatch = value.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
-      if (dateMatch) {
+      if (dateMatch && dateMatch[1] && dateMatch[2] && dateMatch[3]) {
         releaseDate = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
       }
     }
 
     if (label.includes('再生時間') || label.includes('収録時間')) {
       const durationMatch = value.match(/(\d+)\s*(分|min)/);
-      if (durationMatch) {
+      if (durationMatch && durationMatch[1]) {
         duration = parseInt(durationMatch[1]);
       }
     }
@@ -477,7 +477,7 @@ async function saveProduct(
   product: TmpProduct
 ): Promise<boolean> {
   try {
-    const normalizedProductId = `${siteConfig.aspName}-${product.productId}`;
+    const normalizedProductId = `${siteConfig.aspName}-${product['productId']}`;
 
     // 既存チェック
     const existingProduct = await db
@@ -487,72 +487,88 @@ async function saveProduct(
       .limit(1);
 
     if (existingProduct.length > 0) {
-      console.log(`  ⏭️ Already exists: ${product.productId}`);
+      console.log(`  ⏭️ Already exists: ${product['productId']}`);
       return false;
     }
 
     // 新規作成
-    const [newProduct] = await db
+    const insertResult = await db
       .insert(products)
       .values({
         normalizedProductId,
-        title: product.title,
-        description: product.description || null,
-        defaultThumbnailUrl: product.thumbnailUrl || null,
-        releaseDate: product.releaseDate || null,
-        duration: product.duration || null,
+        title: product['title'],
+        description: product['description'] || null,
+        defaultThumbnailUrl: product['thumbnailUrl'] || null,
+        releaseDate: product['releaseDate'] || null,
+        duration: product['duration'] || null,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
-      .returning({ id: products.id });
+      .returning({ id: products['id'] });
+
+    const newProduct = insertResult[0];
+    if (!newProduct) {
+      console.error(`  ❌ Failed to insert product: ${product['productId']}`);
+      return false;
+    }
 
     // ProductSource
-    await db.insert(productSources).values({
+    await db['insert'](productSources).values({
       productId: newProduct.id,
       aspName: siteConfig.aspName,
-      originalProductId: product.productId,
-      affiliateUrl: `${siteConfig.baseUrl}${siteConfig.productUrlFormat.replace('{id}', product.productId).replace('{providerId}', product.productId.split('-')[0] || '').replace('{movieId}', product.productId.split('-')[1] || '')}`,
+      originalProductId: product['productId'],
+      affiliateUrl: `${siteConfig.baseUrl}${siteConfig.productUrlFormat.replace('{id}', product['productId']).replace('{providerId}', product['productId'].split('-')[0] ?? '').replace('{movieId}', product['productId'].split('-')[1] ?? '')}`,
       dataSource: 'SCRAPE',
       isSubscription: true, // TMP系は月額制
     });
 
     // 出演者
     for (const performerName of product.performers) {
-      if (!isValidPerformerForProduct(performerName, product.title)) {
+      if (!isValidPerformerForProduct(performerName, product['title'])) {
         continue;
       }
 
-      let [existingPerformer] = await db
+      const existingPerformerResult = await db
         .select()
         .from(performers)
-        .where(eq(performers.name, performerName))
+        .where(eq(performers['name'], performerName))
         .limit(1);
 
-      if (!existingPerformer) {
-        [existingPerformer] = await db
+      let performerId: number;
+      if (existingPerformerResult[0]) {
+        performerId = existingPerformerResult[0].id;
+      } else {
+        const newPerformerResult = await db
           .insert(performers)
           .values({
             name: performerName,
           })
           .returning();
+        const newPerformer = newPerformerResult[0];
+        if (!newPerformer) {
+          continue;
+        }
+        performerId = newPerformer.id;
       }
 
       await db
         .insert(productPerformers)
         .values({
           productId: newProduct.id,
-          performerId: existingPerformer.id,
+          performerId: performerId,
         })
         .onConflictDoNothing();
     }
 
     // サンプル画像
     for (let i = 0; i < product.sampleImages.length; i++) {
+      const imageUrl = product.sampleImages[i];
+      if (!imageUrl) continue;
       await db
         .insert(productImages)
         .values({
           productId: newProduct.id,
-          imageUrl: product.sampleImages[i],
+          imageUrl: imageUrl,
           imageType: 'sample',
           displayOrder: i,
           aspName: siteConfig.aspName,
@@ -561,10 +577,10 @@ async function saveProduct(
         .onConflictDoNothing();
     }
 
-    console.log(`  ✅ Saved: ${product.title}`);
+    console.log(`  ✅ Saved: ${product['title']}`);
     return true;
   } catch (error) {
-    console.error(`  ❌ Error saving ${product.productId}:`, error);
+    console.error(`  ❌ Error saving ${product['productId']}:`, error);
     return false;
   }
 }

@@ -76,7 +76,7 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
   const [isExpanded, setIsExpanded] = useState(true);
   const [showAll, setShowAll] = useState(false);
 
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   // 配列の参照ではなく内容で比較するためにシリアライズ
   const idsKey = JSON.stringify(favoritePerformerIds.slice().sort());

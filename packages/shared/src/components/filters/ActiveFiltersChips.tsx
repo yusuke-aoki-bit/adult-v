@@ -39,7 +39,7 @@ export default function ActiveFiltersChips({
   const searchParams = useSearchParams();
   const router = useRouter();
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = getActiveFiltersTranslation(locale);
   const themeConfig = getFilterThemeConfig(theme);
 

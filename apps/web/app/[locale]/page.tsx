@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { SortDropdown, FanzaNewReleasesSection } from '@adult-v/shared/components';
 import Pagination from '@/components/Pagination';
+import PerPageDropdown from '@/components/PerPageDropdown';
 import PerformerGridWithComparison from '@/components/PerformerGridWithComparison';
 import ActressListFilter from '@/components/ActressListFilter';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
@@ -36,26 +37,26 @@ export async function generateMetadata({
   const approximateCount = '38,000';
 
   // 検索クエリやフィルターがある場合はnoindex
-  const hasQuery = !!searchParamsData.q;
+  const hasQuery = !!searchParamsData['q'];
   const hasFilters = !!(
-    searchParamsData.initial ||
-    searchParamsData.include ||
-    searchParamsData.exclude ||
-    searchParamsData.includeAsp ||
-    searchParamsData.excludeAsp ||
-    searchParamsData.hasVideo ||
-    searchParamsData.hasImage ||
-    searchParamsData.hasReview ||
-    searchParamsData.cup ||
-    searchParamsData.heightMin ||
-    searchParamsData.heightMax ||
-    searchParamsData.bloodType
+    searchParamsData['initial'] ||
+    searchParamsData['include'] ||
+    searchParamsData['exclude'] ||
+    searchParamsData['includeAsp'] ||
+    searchParamsData['excludeAsp'] ||
+    searchParamsData['hasVideo'] ||
+    searchParamsData['hasImage'] ||
+    searchParamsData['hasReview'] ||
+    searchParamsData['cup'] ||
+    searchParamsData['heightMin'] ||
+    searchParamsData['heightMax'] ||
+    searchParamsData['bloodType']
   );
-  const hasPageParam = !!searchParamsData.page && searchParamsData.page !== '1';
+  const hasPageParam = !!searchParamsData['page'] && searchParamsData['page'] !== '1';
   // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
-  const hasNonDefaultSort = !!searchParamsData.sort && searchParamsData.sort !== 'releaseCount';
+  const hasNonDefaultSort = !!searchParamsData['sort'] && searchParamsData['sort'] !== 'releaseCount';
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   const metadata = generateBaseMetadata(
     t('title'),
@@ -103,7 +104,8 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const PER_PAGE = 96;
+const DEFAULT_PER_PAGE = 48;
+const VALID_PER_PAGE = [12, 24, 48, 96];
 
 export default async function Home({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -112,7 +114,11 @@ export default async function Home({ params, searchParams }: PageProps) {
   const tFilter = await getTranslations({ locale, namespace: 'filter' });
 
   const searchParamsData = await searchParams;
-  const page = Number(searchParamsData.page) || 1;
+  const page = Number(searchParamsData['page']) || 1;
+
+  // 表示件数（URLパラメータから取得、無効な値はデフォルトに）
+  const perPageParam = Number(searchParamsData['perPage']);
+  const perPage = VALID_PER_PAGE.includes(perPageParam) ? perPageParam : DEFAULT_PER_PAGE;
 
   // FANZAサイトかどうかを判定
   const [serverAspFilter, isFanzaSite] = await Promise.all([
@@ -121,56 +127,56 @@ export default async function Home({ params, searchParams }: PageProps) {
   ]);
 
 
-  const query = typeof searchParamsData.q === 'string' ? searchParamsData.q : undefined;
-  const sortBy = (typeof searchParamsData.sort === 'string' ? searchParamsData.sort : 'recent') as 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
-  const initialFilter = typeof searchParamsData.initial === 'string' ? searchParamsData.initial : undefined;
+  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'] : undefined;
+  const sortBy = (typeof searchParamsData['sort'] === 'string' ? searchParamsData['sort'] : 'recent') as 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
+  const initialFilter = typeof searchParamsData['initial'] === 'string' ? searchParamsData['initial'] : undefined;
 
   // 対象タグ（include）と除外タグ（exclude）を取得
-  const includeTags = typeof searchParamsData.include === 'string'
-    ? searchParamsData.include.split(',').filter(Boolean)
-    : Array.isArray(searchParamsData.include)
-    ? searchParamsData.include
+  const includeTags = typeof searchParamsData['include'] === 'string'
+    ? searchParamsData['include'].split(',').filter(Boolean)
+    : Array.isArray(searchParamsData['include'])
+    ? searchParamsData['include']
     : [];
-  const excludeTags = typeof searchParamsData.exclude === 'string'
-    ? searchParamsData.exclude.split(',').filter(Boolean)
-    : Array.isArray(searchParamsData.exclude)
-    ? searchParamsData.exclude
+  const excludeTags = typeof searchParamsData['exclude'] === 'string'
+    ? searchParamsData['exclude'].split(',').filter(Boolean)
+    : Array.isArray(searchParamsData['exclude'])
+    ? searchParamsData['exclude']
     : [];
 
   // ASPフィルターを取得（FANZAサイトの場合は自動的にFANZAのみをフィルタ）
   const includeAsps = serverAspFilter
     ? serverAspFilter
-    : (typeof searchParamsData.includeAsp === 'string'
-        ? searchParamsData.includeAsp.split(',').filter(Boolean)
-        : Array.isArray(searchParamsData.includeAsp)
-        ? searchParamsData.includeAsp
+    : (typeof searchParamsData['includeAsp'] === 'string'
+        ? searchParamsData['includeAsp'].split(',').filter(Boolean)
+        : Array.isArray(searchParamsData['includeAsp'])
+        ? searchParamsData['includeAsp']
         : []);
-  const excludeAsps = typeof searchParamsData.excludeAsp === 'string'
-    ? searchParamsData.excludeAsp.split(',').filter(Boolean)
-    : Array.isArray(searchParamsData.excludeAsp)
-    ? searchParamsData.excludeAsp
+  const excludeAsps = typeof searchParamsData['excludeAsp'] === 'string'
+    ? searchParamsData['excludeAsp'].split(',').filter(Boolean)
+    : Array.isArray(searchParamsData['excludeAsp'])
+    ? searchParamsData['excludeAsp']
     : [];
 
   // hasVideo/hasImage/hasReviewフィルターを取得
-  const hasVideo = searchParamsData.hasVideo === 'true';
-  const hasImage = searchParamsData.hasImage === 'true';
-  const hasReview = searchParamsData.hasReview === 'true';
+  const hasVideo = searchParamsData['hasVideo'] === 'true';
+  const hasImage = searchParamsData['hasImage'] === 'true';
+  const hasReview = searchParamsData['hasReview'] === 'true';
 
   // 女優特徴フィルターを取得
-  const cupSizes = typeof searchParamsData.cup === 'string'
-    ? searchParamsData.cup.split(',').filter(Boolean)
+  const cupSizes = typeof searchParamsData['cup'] === 'string'
+    ? searchParamsData['cup'].split(',').filter(Boolean)
     : [];
-  const heightMin = typeof searchParamsData.heightMin === 'string'
-    ? parseInt(searchParamsData.heightMin, 10)
+  const heightMin = typeof searchParamsData['heightMin'] === 'string'
+    ? parseInt(searchParamsData['heightMin'], 10)
     : undefined;
-  const heightMax = typeof searchParamsData.heightMax === 'string'
-    ? parseInt(searchParamsData.heightMax, 10)
+  const heightMax = typeof searchParamsData['heightMax'] === 'string'
+    ? parseInt(searchParamsData['heightMax'], 10)
     : undefined;
-  const bloodTypes = typeof searchParamsData.bloodType === 'string'
-    ? searchParamsData.bloodType.split(',').filter(Boolean)
+  const bloodTypes = typeof searchParamsData['bloodType'] === 'string'
+    ? searchParamsData['bloodType'].split(',').filter(Boolean)
     : [];
 
-  const offset = (page - 1) * PER_PAGE;
+  const offset = (page - 1) * perPage;
 
   // "etc"の場合は特別処理（50音・アルファベット以外）
   const isEtcFilter = initialFilter === 'etc';
@@ -184,25 +190,25 @@ export default async function Home({ params, searchParams }: PageProps) {
   // serverAspFilterが設定されている場合、それは自動適用されるフィルターなのでTOPページ判定には含めない
   const userSetIncludeAsps = serverAspFilter ? [] : includeAsps;
   const userSetExcludeAsps = serverAspFilter ? [] : excludeAsps;
-  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && cupSizes.length === 0 && !heightMin && !heightMax && bloodTypes.length === 0 && sortBy === 'recent' && page === 1;
+  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && cupSizes.length === 0 && !heightMin && !heightMax && bloodTypes.length === 0 && sortBy === 'recent' && page === 1 && perPage === DEFAULT_PER_PAGE;
 
-  // 共通のクエリオプション
+  // 共通のクエリオプション（exactOptionalPropertyTypes対応）
   const actressQueryOptions = {
-    query: searchQuery,
+    ...(searchQuery && { query: searchQuery }),
     includeTags,
     excludeTags,
     sortBy,
     excludeInitials: isEtcFilter,
     includeAsps,
     excludeAsps,
-    hasVideo: hasVideo || undefined,
-    hasImage: hasImage || undefined,
-    hasReview: hasReview || undefined,
+    ...(hasVideo && { hasVideo: true as const }),
+    ...(hasImage && { hasImage: true as const }),
+    ...(hasReview && { hasReview: true as const }),
     // 女優特徴フィルター
-    cupSizes: cupSizes.length > 0 ? cupSizes : undefined,
-    heightMin,
-    heightMax,
-    bloodTypes: bloodTypes.length > 0 ? bloodTypes : undefined,
+    ...(cupSizes.length > 0 && { cupSizes }),
+    ...(heightMin !== undefined && { heightMin }),
+    ...(heightMax !== undefined && { heightMax }),
+    ...(bloodTypes.length > 0 && { bloodTypes }),
   };
 
   // 並列クエリ実行（パフォーマンス最適化）
@@ -215,7 +221,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     }) : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
     getActresses({
       ...actressQueryOptions,
-      limit: PER_PAGE,
+      limit: perPage,
       offset,
       locale,
     }),
@@ -270,7 +276,7 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   // LCP最適化: 最初の女優画像をpreload（コンパクトモードではthumbnail優先）
   const firstActressImageUrl = actresses.length > 0
-    ? normalizeImageUrlForPreload(actresses[0].thumbnail || actresses[0].heroImage)
+    ? normalizeImageUrlForPreload(actresses[0]?.thumbnail || actresses[0]?.heroImage)
     : null;
 
   return (
@@ -345,8 +351,12 @@ export default async function Home({ params, searchParams }: PageProps) {
             }}
           />
 
-          {/* 並び順 */}
-          <div className="flex justify-end mb-2 sm:mb-4">
+          {/* 並び順・表示件数 */}
+          <div className="flex justify-end items-center gap-4 mb-2 sm:mb-4">
+            <PerPageDropdown
+              perPage={perPage}
+              basePath={localizedHref('/', locale)}
+            />
             <SortDropdown sortBy={sortBy} theme="dark" />
           </div>
 
@@ -354,7 +364,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           <Pagination
             total={totalCount}
             page={page}
-            perPage={PER_PAGE}
+            perPage={perPage}
             basePath={localizedHref('/', locale)}
             position="top"
             queryParams={{
@@ -368,6 +378,7 @@ export default async function Home({ params, searchParams }: PageProps) {
               ...(hasVideo ? { hasVideo: 'true' } : {}),
               ...(hasImage ? { hasImage: 'true' } : {}),
               ...(hasReview ? { hasReview: 'true' } : {}),
+              ...(perPage !== DEFAULT_PER_PAGE ? { perPage: String(perPage) } : {}),
             }}
           />
 
@@ -381,7 +392,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           <Pagination
             total={totalCount}
             page={page}
-            perPage={PER_PAGE}
+            perPage={perPage}
             basePath={localizedHref('/', locale)}
             position="bottom"
             queryParams={{
@@ -395,6 +406,7 @@ export default async function Home({ params, searchParams }: PageProps) {
               ...(hasVideo ? { hasVideo: 'true' } : {}),
               ...(hasImage ? { hasImage: 'true' } : {}),
               ...(hasReview ? { hasReview: 'true' } : {}),
+              ...(perPage !== DEFAULT_PER_PAGE ? { perPage: String(perPage) } : {}),
             }}
           />
         </div>

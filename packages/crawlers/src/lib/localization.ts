@@ -21,15 +21,15 @@ export function getLocalizedTitle(
 ): string {
   switch (locale) {
     case 'en':
-      return product.titleEn || product.title;
+      return product['titleEn'] || product['title'];
     case 'zh':
-      return product.titleZh || product.title;
+      return product['titleZh'] || product['title'];
     case 'zh-TW':
-      return product.titleZhTw || product.titleZh || product.title;
+      return product.titleZhTw || product['titleZh'] || product['title'];
     case 'ko':
-      return product.titleKo || product.title;
+      return product['titleKo'] || product['title'];
     default:
-      return product.title;
+      return product['title'];
   }
 }
 
@@ -49,15 +49,15 @@ export function getLocalizedDescription(
 ): string {
   switch (locale) {
     case 'en':
-      return product.descriptionEn || product.description || '';
+      return product['descriptionEn'] || product['description'] || '';
     case 'zh':
-      return product.descriptionZh || product.description || '';
+      return product['descriptionZh'] || product['description'] || '';
     case 'zh-TW':
-      return product.descriptionZhTw || product.descriptionZh || product.description || '';
+      return product.descriptionZhTw || product['descriptionZh'] || product['description'] || '';
     case 'ko':
-      return product.descriptionKo || product.description || '';
+      return product['descriptionKo'] || product['description'] || '';
     default:
-      return product.description || '';
+      return product['description'] || '';
   }
 }
 
@@ -77,15 +77,15 @@ export function getLocalizedPerformerName(
 ): string {
   switch (locale) {
     case 'en':
-      return performer.nameEn || performer.name;
+      return performer['nameEn'] || performer['name'];
     case 'zh':
-      return performer.nameZh || performer.name;
+      return performer.nameZh || performer['name'];
     case 'zh-TW':
-      return performer.nameZhTw || performer.nameZh || performer.name;
+      return performer.nameZhTw || performer.nameZh || performer['name'];
     case 'ko':
-      return performer.nameKo || performer.name;
+      return performer.nameKo || performer['name'];
     default:
-      return performer.name;
+      return performer['name'];
   }
 }
 
@@ -133,15 +133,15 @@ export function getLocalizedTagName(
 ): string {
   switch (locale) {
     case 'en':
-      return tag.nameEn || tag.name;
+      return tag['nameEn'] || tag['name'];
     case 'zh':
-      return tag.nameZh || tag.name;
+      return tag.nameZh || tag['name'];
     case 'zh-TW':
-      return tag.nameZhTw || tag.nameZh || tag.name;
+      return tag.nameZhTw || tag.nameZh || tag['name'];
     case 'ko':
-      return tag.nameKo || tag.name;
+      return tag.nameKo || tag['name'];
     default:
-      return tag.name;
+      return tag['name'];
   }
 }
 
@@ -161,13 +161,13 @@ export function getLocalizedTagDescription(
 ): string {
   switch (locale) {
     case 'en':
-      return tag.descriptionEn || tag.descriptionJa || '';
+      return tag['descriptionEn'] || tag.descriptionJa || '';
     case 'zh':
-      return tag.descriptionZh || tag.descriptionJa || '';
+      return tag['descriptionZh'] || tag.descriptionJa || '';
     case 'zh-TW':
-      return tag.descriptionZhTw || tag.descriptionZh || tag.descriptionJa || '';
+      return tag.descriptionZhTw || tag['descriptionZh'] || tag.descriptionJa || '';
     case 'ko':
-      return tag.descriptionKo || tag.descriptionJa || '';
+      return tag['descriptionKo'] || tag.descriptionJa || '';
     default:
       return tag.descriptionJa || '';
   }

@@ -75,7 +75,7 @@ interface MakerAnalysisProps {
 }
 
 export default function MakerAnalysis({ locale, className = '' }: MakerAnalysisProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const { items: viewedItems, isLoading: isViewLoading } = useRecentlyViewed();
   const [makers, setMakers] = useState<MakerPreference[]>([]);
   const [isLoading, setIsLoading] = useState(false);

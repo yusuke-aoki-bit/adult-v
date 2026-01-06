@@ -83,7 +83,7 @@ describe('DynamicCharts', () => {
     });
 
     it('should pass props to dynamic component', () => {
-      const testData = [{ month: '2024-01', count: 100 }];
+      const testData = [{ month: '2024-01', releaseCount: 100 }];
       render(React.createElement(DynamicReleasesTrendChart, { data: testData }));
 
       const chart = screen.getByTestId('dynamic-chart');

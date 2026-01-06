@@ -1,12 +1,12 @@
 import { getDb } from './index';
 import { products, performers, productPerformers, tags, productTags, productSources, performerAliases, productImages, productVideos, productSales } from './schema';
 import { eq, and, or, desc, asc, gte, sql, inArray, notInArray } from 'drizzle-orm';
-import type { Product as ProductType, Actress as ActressType, ProductCategory, ProviderId } from '@/types/product';
+import type { Product as ProductType, Actress as ActressType, ProductCategory, ProviderId } from '../../types/product';
 import type { InferSelectModel } from 'drizzle-orm';
-import { mapLegacyProvider } from '@/lib/provider-utils';
-import { getDtiServiceFromUrl } from '@/lib/image-utils';
-import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
-import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@/lib/localization';
+import { mapLegacyProvider } from '../provider-utils';
+import { getDtiServiceFromUrl } from '../image-utils';
+import { ASP_TO_PROVIDER_ID } from '../constants/filters';
+import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '../localization';
 
 type DbProduct = InferSelectModel<typeof products>;
 type DbPerformer = InferSelectModel<typeof performers>;
@@ -16,7 +16,7 @@ type DbPerformer = InferSelectModel<typeof performers>;
  * クローリング時のパース エラーにより生成された無効なデータを除外
  */
 function isValidPerformer(performer: { name: string }): boolean {
-  const name = performer.name;
+  const name = performer['name'];
 
   // 1文字だけの名前は無効（例: 'デ', 'ラ', 'J', 'K'）
   if (name.length <= 1) return false;
@@ -81,12 +81,12 @@ async function batchFetchProductRelatedData(
     db
       .select({
         productId: productPerformers.productId,
-        id: performers.id,
-        name: performers.name,
-        nameKana: performers.nameKana,
+        id: performers['id'],
+        name: performers['name'],
+        nameKana: performers['nameKana'],
       })
       .from(productPerformers)
-      .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+      .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
       .where(inArray(productPerformers.productId, productIds)),
     db
       .select({
@@ -176,11 +176,11 @@ function mapProductsWithBatchData(
   locale: string = 'ja'
 ): ProductType[] {
   return productList.map((product) => {
-    const performerData = (batchData.performersMap.get(product.id) || []).filter(isValidPerformer);
-    const tagData = batchData.tagsMap.get(product.id) || [];
-    const imagesData = batchData.imagesMap.get(product.id);
-    const saleData = batchData.salesMap.get(product.id);
-    return mapProductToType(product, performerData, tagData, batchData.sourcesMap.get(product.id), undefined, imagesData, undefined, locale, saleData);
+    const performerData = (batchData.performersMap.get(product['id']) || []).filter(isValidPerformer);
+    const tagData = batchData.tagsMap.get(product['id']) || [];
+    const imagesData = batchData.imagesMap.get(product['id']);
+    const saleData = batchData.salesMap.get(product['id']);
+    return mapProductToType(product, performerData, tagData, batchData.sourcesMap.get(product['id']), undefined, imagesData, undefined, locale, saleData);
   });
 }
 
@@ -192,12 +192,12 @@ async function fetchProductRelatedData(db: ReturnType<typeof getDb>, productId: 
     // 出演者情報を取得
     db
       .select({
-        id: performers.id,
-        name: performers.name,
-        nameKana: performers.nameKana,
+        id: performers['id'],
+        name: performers['name'],
+        nameKana: performers['nameKana'],
       })
       .from(productPerformers)
-      .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+      .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
       .where(eq(productPerformers.productId, productId)),
 
     // タグ情報を取得
@@ -254,7 +254,7 @@ export async function getProductById(id: string, locale: string = 'ja'): Promise
     const result = await db
       .select()
       .from(products)
-      .where(eq(products.id, parseInt(id)))
+      .where(eq(products['id'], parseInt(id)))
       .limit(1);
 
     if (result.length === 0) {
@@ -262,6 +262,7 @@ export async function getProductById(id: string, locale: string = 'ja'): Promise
     }
 
     const product = result[0];
+    if (!product) return null;
 
     // 関連データを並列で取得
     const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product.id);
@@ -291,6 +292,7 @@ export async function searchProductByProductId(productId: string, locale: string
 
     if (productByNormalizedId.length > 0) {
       const product = productByNormalizedId[0];
+      if (!product) return null;
 
       // 関連データを並列で取得
       const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product.id);
@@ -310,12 +312,13 @@ export async function searchProductByProductId(productId: string, locale: string
     }
 
     const source = sourceByOriginalId[0];
+    if (!source) return null;
 
     // 商品情報を取得
     const product = await db
       .select()
       .from(products)
-      .where(eq(products.id, source.productId))
+      .where(eq(products['id'], source.productId))
       .limit(1);
 
     if (product.length === 0) {
@@ -323,17 +326,18 @@ export async function searchProductByProductId(productId: string, locale: string
     }
 
     const productData = product[0];
+    if (!productData) return null;
 
     // 関連データを並列で取得（sourceは既に取得済みなので、出演者、タグ、画像、動画）
     const [performerData, tagData, imagesData, videosData] = await Promise.all([
       db
         .select({
-          id: performers.id,
-          name: performers.name,
-          nameKana: performers.nameKana,
+          id: performers['id'],
+          name: performers['name'],
+          nameKana: performers['nameKana'],
         })
         .from(productPerformers)
-        .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+        .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
         .where(eq(productPerformers.productId, productData.id)),
 
       db
@@ -423,7 +427,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productSources} ps
-            WHERE ps.product_id = ${products.id}
+            WHERE ps.product_id = ${products['id']}
             AND ps.asp_name = ${aspNames[0]}
           )`
         );
@@ -431,7 +435,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productSources} ps
-            WHERE ps.product_id = ${products.id}
+            WHERE ps.product_id = ${products['id']}
             AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
           )`
         );
@@ -444,7 +448,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
-          WHERE ps.product_id = ${products.id}
+          WHERE ps.product_id = ${products['id']}
           AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
         )`
       );
@@ -453,18 +457,18 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     // 価格フィルタ（productSourcesの価格を使用）
     if (options?.minPrice !== undefined || options?.maxPrice !== undefined) {
       const priceConditions = [];
-      if (options.minPrice !== undefined) {
-        priceConditions.push(sql`ps.price >= ${options.minPrice}`);
+      if (options['minPrice'] !== undefined) {
+        priceConditions.push(sql`ps.price >= ${options['minPrice']}`);
       }
-      if (options.maxPrice !== undefined) {
-        priceConditions.push(sql`ps.price <= ${options.maxPrice}`);
+      if (options['maxPrice'] !== undefined) {
+        priceConditions.push(sql`ps.price <= ${options['maxPrice']}`);
       }
 
       // EXISTSを使用
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
-          WHERE ps.product_id = ${products.id}
+          WHERE ps.product_id = ${products['id']}
           AND ${sql.join(priceConditions, sql` AND `)}
         )`
       );
@@ -478,7 +482,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productPerformers} pp
-            WHERE pp.product_id = ${products.id}
+            WHERE pp.product_id = ${products['id']}
             AND pp.performer_id = ${performerId}
           )`
         );
@@ -493,7 +497,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productTags} pt
-            WHERE pt.product_id = ${products.id}
+            WHERE pt.product_id = ${products['id']}
             AND pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
           )`
         );
@@ -508,7 +512,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         conditions.push(
           sql`NOT EXISTS (
             SELECT 1 FROM ${productTags} pt
-            WHERE pt.product_id = ${products.id}
+            WHERE pt.product_id = ${products['id']}
             AND pt.tag_id IN (${sql.join(excludeTagIds.map(id => sql`${id}`), sql`, `)})
           )`
         );
@@ -524,7 +528,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       conditions.push(
         sql`(
           ${products}.search_vector @@ plainto_tsquery('simple', ${options.query})
-          OR ${products.aiDescription}::text ILIKE ${searchPattern}
+          OR ${products['aiDescription']}::text ILIKE ${searchPattern}
         )`
       );
     }
@@ -534,7 +538,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productVideos} pv
-          WHERE pv.product_id = ${products.id}
+          WHERE pv.product_id = ${products['id']}
         )`
       );
     }
@@ -544,7 +548,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productImages} pi
-          WHERE pi.product_id = ${products.id}
+          WHERE pi.product_id = ${products['id']}
         )`
       );
     }
@@ -555,7 +559,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       conditions.push(
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
-          WHERE pp.product_id = ${products.id}
+          WHERE pp.product_id = ${products['id']}
         ) = 1`
       );
     } else if (options?.performerType === 'multi') {
@@ -563,7 +567,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       conditions.push(
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
-          WHERE pp.product_id = ${products.id}
+          WHERE pp.product_id = ${products['id']}
         ) >= 2`
       );
     }
@@ -574,7 +578,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
           INNER JOIN ${productSales} psl ON psl.product_source_id = ps.id
-          WHERE ps.product_id = ${products.id}
+          WHERE ps.product_id = ${products['id']}
           AND psl.is_active = true
           AND (psl.end_at IS NULL OR psl.end_at > NOW())
         )`
@@ -586,7 +590,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       conditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${productPerformers} pp
-          WHERE pp.product_id = ${products.id}
+          WHERE pp.product_id = ${products['id']}
         )`
       );
     }
@@ -603,7 +607,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
           price: productSources.price,
         })
         .from(products)
-        .innerJoin(productSources, eq(products.id, productSources.productId))
+        .innerJoin(productSources, eq(products['id'], productSources.productId))
         .where(whereClause)
         .orderBy(
           options.sortBy === 'priceAsc'
@@ -626,14 +630,14 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     let orderByClause;
     switch (options?.sortBy) {
       case 'releaseDateAsc':
-        orderByClause = [asc(products.releaseDate), asc(products.createdAt)];
+        orderByClause = [asc(products['releaseDate']), asc(products['createdAt'])];
         break;
       case 'titleAsc':
-        orderByClause = [asc(products.title)];
+        orderByClause = [asc(products['title'])];
         break;
       case 'releaseDateDesc':
       default:
-        orderByClause = [desc(products.releaseDate), desc(products.createdAt)];
+        orderByClause = [desc(products['releaseDate']), desc(products['createdAt'])];
         break;
     }
 
@@ -680,7 +684,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productSources} ps
-            WHERE ps.product_id = ${products.id}
+            WHERE ps.product_id = ${products['id']}
             AND ps.asp_name = ${aspNames[0]}
           )`
         );
@@ -688,7 +692,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productSources} ps
-            WHERE ps.product_id = ${products.id}
+            WHERE ps.product_id = ${products['id']}
             AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
           )`
         );
@@ -701,7 +705,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
-          WHERE ps.product_id = ${products.id}
+          WHERE ps.product_id = ${products['id']}
           AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
         )`
       );
@@ -714,7 +718,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productPerformers} pp
-            WHERE pp.product_id = ${products.id}
+            WHERE pp.product_id = ${products['id']}
             AND pp.performer_id = ${performerId}
           )`
         );
@@ -726,7 +730,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productVideos} pv
-          WHERE pv.product_id = ${products.id}
+          WHERE pv.product_id = ${products['id']}
         )`
       );
     }
@@ -736,7 +740,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productImages} pi
-          WHERE pi.product_id = ${products.id}
+          WHERE pi.product_id = ${products['id']}
         )`
       );
     }
@@ -746,14 +750,14 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
       conditions.push(
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
-          WHERE pp.product_id = ${products.id}
+          WHERE pp.product_id = ${products['id']}
         ) = 1`
       );
     } else if (options?.performerType === 'multi') {
       conditions.push(
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
-          WHERE pp.product_id = ${products.id}
+          WHERE pp.product_id = ${products['id']}
         ) >= 2`
       );
     }
@@ -764,7 +768,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
           INNER JOIN ${productSales} psl ON psl.product_source_id = ps.id
-          WHERE ps.product_id = ${products.id}
+          WHERE ps.product_id = ${products['id']}
           AND psl.is_active = true
           AND (psl.end_at IS NULL OR psl.end_at > NOW())
         )`
@@ -776,7 +780,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
       conditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${productPerformers} pp
-          WHERE pp.product_id = ${products.id}
+          WHERE pp.product_id = ${products['id']}
         )`
       );
     }
@@ -844,7 +848,7 @@ export async function getActresses(options?: {
       sql`EXISTS (
         SELECT 1 FROM ${productPerformers} pp
         INNER JOIN products p2 ON pp.product_id = p2.id
-        WHERE pp.performer_id = ${performers.id}
+        WHERE pp.performer_id = ${performers['id']}
       )`
     );
 
@@ -852,7 +856,7 @@ export async function getActresses(options?: {
     if (options?.excludeInitials) {
       conditions.push(
         sql`NOT (
-          LEFT(${performers.name}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
+          LEFT(${performers['name']}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
         )`
       );
     }
@@ -872,7 +876,7 @@ export async function getActresses(options?: {
           if (performerIds.length > 0) {
             const performerIdValues = performerIds.map(p => p.performerId);
             conditions.push(
-              inArray(performers.id, performerIdValues)
+              inArray(performers['id'], performerIdValues)
             );
           } else {
             // 該当女優なし
@@ -900,7 +904,7 @@ export async function getActresses(options?: {
           if (excludedPerformerIds.length > 0) {
             const excludedPerformerIdValues = excludedPerformerIds.map(p => p.performerId);
             conditions.push(
-              notInArray(performers.id, excludedPerformerIdValues)
+              notInArray(performers['id'], excludedPerformerIdValues)
             );
           }
         }
@@ -923,7 +927,7 @@ export async function getActresses(options?: {
         if (performerIds.length > 0) {
           const performerIdValues = performerIds.map(p => p.performerId);
           conditions.push(
-            inArray(performers.id, performerIdValues)
+            inArray(performers['id'], performerIdValues)
           );
         } else {
           // 該当女優なし
@@ -948,7 +952,7 @@ export async function getActresses(options?: {
         if (excludedPerformerIds.length > 0) {
           const excludedPerformerIdValues = excludedPerformerIds.map(p => p.performerId);
           conditions.push(
-            notInArray(performers.id, excludedPerformerIdValues)
+            notInArray(performers['id'], excludedPerformerIdValues)
           );
         }
       } catch (excludeAspsError) {
@@ -968,7 +972,7 @@ export async function getActresses(options?: {
         if (performerIds.length > 0) {
           const performerIdValues = performerIds.map(p => p.performerId);
           conditions.push(
-            inArray(performers.id, performerIdValues)
+            inArray(performers['id'], performerIdValues)
           );
         } else {
           return [];
@@ -990,7 +994,7 @@ export async function getActresses(options?: {
         if (performerIds.length > 0) {
           const performerIdValues = performerIds.map(p => p.performerId);
           conditions.push(
-            inArray(performers.id, performerIdValues)
+            inArray(performers['id'], performerIdValues)
           );
         } else {
           return [];
@@ -1029,12 +1033,12 @@ export async function getActresses(options?: {
         // 主名前、カナ名、別名、またはAIレビューのいずれかに一致
         // 頭文字検索の場合、nameKanaでのみ検索（ひらがな頭文字→漢字名はマッチしないため）
         const nameConditions = isInitialSearch
-          ? sql`${performers.nameKana} IS NOT NULL AND ${performers.nameKana} ILIKE ${searchPattern}`
+          ? sql`${performers['nameKana']} IS NOT NULL AND ${performers['nameKana']} ILIKE ${searchPattern}`
           : or(
-              sql`similarity(${performers.name}, ${options.query}) > 0.2`,
-              sql`similarity(${performers.nameKana}, ${options.query}) > 0.2`,
-              sql`${performers.name} ILIKE ${searchPattern}`,
-              sql`${performers.nameKana} ILIKE ${searchPattern}`,
+              sql`similarity(${performers['name']}, ${options.query}) > 0.2`,
+              sql`similarity(${performers['nameKana']}, ${options.query}) > 0.2`,
+              sql`${performers['name']} ILIKE ${searchPattern}`,
+              sql`${performers['nameKana']} ILIKE ${searchPattern}`,
               // AIレビュー本文も検索対象に追加（2文字以上の検索時のみ）
               sql`${performers.aiReview} ILIKE ${searchPattern}`
             )!;
@@ -1044,7 +1048,7 @@ export async function getActresses(options?: {
           conditions.push(
             or(
               nameConditions,
-              inArray(performers.id, matchingPerformerIds.map(p => p.performerId))
+              inArray(performers['id'], matchingPerformerIds.map(p => p.performerId))
             )!
           );
         } else {
@@ -1064,27 +1068,27 @@ export async function getActresses(options?: {
     if (sortBy === 'productCountDesc' || sortBy === 'productCountAsc') {
       try {
         // 作品数順の場合は、LEFT JOINして作品数でソート
-        // 同じ作品数の場合はperformer.idでソートして順序を安定させる
+        // 同じ作品数の場合はperformer['id']でソートして順序を安定させる
         const results = await db
           .select({
             performer: performers,
             productCount: sql<number>`COALESCE(COUNT(${productPerformers.productId}), 0)`,
           })
           .from(performers)
-          .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
+          .leftJoin(productPerformers, eq(performers['id'], productPerformers.performerId))
           .where(whereClause)
-          .groupBy(performers.id)
+          .groupBy(performers['id'])
           .orderBy(
             sortBy === 'productCountDesc'
               ? desc(sql`COALESCE(COUNT(${productPerformers.productId}), 0)`)
               : asc(sql`COALESCE(COUNT(${productPerformers.productId}), 0)`),
-            desc(performers.id)
+            desc(performers['id'])
           )
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
 
         // バッチで作品数、サムネイル、ASPサービス、別名を取得
-        const performerIds = results.map(r => r.performer.id);
+        const performerIds = results.map(r => r.performer['id']);
         const [productCounts, thumbnails, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerProductCounts(db, performerIds),
           batchGetPerformerThumbnails(db, performerIds),
@@ -1096,10 +1100,10 @@ export async function getActresses(options?: {
         const actresses = results
           .map(r => mapPerformerToActressTypeSync(
             r.performer,
-            productCounts.get(r.performer.id) || 0,
-            thumbnails.get(r.performer.id),
-            servicesMap.get(r.performer.id),
-            aliasesMap.get(r.performer.id),
+            productCounts.get(r.performer['id']) || 0,
+            thumbnails.get(r.performer['id']),
+            servicesMap.get(r.performer['id']),
+            aliasesMap.get(r.performer['id']),
             locale
           ));
 
@@ -1112,23 +1116,23 @@ export async function getActresses(options?: {
       try {
         // 新着順の場合は、作品のリリース日でソート（最新の作品が出ている女優を先に表示）
         // release_dateがNULLの場合は最低優先順位（NULLS LAST）
-        // 同じ日付の場合はperformer.idでソートして順序を安定させる
+        // 同じ日付の場合はperformer['id']でソートして順序を安定させる
         const results = await db
           .select({
             performer: performers,
-            latestDate: sql<Date>`MAX(${products.releaseDate})`,
+            latestDate: sql<Date>`MAX(${products['releaseDate']})`,
           })
           .from(performers)
-          .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
-          .leftJoin(products, eq(productPerformers.productId, products.id))
+          .leftJoin(productPerformers, eq(performers['id'], productPerformers.performerId))
+          .leftJoin(products, eq(productPerformers.productId, products['id']))
           .where(whereClause)
-          .groupBy(performers.id)
-          .orderBy(sql`MAX(${products.releaseDate}) DESC NULLS LAST`, desc(performers.id))
+          .groupBy(performers['id'])
+          .orderBy(sql`MAX(${products['releaseDate']}) DESC NULLS LAST`, desc(performers['id']))
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
 
         // バッチで作品数、サムネイル、ASPサービス、別名を取得
-        const performerIds = results.map(r => r.performer.id);
+        const performerIds = results.map(r => r.performer['id']);
         const [productCounts, thumbnails, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerProductCounts(db, performerIds),
           batchGetPerformerThumbnails(db, performerIds),
@@ -1140,10 +1144,10 @@ export async function getActresses(options?: {
         const actresses = results
           .map(r => mapPerformerToActressTypeSync(
             r.performer,
-            productCounts.get(r.performer.id) || 0,
-            thumbnails.get(r.performer.id),
-            servicesMap.get(r.performer.id),
-            aliasesMap.get(r.performer.id),
+            productCounts.get(r.performer['id']) || 0,
+            thumbnails.get(r.performer['id']),
+            servicesMap.get(r.performer['id']),
+            aliasesMap.get(r.performer['id']),
             locale
           ));
 
@@ -1155,17 +1159,17 @@ export async function getActresses(options?: {
     } else {
       try {
         // 名前順
-        // 同じ名前の場合はperformer.idでソートして順序を安定させる
+        // 同じ名前の場合はperformer['id']でソートして順序を安定させる
         let orderByClauses;
         switch (sortBy) {
           case 'nameAsc':
-            orderByClauses = [asc(performers.name), asc(performers.id)];
+            orderByClauses = [asc(performers['name']), asc(performers['id'])];
             break;
           case 'nameDesc':
-            orderByClauses = [desc(performers.name), desc(performers.id)];
+            orderByClauses = [desc(performers['name']), desc(performers['id'])];
             break;
           default:
-            orderByClauses = [asc(performers.name), asc(performers.id)];
+            orderByClauses = [asc(performers['name']), asc(performers['id'])];
         }
 
         const results = await db
@@ -1189,10 +1193,10 @@ export async function getActresses(options?: {
         const actresses = results
           .map(performer => mapPerformerToActressTypeSync(
             performer,
-            productCounts.get(performer.id) || 0,
-            thumbnails.get(performer.id),
-            servicesMap.get(performer.id),
-            aliasesMap.get(performer.id),
+            productCounts.get(performer['id']) || 0,
+            thumbnails.get(performer['id']),
+            servicesMap.get(performer['id']),
+            aliasesMap.get(performer['id']),
             locale
           ));
 
@@ -1286,10 +1290,10 @@ async function batchGetPerformerServices(db: ReturnType<typeof getDb>, performer
     .selectDistinct({
       performerId: productPerformers.performerId,
       aspName: productSources.aspName,
-      thumbnailUrl: products.defaultThumbnailUrl,
+      thumbnailUrl: products['defaultThumbnailUrl'],
     })
     .from(productPerformers)
-    .innerJoin(products, eq(productPerformers.productId, products.id))
+    .innerJoin(products, eq(productPerformers.productId, products['id']))
     .innerJoin(productSources, eq(productPerformers.productId, productSources.productId))
     .where(inArray(productPerformers.performerId, performerIds));
 
@@ -1462,7 +1466,7 @@ export async function getActressesCount(options?: {
       sql`EXISTS (
         SELECT 1 FROM ${productPerformers} pp
         INNER JOIN products p2 ON pp.product_id = p2.id
-        WHERE pp.performer_id = ${performers.id}
+        WHERE pp.performer_id = ${performers['id']}
       )`
     );
 
@@ -1470,7 +1474,7 @@ export async function getActressesCount(options?: {
     if (options?.excludeInitials) {
       conditions.push(
         sql`NOT (
-          LEFT(${performers.name}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
+          LEFT(${performers['name']}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
         )`
       );
     }
@@ -1488,7 +1492,7 @@ export async function getActressesCount(options?: {
         if (performerIds.length > 0) {
           const performerIdValues = performerIds.map(p => p.performerId);
           conditions.push(
-            inArray(performers.id, performerIdValues)
+            inArray(performers['id'], performerIdValues)
           );
         } else {
           return 0;
@@ -1509,7 +1513,7 @@ export async function getActressesCount(options?: {
         if (excludedPerformerIds.length > 0) {
           const excludedPerformerIdValues = excludedPerformerIds.map(p => p.performerId);
           conditions.push(
-            notInArray(performers.id, excludedPerformerIdValues)
+            notInArray(performers['id'], excludedPerformerIdValues)
           );
         }
       }
@@ -1526,7 +1530,7 @@ export async function getActressesCount(options?: {
       if (performerIds.length > 0) {
         const performerIdValues = performerIds.map(p => p.performerId);
         conditions.push(
-          inArray(performers.id, performerIdValues)
+          inArray(performers['id'], performerIdValues)
         );
       } else {
         return 0;
@@ -1544,7 +1548,7 @@ export async function getActressesCount(options?: {
       if (excludedPerformerIds.length > 0) {
         const excludedPerformerIdValues = excludedPerformerIds.map(p => p.performerId);
         conditions.push(
-          notInArray(performers.id, excludedPerformerIdValues)
+          notInArray(performers['id'], excludedPerformerIdValues)
         );
       }
     }
@@ -1559,7 +1563,7 @@ export async function getActressesCount(options?: {
       if (performerIds.length > 0) {
         const performerIdValues = performerIds.map(p => p.performerId);
         conditions.push(
-          inArray(performers.id, performerIdValues)
+          inArray(performers['id'], performerIdValues)
         );
       } else {
         return 0;
@@ -1576,7 +1580,7 @@ export async function getActressesCount(options?: {
       if (performerIds.length > 0) {
         const performerIdValues = performerIds.map(p => p.performerId);
         conditions.push(
-          inArray(performers.id, performerIdValues)
+          inArray(performers['id'], performerIdValues)
         );
       } else {
         return 0;
@@ -1610,12 +1614,12 @@ export async function getActressesCount(options?: {
       // 主名前、カナ名、または別名のいずれかに一致
       // 頭文字検索の場合、nameKanaでのみ検索（ひらがな頭文字→漢字名はマッチしないため）
       const nameConditions = isInitialSearch
-        ? sql`${performers.nameKana} IS NOT NULL AND ${performers.nameKana} ILIKE ${searchPattern}`
+        ? sql`${performers['nameKana']} IS NOT NULL AND ${performers['nameKana']} ILIKE ${searchPattern}`
         : or(
-            sql`similarity(${performers.name}, ${options.query}) > 0.2`,
-            sql`similarity(${performers.nameKana}, ${options.query}) > 0.2`,
-            sql`${performers.name} ILIKE ${searchPattern}`,
-            sql`${performers.nameKana} ILIKE ${searchPattern}`
+            sql`similarity(${performers['name']}, ${options.query}) > 0.2`,
+            sql`similarity(${performers['nameKana']}, ${options.query}) > 0.2`,
+            sql`${performers['name']} ILIKE ${searchPattern}`,
+            sql`${performers['nameKana']} ILIKE ${searchPattern}`
           )!;
 
       // 別名から一致した女優IDがあれば追加
@@ -1623,7 +1627,7 @@ export async function getActressesCount(options?: {
         conditions.push(
           or(
             nameConditions,
-            inArray(performers.id, matchingPerformerIds.map(p => p.performerId))
+            inArray(performers['id'], matchingPerformerIds.map(p => p.performerId))
           )!
         );
       } else {
@@ -1663,14 +1667,19 @@ export async function getActressById(id: string, locale: string = 'ja'): Promise
     const result = await db
       .select()
       .from(performers)
-      .where(eq(performers.id, performerId))
+      .where(eq(performers['id'], performerId))
       .limit(1);
 
     if (result.length === 0) {
       return null;
     }
 
-    return await mapPerformerToActressType(result[0], locale);
+    const performer = result[0];
+    if (!performer) {
+      return null;
+    }
+
+    return await mapPerformerToActressType(performer, locale);
   } catch (error) {
     console.error(`Error fetching actress ${id}:`, error);
     throw error;
@@ -1721,18 +1730,18 @@ export async function getActressProductCountBySite(actressId: string): Promise<A
     const results = await db
       .select({
         siteName: tags.name,
-        count: sql<number>`COUNT(DISTINCT ${products.id})`,
+        count: sql<number>`COUNT(DISTINCT ${products['id']})`,
       })
       .from(products)
-      .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
-      .innerJoin(productTags, eq(products.id, productTags.productId))
+      .innerJoin(productPerformers, eq(products['id'], productPerformers.productId))
+      .innerJoin(productTags, eq(products['id'], productTags.productId))
       .innerJoin(tags, eq(productTags.tagId, tags.id))
       .where(and(
         eq(productPerformers.performerId, performerId),
         eq(tags.category, 'site')
       ))
       .groupBy(tags.name)
-      .orderBy(desc(sql<number>`COUNT(DISTINCT ${products.id})`));
+      .orderBy(desc(sql<number>`COUNT(DISTINCT ${products['id']})`));
 
     return results.map(r => ({
       siteName: r.siteName,
@@ -1912,12 +1921,12 @@ function mapProductToType(
   // 通貨情報を取得（デフォルトJPY）
   const currency = source?.currency || 'JPY';
 
-  // サムネイル画像を取得（product.defaultThumbnailUrl → imagesDataのthumbnail → imagesDataの最初の画像）
-  let imageUrl = cache?.thumbnailUrl || product.defaultThumbnailUrl;
+  // サムネイル画像を取得（product['defaultThumbnailUrl'] → imagesDataのthumbnail → imagesDataの最初の画像）
+  let imageUrl = cache?.thumbnailUrl || product['defaultThumbnailUrl'];
   if (!imageUrl && imagesData && imagesData.length > 0) {
     // thumbnailタイプの画像を優先、なければ最初の画像
     const thumbnailImg = imagesData.find(img => img.imageType === 'thumbnail');
-    imageUrl = thumbnailImg?.imageUrl || imagesData[0].imageUrl;
+    imageUrl = thumbnailImg?.imageUrl || imagesData[0]?.imageUrl;
   }
   if (!imageUrl) {
     imageUrl = 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
@@ -1934,8 +1943,9 @@ function mapProductToType(
   const category: ProductCategory = 'premium';
 
   // 出演者情報（後方互換性のため最初の1人も保持）- ローカライズ対応
-  const actressId = performerData.length > 0 ? String(performerData[0].id) : undefined;
-  const actressName = performerData.length > 0 ? getLocalizedPerformerName(performerData[0], locale) : undefined;
+  const firstPerformer = performerData[0];
+  const actressId = firstPerformer ? String(firstPerformer.id) : undefined;
+  const actressName = firstPerformer ? getLocalizedPerformerName(firstPerformer, locale) : undefined;
 
   // 全出演者情報 - ローカライズ対応
   const performersList = performerData.map(p => ({
@@ -1947,8 +1957,8 @@ function mapProductToType(
   const tagsList = tagData.map(t => getLocalizedTagName(t, locale));
 
   // 新作判定・発売予定判定
-  const { isNew, isFuture } = product.releaseDate ? (() => {
-    const releaseDate = new Date(product.releaseDate);
+  const { isNew, isFuture } = product['releaseDate'] ? (() => {
+    const releaseDate = new Date(product['releaseDate']);
     const now = new Date();
     const diffTime = now.getTime() - releaseDate.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -1962,47 +1972,47 @@ function mapProductToType(
 
   // サンプル動画を整形
   const sampleVideos = videosData && videosData.length > 0
-    ? videosData.map(video => ({
-        url: video.videoUrl,
-        type: video.videoType,
-        quality: video.quality || undefined,
-        duration: video.duration || undefined,
-      }))
+    ? videosData.map(video => {
+        const result: { url: string; type: string; quality?: string; duration?: number } = {
+          url: video.videoUrl,
+          type: video.videoType,
+        };
+        if (video.quality) result.quality = video.quality;
+        if (video.duration) result.duration = video.duration;
+        return result;
+      })
     : undefined;
 
-  return {
-    id: String(product.id),
-    normalizedProductId: product.normalizedProductId || undefined,
-    originalProductId: source?.originalProductId || undefined,
+  const result: ProductType = {
+    id: String(product['id']),
     title: getLocalizedTitle(product, locale),
     description: getLocalizedDescription(product, locale),
     price,
-    currency,
     category,
     imageUrl,
     affiliateUrl,
     provider: mappedProvider,
     providerLabel,
-    actressId,
-    actressName,
-    performers: performersList.length > 0 ? performersList : undefined,
-    releaseDate: product.releaseDate || undefined,
-    duration: product.duration || undefined,
-    format: undefined,
-    rating: undefined,
-    reviewCount: undefined,
-    tags: tagsList,
     isFeatured: false,
     isNew,
     isFuture,
-    discount: saleData?.discountPercent || undefined,
-    salePrice: saleData?.salePrice,
-    regularPrice: saleData?.regularPrice,
-    reviewHighlight: undefined,
-    ctaLabel: undefined,
-    sampleImages,
-    sampleVideos,
+    ...(product.normalizedProductId ? { normalizedProductId: product.normalizedProductId } : {}),
+    ...(source?.originalProductId ? { originalProductId: source.originalProductId } : {}),
+    ...(currency ? { currency } : {}),
+    ...(actressId ? { actressId } : {}),
+    ...(actressName ? { actressName } : {}),
+    ...(performersList.length > 0 ? { performers: performersList } : {}),
+    ...(product['releaseDate'] ? { releaseDate: product['releaseDate'] } : {}),
+    ...(product['duration'] ? { duration: product['duration'] } : {}),
+    ...(tagsList.length > 0 ? { tags: tagsList } : {}),
+    ...(saleData?.discountPercent ? { discount: saleData.discountPercent } : {}),
+    ...(saleData?.salePrice ? { salePrice: saleData.salePrice } : {}),
+    ...(saleData?.regularPrice ? { regularPrice: saleData.regularPrice } : {}),
+    ...(sampleImages && sampleImages.length > 0 ? { sampleImages } : {}),
+    ...(sampleVideos && sampleVideos.length > 0 ? { sampleVideos } : {}),
   };
+
+  return result;
 }
 
 const ACTRESS_PLACEHOLDER = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+IMAGE';
@@ -2014,7 +2024,7 @@ const ACTRESS_PLACEHOLDER = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+
  */
 function mapPerformerToActressTypeSync(performer: DbPerformer, releaseCount: number, thumbnailUrl?: string, services?: string[], aliases?: string[], locale: string = 'ja'): ActressType {
   // 画像の優先順位: profileImageUrl > thumbnailUrl（商品画像） > プレースホルダー
-  const imageUrl = performer.profileImageUrl || thumbnailUrl || ACTRESS_PLACEHOLDER;
+  const imageUrl = performer['profileImageUrl'] || thumbnailUrl || ACTRESS_PLACEHOLDER;
   // ASP名をProviderId型に変換（共通定数を使用）
   const providerIds = (services || [])
     .map(s => ASP_TO_PROVIDER_ID[s])
@@ -2027,7 +2037,7 @@ function mapPerformerToActressTypeSync(performer: DbPerformer, releaseCount: num
   const bio = getLocalizedPerformerBio(performer, locale);
 
   return {
-    id: String(performer.id),
+    id: String(performer['id']),
     name: getLocalizedPerformerName(performer, locale),
     catchcopy: '',
     description: bio,
@@ -2042,9 +2052,9 @@ function mapPerformerToActressTypeSync(performer: DbPerformer, releaseCount: num
     },
     highlightWorks: [],
     tags: [],
-    aliases: aliases && aliases.length > 0 ? aliases : undefined,
-    aiReview,
-    aiReviewUpdatedAt: performer.aiReviewUpdatedAt?.toISOString(),
+    ...(aliases && aliases.length > 0 ? { aliases } : {}),
+    ...(aiReview ? { aiReview } : {}),
+    ...(performer.aiReviewUpdatedAt ? { aiReviewUpdatedAt: performer.aiReviewUpdatedAt.toISOString() } : {}),
   };
 }
 
@@ -2058,24 +2068,24 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
   // 作品数、サムネイル、ASPサービスを並列取得
   const [productCountResult, thumbnailResult, servicesResult] = await Promise.all([
     // 作品数
-    db.select({ count: sql<number>`count(*)` })
+    db['select']({ count: sql<number>`count(*)` })
       .from(productPerformers)
-      .where(eq(productPerformers.performerId, performer.id)),
+      .where(eq(productPerformers.performerId, performer['id'])),
     // サムネイル（DTI以外の商品を優先、なければDTIから取得）
-    db.select({ thumbnailUrl: products.defaultThumbnailUrl, aspName: productSources.aspName })
+    db['select']({ thumbnailUrl: products['defaultThumbnailUrl'], aspName: productSources.aspName })
       .from(productPerformers)
-      .innerJoin(products, eq(productPerformers.productId, products.id))
+      .innerJoin(products, eq(productPerformers.productId, products['id']))
       .innerJoin(productSources, eq(productPerformers.productId, productSources.productId))
       .where(
         and(
-          eq(productPerformers.performerId, performer.id),
-          sql`${products.defaultThumbnailUrl} IS NOT NULL`,
-          sql`${products.defaultThumbnailUrl} != ''`
+          eq(productPerformers.performerId, performer['id']),
+          sql`${products['defaultThumbnailUrl']} IS NOT NULL`,
+          sql`${products['defaultThumbnailUrl']} != ''`
         )
       )
       .orderBy(
         sql`CASE WHEN ${productSources.aspName} != 'DTI' THEN 0 ELSE 1 END`,
-        desc(products.createdAt)
+        desc(products['createdAt'])
       )
       .limit(1),
     // ASPサービス一覧（DTIは個別サービスに分割）
@@ -2099,7 +2109,7 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
       FROM product_performers pp
       INNER JOIN product_sources ps ON pp.product_id = ps.product_id
       INNER JOIN products p ON pp.product_id = p.id
-      WHERE pp.performer_id = ${performer.id}
+      WHERE pp.performer_id = ${performer['id']}
       AND ps.asp_name IS NOT NULL
     `),
   ]);
@@ -2131,12 +2141,12 @@ export async function fuzzySearchProducts(query: string, limit: number = 20): Pr
 
     // productsテーブルでnormalized_product_idとtitleを検索
     const productMatches = await db
-      .select({ id: products.id })
+      .select({ id: products['id'] })
       .from(products)
       .where(
         or(
           sql`${products.normalizedProductId} ILIKE ${searchPattern}`,
-          sql`${products.title} ILIKE ${searchPattern}`
+          sql`${products['title']} ILIKE ${searchPattern}`
         )!
       )
       .limit(limit);
@@ -2214,10 +2224,10 @@ export async function getActressesWithNewReleases(options: {
     // ActressType形式に変換（getActressByIdで画像など取得）
     const actressesWithDetails = await Promise.all(
       result.rows.map(async (actress) => {
-        const fullActress = await getActressById(actress.id.toString(), locale);
+        const fullActress = await getActressById(actress['id'].toString(), locale);
         return fullActress || {
-          id: actress.id.toString(),
-          name: actress.name,
+          id: actress['id'].toString(),
+          name: actress['name'],
           catchcopy: '',
           description: '',
           heroImage: '',
@@ -2292,13 +2302,13 @@ export async function getRecentProducts(options?: {
     const results = await db
       .select()
       .from(products)
-      .orderBy(desc(products.releaseDate), desc(products.createdAt))
+      .orderBy(desc(products['releaseDate']), desc(products['createdAt']))
       .limit(limit);
 
     // 関連データを並列で取得
     const productsWithData = await Promise.all(
       results.map(async (product) => {
-        const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product.id);
+        const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product['id']);
 
         return mapProductToType(
           product,
@@ -2450,18 +2460,18 @@ export async function getUncategorizedProducts(options?: {
     // 関連データを並列で取得
     const productsWithData = await Promise.all(
       (results.rows as any[]).map(async (product) => {
-        const { tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product.id);
+        const { tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product['id']);
 
         // ローカライズ適用
         const localizedTitle = getLocalizedTitle({
-          title: product.title || '',
+          title: product['title'] || '',
           titleEn: product.title_en,
           titleZh: product.title_zh,
           titleZhTw: product.title_zh_tw,
           titleKo: product.title_ko,
         }, locale);
         const localizedDescription = getLocalizedDescription({
-          description: product.description,
+          description: product['description'],
           descriptionEn: product.description_en,
           descriptionZh: product.description_zh,
           descriptionZhTw: product.description_zh_tw,
@@ -2469,13 +2479,13 @@ export async function getUncategorizedProducts(options?: {
         }, locale);
 
         return {
-          id: String(product.id),
+          id: String(product['id']),
           title: localizedTitle,
           description: localizedDescription,
           normalizedProductId: product.normalized_product_id,
           imageUrl: product.default_thumbnail_url || '',
           releaseDate: product.release_date,
-          duration: product.duration,
+          duration: product['duration'],
           price: sourceData?.price || 0,
           category: 'all' as const,
           affiliateUrl: sourceData?.affiliateUrl || '',
@@ -2749,7 +2759,7 @@ export async function getProviderProductCounts(): Promise<Record<string, number>
       const providerId = aspToProviderId[row.asp_name];
       if (providerId) {
         // 同じproviderIdに対して複数のASP名がある場合は合算
-        counts[providerId] = (counts[providerId] || 0) + parseInt(row.count, 10);
+        counts[providerId] = (counts[providerId] || 0) + parseInt(row['count'], 10);
       }
     }
 
@@ -2882,8 +2892,8 @@ export async function getCategories(options?: {
     if (!result.rows) return [];
 
     return result.rows.map(row => ({
-      id: row.id,
-      name: row.name,
+      id: row['id'],
+      name: row['name'],
       nameEn: row.name_en,
       nameZh: row.name_zh,
       nameKo: row.name_ko,
@@ -3176,7 +3186,7 @@ export async function getAspStatsByCategory(
 
     return result.rows.map((row) => ({
       aspName: row.asp_name,
-      count: parseInt(row.count, 10),
+      count: parseInt(row['count'], 10),
     }));
   } catch (error) {
     console.error('Error getting ASP stats by category:', error);
@@ -3204,14 +3214,16 @@ export async function getTagById(tagId: number): Promise<{
       .limit(1);
 
     if (result.length === 0) return null;
+    const tag = result[0];
+    if (!tag) return null;
 
     return {
-      id: result[0].id,
-      name: result[0].name,
-      nameEn: result[0].nameEn,
-      nameZh: result[0].nameZh,
-      nameKo: result[0].nameKo,
-      category: result[0].category,
+      id: tag.id,
+      name: tag.name,
+      nameEn: tag.nameEn,
+      nameZh: tag.nameZh,
+      nameKo: tag.nameKo,
+      category: tag.category,
     };
   } catch (error) {
     console.error('Error getting tag by id:', error);
@@ -3316,12 +3328,12 @@ export async function getUncategorizedStats(): Promise<UncategorizedStats> {
     return {
       aspStats: aspResult.rows?.map(row => ({
         aspName: row.asp_name,
-        count: parseInt(row.count, 10),
+        count: parseInt(row['count'], 10),
       })) || [],
       patternStats: patternResult.rows?.map(row => ({
         pattern: row.pattern,
         label: patternLabels[row.pattern] || row.pattern,
-        count: parseInt(row.count, 10),
+        count: parseInt(row['count'], 10),
       })) || [],
       totalCount: parseInt(totalResult.rows?.[0]?.count || '0', 10),
     };
@@ -3350,7 +3362,7 @@ export async function getCandidatePerformers(productCode: string): Promise<Array
 
     return result.rows?.map(row => ({
       name: row.performer_name,
-      source: row.source,
+      source: row['source'],
     })) || [];
   } catch (error) {
     console.error('Error getting candidate performers:', error);
@@ -3392,7 +3404,7 @@ export async function getSaleProducts(options?: {
     ];
 
     if (options?.aspName) {
-      conditions.push(eq(productSources.aspName, options.aspName));
+      conditions.push(eq(productSources.aspName, options['aspName']));
     }
 
     if (options?.minDiscount) {
@@ -3401,10 +3413,10 @@ export async function getSaleProducts(options?: {
 
     const results = await db
       .select({
-        productId: products.id,
+        productId: products['id'],
         normalizedProductId: products.normalizedProductId,
-        title: products.title,
-        thumbnailUrl: products.defaultThumbnailUrl,
+        title: products['title'],
+        thumbnailUrl: products['defaultThumbnailUrl'],
         aspName: productSources.aspName,
         affiliateUrl: productSources.affiliateUrl,
         regularPrice: productSales.regularPrice,
@@ -3416,7 +3428,7 @@ export async function getSaleProducts(options?: {
       })
       .from(productSales)
       .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
-      .innerJoin(products, eq(productSources.productId, products.id))
+      .innerJoin(products, eq(productSources.productId, products['id']))
       .where(and(...conditions))
       .orderBy(desc(productSales.discountPercent), desc(productSales.fetchedAt))
       .limit(limit);
@@ -3427,11 +3439,11 @@ export async function getSaleProducts(options?: {
       ? await db
           .select({
             productId: productPerformers.productId,
-            performerId: performers.id,
-            performerName: performers.name,
+            performerId: performers['id'],
+            performerName: performers['name'],
           })
           .from(productPerformers)
-          .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+          .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
           .where(inArray(productPerformers.productId, productIds))
       : [];
 

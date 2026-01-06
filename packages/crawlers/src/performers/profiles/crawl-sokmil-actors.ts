@@ -15,7 +15,7 @@ import { performers } from '../../lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { RateLimiter, crawlerLog } from '../../lib/crawler';
 
-const SOKMIL_API_KEY = process.env.SOKMIL_API_KEY || '52c5a783bce2839f841b887f8ab3d90a';
+const SOKMIL_API_KEY = process.env['SOKMIL_API_KEY'] || '52c5a783bce2839f841b887f8ab3d90a';
 const SOKMIL_AFFILIATE_ID = '47418-001';
 const SOKMIL_API_BASE = 'https://sokmil-ad.com/api/v1';
 
@@ -101,7 +101,7 @@ async function fetchSokmilActors(params: {
   });
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`);
+    throw new Error(`API error: ${response['status']} ${response.statusText}`);
   }
 
   return response.json();
@@ -143,8 +143,8 @@ async function main() {
   const offsetArg = args.find(arg => arg.startsWith('--offset='));
   const initialArg = args.find(arg => arg.startsWith('--initial='));
 
-  const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 100;
-  const startOffset = offsetArg ? parseInt(offsetArg.split('=')[1]) : 1;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '100', 10) : 100;
+  const startOffset = offsetArg ? parseInt(offsetArg.split('=')[1] ?? '1', 10) : 1;
   const initial = initialArg ? initialArg.split('=')[1] : undefined;
 
   console.log('========================================');
@@ -180,13 +180,13 @@ async function main() {
         const response = await fetchSokmilActors({
           hits: pageSize,
           offset,
-          initial,
+          ...(initial && { initial }),
           gender: 'f',
           category: 'av',
         });
 
-        if (response.result.status !== '200') {
-          crawlerLog.error(`API エラー: status=${response.result.status}`);
+        if (response.result['status'] !== '200') {
+          crawlerLog.error(`API エラー: status=${response.result['status']}`);
           break;
         }
 
@@ -215,50 +215,45 @@ async function main() {
             const existingPerformer = await db
               .select()
               .from(performers)
-              .where(eq(performers.name, actor.name.trim()))
+              .where(eq(performers['name'], actor.name.trim()))
               .limit(1);
 
             // プロフィールデータを準備
-            const birthday = parseBirthday(actor.birthday);
+            const birthdayDate = parseBirthday(actor.birthday);
             const profileData = {
               nameKana: actor.ruby || null,
               height: parseNumber(actor.height),
               bust: parseNumber(actor.bust),
               waist: parseNumber(actor.waist),
               hip: parseNumber(actor.hip),
-              cupSize: actor.cup?.toUpperCase() || null,
+              cup: actor.cup?.toUpperCase() || null,
               bloodType: actor.blood || null,
-              birthDate: birthday,
-              hobby: actor.hobby || null,
-              heroImage: actor.imageURL?.large || actor.imageURL?.small || null,
-              thumbnail: actor.imageURL?.list || actor.imageURL?.small || null,
-              sokmilActorId: actor.id,
-              updatedAt: new Date(),
+              birthday: birthdayDate ? birthdayDate.toISOString().split('T')[0] : null,
+              hobbies: actor.hobby || null,
+              profileImageUrl: actor.imageURL?.large || actor.imageURL?.small || null,
             };
 
             if (existingPerformer.length > 0) {
               // 既存のperformerを更新（プロフィール情報がnullの場合のみ更新）
-              const existing = existingPerformer[0];
-              const updateData: Record<string, any> = {};
+              const existing = existingPerformer[0]!;
+              const updateData: Record<string, unknown> = {};
 
               // null または空の場合のみ更新
-              if (!existing.nameKana && profileData.nameKana) updateData.nameKana = profileData.nameKana;
-              if (!existing.height && profileData.height) updateData.height = profileData.height;
-              if (!existing.bust && profileData.bust) updateData.bust = profileData.bust;
-              if (!existing.waist && profileData.waist) updateData.waist = profileData.waist;
-              if (!existing.hip && profileData.hip) updateData.hip = profileData.hip;
-              if (!existing.cupSize && profileData.cupSize) updateData.cupSize = profileData.cupSize;
-              if (!existing.bloodType && profileData.bloodType) updateData.bloodType = profileData.bloodType;
-              if (!existing.birthDate && profileData.birthDate) updateData.birthDate = profileData.birthDate;
-              if (!existing.heroImage && profileData.heroImage) updateData.heroImage = profileData.heroImage;
-              if (!existing.thumbnail && profileData.thumbnail) updateData.thumbnail = profileData.thumbnail;
+              if (!existing.nameKana && profileData.nameKana) updateData['nameKana'] = profileData.nameKana;
+              if (!existing.height && profileData.height) updateData['height'] = profileData.height;
+              if (!existing.bust && profileData.bust) updateData['bust'] = profileData.bust;
+              if (!existing.waist && profileData.waist) updateData['waist'] = profileData.waist;
+              if (!existing.hip && profileData.hip) updateData['hip'] = profileData.hip;
+              if (!existing.cup && profileData.cup) updateData['cup'] = profileData.cup;
+              if (!existing.bloodType && profileData.bloodType) updateData['bloodType'] = profileData.bloodType;
+              if (!existing.birthday && profileData.birthday) updateData['birthday'] = profileData.birthday;
+              if (!existing.profileImageUrl && profileData.profileImageUrl) updateData['profileImageUrl'] = profileData.profileImageUrl;
 
               if (Object.keys(updateData).length > 0) {
-                updateData.updatedAt = new Date();
                 await db
                   .update(performers)
                   .set(updateData)
-                  .where(eq(performers.id, existing.id));
+                  .where(eq(performers['id'], existing.id));
                 stats.updatedPerformers++;
                 crawlerLog.info(`更新: ${actor.name} (ID: ${existing.id})`);
               } else {
@@ -266,7 +261,7 @@ async function main() {
               }
             } else {
               // 新規performerを作成
-              await db.insert(performers).values({
+              await db['insert'](performers).values({
                 name: actor.name.trim(),
                 ...profileData,
                 createdAt: new Date(),

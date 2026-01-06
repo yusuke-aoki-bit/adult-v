@@ -82,7 +82,7 @@ export default function SimilarProductSearch({
   locale,
   className = '',
 }: SimilarProductSearchProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<SimilarProduct[]>([]);

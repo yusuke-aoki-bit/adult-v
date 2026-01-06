@@ -56,18 +56,18 @@ async function parseDetailPage(movieId: string): Promise<JapanskaProduct | null>
 
     if (!response.ok) return null;
 
-    const html = await response.text();
+    const html = await response['text']();
 
     if (isHomePage(html)) return null;
 
     let title = '';
     const movieTtlMatch = html.match(/<div[^>]*class="movie_ttl"[^>]*>\s*<p>([^<]+)<\/p>/i);
-    if (movieTtlMatch) {
+    if (movieTtlMatch?.[1]) {
       title = movieTtlMatch[1].trim();
     }
     if (!title) {
       const ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i);
-      if (ogTitleMatch && !ogTitleMatch[1].includes('JAPANSKA')) {
+      if (ogTitleMatch?.[1] && !ogTitleMatch[1].includes('JAPANSKA')) {
         title = ogTitleMatch[1].trim();
       }
     }
@@ -77,12 +77,12 @@ async function parseDetailPage(movieId: string): Promise<JapanskaProduct | null>
 
     const descMatch = html.match(/<div[^>]*class="[^"]*comment[^"]*"[^>]*>([\s\S]*?)<\/div>/i) ||
                       html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i);
-    const description = descMatch ? descMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 1000) : undefined;
+    const description = descMatch?.[1] ? descMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 1000) : undefined;
 
     const performers: string[] = [];
     const actressLinkMatches = html.matchAll(/<a[^>]*href="[^"]*actress[^"]*"[^>]*>([^<]+)<\/a>/gi);
     for (const match of actressLinkMatches) {
-      const name = match[1].trim();
+      const name = match[1]?.trim();
       if (name && !performers.includes(name) && !name.includes('女優一覧') && name.length > 1 && name.length < 30) {
         performers.push(name);
       }
@@ -95,27 +95,29 @@ async function parseDetailPage(movieId: string): Promise<JapanskaProduct | null>
     }
 
     const durationMatch = html.match(/(\d+)分(\d+)?秒?/);
-    const duration = durationMatch
+    const duration = durationMatch?.[1]
       ? parseInt(durationMatch[1]) + (durationMatch[2] ? Math.round(parseInt(durationMatch[2]) / 60) : 0)
       : undefined;
 
     let sampleVideoUrl: string | undefined;
     const videoSrcMatch = html.match(/<source[^>]*src="([^"]+\.mp4)"/i);
-    if (videoSrcMatch) {
+    if (videoSrcMatch?.[1]) {
       sampleVideoUrl = videoSrcMatch[1].startsWith('http')
         ? videoSrcMatch[1]
         : `https://www.japanska-xxx.com/${videoSrcMatch[1]}`;
     }
 
-    return {
+    const result: JapanskaProduct = {
       movieId,
       title,
-      description,
       performers,
-      thumbnailUrl,
-      sampleVideoUrl,
-      duration,
     };
+    if (description !== undefined) result.description = description;
+    if (thumbnailUrl !== undefined) result.thumbnailUrl = thumbnailUrl;
+    if (sampleVideoUrl !== undefined) result.sampleVideoUrl = sampleVideoUrl;
+    if (duration !== undefined) result.duration = duration;
+
+    return result;
   } catch {
     return null;
   }
@@ -146,7 +148,7 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
     };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const startId = parseInt(url.searchParams.get('start') || '34000');
       const limit = parseInt(url.searchParams.get('limit') || '50');
 
@@ -189,7 +191,7 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
 
           const productResult = await db.execute(sql`
             INSERT INTO products (normalized_product_id, title, description, duration, default_thumbnail_url, updated_at)
-            VALUES (${normalizedProductId}, ${product.title}, ${product.description || null}, ${product.duration || null}, ${product.thumbnailUrl || null}, NOW())
+            VALUES (${normalizedProductId}, ${product['title']}, ${product['description'] || null}, ${product['duration'] || null}, ${product['thumbnailUrl'] || null}, NOW())
             ON CONFLICT (normalized_product_id) DO UPDATE SET
               title = EXCLUDED.title, description = EXCLUDED.description, duration = EXCLUDED.duration,
               default_thumbnail_url = EXCLUDED.default_thumbnail_url, updated_at = NOW()
@@ -220,10 +222,10 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
             `);
           }
 
-          if (product.sampleVideoUrl) {
+          if (product['sampleVideoUrl']) {
             const videoResult = await db.execute(sql`
               INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
-              VALUES (${productId}, 'Japanska', ${product.sampleVideoUrl}, 'sample', 0)
+              VALUES (${productId}, 'Japanska', ${product['sampleVideoUrl']}, 'sample', 0)
               ON CONFLICT DO NOTHING RETURNING id
             `);
 

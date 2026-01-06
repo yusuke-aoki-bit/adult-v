@@ -13,7 +13,7 @@
  * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fc2.ts --scan --from=1000000 --to=2000000 [--no-ai]
  */
 
-if (!process.env.DATABASE_URL) {
+if (!process.env['DATABASE_URL']) {
   console.error('ERROR: DATABASE_URL environment variable is not set');
   process.exit(1);
 }
@@ -35,7 +35,7 @@ const db = getDb();
 
 // アフィリエイトID設定
 // FC2 affiliate format: https://adult.contents.fc2.com/aff.php?aid={articleId}&affuid={base64_encoded_id}
-const FC2_AFFUID = process.env.FC2_AFFUID || 'TVRFNU5USTJOVEE9';
+const FC2_AFFUID = process.env['FC2_AFFUID'] || 'TVRFNU5USTJOVEE9';
 
 interface FC2Product {
   articleId: string;
@@ -86,11 +86,11 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     });
 
     if (!response.ok) {
-      console.log(`    ⚠️ 商品 ${articleId} が見つかりません (${response.status})`);
+      console.log(`    ⚠️ 商品 ${articleId} が見つかりません (${response['status']})`);
       return { product: null, rawDataId: null, shouldSkip: false };
     }
 
-    const html = await response.text();
+    const html = await response['text']();
 
     // NOT FOUND / 削除済み / トップページへのリダイレクト検出
     const notFoundPatterns = [
@@ -128,7 +128,7 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     if (!html.includes(articleId) && !html.includes(`article/${articleId}`)) {
       // og:urlも確認
       const ogUrlMatch = html.match(/<meta[^>]*property="og:url"[^>]*content="([^"]+)"/i);
-      if (ogUrlMatch && !ogUrlMatch[1].includes(articleId)) {
+      if (ogUrlMatch?.[1] && !ogUrlMatch[1].includes(articleId)) {
         console.log(`    ⚠️ 別ページへリダイレクト: ${articleId} → ${ogUrlMatch[1]}`);
         return { product: null, rawDataId: null, shouldSkip: false };
       }
@@ -157,14 +157,14 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
 
     // パターン1: og:title meta tag
     const ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i);
-    if (ogTitleMatch) {
+    if (ogTitleMatch?.[1]) {
       title = ogTitleMatch[1].trim();
     }
 
     // パターン2: h1タグ
     if (!title) {
       const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-      if (h1Match) {
+      if (h1Match?.[1]) {
         title = h1Match[1].trim();
       }
     }
@@ -172,9 +172,9 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     // パターン3: titleタグ
     if (!title) {
       const titleTagMatch = html.match(/<title>([^<]+)<\/title>/i);
-      if (titleTagMatch) {
+      if (titleTagMatch?.[1]) {
         const parts = titleTagMatch[1].split(/[|\-]/);
-        title = parts[0].trim();
+        title = parts[0]?.trim() ?? '';
       }
     }
 
@@ -186,7 +186,7 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     // 説明抽出
     const descMatch = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i) ||
                       html.match(/<div[^>]*class="[^"]*description[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
-    const description = descMatch ? descMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 1000) : undefined;
+    const description = descMatch?.[1] ? descMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 1000) : undefined;
 
     // 出演者抽出（共通バリデーション使用）
     const performersList: string[] = [];
@@ -194,7 +194,7 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     // パターン1: 出演者リンク
     const performerMatches = html.matchAll(/<a[^>]*href="[^"]*(?:actress|performer|cast)[^"]*"[^>]*>([^<]+)<\/a>/gi);
     for (const match of performerMatches) {
-      const rawName = match[1].trim();
+      const rawName = match[1]?.trim() ?? '';
       const normalizedName = normalizePerformerName(rawName);
       if (normalizedName &&
           !performersList.includes(normalizedName) &&
@@ -207,7 +207,7 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     // パターン2: 出演ラベル後のテキスト
     if (performersList.length === 0) {
       const actorLabelMatch = html.match(/出演[者：:]\s*([^<\n]+)/i);
-      if (actorLabelMatch) {
+      if (actorLabelMatch?.[1]) {
         const names = actorLabelMatch[1].split(/[,、\/]/).map(n => n.trim());
         for (const rawName of names.slice(0, 10)) {
           const normalizedName = normalizePerformerName(rawName);
@@ -224,40 +224,40 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     // サムネイル抽出
     const thumbMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i) ||
                        html.match(/<img[^>]*class="[^"]*(?:thumbnail|main)[^"]*"[^>]*src="([^"]+)"/i);
-    const thumbnailUrl = thumbMatch ? thumbMatch[1] : undefined;
+    const thumbnailUrl = thumbMatch?.[1];
 
     // サンプル画像抽出
     const sampleImages: string[] = [];
     const sampleMatches = html.matchAll(/<img[^>]*src="([^"]*(?:sample|preview|capture)[^"]*)"/gi);
     for (const match of sampleMatches) {
       const imgUrl = match[1];
-      if (!sampleImages.includes(imgUrl) && imgUrl.startsWith('http')) {
+      if (imgUrl && !sampleImages.includes(imgUrl) && imgUrl.startsWith('http')) {
         sampleImages.push(imgUrl);
       }
     }
 
     // 再生時間抽出
     const durationMatch = html.match(/(\d+)\s*分/) || html.match(/(\d+)\s*min/i);
-    const duration = durationMatch ? parseInt(durationMatch[1]) : undefined;
+    const duration = durationMatch?.[1] ? parseInt(durationMatch[1]) : undefined;
 
     // 価格抽出
     let price: number | undefined;
     let saleInfo: SaleInfo | undefined;
 
     const priceMatch = html.match(/(\d{1,3}(?:,\d{3})*)\s*(?:円|pt|ポイント)/);
-    price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : undefined;
+    price = priceMatch?.[1] ? parseInt(priceMatch[1].replace(/,/g, '')) : undefined;
 
     // セール情報抽出 (FC2は通常価格と割引価格がある場合がある)
     // パターン1: 取り消し線の価格と新しい価格
     const delPriceMatch = html.match(/<(?:del|s|strike)[^>]*>\s*(\d{1,3}(?:,\d{3})*)\s*(?:円|pt)/i);
-    if (delPriceMatch && price) {
+    if (delPriceMatch?.[1] && price) {
       const regularPrice = parseInt(delPriceMatch[1].replace(/,/g, ''));
       if (regularPrice > price) {
         const discountMatch = html.match(/(\d+)\s*%\s*(?:OFF|オフ|off)/);
         saleInfo = {
           regularPrice,
           salePrice: price,
-          discountPercent: discountMatch ? parseInt(discountMatch[1]) : Math.round((1 - price / regularPrice) * 100),
+          discountPercent: discountMatch?.[1] ? parseInt(discountMatch[1]) : Math.round((1 - price / regularPrice) * 100),
           saleType: 'sale',
         };
         console.log(`    💰 Sale detected: ¥${regularPrice.toLocaleString()} → ¥${price.toLocaleString()}`);
@@ -267,7 +267,7 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     // パターン2: 元の価格と割引価格
     if (!saleInfo) {
       const originalMatch = html.match(/(?:定価|通常|元)[価値:]?\s*(\d{1,3}(?:,\d{3})*)\s*(?:円|pt)/i);
-      if (originalMatch && price) {
+      if (originalMatch?.[1] && price) {
         const regularPrice = parseInt(originalMatch[1].replace(/,/g, ''));
         if (regularPrice > price) {
           saleInfo = {
@@ -285,7 +285,7 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     const tags: string[] = [];
     const tagMatches = html.matchAll(/<a[^>]*href="[^"]*tag[^"]*"[^>]*>([^<]+)<\/a>/gi);
     for (const match of tagMatches) {
-      const tag = match[1].trim();
+      const tag = match[1]?.trim();
       if (tag && !tags.includes(tag) && tag.length < 30) {
         tags.push(tag);
       }
@@ -294,7 +294,7 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     // カテゴリ抽出
     const categoryMatch = html.match(/カテゴリ[：:]\s*([^<\n]+)/i) ||
                           html.match(/<a[^>]*href="[^"]*category[^"]*"[^>]*>([^<]+)<\/a>/i);
-    const category = categoryMatch ? categoryMatch[1].trim() : undefined;
+    const category = categoryMatch?.[1]?.trim();
 
     // サンプル動画URL抽出
     let sampleVideoUrl: string | undefined;
@@ -336,15 +336,15 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
       product: {
         articleId,
         title,
-        description,
+        ...(description !== undefined && { description }),
         performers: performersList,
-        thumbnailUrl,
+        ...(thumbnailUrl !== undefined && { thumbnailUrl }),
         sampleImages,
-        sampleVideoUrl,
-        duration,
-        price,
-        saleInfo,
-        category,
+        ...(sampleVideoUrl !== undefined && { sampleVideoUrl }),
+        ...(duration !== undefined && { duration }),
+        ...(price !== undefined && { price }),
+        ...(saleInfo !== undefined && { saleInfo }),
+        ...(category !== undefined && { category }),
         tags,
       },
       rawDataId: upsertResult.id,
@@ -374,16 +374,16 @@ const INVALID_TITLE_PATTERNS = [
 async function saveProduct(product: FC2Product): Promise<number | null> {
   // 無効なタイトルパターンをチェック
   for (const pattern of INVALID_TITLE_PATTERNS) {
-    if (pattern.test(product.title)) {
-      console.log(`    ⚠️ 無効な商品をスキップ: "${product.title}"`);
+    if (pattern.test(product['title'])) {
+      console.log(`    ⚠️ 無効な商品をスキップ: "${product['title']}"`);
       return null;
     }
   }
 
   // 商品データの検証
   const validation = validateProductData({
-    title: product.title,
-    description: product.description,
+    title: product['title'],
+    ...(product['description'] !== undefined && { description: product['description'] }),
     aspName: 'FC2',
     originalId: product.articleId,
   });
@@ -406,7 +406,7 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
     let productId: number;
 
     if (existing.length > 0) {
-      productId = existing[0].id;
+      productId = existing[0]!.id;
       console.log(`    ⏭️ 既存商品 (ID: ${productId})`);
     } else {
       // 新規商品作成
@@ -414,24 +414,24 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
         .insert(products)
         .values({
           normalizedProductId,
-          title: product.title,
-          description: product.description || '',
-          duration: product.duration,
-          defaultThumbnailUrl: product.thumbnailUrl,
+          title: product['title'],
+          description: product['description'] || '',
+          duration: product['duration'],
+          defaultThumbnailUrl: product['thumbnailUrl'],
         })
-        .returning({ id: products.id });
+        .returning({ id: products['id'] });
 
-      productId = inserted.id;
+      productId = inserted!.id;
       console.log(`    ✓ 新規商品作成 (ID: ${productId})`);
 
       // product_sources作成
       const affiliateUrl = generateAffiliateUrl(product.articleId);
-      await db.insert(productSources).values({
+      await db['insert'](productSources).values({
         productId,
         aspName: 'FC2',
         originalProductId: product.articleId,
         affiliateUrl,
-        price: product.price,
+        price: product['price'],
         dataSource: 'CRAWL',
       });
 
@@ -440,18 +440,18 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
         const [performer] = await db
           .select()
           .from(performers)
-          .where(eq(performers.name, performerName))
+          .where(eq(performers['name'], performerName))
           .limit(1);
 
         let performerId: number;
         if (performer) {
-          performerId = performer.id;
+          performerId = performer['id'];
         } else {
           const [inserted] = await db
             .insert(performers)
             .values({ name: performerName })
-            .returning({ id: performers.id });
-          performerId = inserted.id;
+            .returning({ id: performers['id'] });
+          performerId = inserted!.id;
         }
 
         // 商品-出演者リンク
@@ -467,7 +467,7 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
           .limit(1);
 
         if (existingLink.length === 0) {
-          await db.insert(productPerformers).values({
+          await db['insert'](productPerformers).values({
             productId,
             performerId,
           });
@@ -475,10 +475,10 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
       }
 
       // サンプル画像保存
-      if (product.thumbnailUrl) {
-        await db.insert(productImages).values({
+      if (product['thumbnailUrl']) {
+        await db['insert'](productImages).values({
           productId,
-          imageUrl: product.thumbnailUrl,
+          imageUrl: product['thumbnailUrl'],
           imageType: 'thumbnail',
           displayOrder: 0,
           aspName: 'FC2',
@@ -486,9 +486,11 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
       }
 
       for (let i = 0; i < product.sampleImages.length; i++) {
-        await db.insert(productImages).values({
+        const imageUrl = product.sampleImages[i];
+        if (!imageUrl) continue;
+        await db['insert'](productImages).values({
           productId,
-          imageUrl: product.sampleImages[i],
+          imageUrl,
           imageType: 'sample',
           displayOrder: i + 1,
           aspName: 'FC2',
@@ -496,10 +498,10 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
       }
 
       // サンプル動画保存
-      if (product.sampleVideoUrl) {
-        await db.insert(productVideos).values({
+      if (product['sampleVideoUrl']) {
+        await db['insert'](productVideos).values({
           productId,
-          videoUrl: product.sampleVideoUrl,
+          videoUrl: product['sampleVideoUrl'],
           videoType: 'sample',
           aspName: 'FC2',
           displayOrder: 0,
@@ -558,18 +560,18 @@ async function fetchArticleIds(page: number = 1): Promise<string[]> {
       });
 
       if (!response.ok) {
-        console.log(`  ⚠️ 取得失敗 (${response.status})、次のエンドポイントを試行`);
+        console.log(`  ⚠️ 取得失敗 (${response['status']})、次のエンドポイントを試行`);
         continue;
       }
 
-      const html = await response.text();
+      const html = await response['text']();
 
       // 商品IDを抽出: /article/{ID}/ パターン
       const articleIds: string[] = [];
       const matches = html.matchAll(/\/article\/(\d+)\/?/g);
       for (const match of matches) {
         const id = match[1];
-        if (!articleIds.includes(id) && id.length >= 5) {
+        if (id && !articleIds.includes(id) && id.length >= 5) {
           articleIds.push(id);
         }
       }
@@ -605,8 +607,8 @@ async function generateAIContent(
   const aiHelper = getAIHelper();
   const result = await aiHelper.processProduct(
     {
-      title: product.title,
-      description: product.description,
+      title: product['title'],
+      ...(product['description'] !== undefined && { description: product['description'] }),
       performers: product.performers,
       genres: product.tags,
     },
@@ -626,10 +628,10 @@ async function generateAIContent(
   let aiTags: FC2Product['aiTags'];
 
   // AI説明文
-  if (result.description) {
-    aiDescription = result.description;
+  if (result['description']) {
+    aiDescription = result['description'];
     console.log(`      ✅ AI説明文生成完了`);
-    console.log(`         キャッチコピー: ${result.description.catchphrase}`);
+    console.log(`         キャッチコピー: ${result['description'].catchphrase}`);
   }
 
   // AIタグ
@@ -640,7 +642,10 @@ async function generateAIContent(
     console.log(`         属性: ${result.tags.attributes.join(', ') || 'なし'}`);
   }
 
-  return { aiDescription, aiTags };
+  return {
+    ...(aiDescription !== undefined && { aiDescription }),
+    ...(aiTags !== undefined && { aiTags }),
+  };
 }
 
 /**
@@ -659,20 +664,20 @@ async function saveAIContent(
     const updateData: Record<string, any> = {};
 
     if (aiDescription) {
-      updateData.aiDescription = JSON.stringify(aiDescription);
-      updateData.aiCatchphrase = aiDescription.catchphrase;
-      updateData.aiShortDescription = aiDescription.shortDescription;
+      updateData['aiDescription'] = JSON.stringify(aiDescription);
+      updateData['aiCatchphrase'] = aiDescription.catchphrase;
+      updateData['aiShortDescription'] = aiDescription.shortDescription;
     }
 
     if (aiTags) {
-      updateData.aiTags = JSON.stringify(aiTags);
+      updateData['aiTags'] = JSON.stringify(aiTags);
     }
 
     if (Object.keys(updateData).length > 0) {
       await db
         .update(products)
         .set(updateData)
-        .where(eq(products.id, productId));
+        .where(eq(products['id'], productId));
       console.log(`    💾 AI生成データを保存しました`);
     }
   } catch (error) {
@@ -707,35 +712,35 @@ async function translateAndSave(
     const updateData: Record<string, any> = {};
 
     if (translation.en) {
-      updateData.titleEn = translation.en.title;
+      updateData['titleEn'] = translation.en.title;
       if (translation.en.description) {
-        updateData.descriptionEn = translation.en.description;
+        updateData['descriptionEn'] = translation.en.description;
       }
       console.log(`      EN: ${translation.en.title.slice(0, 50)}...`);
     }
 
     if (translation.zh) {
-      updateData.titleZh = translation.zh.title;
+      updateData['titleZh'] = translation.zh.title;
       if (translation.zh.description) {
-        updateData.descriptionZh = translation.zh.description;
+        updateData['descriptionZh'] = translation.zh.description;
       }
       console.log(`      ZH: ${translation.zh.title.slice(0, 50)}...`);
     }
 
     if (translation.ko) {
-      updateData.titleKo = translation.ko.title;
+      updateData['titleKo'] = translation.ko.title;
       if (translation.ko.description) {
-        updateData.descriptionKo = translation.ko.description;
+        updateData['descriptionKo'] = translation.ko.description;
       }
       console.log(`      KO: ${translation.ko.title.slice(0, 50)}...`);
     }
 
     if (Object.keys(updateData).length > 0) {
-      updateData.updatedAt = new Date();
+      updateData['updatedAt'] = new Date();
       await db
         .update(products)
         .set(updateData)
-        .where(eq(products.id, productId));
+        .where(eq(products['id'], productId));
       console.log(`    💾 翻訳データを保存しました`);
     }
   } catch (error) {
@@ -797,7 +802,7 @@ async function runIdScanMode(
 
     if (product) {
       consecutiveErrors = 0; // 成功したらリセット
-      console.log(`  ✓ [${totalFound + 1}] ID: ${idStr} - ${product.title.substring(0, 40)}...`);
+      console.log(`  ✓ [${totalFound + 1}] ID: ${idStr} - ${product['title'].substring(0, 40)}...`);
 
       const savedId = await saveProduct(product);
       if (savedId) {
@@ -805,7 +810,7 @@ async function runIdScanMode(
         if (enableAI) {
           const { aiDescription, aiTags } = await generateAIContent(product, enableAI);
           await saveAIContent(savedId, aiDescription, aiTags);
-          await translateAndSave(savedId, product.title, product.description, enableAI);
+          await translateAndSave(savedId, product['title'], product['description'], enableAI);
         }
 
         // 処理済みマーク
@@ -851,23 +856,25 @@ async function main() {
   let toId = 5000000;   // 現在は500万台まで存在
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--start' && args[i + 1]) {
-      startPage = parseInt(args[i + 1]);
+    const arg = args[i];
+    const nextArg = args[i + 1];
+    if (arg === '--start' && nextArg) {
+      startPage = parseInt(nextArg, 10);
     }
-    if (args[i] === '--end' && args[i + 1]) {
-      endPage = parseInt(args[i + 1]);
+    if (arg === '--end' && nextArg) {
+      endPage = parseInt(nextArg, 10);
     }
-    if (args[i] === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1]);
+    if (arg === '--limit' && nextArg) {
+      limit = parseInt(nextArg, 10);
     }
-    if (args[i] === '--id' && args[i + 1]) {
-      singleId = args[i + 1];
+    if (arg === '--id' && nextArg) {
+      singleId = nextArg;
     }
-    if (args[i].startsWith('--from=')) {
-      fromId = parseInt(args[i].split('=')[1]);
+    if (arg?.startsWith('--from=')) {
+      fromId = parseInt(arg.split('=')[1] ?? '0', 10);
     }
-    if (args[i].startsWith('--to=')) {
-      toId = parseInt(args[i].split('=')[1]);
+    if (arg?.startsWith('--to=')) {
+      toId = parseInt(arg.split('=')[1] ?? '0', 10);
     }
   }
 
@@ -879,7 +886,7 @@ async function main() {
       FROM product_sources
       WHERE asp_name = 'FC2'
     `);
-    console.log(`\nFC2総商品数: ${stats.rows[0].count}`);
+    console.log(`\nFC2総商品数: ${stats.rows[0]?.['count']}`);
     process.exit(0);
     return;
   }
@@ -901,7 +908,7 @@ async function main() {
     if (shouldSkip) {
       totalSkipped++;
     } else if (product) {
-      console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
+      console.log(`    タイトル: ${product['title'].substring(0, 50)}...`);
       console.log(`    出演者: ${product.performers.join(', ') || '不明'}`);
 
       const savedId = await saveProduct(product);
@@ -913,7 +920,7 @@ async function main() {
         }
         // 翻訳機能: タイトルと説明を多言語翻訳
         if (enableAI) {
-          await translateAndSave(savedId, product.title, product.description, enableAI);
+          await translateAndSave(savedId, product['title'], product['description'], enableAI);
         }
 
         // 処理済みマーク
@@ -952,7 +959,7 @@ async function main() {
         }
 
         if (product) {
-          console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
+          console.log(`    タイトル: ${product['title'].substring(0, 50)}...`);
           console.log(`    出演者: ${product.performers.join(', ') || '不明'}`);
 
           const savedId = await saveProduct(product);
@@ -964,7 +971,7 @@ async function main() {
             }
             // 翻訳機能: タイトルと説明を多言語翻訳
             if (enableAI) {
-              await translateAndSave(savedId, product.title, product.description, enableAI);
+              await translateAndSave(savedId, product['title'], product['description'], enableAI);
             }
 
             // 処理済みマーク
@@ -994,7 +1001,7 @@ async function main() {
     FROM product_sources
     WHERE asp_name = 'FC2'
   `);
-  console.log(`\nFC2総商品数: ${stats.rows[0].count}`);
+  console.log(`\nFC2総商品数: ${stats.rows[0]?.['count']}`);
 
   process.exit(0);
 }

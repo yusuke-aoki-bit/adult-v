@@ -68,7 +68,7 @@ export function useWatchlistAnalysis() {
           // Merge price data with favorites
           const enriched = productFavorites.map(product => ({
             ...product,
-            ...priceData[String(product.id)],
+            ...priceData[String(product['id'])],
           }));
 
           setEnrichedProducts(enriched);

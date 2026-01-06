@@ -59,7 +59,7 @@ interface Props {
 
 function CampaignCardComponent({ campaign, theme = 'light' }: Props) {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   // Memoize translation object to prevent recreation on each render
   const t = useMemo(
     () => translations[locale as keyof typeof translations] || translations.ja,

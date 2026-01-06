@@ -32,13 +32,13 @@ const SOURCE_NAME = 'MGS';
 function parseMgsProductId(originalProductId: string): { series: string; num: string } | null {
   // パターン1: STARS-865 or STARS865
   let match = originalProductId.match(/^([A-Z]+)-?(\d+)$/);
-  if (match) {
+  if (match && match[1] && match[2]) {
     return { series: match[1], num: match[2] };
   }
 
   // パターン2: 300MIUM1359 (数字プレフィックス付き)
   match = originalProductId.match(/^(\d+[A-Z]+)(\d+)$/);
-  if (match) {
+  if (match && match[1] && match[2]) {
     return { series: match[1], num: match[2] };
   }
 
@@ -130,11 +130,11 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     });
 
     if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
+      console.error(`HTTP error! status: ${response['status']}`);
       return null;
     }
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     // 商品IDを抽出（URLから: https://www.mgstage.com/product/product_detail/857OMG-018/）
@@ -304,7 +304,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       const scriptContent = $('script:contains("sample_url")').html();
       if (scriptContent) {
         const sampleUrlMatch = scriptContent.match(/sample_url['":\s]+['"]([^'"]+)['"]/);
-        if (sampleUrlMatch) {
+        if (sampleUrlMatch && sampleUrlMatch[1]) {
           sampleVideoUrl = sampleUrlMatch[1].startsWith('http')
             ? sampleUrlMatch[1]
             : `https://www.mgstage.com${sampleUrlMatch[1]}`;
@@ -350,8 +350,8 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     const downloadHdPriceText = $('#download_hd_price').text().trim();
     if (downloadHdPriceText) {
       const priceMatch = downloadHdPriceText.match(/(\d+(?:,\d+)*)/);
-      if (priceMatch) {
-        hdPrice = parseInt(priceMatch[1].replace(/,/g, ''));
+      if (priceMatch && priceMatch[1]) {
+        hdPrice = parseInt(priceMatch[1].replace(/,/g, ''), 10);
         console.log(`  💰 HD download price: ¥${hdPrice.toLocaleString()}`);
       }
     }
@@ -363,8 +363,8 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       if (priceValue) {
         // Format: download_hd,0,uuid,PRODUCT-ID,1480
         const parts = priceValue.split(',');
-        if (parts.length >= 5) {
-          const extractedPrice = parseInt(parts[4]);
+        if (parts.length >= 5 && parts[4]) {
+          const extractedPrice = parseInt(parts[4], 10);
           if (!isNaN(extractedPrice) && extractedPrice > 0) {
             hdPrice = extractedPrice;
             console.log(`  💰 HD price from radio: ¥${hdPrice.toLocaleString()}`);
@@ -377,8 +377,8 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     const downloadSdPriceText = $('#download_sd_price').text().trim();
     if (downloadSdPriceText) {
       const priceMatch = downloadSdPriceText.match(/(\d+(?:,\d+)*)/);
-      if (priceMatch) {
-        downloadPrice = parseInt(priceMatch[1].replace(/,/g, ''));
+      if (priceMatch && priceMatch[1]) {
+        downloadPrice = parseInt(priceMatch[1].replace(/,/g, ''), 10);
         console.log(`  💰 SD download price: ¥${downloadPrice.toLocaleString()}`);
       }
     }
@@ -389,8 +389,8 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       const priceValue = priceInput.attr('value');
       if (priceValue) {
         const parts = priceValue.split(',');
-        if (parts.length >= 5) {
-          const extractedPrice = parseInt(parts[4]);
+        if (parts.length >= 5 && parts[4]) {
+          const extractedPrice = parseInt(parts[4], 10);
           if (!isNaN(extractedPrice) && extractedPrice > 0) {
             downloadPrice = extractedPrice;
           }
@@ -402,8 +402,8 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     const streamingPriceText = $('#streaming_price').text().trim();
     if (streamingPriceText) {
       const priceMatch = streamingPriceText.match(/(\d+(?:,\d+)*)/);
-      if (priceMatch) {
-        streamingPrice = parseInt(priceMatch[1].replace(/,/g, ''));
+      if (priceMatch && priceMatch[1]) {
+        streamingPrice = parseInt(priceMatch[1].replace(/,/g, ''), 10);
         console.log(`  💰 Streaming price: ¥${streamingPrice.toLocaleString()}`);
       }
     }
@@ -421,8 +421,8 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     const delPrice = priceListDiv.find('del, .price_del, s, strike').text().trim();
     const delPriceMatch = delPrice.match(/(\d+(?:,\d+)*)/);
 
-    if (delPriceMatch && price) {
-      const regularPrice = parseInt(delPriceMatch[1].replace(/,/g, ''));
+    if (delPriceMatch && delPriceMatch[1] && price) {
+      const regularPrice = parseInt(delPriceMatch[1].replace(/,/g, ''), 10);
       if (price < regularPrice) {
         // This is a sale
         const discountPercent = Math.round((1 - price / regularPrice) * 100);
@@ -432,7 +432,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
 
         // パターン1: "○月○日まで" または "M/D まで"
         const endDatePattern1 = html.match(/(\d{1,2})[月\/](\d{1,2})日?\s*(まで|迄)/);
-        if (endDatePattern1) {
+        if (endDatePattern1 && endDatePattern1[1] && endDatePattern1[2]) {
           const month = parseInt(endDatePattern1[1], 10);
           const day = parseInt(endDatePattern1[2], 10);
           const now = new Date();
@@ -448,7 +448,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
         // パターン2: "YYYY/MM/DD" または "YYYY-MM-DD"
         if (!saleEndAt) {
           const endDatePattern2 = html.match(/(20\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2}).*?(まで|迄|終了)/);
-          if (endDatePattern2) {
+          if (endDatePattern2 && endDatePattern2[1] && endDatePattern2[2] && endDatePattern2[3]) {
             const year = parseInt(endDatePattern2[1], 10);
             const month = parseInt(endDatePattern2[2], 10);
             const day = parseInt(endDatePattern2[3], 10);
@@ -459,7 +459,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
         // パターン3: "○日○時間" の残り時間表示
         if (!saleEndAt) {
           const remainingPattern = html.match(/残り\s*(\d+)\s*日\s*(\d+)?\s*時間?/);
-          if (remainingPattern) {
+          if (remainingPattern && remainingPattern[1]) {
             const days = parseInt(remainingPattern[1], 10);
             const hours = remainingPattern[2] ? parseInt(remainingPattern[2], 10) : 0;
             saleEndAt = new Date(Date.now() + (days * 24 + hours) * 60 * 60 * 1000);
@@ -470,7 +470,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
         if (!saleEndAt) {
           const saleBannerText = $('.sale_end, .campaign_end, .timesale_end, .sale_period').text();
           const bannerMatch = saleBannerText.match(/(\d{1,2})[月\/](\d{1,2})/);
-          if (bannerMatch) {
+          if (bannerMatch && bannerMatch[1] && bannerMatch[2]) {
             const month = parseInt(bannerMatch[1], 10);
             const day = parseInt(bannerMatch[2], 10);
             const now = new Date();
@@ -488,7 +488,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
           salePrice: price,
           discountPercent,
           saleType: 'timesale',
-          endAt: saleEndAt,
+          ...(saleEndAt && { endAt: saleEndAt }),
         };
 
         const endAtStr = saleEndAt ? ` (〜${saleEndAt.toLocaleDateString('ja-JP')})` : '';
@@ -501,8 +501,8 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       const priceTd = $('th:contains("価格")').next('td');
       const priceText = priceTd.text().trim();
       const priceMatch = priceText.match(/(\d+(?:,\d+)*)/g);
-      if (priceMatch) {
-        price = parseInt(priceMatch[0].replace(/,/g, ''));
+      if (priceMatch && priceMatch[0]) {
+        price = parseInt(priceMatch[0].replace(/,/g, ''), 10);
         console.log(`  💰 Found legacy price: ¥${price.toLocaleString()}`);
       }
     }
@@ -515,11 +515,11 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     // パターン: (5点満点中 4.6点 / レビュー数 5 件)
     const reviewSummaryText = $('.user_review_head .detail').text();
     const summaryMatch = reviewSummaryText.match(/(\d+)点満点中\s*([\d.]+)点.*レビュー数\s*(\d+)\s*件/);
-    if (summaryMatch) {
+    if (summaryMatch && summaryMatch[1] && summaryMatch[2] && summaryMatch[3]) {
       ratingSummary = {
-        maxRating: parseInt(summaryMatch[1]),
+        maxRating: parseInt(summaryMatch[1], 10),
         averageRating: parseFloat(summaryMatch[2]),
-        totalReviews: parseInt(summaryMatch[3]),
+        totalReviews: parseInt(summaryMatch[3], 10),
       };
       console.log(`  Found rating summary: ${ratingSummary.averageRating}/${ratingSummary.maxRating} (${ratingSummary.totalReviews} reviews)`);
     }
@@ -533,16 +533,16 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       // レビュアー名 (例: "カカシさんのレビュー" → "カカシ")
       const reviewerNameText = $userDate.find('.name').text().trim();
       const reviewerNameMatch = reviewerNameText.match(/^(.+?)さんのレビュー$/);
-      const reviewerName = reviewerNameMatch ? reviewerNameMatch[1] : reviewerNameText.replace(/さんのレビュー$/, '');
+      const reviewerName = (reviewerNameMatch && reviewerNameMatch[1]) ? reviewerNameMatch[1] : reviewerNameText.replace(/さんのレビュー$/, '');
 
       // 評価（star_XX_XX または star_XX クラスから）
       // star_50 = 5.0, star_40_44 = 4.0-4.4 (実質4.0)
       const starClass = $userDate.find('p.review span[class^="star_"]').attr('class') || '';
       let rating = 0;
       const starMatch = starClass.match(/star_(\d+)(?:_(\d+))?/);
-      if (starMatch) {
+      if (starMatch && starMatch[1]) {
         // star_50 → 5.0, star_40_44 → 4.0
-        rating = parseInt(starMatch[1]) / 10;
+        rating = parseInt(starMatch[1], 10) / 10;
       }
 
       // レビュー内容（user_dateの次の兄弟要素p.text）
@@ -593,7 +593,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     const durationCell = $('th:contains("収録時間")').next('td').text().trim();
     if (durationCell) {
       const durationMatch = durationCell.match(/(\d+)\s*分/);
-      if (durationMatch) {
+      if (durationMatch && durationMatch[1]) {
         duration = parseInt(durationMatch[1], 10);
       }
     }
@@ -601,7 +601,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     if (!duration) {
       const durationRegex = /収録時間[：:]\s*(\d+)\s*分/;
       const match = html.match(durationRegex);
-      if (match) {
+      if (match && match[1]) {
         duration = parseInt(match[1], 10);
       }
     }
@@ -610,7 +610,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       const playTimeCell = $('th:contains("再生時間")').next('td').text().trim();
       if (playTimeCell) {
         const playTimeMatch = playTimeCell.match(/(\d+)\s*分/);
-        if (playTimeMatch) {
+        if (playTimeMatch && playTimeMatch[1]) {
           duration = parseInt(playTimeMatch[1], 10);
         }
       }
@@ -621,24 +621,24 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     }
 
     return {
-      productId,
+      productId: productId!,
       url: productUrl, // Keep original product URL for reference
       title,
-      releaseDate,
-      performerNames,
-      thumbnailUrl,
-      sampleImages: sampleImages.length > 0 ? sampleImages : undefined,
-      sampleVideoUrl,
-      price,
-      downloadPrice,
-      streamingPrice,
-      hdPrice,
-      saleInfo,
-      reviews: reviews.length > 0 ? reviews : undefined,
-      ratingSummary,
-      description,
-      genres: genres.length > 0 ? genres : undefined,
-      duration,
+      ...(releaseDate && { releaseDate }),
+      ...(performerNames.length > 0 && { performerNames }),
+      ...(thumbnailUrl && { thumbnailUrl }),
+      ...(sampleImages.length > 0 && { sampleImages }),
+      ...(sampleVideoUrl && { sampleVideoUrl }),
+      ...(price !== undefined && { price }),
+      ...(downloadPrice !== undefined && { downloadPrice }),
+      ...(streamingPrice !== undefined && { streamingPrice }),
+      ...(hdPrice !== undefined && { hdPrice }),
+      ...(saleInfo && { saleInfo }),
+      ...(reviews.length > 0 && { reviews }),
+      ...(ratingSummary && { ratingSummary }),
+      ...(description && { description }),
+      ...(genres.length > 0 && { genres }),
+      ...(duration !== undefined && { duration }),
     };
   } catch (error) {
     console.error('Error crawling MGS product:', error);
@@ -665,7 +665,7 @@ async function saveRawHtmlData(
       .where(and(eq(rawHtmlData.source, SOURCE_NAME), eq(rawHtmlData.productId, productId)))
       .limit(1);
 
-    if (existing.length > 0) {
+    if (existing.length > 0 && existing[0]) {
       // ハッシュが同じなら更新不要
       if (existing[0].hash === hash) {
         console.log(`Product ${productId} - No changes detected`);
@@ -685,7 +685,7 @@ async function saveRawHtmlData(
           crawledAt: new Date(),
           processedAt: null, // 再処理が必要
         })
-        .where(eq(rawHtmlData.id, existing[0].id));
+        .where(eq(rawHtmlData.id, existing[0]!['id']));
 
       console.log(`Product ${productId} - Updated raw HTML${gcsUrl ? ' (GCS)' : ' (DB)'}`);
     } else {
@@ -693,7 +693,7 @@ async function saveRawHtmlData(
       const { gcsUrl, htmlContent } = await saveRawHtml('mgs', productId, html);
 
       // 新規挿入
-      await db.insert(rawHtmlData).values({
+      await db['insert'](rawHtmlData).values({
         source: SOURCE_NAME,
         productId,
         url,
@@ -752,25 +752,25 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
         })
         .returning();
 
-      productId = newProduct.id;
+      productId = newProduct!.id;
       console.log(`Created new product: ${normalizedProductId}${mgsProduct.duration ? ` (${mgsProduct.duration}分)` : ''}`);
     } else {
-      productId = productRecord[0].id;
+      productId = productRecord[0]!['id'];
       // 既存作品のduration・descriptionが未設定の場合は更新
       const updateData: { duration?: number; description?: string } = {};
-      if (mgsProduct.duration && !productRecord[0].duration) {
-        updateData.duration = mgsProduct.duration;
+      if (mgsProduct.duration && !productRecord[0]!['duration']) {
+        updateData['duration'] = mgsProduct.duration;
       }
-      if (mgsProduct.description && !productRecord[0].description) {
-        updateData.description = mgsProduct.description;
+      if (mgsProduct.description && !productRecord[0]!['description']) {
+        updateData['description'] = mgsProduct.description;
       }
       if (Object.keys(updateData).length > 0) {
         await db
           .update(products)
           .set(updateData)
-          .where(eq(products.id, productId));
-        if (updateData.duration) console.log(`  Updated duration: ${updateData.duration}分`);
-        if (updateData.description) console.log(`  Updated description: ${updateData.description.substring(0, 50)}...`);
+          .where(eq(products['id'], productId));
+        if (updateData['duration']) console.log(`  Updated duration: ${updateData['duration']}分`);
+        if (updateData['description']) console.log(`  Updated description: ${updateData['description'].substring(0, 50)}...`);
       }
     }
 
@@ -790,9 +790,9 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
       .limit(1);
 
     let sourceId: number;
-    if (existing.length > 0) {
+    if (existing.length > 0 && existing[0]) {
       // 更新
-      sourceId = existing[0].id;
+      sourceId = existing[0]['id'];
       await db
         .update(productSources)
         .set({
@@ -806,7 +806,7 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
       console.log(`Updated affiliate link for product ${productId}${mgsProduct.price ? ` (¥${mgsProduct.price.toLocaleString()})` : ''}`);
     } else {
       // 新規挿入
-      const [inserted] = await db.insert(productSources).values({
+      const [inserted] = await db['insert'](productSources).values({
         productId,
         aspName: SOURCE_NAME,
         originalProductId: mgsProduct.productId,
@@ -814,16 +814,16 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
         price: mgsProduct.price,
         dataSource: 'HTML',
       }).returning({ id: productSources.id });
-      sourceId = inserted.id;
+      sourceId = inserted!.id;
 
       console.log(`Saved affiliate link for product ${productId}${mgsProduct.price ? ` (¥${mgsProduct.price.toLocaleString()})` : ''}`);
     }
 
     // product_prices に価格タイプ別の価格を保存
     const priceList = buildPriceInfoList({
-      downloadPrice: mgsProduct.downloadPrice,
-      streamingPrice: mgsProduct.streamingPrice,
-      hdPrice: mgsProduct.hdPrice,
+      ...(mgsProduct.downloadPrice !== undefined && { downloadPrice: mgsProduct.downloadPrice }),
+      ...(mgsProduct.streamingPrice !== undefined && { streamingPrice: mgsProduct.streamingPrice }),
+      ...(mgsProduct.hdPrice !== undefined && { hdPrice: mgsProduct.hdPrice }),
     });
     if (priceList.length > 0) {
       const priceResult = await saveProductPricesBySourceId(sourceId, priceList);
@@ -893,10 +893,10 @@ async function linkMgsTag(productId: number): Promise<void> {
         })
         .returning();
 
-      tagId = newTag.id;
+      tagId = newTag!.id;
       console.log(`Created MGS tag with ID: ${tagId}`);
     } else {
-      tagId = mgsTag[0].id;
+      tagId = mgsTag[0]!['id'];
     }
 
     // 既存の紐付けをチェック
@@ -912,7 +912,7 @@ async function linkMgsTag(productId: number): Promise<void> {
       .limit(1);
 
     if (existingLink.length === 0) {
-      await db.insert(productTags).values({
+      await db['insert'](productTags).values({
         productId,
         tagId,
       });
@@ -953,7 +953,7 @@ async function saveProductImages(
         .limit(1);
 
       if (existing.length === 0) {
-        await db.insert(productImages).values({
+        await db['insert'](productImages).values({
           productId,
           imageUrl: thumbnailUrl,
           imageType: 'thumbnail',
@@ -967,7 +967,7 @@ async function saveProductImages(
     // Save sample images
     if (sampleImages && sampleImages.length > 0) {
       for (let i = 0; i < sampleImages.length; i++) {
-        const imageUrl = sampleImages[i];
+        const imageUrl = sampleImages[i]!;
 
         const existing = await db
           .select()
@@ -981,7 +981,7 @@ async function saveProductImages(
           .limit(1);
 
         if (existing.length === 0) {
-          await db.insert(productImages).values({
+          await db['insert'](productImages).values({
             productId,
             imageUrl,
             imageType: 'sample',
@@ -1025,7 +1025,7 @@ async function saveProductVideo(
       .limit(1);
 
     if (existing.length === 0) {
-      await db.insert(productVideos).values({
+      await db['insert'](productVideos).values({
         productId,
         videoUrl: sampleVideoUrl,
         videoType: 'sample',
@@ -1064,7 +1064,7 @@ async function saveProductReviews(
         )
         .limit(1);
 
-      if (existing.length > 0) {
+      if (existing.length > 0 && existing[0]) {
         // 更新
         await db
           .update(productRatingSummary)
@@ -1074,10 +1074,10 @@ async function saveProductReviews(
             totalReviews: ratingSummary.totalReviews,
             lastUpdated: new Date(),
           })
-          .where(eq(productRatingSummary.id, existing[0].id));
+          .where(eq(productRatingSummary.id, existing[0]['id']));
       } else {
         // 新規挿入
-        await db.insert(productRatingSummary).values({
+        await db['insert'](productRatingSummary).values({
           productId,
           aspName: SOURCE_NAME,
           averageRating: String(ratingSummary.averageRating),
@@ -1111,13 +1111,13 @@ async function saveProductReviews(
           .limit(1);
 
         if (existing.length === 0) {
-          await db.insert(productReviews).values({
+          await db['insert'](productReviews).values({
             productId,
             aspName: SOURCE_NAME,
             reviewerName: review.reviewerName,
-            rating: String(review.rating),
+            rating: String(review['rating']),
             maxRating: '5',
-            title: review.title || null,
+            title: review['title'] || null,
             content: review.content,
             sourceReviewId,
           });
@@ -1151,9 +1151,9 @@ async function generateAIContent(
   const result = await aiHelper.processProduct(
     {
       title: mgsProduct.title,
-      description: mgsProduct.description,
-      performers: mgsProduct.performerNames,
-      genres: mgsProduct.genres,
+      ...(mgsProduct.description && { description: mgsProduct.description }),
+      ...(mgsProduct.performerNames && { performers: mgsProduct.performerNames }),
+      ...(mgsProduct.genres && { genres: mgsProduct.genres }),
     },
     {
       extractTags: true,
@@ -1171,10 +1171,10 @@ async function generateAIContent(
   let aiTags: MgsProduct['aiTags'];
 
   // AI説明文
-  if (result.description) {
-    aiDescription = result.description;
+  if (result['description']) {
+    aiDescription = result['description'];
     console.log(`    ✅ AI説明文生成完了`);
-    console.log(`       キャッチコピー: ${result.description.catchphrase}`);
+    console.log(`       キャッチコピー: ${result['description'].catchphrase}`);
   }
 
   // AIタグ
@@ -1185,7 +1185,10 @@ async function generateAIContent(
     console.log(`       属性: ${result.tags.attributes.join(', ') || 'なし'}`);
   }
 
-  return { aiDescription, aiTags };
+  return {
+    ...(aiDescription && { aiDescription }),
+    ...(aiTags && { aiTags }),
+  };
 }
 
 /**
@@ -1206,20 +1209,20 @@ async function saveAIContent(
     const updateData: Record<string, any> = {};
 
     if (aiDescription) {
-      updateData.aiDescription = JSON.stringify(aiDescription);
-      updateData.aiCatchphrase = aiDescription.catchphrase;
-      updateData.aiShortDescription = aiDescription.shortDescription;
+      updateData['aiDescription'] = JSON.stringify(aiDescription);
+      updateData['aiCatchphrase'] = aiDescription.catchphrase;
+      updateData['aiShortDescription'] = aiDescription.shortDescription;
     }
 
     if (aiTags) {
-      updateData.aiTags = JSON.stringify(aiTags);
+      updateData['aiTags'] = JSON.stringify(aiTags);
     }
 
     if (Object.keys(updateData).length > 0) {
       await db
         .update(products)
         .set(updateData)
-        .where(eq(products.id, productId));
+        .where(eq(products['id'], productId));
       console.log(`  💾 AI生成データを保存しました`);
     }
   } catch (error) {
@@ -1254,35 +1257,35 @@ async function translateAndSave(
     const updateData: Record<string, any> = {};
 
     if (translation.en) {
-      updateData.titleEn = translation.en.title;
+      updateData['titleEn'] = translation.en.title;
       if (translation.en.description) {
-        updateData.descriptionEn = translation.en.description;
+        updateData['descriptionEn'] = translation.en.description;
       }
       console.log(`    EN: ${translation.en.title.slice(0, 50)}...`);
     }
 
     if (translation.zh) {
-      updateData.titleZh = translation.zh.title;
+      updateData['titleZh'] = translation.zh.title;
       if (translation.zh.description) {
-        updateData.descriptionZh = translation.zh.description;
+        updateData['descriptionZh'] = translation.zh.description;
       }
       console.log(`    ZH: ${translation.zh.title.slice(0, 50)}...`);
     }
 
     if (translation.ko) {
-      updateData.titleKo = translation.ko.title;
+      updateData['titleKo'] = translation.ko.title;
       if (translation.ko.description) {
-        updateData.descriptionKo = translation.ko.description;
+        updateData['descriptionKo'] = translation.ko.description;
       }
       console.log(`    KO: ${translation.ko.title.slice(0, 50)}...`);
     }
 
     if (Object.keys(updateData).length > 0) {
-      updateData.updatedAt = new Date();
+      updateData['updatedAt'] = new Date();
       await db
         .update(products)
         .set(updateData)
-        .where(eq(products.id, productId));
+        .where(eq(products['id'], productId));
       console.log(`  💾 翻訳データを保存しました`);
     }
   } catch (error) {
@@ -1331,7 +1334,7 @@ async function main() {
           'Cookie': 'adc=1',  // Age verification cookie
         },
       });
-      const html = await response.text();
+      const html = await response['text']();
       await saveRawHtmlData(mgsProduct.productId, url, html);
 
       // アフィリエイトリンクを保存してproductIdを取得
@@ -1353,8 +1356,8 @@ async function main() {
         .where(eq(products.normalizedProductId, normalizedProductId))
         .limit(1);
 
-      if (productRecord.length > 0) {
-        const productId = productRecord[0].id;
+      if (productRecord.length > 0 && productRecord[0]) {
+        const productId = productRecord[0]['id'];
 
         // 女優データを保存（wiki_crawl_data優先）
         await savePerformers(productId, mgsProduct.productId, mgsProduct.performerNames || []);
@@ -1390,13 +1393,13 @@ async function main() {
           await translateAndSave(productId, mgsProduct.title, mgsProduct.description, enableAI);
         }
 
-        // products.defaultThumbnailUrlを更新
+        // products['defaultThumbnailUrl']を更新
         if (thumbnailUrl) {
           await db
             .update(products)
             .set({ defaultThumbnailUrl: thumbnailUrl })
-            .where(eq(products.id, productId));
-          console.log(`  Updated products.defaultThumbnailUrl`);
+            .where(eq(products['id'], productId));
+          console.log(`  Updated products['defaultThumbnailUrl']`);
         }
 
         // MGSタグと紐付け

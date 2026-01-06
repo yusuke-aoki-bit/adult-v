@@ -63,7 +63,7 @@ async function requestIndexingForProducts(
   const stats: IndexingStats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
   const results: any[] = [];
   let ownershipVerificationRequired = false;
-  const siteBaseUrl = deps.siteBaseUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://adult-v.com';
+  const siteBaseUrl = deps.siteBaseUrl || process.env['NEXT_PUBLIC_SITE_URL'] || 'https://adult-v.com';
 
   // サイトマップとの整合性を保つため、数値IDベースのURLを使用
   // 品番URLはcanonicalで数値IDにリダイレクトされるため、Indexing APIには数値IDを送信
@@ -86,7 +86,7 @@ async function requestIndexingForProducts(
     stats.totalProcessed++;
 
     // 数値IDベースのURL（サイトマップと同じ形式）
-    const productUrl = `${siteBaseUrl}/products/${product.id}`;
+    const productUrl = `${siteBaseUrl}/products/${product['id']}`;
 
     try {
       const result = await deps.requestIndexing(productUrl, 'URL_UPDATED');
@@ -101,7 +101,7 @@ async function requestIndexingForProducts(
           )
           VALUES (
             ${productUrl},
-            ${product.id},
+            ${product['id']},
             'requested',
             NOW()
           )
@@ -113,7 +113,7 @@ async function requestIndexingForProducts(
 
         stats.success++;
         results.push({
-          productId: product.id,
+          productId: product['id'],
           url: productUrl,
           status: 'requested',
         });
@@ -128,7 +128,7 @@ async function requestIndexingForProducts(
           )
           VALUES (
             ${productUrl},
-            ${product.id},
+            ${product['id']},
             'ownership_required',
             ${result.error || 'URL ownership verification required'}
           )
@@ -149,7 +149,7 @@ async function requestIndexingForProducts(
           )
           VALUES (
             ${productUrl},
-            ${product.id},
+            ${product['id']},
             'error',
             ${result.error || 'Unknown error'}
           )
@@ -164,7 +164,7 @@ async function requestIndexingForProducts(
 
       await new Promise(r => setTimeout(r, 100));
     } catch (error) {
-      console.error(`[seo-enhance] Indexing error for ${product.id}:`, error);
+      console.error(`[seo-enhance] Indexing error for ${product['id']}:`, error);
 
       await db.execute(sql`
         INSERT INTO seo_indexing_status (
@@ -175,7 +175,7 @@ async function requestIndexingForProducts(
         )
         VALUES (
           ${productUrl},
-          ${product.id},
+          ${product['id']},
           'error',
           ${error instanceof Error ? error.message : 'Unknown error'}
         )
@@ -191,11 +191,15 @@ async function requestIndexingForProducts(
 
   stats.ownershipVerificationRequired = ownershipVerificationRequired;
 
-  const warning = ownershipVerificationRequired
-    ? 'Search Console ownership verification required. Add the service account email as an owner in Google Search Console for this domain.'
-    : undefined;
+  if (ownershipVerificationRequired) {
+    return {
+      stats,
+      results,
+      warning: 'Search Console ownership verification required. Add the service account email as an owner in Google Search Console for this domain.',
+    };
+  }
 
-  return { stats, results, warning };
+  return { stats, results };
 }
 
 /**
@@ -208,7 +212,7 @@ async function fetchAnalyticsData(
 ): Promise<{ stats: Stats; results: any }> {
   const stats: Stats = { totalProcessed: 1, success: 0, errors: 0, skipped: 0 };
 
-  const ga4PropertyId = process.env.GA4_PROPERTY_ID || '';
+  const ga4PropertyId = process.env['GA4_PROPERTY_ID'] || '';
 
   if (!ga4PropertyId) {
     return {
@@ -218,10 +222,10 @@ async function fetchAnalyticsData(
   }
 
   const today = new Date();
-  const endDate = today.toISOString().split('T')[0];
+  const endDate = today.toISOString().split('T')[0] ?? '';
   const startDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
     .toISOString()
-    .split('T')[0];
+    .split('T')[0] ?? '';
   const dateRange = `${startDate}_${endDate}`;
 
   const cacheResult = await db.execute(sql`
@@ -378,10 +382,10 @@ export function createSeoEnhanceHandler(deps: SeoEnhanceHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
-    const siteBaseUrl = deps.siteBaseUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://adult-v.com';
+    const siteBaseUrl = deps.siteBaseUrl || process.env['NEXT_PUBLIC_SITE_URL'] || 'https://adult-v.com';
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const type = url.searchParams.get('type') || 'indexing';
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '100'), 500);
       const reportType = url.searchParams.get('report') || 'top-pages';

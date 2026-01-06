@@ -10,7 +10,7 @@ export default function ProductIdSearch() {
   const [error, setError] = useState('');
   const router = useRouter();
   const params = useParams();
-  const locale = params.locale as string || 'ja';
+  const locale = params['locale'] as string || 'ja';
   const t = useTranslations('productIdSearch');
 
   // AbortController for request cancellation

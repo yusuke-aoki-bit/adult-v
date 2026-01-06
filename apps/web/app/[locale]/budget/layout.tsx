@@ -13,7 +13,7 @@ export async function generateMetadata({
     ? '月間予算を設定し、ウォッチリストの作品を賢く購入しましょう'
     : 'Set your monthly budget and track your watchlist purchases smartly';
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   return {
     title,

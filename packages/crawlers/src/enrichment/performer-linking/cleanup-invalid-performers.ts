@@ -33,7 +33,7 @@ async function main() {
     .from(wikiCrawlData);
 
   const invalidWikiEntries = allWikiEntries.filter(
-    entry => !isValidPerformerName(entry.performerName)
+    entry => !isValidPerformerName(entry['performerName'])
   );
 
   console.log(`   総レコード: ${allWikiEntries.length}件`);
@@ -42,7 +42,7 @@ async function main() {
   if (invalidWikiEntries.length > 0) {
     console.log('\n   無効エントリ:');
     for (const entry of invalidWikiEntries.slice(0, 30)) {
-      console.log(`   - ${entry.productCode}: "${entry.performerName}"`);
+      console.log(`   - ${entry['productCode']}: "${entry['performerName']}"`);
     }
     if (invalidWikiEntries.length > 30) {
       console.log(`   ... 他${invalidWikiEntries.length - 30}件`);
@@ -53,8 +53,8 @@ async function main() {
   console.log('\n2. performersテーブルの無効エントリ検索...');
   const allPerformers = await db
     .select({
-      id: performers.id,
-      name: performers.name,
+      id: performers['id'],
+      name: performers['name'],
     })
     .from(performers);
 
@@ -114,7 +114,7 @@ async function main() {
     for (let i = 0; i < invalidWikiEntries.length; i += batchSize) {
       const batch = invalidWikiEntries.slice(i, i + batchSize);
       const ids = batch.map(e => e.id);
-      await db.delete(wikiCrawlData).where(inArray(wikiCrawlData.id, ids));
+      await db['delete'](wikiCrawlData).where(inArray(wikiCrawlData.id, ids));
       deletedCount += ids.length;
       console.log(`   wiki_crawl_data: ${deletedCount}/${invalidWikiEntries.length}件削除`);
     }
@@ -127,7 +127,7 @@ async function main() {
     let deletedCount = 0;
     for (let i = 0; i < invalidPerformerIds.length; i += batchSize) {
       const batch = invalidPerformerIds.slice(i, i + batchSize);
-      await db.delete(productPerformers).where(inArray(productPerformers.performerId, batch));
+      await db['delete'](productPerformers).where(inArray(productPerformers.performerId, batch));
       deletedCount += batch.length;
       console.log(`   product_performers: ${deletedCount}/${invalidPerformerIds.length}演者の紐付け削除`);
     }
@@ -140,7 +140,7 @@ async function main() {
     let deletedCount = 0;
     for (let i = 0; i < invalidPerformerIds.length; i += batchSize) {
       const batch = invalidPerformerIds.slice(i, i + batchSize);
-      await db.delete(performers).where(inArray(performers.id, batch));
+      await db['delete'](performers).where(inArray(performers['id'], batch));
       deletedCount += batch.length;
       console.log(`   performers: ${deletedCount}/${invalidPerformerIds.length}件削除`);
     }

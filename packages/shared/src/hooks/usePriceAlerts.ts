@@ -65,7 +65,7 @@ export function usePriceAlerts() {
   const addAlert = useCallback(
     (alert: Omit<PriceAlert, 'createdAt'>) => {
       const newAlerts = [
-        ...alerts.filter((a) => a.productId !== alert.productId),
+        ...alerts.filter((a) => a.productId !== alert['productId']),
         { ...alert, createdAt: Date.now() },
       ];
       saveAlerts(newAlerts);
@@ -112,8 +112,8 @@ export function usePriceAlerts() {
   // アラート登録をトグル
   const toggleAlert = useCallback(
     (alert: Omit<PriceAlert, 'createdAt'>) => {
-      if (hasAlert(alert.productId)) {
-        removeAlert(alert.productId);
+      if (hasAlert(alert['productId'])) {
+        removeAlert(alert['productId']);
       } else {
         addAlert(alert);
       }

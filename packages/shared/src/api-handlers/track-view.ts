@@ -16,12 +16,12 @@ export function createTrackViewHandler(deps: TrackViewHandlerDeps) {
     try {
       const body: TrackViewRequest = await request.json();
 
-      if (body.productId) {
-        await deps.trackProductView(body.productId);
+      if (body['productId']) {
+        await deps.trackProductView(body['productId']);
       }
 
-      if (body.performerId) {
-        await deps.trackPerformerView(body.performerId);
+      if (body['performerId']) {
+        await deps.trackPerformerView(body['performerId']);
       }
 
       return NextResponse.json({ success: true });

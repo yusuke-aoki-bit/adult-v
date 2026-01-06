@@ -51,8 +51,8 @@ export async function generateMetadata({
   };
 
   return generateBaseMetadata(
-    titles[locale] || titles.ja,
-    descriptions[locale] || descriptions.ja,
+    titles[locale] || titles['ja'],
+    descriptions[locale] || descriptions['ja'],
     undefined,
     '/statistics',
     undefined,
@@ -108,7 +108,7 @@ export default async function StatisticsPage({
     temporalCoverage: `2015/${currentYear}`,
     distribution: {
       '@type': 'DataDownload',
-      contentUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/statistics`,
+      contentUrl: `${process.env['NEXT_PUBLIC_SITE_URL']}/statistics`,
       encodingFormat: 'text/html',
     },
   };
@@ -138,7 +138,7 @@ export default async function StatisticsPage({
         <div className="shrink-0">
           <SocialShareButtons
             title="AV業界統計・ランキング - 最新データで業界動向を分析"
-            url={`${process.env.NEXT_PUBLIC_SITE_URL || ''}/statistics`}
+            url={`${process.env['NEXT_PUBLIC_SITE_URL'] || ''}/statistics`}
             showAll={true}
             hashtags={['AV統計', 'ランキング']}
           />
@@ -290,28 +290,28 @@ export default async function StatisticsPage({
           <div>
             <p className="text-sm font-medium mb-2 theme-text">概要統計（作品数・女優数）:</p>
             <code className="block p-3 bg-gray-800 text-green-400 text-xs rounded overflow-x-auto">
-              {`<iframe src="${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/embed/stats?type=overview" width="320" height="180" frameborder="0"></iframe>`}
+              {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com'}/embed/stats?type=overview" width="320" height="180" frameborder="0"></iframe>`}
             </code>
           </div>
 
           <div>
             <p className="text-sm font-medium mb-2 theme-text">人気女優ランキング:</p>
             <code className="block p-3 bg-gray-800 text-green-400 text-xs rounded overflow-x-auto">
-              {`<iframe src="${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/embed/stats?type=performers&limit=5" width="320" height="280" frameborder="0"></iframe>`}
+              {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com'}/embed/stats?type=performers&limit=5" width="320" height="280" frameborder="0"></iframe>`}
             </code>
           </div>
 
           <div>
             <p className="text-sm font-medium mb-2 theme-text">人気ジャンル:</p>
             <code className="block p-3 bg-gray-800 text-green-400 text-xs rounded overflow-x-auto">
-              {`<iframe src="${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/embed/stats?type=genres&limit=5" width="320" height="280" frameborder="0"></iframe>`}
+              {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com'}/embed/stats?type=genres&limit=5" width="320" height="280" frameborder="0"></iframe>`}
             </code>
           </div>
 
           <div>
             <p className="text-sm font-medium mb-2 theme-text">月別リリース推移:</p>
             <code className="block p-3 bg-gray-800 text-green-400 text-xs rounded overflow-x-auto">
-              {`<iframe src="${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/embed/stats?type=releases" width="320" height="200" frameborder="0"></iframe>`}
+              {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com'}/embed/stats?type=releases" width="320" height="200" frameborder="0"></iframe>`}
             </code>
           </div>
         </div>

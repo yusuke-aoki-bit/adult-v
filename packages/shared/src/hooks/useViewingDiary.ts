@@ -41,7 +41,7 @@ export interface YearlyStats {
 }
 
 const SITE_MODE = typeof window !== 'undefined'
-  ? (process.env.NEXT_PUBLIC_SITE_MODE || 'adult-v')
+  ? (process.env['NEXT_PUBLIC_SITE_MODE'] || 'adult-v')
   : 'adult-v';
 const STORAGE_KEY = `viewing_diary_${SITE_MODE}`;
 const MAX_ENTRIES = 500;
@@ -70,7 +70,7 @@ export function useViewingDiary() {
     setEntries((prev) => {
       const newEntry: DiaryEntry = {
         ...entry,
-        id: `${entry.productId}-${Date.now()}`,
+        id: `${entry['productId']}-${Date.now()}`,
         createdAt: Date.now(),
       };
 
@@ -90,7 +90,7 @@ export function useViewingDiary() {
   const updateEntry = useCallback((id: string, updates: Partial<Pick<DiaryEntry, 'rating' | 'note'>>) => {
     setEntries((prev) => {
       const updated = prev.map((entry) =>
-        entry.id === id ? { ...entry, ...updates } : entry
+        entry['id'] === id ? { ...entry, ...updates } : entry
       );
 
       try {
@@ -106,7 +106,7 @@ export function useViewingDiary() {
   // エントリーを削除
   const removeEntry = useCallback((id: string) => {
     setEntries((prev) => {
-      const updated = prev.filter((entry) => entry.id !== id);
+      const updated = prev.filter((entry) => entry['id'] !== id);
 
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -150,8 +150,8 @@ export function useViewingDiary() {
     // 出演者集計
     const performerCounts: Record<string, number> = {};
     monthEntries.forEach((entry) => {
-      if (entry.performerName) {
-        performerCounts[entry.performerName] = (performerCounts[entry.performerName] || 0) + 1;
+      if (entry['performerName']) {
+        performerCounts[entry['performerName']] = (performerCounts[entry['performerName']] || 0) + 1;
       }
     });
     const topPerformerEntry = Object.entries(performerCounts).sort((a, b) => b[1] - a[1])[0];
@@ -175,8 +175,8 @@ export function useViewingDiary() {
       month,
       count: monthEntries.length,
       totalDuration: monthEntries.reduce((sum, e) => sum + (e.duration || 0), 0),
-      topPerformer: topPerformerEntry ? { name: topPerformerEntry[0], count: topPerformerEntry[1] } : undefined,
-      topTag: topTagEntry ? { name: topTagEntry[0], count: topTagEntry[1] } : undefined,
+      ...(topPerformerEntry && { topPerformer: { name: topPerformerEntry[0], count: topPerformerEntry[1] } }),
+      ...(topTagEntry && { topTag: { name: topTagEntry[0], count: topTagEntry[1] } }),
       averageRating,
     };
   }, [entriesByMonth]);
@@ -191,17 +191,26 @@ export function useViewingDiary() {
     // 出演者集計
     const performerCounts: Record<string, { count: number; id?: number | string }> = {};
     yearEntries.forEach((entry) => {
-      if (entry.performerName) {
-        if (!performerCounts[entry.performerName]) {
-          performerCounts[entry.performerName] = { count: 0, id: entry.performerId };
+      if (entry['performerName']) {
+        const existingEntry = performerCounts[entry['performerName']];
+        if (!existingEntry) {
+          performerCounts[entry['performerName']] = {
+            count: 1,
+            ...(entry['performerId'] !== undefined && { id: entry['performerId'] }),
+          };
+        } else {
+          existingEntry.count++;
         }
-        performerCounts[entry.performerName].count++;
       }
     });
     const topPerformers = Object.entries(performerCounts)
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 10)
-      .map(([name, data]) => ({ name, count: data.count, id: data.id }));
+      .map(([name, data]) => ({
+        name,
+        count: data['count'],
+        ...(data['id'] !== undefined && { id: data['id'] }),
+      }));
 
     // タグ集計
     const tagCounts: Record<string, number> = {};

@@ -281,7 +281,7 @@ export function validateChallengeToken(token: string): boolean {
   try {
     const decoded = Buffer.from(token, 'base64').toString('utf-8');
     const [timestampStr] = decoded.split(':');
-    const timestamp = parseInt(timestampStr, 10);
+    const timestamp = parseInt(timestampStr ?? '0', 10);
     const now = Date.now();
     const fiveMinutes = 5 * 60 * 1000;
 

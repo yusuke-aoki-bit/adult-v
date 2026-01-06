@@ -34,6 +34,7 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     const touch = e.touches[0];
+    if (!touch) return;
     touchState.current = {
       startX: touch.clientX,
       startY: touch.clientY,
@@ -45,6 +46,7 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
     if (!touchState.current) return;
 
     const touch = e.changedTouches[0];
+    if (!touch) return;
     const deltaX = touch.clientX - touchState.current.startX;
     const deltaY = touch.clientY - touchState.current.startY;
     const deltaTime = Date.now() - touchState.current.startTime;

@@ -143,7 +143,7 @@ function getPurchasePriority(
   }
 
   // Priority 1: High discount (30%+)
-  if (product.discount && product.discount >= 30) {
+  if (product['discount'] && product['discount'] >= 30) {
     return {
       priority: 1,
       reason: t.highDiscount,
@@ -282,16 +282,16 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
 
         {analysis.prioritizedProducts.slice(0, 6).map((product) => (
           <Link
-            key={`${product.type}-${product.id}`}
-            href={`/${locale}/products/${product.id}`}
+            key={`${product.type}-${product['id']}`}
+            href={`/${locale}/products/${product['id']}`}
             className="flex items-center gap-3 bg-gray-750 hover:bg-gray-700 rounded-lg p-2 transition-colors group"
           >
             {/* Thumbnail */}
             <div className="w-12 h-16 sm:w-14 sm:h-[72px] relative shrink-0 bg-gray-700 rounded overflow-hidden">
-              {product.thumbnail ? (
+              {product['thumbnail'] ? (
                 <Image
-                  src={product.thumbnail}
-                  alt={product.title || ''}
+                  src={product['thumbnail']}
+                  alt={product['title'] || ''}
                   fill
                   className="object-cover"
                 />
@@ -302,20 +302,20 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
               )}
               {/* Priority badge */}
               <div className={`absolute top-0 left-0 w-5 h-5 flex items-center justify-center text-xs font-bold ${
-                product.priority === 1
+                product['priority'] === 1
                   ? 'bg-red-500 text-white'
-                  : product.priority === 2
+                  : product['priority'] === 2
                   ? 'bg-yellow-500 text-black'
                   : 'bg-gray-600 text-white'
               }`}>
-                {product.priority}
+                {product['priority']}
               </div>
             </div>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
               <h5 className="text-white text-sm font-medium line-clamp-1 group-hover:text-rose-300 transition-colors">
-                {product.title}
+                {product['title']}
               </h5>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 {product.salePrice ? (
@@ -323,15 +323,15 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
                     <span className="text-rose-400 font-bold text-sm">
                       ¥{product.salePrice.toLocaleString()}
                     </span>
-                    {product.discount && (
+                    {product['discount'] && (
                       <span className="text-xs bg-red-600 text-white px-1.5 py-0.5 rounded">
-                        -{product.discount}%
+                        -{product['discount']}%
                       </span>
                     )}
                   </>
-                ) : product.price ? (
+                ) : product['price'] ? (
                   <span className="text-gray-300 text-sm">
-                    ¥{product.price.toLocaleString()}
+                    ¥{product['price'].toLocaleString()}
                   </span>
                 ) : (
                   <span className="text-gray-500 text-xs">{t.priceUnknown}</span>
@@ -340,9 +340,9 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
               <div className="flex items-center gap-1 mt-1">
                 {product.urgent ? (
                   <AlertTriangle className="w-3 h-3 text-red-400" />
-                ) : product.priority === 1 ? (
+                ) : product['priority'] === 1 ? (
                   <CheckCircle2 className="w-3 h-3 text-green-400" />
-                ) : product.priority === 2 ? (
+                ) : product['priority'] === 2 ? (
                   <TrendingDown className="w-3 h-3 text-yellow-400" />
                 ) : (
                   <Clock className="w-3 h-3 text-gray-500" />
@@ -350,13 +350,13 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
                 <span className={`text-xs ${
                   product.urgent
                     ? 'text-red-400'
-                    : product.priority === 1
+                    : product['priority'] === 1
                     ? 'text-green-400'
-                    : product.priority === 2
+                    : product['priority'] === 2
                     ? 'text-yellow-400'
                     : 'text-gray-500'
                 }`}>
-                  {product.reason}
+                  {product['reason']}
                 </span>
               </div>
             </div>

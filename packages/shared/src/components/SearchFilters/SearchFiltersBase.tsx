@@ -124,7 +124,13 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
       const newProviders = currentProviders.includes(provider)
         ? currentProviders.filter((p) => p !== provider)
         : [...currentProviders, provider];
-      const newFilters = { ...prev, providers: newProviders.length > 0 ? newProviders : undefined };
+      const newFilters: SearchFilterOptions = {
+        ...prev,
+        ...(newProviders.length > 0 ? { providers: newProviders } : {}),
+      };
+      if (newProviders.length === 0) {
+        delete newFilters.providers;
+      }
       onFilterChange(newFilters);
       return newFilters;
     });
@@ -133,7 +139,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
   const clearFilters = useCallback(() => {
     setFilters(prev => {
       const clearedFilters: SearchFilterOptions = {
-        query: prev.query,
+        ...(prev.query && { query: prev.query }),
       };
       onFilterChange(clearedFilters);
       return clearedFilters;

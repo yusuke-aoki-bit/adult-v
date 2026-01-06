@@ -377,7 +377,7 @@ export function createAdminStatsHandler(
       const collectionRatesWithEstimates = (collectionRates.rows as { asp_name: string; count: string }[]).map(row => {
         const aspName = deps.mapDBNameToASPName(row.asp_name);
         const estimated = estimates[row.asp_name] || estimates[aspName] || null;
-        const collected = parseInt(row.count);
+        const collected = parseInt(row['count']);
 
         // 対応するASPTotalからソース情報を取得
         const totalInfo = aspTotals.find(t =>
@@ -413,8 +413,8 @@ export function createAdminStatsHandler(
 
       // SEO統計を追加（オプション）
       if (includeSeoIndexing) {
-        response.seoIndexingByStatus = seoIndexingByStatus;
-        response.seoIndexingSummary = seoIndexingSummary.length > 0 ? seoIndexingSummary[0] : null;
+        response['seoIndexingByStatus'] = seoIndexingByStatus;
+        response['seoIndexingSummary'] = seoIndexingSummary.length > 0 ? seoIndexingSummary[0] : null;
       }
 
       return NextResponse.json(response);

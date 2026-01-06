@@ -38,7 +38,7 @@ export default function FilterPersistence() {
       const settings = {
         includeTags: include ? include.split(',').filter(Boolean) : [],
         excludeTags: exclude ? exclude.split(',').filter(Boolean) : [],
-        sortBy: sort || undefined,
+        ...(sort && { sortBy: sort }),
       };
       saveFilterSettings(pageType, settings);
       return;

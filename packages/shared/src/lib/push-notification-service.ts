@@ -67,7 +67,7 @@ export async function sendPushNotification(
 
     const result = await webpush.sendNotification(
       {
-        endpoint: subscription.endpoint,
+        endpoint: subscription['endpoint'],
         keys: subscription.keys,
       },
       pushPayload
@@ -75,8 +75,8 @@ export async function sendPushNotification(
 
     return {
       success: true,
-      endpoint: subscription.endpoint,
-      statusCode: result.statusCode,
+      endpoint: subscription['endpoint'],
+      statusCode: result['statusCode'],
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -84,8 +84,8 @@ export async function sendPushNotification(
 
     return {
       success: false,
-      endpoint: subscription.endpoint,
-      statusCode,
+      endpoint: subscription['endpoint'],
+      ...(statusCode !== undefined && { statusCode }),
       error: errorMessage,
     };
   }
@@ -128,8 +128,8 @@ export async function sendPushNotificationBatch(
       results.push(result);
 
       // 410 Gone または 404 Not Found は購読が無効
-      if (result.statusCode === 410 || result.statusCode === 404) {
-        expiredEndpoints.push(result.endpoint);
+      if (result['statusCode'] === 410 || result['statusCode'] === 404) {
+        expiredEndpoints.push(result['endpoint']);
       }
     }
 

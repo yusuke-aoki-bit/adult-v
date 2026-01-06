@@ -133,7 +133,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
       const result = await db
         .select()
         .from(products)
-        .where(eq(products.id, parseInt(id)))
+        .where(eq(products['id'], parseInt(id)))
         .limit(1);
 
       if (result.length === 0) {
@@ -142,7 +142,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
       const product = result[0];
       const { performerData, tagData, sourceData, imagesData, videosData, saleData } =
-        await fetchProductRelatedData(product.id);
+        await fetchProductRelatedData(product['id']);
 
       return mapProductToType(
         product,
@@ -181,7 +181,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
       if (productByNormalizedId.length > 0) {
         const product = productByNormalizedId[0];
         const { performerData, tagData, sourceData, imagesData, videosData, saleData } =
-          await fetchProductRelatedData(product.id);
+          await fetchProductRelatedData(product['id']);
 
         return mapProductToType(
           product,
@@ -211,7 +211,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
       const product = await db
         .select()
         .from(products)
-        .where(eq(products.id, source.productId))
+        .where(eq(products['id'], source.productId))
         .limit(1);
 
       if (product.length === 0) {
@@ -223,12 +223,12 @@ export function createProductQueries(deps: ProductQueryDeps) {
       const [performerData, tagData, imagesData, videosData, saleDataResult] = await Promise.all([
         db
           .select({
-            id: performers.id,
-            name: performers.name,
-            nameKana: performers.nameKana,
+            id: performers['id'],
+            name: performers['name'],
+            nameKana: performers['nameKana'],
           })
           .from(productPerformers)
-          .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+          .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
           .where(eq(productPerformers.productId, productData.id)),
         db
           .select({
@@ -402,7 +402,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         makerProductCode: products.makerProductCode,
       })
       .from(products)
-      .where(eq(products.id, productId))
+      .where(eq(products['id'], productId))
       .limit(1);
 
     if (result.length === 0) return null;
@@ -432,10 +432,10 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
       // productsテーブルでnormalized_product_idとtitleを検索
       const productMatches = await db
-        .select({ id: products.id })
+        .select({ id: products['id'] })
         .from(products)
         .where(
-          sql`${products.normalizedProductId} ILIKE ${searchPattern} OR ${products.title} ILIKE ${searchPattern}`
+          sql`${products.normalizedProductId} ILIKE ${searchPattern} OR ${products['title']} ILIKE ${searchPattern}`
         )
         .limit(limit);
 
@@ -477,14 +477,14 @@ export function createProductQueries(deps: ProductQueryDeps) {
       const results = await db
         .select()
         .from(products)
-        .orderBy(desc(products.releaseDate), desc(products.createdAt))
+        .orderBy(desc(products['releaseDate']), desc(products['createdAt']))
         .limit(limit);
 
       // 関連データを並列で取得
       const productsWithData = await Promise.all(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         results.map(async (product: any) => {
-          const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(product.id as number);
+          const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(product['id'] as number);
 
           return mapProductToType(
             product,

@@ -12,7 +12,7 @@ export async function generateMetadata({
     ? '人気のメーカー・レーベルから作品を探す'
     : 'Browse products by popular makers and labels';
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   // hreflang/canonical設定
   const alternates = {

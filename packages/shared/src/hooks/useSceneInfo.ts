@@ -24,9 +24,9 @@ export interface SceneMarker {
 export interface ProductSceneInfo {
   productId: number;
   scenes: SceneMarker[];
-  totalDuration?: number;
+  totalDuration?: number | undefined;
   averageSceneRating: number;
-  bestScene?: SceneMarker;
+  bestScene?: SceneMarker | undefined;
 }
 
 // SSR-safe localStorage access
@@ -53,7 +53,7 @@ function saveSceneInfo(data: Record<number, ProductSceneInfo>): boolean {
 }
 
 // Helper to recalculate stats
-function recalculateStats(scenes: SceneMarker[]): { averageSceneRating: number; bestScene?: SceneMarker } {
+function recalculateStats(scenes: SceneMarker[]): { averageSceneRating: number; bestScene: SceneMarker | undefined } {
   if (scenes.length === 0) {
     return { averageSceneRating: 0, bestScene: undefined };
   }
@@ -132,13 +132,17 @@ export function useSceneInfo(productId: number) {
       averageSceneRating: 0,
     };
 
+    const sanitizedDescription = scene.description ? sanitizeText(scene.description, MAX_DESCRIPTION_LENGTH) : undefined;
     const newScene: SceneMarker = {
-      ...scene,
+      timestamp: scene.timestamp,
       label: sanitizeText(scene.label || 'Scene', MAX_LABEL_LENGTH),
-      description: scene.description ? sanitizeText(scene.description, MAX_DESCRIPTION_LENGTH) : undefined,
+      rating: scene.rating,
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       votes: 1,
       createdAt: new Date().toISOString(),
+      ...(scene.endTimestamp !== undefined && { endTimestamp: scene.endTimestamp }),
+      ...(sanitizedDescription !== undefined && { description: sanitizedDescription }),
+      ...(scene.userId !== undefined && { userId: scene.userId }),
     };
 
     const newScenes = [...current.scenes, newScene].sort((a, b) => a.timestamp - b.timestamp);
@@ -257,11 +261,14 @@ export function parseTimestamp(str: string): number | null {
   let totalSeconds: number;
 
   if (parts.length === 2) {
-    const [minutes, seconds] = parts;
+    const minutes = parts[0]!;
+    const seconds = parts[1]!;
     if (seconds >= 60) return null; // Invalid seconds
     totalSeconds = minutes * 60 + seconds;
   } else if (parts.length === 3) {
-    const [hours, minutes, seconds] = parts;
+    const hours = parts[0]!;
+    const minutes = parts[1]!;
+    const seconds = parts[2]!;
     if (minutes >= 60 || seconds >= 60) return null; // Invalid time
     totalSeconds = hours * 3600 + minutes * 60 + seconds;
   } else {

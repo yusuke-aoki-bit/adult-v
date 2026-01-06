@@ -300,12 +300,12 @@ export default function ReleaseCalendar({
           </h4>
           <ul className="space-y-1 max-h-48 overflow-y-auto">
             {selectedDateData.products.map(product => (
-              <li key={product.id} className="text-sm">
+              <li key={product['id']} className="text-sm">
                 <Link
-                  href={`${productLinkPrefix}/${product.normalizedProductId || product.id}`}
+                  href={`${productLinkPrefix}/${product.normalizedProductId || product['id']}`}
                   className="text-indigo-600 dark:text-indigo-400 hover:underline line-clamp-1"
                 >
-                  {product.title}
+                  {product['title']}
                 </Link>
               </li>
             ))}

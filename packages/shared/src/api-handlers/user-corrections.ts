@@ -36,7 +36,7 @@ export function createUserCorrectionsGetHandler(deps: UserCorrectionsHandlerDeps
 
     try {
       const db = getDb() as Record<string, unknown>;
-      const { searchParams } = new URL(request.url);
+      const { searchParams } = new URL(request['url']);
       const targetType = context?.params?.targetType || searchParams.get('targetType');
       const targetId = context?.params?.targetId || searchParams.get('targetId');
       const userId = searchParams.get('userId');
@@ -49,31 +49,31 @@ export function createUserCorrectionsGetHandler(deps: UserCorrectionsHandlerDeps
       const conditions: unknown[] = [];
 
       if (targetType) {
-        conditions.push(eq((userCorrections as Record<string, unknown>).targetType, targetType));
+        conditions.push(eq((userCorrections as Record<string, unknown>)['targetType'], targetType));
       }
       if (targetId) {
-        conditions.push(eq((userCorrections as Record<string, unknown>).targetId, parseInt(targetId, 10)));
+        conditions.push(eq((userCorrections as Record<string, unknown>)['targetId'], parseInt(targetId, 10)));
       }
       if (userId) {
-        conditions.push(eq((userCorrections as Record<string, unknown>).userId, userId));
+        conditions.push(eq((userCorrections as Record<string, unknown>)['userId'], userId));
       }
       if (status) {
-        conditions.push(eq((userCorrections as Record<string, unknown>).status, status));
+        conditions.push(eq((userCorrections as Record<string, unknown>)['status'], status));
       }
 
-      let query = (db.select as CallableFunction)({
-        id: (userCorrections as Record<string, unknown>).id,
-        targetType: (userCorrections as Record<string, unknown>).targetType,
-        targetId: (userCorrections as Record<string, unknown>).targetId,
-        userId: (userCorrections as Record<string, unknown>).userId,
-        fieldName: (userCorrections as Record<string, unknown>).fieldName,
-        currentValue: (userCorrections as Record<string, unknown>).currentValue,
-        suggestedValue: (userCorrections as Record<string, unknown>).suggestedValue,
-        reason: (userCorrections as Record<string, unknown>).reason,
-        status: (userCorrections as Record<string, unknown>).status,
-        reviewedBy: (userCorrections as Record<string, unknown>).reviewedBy,
-        reviewedAt: (userCorrections as Record<string, unknown>).reviewedAt,
-        createdAt: (userCorrections as Record<string, unknown>).createdAt,
+      let query = (db['select'] as CallableFunction)({
+        id: (userCorrections as Record<string, unknown>)['id'],
+        targetType: (userCorrections as Record<string, unknown>)['targetType'],
+        targetId: (userCorrections as Record<string, unknown>)['targetId'],
+        userId: (userCorrections as Record<string, unknown>)['userId'],
+        fieldName: (userCorrections as Record<string, unknown>)['fieldName'],
+        currentValue: (userCorrections as Record<string, unknown>)['currentValue'],
+        suggestedValue: (userCorrections as Record<string, unknown>)['suggestedValue'],
+        reason: (userCorrections as Record<string, unknown>)['reason'],
+        status: (userCorrections as Record<string, unknown>)['status'],
+        reviewedBy: (userCorrections as Record<string, unknown>)['reviewedBy'],
+        reviewedAt: (userCorrections as Record<string, unknown>)['reviewedAt'],
+        createdAt: (userCorrections as Record<string, unknown>)['createdAt'],
       }).from(userCorrections);
 
       if (conditions.length > 0) {
@@ -81,7 +81,7 @@ export function createUserCorrectionsGetHandler(deps: UserCorrectionsHandlerDeps
       }
 
       const corrections = await query
-        .orderBy(desc((userCorrections as Record<string, unknown>).createdAt))
+        .orderBy(desc((userCorrections as Record<string, unknown>)['createdAt']))
         .limit(limit)
         .offset(offset);
 
@@ -122,7 +122,7 @@ export function createUserCorrectionsPostHandler(deps: UserCorrectionsHandlerDep
       }
 
       // 提案作成
-      const result = await (db.insert as CallableFunction)(userCorrections)
+      const result = await (db['insert'] as CallableFunction)(userCorrections)
         .values({
           userId,
           targetType,
@@ -136,15 +136,15 @@ export function createUserCorrectionsPostHandler(deps: UserCorrectionsHandlerDep
         .returning();
 
       // 貢献度更新
-      await (db.insert as CallableFunction)(userContributionStats)
+      await (db['insert'] as CallableFunction)(userContributionStats)
         .values({
           userId,
           correctionCount: 1,
         })
         .onConflictDoUpdate({
-          target: (userContributionStats as Record<string, unknown>).userId,
+          target: (userContributionStats as Record<string, unknown>)['userId'],
           set: {
-            correctionCount: (sql as CallableFunction)`${(userContributionStats as Record<string, unknown>).correctionCount} + 1`,
+            correctionCount: (sql as CallableFunction)`${(userContributionStats as Record<string, unknown>)['correctionCount']} + 1`,
             updatedAt: new Date(),
           },
         });
@@ -165,7 +165,7 @@ export function createUserCorrectionsReviewHandler(deps: UserCorrectionsHandlerD
 
     try {
       const db = getDb() as Record<string, unknown>;
-      const correctionId = parseInt(context.params.id, 10);
+      const correctionId = parseInt(context.params['id'], 10);
       const body = await request.json();
       const { reviewerId, status } = body;
 
@@ -178,9 +178,9 @@ export function createUserCorrectionsReviewHandler(deps: UserCorrectionsHandlerD
       }
 
       // 既存の提案を取得
-      const existing = await (db.select as CallableFunction)()
+      const existing = await (db['select'] as CallableFunction)()
         .from(userCorrections)
-        .where(eq((userCorrections as Record<string, unknown>).id, correctionId))
+        .where(eq((userCorrections as Record<string, unknown>)['id'], correctionId))
         .limit(1);
 
       if (existing.length === 0) {
@@ -188,30 +188,30 @@ export function createUserCorrectionsReviewHandler(deps: UserCorrectionsHandlerD
       }
 
       const correction = existing[0] as UserCorrection;
-      if (correction.status !== 'pending') {
+      if (correction['status'] !== 'pending') {
         return NextResponse.json({ error: 'Correction already reviewed' }, { status: 400 });
       }
 
       // 審査結果を更新
-      const result = await (db.update as CallableFunction)(userCorrections)
+      const result = await (db['update'] as CallableFunction)(userCorrections)
         .set({
           status,
           reviewedBy: reviewerId,
           reviewedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq((userCorrections as Record<string, unknown>).id, correctionId))
+        .where(eq((userCorrections as Record<string, unknown>)['id'], correctionId))
         .returning();
 
       // 承認された場合、貢献度を更新
       if (status === 'approved') {
-        await (db.update as CallableFunction)(userContributionStats)
+        await (db['update'] as CallableFunction)(userContributionStats)
           .set({
-            correctionApprovedCount: (sql as CallableFunction)`${(userContributionStats as Record<string, unknown>).correctionApprovedCount} + 1`,
-            contributionScore: (sql as CallableFunction)`${(userContributionStats as Record<string, unknown>).contributionScore} + 10`,
+            correctionApprovedCount: (sql as CallableFunction)`${(userContributionStats as Record<string, unknown>)['correctionApprovedCount']} + 1`,
+            contributionScore: (sql as CallableFunction)`${(userContributionStats as Record<string, unknown>)['contributionScore']} + 10`,
             updatedAt: new Date(),
           })
-          .where(eq((userContributionStats as Record<string, unknown>).userId, correction.userId));
+          .where(eq((userContributionStats as Record<string, unknown>)['userId'], correction['userId']));
       }
 
       return NextResponse.json({ correction: result[0] });
@@ -230,8 +230,8 @@ export function createUserCorrectionsDeleteHandler(deps: UserCorrectionsHandlerD
 
     try {
       const db = getDb() as Record<string, unknown>;
-      const correctionId = parseInt(context.params.id, 10);
-      const { searchParams } = new URL(request.url);
+      const correctionId = parseInt(context.params['id'], 10);
+      const { searchParams } = new URL(request['url']);
       const userId = searchParams.get('userId');
 
       if (!userId) {
@@ -239,11 +239,11 @@ export function createUserCorrectionsDeleteHandler(deps: UserCorrectionsHandlerD
       }
 
       // pending状態の自分の提案のみ削除可能
-      const result = await (db.delete as CallableFunction)(userCorrections)
+      const result = await (db['delete'] as CallableFunction)(userCorrections)
         .where(and(
-          eq((userCorrections as Record<string, unknown>).id, correctionId),
-          eq((userCorrections as Record<string, unknown>).userId, userId),
-          eq((userCorrections as Record<string, unknown>).status, 'pending')
+          eq((userCorrections as Record<string, unknown>)['id'], correctionId),
+          eq((userCorrections as Record<string, unknown>)['userId'], userId),
+          eq((userCorrections as Record<string, unknown>)['status'], 'pending')
         ))
         .returning();
 
@@ -252,12 +252,12 @@ export function createUserCorrectionsDeleteHandler(deps: UserCorrectionsHandlerD
       }
 
       // 貢献度を減らす
-      await (db.update as CallableFunction)(userContributionStats)
+      await (db['update'] as CallableFunction)(userContributionStats)
         .set({
-          correctionCount: (sql as CallableFunction)`GREATEST(${(userContributionStats as Record<string, unknown>).correctionCount} - 1, 0)`,
+          correctionCount: (sql as CallableFunction)`GREATEST(${(userContributionStats as Record<string, unknown>)['correctionCount']} - 1, 0)`,
           updatedAt: new Date(),
         })
-        .where(eq((userContributionStats as Record<string, unknown>).userId, userId));
+        .where(eq((userContributionStats as Record<string, unknown>)['userId'], userId));
 
       return NextResponse.json({ success: true });
     } catch (error) {

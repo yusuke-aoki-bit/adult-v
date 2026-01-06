@@ -43,10 +43,10 @@ export default function ConnectedFavoriteButton({
     toggleFavorite({
       type,
       id,
-      title,
-      name,
-      thumbnail,
-      image,
+      ...(title && { title }),
+      ...(name && { name }),
+      ...(thumbnail && { thumbnail }),
+      ...(image && { image }),
     });
   };
 
@@ -54,10 +54,10 @@ export default function ConnectedFavoriteButton({
     <FavoriteButton
       type={type}
       id={id}
-      title={title}
-      name={name}
-      thumbnail={thumbnail}
-      image={image}
+      {...(title && { title })}
+      {...(name && { name })}
+      {...(thumbnail && { thumbnail })}
+      {...(image && { image })}
       className={className}
       size={size}
       isFavorite={favorite}

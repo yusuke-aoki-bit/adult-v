@@ -48,7 +48,7 @@ function generateSearchVariants(normalizedProductId: string, originalProductId?:
   if (matches) {
     for (const match of matches) {
       const parts = match.match(/([A-Z]+)[-_]?(\d+)/i);
-      if (parts) {
+      if (parts && parts[1] && parts[2]) {
         const prefix = parts[1].toUpperCase();
         const number = parts[2];
         variants.push(`${prefix}-${number}`);
@@ -76,7 +76,7 @@ async function searchMinnaNoAV(productCode: string): Promise<string[]> {
 
     if (!response.ok) return [];
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     let movieUrl: string | null = null;
@@ -147,7 +147,7 @@ async function searchAVWiki(productCode: string): Promise<string[]> {
 
     if (!response.ok) return [];
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     const performers: string[] = [];
@@ -221,7 +221,7 @@ async function fetchFromLookupTable(
       if (row.performer_names && row.performer_names.length > 0) {
         return {
           performers: row.performer_names,
-          source: `lookup:${row.source}`,
+          source: `lookup:${row['source']}`,
         };
       }
     }
@@ -381,7 +381,7 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
     };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 500);
       const offset = parseInt(url.searchParams.get('offset') || '0');
       const aspFilter = url.searchParams.get('asp') || null;
@@ -449,20 +449,20 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
           continue;
         }
 
-        console.log(`[normalize-performers] Hit (${result.source}): ${product.normalized_product_id} -> ${result.performers.join(', ')}`);
+        console.log(`[normalize-performers] Hit (${result['source']}): ${product.normalized_product_id} -> ${result.performers.join(', ')}`);
         stats.wikiHits++;
 
         for (const rawPerformerName of result.performers) {
           const splitNames = parsePerformerNames(rawPerformerName, /[、,\/・\n\t\s　]+/);
 
           if (splitNames.length === 0) {
-            const success = await linkPerformerToProduct(db, product.id, rawPerformerName);
+            const success = await linkPerformerToProduct(db, product['id'], rawPerformerName);
             if (success) {
               stats.performersAdded++;
             }
           } else {
             for (const performerName of splitNames) {
-              const success = await linkPerformerToProduct(db, product.id, performerName);
+              const success = await linkPerformerToProduct(db, product['id'], performerName);
               if (success) {
                 stats.performersAdded++;
               }

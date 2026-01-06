@@ -95,12 +95,12 @@ export default function MarkAsViewedButton({
       title,
       imageUrl,
       aspName,
-      performerName,
-      performerId,
-      tags,
-      duration,
-      rating: rating > 0 ? rating : undefined,
-      note: note.trim() || undefined,
+      ...(performerName && { performerName }),
+      ...(performerId !== undefined && { performerId }),
+      ...(tags && { tags }),
+      ...(duration !== undefined && { duration }),
+      ...(rating > 0 && { rating }),
+      ...(note.trim() && { note: note.trim() }),
       viewedAt: Date.now(),
     };
 

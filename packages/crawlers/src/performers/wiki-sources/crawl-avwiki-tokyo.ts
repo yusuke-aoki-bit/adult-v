@@ -41,13 +41,13 @@ async function fetchActressPage(actressName: string): Promise<ActressData | null
 
     const result = await crawler.fetch(url);
 
-    if (result.status === 404 || result.html.includes('このページは存在しません')) {
+    if (result['status'] === 404 || result.html.includes('このページは存在しません')) {
       console.log(`  Not found: ${actressName}`);
       return null;
     }
 
-    if (result.status !== 200) {
-      console.error(`  HTTP ${result.status}: ${url}`);
+    if (result['status'] !== 200) {
+      console.error(`  HTTP ${result['status']}: ${url}`);
       return null;
     }
 
@@ -115,9 +115,9 @@ async function saveActressData(db: any, performerId: number, data: ActressData):
 
   // 別名を保存
   for (const alias of data.aliases) {
-    if (!alias || alias === data.name) continue;
+    if (!alias || alias === data['name']) continue;
     try {
-      await db.insert(performerAliases).values({
+      await db['insert'](performerAliases).values({
         performerId,
         aliasName: alias,
         source: 'av-wiki.tokyo',
@@ -135,14 +135,14 @@ async function saveActressData(db: any, performerId: number, data: ActressData):
       const normalizedCode = productId.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
       // 商品を検索
-      const existingProduct = await db.select()
+      const existingProduct = await db['select']()
         .from(products)
         .where(eq(products.normalizedProductId, normalizedCode))
         .limit(1);
 
       if (existingProduct.length > 0) {
-        await db.insert(productPerformers).values({
-          productId: existingProduct[0].id,
+        await db['insert'](productPerformers).values({
+          productId: existingProduct[0]['id'],
           performerId,
         }).onConflictDoNothing();
         result.products++;
@@ -161,7 +161,9 @@ async function saveActressData(db: any, performerId: number, data: ActressData):
 async function main() {
   const db = getDb();
   const args = process.argv.slice(2);
-  const limit = args.includes('--limit') ? parseInt(args[args.indexOf('--limit') + 1]) : 100;
+  const limitIdx = args.indexOf('--limit');
+  const limitArg = limitIdx !== -1 ? args[limitIdx + 1] : undefined;
+  const limit = limitArg ? parseInt(limitArg, 10) : 100;
 
   console.log('=== av-wiki.tokyo Crawler (別名・作品紐付け) ===\n');
   console.log(`Limit: ${limit} actresses\n`);
@@ -190,13 +192,13 @@ async function main() {
   let totalAliases = 0;
   let totalProducts = 0;
 
-  for (const actress of actressesToProcess.rows as ActressRow[]) {
-    console.log(`\n[${successCount + failCount + 1}/${actressesToProcess.rows.length}] Processing: ${actress.name}`);
+  for (const actress of actressesToProcess.rows as unknown as ActressRow[]) {
+    console.log(`\n[${successCount + failCount + 1}/${actressesToProcess.rows.length}] Processing: ${actress['name']}`);
 
-    const data = await fetchActressPage(actress.name);
+    const data = await fetchActressPage(actress['name']);
 
     if (data) {
-      const result = await saveActressData(db, actress.id, data);
+      const result = await saveActressData(db, actress['id'], data);
       totalAliases += result.aliases;
       totalProducts += result.products;
 

@@ -49,7 +49,7 @@ function InitialSearchMenu({
   excludeTags,
 }: InitialSearchMenuProps) {
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const buildUrl = useCallback((initial: string) => {
     const params = new URLSearchParams();

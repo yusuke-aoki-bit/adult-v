@@ -48,7 +48,7 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
       const dugaClient = deps.getDugaClient();
 
       // クエリパラメータからlimitを取得（デフォルト100）
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const limit = parseInt(url.searchParams.get('limit') || '100');
       const offset = parseInt(url.searchParams.get('offset') || '0');
 
@@ -61,7 +61,7 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
           // 1. 生JSONレスポンスを保存
           const rawResponseResult = await db.execute(sql`
             INSERT INTO duga_raw_responses (product_id, api_version, raw_json, fetched_at)
-            VALUES (${item.productId}, '1.2', ${JSON.stringify(item)}::jsonb, NOW())
+            VALUES (${item['productId']}, '1.2', ${JSON.stringify(item)}::jsonb, NOW())
             ON CONFLICT (product_id)
             DO UPDATE SET
               raw_json = EXCLUDED.raw_json,
@@ -74,7 +74,7 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
           stats.rawDataSaved++;
 
           // 2. 正規化されたデータを保存
-          const normalizedProductId = `duga-${item.productId}`;
+          const normalizedProductId = `duga-${item['productId']}`;
 
           const productResult = await db.execute(sql`
             INSERT INTO products (
@@ -88,11 +88,11 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
             )
             VALUES (
               ${normalizedProductId},
-              ${item.title || ''},
-              ${item.description || null},
-              ${item.releaseDate || null},
-              ${item.duration || null},
-              ${item.thumbnailUrl || null},
+              ${item['title'] || ''},
+              ${item['description'] || null},
+              ${item['releaseDate'] || null},
+              ${item['duration'] || null},
+              ${item['thumbnailUrl'] || null},
               NOW()
             )
             ON CONFLICT (normalized_product_id)
@@ -129,9 +129,9 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
             VALUES (
               ${productId},
               'DUGA',
-              ${item.productId},
-              ${item.affiliateUrl || ''},
-              ${item.price || null},
+              ${item['productId']},
+              ${item['affiliateUrl'] || ''},
+              ${item['price'] || null},
               'API',
               NOW()
             )
@@ -192,7 +192,7 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
             for (const performer of item.performers) {
               const performerResult = await db.execute(sql`
                 INSERT INTO performers (name)
-                VALUES (${performer.name})
+                VALUES (${performer['name']})
                 ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
                 RETURNING id
               `);
@@ -208,7 +208,7 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
 
         } catch (error) {
           stats.errors++;
-          console.error(`Error processing DUGA product ${item.productId}:`, error);
+          console.error(`Error processing DUGA product ${item['productId']}:`, error);
         }
       }
 

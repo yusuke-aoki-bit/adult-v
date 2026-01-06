@@ -6,7 +6,7 @@ import { useCallback, memo } from 'react';
 export type SortDropdownTheme = 'dark' | 'light';
 
 // Client-side translations (ConditionalLayout is outside NextIntlClientProvider)
-const translations = {
+const translations: { [key: string]: { sortLabel: string; nameAsc: string; nameDesc: string; productCountDesc: string; productCountAsc: string; recent: string } } = {
   ja: {
     sortLabel: '並び順:',
     nameAsc: '名前順（あ→ん）',
@@ -39,7 +39,7 @@ const translations = {
     productCountAsc: '작품 수 (적은순)',
     recent: '최신 추가순',
   },
-} as const;
+};
 
 // Theme configuration
 const themeConfig = {
@@ -64,8 +64,8 @@ function SortDropdownComponent({ sortBy, theme = 'dark' }: SortDropdownProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const t = translations[locale] ?? translations['ja']!;
   const colors = themeConfig[theme];
 
   const handleSortChange = useCallback((newSort: string) => {

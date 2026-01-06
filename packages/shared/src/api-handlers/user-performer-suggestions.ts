@@ -106,7 +106,7 @@ export function createUserPerformerSuggestionsGetHandler(deps: UserPerformerSugg
 
         suggestionsWithVotes = suggestions.map(suggestion => ({
           ...suggestion,
-          userVote: voteMap.get(suggestion.id) || null,
+          userVote: voteMap.get(suggestion['id']) || null,
         }));
       }
 

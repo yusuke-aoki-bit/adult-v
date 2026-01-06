@@ -14,7 +14,7 @@ export default function ProductSortDropdown({ sortBy, basePath, theme }: Product
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = getSortTranslation(locale);
   const themeConfig = getFilterThemeConfig(theme);
 

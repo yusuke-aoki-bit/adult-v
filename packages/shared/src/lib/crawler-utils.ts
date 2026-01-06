@@ -140,7 +140,7 @@ export async function navigateWithRedirectCheck(
       success: true,
       finalUrl,
       wasRedirected: redirectInfo.isRedirected,
-      redirectType: redirectInfo.redirectType,
+      ...(redirectInfo.redirectType && { redirectType: redirectInfo.redirectType }),
     };
   } catch {
     return {

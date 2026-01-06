@@ -48,8 +48,8 @@ const translations = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  const t = translations[locale as keyof typeof translations] || translations.ja;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   return {
     ...generateBaseMetadata(
@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function SeriesListPage({ params }: PageProps) {
   const { locale } = await params;
   const tNav = await getTranslations('nav');
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const series = await getPopularSeries(50);
 

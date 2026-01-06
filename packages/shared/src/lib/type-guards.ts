@@ -72,7 +72,7 @@ export function isDbRow<T extends Record<string, unknown>>(
 export function hasPerformerId(
   row: unknown
 ): row is { performerId: number } {
-  return hasProperty(row, 'performerId') && isNumber(row.performerId);
+  return hasProperty(row, 'performerId') && isNumber(row['performerId']);
 }
 
 /**
@@ -84,14 +84,14 @@ export function extractPerformerIds(
 ): number[] {
   return rows
     .filter(hasPerformerId)
-    .map((row) => row.performerId);
+    .map((row) => row['performerId']);
 }
 
 /**
  * id を含む行の型ガード
  */
 export function hasId(row: unknown): row is { id: number } {
-  return hasProperty(row, 'id') && isNumber(row.id);
+  return hasProperty(row, 'id') && isNumber(row['id']);
 }
 
 /**
@@ -99,7 +99,7 @@ export function hasId(row: unknown): row is { id: number } {
  * 型安全にfilter + mapを1ステップで行う
  */
 export function extractIds(rows: { id: unknown }[]): number[] {
-  return rows.filter(hasId).map((row) => row.id);
+  return rows.filter(hasId).map((row) => row['id']);
 }
 
 /**
@@ -108,7 +108,7 @@ export function extractIds(rows: { id: unknown }[]): number[] {
 export function hasProductId(
   row: unknown
 ): row is { productId: number } {
-  return hasProperty(row, 'productId') && isNumber(row.productId);
+  return hasProperty(row, 'productId') && isNumber(row['productId']);
 }
 
 /**
@@ -118,7 +118,7 @@ export function hasProductId(
 export function extractProductIds(
   rows: { productId: unknown }[]
 ): number[] {
-  return rows.filter(hasProductId).map((row) => row.productId);
+  return rows.filter(hasProductId).map((row) => row['productId']);
 }
 
 /**
@@ -128,14 +128,14 @@ export function hasCount(
   row: unknown
 ): row is { count: string | number } {
   if (!hasProperty(row, 'count')) return false;
-  return isString(row.count) || isNumber(row.count);
+  return isString(row['count']) || isNumber(row['count']);
 }
 
 /**
  * aspName を含む行の型ガード
  */
 export function hasAspName(row: unknown): row is { aspName: string } {
-  return hasProperty(row, 'aspName') && isString(row.aspName);
+  return hasProperty(row, 'aspName') && isString(row['aspName']);
 }
 
 /**
@@ -289,9 +289,9 @@ export function toPerformerRows(rows: unknown[]): PerformerRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      id: (r.id as number) ?? 0,
-      name: (r.name as string) ?? '',
-      nameKana: (r.nameKana as string | null) ?? null,
+      id: (r['id'] as number) ?? 0,
+      name: (r['name'] as string) ?? '',
+      nameKana: (r['nameKana'] as string | null) ?? null,
     };
   });
 }
@@ -303,9 +303,9 @@ export function toTagRows(rows: unknown[]): TagRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      id: (r.id as number) ?? 0,
-      name: (r.name as string) ?? '',
-      category: (r.category as string | null) ?? null,
+      id: (r['id'] as number) ?? 0,
+      name: (r['name'] as string) ?? '',
+      category: (r['category'] as string | null) ?? null,
     };
   });
 }
@@ -317,11 +317,11 @@ export function toSourceRow(row: unknown): SourceRow | undefined {
   if (!row) return undefined;
   const r = row as Record<string, unknown>;
   return {
-    aspName: r.aspName as string | undefined,
-    originalProductId: r.originalProductId as string | undefined,
-    affiliateUrl: r.affiliateUrl as string | undefined,
-    price: r.price as number | undefined,
-    currency: r.currency as string | undefined,
+    aspName: r['aspName'] as string | undefined,
+    originalProductId: r['originalProductId'] as string | undefined,
+    affiliateUrl: r['affiliateUrl'] as string | undefined,
+    price: r['price'] as number | undefined,
+    currency: r['currency'] as string | undefined,
   };
 }
 
@@ -332,10 +332,10 @@ export function toImageRows(rows: unknown[]): ImageRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      productId: (r.productId as number) ?? 0,
-      imageUrl: (r.imageUrl as string) ?? '',
-      imageType: (r.imageType as string) ?? '',
-      displayOrder: (r.displayOrder as number | null) ?? null,
+      productId: (r['productId'] as number) ?? 0,
+      imageUrl: (r['imageUrl'] as string) ?? '',
+      imageType: (r['imageType'] as string) ?? '',
+      displayOrder: (r['displayOrder'] as number | null) ?? null,
     };
   });
 }
@@ -347,11 +347,11 @@ export function toVideoRows(rows: unknown[]): VideoRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      productId: (r.productId as number) ?? 0,
-      videoUrl: (r.videoUrl as string) ?? '',
-      videoType: (r.videoType as string | null) ?? null,
-      quality: (r.quality as string | null) ?? null,
-      duration: (r.duration as number | null) ?? null,
+      productId: (r['productId'] as number) ?? 0,
+      videoUrl: (r['videoUrl'] as string) ?? '',
+      videoType: (r['videoType'] as string | null) ?? null,
+      quality: (r['quality'] as string | null) ?? null,
+      duration: (r['duration'] as number | null) ?? null,
     };
   });
 }
@@ -382,14 +382,14 @@ export function toBatchSourceRows(rows: unknown[]): BatchSourceRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      id: ((r.id ?? 0) as number),
-      productId: ((r.product_id ?? r.productId ?? 0) as number),
-      aspName: ((r.asp_name ?? r.aspName ?? '') as string),
-      originalProductId: ((r.original_product_id ?? r.originalProductId ?? null) as string | null),
-      affiliateUrl: ((r.affiliate_url ?? r.affiliateUrl ?? null) as string | null),
-      price: ((r.price ?? null) as number | null),
-      currency: ((r.currency ?? null) as string | null),
-      productType: ((r.product_type ?? r.productType ?? null) as string | null),
+      id: ((r['id'] ?? 0) as number),
+      productId: ((r['product_id'] ?? r['productId'] ?? 0) as number),
+      aspName: ((r['asp_name'] ?? r['aspName'] ?? '') as string),
+      originalProductId: ((r['original_product_id'] ?? r['originalProductId'] ?? null) as string | null),
+      affiliateUrl: ((r['affiliate_url'] ?? r['affiliateUrl'] ?? null) as string | null),
+      price: ((r['price'] ?? null) as number | null),
+      currency: ((r['currency'] ?? null) as string | null),
+      productType: ((r['product_type'] ?? r['productType'] ?? null) as string | null),
     };
   });
 }
@@ -411,10 +411,10 @@ export function toBatchImageRows(rows: unknown[]): BatchImageRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      productId: ((r.product_id ?? r.productId ?? 0) as number),
-      imageUrl: ((r.image_url ?? r.imageUrl ?? '') as string),
-      imageType: ((r.image_type ?? r.imageType ?? '') as string),
-      displayOrder: ((r.display_order ?? r.displayOrder ?? null) as number | null),
+      productId: ((r['product_id'] ?? r['productId'] ?? 0) as number),
+      imageUrl: ((r['image_url'] ?? r['imageUrl'] ?? '') as string),
+      imageType: ((r['image_type'] ?? r['imageType'] ?? '') as string),
+      displayOrder: ((r['display_order'] ?? r['displayOrder'] ?? null) as number | null),
     };
   });
 }
@@ -437,11 +437,11 @@ export function toBatchVideoRows(rows: unknown[]): BatchVideoRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      productId: ((r.product_id ?? r.productId ?? 0) as number),
-      videoUrl: ((r.video_url ?? r.videoUrl ?? '') as string),
-      videoType: ((r.video_type ?? r.videoType ?? null) as string | null),
-      quality: ((r.quality ?? null) as string | null),
-      duration: ((r.duration ?? null) as number | null),
+      productId: ((r['product_id'] ?? r['productId'] ?? 0) as number),
+      videoUrl: ((r['video_url'] ?? r['videoUrl'] ?? '') as string),
+      videoType: ((r['video_type'] ?? r['videoType'] ?? null) as string | null),
+      quality: ((r['quality'] ?? null) as string | null),
+      duration: ((r['duration'] ?? null) as number | null),
     };
   });
 }
@@ -464,11 +464,11 @@ export function toBatchSaleRows(rows: unknown[]): BatchSaleRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      productId: ((r.product_id ?? r.productId ?? 0) as number),
-      regularPrice: ((r.regular_price ?? r.regularPrice ?? 0) as number),
-      salePrice: ((r.sale_price ?? r.salePrice ?? 0) as number),
-      discountPercent: ((r.discount_percent ?? r.discountPercent ?? null) as number | null),
-      endAt: ((r.end_at ?? r.endAt ?? null) as Date | null),
+      productId: ((r['product_id'] ?? r['productId'] ?? 0) as number),
+      regularPrice: ((r['regular_price'] ?? r['regularPrice'] ?? 0) as number),
+      salePrice: ((r['sale_price'] ?? r['salePrice'] ?? 0) as number),
+      discountPercent: ((r['discount_percent'] ?? r['discountPercent'] ?? null) as number | null),
+      endAt: ((r['end_at'] ?? r['endAt'] ?? null) as Date | null),
     };
   });
 }
@@ -480,8 +480,8 @@ export function extractRowsArray(result: unknown): unknown[] {
   if (Array.isArray(result)) {
     return result;
   }
-  if (isObject(result) && 'rows' in result && Array.isArray(result.rows)) {
-    return result.rows;
+  if (isObject(result) && 'rows' in result && Array.isArray(result['rows'])) {
+    return result['rows'];
   }
   return [];
 }

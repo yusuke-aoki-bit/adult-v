@@ -96,7 +96,7 @@ export function SimilarPerformerMap({
     const positions = new Map<number, { x: number; y: number }>();
 
     // 中心ノード
-    positions.set(data.performer.id, { x: centerX, y: centerY });
+    positions.set(data.performer['id'], { x: centerX, y: centerY });
 
     // ホップごとにグループ化
     const hop1 = data.similar.filter(r => r.hop === 1);
@@ -224,7 +224,7 @@ export function SimilarPerformerMap({
       {/* 凡例 */}
       {viewMode === 'network' && (() => {
         const hop1Data = data.similar.filter(s => s.hop === 1);
-        const isMakerBased = hop1Data.length > 0 && hop1Data[0].makerScore > 0;
+        const isMakerBased = hop1Data.length > 0 && (hop1Data[0]?.makerScore ?? 0) > 0;
         return (
           <div className={`px-4 py-2 flex gap-4 text-xs ${isDark ? 'bg-gray-900/50' : 'bg-gray-50'}`}>
             <div className="flex items-center gap-1">
@@ -249,7 +249,7 @@ export function SimilarPerformerMap({
           {[1, 2].map(hop => {
             const hopSimilar = data.similar.filter(s => s.hop === hop);
             if (hopSimilar.length === 0) return null;
-            const isMakerBased = hop === 1 && hopSimilar[0].makerScore > 0;
+            const isMakerBased = hop === 1 && (hopSimilar[0]?.makerScore ?? 0) > 0;
             return (
               <div key={hop} className="mb-4 last:mb-0">
                 <h4 className={`text-sm font-medium mb-2 flex items-center gap-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -343,7 +343,7 @@ export function SimilarPerformerMap({
 
               {/* 中心ノード（対象の女優） */}
               <g className="cursor-pointer group/center">
-                <title>{data.performer.name}</title>
+                <title>{data.performer['name']}</title>
                 <circle
                   cx="250"
                   cy="250"
@@ -358,9 +358,9 @@ export function SimilarPerformerMap({
                     <circle cx="250" cy="250" r="32" />
                   </clipPath>
                 </defs>
-                {(data.performer.thumbnailUrl || data.performer.profileImageUrl) && (
+                {(data.performer['thumbnailUrl'] || data.performer['profileImageUrl']) && (
                   <image
-                    href={data.performer.thumbnailUrl || data.performer.profileImageUrl || ''}
+                    href={data.performer['thumbnailUrl'] || data.performer['profileImageUrl'] || ''}
                     x="218"
                     y="218"
                     width="64"
@@ -369,7 +369,7 @@ export function SimilarPerformerMap({
                     preserveAspectRatio="xMidYMid slice"
                   />
                 )}
-                {!data.performer.thumbnailUrl && !data.performer.profileImageUrl && (
+                {!data.performer['thumbnailUrl'] && !data.performer['profileImageUrl'] && (
                   <text
                     x="250"
                     y="255"
@@ -378,7 +378,7 @@ export function SimilarPerformerMap({
                     fontSize="14"
                     fontWeight="bold"
                   >
-                    {data.performer.name.slice(0, 2)}
+                    {data.performer['name'].slice(0, 2)}
                   </text>
                 )}
               </g>

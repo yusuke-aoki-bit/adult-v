@@ -25,7 +25,7 @@ export function CompareButton({
   const { toggleItem, isInCompareList, isFull, count, maxItems } = useCompareList();
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
-  const isInList = isInCompareList(product.id);
+  const isInList = isInCompareList(product['id']);
   const isDark = theme === 'dark';
 
   const sizeClasses = {

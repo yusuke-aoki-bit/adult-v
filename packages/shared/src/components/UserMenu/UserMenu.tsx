@@ -92,7 +92,21 @@ interface UserMenuTranslations {
   anonymous: string;
 }
 
-const translations: Record<string, UserMenuTranslations> = {
+const defaultTranslation: UserMenuTranslations = {
+  login: 'ログイン',
+  logout: 'ログアウト',
+  favorites: 'お気に入り',
+  watchlist: 'あとで見る',
+  diary: '視聴日記',
+  lists: 'マイリスト',
+  alerts: '価格アラート',
+  budget: '予算管理',
+  saleCalendar: 'セールカレンダー',
+  settings: '設定',
+  anonymous: 'ゲストユーザー',
+};
+
+const translations: { [key: string]: UserMenuTranslations } = {
   ja: {
     login: 'ログイン',
     logout: 'ログアウト',
@@ -157,7 +171,8 @@ export function UserMenu({ locale }: UserMenuProps) {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const t = translations[locale] || translations.ja;
+  // defaultTranslationを使用することで型安全性を保証
+  const t: UserMenuTranslations = translations[locale] ?? defaultTranslation;
 
   // Close menu on outside click
   useEffect(() => {
@@ -191,6 +206,9 @@ export function UserMenu({ locale }: UserMenuProps) {
     setIsLoggingIn(true);
     try {
       await linkGoogle();
+      // ログイン成功時はFirebaseのonAuthStateChangeが自動でuserを更新する
+    } catch (error) {
+      console.error('[UserMenu] Login error:', error);
     } finally {
       setIsLoggingIn(false);
       setIsOpen(false);
@@ -274,9 +292,10 @@ export function UserMenu({ locale }: UserMenuProps) {
   }
 
   // Authenticated - show avatar and dropdown
-  const displayName = user?.displayName || t.anonymous;
-  const photoURL = user?.photoURL;
-  const email = user?.email;
+  // displayNameがなければemailのローカルパート、それもなければanonymousを表示
+  const email = user?.email ?? null;
+  const displayName = user?.displayName ?? (email ? email.split('@')[0] : null) ?? t.anonymous;
+  const photoURL = user?.photoURL ?? null;
 
   return (
     <div className="relative" ref={menuRef}>

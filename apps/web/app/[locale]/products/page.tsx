@@ -27,24 +27,24 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: 'products' });
 
   // 検索クエリやフィルターがある場合はnoindex
-  const hasQuery = !!searchParamsData.q;
+  const hasQuery = !!searchParamsData['q'];
   const hasFilters = !!(
-    searchParamsData.includeAsp ||
-    searchParamsData.excludeAsp ||
-    searchParamsData.hasVideo ||
-    searchParamsData.hasImage ||
-    searchParamsData.onSale ||
-    searchParamsData.include ||
-    searchParamsData.exclude ||
-    searchParamsData.performerType ||
-    searchParamsData.uncategorized ||
-    searchParamsData.releaseDate
+    searchParamsData['includeAsp'] ||
+    searchParamsData['excludeAsp'] ||
+    searchParamsData['hasVideo'] ||
+    searchParamsData['hasImage'] ||
+    searchParamsData['onSale'] ||
+    searchParamsData['include'] ||
+    searchParamsData['exclude'] ||
+    searchParamsData['performerType'] ||
+    searchParamsData['uncategorized'] ||
+    searchParamsData['releaseDate']
   );
-  const hasPageParam = !!searchParamsData.page && searchParamsData.page !== '1';
+  const hasPageParam = !!searchParamsData['page'] && searchParamsData['page'] !== '1';
   // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
-  const hasNonDefaultSort = !!searchParamsData.sort && searchParamsData.sort !== 'releaseDate';
+  const hasNonDefaultSort = !!searchParamsData['sort'] && searchParamsData['sort'] !== 'releaseDate';
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   const metadata = generateBaseMetadata(
     t('title'),
@@ -91,16 +91,16 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const DEFAULT_PER_PAGE = 36;
-const VALID_PER_PAGE = [24, 36, 48];
+const DEFAULT_PER_PAGE = 48;
+const VALID_PER_PAGE = [12, 24, 48, 96];
 
 export default async function ProductsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const searchParamsData = await searchParams;
-  const page = Number(searchParamsData.page) || 1;
+  const page = Number(searchParamsData['page']) || 1;
 
   // 表示件数（URLパラメータから取得、無効な値はデフォルトに）
-  const perPageParam = Number(searchParamsData.perPage);
+  const perPageParam = Number(searchParamsData['perPage']);
   const perPage = VALID_PER_PAGE.includes(perPageParam) ? perPageParam : DEFAULT_PER_PAGE;
 
   // 翻訳とサイト設定を並列取得（パフォーマンス最適化）
@@ -112,13 +112,13 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   ]);
 
 
-  const query = typeof searchParamsData.q === 'string' ? searchParamsData.q.trim() : undefined;
+  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim() : undefined;
 
   // ASPフィルターの決定ロジック:
   // 1. URLパラメータが指定されている場合は、それを優先（サイト許可ASP内でフィルター）
   // 2. URLパラメータがない場合は、サイトデフォルト（FANZAサイト:FANZA, adult-v:全ASP）
-  const urlIncludeAsp = typeof searchParamsData.includeAsp === 'string'
-    ? searchParamsData.includeAsp.split(',').filter(Boolean)
+  const urlIncludeAsp = typeof searchParamsData['includeAsp'] === 'string'
+    ? searchParamsData['includeAsp'].split(',').filter(Boolean)
     : [];
 
   let includeAsp: string[];
@@ -140,37 +140,37 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   // ASP名を小文字に正規化（DBのCASE式で小文字に変換されるため）
   includeAsp = includeAsp.map(asp => asp.toLowerCase());
 
-  const excludeAsp = (typeof searchParamsData.excludeAsp === 'string'
-    ? searchParamsData.excludeAsp.split(',').filter(Boolean)
+  const excludeAsp = (typeof searchParamsData['excludeAsp'] === 'string'
+    ? searchParamsData['excludeAsp'].split(',').filter(Boolean)
     : []).map(asp => asp.toLowerCase());
-  const hasVideo = searchParamsData.hasVideo === 'true';
-  const hasImage = searchParamsData.hasImage === 'true';
-  const onSale = searchParamsData.onSale === 'true';
-  const uncategorized = searchParamsData.uncategorized === 'true';
-  const performerType = searchParamsData.performerType as 'solo' | 'multi' | undefined;
-  const releaseDate = typeof searchParamsData.releaseDate === 'string' ? searchParamsData.releaseDate : undefined;
-  const includeTags = typeof searchParamsData.include === 'string'
-    ? searchParamsData.include.split(',').filter(Boolean)
+  const hasVideo = searchParamsData['hasVideo'] === 'true';
+  const hasImage = searchParamsData['hasImage'] === 'true';
+  const onSale = searchParamsData['onSale'] === 'true';
+  const uncategorized = searchParamsData['uncategorized'] === 'true';
+  const performerType = searchParamsData['performerType'] as 'solo' | 'multi' | undefined;
+  const releaseDate = typeof searchParamsData['releaseDate'] === 'string' ? searchParamsData['releaseDate'] : undefined;
+  const includeTags = typeof searchParamsData['include'] === 'string'
+    ? searchParamsData['include'].split(',').filter(Boolean)
     : [];
-  const excludeTags = typeof searchParamsData.exclude === 'string'
-    ? searchParamsData.exclude.split(',').filter(Boolean)
+  const excludeTags = typeof searchParamsData['exclude'] === 'string'
+    ? searchParamsData['exclude'].split(',').filter(Boolean)
     : [];
-  const sortBy = typeof searchParamsData.sort === 'string' ? searchParamsData.sort : 'releaseDateDesc';
+  const sortBy = typeof searchParamsData['sort'] === 'string' ? searchParamsData['sort'] : 'releaseDateDesc';
   const offset = (page - 1) * perPage;
 
-  // フィルタオプションを共通化
+  // フィルタオプションを共通化（exactOptionalPropertyTypes対応）
   const filterOptions = {
-    query: query || undefined,
-    providers: includeAsp.length > 0 ? includeAsp : undefined,
-    excludeProviders: excludeAsp.length > 0 ? excludeAsp : undefined,
-    hasVideo: hasVideo || undefined,
-    hasImage: hasImage || undefined,
-    onSale: onSale || undefined,
-    uncategorized: uncategorized || undefined,
-    performerType: performerType || undefined,
-    releaseDate: releaseDate || undefined,
-    tags: includeTags.length > 0 ? includeTags : undefined,
-    excludeTags: excludeTags.length > 0 ? excludeTags : undefined,
+    ...(query && { query }),
+    ...(includeAsp.length > 0 && { providers: includeAsp }),
+    ...(excludeAsp.length > 0 && { excludeProviders: excludeAsp }),
+    ...(hasVideo && { hasVideo: true as const }),
+    ...(hasImage && { hasImage: true as const }),
+    ...(onSale && { onSale: true as const }),
+    ...(uncategorized && { uncategorized: true as const }),
+    ...(performerType && { performerType }),
+    ...(releaseDate && { releaseDate }),
+    ...(includeTags.length > 0 && { tags: includeTags }),
+    ...(excludeTags.length > 0 && { excludeTags }),
   };
 
   // ASP統計、タグ、総件数、商品を全て並列取得（パフォーマンス最適化）
@@ -189,19 +189,19 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
 
   // ページネーション用のクエリパラメータ
   const queryParams: Record<string, string> = {};
-  if (query) queryParams.q = query;
-  if (includeAsp.length > 0) queryParams.includeAsp = includeAsp.join(',');
-  if (excludeAsp.length > 0) queryParams.excludeAsp = excludeAsp.join(',');
-  if (hasVideo) queryParams.hasVideo = 'true';
-  if (hasImage) queryParams.hasImage = 'true';
-  if (onSale) queryParams.onSale = 'true';
-  if (uncategorized) queryParams.uncategorized = 'true';
-  if (performerType) queryParams.performerType = performerType;
-  if (releaseDate) queryParams.releaseDate = releaseDate;
-  if (includeTags.length > 0) queryParams.include = includeTags.join(',');
-  if (excludeTags.length > 0) queryParams.exclude = excludeTags.join(',');
-  if (sortBy !== 'releaseDateDesc') queryParams.sort = sortBy;
-  if (perPage !== DEFAULT_PER_PAGE) queryParams.perPage = String(perPage);
+  if (query) queryParams['q'] = query;
+  if (includeAsp.length > 0) queryParams['includeAsp'] = includeAsp.join(',');
+  if (excludeAsp.length > 0) queryParams['excludeAsp'] = excludeAsp.join(',');
+  if (hasVideo) queryParams['hasVideo'] = 'true';
+  if (hasImage) queryParams['hasImage'] = 'true';
+  if (onSale) queryParams['onSale'] = 'true';
+  if (uncategorized) queryParams['uncategorized'] = 'true';
+  if (performerType) queryParams['performerType'] = performerType;
+  if (releaseDate) queryParams['releaseDate'] = releaseDate;
+  if (includeTags.length > 0) queryParams['include'] = includeTags.join(',');
+  if (excludeTags.length > 0) queryParams['exclude'] = excludeTags.join(',');
+  if (sortBy !== 'releaseDateDesc') queryParams['sort'] = sortBy;
+  if (perPage !== DEFAULT_PER_PAGE) queryParams['perPage'] = String(perPage);
 
   // ASP統計をProductListFilter用に変換
   const aspStatsForFilter = aspStats.map(stat => ({

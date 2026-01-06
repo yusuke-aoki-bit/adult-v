@@ -29,7 +29,7 @@ export interface RankingProductsHandlerDeps {
 export function createRankingProductsHandler(deps: RankingProductsHandlerDeps) {
   return async function GET(request: NextRequest) {
     try {
-      const { searchParams } = new URL(request.url);
+      const { searchParams } = new URL(request['url']);
       const periodParam = searchParams.get('period');
       const period: Period = isValidPeriod(periodParam) ? periodParam : 'weekly';
       const limit = sanitizeLimit(searchParams.get('limit'));
@@ -87,12 +87,12 @@ export function createRankingProductsHandler(deps: RankingProductsHandlerDeps) {
       return NextResponse.json({
         period,
         ranking: (ranking.rows as unknown as RankingRow[]).map((row) => ({
-          rank: Number(row.rank),
-          productId: row.id,
-          title: row.title,
-          thumbnail: row.thumbnail,
+          rank: Number(row['rank']),
+          productId: row['id'],
+          title: row['title'],
+          thumbnail: row['thumbnail'],
           releaseDate: row.release_date,
-          viewCount: Number(row.view_count),
+          viewCount: Number(row['view_count']),
         })),
       });
     } catch (error) {

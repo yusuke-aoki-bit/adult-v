@@ -64,7 +64,7 @@ function convertToProduct(product: RelatedProduct): Product {
 
 const RelatedProducts = memo(function RelatedProducts({ products, title }: RelatedProductsProps) {
   const params = useParams();
-  const _locale = (params?.locale as string) || 'ja';
+  const _locale = (params?.['locale'] as string) || 'ja';
   const t = useTranslations('relatedProducts');
 
   const convertedProducts = useMemo(

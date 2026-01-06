@@ -192,13 +192,23 @@ export abstract class BrowserCrawler<TRawItem = unknown> extends BaseCrawler<TRa
       `--window-size=${this.browserOptions.viewportWidth},${this.browserOptions.viewportHeight}`,
     ];
 
+    // Filter out undefined values from launchOptions to satisfy exactOptionalPropertyTypes
+    const baseLaunchOptions = this.browserOptions.launchOptions || {};
+    const filteredLaunchOptions: Partial<LaunchOptions> = {};
+    for (const [key, value] of Object.entries(baseLaunchOptions)) {
+      if (value !== undefined && key !== 'args') {
+        (filteredLaunchOptions as Record<string, unknown>)[key] = value;
+      }
+    }
+
+    const headless = this.browserOptions.headless ?? true;
     const launchOptions: LaunchOptions = {
-      headless: this.browserOptions.headless,
+      headless,
       args: [
         ...defaultArgs,
         ...(this.browserOptions.launchOptions?.args || []),
       ],
-      ...this.browserOptions.launchOptions,
+      ...filteredLaunchOptions,
     };
 
     this.browser = await puppeteerExtra.launch(launchOptions);
@@ -298,8 +308,8 @@ export abstract class BrowserCrawler<TRawItem = unknown> extends BaseCrawler<TRa
       }
 
       // ステータスコードをチェック
-      if (response.status() >= 400) {
-        this.log('warn', `HTTP ${response.status()}: ${url}`);
+      if (response['status']() >= 400) {
+        this.log('warn', `HTTP ${response['status']()}: ${url}`);
         this.stats.errors++;
         return;
       }
@@ -316,7 +326,7 @@ export abstract class BrowserCrawler<TRawItem = unknown> extends BaseCrawler<TRa
       // 検証
       const validation = this.validateProduct({
         title: parsed.title,
-        description: parsed.description,
+        ...(parsed.description !== undefined && { description: parsed.description }),
         originalId: parsed.originalId,
       });
 
@@ -356,7 +366,7 @@ export abstract class BrowserCrawler<TRawItem = unknown> extends BaseCrawler<TRa
     try {
       return await page.goto(url, {
         waitUntil: 'networkidle2',
-        timeout: this.browserOptions.pageTimeout,
+        ...(this.browserOptions.pageTimeout !== undefined && { timeout: this.browserOptions.pageTimeout }),
       });
     } catch (error) {
       // タイムアウトの場合は部分的に読み込まれている可能性があるため続行
@@ -447,7 +457,8 @@ export abstract class BrowserCrawler<TRawItem = unknown> extends BaseCrawler<TRa
    */
   protected async waitForElement(page: Page, selector: string, timeout?: number): Promise<boolean> {
     try {
-      await page.waitForSelector(selector, { timeout: timeout || this.browserOptions.pageTimeout });
+      const effectiveTimeout = timeout ?? this.browserOptions.pageTimeout;
+      await page.waitForSelector(selector, effectiveTimeout !== undefined ? { timeout: effectiveTimeout } : {});
       return true;
     } catch {
       return false;

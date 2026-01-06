@@ -205,15 +205,15 @@ export default function ActressBundleCalculator({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-64 overflow-y-auto">
             {bundleData.products.slice(0, 12).map((product) => (
               <Link
-                key={product.id}
-                href={`${productLinkPrefix}/${product.normalizedProductId || product.id}`}
+                key={product['id']}
+                href={`${productLinkPrefix}/${product.normalizedProductId || product['id']}`}
                 className={`group p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-gray-700' : 'hover:bg-white'}`}
               >
                 <div className="relative rounded overflow-hidden mb-1" style={{ aspectRatio: '3/4' }}>
-                  {product.thumbnailUrl ? (
+                  {product['thumbnailUrl'] ? (
                     <img
-                      src={product.thumbnailUrl}
-                      alt={product.title}
+                      src={product['thumbnailUrl']}
+                      alt={product['title']}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
@@ -222,17 +222,17 @@ export default function ActressBundleCalculator({
                       <span className="text-xs text-gray-500">No Image</span>
                     </div>
                   )}
-                  {product.salePrice && product.salePrice < product.price && (
+                  {product.salePrice && product.salePrice < product['price'] && (
                     <div className="absolute top-1 right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded">
                       SALE
                     </div>
                   )}
                 </div>
                 <p className={`text-xs line-clamp-2 ${isDark ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'}`}>
-                  {product.title}
+                  {product['title']}
                 </p>
                 <p className={`text-xs font-medium mt-0.5 ${product.salePrice ? 'text-red-500' : isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  ¥{(product.salePrice || product.price).toLocaleString()}
+                  ¥{(product.salePrice || product['price']).toLocaleString()}
                 </p>
               </Link>
             ))}

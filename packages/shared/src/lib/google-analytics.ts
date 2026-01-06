@@ -15,13 +15,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // GA4プロパティID
-const PROPERTY_ID = process.env.GOOGLE_ANALYTICS_PROPERTY_ID;
+const PROPERTY_ID = process.env['GOOGLE_ANALYTICS_PROPERTY_ID'];
 
 /**
  * Analytics Data APIクライアントを取得
  */
 function getAnalyticsClient(): BetaAnalyticsDataClient {
-  const keyFilePath = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE;
+  const keyFilePath = process.env['GOOGLE_SERVICE_ACCOUNT_KEY_FILE'];
 
   if (!keyFilePath) {
     throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY_FILE が設定されていません');
@@ -202,7 +202,7 @@ export async function getTrafficSources(
  * Analytics API設定確認
  */
 export function checkAnalyticsApiConfig(): { keyFile: boolean; propertyId: boolean } {
-  const keyFile = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE;
+  const keyFile = process.env['GOOGLE_SERVICE_ACCOUNT_KEY_FILE'];
   return {
     keyFile: !!keyFile && fs.existsSync(path.resolve(keyFile)),
     propertyId: !!PROPERTY_ID,

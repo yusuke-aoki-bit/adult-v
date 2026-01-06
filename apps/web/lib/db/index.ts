@@ -21,7 +21,7 @@ function getDb() {
   if (!dbStore.instance) {
     try {
       // 環境変数から接続情報を取得
-      const connectionString = process.env.DATABASE_URL || '';
+      const connectionString = process.env['DATABASE_URL'] || '';
 
       if (!connectionString) {
         throw new Error('DATABASE_URL environment variable is not set');
@@ -35,12 +35,12 @@ function getDb() {
       const cleanConnectionString = `postgresql://${url.username}:${url.password}@${url.host}${url.pathname}`;
 
       // 開発環境と本番環境で接続プール設定を分ける
-      const isDev = process.env.NODE_ENV !== 'production';
+      const isDev = process.env['NODE_ENV'] !== 'production';
 
       dbStore.pool = new Pool({
         connectionString: cleanConnectionString,
         // Cloud SQL Proxy経由の場合はSSL不要、それ以外は環境に応じて設定
-        ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
+        ssl: isCloudSqlProxy ? false : (process.env['NODE_ENV'] === 'production' ? { rejectUnauthorized: false } : false),
         max: isDev ? 10 : 50, // 開発環境では10、本番は50
         min: isDev ? 2 : 10, // 開発環境では2、本番は10
         idleTimeoutMillis: isDev ? 30000 : 60000, // 開発環境では30秒、本番は60秒

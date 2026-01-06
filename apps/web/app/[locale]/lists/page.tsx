@@ -183,8 +183,8 @@ const translations = {
 export default function ListsPage() {
   const params = useParams();
   const router = useRouter();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const { user, isLoading: isAuthLoading } = useFirebaseAuth();
   const userId = user?.uid ?? null;

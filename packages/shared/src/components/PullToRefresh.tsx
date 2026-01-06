@@ -33,7 +33,7 @@ export function PullToRefresh({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (containerRef.current?.scrollTop === 0) {
-      startY.current = e.touches[0].clientY;
+      startY.current = e.touches[0]?.clientY ?? 0;
       setIsPulling(true);
     }
   };
@@ -41,7 +41,7 @@ export function PullToRefresh({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isPulling || isRefreshing) return;
 
-    const currentY = e.touches[0].clientY;
+    const currentY = e.touches[0]?.clientY ?? 0;
     const distance = Math.max(0, currentY - startY.current);
 
     // 抵抗を追加（距離が長くなるほど引きにくくなる）

@@ -4,7 +4,7 @@
  * UIコンポーネント間で共有される定数を一元管理
  */
 
-import { ProviderId } from '@/lib/providers';
+import type { ProviderId } from '../providers';
 
 // ============================================================
 // ひらがな・アルファベット定数
@@ -144,9 +144,11 @@ export const PRICE_RANGES: { value: string; label: string; min?: number; max?: n
 export function parsePriceRange(value: string): { min?: number; max?: number } {
   if (!value) return {};
   const [minStr, maxStr] = value.split('-');
+  const min = minStr ? parseInt(minStr, 10) : undefined;
+  const max = maxStr ? parseInt(maxStr, 10) : undefined;
   return {
-    min: minStr ? parseInt(minStr, 10) : undefined,
-    max: maxStr ? parseInt(maxStr, 10) : undefined,
+    ...(min !== undefined && { min }),
+    ...(max !== undefined && { max }),
   };
 }
 

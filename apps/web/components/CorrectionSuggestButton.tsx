@@ -206,7 +206,7 @@ export default function CorrectionSuggestButton({
   locale,
   fields,
 }: CorrectionSuggestButtonProps) {
-  const t = translations[locale] || translations.ja;
+  const t = translations[locale] || translations['ja'];
   const { user, linkGoogle } = useFirebaseAuth();
   const userId = user?.uid ?? null;
 

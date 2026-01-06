@@ -88,7 +88,7 @@ async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
       // DB更新（並列）
       let descIndex = 0;
       await Promise.all(batch.map(async (product, idx) => {
-        const hasDesc = product.description && product.description.length > 0;
+        const hasDesc = product['description'] && product['description'].length > 0;
         const descEn = hasDesc ? descsEn[descIndex] : null;
         const descZh = hasDesc ? descsZh[descIndex] : null;
         const descKo = hasDesc ? descsKo[descIndex] : null;
@@ -104,7 +104,7 @@ async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
             description_zh = ${descZh || null},
             description_ko = ${descKo || null},
             updated_at = NOW()
-          WHERE id = ${product.id}
+          WHERE id = ${product['id']}
         `);
       }));
 
@@ -158,10 +158,10 @@ async function translatePerformers(db: ReturnType<typeof getDb>, limit: number) 
 
         if (translatedName) {
           const updateQuery = lang === 'en'
-            ? sql`UPDATE performers SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${performer.id}`
+            ? sql`UPDATE performers SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${performer['id']}`
             : lang === 'zh'
-            ? sql`UPDATE performers SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${performer.id}`
-            : sql`UPDATE performers SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${performer.id}`;
+            ? sql`UPDATE performers SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${performer['id']}`
+            : sql`UPDATE performers SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${performer['id']}`;
 
           await db.execute(updateQuery);
           translated++;
@@ -213,10 +213,10 @@ async function translateTags(db: ReturnType<typeof getDb>, limit: number) {
 
         if (translatedName) {
           const updateQuery = lang === 'en'
-            ? sql`UPDATE tags SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${tag.id}`
+            ? sql`UPDATE tags SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${tag['id']}`
             : lang === 'zh'
-            ? sql`UPDATE tags SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${tag.id}`
-            : sql`UPDATE tags SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${tag.id}`;
+            ? sql`UPDATE tags SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${tag['id']}`
+            : sql`UPDATE tags SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${tag['id']}`;
 
           await db.execute(updateQuery);
           translated++;
@@ -289,7 +289,7 @@ async function translateReviews(db: ReturnType<typeof getDb>, limit: number) {
       // DB更新（並列）
       let titleIndex = 0;
       await Promise.all(batch.map(async (review, idx) => {
-        const hasTitle = review.title && review.title.length > 0;
+        const hasTitle = review['title'] && review['title'].length > 0;
         const titleEn = hasTitle ? titlesEn[titleIndex] : null;
         const titleZh = hasTitle ? titlesZh[titleIndex] : null;
         const titleKo = hasTitle ? titlesKo[titleIndex] : null;
@@ -305,7 +305,7 @@ async function translateReviews(db: ReturnType<typeof getDb>, limit: number) {
             content_zh = ${contentsZh[idx] || null},
             content_ko = ${contentsKo[idx] || null},
             updated_at = NOW()
-          WHERE id = ${review.id}
+          WHERE id = ${review['id']}
         `);
       }));
 
@@ -370,7 +370,7 @@ async function translateAiReviews(db: ReturnType<typeof getDb>, limit: number) {
             ai_review_zh = ${reviewsZh[idx] || null},
             ai_review_ko = ${reviewsKo[idx] || null},
             updated_at = NOW()
-          WHERE id = ${product.id}
+          WHERE id = ${product['id']}
         `);
       }));
 
@@ -435,7 +435,7 @@ async function translatePerformerAiReviews(db: ReturnType<typeof getDb>, limit: 
             ai_review_zh = ${reviewsZh[idx] || null},
             ai_review_ko = ${reviewsKo[idx] || null},
             updated_at = NOW()
-          WHERE id = ${performer.id}
+          WHERE id = ${performer['id']}
         `);
       }));
 
@@ -457,7 +457,7 @@ async function translatePerformerAiReviews(db: ReturnType<typeof getDb>, limit: 
 
 async function main() {
   // 環境変数チェック
-  if (!process.env.DEEPL_API_KEY) {
+  if (!process.env['DEEPL_API_KEY']) {
     console.error('❌ DEEPL_API_KEY環境変数が設定されていません');
     process.exit(1);
   }

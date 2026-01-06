@@ -9,7 +9,7 @@
  * 5. チャットボット（作品検索）
  */
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+const GEMINI_API_KEY = process.env['GEMINI_API_KEY'] || process.env['GOOGLE_API_KEY'] || '';
 const GEMINI_MODEL = 'gemini-2.0-flash';
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
@@ -56,7 +56,7 @@ async function callGemini(
     };
 
     if (systemInstruction) {
-      requestBody.systemInstruction = {
+      requestBody['systemInstruction'] = {
         parts: [{ text: systemInstruction }]
       };
     }
@@ -571,11 +571,11 @@ export async function generatePersonalizedRecommendation(params: {
 好きな女優: ${userPreferences.favoriteActresses.join('、') || '不明'}
 
 【おすすめ作品】
-タイトル: ${product.title}
+タイトル: ${product['title']}
 ジャンル: ${product.genres?.join('、') || '不明'}
 出演者: ${product.performers?.join('、') || '不明'}
-評価: ${product.rating || '不明'}
-発売日: ${product.releaseDate || '不明'}
+評価: ${product['rating'] || '不明'}
+発売日: ${product['releaseDate'] || '不明'}
 
 この作品がなぜこのユーザーにおすすめなのか説明してください。
 
@@ -767,7 +767,7 @@ async function callGeminiVision(
     };
 
     if (systemInstruction) {
-      requestBody.systemInstruction = {
+      requestBody['systemInstruction'] = {
         parts: [{ text: systemInstruction }]
       };
     }

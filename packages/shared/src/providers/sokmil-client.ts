@@ -300,7 +300,7 @@ export class SokmilApiClient {
       });
 
       if (!response.ok) {
-        throw new Error(`Sokmil API error: ${response.status} ${response.statusText}`);
+        throw new Error(`Sokmil API error: ${response['status']} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -323,8 +323,8 @@ export class SokmilApiClient {
     // SOKMIL APIのレスポンス構造: { result: { status, result_count, total_count, items: [...] } }
     const result = data.result || data;
     return {
-      status: result.status === '200' ? 'success' : 'error',
-      totalCount: parseInt(result.total_count || result.totalCount || '0', 10),
+      status: result['status'] === '200' ? 'success' : 'error',
+      totalCount: parseInt(result.total_count || result['totalCount'] || '0', 10),
       currentPage: parseInt(result.first_position || result.currentPage || '1', 10),
       perPage: parseInt(result.result_count || result.perPage || '20', 10),
       data: result.items || result.data || [],
@@ -370,47 +370,74 @@ export class SokmilApiClient {
       sampleVideoUrl = data.sample_movie_url;
     }
 
-    return {
-      itemId: data.id || '',
-      itemName: data.title || '',
+    const result: SokmilProduct = {
+      itemId: data['id'] || '',
+      itemName: data['title'] || '',
       itemUrl: data.URL || '',
       affiliateUrl: data.affiliateURL || '',
-      // 大きい画像(large)を優先して使用
-      // APIレスポンス: imageURL.large > imageURL.list > imageURL.small
-      thumbnailUrl: data.imageURL?.large || data.imageURL?.list || data.imageURL?.small,
-      packageImageUrl: data.imageURL?.large,
-      sampleImages: data.sampleImageURL?.image || [],
-      sampleVideoUrl,
-      price: data.prices?.price ? parseInt(data.prices.price.replace(/[^0-9]/g, ''), 10) : undefined,
-      releaseDate: data.date,
-      duration: data.volume ? parseInt(data.volume.replace(/[^0-9]/g, ''), 10) : undefined,
-      maker: makers[0]
-        ? {
-            id: makers[0].id,
-            name: makers[0].name,
-          }
-        : undefined,
-      label: labels[0]
-        ? {
-            id: labels[0].id,
-            name: labels[0].name,
-          }
-        : undefined,
-      series: undefined, // iteminfo にシリーズ情報がない
-      genres: genres.map((g: any) => ({
+    };
+
+    // 大きい画像(large)を優先して使用
+    // APIレスポンス: imageURL.large > imageURL.list > imageURL.small
+    const thumbnailUrl = data.imageURL?.large || data.imageURL?.list || data.imageURL?.small;
+    if (thumbnailUrl) {
+      result.thumbnailUrl = thumbnailUrl;
+    }
+    if (data.imageURL?.large) {
+      result.packageImageUrl = data.imageURL.large;
+    }
+    const sampleImagesArray = data.sampleImageURL?.image;
+    if (sampleImagesArray && sampleImagesArray.length > 0) {
+      result.sampleImages = sampleImagesArray;
+    }
+    if (sampleVideoUrl) {
+      result.sampleVideoUrl = sampleVideoUrl;
+    }
+    if (data.prices?.price) {
+      result.price = parseInt(data.prices.price.replace(/[^0-9]/g, ''), 10);
+    }
+    if (data.date) {
+      result.releaseDate = data.date;
+    }
+    if (data.volume) {
+      result.duration = parseInt(data.volume.replace(/[^0-9]/g, ''), 10);
+    }
+    if (makers[0]) {
+      result.maker = {
+        id: makers[0]['id'],
+        name: makers[0]['name'],
+      };
+    }
+    if (labels[0]) {
+      result.label = {
+        id: labels[0]['id'],
+        name: labels[0]['name'],
+      };
+    }
+    // series: iteminfo にシリーズ情報がない
+    if (genres.length > 0) {
+      result.genres = genres.map((g: any) => ({
         id: g.id,
         name: g.name,
-      })),
-      directors: directors.map((d: any) => ({
+      }));
+    }
+    if (directors.length > 0) {
+      result.directors = directors.map((d: any) => ({
         id: d.id,
         name: d.name,
-      })),
-      actors: actors.map((a: any) => ({
+      }));
+    }
+    if (actors.length > 0) {
+      result.actors = actors.map((a: any) => ({
         id: a.id,
         name: a.name,
-      })),
-      description: data.description || data.desc,
-    };
+      }));
+    }
+    if (data['description'] || data.desc) {
+      result.description = data['description'] || data.desc;
+    }
+
+    return result;
   }
 
   /**
@@ -496,7 +523,7 @@ export class SokmilApiClient {
     const response = await this.searchItems({ keyword: itemId, hits: 10 });
     // 完全一致を探す
     const match = response.data.find(item => item.itemId === itemId);
-    return match || (response.data.length > 0 ? response.data[0] : null);
+    return match ?? (response.data.length > 0 ? response.data[0] ?? null : null);
   }
 
   /**
@@ -575,14 +602,21 @@ export class SokmilApiClient {
     let hasMore = true;
 
     while (hasMore) {
-      const response = await this.searchItems({
-        category: options.category,
-        gte_date: options.gte_date,
-        lte_date: options.lte_date,
+      const searchParams: Omit<SokmilItemSearchParams, 'api_key'> = {
         sort: 'date',
         hits,
         offset,
-      });
+      };
+      if (options.category) {
+        searchParams.category = options.category;
+      }
+      if (options.gte_date) {
+        searchParams.gte_date = options.gte_date;
+      }
+      if (options.lte_date) {
+        searchParams.lte_date = options.lte_date;
+      }
+      const response = await this.searchItems(searchParams);
 
       if (response.data.length === 0) {
         hasMore = false;
@@ -601,7 +635,7 @@ export class SokmilApiClient {
       offset += hits;
 
       // 総件数を超えた場合
-      if (offset > response.totalCount) {
+      if (offset > response['totalCount']) {
         hasMore = false;
       }
 
@@ -618,7 +652,7 @@ export type SokmilClient = SokmilApiClient;
  * ソクミルクライアントのシングルトンインスタンスを取得
  */
 export function getSokmilClient(): SokmilApiClient {
-  const apiKey = process.env.SOKMIL_API_KEY;
+  const apiKey = process.env['SOKMIL_API_KEY'];
 
   if (!apiKey) {
     throw new Error('SOKMIL_API_KEY must be set in environment variables');

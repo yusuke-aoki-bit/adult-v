@@ -26,7 +26,11 @@ export function HomeSectionManager({
     toggleVisibility,
     reorderSections,
     resetToDefault,
-  } = useHomeSections({ locale, pageId, customSections });
+  } = useHomeSections({
+    locale,
+    pageId,
+    ...(customSections && { customSections }),
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 

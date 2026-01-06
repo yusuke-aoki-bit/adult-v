@@ -78,7 +78,7 @@ async function main() {
     `);
     console.log('\n📊 テーブル状態:');
     for (const row of result.rows) {
-      console.log(`  ${row.table_name}: ${row.count} rows`);
+      console.log(`  ${row.table_name}: ${row['count']} rows`);
     }
 
     console.log('\n✨ マイグレーション完了!');

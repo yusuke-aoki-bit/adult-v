@@ -13,7 +13,7 @@ export async function generateMetadata({
     ? 'あなたの好みを設定して、パーソナライズされた作品を見つけよう'
     : 'Set your preferences and discover personalized content';
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   return {
     title,

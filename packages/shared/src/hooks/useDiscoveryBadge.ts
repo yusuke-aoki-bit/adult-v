@@ -331,7 +331,7 @@ export function useDiscoveryBadge() {
 
       return {
         ...badge,
-        earnedAt: isEarned ? new Date().toISOString() : undefined,
+        ...(isEarned && { earnedAt: new Date().toISOString() }),
         progress: isEarned ? 100 : Math.round(progress),
       };
     });

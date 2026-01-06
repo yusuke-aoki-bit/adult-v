@@ -38,7 +38,7 @@ export function decodeCursor(cursor: ProductCursor): CursorData | null {
     const data = JSON.parse(json);
 
     // バリデーション: idは必須
-    if (typeof data.id !== 'number') {
+    if (typeof data['id'] !== 'number') {
       return null;
     }
 
@@ -51,13 +51,13 @@ export function decodeCursor(cursor: ProductCursor): CursorData | null {
 
     return {
       type,
-      releaseDate: data.releaseDate ?? null,
-      price: data.price ?? null,
-      rating: data.rating ?? null,
-      reviewCount: data.reviewCount ?? null,
-      duration: data.duration ?? null,
-      title: data.title ?? null,
-      id: data.id,
+      releaseDate: data['releaseDate'] ?? null,
+      price: data['price'] ?? null,
+      rating: data['rating'] ?? null,
+      reviewCount: data['reviewCount'] ?? null,
+      duration: data['duration'] ?? null,
+      title: data['title'] ?? null,
+      id: data['id'],
     };
   } catch {
     return null;
@@ -85,7 +85,7 @@ export function createCursorFromProduct(
   },
   sortType: CursorSortType = 'releaseDate'
 ): CursorData {
-  const id = typeof product.id === 'string' ? parseInt(product.id, 10) : product.id;
+  const id = typeof product['id'] === 'string' ? parseInt(product['id'], 10) : product['id'];
 
   // ソートタイプに応じたカーソルデータを生成
   const cursorData: CursorData = { type: sortType, id };
@@ -93,30 +93,30 @@ export function createCursorFromProduct(
   switch (sortType) {
     case 'releaseDate': {
       let releaseDate: string | null = null;
-      if (product.releaseDate) {
-        if (product.releaseDate instanceof Date) {
-          releaseDate = product.releaseDate.toISOString();
+      if (product['releaseDate']) {
+        if (product['releaseDate'] instanceof Date) {
+          releaseDate = product['releaseDate'].toISOString();
         } else {
-          releaseDate = product.releaseDate;
+          releaseDate = product['releaseDate'];
         }
       }
       cursorData.releaseDate = releaseDate;
       break;
     }
     case 'price':
-      cursorData.price = product.price ?? null;
+      cursorData.price = product['price'] ?? null;
       break;
     case 'rating':
       cursorData.rating = product.averageRating ?? null;
       break;
     case 'reviewCount':
-      cursorData.reviewCount = product.reviewCount ?? null;
+      cursorData.reviewCount = product['reviewCount'] ?? null;
       break;
     case 'duration':
-      cursorData.duration = product.duration ?? null;
+      cursorData.duration = product['duration'] ?? null;
       break;
     case 'title':
-      cursorData.title = product.title ?? null;
+      cursorData.title = product['title'] ?? null;
       break;
   }
 

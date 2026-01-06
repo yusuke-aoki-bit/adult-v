@@ -1,7 +1,15 @@
-import type { ProviderId, ProviderMeta } from '@/types/product';
+// Provider types
+export type ProviderId = 'duga' | 'sokmil' | 'dti' | 'mgs' | 'b10f' | 'japanska' | 'fc2' | 'fanza' | 'caribbeancom' | 'caribbeancompr' | '1pondo' | 'heyzo' | '10musume' | 'pacopacomama' | 'muramura' | 'tokyohot';
 
-// 型の再エクスポート
-export type { ProviderId, ProviderMeta };
+export interface ProviderMeta {
+  id: ProviderId;
+  label: string;
+  accentClass: string;
+  textClass: string;
+  description: string;
+  siteUrl: string;
+}
+
 
 /**
  * プロバイダーメタデータ（クライアントサイドでも使用可能）

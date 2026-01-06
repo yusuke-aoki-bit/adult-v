@@ -80,8 +80,8 @@ export default function PerformerOnSaleProducts({
           const timeRemaining = getTimeRemaining(product.saleEndAt, translations);
           return (
             <Link
-              key={product.id}
-              href={`/${locale}/products/${product.id}`}
+              key={product['id']}
+              href={`/${locale}/products/${product['id']}`}
               className={`group block rounded-lg overflow-hidden transition-all ${
                 isDark
                   ? 'bg-gray-800/50 hover:bg-gray-800'
@@ -92,7 +92,7 @@ export default function PerformerOnSaleProducts({
               <div className="relative aspect-video">
                 <Image
                   src={product.imageUrl || PLACEHOLDER_IMAGE}
-                  alt={product.title}
+                  alt={product['title']}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform"
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -119,7 +119,7 @@ export default function PerformerOnSaleProducts({
                 <h3 className={`text-sm font-medium line-clamp-2 transition-colors ${
                   isDark ? 'text-white group-hover:text-red-400' : 'text-gray-900 group-hover:text-red-600'
                 }`}>
-                  {product.title}
+                  {product['title']}
                 </h3>
 
                 {/* 価格 */}
@@ -127,9 +127,9 @@ export default function PerformerOnSaleProducts({
                   <span className={`text-lg font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
                     {translations.yen}{product.salePrice.toLocaleString()}
                   </span>
-                  {product.originalPrice && (
+                  {product['originalPrice'] && (
                     <span className={`text-sm line-through ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {translations.yen}{product.originalPrice.toLocaleString()}
+                      {translations.yen}{product['originalPrice'].toLocaleString()}
                     </span>
                   )}
                 </div>

@@ -286,7 +286,7 @@ function CategoryRatingBar({
   comment,
   locale
 }: CategoryRating & { locale: string }) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const icons: Record<CategoryRating['category'], React.ReactNode> = {
     performance: <Theater className="w-4 h-4" />,
@@ -341,7 +341,7 @@ export default function EnhancedAiReview({
   locale,
   className = '',
 }: EnhancedAiReviewProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!aiReview) {

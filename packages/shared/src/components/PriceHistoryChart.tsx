@@ -107,7 +107,7 @@ export default function PriceHistoryChart({
     const width = 100;
     const points = sorted.map((entry, i) => {
       const x = (i / (sorted.length - 1)) * width;
-      const y = height - ((entry.salePrice || entry.price) - minPrice) / priceRange * height;
+      const y = height - ((entry.salePrice || entry['price']) - minPrice) / priceRange * height;
       return { x, y, ...entry };
     });
 

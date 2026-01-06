@@ -109,7 +109,7 @@ export function createUserReviewsGetHandler(deps: UserReviewsHandlerDeps) {
 
         reviewsWithVotes = reviews.map(review => ({
           ...review,
-          userVote: voteMap.get(review.id) || null,
+          userVote: voteMap.get(review['id']) || null,
         }));
       }
 
@@ -211,7 +211,7 @@ export function createUserReviewsPostHandler(deps: UserReviewsHandlerDeps) {
 
       try {
         moderationResult = await moderateUserReview({
-          productTitle: product.title,
+          productTitle: product['title'],
           reviewTitle: title,
           reviewContent: content,
           rating,
@@ -327,7 +327,7 @@ export function createUserReviewVoteHandler(deps: UserReviewsHandlerDeps) {
       }
 
       // 自分のレビューには投票できない
-      if (review.userId === userId) {
+      if (review['userId'] === userId) {
         return NextResponse.json({ error: 'Cannot vote on your own review' }, { status: 403 });
       }
 

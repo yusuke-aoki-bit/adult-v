@@ -49,7 +49,7 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
     };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const limit = parseInt(url.searchParams.get('limit') || '500');
       const source = url.searchParams.get('source') || null;
 
@@ -89,7 +89,7 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
           const performerNames: string[] = [];
           const price: number | null = null;
 
-          if (row.source.includes('HEYZO') || row.source.includes('heyzo') || row.source.includes('Hey動画')) {
+          if (row['source'].includes('HEYZO') || row['source'].includes('heyzo') || row['source'].includes('Hey動画')) {
             title = $('h1').first().text().trim() || $('title').text().trim();
             description = $('meta[name="description"]').attr('content') || '';
 
@@ -112,7 +112,7 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
             if (row.product_id.match(/^\d+$/)) {
               sampleVideoUrl = `https://sample.heyzo.com/contents/3000/${row.product_id.padStart(4, '0')}/heyzo_hd_${row.product_id.padStart(4, '0')}_sample.mp4`;
             }
-          } else if (row.source.includes('1pondo') || row.source.includes('caribbeancom') || row.source.includes('カリビアンコム')) {
+          } else if (row['source'].includes('1pondo') || row['source'].includes('caribbeancom') || row['source'].includes('カリビアンコム')) {
             title = $('h1').first().text().trim() || $('title').text().trim();
             description = $('meta[name="description"]').attr('content') || '';
 
@@ -133,13 +133,13 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
             }
 
             if (row.product_id.match(/^\d{6}_\d{3}$/)) {
-              if (row.source.includes('1pondo')) {
+              if (row['source'].includes('1pondo')) {
                 sampleVideoUrl = `https://smovie.1pondo.tv/sample/movies/${row.product_id}/1080p.mp4`;
-              } else if (row.source.includes('caribbeancom')) {
+              } else if (row['source'].includes('caribbeancom')) {
                 sampleVideoUrl = `https://www.caribbeancom.com/moviepages/${row.product_id}/sample/sample.mp4`;
               }
             }
-          } else if (row.source === 'MGS' || row.source.includes('mgstage')) {
+          } else if (row['source'] === 'MGS' || row['source'].includes('mgstage')) {
             title = $('h1.tag').text().trim() || $('title').text().trim();
             const releaseDateText = $('th:contains("配信開始日")').next('td').text().trim();
             if (releaseDateText) {
@@ -153,7 +153,7 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
 
             const productIdLower = row.product_id.toLowerCase();
             const parts = row.product_id.split('-');
-            if (parts.length >= 2) {
+            if (parts.length >= 2 && parts[0]) {
               const prefix = parts[0].toLowerCase();
               let category = 'amateur';
               if (/^(abw|stars|sdjs|sdab)$/i.test(prefix)) {
@@ -161,10 +161,10 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
               }
               sampleVideoUrl = `https://sample.mgstage.com/sample/${category}/${prefix}/${productIdLower}/${productIdLower}_sample.mp4`;
             }
-          } else if (row.source === 'FC2' || row.source.includes('fc2')) {
+          } else if (row['source'] === 'FC2' || row['source'].includes('fc2')) {
             title = $('title').text().trim();
             description = $('meta[name="description"]').attr('content') || '';
-          } else if (row.source.includes('japanska')) {
+          } else if (row['source'].includes('japanska')) {
             title = $('h1').first().text().trim() || $('title').text().trim();
             description = $('meta[name="description"]').attr('content') || '';
           }
@@ -173,7 +173,7 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
             title = row.product_id;
           }
 
-          const sourcePrefix = row.source.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const sourcePrefix = row['source'].toLowerCase().replace(/[^a-z0-9]/g, '');
           const normalizedProductId = `${sourcePrefix}-${row.product_id}`;
 
           const productResult = await db.execute(sql`
@@ -188,9 +188,9 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
             ON CONFLICT (normalized_product_id)
             DO UPDATE SET
               title = EXCLUDED.title,
-              description = COALESCE(EXCLUDED.description, products.description),
+              description = COALESCE(EXCLUDED.description, products['description']),
               release_date = COALESCE(EXCLUDED.release_date, products.release_date),
-              duration = COALESCE(EXCLUDED.duration, products.duration),
+              duration = COALESCE(EXCLUDED.duration, products['duration']),
               default_thumbnail_url = COALESCE(EXCLUDED.default_thumbnail_url, products.default_thumbnail_url),
               updated_at = NOW()
             RETURNING id
@@ -202,15 +202,15 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
           if (isNew) stats.newProducts++; else stats.updatedProducts++;
 
           let aspName = 'DTI';
-          if (row.source.includes('MGS') || row.source.includes('mgstage')) {
+          if (row['source'].includes('MGS') || row['source'].includes('mgstage')) {
             aspName = 'MGS';
-          } else if (row.source.includes('FC2') || row.source.includes('fc2')) {
+          } else if (row['source'].includes('FC2') || row['source'].includes('fc2')) {
             aspName = 'FC2';
-          } else if (row.source.includes('japanska')) {
+          } else if (row['source'].includes('japanska')) {
             aspName = 'Japanska';
-          } else if (row.source.includes('1pondo')) {
+          } else if (row['source'].includes('1pondo')) {
             aspName = 'DTI';
-          } else if (row.source.includes('caribbeancom')) {
+          } else if (row['source'].includes('caribbeancom')) {
             aspName = 'DTI';
           }
 
@@ -218,7 +218,7 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
             INSERT INTO product_sources (
               product_id, asp_name, original_product_id, affiliate_url, price, data_source, last_updated
             )
-            VALUES (${productId}, ${aspName}, ${row.product_id}, ${row.url || ''}, ${price}, 'HTML', NOW())
+            VALUES (${productId}, ${aspName}, ${row.product_id}, ${row['url'] || ''}, ${price}, 'HTML', NOW())
             ON CONFLICT (product_id, asp_name)
             DO UPDATE SET
               affiliate_url = COALESCE(EXCLUDED.affiliate_url, product_sources.affiliate_url),
@@ -252,12 +252,12 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
           }
 
           await db.execute(sql`
-            UPDATE raw_html_data SET processed_at = NOW() WHERE id = ${row.id}
+            UPDATE raw_html_data SET processed_at = NOW() WHERE id = ${row['id']}
           `);
 
         } catch (error) {
           stats.errors++;
-          console.error(`Error processing raw_html_data id=${row.id}:`, error);
+          console.error(`Error processing raw_html_data id=${row['id']}:`, error);
         }
       }
 

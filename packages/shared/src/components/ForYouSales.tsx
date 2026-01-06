@@ -111,13 +111,13 @@ export default function ForYouSales({
     async function fetchForYouSales() {
       try {
         // お気に入り女優IDを取得
-        const favoriteActressesRaw = localStorage.getItem(`favoriteActresses-${process.env.NEXT_PUBLIC_SITE_MODE || 'adult-v'}`);
+        const favoriteActressesRaw = localStorage.getItem(`favoriteActresses-${process.env['NEXT_PUBLIC_SITE_MODE'] || 'adult-v'}`);
         const favoriteActresses = favoriteActressesRaw ? JSON.parse(favoriteActressesRaw) : [];
 
         // 最近見た作品IDを取得
-        const recentlyViewedRaw = localStorage.getItem(`recentlyViewed-${process.env.NEXT_PUBLIC_SITE_MODE || 'adult-v'}`);
+        const recentlyViewedRaw = localStorage.getItem(`recentlyViewed-${process.env['NEXT_PUBLIC_SITE_MODE'] || 'adult-v'}`);
         const recentlyViewed = recentlyViewedRaw ? JSON.parse(recentlyViewedRaw) : [];
-        const recentProductIds = recentlyViewed.slice(0, 10).map((item: { productId: string }) => item.productId);
+        const recentProductIds = recentlyViewed.slice(0, 10).map((item: { productId: string }) => item['productId']);
 
         const params = new URLSearchParams();
         if (favoriteActresses.length > 0) {
@@ -213,16 +213,16 @@ export default function ForYouSales({
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {products.map((product) => (
           <Link
-            key={product.id}
-            href={`${productLinkPrefix}/${product.normalizedProductId || product.id}`}
+            key={product['id']}
+            href={`${productLinkPrefix}/${product.normalizedProductId || product['id']}`}
             className={`group rounded-lg overflow-hidden transition-transform hover:scale-[1.02] ${isDark ? 'bg-gray-800/50' : 'bg-white shadow-sm'}`}
           >
             {/* Image */}
             <div className="relative" style={{ aspectRatio: '3/4' }}>
-              {product.thumbnailUrl ? (
+              {product['thumbnailUrl'] ? (
                 <Image
-                  src={product.thumbnailUrl}
-                  alt={product.title}
+                  src={product['thumbnailUrl']}
+                  alt={product['title']}
                   fill
                   className="object-cover"
                   sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
@@ -259,7 +259,7 @@ export default function ForYouSales({
             {/* Info */}
             <div className="p-2">
               <p className={`text-xs line-clamp-2 mb-1 ${isDark ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-gray-900'}`}>
-                {product.title}
+                {product['title']}
               </p>
               {product.performers.length > 0 && (
                 <p className={`text-xs mb-1 truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>

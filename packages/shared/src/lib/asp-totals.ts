@@ -32,7 +32,7 @@ export async function getDUGATotal(): Promise<ASPTotal> {
     const response = await dugaClient.getNewReleases(1, 0);
     return {
       asp: 'DUGA',
-      apiTotal: response.count,
+      apiTotal: response['count'],
       source: 'DUGA API (count)'
     };
   } catch (e) {
@@ -55,10 +55,10 @@ export async function getSOKMILTotal(): Promise<ASPTotal> {
     // hits=1で最小限のデータ取得、totalCountのみ必要
     const response = await sokmilClient.searchItems({ hits: 1, category: 'av' });
     // APIエラー時はtotalCountが0になることがある
-    if (response.totalCount > 0) {
+    if (response['totalCount'] > 0) {
       return {
         asp: 'SOKMIL',
-        apiTotal: response.totalCount,
+        apiTotal: response['totalCount'],
         source: 'SOKMIL API (total_count)'
       };
     }
@@ -83,7 +83,7 @@ export async function getSOKMILTotal(): Promise<ASPTotal> {
  */
 export async function getB10FTotal(): Promise<ASPTotal> {
   try {
-    const B10F_AFFILIATE_ID = process.env.B10F_AFFILIATE_ID || '11209';
+    const B10F_AFFILIATE_ID = process.env['B10F_AFFILIATE_ID'] || '11209';
     const url = `https://b10f.jp/csv_home.php?all=1&atype=${B10F_AFFILIATE_ID}&nosep=1`;
 
     const response = await fetch(url, {
@@ -93,10 +93,10 @@ export async function getB10FTotal(): Promise<ASPTotal> {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      throw new Error(`HTTP ${response['status']}`);
     }
 
-    const csv = await response.text();
+    const csv = await response['text']();
     const lines = csv.split('\n').filter(line => line.trim().length > 0);
     const apiTotal = lines.length - 1;
 
@@ -125,12 +125,12 @@ export async function getHEYZOTotal(): Promise<ASPTotal> {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
     });
-    const html = await response.text();
+    const html = await response['text']();
 
     const movieMatches = html.matchAll(/\/moviepages\/(\d+)\//g);
     let maxId = 0;
     for (const match of movieMatches) {
-      const id = parseInt(match[1]);
+      const id = parseInt(match[1] ?? '0');
       if (id > maxId) maxId = id;
     }
 
@@ -145,7 +145,7 @@ export async function getHEYZOTotal(): Promise<ASPTotal> {
     const pageMatches = html.matchAll(/all_(\d+)\.html/g);
     let maxPage = 1;
     for (const match of pageMatches) {
-      const page = parseInt(match[1]);
+      const page = parseInt(match[1] ?? '0');
       if (page > maxPage) maxPage = page;
     }
     const apiTotal = maxPage * 12;
@@ -176,7 +176,7 @@ export async function getMGSTotal(): Promise<ASPTotal> {
         'Cookie': 'adc=1',
       },
     });
-    const html = await response.text();
+    const html = await response['text']();
 
     const patterns = [
       /全\s*([\d,]+)\s*件/,
@@ -187,7 +187,7 @@ export async function getMGSTotal(): Promise<ASPTotal> {
 
     for (const pattern of patterns) {
       const match = html.match(pattern);
-      if (match) {
+      if (match?.[1]) {
         const total = parseInt(match[1].replace(/,/g, ''));
         if (total > 10000) {
           return {
@@ -200,7 +200,7 @@ export async function getMGSTotal(): Promise<ASPTotal> {
     }
 
     const lastPageMatch = html.match(/page=(\d+)[^>]*>\s*(?:最後|Last|»)/i);
-    if (lastPageMatch) {
+    if (lastPageMatch?.[1]) {
       const lastPage = parseInt(lastPageMatch[1]);
       const itemsPerPage = 120;
       const apiTotal = lastPage * itemsPerPage;
@@ -271,17 +271,17 @@ export async function getJapanskaTotal(): Promise<ASPTotal> {
       return {
         asp: 'Japanska',
         apiTotal: FALLBACK_ESTIMATE,
-        source: `japanska-xxx.com (推定値, HTTP ${response.status})`
+        source: `japanska-xxx.com (推定値, HTTP ${response['status']})`
       };
     }
 
-    const html = await response.text();
+    const html = await response['text']();
 
     // 動画IDパターン（より柔軟に）
     const movieMatches = html.matchAll(/movie\/detail_(\d+)\.html/g);
     let maxId = 0;
     for (const match of movieMatches) {
-      const id = parseInt(match[1]);
+      const id = parseInt(match[1] ?? '0');
       if (id > maxId) maxId = id;
     }
 
@@ -298,7 +298,7 @@ export async function getJapanskaTotal(): Promise<ASPTotal> {
     const pageMatches = html.matchAll(/list_(\d+)\.html/g);
     let maxPage = 0;
     for (const match of pageMatches) {
-      const page = parseInt(match[1]);
+      const page = parseInt(match[1] ?? '0');
       if (page > maxPage) maxPage = page;
     }
 
@@ -352,13 +352,13 @@ export async function getCaribbeancomTotal(): Promise<ASPTotal> {
       };
     }
 
-    const html = await response.text();
+    const html = await response['text']();
 
     // ページネーションから推定（1ページ12件）
     const pageMatches = html.matchAll(/all(\d+)\.htm/g);
     let maxPage = 1;
     for (const match of pageMatches) {
-      const page = parseInt(match[1]);
+      const page = parseInt(match[1] ?? '0');
       if (page > maxPage) maxPage = page;
     }
 
@@ -375,7 +375,7 @@ export async function getCaribbeancomTotal(): Promise<ASPTotal> {
     const movieMatches = html.matchAll(/\/moviepages\/(\d{6}_\d{3})\//g);
     const uniqueIds = new Set<string>();
     for (const match of movieMatches) {
-      uniqueIds.add(match[1]);
+      if (match[1]) uniqueIds.add(match[1]);
     }
 
     if (uniqueIds.size > 0) {
@@ -417,10 +417,10 @@ export async function get1PondoTotal(): Promise<ASPTotal> {
       return { asp: '一本道', apiTotal: 3000, source: '1pondo.tv (推定値)' };
     }
 
-    const html = await response.text();
+    const html = await response['text']();
 
     const descMatch = html.match(/content="[^"]*?(\d{1,5}),?(\d{3})?本[^"]*"/i);
-    if (descMatch) {
+    if (descMatch?.[1]) {
       const totalStr = descMatch[2] ? descMatch[1] + descMatch[2] : descMatch[1];
       const total = parseInt(totalStr.replace(/,/g, ''));
       if (total > 100) {
@@ -433,7 +433,7 @@ export async function get1PondoTotal(): Promise<ASPTotal> {
     }
 
     const bodyMatch = html.match(/(\d{1,5}),?(\d{3})?本(?:以上|公開)/);
-    if (bodyMatch) {
+    if (bodyMatch?.[1]) {
       const totalStr = bodyMatch[2] ? bodyMatch[1] + bodyMatch[2] : bodyMatch[1];
       const total = parseInt(totalStr.replace(/,/g, ''));
       if (total > 100) {

@@ -92,10 +92,10 @@ export function PerformerListWithSelection({
   // コールバックをメモ化
   const handleTogglePerformer = useCallback((performer: Performer) => {
     toggleItem({
-      id: performer.id,
-      name: performer.name,
+      id: performer['id'],
+      name: performer['name'],
       imageUrl: performer.imageUrl || null,
-      productCount: performer.productCount,
+      ...(performer.productCount !== undefined && { productCount: performer.productCount }),
     });
   }, [toggleItem]);
 
@@ -145,10 +145,10 @@ export function PerformerListWithSelection({
       <div className={className}>
         {performers.map((performer, index) => (
           <PerformerItem
-            key={performer.id}
+            key={performer['id']}
             performer={performer}
             index={index}
-            isSelected={compareSet.has(String(performer.id))}
+            isSelected={compareSet.has(String(performer['id']))}
             isSelectionMode={isSelectionMode}
             theme={theme}
             onToggle={handleTogglePerformer}

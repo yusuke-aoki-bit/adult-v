@@ -15,7 +15,7 @@ export interface PageSectionConfig {
   sections: HomeSection[];
 }
 
-const STORAGE_KEY_PREFIX = 'section_preferences';
+const STORAGE_KEY_PREFIX = 'section_preferences' as const;
 
 /** 各ページのデフォルトセクション設定 */
 const pageSectionDefaults: Record<string, { ja: HomeSection[]; en: HomeSection[] }> = {
@@ -340,8 +340,8 @@ const pageSectionDefaults: Record<string, { ja: HomeSection[]; en: HomeSection[]
 };
 
 // 後方互換性のためのデフォルトセクション
-const defaultSections: HomeSection[] = pageSectionDefaults.home.ja;
-const defaultSectionsEn: HomeSection[] = pageSectionDefaults.home.en;
+const defaultSections: HomeSection[] = pageSectionDefaults['home']!['ja'];
+const defaultSectionsEn: HomeSection[] = pageSectionDefaults['home']!['en'];
 
 export interface UseHomeSectionsOptions {
   locale?: string;
@@ -428,6 +428,7 @@ export function useHomeSections(localeOrOptions: string | UseHomeSectionsOptions
     setSections(prev => {
       const updated = [...prev];
       const [removed] = updated.splice(fromIndex, 1);
+      if (removed === undefined) return prev;
       updated.splice(toIndex, 0, removed);
 
       // orderを再計算

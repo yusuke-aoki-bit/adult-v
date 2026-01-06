@@ -3,7 +3,7 @@ import { getDb } from '@/lib/db';
 import { performers } from '@/lib/db/schema';
 import { desc, sql } from 'drizzle-orm';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 const CHUNK_SIZE = 5000;
 
 export const revalidate = 3600; // 1時間キャッシュ

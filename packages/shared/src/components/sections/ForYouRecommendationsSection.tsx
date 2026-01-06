@@ -133,7 +133,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
 
       try {
         // Step 1: Get recommendation IDs
-        const productIds = viewedItems.slice(0, 10).map(item => item.id);
+        const productIds = viewedItems.slice(0, 10).map(item => item['id']);
 
         let recommendations: RecommendationMeta[];
         if (fetchRecommendations) {
@@ -177,7 +177,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
         // Maintain recommendation order
         const productMap = new Map<number, T>();
         for (const product of fetchedProducts) {
-          productMap.set(Number(product.id), product);
+          productMap.set(Number(product['id']), product);
         }
 
         const orderedProducts: T[] = [];
@@ -201,8 +201,8 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
               for (const product of orderedProducts) {
                 if (product.performers) {
                   for (const performer of product.performers) {
-                    if (!performerMap.has(performer.id)) {
-                      performerMap.set(performer.id, performer);
+                    if (!performerMap.has(performer['id'])) {
+                      performerMap.set(performer['id'], performer);
                     }
                   }
                 }
@@ -320,7 +320,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
             ) : (
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                 {actresses.map((actress) => (
-                  <ActressCard key={actress.id} actress={actress} size="mini" />
+                  <ActressCard key={actress['id']} actress={actress} size="mini" />
                 ))}
               </div>
             )}
@@ -336,7 +336,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
           )}
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} size="mini" />
+              <ProductCard key={product['id']} product={product} size="mini" />
             ))}
           </div>
         </div>
@@ -350,7 +350,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
         <AccordionSection
           icon={<Sparkles className="w-5 h-5" />}
           title={t.title}
-          itemCount={hasExpanded && products.length > 0 ? products.length : undefined}
+          {...(hasExpanded && products.length > 0 && { itemCount: products.length })}
           defaultOpen={false}
           onToggle={handleToggle}
           iconColorClass={themeConfig.forYouRecommendations.iconColorClass}

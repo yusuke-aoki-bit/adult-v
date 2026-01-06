@@ -5,7 +5,7 @@ import { SectionSettings } from '@adult-v/shared/components';
 
 export default function SettingsPage() {
   const params = useParams();
-  const locale = (params.locale as string) || 'ja';
+  const locale = (params['locale'] as string) || 'ja';
 
   const t = {
     title: locale === 'ja' ? '設定' : 'Settings',

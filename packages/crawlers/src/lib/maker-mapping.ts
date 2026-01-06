@@ -238,19 +238,19 @@ export function getMakerByProductCode(productCode: string): MakerInfo | null {
 
   // パターン1: ハイフン区切り（SSIS-865, 300MIUM-1359）
   let match = withoutPrefix.match(/^(\d*[A-Z]+)-\d+$/);
-  if (match) {
+  if (match && match[1]) {
     return getMakerByPrefix(match[1]);
   }
 
   // パターン2: 数字プレフィックス付き（300MIUM1359）
   match = withoutPrefix.match(/^(\d+[A-Z]+)\d+$/);
-  if (match) {
+  if (match && match[1]) {
     return getMakerByPrefix(match[1]);
   }
 
   // パターン3: 英字のみ（SSIS865）
   match = withoutPrefix.match(/^([A-Z]+)\d+$/);
-  if (match) {
+  if (match && match[1]) {
     return getMakerByPrefix(match[1]);
   }
 
@@ -271,8 +271,8 @@ export function getPrefixesByMakerName(makerName: string): { prefix: string; inf
 
   for (const [prefix, info] of Object.entries(MAKER_MAP)) {
     if (
-      info.name.toLowerCase().includes(searchName) ||
-      (info.nameEn && info.nameEn.toLowerCase().includes(searchName))
+      info['name'].toLowerCase().includes(searchName) ||
+      (info['nameEn'] && info['nameEn'].toLowerCase().includes(searchName))
     ) {
       results.push({ prefix, info });
     }
@@ -298,7 +298,7 @@ export function getMgsPath(prefix: string): string | null {
 export function getAllMakerNames(): string[] {
   const names = new Set<string>();
   for (const info of Object.values(MAKER_MAP)) {
-    names.add(info.name);
+    names.add(info['name']);
   }
   return Array.from(names).sort();
 }

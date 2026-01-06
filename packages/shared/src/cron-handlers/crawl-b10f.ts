@@ -39,10 +39,10 @@ async function downloadCsv(): Promise<string> {
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
   }
 
-  return await response.text();
+  return await response['text']();
 }
 
 function parseCsv(csv: string): B10fProduct[] {
@@ -50,26 +50,26 @@ function parseCsv(csv: string): B10fProduct[] {
   const products: B10fProduct[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const line = lines[i]?.trim();
     if (!line) continue;
 
     const fields = line.split(',');
     if (fields.length < 13) continue;
 
     products.push({
-      productId: fields[0],
-      releaseDate: fields[1],
-      title: fields[2],
-      captureCount: fields[3],
-      imageType: fields[4],
-      imageUrl: fields[5],
-      productUrl: fields[6],
-      description: fields[7],
-      price: fields[8],
-      duration: fields[9],
-      brand: fields[10],
-      category: fields[11],
-      performers: fields[12],
+      productId: fields[0] ?? '',
+      releaseDate: fields[1] ?? '',
+      title: fields[2] ?? '',
+      captureCount: fields[3] ?? '',
+      imageType: fields[4] ?? '',
+      imageUrl: fields[5] ?? '',
+      productUrl: fields[6] ?? '',
+      description: fields[7] ?? '',
+      price: fields[8] ?? '',
+      duration: fields[9] ?? '',
+      brand: fields[10] ?? '',
+      category: fields[11] ?? '',
+      performers: fields[12] ?? '',
     });
   }
 
@@ -101,7 +101,7 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
     };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const limit = parseInt(url.searchParams.get('limit') || '500');
 
       const csvData = await downloadCsv();
@@ -120,14 +120,14 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
 
       for (const item of productsToProcess) {
         try {
-          const normalizedProductId = `b10f-${item.productId}`;
-          const releaseDateParsed = item.releaseDate ? new Date(item.releaseDate) : null;
-          const durationMinutes = item.duration ? parseInt(item.duration) : null;
-          const priceYen = item.price ? parseInt(item.price) : null;
+          const normalizedProductId = `b10f-${item['productId']}`;
+          const releaseDateParsed = item['releaseDate'] ? new Date(item['releaseDate']) : null;
+          const durationMinutes = item['duration'] ? parseInt(item['duration']) : null;
+          const priceYen = item['price'] ? parseInt(item['price']) : null;
 
           const productResult = await db.execute(sql`
             INSERT INTO products (normalized_product_id, title, description, release_date, duration, default_thumbnail_url, updated_at)
-            VALUES (${normalizedProductId}, ${item.title || ''}, ${item.description || null}, ${releaseDateParsed}, ${durationMinutes}, ${item.imageUrl || null}, NOW())
+            VALUES (${normalizedProductId}, ${item['title'] || ''}, ${item['description'] || null}, ${releaseDateParsed}, ${durationMinutes}, ${item.imageUrl || null}, NOW())
             ON CONFLICT (normalized_product_id) DO UPDATE SET
               title = EXCLUDED.title, description = EXCLUDED.description, release_date = EXCLUDED.release_date,
               duration = EXCLUDED.duration, default_thumbnail_url = EXCLUDED.default_thumbnail_url, updated_at = NOW()
@@ -139,7 +139,7 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
 
           await db.execute(sql`
             INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, data_source, last_updated)
-            VALUES (${productId}, 'b10f', ${item.productId}, ${item.productUrl || ''}, ${priceYen}, 'CSV', NOW())
+            VALUES (${productId}, 'b10f', ${item['productId']}, ${item.productUrl || ''}, ${priceYen}, 'CSV', NOW())
             ON CONFLICT (product_id, asp_name) DO UPDATE SET
               affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, last_updated = NOW()
           `);
@@ -197,7 +197,7 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
 
         } catch (error) {
           stats.errors++;
-          console.error(`Error processing product ${item.productId}:`, error);
+          console.error(`Error processing product ${item['productId']}:`, error);
         }
       }
 

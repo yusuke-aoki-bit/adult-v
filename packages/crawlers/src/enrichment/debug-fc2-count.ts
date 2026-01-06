@@ -27,8 +27,8 @@ async function main() {
   `);
   console.log('\n2. FC2商品サンプル（10件）:');
   for (const row of fc2Samples.rows as { id: number; normalized_product_id: string; title: string; asp_name: string; original_product_id: string }[]) {
-    console.log(`   - [${row.id}] normalizedId=${row.normalized_product_id}, originalId=${row.original_product_id}`);
-    console.log(`     title: ${row.title.substring(0, 50)}...`);
+    console.log(`   - [${row['id']}] normalizedId=${row.normalized_product_id}, originalId=${row.original_product_id}`);
+    console.log(`     title: ${row['title'].substring(0, 50)}...`);
   }
 
   // 3. FC2商品の重複タイトル確認（「FC2動画アダルト」の詳細）
@@ -44,7 +44,7 @@ async function main() {
   `);
   console.log('\n3. FC2で重複しているタイトル:');
   for (const row of duplicateTitles.rows as { title: string; count: number }[]) {
-    console.log(`   - 「${row.title.substring(0, 40)}...」: ${row.count}件`);
+    console.log(`   - 「${row['title'].substring(0, 40)}...」: ${row['count']}件`);
   }
 
   // 4. 「FC2動画アダルト」タイトルの商品詳細を確認
@@ -57,7 +57,7 @@ async function main() {
   `);
   console.log('\n4. 「FC2動画アダルト」商品のID確認:');
   for (const row of fc2AdultSamples.rows as { id: number; normalized_product_id: string; original_product_id: string; title: string }[]) {
-    console.log(`   - [${row.id}] normalizedId=${row.normalized_product_id}, originalId=${row.original_product_id}`);
+    console.log(`   - [${row['id']}] normalizedId=${row.normalized_product_id}, originalId=${row.original_product_id}`);
   }
 
   // 5. 商品テーブルのASP別商品数
@@ -70,7 +70,7 @@ async function main() {
   `);
   console.log('\n5. ASP別商品数:');
   for (const row of providerCheck.rows as { asp_name: string; count: number }[]) {
-    console.log(`   - ${row.asp_name}: ${row.count}件`);
+    console.log(`   - ${row.asp_name}: ${row['count']}件`);
   }
 
   // 6. normalizedProductIdのパターン確認
@@ -89,7 +89,7 @@ async function main() {
   `);
   console.log('\n6. FC2商品のnormalizedProductIdパターン:');
   for (const row of normalizedIdPatterns.rows as { pattern: string; count: number }[]) {
-    console.log(`   - ${row.pattern}: ${row.count}件`);
+    console.log(`   - ${row.pattern}: ${row['count']}件`);
   }
 
   console.log('\n=== 完了 ===');

@@ -80,7 +80,7 @@ export default function ViewedButton({
 
     if (isViewed) {
       // 視聴済み解除: この商品の最新のエントリを削除
-      const latestEntry = entries.find((entry) => entry.productId === productId);
+      const latestEntry = entries.find((entry) => entry['productId'] === productId);
       if (latestEntry) {
         removeEntry(latestEntry.id);
         setShowToast(t.removedFromDiary);
@@ -92,10 +92,10 @@ export default function ViewedButton({
         title,
         imageUrl,
         aspName,
-        performerName,
-        performerId,
-        tags,
-        duration,
+        ...(performerName && { performerName }),
+        ...(performerId !== undefined && { performerId }),
+        ...(tags && { tags }),
+        ...(duration !== undefined && { duration }),
         viewedAt: Date.now(),
       };
       addEntry(newEntry);

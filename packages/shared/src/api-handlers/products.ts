@@ -57,7 +57,7 @@ export function createProductsHandler(
 ) {
   return async function GET(request: Request) {
     try {
-      const { searchParams } = new URL(request.url);
+      const { searchParams } = new URL(request['url']);
 
       // Validate pagination
       const paginationResult = validatePagination(searchParams);
@@ -117,20 +117,20 @@ export function createProductsHandler(
       const products = await deps.getProducts({
         limit: finalLimit,
         offset: finalOffset,
-        ids,
-        category,
-        provider,
-        providers: providers && providers.length > 0 ? providers : undefined,
-        excludeProviders: excludeProviders && excludeProviders.length > 0 ? excludeProviders : undefined,
-        actressId,
-        isFeatured,
-        isNew,
-        hasVideo,
-        hasImage,
-        query,
-        sortBy: sortBy || undefined,
-        minPrice,
-        maxPrice,
+        ...(ids && { ids }),
+        ...(category && { category }),
+        ...(provider && { provider }),
+        ...(providers && providers.length > 0 && { providers }),
+        ...(excludeProviders && excludeProviders.length > 0 && { excludeProviders }),
+        ...(actressId && { actressId }),
+        ...(isFeatured && { isFeatured }),
+        ...(isNew && { isNew }),
+        ...(hasVideo && { hasVideo }),
+        ...(hasImage && { hasImage }),
+        ...(query && { query }),
+        ...(sortBy && { sortBy }),
+        ...(minPrice !== undefined && { minPrice }),
+        ...(maxPrice !== undefined && { maxPrice }),
         locale,
       });
 

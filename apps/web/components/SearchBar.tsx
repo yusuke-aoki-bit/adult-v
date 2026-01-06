@@ -11,7 +11,7 @@ import { UnifiedSearchBar } from '@adult-v/shared/components';
 export default function SearchBar() {
   const router = useRouter();
   const params = useParams();
-  const locale = (params.locale as string) || 'ja';
+  const locale = (params['locale'] as string) || 'ja';
 
   const handleActressSearch = useCallback((query: string) => {
     router.push(`/${locale}/?q=${encodeURIComponent(query)}`);

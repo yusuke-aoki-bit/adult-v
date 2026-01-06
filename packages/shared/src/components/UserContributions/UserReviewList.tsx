@@ -75,7 +75,7 @@ export function UserReviewList({ productId, userId, translations: t }: UserRevie
         // 投票状態を更新
         setReviews((prev) =>
           prev.map((review) => {
-            if (review.id === reviewId) {
+            if (review['id'] === reviewId) {
               const oldVote = review.userVote;
               const newVote = voteType;
               let helpfulDelta = 0;
@@ -89,7 +89,7 @@ export function UserReviewList({ productId, userId, translations: t }: UserRevie
               return {
                 ...review,
                 userVote: voteType,
-                helpfulCount: (review.helpfulCount || 0) + helpfulDelta,
+                helpfulCount: (review['helpfulCount'] || 0) + helpfulDelta,
               };
             }
             return review;
@@ -148,7 +148,7 @@ export function UserReviewList({ productId, userId, translations: t }: UserRevie
       <div className="space-y-4">
         {reviews.map((review) => (
           <div
-            key={review.id}
+            key={review['id']}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
           >
             {/* Header */}
@@ -160,7 +160,7 @@ export function UserReviewList({ productId, userId, translations: t }: UserRevie
                     <Star
                       key={star}
                       className={`w-4 h-4 ${
-                        star <= parseFloat(review.rating)
+                        star <= parseFloat(review['rating'])
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'text-gray-300 dark:text-gray-600'
                       }`}
@@ -168,15 +168,15 @@ export function UserReviewList({ productId, userId, translations: t }: UserRevie
                   ))}
                 </div>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {formatDate(review.createdAt)}
+                  {formatDate(review['createdAt'])}
                 </span>
               </div>
             </div>
 
             {/* Title */}
-            {review.title && (
+            {review['title'] && (
               <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                {review.title}
+                {review['title']}
               </h4>
             )}
 
@@ -188,21 +188,21 @@ export function UserReviewList({ productId, userId, translations: t }: UserRevie
             {/* Actions */}
             <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
               <span className="text-sm text-gray-500">
-                {t.helpfulCount.replace('{count}', String(review.helpfulCount || 0))}
+                {t.helpfulCount.replace('{count}', String(review['helpfulCount'] || 0))}
               </span>
 
-              {userId && review.userId !== userId && (
+              {userId && review['userId'] !== userId && (
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleVote(review.id, 'helpful')}
-                    disabled={votingReviewId === review.id}
+                    onClick={() => handleVote(review['id'], 'helpful')}
+                    disabled={votingReviewId === review['id']}
                     className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${
                       review.userVote === 'helpful'
                         ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
                     }`}
                   >
-                    {votingReviewId === review.id ? (
+                    {votingReviewId === review['id'] ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <ThumbsUp className="w-4 h-4" />
@@ -210,15 +210,15 @@ export function UserReviewList({ productId, userId, translations: t }: UserRevie
                     {t.helpful}
                   </button>
                   <button
-                    onClick={() => handleVote(review.id, 'not_helpful')}
-                    disabled={votingReviewId === review.id}
+                    onClick={() => handleVote(review['id'], 'not_helpful')}
+                    disabled={votingReviewId === review['id']}
                     className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${
                       review.userVote === 'not_helpful'
                         ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
                     }`}
                   >
-                    {votingReviewId === review.id ? (
+                    {votingReviewId === review['id'] ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <ThumbsDown className="w-4 h-4" />

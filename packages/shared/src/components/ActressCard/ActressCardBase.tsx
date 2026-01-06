@@ -77,7 +77,7 @@ function ActressCardBaseComponent({
   fetchProductImages,
 }: ActressCardBaseProps): ReactNode {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const themeConfig = getActressCardThemeConfig(theme);
 
@@ -92,8 +92,8 @@ function ActressCardBaseComponent({
 
   // Image handling
   const rawImageUrl = compact
-    ? (actress.thumbnail || actress.heroImage)
-    : (actress.heroImage || actress.thumbnail);
+    ? (actress['thumbnail'] || actress['heroImage'])
+    : (actress['heroImage'] || actress['thumbnail']);
   const initialSrc = normalizeImageUrl(rawImageUrl);
   const [imgSrc, setImgSrc] = useState(initialSrc || themeConfig.placeholderImage);
   const [hasError, setHasError] = useState(!initialSrc);
@@ -133,7 +133,7 @@ function ActressCardBaseComponent({
     if (!fetchProductImages) return;
 
     try {
-      const images = await fetchProductImages(actress.id);
+      const images = await fetchProductImages(actress['id']);
       setProductImages(images);
       if (images.length > 0) {
         setShowLightbox(true);
@@ -141,7 +141,7 @@ function ActressCardBaseComponent({
     } catch (error) {
       console.error('Failed to fetch products:', error);
     }
-  }, [actress.id, fetchProductImages]);
+  }, [actress['id'], fetchProductImages]);
 
   const handleCloseLightbox = useCallback(() => {
     setShowLightbox(false);
@@ -151,14 +151,14 @@ function ActressCardBaseComponent({
   if (resolvedSize === 'mini') {
     return (
       <Link
-        href={`/${locale}/actress/${actress.id}`}
+        href={`/${locale}/actress/${actress['id']}`}
         className={`group ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-amber-500/50 transition-all`}
       >
         <div className={`aspect-square relative ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
-          {actress.heroImage || actress.thumbnail ? (
+          {actress['heroImage'] || actress['thumbnail'] ? (
             <Image
               src={imgSrc}
-              alt={actress.name}
+              alt={actress['name']}
               fill
               sizes="(max-width: 768px) 33vw, 10vw"
               className={`object-cover group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
@@ -186,10 +186,10 @@ function ActressCardBaseComponent({
         <div className="p-1.5">
           <div className="flex items-center gap-1">
             <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-amber-300' : 'text-gray-800 group-hover:text-amber-600'} text-xs font-medium truncate transition-colors flex-1`}>
-              {actress.name}
+              {actress['name']}
             </p>
             <CopyButton
-              text={actress.name}
+              text={actress['name']}
               iconOnly
               size="xs"
               className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
@@ -219,7 +219,7 @@ function ActressCardBaseComponent({
           >
             <Image
               src={imgSrc}
-              alt={actress.name}
+              alt={actress['name']}
               fill
               sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 16vw"
               className={`object-cover opacity-90 group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
@@ -237,7 +237,7 @@ function ActressCardBaseComponent({
                 className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-white rounded-full shadow-md scale-90 sm:scale-100 z-10"
                 onClick={(e) => e.stopPropagation()}
               >
-                <FavoriteButton type="actress" id={actress.id} />
+                <FavoriteButton type="actress" id={actress['id']} />
               </div>
             )}
             {/* Hover overlay */}
@@ -249,13 +249,13 @@ function ActressCardBaseComponent({
             {/* Name - link to detail page with copy button */}
             <div className="flex items-center gap-1">
               <Link
-                href={`/${locale}/actress/${actress.id}`}
+                href={`/${locale}/actress/${actress['id']}`}
                 className={`text-sm sm:text-base font-semibold truncate leading-tight ${themeConfig.hoverColor} transition-colors flex-1`}
               >
-                {actress.name}
+                {actress['name']}
               </Link>
               <CopyButton
-                text={actress.name}
+                text={actress['name']}
                 iconOnly
                 size="xs"
                 className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
@@ -302,7 +302,7 @@ function ActressCardBaseComponent({
           images={productImages}
           isOpen={showLightbox}
           onClose={handleCloseLightbox}
-          alt={actress.name}
+          alt={actress['name']}
         />
       </>
     );
@@ -326,7 +326,7 @@ function ActressCardBaseComponent({
         >
           <Image
             src={imgSrc}
-            alt={actress.name}
+            alt={actress['name']}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className={`object-cover opacity-90 group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
@@ -342,7 +342,7 @@ function ActressCardBaseComponent({
               className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white rounded-full shadow-md z-10"
               onClick={(e) => e.stopPropagation()}
             >
-              <FavoriteButton type="actress" id={actress.id} />
+              <FavoriteButton type="actress" id={actress['id']} />
             </div>
           )}
           {/* Hover overlay */}
@@ -354,13 +354,13 @@ function ActressCardBaseComponent({
           {/* Name - link to detail page */}
           <div className="flex items-center gap-2">
             <Link
-              href={`/${locale}/actress/${actress.id}`}
+              href={`/${locale}/actress/${actress['id']}`}
               className={`text-xl sm:text-2xl font-bold truncate leading-tight ${themeConfig.hoverColor} transition-colors flex-1`}
             >
-              {actress.name}
+              {actress['name']}
             </Link>
             <CopyButton
-              text={actress.name}
+              text={actress['name']}
               iconOnly
               size="sm"
               className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
@@ -382,8 +382,8 @@ function ActressCardBaseComponent({
           {/* AI review or description */}
           {actress.aiReview?.overview ? (
             <p className="text-sm theme-text-secondary line-clamp-3">{actress.aiReview.overview}</p>
-          ) : actress.description && (
-            <p className="text-sm theme-text-secondary line-clamp-3">{actress.description}</p>
+          ) : actress['description'] && (
+            <p className="text-sm theme-text-secondary line-clamp-3">{actress['description']}</p>
           )}
 
           {actress.tags && actress.tags.length > 0 && (
@@ -435,7 +435,7 @@ function ActressCardBaseComponent({
         images={productImages}
         isOpen={showLightbox}
         onClose={handleCloseLightbox}
-        alt={actress.name}
+        alt={actress['name']}
       />
     </>
   );

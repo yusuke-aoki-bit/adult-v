@@ -3,7 +3,7 @@ import { getDb } from '@/lib/db';
 import { performers, productPerformers } from '@/lib/db/schema';
 import { desc, sql, eq } from 'drizzle-orm';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.adult-v.com';
+const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
 // hreflang用の言語バリエーション
 function getHreflangLinks(path: string): string {
@@ -27,7 +27,7 @@ function getHreflangLinks(path: string): string {
  * 作品数の多い順に上位3000名を掲載
  */
 export async function GET() {
-  if (!process.env.DATABASE_URL) {
+  if (!process.env['DATABASE_URL']) {
     return new NextResponse('Database not configured', { status: 500 });
   }
 

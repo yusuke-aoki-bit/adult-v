@@ -70,9 +70,9 @@ const translations = {
 export default function ListDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const locale = (params?.locale as string) || 'ja';
-  const listId = parseInt(params?.id as string, 10);
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const listId = parseInt(params?.['id'] as string, 10);
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const { user } = useFirebaseAuth();
   const userId = user?.uid ?? null;

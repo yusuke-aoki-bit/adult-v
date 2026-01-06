@@ -23,19 +23,25 @@ export function useAnalytics() {
   );
 
   const trackPageView = useCallback((pagePath: string, pageTitle?: string) => {
-    logEvent('page_view', { page_path: pagePath, page_title: pageTitle });
+    logEvent('page_view', {
+      page_path: pagePath,
+      ...(pageTitle && { page_title: pageTitle }),
+    });
   }, []);
 
   const trackSearch = useCallback((searchTerm: string, resultsCount?: number) => {
-    logEvent('search', { search_term: searchTerm, results_count: resultsCount });
+    logEvent('search', {
+      search_term: searchTerm,
+      ...(resultsCount !== undefined && { results_count: resultsCount }),
+    });
   }, []);
 
   const trackProductView = useCallback(
     (productId: string, productTitle?: string, provider?: string) => {
       logEvent('view_product', {
         product_id: productId,
-        product_title: productTitle,
-        provider,
+        ...(productTitle && { product_title: productTitle }),
+        ...(provider && { provider }),
       });
     },
     []
@@ -46,7 +52,7 @@ export function useAnalytics() {
       logEvent('click_affiliate_link', {
         product_id: productId,
         provider,
-        destination_url: destinationUrl,
+        ...(destinationUrl && { destination_url: destinationUrl }),
       });
     },
     []
@@ -100,7 +106,10 @@ export function usePageViewTracking(pagePath: string, pageTitle?: string) {
 
   useEffect(() => {
     if (!hasTracked.current) {
-      logEvent('page_view', { page_path: pagePath, page_title: pageTitle });
+      logEvent('page_view', {
+        page_path: pagePath,
+        ...(pageTitle && { page_title: pageTitle }),
+      });
       hasTracked.current = true;
     }
   }, [pagePath, pageTitle]);
@@ -121,8 +130,8 @@ export function useProductViewTracking(
     if (productId && !hasTracked.current) {
       logEvent('view_product', {
         product_id: productId,
-        product_title: productTitle,
-        provider,
+        ...(productTitle && { product_title: productTitle }),
+        ...(provider && { provider }),
       });
       hasTracked.current = true;
     }

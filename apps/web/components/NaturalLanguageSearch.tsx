@@ -109,7 +109,7 @@ interface NaturalLanguageSearchProps {
 }
 
 export default function NaturalLanguageSearch({ locale, className = '' }: NaturalLanguageSearchProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const suggestions = SEARCH_SUGGESTIONS[locale as keyof typeof SEARCH_SUGGESTIONS] || SEARCH_SUGGESTIONS.ja;
 
   const [query, setQuery] = useState('');

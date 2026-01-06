@@ -63,7 +63,7 @@ describe('createPriceHistoryQueries', () => {
         salePrice: 980,
         discountPercent: 50,
       });
-      expect(result[1].salePrice).toBeUndefined();
+      expect(result[1]!.salePrice).toBeUndefined();
     });
 
     it('空の結果を処理', async () => {

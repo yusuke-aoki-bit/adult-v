@@ -2,7 +2,7 @@ import { getDb } from '@/lib/db';
 import { products, performers } from '@/lib/db/schema';
 import { sql } from 'drizzle-orm';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
 // ISRキャッシュ: 1時間（DBクエリを毎回実行しないように）
 export const revalidate = 3600;

@@ -14,8 +14,11 @@ import {
   GoogleAuthProvider,
   TwitterAuthProvider,
   linkWithPopup,
+  signInWithPopup,
+  signInWithCredential,
   type User,
   type Auth,
+  type AuthError,
 } from 'firebase/auth';
 import {
   getFirestore,
@@ -50,13 +53,13 @@ import { getPerformance, type FirebasePerformance } from 'firebase/performance';
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: process.env['NEXT_PUBLIC_FIREBASE_API_KEY'] ?? '',
+  authDomain: process.env['NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'] ?? '',
+  projectId: process.env['NEXT_PUBLIC_FIREBASE_PROJECT_ID'] ?? '',
+  storageBucket: process.env['NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'] ?? '',
+  messagingSenderId: process.env['NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+  appId: process.env['NEXT_PUBLIC_FIREBASE_APP_ID'] ?? '',
+  measurementId: process.env['NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID'] ?? '',
 };
 
 // Singleton instances
@@ -86,10 +89,23 @@ export function getFirebaseApp(): FirebaseApp | null {
   }
 
   if (!app) {
-    if (!getApps().length) {
-      app = initializeApp(firebaseConfig);
+    const existingApps = getApps();
+    if (existingApps.length === 0) {
+      // isFirebaseConfigured() already checks that required fields are defined
+      // Use spread to conditionally add optional properties only when defined
+      const config = {
+        apiKey: firebaseConfig.apiKey!,
+        projectId: firebaseConfig.projectId!,
+        appId: firebaseConfig.appId!,
+        ...(firebaseConfig.authDomain ? { authDomain: firebaseConfig.authDomain } : {}),
+        ...(firebaseConfig.storageBucket ? { storageBucket: firebaseConfig.storageBucket } : {}),
+        ...(firebaseConfig.messagingSenderId ? { messagingSenderId: firebaseConfig.messagingSenderId } : {}),
+        ...(firebaseConfig.measurementId ? { measurementId: firebaseConfig.measurementId } : {}),
+      };
+      app = initializeApp(config);
     } else {
-      app = getApps()[0];
+      const firstApp = existingApps[0];
+      app = firstApp !== undefined ? firstApp : null;
     }
   }
   return app;
@@ -103,7 +119,7 @@ export function getFirebaseAppCheck(): AppCheck | null {
   if (!firebaseApp) return null;
 
   if (!appCheck) {
-    const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+    const siteKey = process.env['NEXT_PUBLIC_RECAPTCHA_SITE_KEY'];
     if (!siteKey) {
       console.warn('reCAPTCHA site key not configured. App Check disabled.');
       return null;
@@ -111,7 +127,7 @@ export function getFirebaseAppCheck(): AppCheck | null {
 
     try {
       // Enable debug token in development
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         // @ts-expect-error - Debug token for development
         self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
       }
@@ -184,7 +200,7 @@ export function getFirebaseRemoteConfig(): RemoteConfig | null {
     remoteConfig = getRemoteConfig(firebaseApp);
     // Set minimum fetch interval for development
     remoteConfig.settings.minimumFetchIntervalMillis =
-      process.env.NODE_ENV === 'development' ? 0 : 3600000; // 1 hour in production
+      process.env['NODE_ENV'] === 'development' ? 0 : 3600000; // 1 hour in production
   }
   return remoteConfig;
 }
@@ -247,32 +263,114 @@ export async function signInAnonymouslyIfNeeded(): Promise<User | null> {
   }
 }
 
-// Link anonymous account with Google
+// Link anonymous account with Google, or sign in directly if no current user
 export async function linkWithGoogle(): Promise<User | null> {
   const firebaseAuth = getFirebaseAuth();
-  if (!firebaseAuth || !firebaseAuth.currentUser) return null;
+  if (!firebaseAuth) return null;
 
+  const provider = new GoogleAuthProvider();
+
+  // Already signed in with a provider (not anonymous), just return current user
+  if (firebaseAuth.currentUser && !firebaseAuth.currentUser.isAnonymous) {
+    return firebaseAuth.currentUser;
+  }
+
+  // If user is anonymous, try to link with Google first
+  if (firebaseAuth.currentUser?.isAnonymous) {
+    try {
+      const result = await linkWithPopup(firebaseAuth.currentUser, provider);
+      return result.user;
+    } catch (error: unknown) {
+      // Handle credential-already-in-use error (Google account already linked to another user)
+      // Use the credential from the error to sign in without another popup
+      const authError = error as AuthError;
+      if (authError.code === 'auth/credential-already-in-use') {
+        console.log('Google account already exists, signing in with existing account...');
+        // Get credential from the error to avoid second popup
+        const credential = GoogleAuthProvider.credentialFromError(authError);
+        if (credential) {
+          try {
+            // Sign out anonymous user first
+            await firebaseSignOut(firebaseAuth);
+            // Sign in with the credential (no popup needed)
+            const result = await signInWithCredential(firebaseAuth, credential);
+            return result.user;
+          } catch (signInError) {
+            console.error('Google sign-in with credential failed:', signInError);
+          }
+        }
+        // Fallback: if credential extraction failed, we need another popup
+        // But first sign out to avoid conflict
+        await firebaseSignOut(firebaseAuth);
+      } else {
+        console.error('Google link failed:', error);
+        return null;
+      }
+    }
+  }
+
+  // Sign in directly with Google (no current user, or fallback after credential extraction failed)
   try {
-    const provider = new GoogleAuthProvider();
-    const result = await linkWithPopup(firebaseAuth.currentUser, provider);
+    const result = await signInWithPopup(firebaseAuth, provider);
     return result.user;
   } catch (error) {
-    console.error('Google link failed:', error);
+    console.error('Google sign-in failed:', error);
     return null;
   }
 }
 
-// Link anonymous account with Twitter
+// Link anonymous account with Twitter, or sign in directly if no current user
 export async function linkWithTwitter(): Promise<User | null> {
   const firebaseAuth = getFirebaseAuth();
-  if (!firebaseAuth || !firebaseAuth.currentUser) return null;
+  if (!firebaseAuth) return null;
 
+  const provider = new TwitterAuthProvider();
+
+  // Already signed in with a provider (not anonymous), just return current user
+  if (firebaseAuth.currentUser && !firebaseAuth.currentUser.isAnonymous) {
+    return firebaseAuth.currentUser;
+  }
+
+  // If user is anonymous, try to link with Twitter first
+  if (firebaseAuth.currentUser?.isAnonymous) {
+    try {
+      const result = await linkWithPopup(firebaseAuth.currentUser, provider);
+      return result.user;
+    } catch (error: unknown) {
+      // Handle credential-already-in-use error (Twitter account already linked to another user)
+      // Use the credential from the error to sign in without another popup
+      const authError = error as AuthError;
+      if (authError.code === 'auth/credential-already-in-use') {
+        console.log('Twitter account already exists, signing in with existing account...');
+        // Get credential from the error to avoid second popup
+        const credential = TwitterAuthProvider.credentialFromError(authError);
+        if (credential) {
+          try {
+            // Sign out anonymous user first
+            await firebaseSignOut(firebaseAuth);
+            // Sign in with the credential (no popup needed)
+            const result = await signInWithCredential(firebaseAuth, credential);
+            return result.user;
+          } catch (signInError) {
+            console.error('Twitter sign-in with credential failed:', signInError);
+          }
+        }
+        // Fallback: if credential extraction failed, we need another popup
+        // But first sign out to avoid conflict
+        await firebaseSignOut(firebaseAuth);
+      } else {
+        console.error('Twitter link failed:', error);
+        return null;
+      }
+    }
+  }
+
+  // Sign in directly with Twitter (no current user, or fallback after credential extraction failed)
   try {
-    const provider = new TwitterAuthProvider();
-    const result = await linkWithPopup(firebaseAuth.currentUser, provider);
+    const result = await signInWithPopup(firebaseAuth, provider);
     return result.user;
   } catch (error) {
-    console.error('Twitter link failed:', error);
+    console.error('Twitter sign-in failed:', error);
     return null;
   }
 }
@@ -445,7 +543,7 @@ export async function saveWatchlistItemToFirestore(
   if (!firestore) return false;
 
   try {
-    const docRef = doc(firestore, 'users', userId, 'watchlist', item.productId);
+    const docRef = doc(firestore, 'users', userId, 'watchlist', item['productId']);
     await setDoc(docRef, {
       ...item,
       addedAt: serverTimestamp(),
@@ -650,7 +748,11 @@ export async function requestNotificationPermission(): Promise<string | null> {
   if (!fcmMessaging) return null;
 
   try {
-    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+    const vapidKey = process.env['NEXT_PUBLIC_FIREBASE_VAPID_KEY'];
+    if (!vapidKey) {
+      console.warn('VAPID key not configured');
+      return null;
+    }
     const token = await getToken(fcmMessaging, { vapidKey });
     return token;
   } catch (error) {

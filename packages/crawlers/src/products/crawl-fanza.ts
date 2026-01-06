@@ -19,7 +19,7 @@ type SortOrder = 'date' | 'ranking' | 'review';
 // 日付ソートの方向（新着順、古い順）- MGSと同様の双方向クロール用
 type DateSortDirection = 'new' | 'old';
 
-if (!process.env.DATABASE_URL) {
+if (!process.env['DATABASE_URL']) {
   console.error('ERROR: DATABASE_URL environment variable is not set');
   process.exit(1);
 }
@@ -47,7 +47,7 @@ puppeteer.use(StealthPlugin());
 const db = getDb();
 
 // FANZAアフィリエイトID（環境変数から取得、未設定の場合はダミー）
-const AFFILIATE_ID = process.env.FANZA_AFFILIATE_ID || 'minpri-001';
+const AFFILIATE_ID = process.env['FANZA_AFFILIATE_ID'] || 'minpri-001';
 
 // レート制限: 3秒 + ジッター
 const RATE_LIMIT_MS = 3000;
@@ -114,14 +114,14 @@ async function initBrowser(): Promise<Browser> {
 
   console.log('🌐 Puppeteerブラウザを起動中...');
 
-  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+  const executablePath = process.env['PUPPETEER_EXECUTABLE_PATH'];
   if (executablePath) {
     console.log(`  Chromium path: ${executablePath}`);
   }
 
   browser = await puppeteer.launch({
     headless: true,
-    executablePath,
+    ...(executablePath && { executablePath }),
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -397,7 +397,7 @@ async function parseDetailPage(cid: string, forceReprocess: boolean): Promise<{
   let rawDataId: number | null = null;
   try {
     const result = await upsertRawHtmlDataWithGcs('FANZA', cid, url, html);
-    rawDataId = result.id;
+    rawDataId = result['id'];
   } catch (gcsError) {
     console.log(`    ⚠️ Raw HTML保存スキップ: ${gcsError instanceof Error ? gcsError.message : gcsError}`);
   }
@@ -418,7 +418,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     const jsonLdMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/i);
     if (jsonLdMatch) {
       try {
-        jsonLdData = JSON.parse(jsonLdMatch[1]);
+        jsonLdData = JSON.parse(jsonLdMatch[1]!);
       } catch {
         // JSON parse error, fallback to HTML parsing
       }
@@ -431,7 +431,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     } else {
       const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
         || html.match(/<title>([^<]+?)(?:\s*[｜|]\s*[^<]*)?<\/title>/i);
-      title = titleMatch ? titleMatch[1].trim() : `FANZA-${cid}`;
+      title = titleMatch?.[1]?.trim() ?? `FANZA-${cid}`;
     }
     title = title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
     // 広告タグを除去（【ブランドストア30％OFF！】など）
@@ -450,7 +450,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     if (performers.length === 0) {
       const actressMatches = html.matchAll(/href="[^"]*\/av\/list\/\?actress=\d+"[^>]*>([^<]+)</gi);
       for (const match of actressMatches) {
-        const name = match[1].trim();
+        const name = match[1]?.trim();
         if (name && name.length < 30 && !name.includes('一覧') && !performers.includes(name)) {
           performers.push(name);
         }
@@ -475,14 +475,14 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     if (!thumbnailUrl) {
       const thumbnailMatch = html.match(/src="(https:\/\/awsimgsrc\.dmm\.co\.jp\/[^"]*pl\.jpg[^"]*)"/i)
         || html.match(/src="(https:\/\/[^"]*pics[^"]*\/[^"]+pl\.jpg[^"]*)"/i);
-      thumbnailUrl = thumbnailMatch ? thumbnailMatch[1] : '';
+      thumbnailUrl = thumbnailMatch?.[1] ?? '';
     }
 
     // サンプル画像（awsimgsrc.dmm.co.jpから）
     const sampleImages: string[] = [];
     const imgMatches = html.matchAll(/src="(https:\/\/awsimgsrc\.dmm\.co\.jp\/[^"]*-\d+\.jpg[^"]*)"/gi);
     for (const match of imgMatches) {
-      const imgUrl = match[1].split('?')[0]; // クエリパラメータを除去
+      const imgUrl = match[1]?.split('?')[0]; // クエリパラメータを除去
       if (imgUrl && !sampleImages.includes(imgUrl)) {
         sampleImages.push(imgUrl);
       }
@@ -495,8 +495,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // パターン1: litevideo MP4
     const liteVideoMatches = html.matchAll(/src="(https:\/\/[^"]*litevideo[^"]*\.mp4[^"]*)"/gi);
     for (const match of liteVideoMatches) {
-      const url = match[1].split('?')[0];
-      if (!videoUrlSet.has(url)) {
+      const url = match[1]?.split('?')[0];
+      if (url && !videoUrlSet.has(url)) {
         videoUrlSet.add(url);
         sampleVideos.push(url);
       }
@@ -505,8 +505,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // パターン2: data-src属性のサンプル動画
     const dataSrcMatches = html.matchAll(/data-src="(https:\/\/[^"]*(?:sample|preview)[^"]*\.mp4[^"]*)"/gi);
     for (const match of dataSrcMatches) {
-      const url = match[1].split('?')[0];
-      if (!videoUrlSet.has(url)) {
+      const url = match[1]?.split('?')[0];
+      if (url && !videoUrlSet.has(url)) {
         videoUrlSet.add(url);
         sampleVideos.push(url);
       }
@@ -515,8 +515,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // パターン3: cc3001.dmm.co.jp からのサンプル動画
     const cc3001Matches = html.matchAll(/["'](https:\/\/cc3001\.dmm\.co\.jp\/[^"']*\.mp4[^"']*)["']/gi);
     for (const match of cc3001Matches) {
-      const url = match[1].split('?')[0];
-      if (!videoUrlSet.has(url)) {
+      const url = match[1]?.split('?')[0];
+      if (url && !videoUrlSet.has(url)) {
         videoUrlSet.add(url);
         sampleVideos.push(url);
       }
@@ -525,8 +525,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // パターン4: sample.mp4 や _sm_w.mp4 などのパターン
     const sampleMp4Matches = html.matchAll(/["'](https:\/\/[^"']*(?:_sm_|sample|_sample_)[^"']*\.mp4[^"']*)["']/gi);
     for (const match of sampleMp4Matches) {
-      const url = match[1].split('?')[0];
-      if (!videoUrlSet.has(url)) {
+      const url = match[1]?.split('?')[0];
+      if (url && !videoUrlSet.has(url)) {
         videoUrlSet.add(url);
         sampleVideos.push(url);
       }
@@ -563,7 +563,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // 構造: <span>収録時間：</span></th><td>...<span>XXX分</span>...</td>
     const durationContextMatch = html.match(/収録時間[：:]?\s*<\/[^>]+>[\s\S]{0,200}?>(\d{1,3})分</i);
     if (durationContextMatch) {
-      const mins = parseInt(durationContextMatch[1], 10);
+      const mins = parseInt(durationContextMatch[1]!, 10);
       if (mins >= 1 && mins <= 600) {
         duration = mins;
       }
@@ -573,7 +573,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     if (!duration) {
       const durationRowMatch = html.match(/収録時間[\s\S]{0,100}?(\d{1,3})分/i);
       if (durationRowMatch) {
-        const mins = parseInt(durationRowMatch[1], 10);
+        const mins = parseInt(durationRowMatch[1]!, 10);
         if (mins >= 1 && mins <= 600) {
           duration = mins;
         }
@@ -585,7 +585,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     if (!duration) {
       const durationSpanMatch = html.match(/<span[^>]*>(\d{2,3})分<\/span>/i);
       if (durationSpanMatch) {
-        const mins = parseInt(durationSpanMatch[1], 10);
+        const mins = parseInt(durationSpanMatch[1]!, 10);
         if (mins >= 20 && mins <= 600) {
           duration = mins;
         }
@@ -601,20 +601,20 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       // 時間 (H)
       const hoursMatch = durationStr.match(/PT(\d+)H/i);
       if (hoursMatch) {
-        mins += parseInt(hoursMatch[1], 10) * 60;
+        mins += parseInt(hoursMatch[1]!, 10) * 60;
       }
 
       // 分 (M)
       const minsMatch = durationStr.match(/(\d+)M/i);
       if (minsMatch) {
-        mins += parseInt(minsMatch[1], 10);
+        mins += parseInt(minsMatch[1]!, 10);
       }
 
       // 秒 (S) - 秒単位の場合は分に変換
       const secsMatch = durationStr.match(/(\d+)S/i);
       if (secsMatch && mins === 0) {
         // 秒のみの場合（PT7200Sなど）
-        mins = Math.round(parseInt(secsMatch[1], 10) / 60);
+        mins = Math.round(parseInt(secsMatch[1]!, 10) / 60);
       }
 
       if (mins >= 1 && mins <= 600) {
@@ -624,13 +624,13 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
     // メーカー・レーベル・シリーズ（HTMLから）
     const makerMatch = html.match(/href="[^"]*\/av\/list\/\?maker=\d+"[^>]*>([^<]+)</i);
-    const maker = makerMatch ? makerMatch[1].trim() : null;
+    const maker = makerMatch?.[1]?.trim() ?? null;
 
     const labelMatch = html.match(/href="[^"]*\/av\/list\/\?label=\d+"[^>]*>([^<]+)</i);
-    const label = labelMatch ? labelMatch[1].trim() : null;
+    const label = labelMatch?.[1]?.trim() ?? null;
 
     const seriesMatch = html.match(/href="[^"]*\/av\/list\/\?series=\d+"[^>]*>([^<]+)</i);
-    const series = seriesMatch ? seriesMatch[1].trim() : null;
+    const series = seriesMatch?.[1]?.trim() ?? null;
 
     // 価格（HTMLから取得）- FANZAの価格表示構造に基づく
     // 注意: JSON-LDのoffers.priceは月額見放題の最安価格（300円など）のため使用しない
@@ -643,7 +643,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // FANZAの価格パターンを個別に抽出
     // パターン1: 4K価格 - 「4K」「UHD」などの表記
     const fourKPriceMatch = html.match(/(?:4K|UHD|2160p)[^0-9]*?(\d{1,3}(?:,\d{3})*)\s*円/i);
-    if (fourKPriceMatch) {
+    if (fourKPriceMatch?.[1]) {
       const p = parseInt(fourKPriceMatch[1].replace(/,/g, ''), 10);
       if (p >= 500 && p <= 20000) {
         fourKPrice = p;
@@ -652,7 +652,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
     // パターン2: HD版価格 - 「HD版ダウンロード」「HD版」などの表記
     const hdPriceMatch = html.match(/(?:HD版|HD\s*ダウンロード|ハイビジョン)[^0-9]*?(\d{1,3}(?:,\d{3})*)\s*円/i);
-    if (hdPriceMatch) {
+    if (hdPriceMatch?.[1]) {
       const p = parseInt(hdPriceMatch[1].replace(/,/g, ''), 10);
       if (p >= 500 && p <= 15000) {
         hdPrice = p;
@@ -661,7 +661,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
     // パターン3: 通常ダウンロード価格 - 「ダウンロード」表記（HD版以外）
     const dlPriceMatch = html.match(/(?:ダウンロード|DL版|購入)[^0-9HD4K]*?(\d{1,3}(?:,\d{3})*)\s*円/i);
-    if (dlPriceMatch) {
+    if (dlPriceMatch?.[1]) {
       const p = parseInt(dlPriceMatch[1].replace(/,/g, ''), 10);
       if (p >= 500 && p <= 10000) {
         downloadPrice = p;
@@ -670,7 +670,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
     // パターン4: ストリーミング価格
     const streamPriceMatch = html.match(/(?:ストリーミング|視聴|再生)[^0-9]*?(\d{1,3}(?:,\d{3})*)\s*円/i);
-    if (streamPriceMatch) {
+    if (streamPriceMatch?.[1]) {
       const p = parseInt(streamPriceMatch[1].replace(/,/g, ''), 10);
       if (p >= 300 && p <= 8000) {
         streamingPrice = p;
@@ -683,7 +683,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       if (priceMatches.length > 0) {
         // 500円〜10000円の範囲の価格を抽出（月額300円や高額セット除外）
         const validPrices = priceMatches
-          .map(m => parseInt(m[1].replace(/,/g, ''), 10))
+          .map(m => parseInt(m[1]?.replace(/,/g, '') ?? '0', 10))
           .filter(p => p >= 500 && p <= 10000);
 
         if (validPrices.length > 0) {
@@ -701,7 +701,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     if (!price && !fourKPrice && !hdPrice && !downloadPrice) {
       const dataPriceMatch = html.match(/data-price="(\d+)"/i);
       if (dataPriceMatch) {
-        const p = parseInt(dataPriceMatch[1], 10);
+        const p = parseInt(dataPriceMatch[1]!, 10);
         if (p >= 500 && p <= 10000) {
           price = p;
         }
@@ -722,7 +722,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // パターン1: 取り消し線付き元値 + 現在価格（FANZA典型パターン）
     // 例: <del>1,980円</del> → <span>980円</span> または %OFF表記
     const strikeMatch = html.match(/<(?:del|s|strike)[^>]*>\s*[¥￥]?\s*(\d{1,3}(?:,\d{3})*)\s*円\s*<\/(?:del|s|strike)>/i);
-    if (strikeMatch && price) {
+    if (strikeMatch?.[1] && price) {
       const regularPrice = parseInt(strikeMatch[1].replace(/,/g, ''), 10);
       if (regularPrice > price && regularPrice >= 500 && regularPrice <= 15000) {
         const discountPercent = Math.round((1 - price / regularPrice) * 100);
@@ -739,7 +739,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     if (!saleInfo && price) {
       const offMatch = html.match(/(\d+)\s*%\s*(?:OFF|オフ|off)/i);
       if (offMatch) {
-        const discountPercent = parseInt(offMatch[1], 10);
+        const discountPercent = parseInt(offMatch[1]!, 10);
         if (discountPercent >= 10 && discountPercent <= 80) {
           const regularPrice = Math.round(price / (1 - discountPercent / 100));
           if (regularPrice >= 500 && regularPrice <= 15000) {
@@ -757,7 +757,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // パターン3: 定価 / 通常価格 表記
     if (!saleInfo && price) {
       const regularPriceMatch = html.match(/(?:定価|通常価格|希望小売価格)[：:\s]*[¥￥]?\s*(\d{1,3}(?:,\d{3})*)\s*円/i);
-      if (regularPriceMatch) {
+      if (regularPriceMatch?.[1]) {
         const regularPrice = parseInt(regularPriceMatch[1].replace(/,/g, ''), 10);
         if (regularPrice > price && regularPrice >= 500 && regularPrice <= 15000) {
           const discountPercent = Math.round((1 - price / regularPrice) * 100);
@@ -776,8 +776,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       // パターン1: "○月○日まで" または "M/Dまで"
       const endDatePattern1 = html.match(/(\d{1,2})[月\/](\d{1,2})日?\s*(?:\d{1,2}:\d{2})?\s*(?:まで|迄)/);
       if (endDatePattern1) {
-        const month = parseInt(endDatePattern1[1], 10);
-        const day = parseInt(endDatePattern1[2], 10);
+        const month = parseInt(endDatePattern1[1]!, 10);
+        const day = parseInt(endDatePattern1[2]!, 10);
         const now = new Date();
         let year = now.getFullYear();
         const candidateDate = new Date(year, month - 1, day, 23, 59, 59);
@@ -812,7 +812,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // パターン3: 商品説明セクション（class="summary__txt"など）
     if (!description) {
       const summaryMatch = html.match(/<p[^>]*class="[^"]*summary[^"]*"[^>]*>([\s\S]{30,800}?)<\/p>/i);
-      if (summaryMatch) {
+      if (summaryMatch?.[1]) {
         description = summaryMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
       }
     }
@@ -820,7 +820,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // パターン4: 商品紹介・内容紹介セクション
     if (!description) {
       const introMatch = html.match(/(?:商品紹介|内容紹介|あらすじ)[：:・]?\s*<\/[^>]+>[\s\S]{0,100}?<[^>]*>([^<]{30,800})/i);
-      if (introMatch) {
+      if (introMatch?.[1]) {
         description = introMatch[1].replace(/\s+/g, ' ').trim();
       }
     }
@@ -874,7 +874,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       if (avgRating) {
         ratingSummary = {
           averageRating: parseFloat(avgRating) || 0,
-          totalReviews: reviewCountMatch ? parseInt(reviewCountMatch[1]) : 0,
+          totalReviews: reviewCountMatch ? parseInt(reviewCountMatch[1]!, 10) : 0,
         };
       }
     }
@@ -886,8 +886,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
         // パターン: 「★5」「5.00」の近くにある件数
         const starPattern = new RegExp(`${star}(?:\\.0*)?\\s*(?:<[^>]*>\\s*)*(?:[(（])?\\s*(\\d+)\\s*(?:[件）)])?`, 'i');
         const match = html.match(starPattern);
-        if (match) {
-          distribution[star] = parseInt(match[1]) || 0;
+        if (match && match[1]) {
+          distribution[star] = parseInt(match[1], 10) || 0;
         }
       }
       if (Object.keys(distribution).length > 0) {
@@ -911,17 +911,18 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
       if (contentMatch || starsMatch || ratingMatch) {
         const rating = ratingMatch
-          ? parseFloat(ratingMatch[1])
+          ? parseFloat(ratingMatch[1]!)
           : starsMatch
             ? starsMatch[0].length
             : 0;
 
+        const reviewDate = dateMatch?.[1] && dateMatch[2] && dateMatch[3] ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}` : undefined;
         reviews.push({
           reviewerId: `fanza-${Date.now()}-${reviews.length}`,
-          reviewerName: reviewerMatch ? reviewerMatch[1].trim() : '匿名',
+          reviewerName: reviewerMatch?.[1]?.trim() ?? '匿名',
           rating,
-          content: contentMatch ? contentMatch[1].replace(/<[^>]+>/g, '').trim() : '',
-          reviewDate: dateMatch ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}` : undefined,
+          content: contentMatch?.[1]?.replace(/<[^>]+>/g, '').trim() ?? '',
+          ...(reviewDate && { reviewDate }),
         });
       }
     }
@@ -941,13 +942,13 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       series,
       genres,
       price,
-      downloadPrice,
-      streamingPrice,
-      hdPrice,
-      fourKPrice,
-      saleInfo,
-      reviews: reviews.length > 0 ? reviews : undefined,
-      ratingSummary,
+      ...(downloadPrice !== undefined && { downloadPrice }),
+      ...(streamingPrice !== undefined && { streamingPrice }),
+      ...(hdPrice !== undefined && { hdPrice }),
+      ...(fourKPrice !== undefined && { fourKPrice }),
+      ...(saleInfo && { saleInfo }),
+      ...(reviews.length > 0 && { reviews }),
+      ...(ratingSummary && { ratingSummary }),
     };
   } catch (error) {
     console.error(`  ❌ HTMLパースエラー: ${error}`);
@@ -969,8 +970,8 @@ function generateAffiliateUrl(cid: string): string {
  */
 async function saveProduct(product: FanzaProduct): Promise<number | null> {
   const validation = validateProductData({
-    title: product.title,
-    description: product.description,
+    title: product['title'],
+    description: product['description'],
     aspName: 'FANZA',
     originalId: product.cid,
   });
@@ -993,7 +994,7 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
     let productId: number;
 
     if (existing.length > 0) {
-      productId = existing[0].id;
+      productId = existing[0]!['id'];
       console.log(`    ⏭️ 既存商品 (ID: ${productId})`);
     } else {
       // 新規商品作成
@@ -1001,44 +1002,44 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
         .insert(products)
         .values({
           normalizedProductId,
-          title: product.title,
-          description: product.description || '',
-          duration: product.duration,
-          releaseDate: product.releaseDate ? new Date(product.releaseDate) : null,
-          defaultThumbnailUrl: product.thumbnailUrl,
+          title: product['title'],
+          description: product['description'] || '',
+          duration: product['duration'],
+          releaseDate: product['releaseDate'] ?? undefined,
+          defaultThumbnailUrl: product['thumbnailUrl'],
         })
-        .returning({ id: products.id });
+        .returning({ id: products['id'] });
 
-      productId = inserted.id;
+      productId = inserted!.id;
       console.log(`    ✓ 新規商品作成 (ID: ${productId})`);
 
       // product_sources作成
       const affiliateUrl = generateAffiliateUrl(product.cid);
-      const [insertedSource] = await db.insert(productSources).values({
+      const [insertedSource] = await db['insert'](productSources).values({
         productId,
         aspName: 'FANZA',
         originalProductId: product.cid,
         affiliateUrl,
-        price: product.price,
+        price: product['price'],
         dataSource: 'CRAWL',
       }).returning({ id: productSources.id });
 
       // product_prices に価格タイプ別の価格を保存
       const priceList = buildPriceInfoList({
-        downloadPrice: product.downloadPrice,
-        streamingPrice: product.streamingPrice,
-        hdPrice: product.hdPrice,
-        fourKPrice: product.fourKPrice,
+        ...(product.downloadPrice !== undefined && { downloadPrice: product.downloadPrice }),
+        ...(product.streamingPrice !== undefined && { streamingPrice: product.streamingPrice }),
+        ...(product.hdPrice !== undefined && { hdPrice: product.hdPrice }),
+        ...(product.fourKPrice !== undefined && { fourKPrice: product.fourKPrice }),
       });
       if (priceList.length > 0) {
-        const priceResult = await saveProductPricesBySourceId(insertedSource.id, priceList);
+        const priceResult = await saveProductPricesBySourceId(insertedSource!.id, priceList);
         console.log(`    ✓ 価格 ${priceResult.success}件を保存`);
       }
 
       // 出演者登録（wiki_crawl_data優先）
       // クローラーから取得した演者名をバリデーション
       const validatedPerformers = product.performers
-        .filter(name => isValidPerformerName(name) && isValidPerformerForProduct(name, product.title))
+        .filter(name => isValidPerformerName(name) && isValidPerformerForProduct(name, product['title']))
         .map(name => normalizePerformerName(name))
         .filter((name): name is string => name !== null);
 
@@ -1056,10 +1057,10 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
       }
 
       // サンプル画像保存
-      if (product.thumbnailUrl) {
-        await db.insert(productImages).values({
+      if (product['thumbnailUrl']) {
+        await db['insert'](productImages).values({
           productId,
-          imageUrl: product.thumbnailUrl,
+          imageUrl: product['thumbnailUrl'],
           imageType: 'thumbnail',
           displayOrder: 0,
           aspName: 'FANZA',
@@ -1067,9 +1068,9 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
       }
 
       for (let i = 0; i < product.sampleImages.length; i++) {
-        await db.insert(productImages).values({
+        await db['insert'](productImages).values({
           productId,
-          imageUrl: product.sampleImages[i],
+          imageUrl: product.sampleImages[i]!,
           imageType: 'sample',
           displayOrder: i + 1,
           aspName: 'FANZA',
@@ -1078,9 +1079,9 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
 
       // サンプル動画保存
       for (let i = 0; i < product.sampleVideos.length; i++) {
-        await db.insert(productVideos).values({
+        await db['insert'](productVideos).values({
           productId,
-          videoUrl: product.sampleVideos[i],
+          videoUrl: product.sampleVideos[i]!,
           videoType: 'sample',
           aspName: 'FANZA',
           displayOrder: i,
@@ -1122,8 +1123,8 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
               productId,
               aspName: 'FANZA',
               reviewerName: review.reviewerName,
-              rating: String(review.rating),
-              title: review.title || null,
+              rating: String(review['rating']),
+              title: review['title'] || null,
               content: review.content,
               reviewDate: review.reviewDate ? new Date(review.reviewDate) : null,
               helpful: review.helpful || 0,
@@ -1180,8 +1181,8 @@ async function generateAIContent(product: FanzaProduct, enableAI: boolean): Prom
     const aiHelper = getAIHelper();
     const result = await aiHelper.processProduct(
       {
-        title: product.title,
-        description: product.description,
+        title: product['title'],
+        description: product['description'],
         performers: product.performers,
       },
       {
@@ -1196,10 +1197,10 @@ async function generateAIContent(product: FanzaProduct, enableAI: boolean): Prom
       console.log(`      ⚠️ AI処理で一部エラー: ${result.errors.join(', ')}`);
     }
 
-    if (result.description) {
+    if (result['description']) {
       aiDescription = {
-        catchphrase: result.description.catchphrase || '',
-        shortDescription: result.description.shortDescription || '',
+        catchphrase: result['description'].catchphrase || '',
+        shortDescription: result['description'].shortDescription || '',
       };
       console.log(`      ✅ AI説明文生成完了`);
       console.log(`         キャッチコピー: ${aiDescription.catchphrase.substring(0, 30)}...`);
@@ -1233,12 +1234,12 @@ async function saveAIContent(
     const updates: Record<string, unknown> = {};
 
     if (aiDescription) {
-      updates.aiCatchphrase = aiDescription.catchphrase;
-      updates.aiShortDescription = aiDescription.shortDescription;
+      updates['aiCatchphrase'] = aiDescription.catchphrase;
+      updates['aiShortDescription'] = aiDescription.shortDescription;
     }
 
     if (aiTags) {
-      updates.aiTags = JSON.stringify({
+      updates['aiTags'] = JSON.stringify({
         genres: aiTags.genres,
         attributes: aiTags.attributes,
       });
@@ -1248,7 +1249,7 @@ async function saveAIContent(
       await db
         .update(products)
         .set(updates)
-        .where(eq(products.id, productId));
+        .where(eq(products['id'], productId));
       console.log(`    💾 AI生成データを保存しました`);
     }
   } catch (error) {
@@ -1263,29 +1264,29 @@ async function saveTranslations(productId: number, product: FanzaProduct): Promi
   console.log(`    🌐 翻訳処理を実行中（Lingva）...`);
 
   try {
-    const translations = await translateProductLingva(product.title, product.description);
+    const translations = await translateProductLingva(product['title'], product['description']);
 
     if (translations) {
       const updateData: Record<string, string | undefined> = {};
 
       if (translations.en) {
-        updateData.titleEn = translations.en.title;
-        if (translations.en.description) updateData.descriptionEn = translations.en.description;
+        updateData['titleEn'] = translations.en.title;
+        if (translations.en.description) updateData['descriptionEn'] = translations.en.description;
       }
       if (translations.zh) {
-        updateData.titleZh = translations.zh.title;
-        if (translations.zh.description) updateData.descriptionZh = translations.zh.description;
+        updateData['titleZh'] = translations.zh.title;
+        if (translations.zh.description) updateData['descriptionZh'] = translations.zh.description;
       }
       if (translations.ko) {
-        updateData.titleKo = translations.ko.title;
-        if (translations.ko.description) updateData.descriptionKo = translations.ko.description;
+        updateData['titleKo'] = translations.ko.title;
+        if (translations.ko.description) updateData['descriptionKo'] = translations.ko.description;
       }
 
       if (Object.keys(updateData).length > 0) {
         await db
           .update(products)
           .set(updateData)
-          .where(eq(products.id, productId));
+          .where(eq(products['id'], productId));
 
         console.log(`      EN: ${translations.en?.title?.substring(0, 50)}...`);
         console.log(`      ZH: ${translations.zh?.title?.substring(0, 50)}...`);
@@ -1375,7 +1376,7 @@ async function runFullScan(
         }
 
         for (let i = 0; i < newCids.length; i++) {
-          const cid = newCids[i];
+          const cid = newCids[i]!;
           processedCids.add(cid);
 
           console.log(`\n  [${i + 1}/${newCids.length}] 商品CID: ${cid}`);
@@ -1389,7 +1390,7 @@ async function runFullScan(
             }
 
             if (product) {
-              console.log(`      タイトル: ${product.title.substring(0, 50)}...`);
+              console.log(`      タイトル: ${product['title'].substring(0, 50)}...`);
               console.log(`      出演者: ${product.performers.join(', ') || '不明'}`);
               console.log(`      📷 サンプル画像: ${product.sampleImages.length}件`);
               console.log(`      🎬 サンプル動画: ${product.sampleVideos.length}件`);
@@ -1405,7 +1406,7 @@ async function runFullScan(
                 await saveTranslations(savedId, product);
 
                 if (rawDataId) {
-                  await markRawDataAsProcessed('raw_html_data', rawDataId);
+                  await markRawDataAsProcessed('fc2' as const, rawDataId);
                 }
 
                 totalSaved++;
@@ -1471,7 +1472,7 @@ async function main() {
     let maxPages = 10000; // デフォルト最大ページ数
     const maxPagesArg = args.find(arg => arg.startsWith('--max-pages='));
     if (maxPagesArg) {
-      maxPages = parseInt(maxPagesArg.split('=')[1], 10);
+      maxPages = parseInt(maxPagesArg.split('=')[1] ?? '10000', 10);
     }
 
     // 双方向クロール: デフォルトで有効、--no-bidirectionalで無効化
@@ -1489,25 +1490,26 @@ async function main() {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
+    if (!arg) continue;
 
     if (arg.startsWith('--pages=')) {
-      pages = parseInt(arg.split('=')[1], 10);
+      pages = parseInt(arg.split('=')[1] ?? '5', 10);
     } else if (arg === '--pages' && args[i + 1]) {
-      pages = parseInt(args[i + 1], 10);
+      pages = parseInt(args[i + 1]!, 10);
       i++;
     }
 
     if (arg.startsWith('--start-page=')) {
-      startPage = parseInt(arg.split('=')[1], 10);
+      startPage = parseInt(arg.split('=')[1] ?? '1', 10);
     } else if (arg === '--start-page' && args[i + 1]) {
-      startPage = parseInt(args[i + 1], 10);
+      startPage = parseInt(args[i + 1]!, 10);
       i++;
     }
 
     if (arg.startsWith('--limit=')) {
-      limit = parseInt(arg.split('=')[1], 10);
+      limit = parseInt(arg.split('=')[1] ?? '100', 10);
     } else if (arg === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1], 10);
+      limit = parseInt(args[i + 1]!, 10);
       i++;
     }
   }
@@ -1571,7 +1573,7 @@ async function main() {
 
   // 2. 各商品の詳細ページをクロール
   for (let i = 0; i < allCids.length; i++) {
-    const cid = allCids[i];
+    const cid = allCids[i]!;
     console.log(`\n[${i + 1}/${allCids.length}] 商品CID: ${cid}`);
 
     try {
@@ -1583,7 +1585,7 @@ async function main() {
       }
 
       if (product) {
-        console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
+        console.log(`    タイトル: ${product['title'].substring(0, 50)}...`);
         console.log(`    出演者: ${product.performers.join(', ') || '不明'}`);
         console.log(`    📷 サンプル画像: ${product.sampleImages.length}件`);
         console.log(`    🎬 サンプル動画: ${product.sampleVideos.length}件`);
@@ -1599,7 +1601,7 @@ async function main() {
           await saveTranslations(savedId, product);
 
           if (rawDataId) {
-            await markRawDataAsProcessed('raw_html_data', rawDataId);
+            await markRawDataAsProcessed('fc2' as const, rawDataId);
           }
 
           totalSaved++;

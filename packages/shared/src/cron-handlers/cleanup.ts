@@ -47,7 +47,7 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
     };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const action = url.searchParams.get('action') || 'check';
       const type = url.searchParams.get('type') || 'all';
 
@@ -99,7 +99,7 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
             for (const row of duplicatePerformersResult.rows as { name: string }[]) {
               // 最小IDを取得
               const minIdResult = await db.execute(sql`
-                SELECT MIN(id) as min_id FROM performers WHERE name = ${row.name}
+                SELECT MIN(id) as min_id FROM performers WHERE name = ${row['name']}
               `);
               const minId = (minIdResult.rows[0] as { min_id: number }).min_id;
 
@@ -108,7 +108,7 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
                 UPDATE product_performers
                 SET performer_id = ${minId}
                 WHERE performer_id IN (
-                  SELECT id FROM performers WHERE name = ${row.name} AND id != ${minId}
+                  SELECT id FROM performers WHERE name = ${row['name']} AND id != ${minId}
                 )
                 ON CONFLICT DO NOTHING
               `);
@@ -116,7 +116,7 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
               // 重複レコードを削除
               await db.execute(sql`
                 DELETE FROM performers
-                WHERE name = ${row.name} AND id != ${minId}
+                WHERE name = ${row['name']} AND id != ${minId}
               `);
               stats.fixed++;
             }

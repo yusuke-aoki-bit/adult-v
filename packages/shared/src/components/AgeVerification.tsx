@@ -130,7 +130,7 @@ export default function AgeVerification({
         </div>
 
         {/* タイトル */}
-        <h1 className={`text-2xl font-bold ${config.title} text-center mb-4`}>
+        <h1 className={`text-2xl font-bold ${config['title']} text-center mb-4`}>
           {t('title')}
         </h1>
 

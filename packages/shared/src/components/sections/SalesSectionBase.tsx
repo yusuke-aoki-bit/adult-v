@@ -136,7 +136,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
         // Maintain sale order and merge sale info
         const productMap = new Map<number, T>();
         for (const product of fetchedProducts) {
-          productMap.set(Number(product.id), product);
+          productMap.set(Number(product['id']), product);
         }
 
         const orderedProducts: T[] = [];
@@ -170,8 +170,8 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
               for (const sale of saleProducts.slice(0, 8)) {
                 if (sale.performers) {
                   for (const performer of sale.performers) {
-                    if (!performerMap.has(performer.id)) {
-                      performerMap.set(performer.id, performer);
+                    if (!performerMap.has(performer['id'])) {
+                      performerMap.set(performer['id'], performer);
                     }
                   }
                 }
@@ -249,7 +249,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
             ) : (
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                 {actresses.map((actress) => (
-                  <ActressCard key={actress.id} actress={actress} size="mini" />
+                  <ActressCard key={actress['id']} actress={actress} size="mini" />
                 ))}
               </div>
             )}
@@ -265,7 +265,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
           )}
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} size="mini" />
+              <ProductCard key={product['id']} product={product} size="mini" />
             ))}
           </div>
         </div>
@@ -285,13 +285,13 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
   };
 
   // 展開後は実際に取得できた商品数を表示、未展開時はカウントを表示しない
-  const displayCount = hasExpanded && !isLoading ? products.length : undefined;
+  const displayCount = hasExpanded && !isLoading ? products.length : 0;
 
   return (
     <AccordionSection
       icon={<Flame className="w-5 h-5" />}
       title={t.title}
-      itemCount={displayCount}
+      {...(displayCount > 0 && { itemCount: displayCount })}
       defaultOpen={defaultOpen}
       onToggle={handleToggle}
       iconColorClass={themeConfig.salesSection.iconColorClass}

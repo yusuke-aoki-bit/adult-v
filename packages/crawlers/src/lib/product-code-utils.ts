@@ -77,7 +77,7 @@ export function parseProductCode(code: string): ParsedProductCode | null {
 
   // パターン1: 既にハイフン区切り (SSIS-865, 300MIUM-1359)
   let match = input.match(/^(\d*[A-Z]+)-(\d+)$/);
-  if (match) {
+  if (match?.[1] && match?.[2]) {
     const prefix = match[1];
     const number = match[2].replace(/^0+/, '') || '0';
     return {
@@ -90,7 +90,7 @@ export function parseProductCode(code: string): ParsedProductCode | null {
 
   // パターン2: ハイフンなし、数字プレフィックス付き (300MIUM1359)
   match = input.match(/^(\d+[A-Z]+)(\d+)$/);
-  if (match) {
+  if (match?.[1] && match?.[2]) {
     const prefix = match[1];
     const number = match[2].replace(/^0+/, '') || '0';
     return {
@@ -103,7 +103,7 @@ export function parseProductCode(code: string): ParsedProductCode | null {
 
   // パターン3: ハイフンなし、英字のみプレフィックス (ssis00865 → SSIS-865)
   match = input.match(/^([A-Z]+)(\d+)$/);
-  if (match) {
+  if (match?.[1] && match?.[2]) {
     const prefix = match[1];
     const number = match[2].replace(/^0+/, '') || '0';
     return {
@@ -118,7 +118,7 @@ export function parseProductCode(code: string): ParsedProductCode | null {
   // 先頭の数字1桁を除去
   const stripped = input.replace(/^1/, '');
   match = stripped.match(/^([A-Z]+)(\d+)$/);
-  if (match) {
+  if (match?.[1] && match?.[2]) {
     const prefix = match[1];
     const number = match[2].replace(/^0+/, '') || '0';
     return {

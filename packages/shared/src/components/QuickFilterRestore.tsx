@@ -89,7 +89,7 @@ export function QuickFilterRestore({
         const pageKey = getStorageKey(currentPath);
 
         filters[pageKey] = {
-          path: currentPath.split('?')[0],
+          path: currentPath.split('?')[0] ?? '',
           params: searchParams,
           savedAt: Date.now(),
         };

@@ -27,8 +27,10 @@ describe('useSwipeGesture', () => {
 
     // HTMLElementのイベントリスナーをモック
     addEventListenerSpy = vi.spyOn(HTMLElement.prototype, 'addEventListener')
-      .mockImplementation((event: string, handler: EventListener) => {
-        listeners[event] = handler;
+      .mockImplementation(function(this: HTMLElement, event: string, handler: EventListenerOrEventListenerObject) {
+        if (typeof handler === 'function') {
+          listeners[event] = handler as EventListener;
+        }
       });
 
     removeEventListenerSpy = vi.spyOn(HTMLElement.prototype, 'removeEventListener')

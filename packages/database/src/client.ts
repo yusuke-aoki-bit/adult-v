@@ -21,7 +21,7 @@ function getDb() {
   if (!dbStore.instance) {
     try {
       // 環境変数から接続情報を取得
-      const connectionString = process.env.DATABASE_URL || '';
+      const connectionString = process.env['DATABASE_URL'] || '';
 
       if (!connectionString) {
         throw new Error('DATABASE_URL environment variable is not set');
@@ -34,14 +34,14 @@ function getDb() {
       const url = new URL(connectionString);
       const cleanConnectionString = `postgresql://${url.username}:${url.password}@${url.host}${url.pathname}`;
 
-      const isDev = process.env.NODE_ENV !== 'production';
+      const isDev = process.env['NODE_ENV'] !== 'production';
       // Cloud Run Jobs用の設定（長時間バッチ処理に最適化）
-      const isCloudRunJob = process.env.K_SERVICE !== undefined || process.env.CLOUD_RUN_JOB !== undefined;
+      const isCloudRunJob = process.env['K_SERVICE'] !== undefined || process.env['CLOUD_RUN_JOB'] !== undefined;
 
       dbStore.pool = new Pool({
         connectionString: cleanConnectionString,
         // Cloud SQL Proxy経由の場合はSSL不要、それ以外は環境に応じて設定
-        ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
+        ssl: isCloudSqlProxy ? false : (process.env['NODE_ENV'] === 'production' ? { rejectUnauthorized: false } : false),
         // 環境に応じた接続プール設定
         max: isDev ? 5 : (isCloudRunJob ? 10 : 50), // 開発: 5, ジョブ: 10, Webサーバー: 50
         min: isDev ? 0 : (isCloudRunJob ? 1 : 10), // 開発: 0, ジョブ: 1, Webサーバー: 10

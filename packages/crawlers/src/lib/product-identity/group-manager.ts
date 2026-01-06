@@ -33,18 +33,18 @@ export async function createGroup(
   // グループを作成
   const groupResult = await db.execute<{ id: number }>(sql`
     INSERT INTO product_identity_groups (master_product_id, canonical_product_code, created_at, updated_at)
-    VALUES (${product.id}, ${canonicalCode}, NOW(), NOW())
+    VALUES (${product['id']}, ${canonicalCode}, NOW(), NOW())
     RETURNING id
   `);
 
-  const groupId = groupResult.rows[0].id;
+  const groupId = groupResult.rows[0]!.id;
 
   // メンバーを追加
   await db.execute(sql`
     INSERT INTO product_identity_group_members
       (group_id, product_id, confidence_score, matching_method, asp_name, created_at)
     VALUES
-      (${groupId}, ${product.id}, 100, ${matchingMethod}, ${product.aspName}, NOW())
+      (${groupId}, ${product['id']}, 100, ${matchingMethod}, ${product['aspName']}, NOW())
   `);
 
   return groupId;
@@ -63,7 +63,7 @@ export async function addToGroup(
   // 既にグループに所属していないか確認
   const existingMember = await db.execute<{ id: number }>(sql`
     SELECT id FROM product_identity_group_members
-    WHERE group_id = ${groupId} AND product_id = ${product.id}
+    WHERE group_id = ${groupId} AND product_id = ${product['id']}
     LIMIT 1
   `);
 
@@ -77,7 +77,7 @@ export async function addToGroup(
     INSERT INTO product_identity_group_members
       (group_id, product_id, confidence_score, matching_method, asp_name, created_at)
     VALUES
-      (${groupId}, ${product.id}, ${matchResult.confidenceScore}, ${matchResult.matchingMethod}, ${product.aspName}, NOW())
+      (${groupId}, ${product['id']}, ${matchResult.confidenceScore}, ${matchResult.matchingMethod}, ${product['aspName']}, NOW())
   `);
 
   // マスター商品を再評価
@@ -112,6 +112,7 @@ export async function getProductGroup(productId: number): Promise<GroupInfo | nu
   }
 
   const row = result.rows[0];
+  if (!row) return null;
   return {
     id: row.group_id,
     masterProductId: row.master_product_id,
@@ -157,7 +158,7 @@ async function updateMasterProduct(groupId: number): Promise<void> {
     productId: row.product_id,
     score: calculateMasterScore(row.asp_name, row.image_count, row.review_count),
     createdAt: new Date(row.created_at),
-    price: row.price,
+    price: row['price'],
   }));
 
   scored.sort((a, b) => {
@@ -167,7 +168,7 @@ async function updateMasterProduct(groupId: number): Promise<void> {
     return a.createdAt.getTime() - b.createdAt.getTime();
   });
 
-  const masterId = scored[0].productId;
+  const masterId = scored[0]!.productId;
 
   // マスター商品を更新
   await db.execute(sql`
@@ -336,10 +337,18 @@ export async function getGroupStats(): Promise<{
 
   const groupsByMethod: Record<string, number> = {};
   for (const row of methodResult.rows) {
-    groupsByMethod[row.matching_method] = row.count;
+    groupsByMethod[row.matching_method] = row['count'];
   }
 
   const stats = statsResult.rows[0];
+  if (!stats) {
+    return {
+      totalGroups: 0,
+      totalGroupedProducts: 0,
+      avgMembersPerGroup: 0,
+      groupsByMethod,
+    };
+  }
   return {
     totalGroups: stats.total_groups || 0,
     totalGroupedProducts: stats.total_grouped_products || 0,

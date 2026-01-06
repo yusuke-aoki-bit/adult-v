@@ -3,7 +3,7 @@ import { getDb } from '@/lib/db';
 import { products } from '@/lib/db/schema';
 import { desc } from 'drizzle-orm';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.adult-v.com';
+const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 const PRODUCTS_PER_SITEMAP = 10000;
 
 // hreflang用の言語バリエーション
@@ -28,7 +28,7 @@ function getHreflangLinks(path: string): string {
  * 数値IDのみ（品番URLはcanonicalで対応、サイトマップからは除外）
  */
 export async function GET() {
-  if (!process.env.DATABASE_URL) {
+  if (!process.env['DATABASE_URL']) {
     return new NextResponse('Database not configured', { status: 500 });
   }
 

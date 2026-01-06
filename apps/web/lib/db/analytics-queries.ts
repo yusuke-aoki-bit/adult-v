@@ -20,14 +20,14 @@ export async function getAnalyticsData(daysBack: number): Promise<AnalyticsData>
     FROM product_views
     WHERE viewed_at >= NOW() - INTERVAL '1 day' * ${daysBack}
   `);
-  const totalViews = Number(totalViewsResult.rows[0]?.total_views || 0);
+  const totalViews = Number(totalViewsResult.rows[0]?.['total_views'] || 0);
 
   // Get total products
   const totalProductsResult = await db.execute(sql`
     SELECT COUNT(*) as total_products
     FROM products
   `);
-  const totalProducts = Number(totalProductsResult.rows[0]?.total_products || 0);
+  const totalProducts = Number(totalProductsResult.rows[0]?.['total_products'] || 0);
 
   // Get total favorites (estimate based on localStorage usage pattern)
   // Since favorites are client-side, we can't track server-side
@@ -40,7 +40,7 @@ export async function getAnalyticsData(daysBack: number): Promise<AnalyticsData>
     FROM product_views
     WHERE viewed_at >= NOW() - INTERVAL '1 day' * ${daysBack}
   `);
-  const uniqueVisitors = Number(uniqueVisitorsResult.rows[0]?.unique_visitors || 0);
+  const uniqueVisitors = Number(uniqueVisitorsResult.rows[0]?.['unique_visitors'] || 0);
 
   // Get top 5 products by views
   const topProductsResult = await db.execute(sql`

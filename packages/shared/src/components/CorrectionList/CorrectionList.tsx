@@ -98,9 +98,9 @@ export function CorrectionList({
     if (!onDelete) return;
     if (!confirm(t.deleteConfirm)) return;
 
-    setDeletingId(correction.id);
+    setDeletingId(correction['id']);
     try {
-      await onDelete(correction.id);
+      await onDelete(correction['id']);
     } finally {
       setDeletingId(null);
     }
@@ -119,28 +119,28 @@ export function CorrectionList({
       <h4 className="text-sm font-medium text-gray-400 mb-3">{t.title}</h4>
 
       {corrections.map((correction) => {
-        const isExpanded = expandedId === correction.id;
-        const canDelete = currentUserId === correction.userId && correction.status === 'pending';
+        const isExpanded = expandedId === correction['id'];
+        const canDelete = currentUserId === correction['userId'] && correction['status'] === 'pending';
 
         return (
           <div
-            key={correction.id}
+            key={correction['id']}
             className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden"
           >
             {/* Header */}
             <div
               className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-800/80 transition-colors"
-              onClick={() => setExpandedId(isExpanded ? null : correction.id)}
+              onClick={() => setExpandedId(isExpanded ? null : correction['id'])}
             >
               <div className="flex items-center gap-3">
-                <StatusBadge status={correction.status} translations={t} />
+                <StatusBadge status={correction['status']} translations={t} />
                 <span className="text-sm text-white font-medium">
-                  {fieldLabels[correction.fieldName] || correction.fieldName}
+                  {fieldLabels[correction['fieldName']] || correction['fieldName']}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500">
-                  {formatDate(correction.createdAt)}
+                  {formatDate(correction['createdAt'])}
                 </span>
                 {isExpanded ? (
                   <ChevronUp className="h-4 w-4 text-gray-400" />
@@ -156,24 +156,24 @@ export function CorrectionList({
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-gray-500 text-xs mb-1">{t.currentValue}</p>
-                    <p className="text-gray-300">{correction.currentValue || '-'}</p>
+                    <p className="text-gray-300">{correction['currentValue'] || '-'}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs mb-1">{t.suggestedValue}</p>
-                    <p className="text-white font-medium">{correction.suggestedValue}</p>
+                    <p className="text-white font-medium">{correction['suggestedValue']}</p>
                   </div>
                 </div>
 
-                {correction.reason && (
+                {correction['reason'] && (
                   <div>
                     <p className="text-gray-500 text-xs mb-1">{t.reason}</p>
-                    <p className="text-gray-300 text-sm">{correction.reason}</p>
+                    <p className="text-gray-300 text-sm">{correction['reason']}</p>
                   </div>
                 )}
 
-                {correction.status !== 'pending' && correction.reviewedAt && (
+                {correction['status'] !== 'pending' && correction['reviewedAt'] && (
                   <div className="text-xs text-gray-500">
-                    {t.reviewedAt}: {formatDate(correction.reviewedAt)}
+                    {t.reviewedAt}: {formatDate(correction['reviewedAt'])}
                   </div>
                 )}
 
@@ -184,11 +184,11 @@ export function CorrectionList({
                         e.stopPropagation();
                         handleDelete(correction);
                       }}
-                      disabled={deletingId === correction.id}
+                      disabled={deletingId === correction['id']}
                       className="flex items-center gap-1 text-sm text-red-400 hover:text-red-300 disabled:opacity-50 transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
-                      {deletingId === correction.id ? '...' : t.delete}
+                      {deletingId === correction['id'] ? '...' : t.delete}
                     </button>
                   </div>
                 )}

@@ -571,38 +571,38 @@ export default function AdminStatsContent({
         )}
 
         {/* SEO Indexing Status */}
-        {showSeoIndexing && data.seoIndexingSummary && (
+        {showSeoIndexing && data['seoIndexingSummary'] && (
           <div className={`${theme.card} rounded-lg p-6 mb-8`}>
             <h2 className="text-xl font-semibold mb-4">SEO Indexing Status</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-4">
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className="text-2xl font-bold text-blue-400">{formatNumber(data.seoIndexingSummary.total_indexed)}</div>
+                <div className="text-2xl font-bold text-blue-400">{formatNumber(data['seoIndexingSummary'].total_indexed)}</div>
                 <div className={`text-xs ${theme.textMuted}`}>Total Indexed</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className="text-2xl font-bold text-green-400">{formatNumber(data.seoIndexingSummary.requested)}</div>
+                <div className="text-2xl font-bold text-green-400">{formatNumber(data['seoIndexingSummary'].requested)}</div>
                 <div className={`text-xs ${theme.textMuted}`}>Requested</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className="text-2xl font-bold text-yellow-400">{formatNumber(data.seoIndexingSummary.pending)}</div>
+                <div className="text-2xl font-bold text-yellow-400">{formatNumber(data['seoIndexingSummary'].pending)}</div>
                 <div className={`text-xs ${theme.textMuted}`}>Pending</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className="text-2xl font-bold text-red-400">{formatNumber(data.seoIndexingSummary.errors)}</div>
+                <div className="text-2xl font-bold text-red-400">{formatNumber(data['seoIndexingSummary'].errors)}</div>
                 <div className={`text-xs ${theme.textMuted}`}>Errors</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className="text-2xl font-bold text-orange-400">{formatNumber(data.seoIndexingSummary.ownership_required)}</div>
+                <div className="text-2xl font-bold text-orange-400">{formatNumber(data['seoIndexingSummary'].ownership_required)}</div>
                 <div className={`text-xs ${theme.textMuted}`}>Ownership Required</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className={`text-2xl font-bold ${theme.textMuted}`}>{formatNumber(data.seoIndexingSummary.not_requested)}</div>
+                <div className={`text-2xl font-bold ${theme.textMuted}`}>{formatNumber(data['seoIndexingSummary'].not_requested)}</div>
                 <div className={`text-xs ${theme.textMuted}`}>Not Requested</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
                 <div className={`text-sm font-mono ${theme.text}`}>
-                  {data.seoIndexingSummary.last_requested_at
-                    ? new Date(data.seoIndexingSummary.last_requested_at).toLocaleString('ja-JP', {
+                  {data['seoIndexingSummary'].last_requested_at
+                    ? new Date(data['seoIndexingSummary'].last_requested_at).toLocaleString('ja-JP', {
                         month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
                       })
                     : '-'}
@@ -610,11 +610,11 @@ export default function AdminStatsContent({
                 <div className={`text-xs ${theme.textMuted}`}>Last Request</div>
               </div>
             </div>
-            {data.seoIndexingByStatus && data.seoIndexingByStatus.length > 0 && (
+            {data['seoIndexingByStatus'] && data['seoIndexingByStatus'].length > 0 && (
               <div className="mt-4">
                 <h3 className={`text-sm font-medium ${theme.textMuted} mb-2`}>By Status</h3>
                 <div className="flex flex-wrap gap-2">
-                  {data.seoIndexingByStatus.map((s) => (
+                  {data['seoIndexingByStatus'].map((s) => (
                     <div key={s.status} className={`${theme.cardInner} rounded px-3 py-1 text-sm`}>
                       <span className={theme.textMuted}>{s.status}:</span>
                       <span className="ml-1 font-mono">{formatNumber(s.count)}</span>

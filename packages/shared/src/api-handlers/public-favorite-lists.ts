@@ -51,7 +51,7 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
 
     try {
       const db = getDb() as Record<string, unknown>;
-      const { searchParams } = new URL(request.url);
+      const { searchParams } = new URL(request['url']);
       const listId = context?.params?.id;
       const userId = searchParams.get('userId');
       const page = parseInt(searchParams.get('page') || '1', 10);
@@ -60,19 +60,19 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
 
       // 個別リスト取得
       if (listId) {
-        const list = await (db.select as CallableFunction)({
-          id: (publicFavoriteLists as Record<string, unknown>).id,
-          userId: (publicFavoriteLists as Record<string, unknown>).userId,
-          title: (publicFavoriteLists as Record<string, unknown>).title,
-          description: (publicFavoriteLists as Record<string, unknown>).description,
-          isPublic: (publicFavoriteLists as Record<string, unknown>).isPublic,
-          viewCount: (publicFavoriteLists as Record<string, unknown>).viewCount,
-          likeCount: (publicFavoriteLists as Record<string, unknown>).likeCount,
-          createdAt: (publicFavoriteLists as Record<string, unknown>).createdAt,
-          updatedAt: (publicFavoriteLists as Record<string, unknown>).updatedAt,
+        const list = await (db['select'] as CallableFunction)({
+          id: (publicFavoriteLists as Record<string, unknown>)['id'],
+          userId: (publicFavoriteLists as Record<string, unknown>)['userId'],
+          title: (publicFavoriteLists as Record<string, unknown>)['title'],
+          description: (publicFavoriteLists as Record<string, unknown>)['description'],
+          isPublic: (publicFavoriteLists as Record<string, unknown>)['isPublic'],
+          viewCount: (publicFavoriteLists as Record<string, unknown>)['viewCount'],
+          likeCount: (publicFavoriteLists as Record<string, unknown>)['likeCount'],
+          createdAt: (publicFavoriteLists as Record<string, unknown>)['createdAt'],
+          updatedAt: (publicFavoriteLists as Record<string, unknown>)['updatedAt'],
         })
           .from(publicFavoriteLists)
-          .where(eq((publicFavoriteLists as Record<string, unknown>).id, parseInt(listId, 10)))
+          .where(eq((publicFavoriteLists as Record<string, unknown>)['id'], parseInt(listId, 10)))
           .limit(1);
 
         if (list.length === 0) {
@@ -87,28 +87,28 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
         }
 
         // アイテム取得
-        const items = await (db.select as CallableFunction)({
-          listId: (publicFavoriteListItems as Record<string, unknown>).listId,
-          productId: (publicFavoriteListItems as Record<string, unknown>).productId,
-          displayOrder: (publicFavoriteListItems as Record<string, unknown>).displayOrder,
-          note: (publicFavoriteListItems as Record<string, unknown>).note,
-          addedAt: (publicFavoriteListItems as Record<string, unknown>).addedAt,
-          productTitle: (products as Record<string, unknown>).title,
-          productThumbnail: (products as Record<string, unknown>).thumbnailUrl,
+        const items = await (db['select'] as CallableFunction)({
+          listId: (publicFavoriteListItems as Record<string, unknown>)['listId'],
+          productId: (publicFavoriteListItems as Record<string, unknown>)['productId'],
+          displayOrder: (publicFavoriteListItems as Record<string, unknown>)['displayOrder'],
+          note: (publicFavoriteListItems as Record<string, unknown>)['note'],
+          addedAt: (publicFavoriteListItems as Record<string, unknown>)['addedAt'],
+          productTitle: (products as Record<string, unknown>)['title'],
+          productThumbnail: (products as Record<string, unknown>)['thumbnailUrl'],
         })
           .from(publicFavoriteListItems)
-          .leftJoin(products, eq((publicFavoriteListItems as Record<string, unknown>).productId, (products as Record<string, unknown>).id))
-          .where(eq((publicFavoriteListItems as Record<string, unknown>).listId, parseInt(listId, 10)))
-          .orderBy((publicFavoriteListItems as Record<string, unknown>).displayOrder);
+          .leftJoin(products, eq((publicFavoriteListItems as Record<string, unknown>)['productId'], (products as Record<string, unknown>)['id']))
+          .where(eq((publicFavoriteListItems as Record<string, unknown>)['listId'], parseInt(listId, 10)))
+          .orderBy((publicFavoriteListItems as Record<string, unknown>)['displayOrder']);
 
         // ユーザーがいいね済みかチェック
         let userLiked = false;
         if (userId) {
-          const likeCheck = await (db.select as CallableFunction)()
+          const likeCheck = await (db['select'] as CallableFunction)()
             .from(publicListLikes)
             .where(and(
-              eq((publicListLikes as Record<string, unknown>).listId, parseInt(listId, 10)),
-              eq((publicListLikes as Record<string, unknown>).userId, userId)
+              eq((publicListLikes as Record<string, unknown>)['listId'], parseInt(listId, 10)),
+              eq((publicListLikes as Record<string, unknown>)['userId'], userId)
             ))
             .limit(1);
           userLiked = likeCheck.length > 0;
@@ -116,9 +116,9 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
 
         // 閲覧数をインクリメント（所有者以外）
         if (listData.userId !== userId) {
-          await (db.update as CallableFunction)(publicFavoriteLists)
-            .set({ viewCount: (sql as CallableFunction)`${(publicFavoriteLists as Record<string, unknown>).viewCount} + 1` })
-            .where(eq((publicFavoriteLists as Record<string, unknown>).id, parseInt(listId, 10)));
+          await (db['update'] as CallableFunction)(publicFavoriteLists)
+            .set({ viewCount: (sql as CallableFunction)`${(publicFavoriteLists as Record<string, unknown>)['viewCount']} + 1` })
+            .where(eq((publicFavoriteLists as Record<string, unknown>)['id'], parseInt(listId, 10)));
         }
 
         return NextResponse.json({
@@ -128,15 +128,15 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
             userLiked,
           },
           items: items.map((item: Record<string, unknown>) => ({
-            listId: item.listId,
-            productId: item.productId,
-            displayOrder: item.displayOrder,
-            note: item.note,
-            addedAt: item.addedAt,
+            listId: item['listId'],
+            productId: item['productId'],
+            displayOrder: item['displayOrder'],
+            note: item['note'],
+            addedAt: item['addedAt'],
             product: {
-              id: item.productId,
-              title: item.productTitle,
-              thumbnailUrl: item.productThumbnail,
+              id: item['productId'],
+              title: item['productTitle'],
+              thumbnailUrl: item['productThumbnail'],
             },
           })),
         });
@@ -148,25 +148,25 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
       let whereCondition;
       if (myLists && userId) {
         // 自分のリスト（公開・非公開両方）
-        whereCondition = eq((publicFavoriteLists as Record<string, unknown>).userId, userId);
+        whereCondition = eq((publicFavoriteLists as Record<string, unknown>)['userId'], userId);
       } else {
         // 公開リストのみ
-        whereCondition = eq((publicFavoriteLists as Record<string, unknown>).isPublic, true);
+        whereCondition = eq((publicFavoriteLists as Record<string, unknown>)['isPublic'], true);
       }
 
-      const lists = await (db.select as CallableFunction)({
-        id: (publicFavoriteLists as Record<string, unknown>).id,
-        userId: (publicFavoriteLists as Record<string, unknown>).userId,
-        title: (publicFavoriteLists as Record<string, unknown>).title,
-        description: (publicFavoriteLists as Record<string, unknown>).description,
-        isPublic: (publicFavoriteLists as Record<string, unknown>).isPublic,
-        viewCount: (publicFavoriteLists as Record<string, unknown>).viewCount,
-        likeCount: (publicFavoriteLists as Record<string, unknown>).likeCount,
-        createdAt: (publicFavoriteLists as Record<string, unknown>).createdAt,
+      const lists = await (db['select'] as CallableFunction)({
+        id: (publicFavoriteLists as Record<string, unknown>)['id'],
+        userId: (publicFavoriteLists as Record<string, unknown>)['userId'],
+        title: (publicFavoriteLists as Record<string, unknown>)['title'],
+        description: (publicFavoriteLists as Record<string, unknown>)['description'],
+        isPublic: (publicFavoriteLists as Record<string, unknown>)['isPublic'],
+        viewCount: (publicFavoriteLists as Record<string, unknown>)['viewCount'],
+        likeCount: (publicFavoriteLists as Record<string, unknown>)['likeCount'],
+        createdAt: (publicFavoriteLists as Record<string, unknown>)['createdAt'],
       })
         .from(publicFavoriteLists)
         .where(whereCondition)
-        .orderBy(desc((publicFavoriteLists as Record<string, unknown>).likeCount))
+        .orderBy(desc((publicFavoriteLists as Record<string, unknown>)['likeCount']))
         .limit(limit)
         .offset(offset);
 
@@ -197,7 +197,7 @@ export function createPublicFavoriteListsPostHandler(deps: PublicFavoriteListsHa
         return NextResponse.json({ error: 'Title must be at least 2 characters' }, { status: 400 });
       }
 
-      const result = await (db.insert as CallableFunction)(publicFavoriteLists)
+      const result = await (db['insert'] as CallableFunction)(publicFavoriteLists)
         .values({
           userId,
           title: title.trim(),
@@ -222,7 +222,7 @@ export function createPublicFavoriteListsPutHandler(deps: PublicFavoriteListsHan
 
     try {
       const db = getDb() as Record<string, unknown>;
-      const listId = parseInt(context.params.id, 10);
+      const listId = parseInt(context.params['id'], 10);
       const body = await request.json();
       const { userId, title, description, isPublic } = body;
 
@@ -231,11 +231,11 @@ export function createPublicFavoriteListsPutHandler(deps: PublicFavoriteListsHan
       }
 
       // 所有者確認
-      const existing = await (db.select as CallableFunction)()
+      const existing = await (db['select'] as CallableFunction)()
         .from(publicFavoriteLists)
         .where(and(
-          eq((publicFavoriteLists as Record<string, unknown>).id, listId),
-          eq((publicFavoriteLists as Record<string, unknown>).userId, userId)
+          eq((publicFavoriteLists as Record<string, unknown>)['id'], listId),
+          eq((publicFavoriteLists as Record<string, unknown>)['userId'], userId)
         ))
         .limit(1);
 
@@ -244,13 +244,13 @@ export function createPublicFavoriteListsPutHandler(deps: PublicFavoriteListsHan
       }
 
       const updateData: Record<string, unknown> = { updatedAt: new Date() };
-      if (title !== undefined) updateData.title = title.trim();
-      if (description !== undefined) updateData.description = description?.trim() || null;
-      if (isPublic !== undefined) updateData.isPublic = isPublic;
+      if (title !== undefined) updateData['title'] = title.trim();
+      if (description !== undefined) updateData['description'] = description?.trim() || null;
+      if (isPublic !== undefined) updateData['isPublic'] = isPublic;
 
-      const result = await (db.update as CallableFunction)(publicFavoriteLists)
+      const result = await (db['update'] as CallableFunction)(publicFavoriteLists)
         .set(updateData)
-        .where(eq((publicFavoriteLists as Record<string, unknown>).id, listId))
+        .where(eq((publicFavoriteLists as Record<string, unknown>)['id'], listId))
         .returning();
 
       return NextResponse.json({ list: result[0] });
@@ -269,8 +269,8 @@ export function createPublicFavoriteListsDeleteHandler(deps: PublicFavoriteLists
 
     try {
       const db = getDb() as Record<string, unknown>;
-      const listId = parseInt(context.params.id, 10);
-      const { searchParams } = new URL(request.url);
+      const listId = parseInt(context.params['id'], 10);
+      const { searchParams } = new URL(request['url']);
       const userId = searchParams.get('userId');
 
       if (!userId) {
@@ -278,10 +278,10 @@ export function createPublicFavoriteListsDeleteHandler(deps: PublicFavoriteLists
       }
 
       // 所有者確認して削除
-      const result = await (db.delete as CallableFunction)(publicFavoriteLists)
+      const result = await (db['delete'] as CallableFunction)(publicFavoriteLists)
         .where(and(
-          eq((publicFavoriteLists as Record<string, unknown>).id, listId),
-          eq((publicFavoriteLists as Record<string, unknown>).userId, userId)
+          eq((publicFavoriteLists as Record<string, unknown>)['id'], listId),
+          eq((publicFavoriteLists as Record<string, unknown>)['userId'], userId)
         ))
         .returning();
 
@@ -305,7 +305,7 @@ export function createPublicFavoriteListItemsHandler(deps: PublicFavoriteListsHa
 
     try {
       const db = getDb() as Record<string, unknown>;
-      const listId = parseInt(context.params.id, 10);
+      const listId = parseInt(context.params['id'], 10);
       const body = await request.json();
       const { userId, productId, action, note } = body;
 
@@ -314,11 +314,11 @@ export function createPublicFavoriteListItemsHandler(deps: PublicFavoriteListsHa
       }
 
       // 所有者確認
-      const list = await (db.select as CallableFunction)()
+      const list = await (db['select'] as CallableFunction)()
         .from(publicFavoriteLists)
         .where(and(
-          eq((publicFavoriteLists as Record<string, unknown>).id, listId),
-          eq((publicFavoriteLists as Record<string, unknown>).userId, userId)
+          eq((publicFavoriteLists as Record<string, unknown>)['id'], listId),
+          eq((publicFavoriteLists as Record<string, unknown>)['userId'], userId)
         ))
         .limit(1);
 
@@ -328,7 +328,7 @@ export function createPublicFavoriteListItemsHandler(deps: PublicFavoriteListsHa
 
       if (action === 'add') {
         // アイテム追加
-        await (db.insert as CallableFunction)(publicFavoriteListItems)
+        await (db['insert'] as CallableFunction)(publicFavoriteListItems)
           .values({
             listId,
             productId,
@@ -339,10 +339,10 @@ export function createPublicFavoriteListItemsHandler(deps: PublicFavoriteListsHa
         return NextResponse.json({ success: true, action: 'added' });
       } else if (action === 'remove') {
         // アイテム削除
-        await (db.delete as CallableFunction)(publicFavoriteListItems)
+        await (db['delete'] as CallableFunction)(publicFavoriteListItems)
           .where(and(
-            eq((publicFavoriteListItems as Record<string, unknown>).listId, listId),
-            eq((publicFavoriteListItems as Record<string, unknown>).productId, productId)
+            eq((publicFavoriteListItems as Record<string, unknown>)['listId'], listId),
+            eq((publicFavoriteListItems as Record<string, unknown>)['productId'], productId)
           ));
 
         return NextResponse.json({ success: true, action: 'removed' });
@@ -364,7 +364,7 @@ export function createPublicFavoriteListLikeHandler(deps: PublicFavoriteListsHan
 
     try {
       const db = getDb() as Record<string, unknown>;
-      const listId = parseInt(context.params.id, 10);
+      const listId = parseInt(context.params['id'], 10);
       const body = await request.json();
       const { userId, action } = body;
 
@@ -373,9 +373,9 @@ export function createPublicFavoriteListLikeHandler(deps: PublicFavoriteListsHan
       }
 
       // リストが存在し、公開されているか確認
-      const list = await (db.select as CallableFunction)()
+      const list = await (db['select'] as CallableFunction)()
         .from(publicFavoriteLists)
-        .where(eq((publicFavoriteLists as Record<string, unknown>).id, listId))
+        .where(eq((publicFavoriteLists as Record<string, unknown>)['id'], listId))
         .limit(1);
 
       if (list.length === 0) {
@@ -394,30 +394,30 @@ export function createPublicFavoriteListLikeHandler(deps: PublicFavoriteListsHan
 
       if (action === 'like') {
         // いいね追加
-        await (db.insert as CallableFunction)(publicListLikes)
+        await (db['insert'] as CallableFunction)(publicListLikes)
           .values({ listId, userId })
           .onConflictDoNothing();
 
         // カウント更新
-        await (db.update as CallableFunction)(publicFavoriteLists)
-          .set({ likeCount: (sql as CallableFunction)`${(publicFavoriteLists as Record<string, unknown>).likeCount} + 1` })
-          .where(eq((publicFavoriteLists as Record<string, unknown>).id, listId));
+        await (db['update'] as CallableFunction)(publicFavoriteLists)
+          .set({ likeCount: (sql as CallableFunction)`${(publicFavoriteLists as Record<string, unknown>)['likeCount']} + 1` })
+          .where(eq((publicFavoriteLists as Record<string, unknown>)['id'], listId));
 
         return NextResponse.json({ success: true, action: 'liked' });
       } else if (action === 'unlike') {
         // いいね削除
-        const deleted = await (db.delete as CallableFunction)(publicListLikes)
+        const deleted = await (db['delete'] as CallableFunction)(publicListLikes)
           .where(and(
-            eq((publicListLikes as Record<string, unknown>).listId, listId),
-            eq((publicListLikes as Record<string, unknown>).userId, userId)
+            eq((publicListLikes as Record<string, unknown>)['listId'], listId),
+            eq((publicListLikes as Record<string, unknown>)['userId'], userId)
           ))
           .returning();
 
         if (deleted.length > 0) {
           // カウント更新
-          await (db.update as CallableFunction)(publicFavoriteLists)
-            .set({ likeCount: (sql as CallableFunction)`GREATEST(${(publicFavoriteLists as Record<string, unknown>).likeCount} - 1, 0)` })
-            .where(eq((publicFavoriteLists as Record<string, unknown>).id, listId));
+          await (db['update'] as CallableFunction)(publicFavoriteLists)
+            .set({ likeCount: (sql as CallableFunction)`GREATEST(${(publicFavoriteLists as Record<string, unknown>)['likeCount']} - 1, 0)` })
+            .where(eq((publicFavoriteLists as Record<string, unknown>)['id'], listId));
         }
 
         return NextResponse.json({ success: true, action: 'unliked' });

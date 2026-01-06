@@ -36,7 +36,7 @@ describe('Cron Auth', () => {
     });
 
     it('should reject requests without auth in production', async () => {
-      process.env.NODE_ENV = 'production';
+      (process.env as Record<string, string>)['NODE_ENV'] = 'production';
       const { verifyCronRequest } = await import('@adult-v/shared/lib/cron-auth');
       const request = createMockRequest({});
 
@@ -44,8 +44,8 @@ describe('Cron Auth', () => {
     });
 
     it('should accept X-Cron-Secret header in development', async () => {
-      process.env.NODE_ENV = 'development';
-      process.env.CRON_SECRET = 'test-secret';
+      (process.env as Record<string, string>)['NODE_ENV'] = 'development';
+      process.env['CRON_SECRET'] = 'test-secret';
       const { verifyCronRequest } = await import('@adult-v/shared/lib/cron-auth');
       const request = createMockRequest({
         'x-cron-secret': 'test-secret',
@@ -55,8 +55,8 @@ describe('Cron Auth', () => {
     });
 
     it('should reject wrong X-Cron-Secret', async () => {
-      process.env.NODE_ENV = 'development';
-      process.env.CRON_SECRET = 'correct-secret';
+      (process.env as Record<string, string>)['NODE_ENV'] = 'development';
+      process.env['CRON_SECRET'] = 'correct-secret';
       const { verifyCronRequest } = await import('@adult-v/shared/lib/cron-auth');
       const request = createMockRequest({
         'x-cron-secret': 'wrong-secret',
@@ -78,7 +78,7 @@ describe('Cron Auth', () => {
 
   describe('verifyAdminRequest', () => {
     it('should accept Bearer token matching ADMIN_SECRET', async () => {
-      process.env.ADMIN_SECRET = 'admin-secret';
+      process.env['ADMIN_SECRET'] = 'admin-secret';
       const { verifyAdminRequest } = await import('@adult-v/shared/lib/cron-auth');
       const request = createMockRequest({
         authorization: 'Bearer admin-secret',
@@ -88,7 +88,7 @@ describe('Cron Auth', () => {
     });
 
     it('should accept X-Admin-Secret header', async () => {
-      process.env.ADMIN_SECRET = 'admin-secret';
+      process.env['ADMIN_SECRET'] = 'admin-secret';
       const { verifyAdminRequest } = await import('@adult-v/shared/lib/cron-auth');
       const request = createMockRequest({
         'x-admin-secret': 'admin-secret',
@@ -98,8 +98,8 @@ describe('Cron Auth', () => {
     });
 
     it('should reject wrong admin secret', async () => {
-      process.env.ADMIN_SECRET = 'correct-secret';
-      process.env.NODE_ENV = 'production';
+      process.env['ADMIN_SECRET'] = 'correct-secret';
+      (process.env as Record<string, string>)['NODE_ENV'] = 'production';
       const { verifyAdminRequest } = await import('@adult-v/shared/lib/cron-auth');
       const request = createMockRequest({
         'x-admin-secret': 'wrong-secret',

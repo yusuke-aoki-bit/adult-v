@@ -123,7 +123,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
       setIsLoading(true);
       setError(null);
       try {
-        const ids = items.slice(0, 8).map(item => item.id);
+        const ids = items.slice(0, 8).map(item => item['id']);
 
         let fetchedProducts: T[];
         if (fetchProducts) {
@@ -141,12 +141,12 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
         // Maintain viewing order
         const productMap = new Map<string, T>();
         for (const product of fetchedProducts) {
-          productMap.set(String(product.id), product);
+          productMap.set(String(product['id']), product);
         }
 
         const orderedProducts: T[] = [];
         for (const item of items.slice(0, 8)) {
-          const product = productMap.get(item.id);
+          const product = productMap.get(item['id']);
           if (product) {
             orderedProducts.push(product);
           }
@@ -165,8 +165,8 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
               for (const product of orderedProducts) {
                 if (product.performers) {
                   for (const performer of product.performers) {
-                    if (!performerMap.has(performer.id)) {
-                      performerMap.set(performer.id, performer);
+                    if (!performerMap.has(performer['id'])) {
+                      performerMap.set(performer['id'], performer);
                     }
                   }
                 }
@@ -290,7 +290,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
             ) : (
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                 {actresses.map((actress) => (
-                  <ActressCard key={actress.id} actress={actress} size="mini" />
+                  <ActressCard key={actress['id']} actress={actress} size="mini" />
                 ))}
               </div>
             )}
@@ -306,12 +306,12 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
           )}
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
             {products.map((product) => (
-              <div key={product.id} className="relative group/card">
+              <div key={product['id']} className="relative group/card">
                 <ProductCard product={product} size="mini" />
                 {/* Delete button - shows on card hover */}
                 <button
                   type="button"
-                  onClick={(e) => handleRemoveItem(e, product.id)}
+                  onClick={(e) => handleRemoveItem(e, product['id'])}
                   className={`absolute -top-1 -right-1 z-30 w-5 h-5 ${themeConfig.recentlyViewed.deleteButtonBgClass} hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity shadow-lg`}
                   aria-label={t.removeFromHistory}
                 >
@@ -331,7 +331,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
         <AccordionSection
           icon={<Clock className="w-5 h-5" />}
           title={t.title}
-          itemCount={hasExpanded && products.length > 0 ? products.length : undefined}
+          {...(hasExpanded && products.length > 0 && { itemCount: products.length })}
           defaultOpen={false}
           showClear={hasExpanded && products.length > 0}
           clearLabel={t.clearAll}

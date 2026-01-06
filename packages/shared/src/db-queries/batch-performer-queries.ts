@@ -92,10 +92,10 @@ export function createBatchPerformerQueries(deps: BatchPerformerQueryDeps) {
       .selectDistinct({
         performerId: productPerformers.performerId,
         aspName: productSources.aspName,
-        thumbnailUrl: products.defaultThumbnailUrl,
+        thumbnailUrl: products['defaultThumbnailUrl'],
       })
       .from(productPerformers)
-      .innerJoin(products, eq(productPerformers.productId, products.id))
+      .innerJoin(products, eq(productPerformers.productId, products['id']))
       .innerJoin(productSources, eq(productPerformers.productId, productSources.productId))
       .where(inArray(productPerformers.performerId, performerIds));
 

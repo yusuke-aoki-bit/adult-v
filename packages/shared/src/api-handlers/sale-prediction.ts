@@ -118,7 +118,7 @@ export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
           ja: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
         };
         if (monthNum > currentMonth || (monthNum === currentMonth && probability30Days >= 30)) {
-          nextLikelySalePeriod = monthNames.ja[monthNum - 1];
+          nextLikelySalePeriod = monthNames.ja[monthNum - 1] ?? null;
         } else {
           // 来年の同じ月
           nextLikelySalePeriod = `来年${monthNames.ja[monthNum - 1]}頃`;

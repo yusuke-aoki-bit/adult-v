@@ -54,7 +54,7 @@ export function ViewingHabitsDashboard({
 
   const yearlyStats = useMemo<YearlyStats | null>(() => {
     if (availableYears.length === 0) return null;
-    const year = availableYears.includes(selectedYear) ? selectedYear : availableYears[0];
+    const year = availableYears.includes(selectedYear) ? selectedYear : availableYears[0]!;
     return getYearlyStats(year);
   }, [selectedYear, availableYears, getYearlyStats]);
 
@@ -82,13 +82,13 @@ export function ViewingHabitsDashboard({
     let longestStreak = 0;
     let streak = 1;
 
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0]!;
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]!;
 
     // 最長ストリーク計算
     for (let i = 1; i < sortedDates.length; i++) {
-      const prev = new Date(sortedDates[i - 1]);
-      const curr = new Date(sortedDates[i]);
+      const prev = new Date(sortedDates[i - 1]!);
+      const curr = new Date(sortedDates[i]!);
       const diffDays = (curr.getTime() - prev.getTime()) / 86400000;
 
       if (diffDays === 1) {
@@ -107,7 +107,7 @@ export function ViewingHabitsDashboard({
       while (true) {
         const prevDate = new Date(new Date(checkDate).getTime() - 86400000)
           .toISOString()
-          .split('T')[0];
+          .split('T')[0]!;
         if (dates.has(prevDate)) {
           streak++;
           checkDate = prevDate;
@@ -309,11 +309,11 @@ export function ViewingHabitsDashboard({
             <div className="flex flex-wrap gap-2">
               {yearlyStats.topPerformers.slice(0, 5).map((performer, index) => (
                 <button
-                  key={performer.name}
+                  key={performer['name']}
                   type="button"
-                  onClick={() => performer.id && onPerformerClick?.(performer.id, performer.name)}
+                  onClick={() => performer['id'] && onPerformerClick?.(performer['id'], performer['name'])}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-colors ${
-                    performer.id
+                    performer['id']
                       ? isDark
                         ? 'bg-purple-600/30 text-purple-300 hover:bg-purple-600/50'
                         : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
@@ -335,9 +335,9 @@ export function ViewingHabitsDashboard({
                   }`}>
                     {index + 1}
                   </span>
-                  {performer.name}
+                  {performer['name']}
                   <span className={isDark ? 'text-purple-400' : 'text-purple-500'}>
-                    ({performer.count})
+                    ({performer['count']})
                   </span>
                 </button>
               ))}
@@ -354,18 +354,18 @@ export function ViewingHabitsDashboard({
             <div className="flex flex-wrap gap-2">
               {yearlyStats.topTags.slice(0, 8).map((tag) => (
                 <button
-                  key={tag.name}
+                  key={tag['name']}
                   type="button"
-                  onClick={() => onTagClick?.(tag.name)}
+                  onClick={() => onTagClick?.(tag['name'])}
                   className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
                     isDark
                       ? 'bg-blue-600/30 text-blue-300 hover:bg-blue-600/50'
                       : 'bg-pink-100 text-pink-700 hover:bg-pink-200'
                   }`}
                 >
-                  {tag.name}
+                  {tag['name']}
                   <span className={`ml-1 ${isDark ? 'text-blue-400' : 'text-pink-500'}`}>
-                    ({tag.count})
+                    ({tag['count']})
                   </span>
                 </button>
               ))}

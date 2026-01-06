@@ -67,13 +67,13 @@ async function fetchPage(url: string): Promise<string | null> {
     });
 
     if (!response.ok) {
-      if (response.status === 404) {
+      if (response['status'] === 404) {
         return null;
       }
-      throw new Error(`HTTP ${response.status}`);
+      throw new Error(`HTTP ${response['status']}`);
     }
 
-    return await response.text();
+    return await response['text']();
   } catch (error) {
     console.error(`  Fetch error for ${url}: ${error}`);
     return null;
@@ -192,9 +192,10 @@ async function crawlSeriesSearch(
   // 各記事ページから演者情報を取得
   for (let i = 0; i < allArticleUrls.length; i++) {
     const articleUrl = allArticleUrls[i];
+    if (!articleUrl) continue;
     // URLから品番を抽出
     const match = articleUrl.match(/\/(\d{0,3}[a-z]{2,10}-\d{2,5})\/?$/i);
-    if (!match) continue;
+    if (!match?.[1]) continue;
 
     const productCode = match[1].toUpperCase();
 
@@ -280,7 +281,7 @@ async function crawlProductPage(productCode: string): Promise<ProductPerformerEn
   const actressMatch = bodyText.match(
     /(?:出演|出てる)(?:してる)?(?:AV)?女優(?:の名前)?(?:は[、,]?)?([^さ。]+)さん/
   );
-  if (actressMatch) {
+  if (actressMatch?.[1]) {
     const name = actressMatch[1].trim();
     if (
       name.length >= 2 &&
@@ -337,14 +338,14 @@ async function saveEntries(entries: ProductPerformerEntry[]): Promise<number> {
         try {
           await db.execute(sql`
             INSERT INTO wiki_crawl_data (source, product_code, performer_name, source_url, crawled_at)
-            VALUES (${entry.source}, ${entry.productCode}, ${entry.performerName}, ${entry.sourceUrl}, NOW())
+            VALUES (${entry['source']}, ${entry['productCode']}, ${entry['performerName']}, ${entry['sourceUrl']}, NOW())
             ON CONFLICT (source, product_code, performer_name) DO UPDATE SET
               source_url = EXCLUDED.source_url,
               crawled_at = NOW()
           `);
           saved++;
         } catch (innerError) {
-          console.error(`  Error saving ${entry.productCode}: ${innerError}`);
+          console.error(`  Error saving ${entry['productCode']}: ${innerError}`);
         }
       }
     }
@@ -411,11 +412,20 @@ async function main() {
 
   for (const arg of args) {
     if (arg.startsWith('--series=')) {
-      targetSeries = [arg.split('=')[1].toUpperCase()];
+      const seriesValue = arg.split('=')[1];
+      if (seriesValue) {
+        targetSeries = [seriesValue.toUpperCase()];
+      }
     } else if (arg.startsWith('--limit=')) {
-      limit = parseInt(arg.split('=')[1], 10);
+      const limitValue = arg.split('=')[1];
+      if (limitValue) {
+        limit = parseInt(limitValue, 10);
+      }
     } else if (arg.startsWith('--max-pages=')) {
-      maxPages = parseInt(arg.split('=')[1], 10);
+      const maxPagesValue = arg.split('=')[1];
+      if (maxPagesValue) {
+        maxPages = parseInt(maxPagesValue, 10);
+      }
     } else if (arg === '--crawl-missing') {
       crawlMissing = true;
     }

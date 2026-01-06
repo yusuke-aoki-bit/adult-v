@@ -83,7 +83,7 @@ describe('mappers', () => {
       expect(result.actressId).toBe('1');
       expect(result.actressName).toBe('女優A');
       expect(result.performers).toHaveLength(2);
-      expect(result.performers?.[0]).toEqual({ id: '1', name: '女優A' });
+      expect(result.performers![0]).toEqual({ id: '1', name: '女優A' });
     });
 
     it('英語ロケールで出演者名をローカライズ', () => {
@@ -94,7 +94,7 @@ describe('mappers', () => {
       const result = mapProductToType(baseProduct, mockDeps, performers, [], null, null, undefined, undefined, 'en');
 
       expect(result.actressName).toBe('Actress A');
-      expect(result.performers?.[0].name).toBe('Actress A');
+      expect(result.performers![0]!.name).toBe('Actress A');
     });
 
     it('タグデータをマッピング', () => {
@@ -132,7 +132,7 @@ describe('mappers', () => {
       // defaultThumbnailUrlがない商品
       const productWithoutThumb: DbProduct = {
         ...baseProduct,
-        defaultThumbnailUrl: undefined,
+        defaultThumbnailUrl: null,
       };
 
       const result = mapProductToType(productWithoutThumb, mockDeps, [], [], null, null, images);
@@ -175,7 +175,7 @@ describe('mappers', () => {
     it('新作判定（7日以内）', () => {
       const recentProduct: DbProduct = {
         ...baseProduct,
-        releaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3日前
+        releaseDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]!, // 3日前
       };
 
       const result = mapProductToType(recentProduct, mockDeps, [], []);
@@ -187,7 +187,7 @@ describe('mappers', () => {
     it('発売予定判定（未来の日付）', () => {
       const futureProduct: DbProduct = {
         ...baseProduct,
-        releaseDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7日後
+        releaseDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]!, // 7日後
       };
 
       const result = mapProductToType(futureProduct, mockDeps, [], []);
@@ -206,7 +206,7 @@ describe('mappers', () => {
 
       const productWithoutThumb: DbProduct = {
         ...baseProduct,
-        defaultThumbnailUrl: undefined,
+        defaultThumbnailUrl: null,
       };
 
       const result = mapProductToType(productWithoutThumb, mockDeps, [], [], null, cache);
@@ -218,7 +218,7 @@ describe('mappers', () => {
     it('画像がない場合はプレースホルダーを使用', () => {
       const productWithoutThumb: DbProduct = {
         ...baseProduct,
-        defaultThumbnailUrl: undefined,
+        defaultThumbnailUrl: null,
       };
 
       const result = mapProductToType(productWithoutThumb, mockDeps, [], []);
@@ -261,7 +261,7 @@ describe('mappers', () => {
       expect(result.id).toBe('1');
       expect(result.name).toBe('テスト女優');
       expect(result.description).toBe('プロフィール');
-      expect(result.metrics.releaseCount).toBe(50);
+      expect(result.metrics!.releaseCount).toBe(50);
     });
 
     it('英語ロケールでローカライズ', () => {
@@ -337,8 +337,8 @@ describe('mappers', () => {
         videosMap: new Map(),
         salesMap: new Map(),
         sourcesMap: new Map([
-          [1, { aspName: 'FANZA', affiliateUrl: 'https://example1.com', price: 1000 }],
-          [2, { aspName: 'MGS', affiliateUrl: 'https://example2.com', price: 2000 }],
+          [1, { id: 1, productId: 1, aspName: 'FANZA', originalProductId: null, affiliateUrl: 'https://example1.com', price: 1000, currency: 'JPY', productType: null }],
+          [2, { id: 2, productId: 2, aspName: 'MGS', originalProductId: null, affiliateUrl: 'https://example2.com', price: 2000, currency: 'JPY', productType: null }],
         ]),
         allSourcesMap: new Map(),
       };
@@ -346,13 +346,13 @@ describe('mappers', () => {
       const result = mapProductsWithBatchData(products, batchData, mockDeps);
 
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('1');
-      expect(result[0].title).toBe('作品1');
-      expect(result[0].actressName).toBe('女優A');
-      expect(result[0].tags).toContain('タグ1');
-      expect(result[0].price).toBe(1000);
-      expect(result[1].id).toBe('2');
-      expect(result[1].price).toBe(2000);
+      expect(result[0]!.id).toBe('1');
+      expect(result[0]!.title).toBe('作品1');
+      expect(result[0]!.actressName).toBe('女優A');
+      expect(result[0]!.tags).toContain('タグ1');
+      expect(result[0]!.price).toBe(1000);
+      expect(result[1]!.id).toBe('2');
+      expect(result[1]!.price).toBe(2000);
     });
 
     it('代替ソースをalternativeSourcesに追加', () => {
@@ -363,23 +363,23 @@ describe('mappers', () => {
         videosMap: new Map(),
         salesMap: new Map(),
         sourcesMap: new Map([
-          [1, { aspName: 'DUGA', affiliateUrl: 'https://duga.com', price: 1000 }],
+          [1, { id: 1, productId: 1, aspName: 'DUGA', originalProductId: null, affiliateUrl: 'https://duga.com', price: 1000, currency: 'JPY', productType: null }],
         ]),
         allSourcesMap: new Map([
           [1, [
-            { aspName: 'DUGA', affiliateUrl: 'https://duga.com', price: 1000 },
-            { aspName: 'FANZA', affiliateUrl: 'https://fanza.com', price: 1200 },
-            { aspName: 'MGS', affiliateUrl: 'https://mgs.com', price: 1100 },
+            { id: 1, productId: 1, aspName: 'DUGA', originalProductId: null, affiliateUrl: 'https://duga.com', price: 1000, currency: 'JPY', productType: null },
+            { id: 2, productId: 1, aspName: 'FANZA', originalProductId: null, affiliateUrl: 'https://fanza.com', price: 1200, currency: 'JPY', productType: null },
+            { id: 3, productId: 1, aspName: 'MGS', originalProductId: null, affiliateUrl: 'https://mgs.com', price: 1100, currency: 'JPY', productType: null },
           ]],
         ]),
       };
 
-      const result = mapProductsWithBatchData([products[0]], batchData, mockDeps);
+      const result = mapProductsWithBatchData([products[0]!], batchData, mockDeps);
 
-      expect(result[0].alternativeSources).toBeDefined();
-      expect(result[0].alternativeSources).toHaveLength(2);
+      expect(result[0]!.alternativeSources).toBeDefined();
+      expect(result[0]!.alternativeSources).toHaveLength(2);
       // FANZAは特別処理でf.adult-v.comへのリンクに変換
-      const fanzaSource = result[0].alternativeSources?.find(s => s.aspName === 'FANZA');
+      const fanzaSource = result[0]!.alternativeSources?.find(s => s.aspName === 'FANZA');
       expect(fanzaSource?.affiliateUrl).toContain('f.adult-v.com');
     });
 
@@ -399,10 +399,10 @@ describe('mappers', () => {
         allSourcesMap: new Map(),
       };
 
-      const result = mapProductsWithBatchData([products[0]], batchData, mockDeps);
+      const result = mapProductsWithBatchData([products[0]!], batchData, mockDeps);
 
-      expect(result[0].performers).toHaveLength(1);
-      expect(result[0].performers?.[0].name).toBe('女優A');
+      expect(result[0]!.performers).toHaveLength(1);
+      expect(result[0]!.performers![0]!.name).toBe('女優A');
     });
   });
 });

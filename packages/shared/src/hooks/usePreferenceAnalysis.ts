@@ -153,16 +153,16 @@ export function usePreferenceAnalysis(locale: string = 'ja'): PreferenceAnalysis
     });
 
     // ラベル取得
-    const labels = CATEGORY_LABELS[locale] || CATEGORY_LABELS.ja;
+    const labels = CATEGORY_LABELS[locale] ?? CATEGORY_LABELS['ja'];
 
     // レーダーチャート用データ（主要カテゴリのみ）
     const mainCategories = ['young', 'mature', 'solo', 'variety', 'vr', 'fetish', 'cosplay', 'romance'];
     const radarData = mainCategories
       .map((category) => ({
-        label: labels[category] || category,
+        label: labels?.[category] ?? category,
         value: categoryScores[category] || 0,
       }))
-      .filter((item) => item.value > 0 || mainCategories.includes(item.label));
+      .filter((item) => item['value'] > 0 || mainCategories.includes(item.label));
 
     // 上位カテゴリを抽出
     const sortedCategories = Object.entries(categoryScores)
@@ -171,7 +171,7 @@ export function usePreferenceAnalysis(locale: string = 'ja'): PreferenceAnalysis
 
     const topPreferences = sortedCategories.slice(0, 3).map(([category, score]) => ({
       category,
-      label: labels[category] || category,
+      label: labels?.[category] ?? category,
       score,
     }));
 

@@ -72,31 +72,31 @@ export async function GET(request: NextRequest) {
     // セールイベントを整形
     const saleEvents: SaleEvent[] = saleEventsResult.rows.map(row => {
       // sale_dateはDATEの結果で文字列またはDateオブジェクト
-      const saleDate = row.sale_date;
+      const saleDate = row['sale_date'];
       const dateStr = saleDate instanceof Date
         ? saleDate.toISOString().split('T')[0]
         : String(saleDate);
       return {
         date: dateStr,
-        productCount: Number(row.product_count),
-        avgDiscount: Number(row.avg_discount),
+        productCount: Number(row['product_count']),
+        avgDiscount: Number(row['avg_discount']),
         topCategories: [],
       };
     });
 
     // 月別統計を整形
     const monthStats: MonthStats[] = monthStatsResult.rows.map(row => ({
-      month: Number(row.month),
-      avgSaleProducts: Math.round(Number(row.total_products) / Math.max(Number(row.sale_days), 1)),
-      avgDiscount: Number(row.avg_discount),
-      saleFrequency: Number(row.sale_days),
+      month: Number(row['month']),
+      avgSaleProducts: Math.round(Number(row['total_products']) / Math.max(Number(row['sale_days']), 1)),
+      avgDiscount: Number(row['avg_discount']),
+      saleFrequency: Number(row['sale_days']),
     }));
 
     // 予測されるセール日
     const predictedSales = predictedSalesResult.rows.map(row => ({
-      month: Number(row.month),
-      day: Number(row.day),
-      frequency: Number(row.frequency),
+      month: Number(row['month']),
+      day: Number(row['day']),
+      frequency: Number(row['frequency']),
     }));
 
     // 次の大型セール予測

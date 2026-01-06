@@ -68,19 +68,19 @@ export async function getMonthlyReleaseStats(months: number = 24): Promise<Month
 export async function getTopPerformersByProductCount(limit: number = 20): Promise<TopPerformer[]> {
   const result = await db
     .select({
-      id: performers.id,
-      name: performers.name,
+      id: performers['id'],
+      name: performers['name'],
       productCount: count(productPerformers.productId),
     })
     .from(performers)
-    .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
-    .groupBy(performers.id, performers.name)
+    .leftJoin(productPerformers, eq(performers['id'], productPerformers.performerId))
+    .groupBy(performers['id'], performers['name'])
     .orderBy(desc(count(productPerformers.productId)))
     .limit(limit);
 
   return result.map(row => ({
-    id: row.id,
-    name: row.name,
+    id: row['id'],
+    name: row['name'],
     productCount: Number(row.productCount),
   }));
 }
@@ -103,8 +103,8 @@ export async function getTopGenres(limit: number = 20): Promise<GenreStats[]> {
     .limit(limit);
 
   return result.map(row => ({
-    id: row.id,
-    name: row.name,
+    id: row['id'],
+    name: row['name'],
     productCount: Number(row.productCount),
   }));
 }
@@ -123,7 +123,7 @@ export async function getAspDistribution(): Promise<AspStats[]> {
     .orderBy(desc(count(productSources.productId)));
 
   return result.map(row => ({
-    aspName: row.aspName,
+    aspName: row['aspName'],
     productCount: Number(row.productCount),
   }));
 }
@@ -158,9 +158,9 @@ export async function getYearlyStats(): Promise<YearlyStats[]> {
  */
 export async function getOverallStats(): Promise<OverallStats> {
   const [productCountResult, performerCountResult, genreCountResult] = await Promise.all([
-    db.select({ count: count() }).from(products),
-    db.select({ count: count() }).from(performers),
-    db.select({ count: count() }).from(tags).where(eq(tags.category, 'genre')),
+    db['select']({ count: count() }).from(products),
+    db['select']({ count: count() }).from(performers),
+    db['select']({ count: count() }).from(tags).where(eq(tags.category, 'genre')),
   ]);
 
   return {
@@ -179,8 +179,8 @@ export async function getCurrentMonthReleases(): Promise<number> {
     .from(products)
     .where(
       and(
-        isNotNull(products.releaseDate),
-        gte(products.releaseDate, sql`DATE_TRUNC('month', NOW())`)
+        isNotNull(products['releaseDate']),
+        gte(products['releaseDate'], sql`DATE_TRUNC('month', NOW())`)
       )
     );
 
@@ -195,7 +195,7 @@ export async function getNewPerformersThisYear(): Promise<number> {
   const result = await db
     .select({ count: count() })
     .from(performers)
-    .where(eq(performers.debutYear, currentYear));
+    .where(eq(performers['debutYear'], currentYear));
 
   return Number(result[0]?.count || 0);
 }
@@ -332,7 +332,7 @@ export async function getGenreTrends(months: number = 12, topGenres: number = 10
     }
     genreMap.get(genreId)!.months.push({
       month: row.month,
-      count: parseInt(row.count, 10),
+      count: parseInt(row['count'], 10),
     });
   }
 
@@ -541,8 +541,8 @@ export async function getCalendarDetailData(
       });
     }
     dateMap.get(date)!.products.push({
-      id: row.id,
-      title: row.title,
+      id: row['id'],
+      title: row['title'],
       normalizedProductId: row.normalized_product_id,
       thumbnailUrl: row.thumbnail_url,
       releaseDate: row.release_date_str,
@@ -561,8 +561,8 @@ export async function getCalendarDetailData(
       });
     }
     dateMap.get(date)!.performers.push({
-      id: row.id,
-      name: row.name,
+      id: row['id'],
+      name: row['name'],
       nameReading: row.name_reading,
       imageUrl: row.image_url,
       productCount: row.product_count,

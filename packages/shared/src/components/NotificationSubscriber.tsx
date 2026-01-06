@@ -78,7 +78,7 @@ export default function NotificationSubscriber({ theme = 'dark' }: NotificationS
   const [isSubscribed, setIsSubscribed] = useState(false);
   const isSupported = useNotificationSupport();
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   // Memoize translation object to prevent recreation on each render
   const t = useMemo(
     () => translations[locale as keyof typeof translations] || translations.ja,
@@ -92,7 +92,7 @@ export default function NotificationSubscriber({ theme = 'dark' }: NotificationS
       const subscription = await registration.pushManager.getSubscription();
       setIsSubscribed(!!subscription);
     } catch (error: unknown) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.warn('[NotificationSubscriber] Subscription check failed:', error);
       }
     }
@@ -134,7 +134,7 @@ export default function NotificationSubscriber({ theme = 'dark' }: NotificationS
 
       // Subscribe to push notifications
       // Note: You need to set up VAPID keys for production
-      const applicationServerKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      const applicationServerKey = process.env['NEXT_PUBLIC_VAPID_PUBLIC_KEY'];
 
       if (!applicationServerKey) {
         console.warn('VAPID public key not configured');
@@ -180,7 +180,7 @@ export default function NotificationSubscriber({ theme = 'dark' }: NotificationS
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ endpoint: subscription.endpoint }),
+          body: JSON.stringify({ endpoint: subscription['endpoint'] }),
         });
       }
 

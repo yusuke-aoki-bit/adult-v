@@ -18,7 +18,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations('categories');
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   const metadata = generateBaseMetadata(
     t('metaTitle'),
@@ -53,8 +53,9 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
   const tCommon = await getTranslations('common');
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
-  // 人気タグを取得
-  const tags = await getPopularTags({ limit: 100, category: selectedCategory });
+  // 人気タグを取得（exactOptionalPropertyTypes対応）
+  const tagsOptions = { limit: 100, ...(selectedCategory && { category: selectedCategory }) };
+  const tags = await getPopularTags(tagsOptions);
 
   // カテゴリ別にグループ化
   const tagsByCategory = tags.reduce((acc, tag) => {

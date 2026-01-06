@@ -101,7 +101,7 @@ export function generateProductIdVariations(id: string): string[] {
 
     // 標準的な品番パターン: PREFIX-NUMBER（例: MIDE-001, ABP-123）
     const standardMatch = baseId.match(/^([a-zA-Z]+)[-_]?(\d+)$/);
-    if (standardMatch) {
+    if (standardMatch?.[1] && standardMatch[2]) {
       const prefix = standardMatch[1];
       const num = parseInt(standardMatch[2], 10);
       addPaddingVariations(variations, prefix, num);
@@ -109,7 +109,7 @@ export function generateProductIdVariations(id: string): string[] {
 
     // FANZA特有の品番パターン: prefix + 5桁数字（例: mide00001）
     const fanzaMatch = baseId.match(/^([a-zA-Z]+)(\d{5})$/i);
-    if (fanzaMatch) {
+    if (fanzaMatch?.[1] && fanzaMatch[2]) {
       const prefix = fanzaMatch[1];
       const num = parseInt(fanzaMatch[2], 10);
       addPaddingVariations(variations, prefix, num);
@@ -120,7 +120,7 @@ export function generateProductIdVariations(id: string): string[] {
 
     // MGS特有の品番パターン: 数字prefix + アルファベット + 数字（例: 259LUXU-1234）
     const mgsMatch = baseId.match(/^(\d+)([a-zA-Z]+)[-_]?(\d+)$/);
-    if (mgsMatch) {
+    if (mgsMatch?.[1] && mgsMatch[2] && mgsMatch[3]) {
       const numPrefix = mgsMatch[1];
       const letterPart = mgsMatch[2];
       const numSuffix = mgsMatch[3];
@@ -134,7 +134,7 @@ export function generateProductIdVariations(id: string): string[] {
 
     // TMP特有のパターン: 数字-PPV数字（例: 4037-PPV2543）
     const tmpMatch = baseId.match(/^(\d+)[-_]?(PPV|ppv)(\d+)$/i);
-    if (tmpMatch) {
+    if (tmpMatch?.[1] && tmpMatch[2] && tmpMatch[3]) {
       const num1 = tmpMatch[1];
       const ppv = tmpMatch[2];
       const num2 = tmpMatch[3];
@@ -146,7 +146,7 @@ export function generateProductIdVariations(id: string): string[] {
 
     // DTI特有のパターン: 数字_数字（例: 123456_01）
     const dtiMatch = baseId.match(/^(\d+)_(\d+)$/);
-    if (dtiMatch) {
+    if (dtiMatch?.[1] && dtiMatch[2]) {
       const mainNum = dtiMatch[1];
       const subNum = dtiMatch[2];
       variations.add(`${mainNum}_${subNum}`);
@@ -254,7 +254,7 @@ export function formatProductCodeForDisplay(code: string | null | undefined): st
 
   // パターン1: 既にハイフン区切り (SSIS-865, 300MIUM-1359, START-470)
   let match = input.match(/^(\d*[A-Z]+)-(\d+)$/);
-  if (match) {
+  if (match?.[1] && match[2]) {
     const prefix = match[1];
     const number = match[2].replace(/^0+/, '') || '0';
     return `${prefix}-${number}`;
@@ -262,7 +262,7 @@ export function formatProductCodeForDisplay(code: string | null | undefined): st
 
   // パターン2: ハイフンなし、数字プレフィックス付き (300MIUM1359)
   match = input.match(/^(\d+[A-Z]+)(\d+)$/);
-  if (match) {
+  if (match?.[1] && match[2]) {
     const prefix = match[1];
     const number = match[2].replace(/^0+/, '') || '0';
     return `${prefix}-${number}`;
@@ -270,7 +270,7 @@ export function formatProductCodeForDisplay(code: string | null | undefined): st
 
   // パターン3: ハイフンなし、英字のみプレフィックス (SSIS00865 → SSIS-865)
   match = input.match(/^([A-Z]+)(\d+)$/);
-  if (match) {
+  if (match?.[1] && match[2]) {
     const prefix = match[1];
     const number = match[2].replace(/^0+/, '') || '0';
     return `${prefix}-${number}`;

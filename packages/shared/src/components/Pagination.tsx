@@ -82,7 +82,7 @@ export default function Pagination({
   const searchParams = useSearchParams();
   const params = useParams();
   const router = useRouter();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const totalPages = Math.ceil(total / perPage);
   const [inputPage, setInputPage] = useState('');

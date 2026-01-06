@@ -52,11 +52,11 @@ describe('Image Container Styles', () => {
       const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       const mockProduct = {
-        id: 12345,
+        id: '12345',
         title: 'テスト商品',
         imageUrl: 'https://example.com/image.jpg',
         price: 1980,
-        provider: 'FANZA',
+        provider: 'fanza' as const,
         providerLabel: 'FANZA',
       };
 
@@ -90,11 +90,11 @@ describe('Image Container Styles', () => {
       const { ProductCardBase } = await import('@adult-v/shared/components/ProductCard');
 
       const mockProduct = {
-        id: 12345,
+        id: '12345',
         title: 'テスト商品',
         imageUrl: 'https://example.com/image.jpg',
         price: 1980,
-        provider: 'FANZA',
+        provider: 'fanza' as const,
         providerLabel: 'FANZA',
       };
 

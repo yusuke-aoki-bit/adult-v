@@ -20,9 +20,9 @@ export function normalizeMgsProductId(productId: string): string {
 export function extractMgsProductUrl(widgetCode: string): string | null {
   const productIdMatch = widgetCode.match(/[?&]p=([^&"']+)/);
   const affCodeMatch = widgetCode.match(/[?&]c=([^&"']+)/);
-  if (productIdMatch) {
+  if (productIdMatch?.[1]) {
     const productId = normalizeMgsProductId(productIdMatch[1]);
-    const affCode = affCodeMatch ? affCodeMatch[1] : '';
+    const affCode = affCodeMatch?.[1] ?? '';
     const affParam = affCode ? `?aff=${affCode}` : '';
     return `https://www.mgstage.com/product/product_detail/${productId}/${affParam}`;
   }
@@ -40,7 +40,7 @@ export function convertFanzaToDirectUrl(affiliateUrl: string): string {
 
   // lurl パラメータから直リンクを抽出 (https://al.dmm.co.jp/?lurl=...&af_id=... 形式)
   const lurlMatch = affiliateUrl.match(/[?&]lurl=([^&]+)/);
-  if (lurlMatch) {
+  if (lurlMatch?.[1]) {
     try {
       return decodeURIComponent(lurlMatch[1]);
     } catch {
@@ -50,7 +50,7 @@ export function convertFanzaToDirectUrl(affiliateUrl: string): string {
 
   // _url パラメータから直リンクを抽出 (旧形式)
   const urlMatch = affiliateUrl.match(/[?&]_url=([^&]+)/);
-  if (urlMatch) {
+  if (urlMatch?.[1]) {
     try {
       return decodeURIComponent(urlMatch[1]);
     } catch {
@@ -60,7 +60,7 @@ export function convertFanzaToDirectUrl(affiliateUrl: string): string {
 
   // _link パラメータからcidを抽出してDMM直リンクを生成
   const linkMatch = affiliateUrl.match(/[?&]_link=([^&]+)/);
-  if (linkMatch) {
+  if (linkMatch?.[1]) {
     try {
       const decodedLink = decodeURIComponent(linkMatch[1]);
       if (decodedLink.includes('dmm.co.jp')) {

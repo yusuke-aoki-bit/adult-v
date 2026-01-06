@@ -14,7 +14,7 @@ interface ConditionalLayoutProps {
 export function ConditionalLayout({ children, Header, Footer }: ConditionalLayoutProps) {
   const pathname = usePathname();
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
 
   const isAgeVerificationPage = pathname === '/age-verification' ||
                                  pathname?.includes('/age-verification');

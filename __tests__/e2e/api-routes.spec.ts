@@ -2,8 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * API Routes E2E Tests
- * APIエンドポイントの動作確認
- */
+ * APIエンド�Eイント�E動作確誁E */
 
 // Increase timeout for API tests (DB queries can be slow in dev)
 test.setTimeout(120000);
@@ -168,7 +167,7 @@ test.describe('API Response Format', () => {
 
 test.describe('API Performance', () => {
   // Relaxed thresholds for dev environment
-  const API_TIMEOUT_MS = process.env.CI ? 5000 : 15000;
+  const API_TIMEOUT_MS = process.env['CI'] ? 5000 : 15000;
 
   test('API responds within acceptable time', async ({ request }) => {
     const start = Date.now();
@@ -182,7 +181,7 @@ test.describe('API Performance', () => {
   });
 
   test('Search API responds quickly', async ({ request }) => {
-    const SEARCH_TIMEOUT_MS = process.env.CI ? 3000 : 10000;
+    const SEARCH_TIMEOUT_MS = process.env['CI'] ? 3000 : 10000;
     const start = Date.now();
     const response = await request.get('/api/search/autocomplete?q=a');
     const duration = Date.now() - start;

@@ -3,7 +3,7 @@ import { getDb } from '@/lib/db';
 import { products, productSources, productPerformers, performers } from '@/lib/db/schema';
 import { desc, sql, eq } from 'drizzle-orm';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 const SITE_NAME = 'Adult Viewer Lab';
 const SITE_DESCRIPTION = '複数のプラットフォームを横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト';
 

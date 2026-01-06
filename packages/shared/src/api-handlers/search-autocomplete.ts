@@ -63,7 +63,7 @@ export interface SearchAutocompleteHandlerDeps {
  * クローリング時のパースエラーにより生成された無効なデータを除外
  */
 function isValidPerformer(performer: { name: string }): boolean {
-  const name = performer.name;
+  const name = performer['name'];
 
   // 1文字だけの名前は無効
   if (name.length <= 1) return false;
@@ -81,7 +81,7 @@ function isValidPerformer(performer: { name: string }): boolean {
 export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerDeps) {
   return async function GET(request: NextRequest) {
     try {
-      const { searchParams } = new URL(request.url);
+      const { searchParams } = new URL(request['url']);
       const query = searchParams.get('q');
 
       if (!query || query.length < 2) {
@@ -96,16 +96,16 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
         // 1. 品番検索（最優先）
         db
           .select({
-            id: deps.products.id,
-            title: deps.products.title,
+            id: deps.products['id'],
+            title: deps.products['title'],
             normalizedProductId: deps.products.normalizedProductId,
             originalProductId: deps.productSources.originalProductId,
-            thumbnail: deps.products.defaultThumbnailUrl,
+            thumbnail: deps.products['defaultThumbnailUrl'],
           })
           .from(deps.products)
           .leftJoin(
             deps.productSources,
-            sql`${deps.products.id} = ${deps.productSources.productId}`
+            sql`${deps.products['id']} = ${deps.productSources.productId}`
           )
           .where(
             or(
@@ -124,9 +124,9 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
         // 2. 女優名検索
         db
           .select({
-            id: deps.performers.id,
-            name: deps.performers.name,
-            image: deps.performers.profileImageUrl,
+            id: deps.performers['id'],
+            name: deps.performers['name'],
+            image: deps.performers['profileImageUrl'],
             productCount: sql<number>`COUNT(DISTINCT pp.product_id)`.as(
               'product_count'
             ),
@@ -134,13 +134,13 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
           .from(deps.performers)
           .leftJoin(
             sql`product_performers pp`,
-            sql`${deps.performers.id} = pp.performer_id`
+            sql`${deps.performers['id']} = pp.performer_id`
           )
-          .where(ilike(deps.performers.name as never, `%${query}%`))
+          .where(ilike(deps.performers['name'] as never, `%${query}%`))
           .groupBy(
-            deps.performers.id,
-            deps.performers.name,
-            deps.performers.profileImageUrl
+            deps.performers['id'],
+            deps.performers['name'],
+            deps.performers['profileImageUrl']
           )
           .orderBy(desc(sql`product_count`))
           .limit(limit) as Promise<{
@@ -175,9 +175,9 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
         // 4. 商品タイトル検索（FTS使用）
         db
           .select({
-            id: deps.products.id,
-            title: deps.products.title,
-            thumbnail: deps.products.defaultThumbnailUrl,
+            id: deps.products['id'],
+            title: deps.products['title'],
+            thumbnail: deps.products['defaultThumbnailUrl'],
           })
           .from(deps.products)
           .where(
@@ -202,7 +202,7 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
             match.originalProductId ||
             match.normalizedProductId ||
             String(match.id),
-          image: match.thumbnail || undefined,
+          ...(match.thumbnail && { image: match.thumbnail }),
           category: '品番',
         });
       });
@@ -213,7 +213,7 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
           type: 'actress',
           id: match.id,
           name: match.name,
-          image: match.image || undefined,
+          ...(match.image && { image: match.image }),
           count: Number(match.productCount || 0),
           category: '女優',
         });
@@ -236,7 +236,7 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
           type: 'product',
           id: match.id,
           name: match.title || '',
-          image: match.thumbnail || undefined,
+          ...(match.thumbnail && { image: match.thumbnail }),
           category: '作品',
         });
       });

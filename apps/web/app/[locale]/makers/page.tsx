@@ -60,8 +60,8 @@ type TranslationKey = keyof typeof translations;
 
 export default function MakersPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as TranslationKey] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const t = translations[locale as TranslationKey] || translations['ja'];
 
   const [makers, setMakers] = useState<Maker[]>([]);
   const [isLoading, setIsLoading] = useState(true);

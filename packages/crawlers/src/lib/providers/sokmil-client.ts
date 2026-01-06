@@ -312,7 +312,7 @@ export class SokmilApiClient {
       });
 
       if (!response.ok) {
-        throw new Error(`Sokmil API error: ${response.status} ${response.statusText}`);
+        throw new Error(`Sokmil API error: ${response['status']} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -335,8 +335,8 @@ export class SokmilApiClient {
     // SOKMIL APIのレスポンス構造: { result: { status, result_count, total_count, items: [...] } }
     const result = data.result || data;
     return {
-      status: result.status === '200' ? 'success' : 'error',
-      totalCount: parseInt(result.total_count || result.totalCount || '0', 10),
+      status: result['status'] === '200' ? 'success' : 'error',
+      totalCount: parseInt(result.total_count || result['totalCount'] || '0', 10),
       currentPage: parseInt(result.first_position || result.currentPage || '1', 10),
       perPage: parseInt(result.result_count || result.perPage || '20', 10),
       data: result.items || result.data || [],
@@ -412,33 +412,41 @@ export class SokmilApiClient {
       }
     }
 
+    const thumbnailUrl = data.imageURL?.large || data.imageURL?.list || data.imageURL?.small;
+    const packageImageUrl = data.imageURL?.large;
+    const price = data.prices?.price ? parseInt(data.prices.price.replace(/[^0-9]/g, ''), 10) : undefined;
+    const duration = data.volume ? parseInt(data.volume.replace(/[^0-9]/g, ''), 10) : undefined;
+    const maker = makers[0]
+      ? {
+          id: makers[0]['id'],
+          name: makers[0]['name'],
+        }
+      : undefined;
+    const label = labels[0]
+      ? {
+          id: labels[0]['id'],
+          name: labels[0]['name'],
+        }
+      : undefined;
+    const description = data['description'] || data.desc;
+
     return {
-      itemId: data.id || '',
-      itemName: data.title || '',
+      itemId: data['id'] || '',
+      itemName: data['title'] || '',
       itemUrl: data.URL || '',
       affiliateUrl: data.affiliateURL || '',
       // 大きい画像(large)を優先して使用
       // APIレスポンス: imageURL.large > imageURL.list > imageURL.small
-      thumbnailUrl: data.imageURL?.large || data.imageURL?.list || data.imageURL?.small,
-      packageImageUrl: data.imageURL?.large,
-      sampleImages,
-      sampleVideoUrl,
-      price: data.prices?.price ? parseInt(data.prices.price.replace(/[^0-9]/g, ''), 10) : undefined,
-      releaseDate: data.date,
-      duration: data.volume ? parseInt(data.volume.replace(/[^0-9]/g, ''), 10) : undefined,
-      maker: makers[0]
-        ? {
-            id: makers[0].id,
-            name: makers[0].name,
-          }
-        : undefined,
-      label: labels[0]
-        ? {
-            id: labels[0].id,
-            name: labels[0].name,
-          }
-        : undefined,
-      series: undefined, // iteminfo にシリーズ情報がない
+      ...(thumbnailUrl && { thumbnailUrl }),
+      ...(packageImageUrl && { packageImageUrl }),
+      ...(sampleImages.length > 0 && { sampleImages }),
+      ...(sampleVideoUrl && { sampleVideoUrl }),
+      ...(price !== undefined && { price }),
+      ...(data.date && { releaseDate: data.date }),
+      ...(duration !== undefined && { duration }),
+      ...(maker && { maker }),
+      ...(label && { label }),
+      // series: undefined, // iteminfo にシリーズ情報がない - removed to satisfy exactOptionalPropertyTypes
       genres: genres.map((g: any) => ({
         id: g.id,
         name: g.name,
@@ -451,7 +459,7 @@ export class SokmilApiClient {
         id: a.id,
         name: a.name,
       })),
-      description: data.description || data.desc,
+      ...(description && { description }),
     };
   }
 
@@ -538,7 +546,7 @@ export class SokmilApiClient {
     const response = await this.searchItems({ keyword: itemId, hits: 10 });
     // 完全一致を探す
     const match = response.data.find(item => item.itemId === itemId);
-    return match || (response.data.length > 0 ? response.data[0] : null);
+    return match ?? (response.data.length > 0 ? response.data[0] ?? null : null);
   }
 
   /**
@@ -618,9 +626,9 @@ export class SokmilApiClient {
 
     while (hasMore) {
       const response = await this.searchItems({
-        category: options.category,
-        gte_date: options.gte_date,
-        lte_date: options.lte_date,
+        ...(options.category && { category: options.category }),
+        ...(options.gte_date && { gte_date: options.gte_date }),
+        ...(options.lte_date && { lte_date: options.lte_date }),
         sort: 'date',
         hits,
         offset,
@@ -643,7 +651,7 @@ export class SokmilApiClient {
       offset += hits;
 
       // 総件数を超えた場合
-      if (offset > response.totalCount) {
+      if (offset > response['totalCount']) {
         hasMore = false;
       }
 
@@ -657,7 +665,7 @@ export class SokmilApiClient {
  * ソクミルクライアントのシングルトンインスタンスを取得
  */
 export function getSokmilClient(): SokmilApiClient {
-  const apiKey = process.env.SOKMIL_API_KEY;
+  const apiKey = process.env['SOKMIL_API_KEY'];
 
   if (!apiKey) {
     throw new Error('SOKMIL_API_KEY must be set in environment variables');

@@ -17,8 +17,8 @@ interface DMMAffiliateLinkParams {
  */
 
 // 環境変数からアフィリエイトIDを取得（.env.localに設定）
-const AFFILIATE_ID = process.env.NEXT_PUBLIC_DMM_AFFILIATE_ID || 'YOUR_AFFILIATE_ID';
-const AFFILIATE_SITE_ID = process.env.NEXT_PUBLIC_DMM_AFFILIATE_SITE_ID || 'YOUR_SITE_ID';
+const AFFILIATE_ID = process.env['NEXT_PUBLIC_DMM_AFFILIATE_ID'] || 'YOUR_AFFILIATE_ID';
+const AFFILIATE_SITE_ID = process.env['NEXT_PUBLIC_DMM_AFFILIATE_SITE_ID'] || 'YOUR_SITE_ID';
 
 /**
  * DMMアフィリエイトリンクを生成
@@ -86,7 +86,7 @@ export function addTrackingParams(url: string, params: Record<string, string>): 
 
 // DUGA アフィリエイト設定
 // 代理店ID-バナーID形式
-const DUGA_AFFILIATE_ID = process.env.NEXT_PUBLIC_DUGA_AFFILIATE_ID || '48611-01';
+const DUGA_AFFILIATE_ID = process.env['NEXT_PUBLIC_DUGA_AFFILIATE_ID'] || '48611-01';
 
 /**
  * DUGAアフィリエイトリンクを生成
@@ -112,7 +112,7 @@ export function generateDUGALink(originalUrl: string): string {
     // URLパースに失敗した場合
     // パスを抽出して変換を試みる
     const pathMatch = originalUrl.match(/duga\.jp(\/[^\s?#]+)/);
-    if (pathMatch) {
+    if (pathMatch && pathMatch[1]) {
       const path = pathMatch[1].replace(/\/$/, '');
       return `https://click.duga.jp${path}/${DUGA_AFFILIATE_ID}`;
     }
@@ -162,11 +162,11 @@ export function extractDTIMovieId(url: string): string | null {
   // カリビアンコムプレミアム: https://www.caribbeancompr.com/moviepages/041924_002/index.html
   // 一本道: https://www.1pondo.tv/movies/111924_001/
   const moviepagesMatch = url.match(/\/moviepages\/([^\/]+)/);
-  if (moviepagesMatch) return moviepagesMatch[1];
+  if (moviepagesMatch?.[1]) return moviepagesMatch[1];
 
   // 一本道の/movies/形式
   const moviesMatch = url.match(/\/movies\/([^\/]+)/);
-  if (moviesMatch) return moviesMatch[1];
+  if (moviesMatch?.[1]) return moviesMatch[1];
 
   return null;
 }

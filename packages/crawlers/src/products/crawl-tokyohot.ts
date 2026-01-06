@@ -11,7 +11,7 @@
  * DATABASE_URL="..." npx tsx packages/crawlers/src/products/crawl-tokyohot.ts [--pages 10] [--start-page 1]
  */
 
-if (!process.env.DATABASE_URL) {
+if (!process.env['DATABASE_URL']) {
   console.error('ERROR: DATABASE_URL environment variable is not set');
   process.exit(1);
 }
@@ -98,14 +98,14 @@ async function initBrowser(): Promise<Browser> {
 
   console.log('🌐 Puppeteerブラウザを起動中...');
 
-  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+  const executablePath = process.env['PUPPETEER_EXECUTABLE_PATH'];
   if (executablePath) {
     console.log(`  Chromium path: ${executablePath}`);
   }
 
   browser = await puppeteer.launch({
     headless: true,
-    executablePath,
+    ...(executablePath && { executablePath }),
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -301,7 +301,7 @@ async function extractProductDetails(
 
       if (label.includes('配信開始日') || label.includes('公開日') || label.includes('Release')) {
         const dateMatch = value.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
-        if (dateMatch) {
+        if (dateMatch && dateMatch[1] && dateMatch[2] && dateMatch[3]) {
           releaseDate = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
         }
       }
@@ -397,19 +397,19 @@ async function saveProduct(
   forceReprocess: boolean = false
 ): Promise<{ saved: boolean; isNew: boolean; skippedUnchanged: boolean }> {
   try {
-    const normalizedProductId = `${siteConfig.aspName}-${product.productId}`;
+    const normalizedProductId = `${siteConfig.aspName}-${product['productId']}`;
 
     // ハッシュベースの重複検出（GCS優先）
     const upsertResult = await upsertRawHtmlDataWithGcs(
       siteConfig.aspName,
-      product.productId,
-      `${siteConfig.baseUrl}/product/${product.productId}/`,
+      product['productId'],
+      `${siteConfig.baseUrl}/product/${product['productId']}/`,
       product.rawHtml
     );
 
     // ハッシュ変更なし、かつ処理済みならスキップ
     if (upsertResult.shouldSkip && !forceReprocess) {
-      console.log(`  ⏭️ スキップ(変更なし): ${product.productId}`);
+      console.log(`  ⏭️ スキップ(変更なし): ${product['productId']}`);
       return { saved: false, isNew: false, skippedUnchanged: true };
     }
 
@@ -429,61 +429,61 @@ async function saveProduct(
         .insert(products)
         .values({
           normalizedProductId,
-          title: product.title,
-          description: product.description || null,
-          defaultThumbnailUrl: product.thumbnailUrl || null,
-          releaseDate: product.releaseDate || null,
-          duration: product.duration || null,
+          title: product['title'],
+          description: product['description'] || null,
+          defaultThumbnailUrl: product['thumbnailUrl'] || null,
+          releaseDate: product['releaseDate'] || null,
+          duration: product['duration'] || null,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
-        .returning({ id: products.id });
-      productId = newProduct.id;
+        .returning({ id: products['id'] });
+      productId = newProduct!.id;
       console.log(`  ✓ 新規商品作成 (product_id: ${productId})`);
     } else {
-      productId = existingProduct[0].id;
+      productId = existingProduct[0]!['id'];
       await db
         .update(products)
         .set({
-          title: product.title,
-          description: product.description || null,
-          defaultThumbnailUrl: product.thumbnailUrl || null,
-          releaseDate: product.releaseDate || null,
-          duration: product.duration || null,
+          title: product['title'],
+          description: product['description'] || null,
+          defaultThumbnailUrl: product['thumbnailUrl'] || null,
+          releaseDate: product['releaseDate'] || null,
+          duration: product['duration'] || null,
           updatedAt: new Date(),
         })
-        .where(eq(products.id, productId));
+        .where(eq(products['id'], productId));
       console.log(`  ✓ 商品更新 (product_id: ${productId})`);
     }
 
     // ProductSource（価格情報含む）
-    await db.insert(productSources).values({
+    await db['insert'](productSources).values({
       productId: productId,
       aspName: siteConfig.aspName,
-      originalProductId: product.productId,
-      affiliateUrl: `${siteConfig.baseUrl}/product/${product.productId}/`,
-      price: product.price,  // 月額料金
+      originalProductId: product['productId'],
+      affiliateUrl: `${siteConfig.baseUrl}/product/${product['productId']}/`,
+      price: product['price'],  // 月額料金
       dataSource: 'SCRAPE',
       isSubscription: true, // JSKY系は月額制
     }).onConflictDoUpdate({
       target: [productSources.productId, productSources.aspName],
       set: {
-        affiliateUrl: `${siteConfig.baseUrl}/product/${product.productId}/`,
-        price: product.price,
+        affiliateUrl: `${siteConfig.baseUrl}/product/${product['productId']}/`,
+        price: product['price'],
         lastUpdated: new Date(),
       },
     });
 
     // 出演者
     for (const performerName of product.performers) {
-      if (!isValidPerformerForProduct(performerName, product.title)) {
+      if (!isValidPerformerForProduct(performerName, product['title'])) {
         continue;
       }
 
       let [existingPerformer] = await db
         .select()
         .from(performers)
-        .where(eq(performers.name, performerName))
+        .where(eq(performers['name'], performerName))
         .limit(1);
 
       if (!existingPerformer) {
@@ -499,18 +499,20 @@ async function saveProduct(
         .insert(productPerformers)
         .values({
           productId: productId,
-          performerId: existingPerformer.id,
+          performerId: existingPerformer!.id,
         })
         .onConflictDoNothing();
     }
 
     // サンプル画像
     for (let i = 0; i < product.sampleImages.length; i++) {
+      const imageUrl = product.sampleImages[i];
+      if (!imageUrl) continue;
       await db
         .insert(productImages)
         .values({
           productId: productId,
-          imageUrl: product.sampleImages[i],
+          imageUrl,
           imageType: 'sample',
           displayOrder: i,
           aspName: siteConfig.aspName,
@@ -522,13 +524,13 @@ async function saveProduct(
     // 処理済みマーク
     await markRawDataAsProcessed('tokyohot', upsertResult.id);
 
-    console.log(`  ✅ ${isNew ? '新規保存' : '更新'}: ${product.title}`);
-    if (product.price) {
-      console.log(`  💰 月額料金: ¥${product.price.toLocaleString()}`);
+    console.log(`  ✅ ${isNew ? '新規保存' : '更新'}: ${product['title']}`);
+    if (product['price']) {
+      console.log(`  💰 月額料金: ¥${product['price'].toLocaleString()}`);
     }
     return { saved: true, isNew, skippedUnchanged: false };
   } catch (error) {
-    console.error(`  ❌ Error saving ${product.productId}:`, error);
+    console.error(`  ❌ Error saving ${product['productId']}:`, error);
     return { saved: false, isNew: false, skippedUnchanged: false };
   }
 }

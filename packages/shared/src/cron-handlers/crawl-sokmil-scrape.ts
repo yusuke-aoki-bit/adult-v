@@ -46,14 +46,14 @@ async function getProductIdsFromListPage(page: number): Promise<string[]> {
 
   if (!response.ok) return [];
 
-  const html = await response.text();
+  const html = await response['text']();
   const $ = cheerio.load(html);
   const productIds: string[] = [];
 
   $('a[href*="/av/_item/item"]').each((_, el) => {
     const href = $(el).attr('href') || '';
     const match = href.match(/item(\d+)\.html/);
-    if (match && !productIds.includes(match[1])) {
+    if (match?.[1] && !productIds.includes(match[1])) {
       productIds.push(match[1]);
     }
   });
@@ -74,7 +74,7 @@ async function parseDetailPage(itemId: string): Promise<SokmilProduct | null> {
 
     if (!response.ok) return null;
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     const title = $('h1').first().text().trim() ||
@@ -96,32 +96,36 @@ async function parseDetailPage(itemId: string): Promise<SokmilProduct | null> {
 
     let duration: number | undefined;
     const durationMatch = $('body').text().match(/(\d+)\s*分/);
-    if (durationMatch) duration = parseInt(durationMatch[1]);
+    if (durationMatch?.[1]) duration = parseInt(durationMatch[1]);
 
     let releaseDate: string | undefined;
     const dateMatch = $('body').text().match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-    if (dateMatch) releaseDate = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
+    if (dateMatch?.[1] && dateMatch[2] && dateMatch[3]) {
+      releaseDate = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
+    }
 
     let price: number | undefined;
     const priceMatch = $('body').text().match(/(\d{1,3}(?:,\d{3})*)\s*円/);
-    if (priceMatch) price = parseInt(priceMatch[1].replace(/,/g, ''));
+    if (priceMatch?.[1]) price = parseInt(priceMatch[1].replace(/,/g, ''));
 
     let sampleVideoUrl: string | undefined;
     const videoMatch = html.match(/https?:\/\/[^"'\s]+\.mp4/i);
     if (videoMatch) sampleVideoUrl = videoMatch[0];
 
-    return {
+    const result: SokmilProduct = {
       itemId,
       title,
-      description,
       performers,
-      thumbnailUrl,
-      sampleVideoUrl,
-      duration,
-      releaseDate,
-      price,
       affiliateUrl: `https://www.sokmil.com/av/_item/item${itemId}.html?aff_id=${AFFILIATE_ID}`,
     };
+    if (description !== undefined) result.description = description;
+    if (thumbnailUrl !== undefined) result.thumbnailUrl = thumbnailUrl;
+    if (sampleVideoUrl !== undefined) result.sampleVideoUrl = sampleVideoUrl;
+    if (duration !== undefined) result.duration = duration;
+    if (releaseDate !== undefined) result.releaseDate = releaseDate;
+    if (price !== undefined) result.price = price;
+
+    return result;
   } catch {
     return null;
   }
@@ -144,7 +148,7 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
     const stats: CrawlStats = { totalFetched: 0, newProducts: 0, updatedProducts: 0, errors: 0, rawDataSaved: 0, videosAdded: 0 };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const page = parseInt(url.searchParams.get('page') || '1');
       const limit = parseInt(url.searchParams.get('limit') || '50');
 
@@ -175,7 +179,7 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
 
           const productResult = await db.execute(sql`
             INSERT INTO products (normalized_product_id, title, description, release_date, duration, default_thumbnail_url, updated_at)
-            VALUES (${normalizedProductId}, ${product.title}, ${product.description || null}, ${product.releaseDate ? new Date(product.releaseDate) : null}, ${product.duration || null}, ${product.thumbnailUrl || null}, NOW())
+            VALUES (${normalizedProductId}, ${product['title']}, ${product['description'] || null}, ${product['releaseDate'] ? new Date(product['releaseDate']) : null}, ${product['duration'] || null}, ${product['thumbnailUrl'] || null}, NOW())
             ON CONFLICT (normalized_product_id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, release_date = EXCLUDED.release_date, duration = EXCLUDED.duration, default_thumbnail_url = EXCLUDED.default_thumbnail_url, updated_at = NOW()
             RETURNING id
           `);
@@ -185,7 +189,7 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
 
           await db.execute(sql`
             INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, data_source, last_updated)
-            VALUES (${productId}, 'Sokmil', ${product.itemId}, ${product.affiliateUrl}, ${product.price || null}, 'CRAWL', NOW())
+            VALUES (${productId}, 'Sokmil', ${product.itemId}, ${product['affiliateUrl']}, ${product['price'] || null}, 'CRAWL', NOW())
             ON CONFLICT (product_id, asp_name) DO UPDATE SET affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, last_updated = NOW()
           `);
 
@@ -194,8 +198,8 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
             await db.execute(sql`INSERT INTO product_performers (product_id, performer_id) VALUES (${productId}, ${(performerResult.rows[0] as { id: number }).id}) ON CONFLICT DO NOTHING`);
           }
 
-          if (product.sampleVideoUrl) {
-            const videoResult = await db.execute(sql`INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order) VALUES (${productId}, 'Sokmil', ${product.sampleVideoUrl}, 'sample', 0) ON CONFLICT DO NOTHING RETURNING id`);
+          if (product['sampleVideoUrl']) {
+            const videoResult = await db.execute(sql`INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order) VALUES (${productId}, 'Sokmil', ${product['sampleVideoUrl']}, 'sample', 0) ON CONFLICT DO NOTHING RETURNING id`);
             if (videoResult.rowCount && videoResult.rowCount > 0) stats.videosAdded++;
           }
 

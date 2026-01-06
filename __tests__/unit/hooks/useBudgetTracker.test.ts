@@ -142,7 +142,7 @@ describe('useBudgetTracker', () => {
 
       addPurchase('product-1', 'Test Product', 1500);
       expect(purchases).toHaveLength(1);
-      expect(purchases[0].price).toBe(1500);
+      expect(purchases[0]!.price).toBe(1500);
     });
 
     it('should remove purchase by id', () => {
@@ -157,7 +157,7 @@ describe('useBudgetTracker', () => {
 
       const result = removePurchase('purchase-1');
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('purchase-2');
+      expect(result[0]!.id).toBe('purchase-2');
     });
 
     it('should clear all purchases', () => {
@@ -246,9 +246,9 @@ describe('useBudgetTracker', () => {
               .replace(`¥${priceMatch[1]}`, '')
               .trim();
             purchases.push({
-              date: dateMatch[1].replace(/\//g, '-'),
+              date: dateMatch[1]!.replace(/\//g, '-'),
               title,
-              price: parseInt(priceMatch[1].replace(/,/g, ''), 10),
+              price: parseInt(priceMatch[1]!.replace(/,/g, ''), 10),
             });
           }
         }
@@ -258,8 +258,8 @@ describe('useBudgetTracker', () => {
 
       const parsed = parseDmmHistory(dmmHistoryText);
       expect(parsed).toHaveLength(3);
-      expect(parsed[0].price).toBe(1500);
-      expect(parsed[0].date).toBe('2025-01-15');
+      expect(parsed[0]!.price).toBe(1500);
+      expect(parsed[0]!.date).toBe('2025-01-15');
     });
   });
 

@@ -3,23 +3,23 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './__tests__/e2e',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 1, // Add 1 retry for flaky tests in dev
-  workers: process.env.CI ? 1 : undefined,
+  forbidOnly: !!process.env['CI'],
+  retries: process.env['CI'] ? 2 : 1, // Add 1 retry for flaky tests in dev
+  ...(process.env['CI'] ? { workers: 1 } : {}),
   reporter: 'list',
   // Increase default timeout for dev environment (Next.js cold starts can be slow)
-  timeout: process.env.CI ? 60000 : 120000,
+  timeout: process.env['CI'] ? 60000 : 120000,
   expect: {
     // Increase expect timeout for slow dev environment
-    timeout: process.env.CI ? 10000 : 30000,
+    timeout: process.env['CI'] ? 10000 : 30000,
   },
   use: {
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     // Increase navigation timeout for dev environment
-    navigationTimeout: process.env.CI ? 30000 : 60000,
+    navigationTimeout: process.env['CI'] ? 30000 : 60000,
     // Increase action timeout for dev environment
-    actionTimeout: process.env.CI ? 15000 : 30000,
+    actionTimeout: process.env['CI'] ? 15000 : 30000,
   },
 
   projects: [

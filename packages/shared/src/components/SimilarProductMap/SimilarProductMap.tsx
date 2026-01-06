@@ -93,7 +93,7 @@ export function SimilarProductMap({
     const positions = new Map<number, { x: number; y: number }>();
 
     // 中心ノード
-    positions.set(data.product.id, { x: centerX, y: centerY });
+    positions.set(data.product['id'], { x: centerX, y: centerY });
 
     // ホップごとにグループ化
     const hop1 = data.similar.filter(r => r.hop === 1);
@@ -221,7 +221,7 @@ export function SimilarProductMap({
       {/* 凡例 */}
       {viewMode === 'network' && (() => {
         const hop1Data = data.similar.filter(s => s.hop === 1);
-        const isMakerBased = hop1Data.length > 0 && hop1Data[0].makerScore > 0;
+        const isMakerBased = hop1Data.length > 0 && (hop1Data[0]?.makerScore ?? 0) > 0;
         return (
           <div className={`px-4 py-2 flex gap-4 text-xs ${isDark ? 'bg-gray-900/50' : 'bg-gray-50'}`}>
             <div className="flex items-center gap-1">
@@ -246,7 +246,7 @@ export function SimilarProductMap({
           {[1, 2].map(hop => {
             const hopSimilar = data.similar.filter(s => s.hop === hop);
             if (hopSimilar.length === 0) return null;
-            const isMakerBased = hop === 1 && hopSimilar[0].makerScore > 0;
+            const isMakerBased = hop === 1 && (hopSimilar[0]?.makerScore ?? 0) > 0;
             return (
               <div key={hop} className="mb-4 last:mb-0">
                 <h4 className={`text-sm font-medium mb-2 flex items-center gap-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -340,7 +340,7 @@ export function SimilarProductMap({
 
               {/* 中心ノード（対象の作品） */}
               <g className="cursor-pointer group/center">
-                <title>{`${data.product.normalizedProductId || ''} ${data.product.title}`.trim()}</title>
+                <title>{`${data.product.normalizedProductId || ''} ${data.product['title']}`.trim()}</title>
                 <circle
                   cx="250"
                   cy="250"
@@ -355,9 +355,9 @@ export function SimilarProductMap({
                     <circle cx="250" cy="250" r="32" />
                   </clipPath>
                 </defs>
-                {data.product.thumbnailUrl && (
+                {data.product['thumbnailUrl'] && (
                   <image
-                    href={data.product.thumbnailUrl}
+                    href={data.product['thumbnailUrl']}
                     x="218"
                     y="218"
                     width="64"
@@ -366,7 +366,7 @@ export function SimilarProductMap({
                     preserveAspectRatio="xMidYMid slice"
                   />
                 )}
-                {!data.product.thumbnailUrl && (
+                {!data.product['thumbnailUrl'] && (
                   <text
                     x="250"
                     y="255"
@@ -375,7 +375,7 @@ export function SimilarProductMap({
                     fontSize="10"
                     fontWeight="bold"
                   >
-                    {(data.product.normalizedProductId || data.product.title).slice(0, 6)}
+                    {(data.product.normalizedProductId || data.product['title']).slice(0, 6)}
                   </text>
                 )}
               </g>

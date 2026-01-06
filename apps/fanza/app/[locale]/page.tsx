@@ -36,22 +36,22 @@ export async function generateMetadata({
   const approximateCount = '38,000';
 
   // 検索クエリやフィルターがある場合はnoindex
-  const hasQuery = !!searchParamsData.q;
+  const hasQuery = !!searchParamsData['q'];
   const hasFilters = !!(
-    searchParamsData.initial ||
-    searchParamsData.include ||
-    searchParamsData.exclude ||
-    searchParamsData.includeAsp ||
-    searchParamsData.excludeAsp ||
-    searchParamsData.hasVideo ||
-    searchParamsData.hasImage ||
-    searchParamsData.hasReview
+    searchParamsData['initial'] ||
+    searchParamsData['include'] ||
+    searchParamsData['exclude'] ||
+    searchParamsData['includeAsp'] ||
+    searchParamsData['excludeAsp'] ||
+    searchParamsData['hasVideo'] ||
+    searchParamsData['hasImage'] ||
+    searchParamsData['hasReview']
   );
-  const hasPageParam = !!searchParamsData.page && searchParamsData.page !== '1';
+  const hasPageParam = !!searchParamsData['page'] && searchParamsData['page'] !== '1';
   // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
-  const hasNonDefaultSort = !!searchParamsData.sort && searchParamsData.sort !== 'releaseCount';
+  const hasNonDefaultSort = !!searchParamsData['sort'] && searchParamsData['sort'] !== 'releaseCount';
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   const metadata = generateBaseMetadata(
     t('title'),
@@ -109,7 +109,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   const tUncategorized = await getTranslations({ locale, namespace: 'uncategorized' });
 
   const searchParamsData = await searchParams;
-  const page = Number(searchParamsData.page) || 1;
+  const page = Number(searchParamsData['page']) || 1;
 
   // FANZAサイトかどうかを判定
   const [serverAspFilter, isFanzaSite] = await Promise.all([
@@ -118,53 +118,53 @@ export default async function Home({ params, searchParams }: PageProps) {
   ]);
 
 
-  const query = typeof searchParamsData.q === 'string' ? searchParamsData.q : undefined;
-  const sortBy = (typeof searchParamsData.sort === 'string' ? searchParamsData.sort : 'recent') as 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
-  const initialFilter = typeof searchParamsData.initial === 'string' ? searchParamsData.initial : undefined;
+  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'] : undefined;
+  const sortBy = (typeof searchParamsData['sort'] === 'string' ? searchParamsData['sort'] : 'recent') as 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
+  const initialFilter = typeof searchParamsData['initial'] === 'string' ? searchParamsData['initial'] : undefined;
 
   // 対象タグ（include）と除外タグ（exclude）を取得
-  const includeTags = typeof searchParamsData.include === 'string'
-    ? searchParamsData.include.split(',').filter(Boolean)
-    : Array.isArray(searchParamsData.include)
-    ? searchParamsData.include
+  const includeTags = typeof searchParamsData['include'] === 'string'
+    ? searchParamsData['include'].split(',').filter(Boolean)
+    : Array.isArray(searchParamsData['include'])
+    ? searchParamsData['include']
     : [];
-  const excludeTags = typeof searchParamsData.exclude === 'string'
-    ? searchParamsData.exclude.split(',').filter(Boolean)
-    : Array.isArray(searchParamsData.exclude)
-    ? searchParamsData.exclude
+  const excludeTags = typeof searchParamsData['exclude'] === 'string'
+    ? searchParamsData['exclude'].split(',').filter(Boolean)
+    : Array.isArray(searchParamsData['exclude'])
+    ? searchParamsData['exclude']
     : [];
 
   // ASPフィルターを取得（FANZAサイトの場合は自動的にFANZAのみをフィルタ）
   const includeAsps = serverAspFilter
     ? serverAspFilter
-    : (typeof searchParamsData.includeAsp === 'string'
-        ? searchParamsData.includeAsp.split(',').filter(Boolean)
-        : Array.isArray(searchParamsData.includeAsp)
-        ? searchParamsData.includeAsp
+    : (typeof searchParamsData['includeAsp'] === 'string'
+        ? searchParamsData['includeAsp'].split(',').filter(Boolean)
+        : Array.isArray(searchParamsData['includeAsp'])
+        ? searchParamsData['includeAsp']
         : []);
-  const excludeAsps = typeof searchParamsData.excludeAsp === 'string'
-    ? searchParamsData.excludeAsp.split(',').filter(Boolean)
-    : Array.isArray(searchParamsData.excludeAsp)
-    ? searchParamsData.excludeAsp
+  const excludeAsps = typeof searchParamsData['excludeAsp'] === 'string'
+    ? searchParamsData['excludeAsp'].split(',').filter(Boolean)
+    : Array.isArray(searchParamsData['excludeAsp'])
+    ? searchParamsData['excludeAsp']
     : [];
 
   // hasVideo/hasImage/hasReviewフィルターを取得
-  const hasVideo = searchParamsData.hasVideo === 'true';
-  const hasImage = searchParamsData.hasImage === 'true';
-  const hasReview = searchParamsData.hasReview === 'true';
+  const hasVideo = searchParamsData['hasVideo'] === 'true';
+  const hasImage = searchParamsData['hasImage'] === 'true';
+  const hasReview = searchParamsData['hasReview'] === 'true';
 
   // 女優特徴フィルターを取得
-  const cupSizes = typeof searchParamsData.cup === 'string'
-    ? searchParamsData.cup.split(',').filter(Boolean)
+  const cupSizes = typeof searchParamsData['cup'] === 'string'
+    ? searchParamsData['cup'].split(',').filter(Boolean)
     : [];
-  const heightMin = typeof searchParamsData.heightMin === 'string' && searchParamsData.heightMin
-    ? parseInt(searchParamsData.heightMin)
+  const heightMin = typeof searchParamsData['heightMin'] === 'string' && searchParamsData['heightMin']
+    ? parseInt(searchParamsData['heightMin'])
     : undefined;
-  const heightMax = typeof searchParamsData.heightMax === 'string' && searchParamsData.heightMax
-    ? parseInt(searchParamsData.heightMax)
+  const heightMax = typeof searchParamsData['heightMax'] === 'string' && searchParamsData['heightMax']
+    ? parseInt(searchParamsData['heightMax'])
     : undefined;
-  const bloodTypes = typeof searchParamsData.bloodType === 'string'
-    ? searchParamsData.bloodType.split(',').filter(Boolean)
+  const bloodTypes = typeof searchParamsData['bloodType'] === 'string'
+    ? searchParamsData['bloodType'].split(',').filter(Boolean)
     : [];
 
   const offset = (page - 1) * PER_PAGE;
@@ -179,20 +179,20 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   // 共通のクエリオプション
   const actressQueryOptions = {
-    query: searchQuery,
+    ...(searchQuery ? { query: searchQuery } : {}),
     includeTags,
     excludeTags,
     sortBy,
     excludeInitials: isEtcFilter,
     includeAsps,
     excludeAsps,
-    hasVideo: hasVideo || undefined,
-    hasImage: hasImage || undefined,
-    hasReview: hasReview || undefined,
-    cupSizes: cupSizes.length > 0 ? cupSizes : undefined,
-    heightMin,
-    heightMax,
-    bloodTypes: bloodTypes.length > 0 ? bloodTypes : undefined,
+    ...(hasVideo ? { hasVideo: true as const } : {}),
+    ...(hasImage ? { hasImage: true as const } : {}),
+    ...(hasReview ? { hasReview: true as const } : {}),
+    ...(cupSizes.length > 0 ? { cupSizes } : {}),
+    ...(heightMin !== undefined ? { heightMin } : {}),
+    ...(heightMax !== undefined ? { heightMax } : {}),
+    ...(bloodTypes.length > 0 ? { bloodTypes } : {}),
   };
 
   // 並列クエリ実行（パフォーマンス最適化）
@@ -237,10 +237,10 @@ export default async function Home({ params, searchParams }: PageProps) {
         getSaleProducts({
           limit: 24, // トップページは24件表示
           minDiscount: 30,
-          aspName: isFanzaSite ? 'FANZA' : undefined, // FANZAサイトの場合はFANZAのみ
+          ...(isFanzaSite ? { aspName: 'FANZA' } : {}), // FANZAサイトの場合はFANZAのみ
         }),
         getUncategorizedProductsCount({
-          includeAsp: isFanzaSite ? ['FANZA'] : undefined,
+          ...(isFanzaSite ? { includeAsp: ['FANZA'] } : {}),
         }),
       ]);
       saleProducts = sales;
@@ -261,8 +261,9 @@ export default async function Home({ params, searchParams }: PageProps) {
   const faqSchema = isTopPage ? generateFAQSchema(getHomepageFAQs(locale)) : null;
 
   // LCP最適化: 最初の女優画像をpreload（コンパクトモードではthumbnail優先）
-  const firstActressImageUrl = actresses.length > 0
-    ? normalizeImageUrlForPreload(actresses[0].thumbnail || actresses[0].heroImage)
+  const firstActress = actresses[0];
+  const firstActressImageUrl = firstActress
+    ? normalizeImageUrlForPreload(firstActress.thumbnail || firstActress.heroImage)
     : null;
 
   return (

@@ -89,8 +89,8 @@ export function UserPreferenceProfile({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           history: recentlyViewed.map(item => ({
-            id: item.id,
-            title: item.title,
+            id: item['id'],
+            title: item['title'],
           })),
         }),
       });

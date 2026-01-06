@@ -175,12 +175,12 @@ export function FooterBase({
               <h3 className="theme-footer-heading font-semibold mb-3">{t.popularActresses}</h3>
               <ul className="space-y-1.5 text-sm">
                 {actresses.slice(0, 8).map((actress) => (
-                  <li key={actress.id}>
+                  <li key={actress['id']}>
                     <Link
-                      href={localizedHref(`/actress/${actress.id}`, locale)}
+                      href={localizedHref(`/actress/${actress['id']}`, locale)}
                       className="theme-footer-link transition-colors"
                     >
-                      {actress.name}
+                      {actress['name']}
                     </Link>
                   </li>
                 ))}
@@ -196,12 +196,12 @@ export function FooterBase({
               </h3>
               <ul className="space-y-1.5 text-sm">
                 {footerLinks.genres.slice(0, 8).map((genre) => (
-                  <li key={genre.id}>
+                  <li key={genre['id']}>
                     <Link
-                      href={localizedHref(`/products?include=${genre.id}`, locale)}
+                      href={localizedHref(`/products?include=${genre['id']}`, locale)}
                       className="theme-footer-link transition-colors"
                     >
-                      {genre.name}
+                      {genre['name']}
                     </Link>
                   </li>
                 ))}
@@ -288,11 +288,11 @@ export function FooterBase({
                   <div className="flex flex-wrap gap-2">
                     {footerLinks.series.slice(0, 5).map((series) => (
                       <Link
-                        key={series.id}
-                        href={localizedHref(`/series/${series.id}`, locale)}
+                        key={series['id']}
+                        href={localizedHref(`/series/${series['id']}`, locale)}
                         className="text-xs px-2 py-1 rounded theme-footer-link theme-footer-tag transition-colors"
                       >
-                        {series.name}
+                        {series['name']}
                       </Link>
                     ))}
                   </div>
@@ -308,11 +308,11 @@ export function FooterBase({
                   <div className="flex flex-wrap gap-2">
                     {footerLinks.makers.slice(0, 5).map((maker) => (
                       <Link
-                        key={maker.id}
-                        href={localizedHref(`/makers/${maker.id}`, locale)}
+                        key={maker['id']}
+                        href={localizedHref(`/makers/${maker['id']}`, locale)}
                         className="text-xs px-2 py-1 rounded theme-footer-link theme-footer-tag transition-colors"
                       >
-                        {maker.name}
+                        {maker['name']}
                       </Link>
                     ))}
                   </div>

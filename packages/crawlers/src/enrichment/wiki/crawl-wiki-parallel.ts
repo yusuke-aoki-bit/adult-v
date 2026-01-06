@@ -9,8 +9,8 @@
  *   npx tsx scripts/crawlers/crawl-wiki-parallel.ts 500 1000
  */
 
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres';
+if (!process.env['DATABASE_URL']) {
+  process.env['DATABASE_URL'] = 'postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres';
 }
 
 import * as cheerio from 'cheerio';
@@ -39,7 +39,7 @@ async function fetchHtml(url: string): Promise<string | null> {
     });
 
     if (!response.ok) {
-      console.log(`  ✗ HTTP ${response.status} for ${url}`);
+      console.log(`  ✗ HTTP ${response['status']} for ${url}`);
       return null;
     }
 
@@ -89,7 +89,7 @@ function extractSeesaawikiPageData($: cheerio.CheerioAPI, url: string): { produc
 
   const titleTag = $('title').text();
   const titleMatch = titleTag.match(/^([^-]+)/);
-  const performerFromTitle = titleMatch ? titleMatch[1].trim() : '';
+  const performerFromTitle = titleMatch ? (titleMatch[1] ?? '').trim() : '';
 
   let performerName = '';
   if (pageTitle && pageTitle.length >= 2 && pageTitle.length <= 20 && isValidPerformerName(pageTitle)) {
@@ -109,7 +109,7 @@ function extractSeesaawikiPageData($: cheerio.CheerioAPI, url: string): { produc
     const text = $(elem).text().trim();
     // パターン: 英字+数字 or 英字+ハイフン+数字
     const codeMatch = text.match(/^([A-Za-z]{2,10}[-_]?\d{2,6})/);
-    if (codeMatch) {
+    if (codeMatch && codeMatch[1]) {
       const code = codeMatch[1].toUpperCase();
       if (!productCodes.includes(code)) {
         productCodes.push(code);
@@ -118,7 +118,7 @@ function extractSeesaawikiPageData($: cheerio.CheerioAPI, url: string): { produc
 
     // パターン: mgsod037| 形式
     const altMatch = text.match(/([A-Za-z]{2,10}\d{2,6})\|/);
-    if (altMatch) {
+    if (altMatch && altMatch[1]) {
       const code = altMatch[1].toUpperCase();
       if (!productCodes.includes(code)) {
         productCodes.push(code);
@@ -248,8 +248,8 @@ async function main() {
     process.exit(1);
   }
 
-  const startPage = parseInt(args[0], 10);
-  const endPage = parseInt(args[1], 10);
+  const startPage = parseInt(args[0] ?? '1', 10);
+  const endPage = parseInt(args[1] ?? '1', 10);
   const workerId = `W${startPage}-${endPage}`;
 
   console.log(`\n🚀 [${workerId}] Starting parallel wiki crawler`);

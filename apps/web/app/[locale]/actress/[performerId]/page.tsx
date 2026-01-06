@@ -36,6 +36,7 @@ import AiActressProfileWrapper from '@/components/AiActressProfileWrapper';
 import PerformerRelationMap from '@/components/PerformerRelationMap';
 import SimilarPerformerMap from '@/components/SimilarPerformerMap';
 import ActressSectionNav from '@/components/ActressSectionNav';
+import PerPageDropdown from '@/components/PerPageDropdown';
 import { localizedHref } from '@adult-v/shared/i18n';
 
 // ISRキャッシュ: 10分（SEO改善のため、検索エンジンクローラーの効率を向上）
@@ -53,7 +54,7 @@ interface PageProps {
     hasImage?: string;
     performerType?: string;
     asp?: string | string[];
-    limit?: string;
+    perPage?: string;
   }>;
 }
 
@@ -74,7 +75,8 @@ export async function generateStaticParams(): Promise<Array<{ performerId: strin
   }
 }
 
-const PER_PAGE = 96;
+const DEFAULT_PER_PAGE = 48;
+const VALID_PER_PAGE = [12, 24, 48, 96];
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   try {
@@ -84,7 +86,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     if (!actress) return {};
 
     const t = await getTranslations('actress');
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
     // フィルター・ページネーションがある場合はnoindex
     const hasFilters = !!(
@@ -197,6 +199,10 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const page = parseInt(resolvedSearchParams.page || '1', 10);
   const sortBy = (resolvedSearchParams.sort || 'releaseDateDesc') as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'titleAsc';
 
+  // 表示件数（URLパラメータから取得、無効な値はデフォルトに）
+  const perPageParam = parseInt(resolvedSearchParams.perPage || '', 10);
+  const perPage = VALID_PER_PAGE.includes(perPageParam) ? perPageParam : DEFAULT_PER_PAGE;
+
 
   // hasVideo/hasImageフィルター
   const hasVideo = resolvedSearchParams.hasVideo === 'true';
@@ -222,15 +228,15 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     ? resolvedSearchParams.asp
     : [];
 
-  // Common filter options for products query
+  // Common filter options for products query (exactOptionalPropertyTypes対応)
   const productFilterOptions = {
     actressId: actress.id,
-    tags: includeTags.length > 0 ? includeTags : undefined,
-    excludeTags: excludeTags.length > 0 ? excludeTags : undefined,
-    hasVideo: hasVideo || undefined,
-    hasImage: hasImage || undefined,
-    performerType: performerType || undefined,
-    providers: includeAsps.length > 0 ? includeAsps : undefined,
+    ...(includeTags.length > 0 && { tags: includeTags }),
+    ...(excludeTags.length > 0 && { excludeTags }),
+    ...(hasVideo && { hasVideo: true as const }),
+    ...(hasImage && { hasImage: true as const }),
+    ...(performerType && { performerType }),
+    ...(includeAsps.length > 0 && { providers: includeAsps }),
   };
 
   // Parallel fetch for all actress data (performance optimization)
@@ -246,8 +252,8 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
       getProducts({
         ...productFilterOptions,
         sortBy,
-        limit: PER_PAGE,
-        offset: (page - 1) * PER_PAGE,
+        limit: perPage,
+        offset: (page - 1) * perPage,
         locale,
       }),
       getProductsCount(productFilterOptions),
@@ -259,16 +265,21 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // Structured data with enhanced Person Schema
   // aiReviewがオブジェクト型の場合は空文字列を使用
   const aiReviewText = typeof actress.aiReview === 'string' ? actress.aiReview : '';
+  // exactOptionalPropertyTypes対応: undefinedを含むプロパティは条件付きで追加
+  const personSchemaOptions: { workCount: number; aliases: string[]; debutYear?: number } = {
+    workCount: total,
+    aliases: nonPrimaryAliases.map(a => a.aliasName),
+  };
+  if (careerAnalysis?.debutYear !== undefined) {
+    personSchemaOptions.debutYear = careerAnalysis.debutYear;
+  }
+
   const personSchema = generatePersonSchema(
     actress.name,
     aiReviewText,
     actress.heroImage || actress.thumbnail || '',
     basePath,
-    {
-      workCount: total,
-      debutYear: careerAnalysis?.debutYear ?? undefined,
-      aliases: nonPrimaryAliases.map(a => a.aliasName),
-    }
+    personSchemaOptions
   );
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: tNav('home'), url: localizedHref('/', locale) },
@@ -279,17 +290,40 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     t('filmography'),
   ) : null;
 
-  // FAQ Schema生成（リッチリザルト対応）
-  const actressFaqs = getActressPageFAQs(locale, {
+  // FAQ Schema生成（リッチリザルト対応）- exactOptionalPropertyTypes対応
+  const actressFaqOptions: {
+    name: string;
+    productCount: number;
+    debutYear?: number;
+    latestReleaseDate?: string;
+    aliases?: string[];
+    topGenres?: string[];
+    aspNames?: string[];
+    isRetired?: boolean;
+  } = {
     name: actress.name,
     productCount: total,
-    debutYear: careerAnalysis?.debutYear ?? undefined,
-    latestReleaseDate: works[0]?.releaseDate ? new Date(works[0].releaseDate).toLocaleDateString('ja-JP') : undefined,
-    aliases: nonPrimaryAliases.length > 0 ? nonPrimaryAliases.map(a => a.aliasName) : undefined,
-    topGenres: genreTags.length > 0 ? genreTags.slice(0, 5).map(t => t.name) : undefined,
-    aspNames: productCountByAsp.length > 0 ? productCountByAsp.map(a => a.aspName) : undefined,
-    isRetired: careerAnalysis ? !careerAnalysis.isActive : undefined,
-  });
+  };
+  if (careerAnalysis?.debutYear !== undefined) {
+    actressFaqOptions.debutYear = careerAnalysis.debutYear;
+  }
+  if (works[0]?.releaseDate) {
+    actressFaqOptions.latestReleaseDate = new Date(works[0].releaseDate).toLocaleDateString('ja-JP');
+  }
+  if (nonPrimaryAliases.length > 0) {
+    actressFaqOptions.aliases = nonPrimaryAliases.map(a => a.aliasName);
+  }
+  if (genreTags.length > 0) {
+    actressFaqOptions.topGenres = genreTags.slice(0, 5).map(t => t.name);
+  }
+  if (productCountByAsp.length > 0) {
+    actressFaqOptions.aspNames = productCountByAsp.map(a => a.aspName);
+  }
+  if (careerAnalysis) {
+    actressFaqOptions.isRetired = !careerAnalysis.isActive;
+  }
+
+  const actressFaqs = getActressPageFAQs(locale, actressFaqOptions);
   const faqSchema = generateFAQSchema(actressFaqs);
 
   return (
@@ -335,7 +369,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   <ActressFavoriteButton
                     id={actress.id}
                     name={actress.name}
-                    thumbnail={actress.heroImage || actress.thumbnail}
+                    thumbnail={actress.heroImage || actress.thumbnail || ''}
                   />
                 </div>
                 <p className="text-sm sm:text-base theme-text-secondary">{t('totalProducts', { count: total })}</p>
@@ -374,8 +408,12 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 )}
               </div>
             )}
-            {/* ソートドロップダウン */}
-            <div className="mt-3 flex justify-end">
+            {/* ソートドロップダウン・表示件数 */}
+            <div className="mt-3 flex justify-end items-center gap-4">
+              <PerPageDropdown
+                perPage={perPage}
+                basePath={basePath}
+              />
               <ProductSortDropdown sortBy={sortBy} basePath={basePath} />
             </div>
           </div>
@@ -397,7 +435,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               <div id="ai-review" className="mb-8">
                 <ActressAiReview
                   review={actress.aiReview}
-                  updatedAt={actress.aiReviewUpdatedAt}
+                  updatedAt={actress.aiReviewUpdatedAt ?? ''}
                   actressName={actress.name}
                   theme="dark"
                 />
@@ -511,8 +549,17 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {total > 0 ? (
             <>
               {/* ページネーション（上部） */}
-              {total > PER_PAGE && (
-                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="top" />
+              {total > perPage && (
+                <Pagination
+                  total={total}
+                  page={page}
+                  perPage={perPage}
+                  basePath={basePath}
+                  position="top"
+                  queryParams={{
+                    ...(perPage !== DEFAULT_PER_PAGE ? { perPage: String(perPage) } : {}),
+                  }}
+                />
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {works.map((work) => (
@@ -520,8 +567,17 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 ))}
               </div>
               {/* ページネーション（下部） */}
-              {total > PER_PAGE && (
-                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="bottom" />
+              {total > perPage && (
+                <Pagination
+                  total={total}
+                  page={page}
+                  perPage={perPage}
+                  basePath={basePath}
+                  position="bottom"
+                  queryParams={{
+                    ...(perPage !== DEFAULT_PER_PAGE ? { perPage: String(perPage) } : {}),
+                  }}
+                />
               )}
             </>
           ) : (

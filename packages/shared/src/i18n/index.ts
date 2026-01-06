@@ -62,12 +62,12 @@ export function localizedHref(
     params.set('hl', locale);
   } else {
     // デフォルトロケールの場合は hl パラメータを削除（念のため）
-    params.delete('hl');
+    params['delete']('hl');
   }
 
   // クエリ文字列を構築
   const newQueryString = params.toString();
-  return newQueryString ? `${basePath}?${newQueryString}` : basePath;
+  return newQueryString ? `${basePath ?? ''}?${newQueryString}` : basePath ?? '';
 }
 
 /**
@@ -88,14 +88,14 @@ export function switchLocaleHref(currentPath: string, targetLocale: string): str
 
   if (targetLocale === defaultLocale) {
     // デフォルトロケールに切り替える場合は hl パラメータを削除
-    params.delete('hl');
+    params['delete']('hl');
   } else {
     // 他の言語に切り替える場合は hl パラメータを設定
     params.set('hl', targetLocale);
   }
 
   const newQueryString = params.toString();
-  return newQueryString ? `${basePath}?${newQueryString}` : basePath;
+  return newQueryString ? `${basePath ?? ''}?${newQueryString}` : basePath ?? '';
 }
 
 /**

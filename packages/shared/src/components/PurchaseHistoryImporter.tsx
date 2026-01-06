@@ -99,7 +99,7 @@ interface ParsedPurchase {
   title: string;
   price: number;
   date: string;
-  productCode?: string;
+  productCode?: string | undefined;
   selected: boolean;
 }
 
@@ -136,13 +136,16 @@ function parsePurchaseHistory(text: string): ParsedPurchase[] {
     const dateMatch = line.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
     if (dateMatch) {
       const [, year, month, day] = dateMatch;
-      lastDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      if (year && month && day) {
+        lastDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
     }
 
     // 価格を検出
     const priceMatch = line.match(/(?:¥|￥)\s*([\d,]+)|(?:^|\s)([\d,]+)(?:円|$)/);
     if (priceMatch) {
       const priceStr = priceMatch[1] || priceMatch[2];
+      if (!priceStr) continue;
       const price = parseInt(priceStr.replace(/,/g, ''), 10);
 
       if (price > 0 && price < 100000) {
@@ -153,7 +156,7 @@ function parsePurchaseHistory(text: string): ParsedPurchase[] {
         // 品番を抽出
         const codeMatch = title.match(/^([a-zA-Z]+-?\d+)\s*/);
         let productCode: string | undefined;
-        if (codeMatch) {
+        if (codeMatch && codeMatch[0] && codeMatch[1]) {
           productCode = codeMatch[1].toUpperCase();
           title = title.substring(codeMatch[0].length).trim();
         }
@@ -161,13 +164,13 @@ function parsePurchaseHistory(text: string): ParsedPurchase[] {
         // タイトルのクリーンアップ
         title = title.replace(/^[\s\-・]+/, '').replace(/[\s\-・]+$/, '').trim();
 
-        if (title.length >= 5 && title.length <= 200) {
+        if (title.length >= 5 && title.length <= 200 && lastDate) {
           purchases.push({
             id: `import-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             title,
             price,
             date: lastDate,
-            productCode,
+            ...(productCode !== undefined && { productCode }),
             selected: true,
           });
         }

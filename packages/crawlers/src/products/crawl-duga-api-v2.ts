@@ -91,8 +91,8 @@ class DugaCrawler extends BaseCrawler<DugaProduct> {
 
       // 重複除外
       for (const item of response.items) {
-        if (!seenIds.has(item.productId)) {
-          seenIds.add(item.productId);
+        if (!seenIds.has(item['productId'])) {
+          seenIds.add(item['productId']);
           allItems.push(item);
         }
       }
@@ -127,8 +127,8 @@ class DugaCrawler extends BaseCrawler<DugaProduct> {
 
         let newCount = 0;
         for (const item of oldResponse.items) {
-          if (!seenIds.has(item.productId)) {
-            seenIds.add(item.productId);
+          if (!seenIds.has(item['productId'])) {
+            seenIds.add(item['productId']);
             allItems.push(item);
             newCount++;
           }
@@ -253,33 +253,36 @@ class DugaCrawler extends BaseCrawler<DugaProduct> {
    * DugaProductをParsedProductDataに変換
    */
   protected parseItem(item: DugaProduct): ParsedProductData | null {
-    if (!item.productId || !item.title) {
+    if (!item['productId'] || !item['title']) {
       return null;
     }
 
-    return {
-      normalizedProductId: `duga-${item.productId}`,
-      originalId: item.productId,
-      title: item.title,
-      description: item.description,
-      releaseDate: item.releaseDate,
-      duration: item.duration,
-      thumbnailUrl: item.thumbnailUrl,
-      sampleImages: item.sampleImages,
-      packageUrl: item.packageUrl,
-      sampleVideos: item.sampleVideos,
-      affiliateUrl: item.affiliateUrl,
-      price: item.price,
-      performers: item.performers?.map(p => p.name),
-      categories: item.categories?.map(c => c.name),
-      saleInfo: item.saleInfo ? {
+    const result: ParsedProductData = {
+      normalizedProductId: `duga-${item['productId']}`,
+      originalId: item['productId'],
+      title: item['title'],
+    };
+    if (item['description'] !== undefined) result.description = item['description'];
+    if (item['releaseDate'] !== undefined) result.releaseDate = item['releaseDate'];
+    if (item['duration'] !== undefined) result.duration = item['duration'];
+    if (item['thumbnailUrl'] !== undefined) result.thumbnailUrl = item['thumbnailUrl'];
+    if (item.sampleImages !== undefined) result.sampleImages = item.sampleImages;
+    if (item.packageUrl !== undefined) result.packageUrl = item.packageUrl;
+    if (item.sampleVideos !== undefined) result.sampleVideos = item.sampleVideos;
+    if (item['affiliateUrl'] !== undefined) result.affiliateUrl = item['affiliateUrl'];
+    if (item['price'] !== undefined) result.price = item['price'];
+    if (item.performers) result.performers = item.performers.map(p => p.name);
+    if (item.categories) result.categories = item.categories.map(c => c.name);
+    if (item.saleInfo) {
+      result.saleInfo = {
         regularPrice: item.saleInfo.regularPrice,
         salePrice: item.saleInfo.salePrice,
         discountPercent: item.saleInfo.discountPercent || 0,
-        saleType: item.saleInfo.saleType,
-        saleName: item.saleInfo.saleName,
-      } : undefined,
-    };
+      };
+      if (item.saleInfo.saleType !== undefined) result.saleInfo.saleType = item.saleInfo.saleType;
+      if (item.saleInfo.saleName !== undefined) result.saleInfo.saleName = item.saleInfo.saleName;
+    }
+    return result;
   }
 
   /**

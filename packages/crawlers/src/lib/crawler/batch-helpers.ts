@@ -59,9 +59,9 @@ export async function ensurePerformers(
 
   // 1. 既存の出演者を一括取得
   const existing = await db
-    .select({ id: performers.id, name: performers.name })
+    .select({ id: performers['id'], name: performers['name'] })
     .from(performers)
-    .where(inArray(performers.name, uniqueNames));
+    .where(inArray(performers['name'], uniqueNames));
 
   const nameToId = new Map<string, number>();
   for (const p of existing) {
@@ -77,7 +77,7 @@ export async function ensurePerformers(
       .insert(performers)
       .values(toCreate.map((name) => ({ name })))
       .onConflictDoNothing()
-      .returning({ id: performers.id, name: performers.name });
+      .returning({ id: performers['id'], name: performers['name'] });
 
     for (const p of created) {
       nameToId.set(p.name, p.id);
@@ -87,9 +87,9 @@ export async function ensurePerformers(
     const stillMissing = toCreate.filter((name) => !nameToId.has(name));
     if (stillMissing.length > 0) {
       const refetch = await db
-        .select({ id: performers.id, name: performers.name })
+        .select({ id: performers['id'], name: performers['name'] })
         .from(performers)
-        .where(inArray(performers.name, stillMissing));
+        .where(inArray(performers['name'], stillMissing));
 
       for (const p of refetch) {
         nameToId.set(p.name, p.id);
@@ -242,7 +242,7 @@ export async function processProductPerformers(
  * 出演者をバッチで取得または作成（別名検索も含む）
  *
  * 検索順序:
- * 1. performers.name で完全一致を検索
+ * 1. performers['name'] で完全一致を検索
  * 2. performer_aliases.alias_name で別名を検索
  * 3. 見つからなければ新規作成
  *
@@ -264,9 +264,9 @@ async function ensurePerformersWithAliases(
 
   // 1. 既存の出演者を一括取得
   const existing = await dbCtx
-    .select({ id: performers.id, name: performers.name })
+    .select({ id: performers['id'], name: performers['name'] })
     .from(performers)
-    .where(inArray(performers.name, uniqueNames));
+    .where(inArray(performers['name'], uniqueNames));
 
   for (const p of existing) {
     nameToId.set(p.name, p.id);
@@ -279,15 +279,15 @@ async function ensurePerformersWithAliases(
       .select({
         aliasName: performerAliases.aliasName,
         performerId: performerAliases.performerId,
-        performerName: performers.name,
+        performerName: performers['name'],
       })
       .from(performerAliases)
-      .innerJoin(performers, eq(performerAliases.performerId, performers.id))
+      .innerJoin(performers, eq(performerAliases.performerId, performers['id']))
       .where(inArray(performerAliases.aliasName, notFoundNames));
 
     for (const row of aliasResults) {
-      nameToId.set(row.aliasName, row.performerId);
-      console.log(`    📝 別名マッチ: "${row.aliasName}" → "${row.performerName}" (ID: ${row.performerId})`);
+      nameToId.set(row.aliasName, row['performerId']);
+      console.log(`    📝 別名マッチ: "${row.aliasName}" → "${row['performerName']}" (ID: ${row['performerId']})`);
     }
   }
 
@@ -298,7 +298,7 @@ async function ensurePerformersWithAliases(
       .insert(performers)
       .values(stillNotFound.map((name) => ({ name })))
       .onConflictDoNothing()
-      .returning({ id: performers.id, name: performers.name });
+      .returning({ id: performers['id'], name: performers['name'] });
 
     for (const p of created) {
       nameToId.set(p.name, p.id);
@@ -308,9 +308,9 @@ async function ensurePerformersWithAliases(
     const stillMissing = stillNotFound.filter((name) => !nameToId.has(name));
     if (stillMissing.length > 0) {
       const refetch = await dbCtx
-        .select({ id: performers.id, name: performers.name })
+        .select({ id: performers['id'], name: performers['name'] })
         .from(performers)
-        .where(inArray(performers.name, stillMissing));
+        .where(inArray(performers['name'], stillMissing));
 
       for (const p of refetch) {
         nameToId.set(p.name, p.id);

@@ -96,7 +96,7 @@ export function detectEncoding(
   // Check Content-Type header first
   if (contentType) {
     const charsetMatch = contentType.match(/charset=([^\s;]+)/i);
-    if (charsetMatch) {
+    if (charsetMatch?.[1]) {
       return charsetMatch[1].toLowerCase();
     }
   }
@@ -118,13 +118,13 @@ export function detectEncoding(
 
   // Pattern 1: <meta charset="xxx">
   const charsetMatch1 = head.match(/<meta\s+charset=["']?([^"'\s>]+)/i);
-  if (charsetMatch1) {
+  if (charsetMatch1?.[1]) {
     return charsetMatch1[1].toLowerCase();
   }
 
   // Pattern 2: <meta http-equiv="Content-Type" content="text/html; charset=xxx">
   const charsetMatch2 = head.match(/content=["'][^"']*charset=([^"'\s;]+)/i);
-  if (charsetMatch2) {
+  if (charsetMatch2?.[1]) {
     return charsetMatch2[1].toLowerCase();
   }
 
@@ -197,6 +197,7 @@ export function generateNextId(
   if (format === 'MMDDYY_NNN' || format === 'MMDDYY_NNNN') {
     // Date-based format: MMDDYY_NNN or MMDDYY_NNNN
     const [datePart, seqPart] = currentId.split('_');
+    if (!datePart || !seqPart) return null;
     const maxSeq = format === 'MMDDYY_NNN' ? 10 : 20;
     const seqLen = format === 'MMDDYY_NNN' ? 3 : 4;
 
@@ -444,7 +445,7 @@ export function extractBasicInfo(html: string): {
     /<meta\s+property=["']og:image["']\s+content=["'](.*?)["']/i
   );
 
-  let rawTitle = titleMatch ? titleMatch[1].trim() : undefined;
+  let rawTitle = titleMatch?.[1]?.trim();
 
   // Remove site suffixes
   if (rawTitle) {
@@ -453,10 +454,12 @@ export function extractBasicInfo(html: string): {
     }
   }
 
+  const description = descMatch?.[1]?.trim();
+  const imageUrl = imgMatch?.[1];
   return {
-    rawTitle,
-    description: descMatch ? descMatch[1].trim() : undefined,
-    imageUrl: imgMatch ? imgMatch[1] : undefined,
+    ...(rawTitle !== undefined && { rawTitle }),
+    ...(description !== undefined && { description }),
+    ...(imageUrl !== undefined && { imageUrl }),
   };
 }
 
@@ -482,7 +485,7 @@ export function extractPrice(html: string): {
   const priceMatch = html.match(
     /var\s+ec_price\s*=\s*parseFloat\s*\(\s*['"](\d+(?:\.\d+)?)['"]\s*\)/
   );
-  if (priceMatch) {
+  if (priceMatch && priceMatch[1]) {
     const usdPrice = parseFloat(priceMatch[1]);
     price = Math.round(usdPrice * 150);
   }
@@ -492,7 +495,7 @@ export function extractPrice(html: string): {
     const itemPriceMatch = html.match(
       /ec_item_price\s*=\s*['"]?(\d+(?:\.\d+)?)['"]?/
     );
-    if (itemPriceMatch) {
+    if (itemPriceMatch && itemPriceMatch[1]) {
       const usdPrice = parseFloat(itemPriceMatch[1]);
       price = Math.round(usdPrice * 150);
     }
@@ -501,8 +504,8 @@ export function extractPrice(html: string): {
   // Pattern 3: Japanese yen price
   if (!price) {
     const yenMatch = html.match(/[¥￥]?\s*(\d{1,3}(?:,\d{3})*)\s*円/);
-    if (yenMatch) {
-      price = parseInt(yenMatch[1].replace(/,/g, ''));
+    if (yenMatch && yenMatch[1]) {
+      price = parseInt(yenMatch[1].replace(/,/g, ''), 10);
     }
   }
 
@@ -512,15 +515,15 @@ export function extractPrice(html: string): {
   );
   const discountMatch = html.match(/(\d+)\s*%\s*(?:OFF|オフ|off|割引)/);
 
-  if (originalPriceMatch && price) {
+  if (originalPriceMatch && originalPriceMatch[1] && price) {
     const originalUsd = parseFloat(originalPriceMatch[1]);
     const regularPrice = Math.round(originalUsd * 150);
     if (regularPrice > price) {
       saleInfo = {
         regularPrice,
         salePrice: price,
-        discountPercent: discountMatch
-          ? parseInt(discountMatch[1])
+        discountPercent: (discountMatch && discountMatch[1])
+          ? parseInt(discountMatch[1], 10)
           : Math.round((1 - price / regularPrice) * 100),
         saleType: 'sale',
       };
@@ -531,7 +534,7 @@ export function extractPrice(html: string): {
   const regularPriceVar = html.match(
     /(?:ec_regular_price|regular_price|original_price)\s*=\s*(?:parseFloat\s*\(\s*)?['"]?(\d+(?:\.\d+)?)['"]?/
   );
-  if (regularPriceVar && price && !saleInfo) {
+  if (regularPriceVar && regularPriceVar[1] && price && !saleInfo) {
     const regularUsd = parseFloat(regularPriceVar[1]);
     const regularPrice = Math.round(regularUsd * 150);
     if (regularPrice > price) {
@@ -544,7 +547,10 @@ export function extractPrice(html: string): {
     }
   }
 
-  return { price, saleInfo };
+  return {
+    ...(price !== undefined && { price }),
+    ...(saleInfo !== undefined && { saleInfo }),
+  };
 }
 
 /**
@@ -562,9 +568,9 @@ export function extractActors(html: string, title?: string): string[] {
   // Pattern 2: Title format "女優名 【ふりがな】 タイトル" (HEYZO系)
   if (rawActors.length === 0) {
     const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
-    if (titleMatch) {
+    if (titleMatch?.[1]) {
       const titleActorMatch = titleMatch[1].match(/^([^\s【]+)\s*【[^】]+】/);
-      if (titleActorMatch) {
+      if (titleActorMatch?.[1]) {
         rawActors = [titleActorMatch[1]];
       }
     }
@@ -573,7 +579,7 @@ export function extractActors(html: string, title?: string): string[] {
   // Pattern 3: HTML content with 出演者 label
   if (rawActors.length === 0) {
     const actorMatches = html.match(/出演者?[:：]?\s*([^<\n]+)/i);
-    if (actorMatches) {
+    if (actorMatches?.[1]) {
       rawActors = actorMatches[1]
         .split(/[、,]/)
         .map((a) => a.trim())
@@ -597,7 +603,7 @@ export function extractReleaseDate(html: string): string | undefined {
   const dateMatch = html.match(
     /配信日[:：]?\s*(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/
   );
-  return dateMatch
+  return dateMatch?.[1] && dateMatch[2] && dateMatch[3]
     ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
     : undefined;
 }
@@ -633,10 +639,10 @@ export function extractReviews(html: string): DtiReview[] {
 
   let match;
   while ((match = reviewBlockRegex.exec(html)) !== null) {
-    const ratingHtml = match[1];
-    const content = match[2].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
-    const reviewerRaw = match[3].trim();
-    const dateRaw = match[4].trim();
+    const ratingHtml = match[1] ?? '';
+    const content = (match[2] ?? '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+    const reviewerRaw = (match[3] ?? '').trim();
+    const dateRaw = (match[4] ?? '').trim();
 
     // Extract rating from star count
     const starCount = (ratingHtml.match(/★/g) || []).length;
@@ -648,7 +654,7 @@ export function extractReviews(html: string): DtiReview[] {
     // Parse date (format: YYYY-MM-DD HH:MM:SS)
     let reviewDate: string | undefined;
     const dateMatch = dateRaw.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})/);
-    if (dateMatch) {
+    if (dateMatch?.[1]) {
       reviewDate = dateMatch[1].replace(/\//g, '-');
     }
 
@@ -657,7 +663,7 @@ export function extractReviews(html: string): DtiReview[] {
         reviewerName,
         rating,
         content,
-        reviewDate,
+        ...(reviewDate !== undefined && { reviewDate }),
       });
     }
   }
@@ -677,7 +683,7 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
     html.matchAll(/<a[^>]*href=["']([^"']*members[^"']*gallery[^"']*\.jpg)["']/gi)
   );
   for (const match of memberGalleryMatches) {
-    imageSet.add(match[1]);
+    if (match[1]) imageSet.add(match[1]);
   }
 
   // Pattern 2: Movie thumb images
@@ -685,7 +691,7 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
     html.matchAll(/<img[^>]*src=["']([^"']*moviepages[^"']*\.jpg)["']/gi)
   );
   for (const match of movieThumbMatches) {
-    imageSet.add(match[1]);
+    if (match[1]) imageSet.add(match[1]);
   }
 
   // Pattern 3: Sample image links
@@ -693,7 +699,7 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
     html.matchAll(/<a[^>]*href=["']([^"']*\/posters\/[^"']*\.jpg)["']/gi)
   );
   for (const match of sampleLinkMatches) {
-    imageSet.add(match[1]);
+    if (match[1]) imageSet.add(match[1]);
   }
 
   // Pattern 4: HEYZO sample images
@@ -701,7 +707,7 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
     html.matchAll(/<img[^>]*src=["']([^"']*\/contents\/[^"']*sample[^"']*\.jpg)["']/gi)
   );
   for (const match of heyzoMatches) {
-    imageSet.add(match[1]);
+    if (match[1]) imageSet.add(match[1]);
   }
 
   // Pattern 5: Generic sample image patterns
@@ -709,7 +715,7 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
     html.matchAll(/<img[^>]*src=["']([^"']*sample[^"']*\.jpg)["']/gi)
   );
   for (const match of genericSampleMatches) {
-    imageSet.add(match[1]);
+    if (match[1]) imageSet.add(match[1]);
   }
 
   // Remove main image URL if provided
@@ -788,7 +794,7 @@ export async function saveProductImages(
         .limit(1);
 
       if (existing.length === 0) {
-        await db.insert(productImages).values({
+        await db['insert'](productImages).values({
           productId,
           imageUrl: thumbnailUrl,
           imageType: 'thumbnail',
@@ -804,6 +810,7 @@ export async function saveProductImages(
       let savedCount = 0;
       for (let i = 0; i < sampleImages.length; i++) {
         const imageUrl = sampleImages[i];
+        if (!imageUrl) continue;
 
         const existing = await db
           .select()
@@ -817,7 +824,7 @@ export async function saveProductImages(
           .limit(1);
 
         if (existing.length === 0) {
-          await db.insert(productImages).values({
+          await db['insert'](productImages).values({
             productId,
             imageUrl,
             imageType: 'sample',
@@ -862,7 +869,7 @@ export async function saveProductVideo(
       .limit(1);
 
     if (existing.length === 0) {
-      await db.insert(productVideos).values({
+      await db['insert'](productVideos).values({
         productId,
         videoUrl: sampleVideoUrl,
         videoType: 'sample',
@@ -888,13 +895,13 @@ export async function saveProduct(
 ): Promise<{ productDbId: number; isNew: boolean } | null> {
   const db = getDb();
   const normalizedProductId = `${config.siteName}-${productId}`;
-  const aspName = config.aspName || config.siteName; // Use aspName if set, otherwise fall back to siteName
+  const aspName = config['aspName'] || config.siteName; // Use aspName if set, otherwise fall back to siteName
 
   try {
     // Validate product data
     const validation = validateProductData({
-      title: productData.title,
-      description: productData.description,
+      ...(productData.title && { title: productData.title }),
+      ...(productData.description && { description: productData.description }),
       aspName: aspName,
       originalId: productId,
     });
@@ -914,7 +921,7 @@ export async function saveProduct(
     let productDbId: number;
     let isNew = false;
 
-    if (existingProduct.length > 0) {
+    if (existingProduct.length > 0 && existingProduct[0]) {
       productDbId = existingProduct[0].id;
     } else {
       isNew = true;
@@ -931,15 +938,15 @@ export async function saveProduct(
           releaseDate: productData.releaseDate,
           defaultThumbnailUrl: thumbnailUrl,
         })
-        .returning({ id: products.id });
+        .returning({ id: products['id'] });
 
-      productDbId = insertedProduct.id;
+      productDbId = insertedProduct!.id;
 
       // Generate affiliate URL
       const affiliateUrl = generateDTILink(url);
 
       // Insert into product_sources
-      await db.insert(productSources).values({
+      await db['insert'](productSources).values({
         productId: productDbId,
         aspName: aspName,
         originalProductId: productId,
@@ -980,20 +987,20 @@ export async function saveProduct(
           const existingPerformer = await db
             .select()
             .from(performers)
-            .where(eq(performers.name, actorName))
+            .where(eq(performers['name'], actorName))
             .limit(1);
 
           let performerId: number;
 
-          if (existingPerformer.length > 0) {
+          if (existingPerformer.length > 0 && existingPerformer[0]) {
             performerId = existingPerformer[0].id;
           } else {
             const [insertedPerformer] = await db
               .insert(performers)
               .values({ name: actorName })
-              .returning({ id: performers.id });
+              .returning({ id: performers['id'] });
 
-            performerId = insertedPerformer.id;
+            performerId = insertedPerformer!.id;
           }
 
           // Link product to performer
@@ -1009,7 +1016,7 @@ export async function saveProduct(
             .limit(1);
 
           if (existingLink.length === 0) {
-            await db.insert(productPerformers).values({
+            await db['insert'](productPerformers).values({
               productId: productDbId,
               performerId,
             });
@@ -1024,7 +1031,7 @@ export async function saveProduct(
         .where(eq(tags.name, config.siteName))
         .limit(1);
 
-      if (existingSiteTag.length > 0) {
+      if (existingSiteTag.length > 0 && existingSiteTag[0]) {
         const tagId = existingSiteTag[0].id;
 
         const existingTagLink = await db
@@ -1039,7 +1046,7 @@ export async function saveProduct(
           .limit(1);
 
         if (existingTagLink.length === 0) {
-          await db.insert(productTags).values({
+          await db['insert'](productTags).values({
             productId: productDbId,
             tagId,
           });
@@ -1074,8 +1081,8 @@ async function runAIFeatures(
     // AI description generation
     const aiResult = await generateProductDescription({
       title: productData.title || '',
-      originalDescription: productData.description,
-      performers: productData.actors,
+      ...(productData.description && { originalDescription: productData.description }),
+      ...(productData.actors && { performers: productData.actors }),
     });
 
     if (aiResult) {

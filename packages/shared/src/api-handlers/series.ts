@@ -18,7 +18,7 @@ export function createSeriesHandler(deps: SeriesHandlerDeps) {
   ) {
     try {
       const { seriesId } = await params;
-      const { searchParams } = new URL(request.url);
+      const { searchParams } = new URL(request['url']);
       const locale = searchParams.get('locale') || 'ja';
 
       const tagId = parseInt(seriesId);

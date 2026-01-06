@@ -18,8 +18,8 @@ let meilisearchClient: MeiliSearch | null = null;
  */
 export function getMeilisearchClient(): MeiliSearch {
   if (!meilisearchClient) {
-    const host = process.env.MEILISEARCH_HOST || 'http://localhost:7700';
-    const apiKey = process.env.MEILISEARCH_API_KEY || 'masterKey';
+    const host = process.env['MEILISEARCH_HOST'] || 'http://localhost:7700';
+    const apiKey = process.env['MEILISEARCH_API_KEY'] || 'masterKey';
 
     meilisearchClient = new MeiliSearch({
       host,

@@ -95,10 +95,10 @@ async function downloadCsv(): Promise<string> {
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
   }
 
-  const csv = await response.text();
+  const csv = await response['text']();
 
   // 一時ファイルに保存（デバッグ用）
   const tempPath = path.join(process.cwd(), 'tmp', 'b10f-latest.csv');
@@ -120,7 +120,7 @@ function parseCsv(csv: string): B10fProduct[] {
 
   // ヘッダー行をスキップ
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const line = lines[i]?.trim();
     if (!line) continue;
 
     // CSVパース（簡易版 - カンマ区切り）
@@ -129,19 +129,19 @@ function parseCsv(csv: string): B10fProduct[] {
     if (fields.length < 13) continue; // 必須フィールドが足りない
 
     products.push({
-      productId: fields[0],
-      releaseDate: fields[1],
-      title: fields[2],
-      captureCount: fields[3],
-      imageType: fields[4],
-      imageUrl: fields[5],
-      productUrl: fields[6],
-      description: fields[7],
-      price: fields[8],
-      duration: fields[9],
-      brand: fields[10],
-      category: fields[11],
-      performers: fields[12],
+      productId: fields[0] ?? '',
+      releaseDate: fields[1] ?? '',
+      title: fields[2] ?? '',
+      captureCount: fields[3] ?? '',
+      imageType: fields[4] ?? '',
+      imageUrl: fields[5] ?? '',
+      productUrl: fields[6] ?? '',
+      description: fields[7] ?? '',
+      price: fields[8] ?? '',
+      duration: fields[9] ?? '',
+      brand: fields[10] ?? '',
+      category: fields[11] ?? '',
+      performers: fields[12] ?? '',
     });
   }
 
@@ -173,16 +173,17 @@ async function generateAIContent(
 
   // パフォーマー名をパース
   const performerNames = item.performers
-    ? parsePerformerNames(item.performers).filter(name => isValidPerformerForProduct(name, item.title))
+    ? parsePerformerNames(item.performers).filter(name => isValidPerformerForProduct(name, item['title']))
     : [];
 
   const aiHelper = getAIHelper();
+  const genres = item.category ? [item.category] : undefined;
   const result = await aiHelper.processProduct(
     {
-      title: item.title,
-      description: item.description,
+      title: item['title'],
+      description: item['description'],
       performers: performerNames,
-      genres: item.category ? [item.category] : undefined,
+      ...(genres && { genres }),
     },
     {
       extractTags: true,
@@ -200,10 +201,10 @@ async function generateAIContent(
   let aiTags: AIContent['aiTags'];
 
   // AI説明文
-  if (result.description) {
-    aiDescription = result.description;
+  if (result['description']) {
+    aiDescription = result['description'];
     console.log(`      ✅ AI説明文生成完了`);
-    console.log(`         キャッチコピー: ${result.description.catchphrase}`);
+    console.log(`         キャッチコピー: ${result['description'].catchphrase}`);
   }
 
   // AIタグ
@@ -214,7 +215,10 @@ async function generateAIContent(
     console.log(`         属性: ${result.tags.attributes.join(', ') || 'なし'}`);
   }
 
-  return { aiDescription, aiTags };
+  return {
+    ...(aiDescription && { aiDescription }),
+    ...(aiTags && { aiTags }),
+  };
 }
 
 /**
@@ -305,8 +309,8 @@ async function main() {
   const enableAI = !args.includes('--no-ai');
   const forceReprocess = args.includes('--force');
 
-  const limit = limitArg ? parseInt(limitArg.split('=')[1]) : undefined;
-  const offset = offsetArg ? parseInt(offsetArg.split('=')[1]) : 0;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '0', 10) : undefined;
+  const offset = offsetArg ? parseInt(offsetArg.split('=')[1] ?? '0', 10) : 0;
 
   console.log('=== b10f.jp CSVクローラー（生データ保存対応） ===');
   console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
@@ -395,14 +399,14 @@ async function main() {
     // 5. 各商品を処理
     for (const [index, item] of productsToProcess.entries()) {
       try {
-        console.log(`[${index + 1}/${productsToProcess.length}] 処理中: ${item.title} (ID: ${item.productId})`);
+        console.log(`[${index + 1}/${productsToProcess.length}] 処理中: ${item['title']} (ID: ${item['productId']})`);
 
         // 商品データの検証
         const validation = validateProductData({
-          title: item.title,
-          description: item.description,
+          title: item['title'],
+          description: item['description'],
           aspName: 'b10f',
-          originalId: item.productId,
+          originalId: item['productId'],
         });
 
         if (!validation.isValid) {
@@ -411,16 +415,16 @@ async function main() {
         }
 
         // normalized_product_id生成: b10f-{productId}
-        const normalizedProductId = `b10f-${item.productId}`;
+        const normalizedProductId = `b10f-${item['productId']}`;
 
         // 6. productsテーブルにupsert
-        const releaseDateParsed = item.releaseDate ? new Date(item.releaseDate) : null;
-        const durationMinutes = item.duration ? parseInt(item.duration) : null;
-        const priceYen = item.price ? parseInt(item.price) : null;
+        const releaseDateParsed = item['releaseDate'] ? new Date(item['releaseDate']) : null;
+        const durationMinutes = item['duration'] ? parseInt(item['duration']) : null;
+        const priceYen = item['price'] ? parseInt(item['price']) : null;
         // 大サイズ画像URL (1s.jpg → 1.jpg)、CSVに画像URLがない場合は商品IDから生成
         const largeImageUrl = item.imageUrl
           ? getLargeImageUrl(item.imageUrl)
-          : generateImageUrlFromProductId(item.productId);
+          : generateImageUrlFromProductId(item['productId']);
 
         const productResult = await db.execute(sql`
           INSERT INTO products (
@@ -434,8 +438,8 @@ async function main() {
           )
           VALUES (
             ${normalizedProductId},
-            ${item.title || ''},
-            ${item.description || null},
+            ${item['title'] || ''},
+            ${item['description'] || null},
             ${releaseDateParsed},
             ${durationMinutes},
             ${largeImageUrl || null},
@@ -478,8 +482,8 @@ async function main() {
           VALUES (
             ${productId},
             'b10f',
-            ${item.productId},
-            ${generateAffiliateUrl(item.productId)},
+            ${item['productId']},
+            ${generateAffiliateUrl(item['productId'])},
             ${priceYen},
             'CSV',
             NOW()
@@ -526,7 +530,7 @@ async function main() {
 
           // キャプチャ画像URLを生成
           // 例: https://ads.b10f.jp/images/142-zmar-146_a/c1.jpg
-          const imageUrlToUse = item.imageUrl || generateImageUrlFromProductId(item.productId);
+          const imageUrlToUse = item.imageUrl || generateImageUrlFromProductId(item['productId']);
           const baseImageUrl = imageUrlToUse.replace(/\/1s?\.jpg$/, '');
 
           for (let i = 1; i <= captureCount; i++) {
@@ -557,7 +561,7 @@ async function main() {
         {
           // 大サイズのみ保存（1s.jpg → 1.jpg に変換）
           // 1s.jpg は約40KB、1.jpg は約200KB
-          const imageUrlToUse = item.imageUrl || generateImageUrlFromProductId(item.productId);
+          const imageUrlToUse = item.imageUrl || generateImageUrlFromProductId(item['productId']);
           const baseImageUrl = imageUrlToUse.replace(/\/1s?\.jpg$/, '');
           const packageImageUrl = `${baseImageUrl}/1.jpg`;
 
@@ -582,11 +586,11 @@ async function main() {
         // imageUrl例: https://ads.b10f.jp/images/142-zmar-147_a/1s.jpg → productCode: 142-zmar-147
         // imageUrl例: https://ads.b10f.jp/images/1-dmow-096/1s.jpg → productCode: 1-dmow-096
         {
-          const videoImageUrl = item.imageUrl || generateImageUrlFromProductId(item.productId);
+          const videoImageUrl = item.imageUrl || generateImageUrlFromProductId(item['productId']);
           // imageUrlからproductCodeを抽出（_a, _b などのサフィックスを除去）
           // パターン: /images/{productCode}[_suffix]/1s.jpg
           const productCodeMatch = videoImageUrl.match(/\/images\/([^\/]+?)(?:_[a-z])?\/\d+s?\.jpg/i);
-          const productCode = productCodeMatch ? productCodeMatch[1] : item.productId;
+          const productCode = productCodeMatch ? productCodeMatch[1] : item['productId'];
 
           if (productCode) {
             const sampleVideoUrl = `https://ads.b10f.jp/flv/${productCode}.mp4`;
@@ -659,7 +663,7 @@ async function main() {
         if (item.performers && item.performers.trim()) {
           // 共通ユーティリティを使用して演者名をパース・検証
           const validPerformerNames = parsePerformerNames(item.performers)
-            .filter(name => isValidPerformerForProduct(name, item.title));
+            .filter(name => isValidPerformerForProduct(name, item['title']));
 
           if (validPerformerNames.length > 0) {
             console.log(`  👤 出演者保存中 (${validPerformerNames.length}人)...`);
@@ -681,7 +685,7 @@ async function main() {
 
         // 14. 翻訳機能: タイトルと説明を多言語翻訳
         if (enableAI) {
-          await translateAndSave(db, productId, item.title, item.description);
+          await translateAndSave(db, productId, item['title'], item['description']);
         }
 
         console.log();

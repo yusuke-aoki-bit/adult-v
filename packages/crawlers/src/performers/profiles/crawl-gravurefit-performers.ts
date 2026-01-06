@@ -56,26 +56,26 @@ function parseThreeSize(text: string): { bust: number | null; waist: number | nu
 
   // バスト
   const bustMatch = text.match(/B(\d+)/);
-  if (bustMatch) {
-    result.bust = parseInt(bustMatch[1], 10);
+  if (bustMatch?.[1]) {
+    result['bust'] = parseInt(bustMatch[1], 10);
   }
 
   // カップサイズ
   const cupMatch = text.match(/\(([A-Z]+)\)/);
-  if (cupMatch) {
-    result.cup = cupMatch[1];
+  if (cupMatch?.[1]) {
+    result['cup'] = cupMatch[1];
   }
 
   // ウエスト
   const waistMatch = text.match(/W(\d+)/);
-  if (waistMatch) {
-    result.waist = parseInt(waistMatch[1], 10);
+  if (waistMatch?.[1]) {
+    result['waist'] = parseInt(waistMatch[1], 10);
   }
 
   // ヒップ
   const hipMatch = text.match(/H(\d+)/);
-  if (hipMatch) {
-    result.hip = parseInt(hipMatch[1], 10);
+  if (hipMatch?.[1]) {
+    result['hip'] = parseInt(hipMatch[1], 10);
   }
 
   return result;
@@ -83,13 +83,13 @@ function parseThreeSize(text: string): { bust: number | null; waist: number | nu
 
 function parseHeight(text: string): number | null {
   const match = text.match(/(\d+)cm/);
-  return match ? parseInt(match[1], 10) : null;
+  return match?.[1] ? parseInt(match[1], 10) : null;
 }
 
 function parseBirthday(text: string): string | null {
   // "35歳（1990年8月25日生まれ）" のような形式
   const match = text.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-  if (match) {
+  if (match?.[1] && match[2] && match[3]) {
     const year = match[1];
     const month = match[2].padStart(2, '0');
     const day = match[3].padStart(2, '0');
@@ -101,7 +101,7 @@ function parseBirthday(text: string): string | null {
 function parseDebutDate(text: string): string | null {
   // "2011年1月" のような形式
   const match = text.match(/(\d{4})年(\d{1,2})月/);
-  if (match) {
+  if (match?.[1] && match[2]) {
     const year = match[1];
     const month = match[2].padStart(2, '0');
     return `${year}-${month}`;
@@ -236,42 +236,42 @@ async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
   const existing = await db
     .select()
     .from(performers)
-    .where(eq(performers.name, profile.name))
+    .where(eq(performers['name'], profile.name))
     .limit(1);
 
   // デビュー年を抽出
   let debutYear: number | null = null;
   if (profile.debutDate) {
     const match = profile.debutDate.match(/^(\d{4})/);
-    if (match) {
+    if (match?.[1]) {
       debutYear = parseInt(match[1], 10);
     }
   }
 
   if (existing.length > 0) {
     // 既存のperformerを更新（既存のデータがnullの場合のみ更新）
-    const performer = existing[0];
+    const performer = existing[0]!;
     const updates: Record<string, unknown> = {};
 
-    if (!performer.nameKana && profile.nameKana) updates.nameKana = profile.nameKana;
-    if (!performer.nameEn && profile.nameEn) updates.nameEn = profile.nameEn;
-    if (!performer.height && profile.height) updates.height = profile.height;
-    if (!performer.bust && profile.bust) updates.bust = profile.bust;
-    if (!performer.waist && profile.waist) updates.waist = profile.waist;
-    if (!performer.hip && profile.hip) updates.hip = profile.hip;
-    if (!performer.cup && profile.cup) updates.cup = profile.cup;
-    if (!performer.birthday && profile.birthday) updates.birthday = profile.birthday;
-    if (!performer.bloodType && profile.bloodType) updates.bloodType = profile.bloodType;
-    if (!performer.birthplace && profile.birthplace) updates.birthplace = profile.birthplace;
-    if (!performer.twitterId && profile.twitterId) updates.twitterId = profile.twitterId;
-    if (!performer.instagramId && profile.instagramId) updates.instagramId = profile.instagramId;
-    if (!performer.debutYear && debutYear) updates.debutYear = debutYear;
+    if (!performer['nameKana'] && profile.nameKana) updates['nameKana'] = profile.nameKana;
+    if (!performer['nameEn'] && profile.nameEn) updates['nameEn'] = profile.nameEn;
+    if (!performer['height'] && profile.height) updates['height'] = profile.height;
+    if (!performer['bust'] && profile.bust) updates['bust'] = profile.bust;
+    if (!performer['waist'] && profile.waist) updates['waist'] = profile.waist;
+    if (!performer['hip'] && profile.hip) updates['hip'] = profile.hip;
+    if (!performer['cup'] && profile.cup) updates['cup'] = profile.cup;
+    if (!performer['birthday'] && profile.birthday) updates['birthday'] = profile.birthday;
+    if (!performer['bloodType'] && profile.bloodType) updates['bloodType'] = profile.bloodType;
+    if (!performer['birthplace'] && profile.birthplace) updates['birthplace'] = profile.birthplace;
+    if (!performer['twitterId'] && profile.twitterId) updates['twitterId'] = profile.twitterId;
+    if (!performer['instagramId'] && profile.instagramId) updates['instagramId'] = profile.instagramId;
+    if (!performer['debutYear'] && debutYear) updates['debutYear'] = debutYear;
 
     if (Object.keys(updates).length > 0) {
       await db
         .update(performers)
         .set(updates)
-        .where(eq(performers.id, performer.id));
+        .where(eq(performers['id'], performer['id']));
       console.log(`  Updated: ${profile.name} (${Object.keys(updates).join(', ')})`);
     } else {
       console.log(`  Skipped (no new data): ${profile.name}`);
@@ -282,7 +282,7 @@ async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
       await db
         .insert(performerAliases)
         .values({
-          performerId: performer.id,
+          performerId: performer['id'],
           aliasName: alias,
           source: 'gravurefit',
         })
@@ -293,16 +293,16 @@ async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
     await db
       .insert(performerExternalIds)
       .values({
-        performerId: performer.id,
+        performerId: performer['id'],
         provider: 'gravurefit',
         externalId: profile.profileSlug,
-        profileUrl: profile.sourceUrl,
+        externalUrl: profile.sourceUrl,
       })
       .onConflictDoNothing();
 
     // タグを保存
     if (profile.tags.length > 0) {
-      await savePerformerTags(performer.id, profile.tags);
+      await savePerformerTags(performer['id'], profile.tags);
     }
   } else {
     // 新規performer作成
@@ -324,7 +324,7 @@ async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
         instagramId: profile.instagramId,
         debutYear: debutYear,
       })
-      .returning({ id: performers.id });
+      .returning({ id: performers['id'] });
 
     console.log(`  Created: ${profile.name}`);
 
@@ -333,7 +333,7 @@ async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
       await db
         .insert(performerAliases)
         .values({
-          performerId: newPerformer.id,
+          performerId: newPerformer!.id,
           aliasName: alias,
           source: 'gravurefit',
         })
@@ -344,16 +344,16 @@ async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
     await db
       .insert(performerExternalIds)
       .values({
-        performerId: newPerformer.id,
+        performerId: newPerformer!.id,
         provider: 'gravurefit',
         externalId: profile.profileSlug,
-        profileUrl: profile.sourceUrl,
+        externalUrl: profile.sourceUrl,
       })
       .onConflictDoNothing();
 
     // タグを保存
     if (profile.tags.length > 0) {
-      await savePerformerTags(newPerformer.id, profile.tags);
+      await savePerformerTags(newPerformer!.id, profile.tags);
     }
   }
 }
@@ -382,9 +382,9 @@ async function savePerformerTags(performerId: number, tagNames: string[]): Promi
             category: 'performer_trait', // 演者特徴カテゴリ
           })
           .returning({ id: tags.id });
-        tagId = newTag.id;
+        tagId = newTag!.id;
       } else {
-        tagId = tagRecord[0].id;
+        tagId = tagRecord[0]!['id'];
       }
 
       // 演者-タグ関連を保存
@@ -406,7 +406,7 @@ async function savePerformerTags(performerId: number, tagNames: string[]): Promi
 async function main() {
   const args = process.argv.slice(2);
   const limitArg = args.find(a => a.startsWith('--limit='));
-  const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : 50;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '50', 10) : 50;
 
   console.log('=== gravurefit.com 女優情報クローラー ===\n');
   console.log(`Limit: ${limit}`);

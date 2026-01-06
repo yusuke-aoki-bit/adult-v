@@ -66,14 +66,19 @@ function ImageLightbox({
     if (!isOpen || images.length === 0) return;
 
     // 現在の画像をプリロード
-    preloadImage(images[currentIndex]);
+    const currentImg = images[currentIndex];
+    if (currentImg) {
+      preloadImage(currentImg);
+    }
 
     // 前後の画像をプリロード
     if (images.length > 1) {
       const prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
       const nextIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
-      preloadImage(images[prevIndex]);
-      preloadImage(images[nextIndex]);
+      const prevImg = images[prevIndex];
+      const nextImg = images[nextIndex];
+      if (prevImg) preloadImage(prevImg);
+      if (nextImg) preloadImage(nextImg);
     }
   }, [isOpen, currentIndex, images, preloadImage]);
 
@@ -91,14 +96,15 @@ function ImageLightbox({
 
   // スワイプハンドラー
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
+    touchStartX.current = e.touches[0]?.clientX ?? null;
     touchEndX.current = null;
     setIsTransitioning(false);
   }, []);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (touchStartX.current === null) return;
-    const currentX = e.touches[0].clientX;
+    const currentX = e.touches[0]?.clientX;
+    if (currentX === undefined) return;
     touchEndX.current = currentX;
     const diff = currentX - touchStartX.current;
     setSwipeOffset(diff);

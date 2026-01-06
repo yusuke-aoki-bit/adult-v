@@ -83,7 +83,7 @@ interface GSCRow {
 
 const PROJECT_ID = 'adult-v';
 // GSCに登録されているサイトURL（環境変数で上書き可能）
-const SITE_URL = process.env.GSC_SITE_URL || 'sc-domain:adult-v.web.app';
+const SITE_URL = process.env['GSC_SITE_URL'] || 'sc-domain:adult-v.web.app';
 
 async function getSecret(secretName: string): Promise<string> {
   const client = new SecretManagerServiceClient();
@@ -134,14 +134,14 @@ async function main() {
   const queryResponse = await searchconsole.searchanalytics.query({
     siteUrl: SITE_URL,
     requestBody: {
-      startDate: dateStartStr,
-      endDate: dateEndStr,
+      startDate: dateStartStr!,
+      endDate: dateEndStr!,
       dimensions: ['query'],
       rowLimit: 1000,
     },
   });
 
-  const queryRows = (queryResponse.data.rows || []) as GSCRow[];
+  const queryRows = ((queryResponse as { data: { rows?: GSCRow[] } }).data.rows || []) as GSCRow[];
   console.log(`  取得クエリ数: ${queryRows.length}`);
 
   // 2. ページ別データを取得
@@ -149,14 +149,14 @@ async function main() {
   const pageResponse = await searchconsole.searchanalytics.query({
     siteUrl: SITE_URL,
     requestBody: {
-      startDate: dateStartStr,
-      endDate: dateEndStr,
+      startDate: dateStartStr!,
+      endDate: dateEndStr!,
       dimensions: ['page'],
       rowLimit: 1000,
     },
   });
 
-  const pageRows = (pageResponse.data.rows || []) as GSCRow[];
+  const pageRows = ((pageResponse as { data: { rows?: GSCRow[] } }).data.rows || []) as GSCRow[];
   console.log(`  取得ページ数: ${pageRows.length}`);
 
   // 3. DBに保存
@@ -166,13 +166,13 @@ async function main() {
   const BATCH_SIZE = 100;
   const queryValues = queryRows.map(row => ({
     queryType: 'query' as const,
-    queryOrUrl: row.keys[0],
+    queryOrUrl: row.keys[0]!,
     clicks: row.clicks,
     impressions: row.impressions,
     ctr: String(row.ctr),
     position: String(row.position),
-    dateStart: dateStartStr,
-    dateEnd: dateEndStr,
+    dateStart: dateStartStr!,
+    dateEnd: dateEndStr!,
   }));
 
   for (let i = 0; i < queryValues.length; i += BATCH_SIZE) {
@@ -193,17 +193,17 @@ async function main() {
   }
 
   // 存在するperformer IDのセットを取得（外部キー制約対応）
-  const existingPerformers = await db.select({ id: performers.id }).from(performers);
+  const existingPerformers = await db['select']({ id: performers['id'] }).from(performers);
   const existingPerformerIds = new Set(existingPerformers.map(p => p.id));
 
   // ページデータをバッチ保存（N+1解消）
   const pageValues = pageRows.map(row => {
-    const url = row.keys[0];
+    const url = row.keys[0] ?? '';
     let performerId: number | null = null;
 
     // /actress/{id} パターンを検出
     const actressMatch = url.match(/\/actress\/(\d+)/);
-    if (actressMatch) {
+    if (actressMatch?.[1]) {
       const parsedId = parseInt(actressMatch[1], 10);
       // 存在するperformerのみ関連付け（外部キー制約エラー防止）
       if (existingPerformerIds.has(parsedId)) {
@@ -219,8 +219,8 @@ async function main() {
       impressions: row.impressions,
       ctr: String(row.ctr),
       position: String(row.position),
-      dateStart: dateStartStr,
-      dateEnd: dateEndStr,
+      dateStart: dateStartStr!,
+      dateEnd: dateEndStr!,
     };
   });
 
@@ -248,7 +248,7 @@ async function main() {
   // クエリから女優名を抽出してマッチング
   // 順位50以上 & 表示回数5以上の女優を優先
   const actressQueries = queryRows.filter(row => {
-    const query = row.keys[0];
+    const query = row.keys[0] ?? '';
     // 作品タイトルっぽいもの（長すぎる、特殊文字多い）は除外
     if (query.length > 20 || /[【】「」]/.test(query)) return false;
     // ブランド名っぽいものも除外
@@ -269,25 +269,25 @@ async function main() {
   }> = [];
 
   for (const row of actressQueries) {
-    const query = row.keys[0].trim();
+    const query = (row.keys[0] ?? '').trim();
 
     // DBで女優名を検索
     const foundPerformers = await db
-      .select({ id: performers.id, name: performers.name })
+      .select({ id: performers['id'], name: performers['name'] })
       .from(performers)
-      .where(eq(performers.name, query))
+      .where(eq(performers['name'], query))
       .limit(1);
 
     if (foundPerformers.length > 0) {
-      const performer = foundPerformers[0];
+      const performer = foundPerformers[0]!;
 
       // 優先度スコア計算: 順位が低い（50以上）が表示回数が多いものを優先
       // スコア = 表示回数 * (順位 / 10) → 順位が高いほどスコアが高い
       const priorityScore = Math.round(row.impressions * (row.position / 10));
 
       matchedActresses.push({
-        performerId: performer.id,
-        performerName: performer.name,
+        performerId: performer['id'],
+        performerName: performer['name'],
         impressions: row.impressions,
         position: row.position,
         priorityScore,
@@ -302,15 +302,15 @@ async function main() {
 
   // 上位20名をフッターテーブルに保存
   // まず既存データをクリア
-  await db.delete(footerFeaturedActresses);
+  await db['delete'](footerFeaturedActresses);
 
   // 新データをバッチ挿入（N+1クエリ回避）
   const top20 = matchedActresses.slice(0, 20);
   if (top20.length > 0) {
-    await db.insert(footerFeaturedActresses).values(
+    await db['insert'](footerFeaturedActresses).values(
       top20.map(actress => ({
-        performerId: actress.performerId,
-        performerName: actress.performerName,
+        performerId: actress['performerId'],
+        performerName: actress['performerName'],
         impressions: actress.impressions,
         position: String(actress.position),
         priorityScore: actress.priorityScore,
@@ -329,7 +329,7 @@ async function main() {
   // 上位5名を表示
   console.log('\n🌟 フッター表示女優 (上位5名):');
   for (const actress of matchedActresses.slice(0, 5)) {
-    console.log(`  - ${actress.performerName}: 表示${actress.impressions}回, 順位${actress.position.toFixed(1)}, スコア${actress.priorityScore}`);
+    console.log(`  - ${actress['performerName']}: 表示${actress.impressions}回, 順位${actress.position.toFixed(1)}, スコア${actress.priorityScore}`);
   }
 
   await pool.end();

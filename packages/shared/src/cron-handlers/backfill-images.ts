@@ -33,7 +33,7 @@ async function fetchImageFromMgs(productId: string): Promise<string | null> {
       },
     });
     if (!response.ok) return null;
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
     return $('meta[property="og:image"]').attr('content') || null;
   } catch {
@@ -50,7 +50,7 @@ async function fetchImageFromDuga(productId: string): Promise<string | null> {
       },
     });
     if (!response.ok) return null;
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
     return $('meta[property="og:image"]').attr('content') || null;
   } catch {
@@ -67,7 +67,7 @@ async function fetchImageFromSokmil(productId: string): Promise<string | null> {
       },
     });
     if (!response.ok) return null;
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
     return $('meta[property="og:image"]').attr('content') || null;
   } catch {
@@ -84,7 +84,7 @@ async function fetchImageFromFanza(productId: string): Promise<string | null> {
       },
     });
     if (!response.ok) return null;
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
     return $('meta[property="og:image"]').attr('content') || null;
   } catch {
@@ -131,7 +131,7 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
     };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const limit = parseInt(url.searchParams.get('limit') || '50');
       const aspFilter = url.searchParams.get('asp')?.toUpperCase();
 
@@ -178,7 +178,7 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
             await db.execute(sql`
               UPDATE products
               SET default_thumbnail_url = ${imageUrl}, updated_at = NOW()
-              WHERE id = ${product.id}
+              WHERE id = ${product['id']}
             `);
             stats.updated++;
             console.log(`[backfill-images] Updated: ${product.normalized_product_id}`);

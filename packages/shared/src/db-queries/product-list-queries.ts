@@ -9,7 +9,7 @@ import type { SiteMode } from './asp-filter';
 import { decodeCursor, encodeCursor, createCursorFromProduct } from '../lib/cursor-pagination';
 import { createAspFilterCondition, createProviderFilterCondition, createMultiProviderFilterCondition, createExcludeProviderFilterCondition } from './asp-filter';
 import { generateProductIdVariations } from '../lib/product-id-utils';
-import { normalizeTitle, deduplicateProductsByTitle, type DeduplicatableProduct } from '../lib/deduplication';
+import { normalizeTitle, deduplicateProductsByTitle, type DeduplicatableProduct, type AlternativeSource } from '../lib/deduplication';
 import type { BatchRelatedDataResult } from './core-queries';
 import type { MapProductsWithBatchDataDeps, DbProduct } from './mappers';
 import { mapProductsWithBatchData } from './mappers';
@@ -136,7 +136,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
 
     // 特定のIDリストでフィルタ（バッチ取得用）
     if (options?.ids && options.ids.length > 0) {
-      conditions.push(inArray(products.id, options.ids));
+      conditions.push(inArray(products['id'], options.ids));
     }
 
     // プロバイダー（ASP）でフィルタ（単一）
@@ -157,18 +157,18 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
     // 価格フィルタ（productSourcesの価格を使用）
     if (options?.minPrice !== undefined || options?.maxPrice !== undefined) {
       const priceConditions: SQL[] = [];
-      if (options.minPrice !== undefined) {
-        priceConditions.push(sql`ps.price >= ${options.minPrice}`);
+      if (options['minPrice'] !== undefined) {
+        priceConditions.push(sql`ps.price >= ${options['minPrice']}`);
       }
-      if (options.maxPrice !== undefined) {
-        priceConditions.push(sql`ps.price <= ${options.maxPrice}`);
+      if (options['maxPrice'] !== undefined) {
+        priceConditions.push(sql`ps.price <= ${options['maxPrice']}`);
       }
 
       // EXISTSを使用
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
-          WHERE ps.product_id = ${products.id}
+          WHERE ps.product_id = ${products['id']}
           AND ${sql.join(priceConditions, sql` AND `)}
         )`
       );
@@ -181,7 +181,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productPerformers} pp
-            WHERE pp.product_id = ${products.id}
+            WHERE pp.product_id = ${products['id']}
             AND pp.performer_id = ${performerId}
           )`
         );
@@ -195,7 +195,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productTags} pt
-            WHERE pt.product_id = ${products.id}
+            WHERE pt.product_id = ${products['id']}
             AND pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
           )`
         );
@@ -209,7 +209,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         conditions.push(
           sql`NOT EXISTS (
             SELECT 1 FROM ${productTags} pt
-            WHERE pt.product_id = ${products.id}
+            WHERE pt.product_id = ${products['id']}
             AND pt.tag_id IN (${sql.join(excludeTagIds.map(id => sql`${id}`), sql`, `)})
           )`
         );
@@ -231,25 +231,25 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
 
         conditions.push(
           sql`(
-            ${products.normalizedProductId} = ANY(${variants})
-            OR ${products.normalizedProductId} ILIKE ANY(${variantPatterns})
-            OR ${products.makerProductCode} ILIKE ANY(${variantPatterns})
+            ${products['normalizedProductId']} = ANY(${variants})
+            OR ${products['normalizedProductId']} ILIKE ANY(${variantPatterns})
+            OR ${products['makerProductCode']} ILIKE ANY(${variantPatterns})
             OR EXISTS (
               SELECT 1 FROM ${productSources} ps
-              WHERE ps.product_id = ${products.id}
+              WHERE ps.product_id = ${products['id']}
               AND (ps.original_product_id = ANY(${variants}) OR ps.original_product_id ILIKE ANY(${variantPatterns}))
             )
-            OR ${products}.search_vector @@ plainto_tsquery('simple', ${query})
-            OR ${products.title} ILIKE ${searchPattern}
+            OR ${products['search_vector']} @@ plainto_tsquery('simple', ${query})
+            OR ${products['title']} ILIKE ${searchPattern}
           )`
         );
       } else {
         // 通常の全文検索（タイトル、説明文、AI説明文）
         conditions.push(
           sql`(
-            ${products}.search_vector @@ plainto_tsquery('simple', ${query})
-            OR ${products.title} ILIKE ${searchPattern}
-            OR ${products.aiDescription}::text ILIKE ${searchPattern}
+            ${products['search_vector']} @@ plainto_tsquery('simple', ${query})
+            OR ${products['title']} ILIKE ${searchPattern}
+            OR ${products['aiDescription']}::text ILIKE ${searchPattern}
           )`
         );
       }
@@ -260,7 +260,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productVideos} pv
-          WHERE pv.product_id = ${products.id}
+          WHERE pv.product_id = ${products['id']}
         )`
       );
     }
@@ -270,7 +270,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productImages} pi
-          WHERE pi.product_id = ${products.id}
+          WHERE pi.product_id = ${products['id']}
         )`
       );
     }
@@ -281,7 +281,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       conditions.push(
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
-          WHERE pp.product_id = ${products.id}
+          WHERE pp.product_id = ${products['id']}
         ) = 1`
       );
     } else if (options?.performerType === 'multi') {
@@ -289,7 +289,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       conditions.push(
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
-          WHERE pp.product_id = ${products.id}
+          WHERE pp.product_id = ${products['id']}
         ) >= 2`
       );
     }
@@ -300,7 +300,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
           INNER JOIN ${productSales} psl ON psl.product_source_id = ps.id
-          WHERE ps.product_id = ${products.id}
+          WHERE ps.product_id = ${products['id']}
           AND psl.is_active = true
           AND (psl.end_at IS NULL OR psl.end_at > NOW())
         )`
@@ -312,14 +312,14 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       conditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${productPerformers} pp
-          WHERE pp.product_id = ${products.id}
+          WHERE pp.product_id = ${products['id']}
         )`
       );
     }
 
     // 発売日フィルタ（YYYY-MM-DD形式）
     if (options?.releaseDate) {
-      conditions.push(eq(sql`TO_CHAR(${products.releaseDate}, 'YYYY-MM-DD')`, options.releaseDate));
+      conditions.push(eq(sql`TO_CHAR(${products['releaseDate']}, 'YYYY-MM-DD')`, options['releaseDate']));
     }
 
     return conditions;
@@ -331,18 +331,18 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
   function buildOrderByClause(sortBy?: ProductSortOption): SQL[] {
     switch (sortBy) {
       case 'releaseDateAsc':
-        return [sql`${products.releaseDate} ASC NULLS LAST`, asc(products.normalizedProductId)];
+        return [sql`${products['releaseDate']} ASC NULLS LAST`, asc(products['normalizedProductId'])];
       case 'titleAsc':
-        return [asc(products.title), asc(products.normalizedProductId)];
+        return [asc(products['title']), asc(products['normalizedProductId'])];
       case 'durationDesc':
-        return [desc(sql`COALESCE(${products.duration}, 0)`), sql`${products.releaseDate} DESC NULLS LAST`, desc(products.normalizedProductId)];
+        return [desc(sql`COALESCE(${products['duration']}, 0)`), sql`${products['releaseDate']} DESC NULLS LAST`, desc(products['normalizedProductId'])];
       case 'durationAsc':
-        return [asc(sql`COALESCE(${products.duration}, 0)`), sql`${products.releaseDate} DESC NULLS LAST`, asc(products.normalizedProductId)];
+        return [asc(sql`COALESCE(${products['duration']}, 0)`), sql`${products['releaseDate']} DESC NULLS LAST`, asc(products['normalizedProductId'])];
       case 'random':
         return [sql`RANDOM()`];
       case 'releaseDateDesc':
       default:
-        return [sql`${products.releaseDate} DESC NULLS LAST`, desc(products.normalizedProductId)];
+        return [sql`${products['releaseDate']} DESC NULLS LAST`, desc(products['normalizedProductId'])];
     }
   }
 
@@ -354,13 +354,13 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       // FANZAサイト: 単純に最安を選択
       const productsByTitle = new Map<string, T>();
       for (const product of mappedProducts) {
-        const normalizedTitleKey = normalizeTitle(product.title);
+        const normalizedTitleKey = normalizeTitle(product['title']);
         const existing = productsByTitle.get(normalizedTitleKey);
         if (!existing) {
           productsByTitle.set(normalizedTitleKey, product);
         } else {
           const existingPrice = existing.salePrice || existing.price || Infinity;
-          const currentPrice = product.salePrice || product.price || Infinity;
+          const currentPrice = product.salePrice || product['price'] || Infinity;
           if (currentPrice < existingPrice) {
             productsByTitle.set(normalizedTitleKey, product);
           }
@@ -369,17 +369,17 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
 
       const seenTitles = new Set<string>();
       return mappedProducts.filter(product => {
-        const normalizedTitleKey = normalizeTitle(product.title);
+        const normalizedTitleKey = normalizeTitle(product['title']);
         if (seenTitles.has(normalizedTitleKey)) return false;
         seenTitles.add(normalizedTitleKey);
         const cheapest = productsByTitle.get(normalizedTitleKey);
-        return cheapest?.id === product.id;
+        return cheapest?.id === product['id'];
       });
     } else {
       // Webサイト: alternativeSourcesを保持
       const productGroupsByTitle = new Map<string, T[]>();
       for (const product of mappedProducts) {
-        const normalizedTitleKey = normalizeTitle(product.title);
+        const normalizedTitleKey = normalizeTitle(product['title']);
         const group = productGroupsByTitle.get(normalizedTitleKey) || [];
         group.push(product);
         productGroupsByTitle.set(normalizedTitleKey, group);
@@ -393,20 +393,22 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
           return priceA - priceB;
         });
         const cheapest = sortedGroup[0];
-        if (sortedGroup.length > 1) {
-          cheapest.alternativeSources = sortedGroup.slice(1).map(p => ({
-            aspName: p.provider || 'unknown',
-            price: p.price,
-            salePrice: p.salePrice,
-            affiliateUrl: p.affiliateUrl || '',
-            productId: typeof p.id === 'string' ? parseInt(p.id, 10) : (p.id as number),
-          }));
+        if (cheapest) {
+          if (sortedGroup.length > 1) {
+            cheapest.alternativeSources = sortedGroup.slice(1).map(p => ({
+              aspName: p.provider || 'unknown',
+              price: p.price,
+              salePrice: p.salePrice,
+              affiliateUrl: p.affiliateUrl || '',
+              productId: typeof p.id === 'string' ? parseInt(p.id, 10) : (p.id as number),
+            } as AlternativeSource));
+          }
+          deduplicatedProducts.push(cheapest);
         }
-        deduplicatedProducts.push(cheapest);
       }
 
       const originalOrder = new Map(mappedProducts.map((p, i) => [p.id, i]));
-      deduplicatedProducts.sort((a, b) => (originalOrder.get(a.id as string) ?? Infinity) - (originalOrder.get(b.id as string) ?? Infinity));
+      deduplicatedProducts.sort((a, b) => (originalOrder.get(a.id) ?? Infinity) - (originalOrder.get(b.id) ?? Infinity));
       return deduplicatedProducts;
     }
   }
@@ -425,15 +427,15 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         const results = await db
           .selectDistinct({
             product: products,
-            price: productSources.price,
+            price: productSources['price'],
           })
           .from(products)
-          .innerJoin(productSources, eq(products.id, productSources.productId))
+          .innerJoin(productSources, eq(products['id'], productSources['productId']))
           .where(whereClause)
           .orderBy(
             options.sortBy === 'priceAsc'
-              ? asc(productSources.price)
-              : desc(productSources.price)
+              ? asc(productSources['price'])
+              : desc(productSources['price'])
           )
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
@@ -461,19 +463,19 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         const results = await db
           .select({
             product: products,
-            avgRating: productRatingSummary.averageRating,
-            totalReviews: productRatingSummary.totalReviews,
+            avgRating: productRatingSummary['averageRating'],
+            totalReviews: productRatingSummary['totalReviews'],
           })
           .from(products)
-          .leftJoin(productRatingSummary, eq(products.id, productRatingSummary.productId))
+          .leftJoin(productRatingSummary, eq(products['id'], productRatingSummary['productId']))
           .where(whereClause)
           .orderBy(
             options.sortBy === 'ratingDesc'
-              ? desc(sql`COALESCE(${productRatingSummary.averageRating}, 0)`)
+              ? desc(sql`COALESCE(${productRatingSummary['averageRating']}, 0)`)
               : options.sortBy === 'ratingAsc'
-              ? asc(sql`COALESCE(${productRatingSummary.averageRating}, 0)`)
-              : desc(sql`COALESCE(${productRatingSummary.totalReviews}, 0)`),
-            desc(products.releaseDate)
+              ? asc(sql`COALESCE(${productRatingSummary['averageRating']}, 0)`)
+              : desc(sql`COALESCE(${productRatingSummary['totalReviews']}, 0)`),
+            desc(products['releaseDate'])
           )
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
@@ -565,7 +567,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
            !options.actressId &&
            !options.isNew &&
            !options.isFeatured &&
-           !options.releaseDate;
+           !options['releaseDate'];
   }
 
   /**
@@ -587,7 +589,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       // フィルターなしの場合でもサイトモード条件は必要
       if (hasNoFilters(options)) {
         const result = await db
-          .select({ count: sql<number>`count(DISTINCT ${products.id})` })
+          .select({ count: sql<number>`count(DISTINCT ${products['id']})` })
           .from(products)
           .innerJoin(productSources, and(
             sql`${productSources}.product_id = ${products}.id`,
@@ -606,7 +608,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       const whereClause = nonAspConditions.length > 0 ? and(...nonAspConditions) : undefined;
 
       const result = await db
-        .select({ count: sql<number>`count(DISTINCT ${products.id})` })
+        .select({ count: sql<number>`count(DISTINCT ${products['id']})` })
         .from(products)
         .innerJoin(productSources, and(
           sql`${productSources}.product_id = ${products}.id`,
@@ -740,10 +742,10 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       const batchData = await batchFetchProductRelatedData(productIds, undefined, listLimits);
 
       // rows を DbProduct 形式に変換
-      const dbProducts = rows.map((r) => {
+      const dbProducts: DbProduct[] = rows.map((r) => {
         // 日付処理: Date型の場合はISO文字列に変換
         const releaseDate = r.release_date instanceof Date
-          ? r.release_date.toISOString().split('T')[0]
+          ? r.release_date.toISOString().split('T')[0] ?? null
           : r.release_date ?? null;
 
         return {
@@ -828,18 +830,18 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
           if (isDescending) {
             baseConditions.push(
               or(
-                sql`${products.releaseDate} IS NOT NULL`,
+                sql`${products['releaseDate']} IS NOT NULL`,
                 and(
-                  sql`${products.releaseDate} IS NULL`,
-                  lt(products.id, id)
+                  sql`${products['releaseDate']} IS NULL`,
+                  lt(products['id'], id)
                 )
               )!
             );
           } else {
             baseConditions.push(
               and(
-                sql`${products.releaseDate} IS NULL`,
-                gt(products.id, id)
+                sql`${products['releaseDate']} IS NULL`,
+                gt(products['id'], id)
               )!
             );
           }
@@ -849,21 +851,21 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
           if (isDescending) {
             baseConditions.push(
               or(
-                lt(products.releaseDate, cursorDate),
+                lt(products['releaseDate'], cursorDate),
                 and(
-                  eq(products.releaseDate, cursorDate),
-                  lt(products.id, id)
+                  eq(products['releaseDate'], cursorDate),
+                  lt(products['id'], id)
                 ),
-                sql`${products.releaseDate} IS NULL`
+                sql`${products['releaseDate']} IS NULL`
               )!
             );
           } else {
             baseConditions.push(
               or(
-                gt(products.releaseDate, cursorDate),
+                gt(products['releaseDate'], cursorDate),
                 and(
-                  eq(products.releaseDate, cursorDate),
-                  gt(products.id, id)
+                  eq(products['releaseDate'], cursorDate),
+                  gt(products['id'], id)
                 )
               )!
             );
@@ -880,9 +882,9 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         .where(whereClause)
         .orderBy(
           isDescending
-            ? desc(sql`COALESCE(${products.releaseDate}, '1970-01-01')`)
-            : asc(sql`COALESCE(${products.releaseDate}, '9999-12-31')`),
-          isDescending ? desc(products.id) : asc(products.id)
+            ? desc(sql`COALESCE(${products['releaseDate']}, '1970-01-01')`)
+            : asc(sql`COALESCE(${products['releaseDate']}, '9999-12-31')`),
+          isDescending ? desc(products['id']) : asc(products['id'])
         )
         .limit(limit + 1);
 

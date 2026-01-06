@@ -89,7 +89,7 @@ export default function SearchAutocomplete({
   placeholder,
   className = '',
 }: SearchAutocompleteProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const resolvedPlaceholder = placeholder || t.placeholder;
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<AutocompleteResult[]>([]);

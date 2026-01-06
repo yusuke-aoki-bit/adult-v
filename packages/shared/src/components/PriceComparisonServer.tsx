@@ -158,7 +158,7 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
   const isMultiple = sourcesWithPrice.length >= 2;
 
   // Find cheapest price
-  const cheapestSource = sourcesWithPrice[0]; // Already sorted by price
+  const cheapestSource = sourcesWithPrice[0]!; // Already sorted by price
   const cheapestPrice = cheapestSource.salePrice ?? cheapestSource.regularPrice ?? 0;
 
   // Calculate max savings compared to highest price

@@ -164,8 +164,8 @@ export function RookieRanking({
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {performers.map((performer, index) => (
           <Link
-            key={performer.id}
-            href={`/${locale}/actress/${performer.id}`}
+            key={performer['id']}
+            href={`/${locale}/actress/${performer['id']}`}
             className={`rounded-lg overflow-hidden transition-all ${themeClasses.card}`}
           >
             {/* Image */}
@@ -173,7 +173,7 @@ export function RookieRanking({
               {performer.imageUrl ? (
                 <Image
                   src={performer.imageUrl}
-                  alt={performer.name}
+                  alt={performer['name']}
                   fill
                   className="object-cover"
                   sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
@@ -197,14 +197,14 @@ export function RookieRanking({
 
               {/* Debut Year Badge */}
               <div className={`absolute bottom-2 right-2 px-2 py-0.5 rounded text-xs font-medium ${themeClasses.badge}`}>
-                {performer.debutYear}
+                {performer['debutYear']}
               </div>
             </div>
 
             {/* Info */}
             <div className="p-2">
               <h3 className={`font-medium text-sm truncate ${themeClasses.text}`}>
-                {performer.name}
+                {performer['name']}
               </h3>
               <div className={`flex items-center gap-2 mt-1 text-xs ${themeClasses.textMuted}`}>
                 <span className="flex items-center gap-0.5">

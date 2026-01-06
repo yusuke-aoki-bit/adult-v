@@ -71,9 +71,9 @@ export function useFirestoreFavorites() {
           mergedFavorites.push({
             type: fsItem.type,
             id: fsItem.itemId,
-            title: fsItem.title,
-            name: fsItem.name,
-            thumbnail: fsItem.thumbnail,
+            ...(fsItem.title !== undefined && { title: fsItem.title }),
+            ...(fsItem.name !== undefined && { name: fsItem.name }),
+            ...(fsItem.thumbnail !== undefined && { thumbnail: fsItem.thumbnail }),
             addedAt: Date.now(), // Firestore timestamp is server-side
           });
         }
@@ -87,9 +87,9 @@ export function useFirestoreFavorites() {
             await saveFavoriteToFirestore(user.uid, {
               type: localItem.type,
               itemId: localItem.id,
-              title: localItem.title,
-              name: localItem.name,
-              thumbnail: localItem.thumbnail,
+              ...(localItem.title !== undefined && { title: localItem.title }),
+              ...(localItem.name !== undefined && { name: localItem.name }),
+              ...(localItem.thumbnail !== undefined && { thumbnail: localItem.thumbnail }),
             });
           }
         }
@@ -126,22 +126,22 @@ export function useFirestoreFavorites() {
 
       setFavorites((prev) => {
         // Check if already exists
-        const exists = prev.some((f) => f.type === item.type && f.id === item.id);
+        const exists = prev.some((f) => f.type === item.type && f.id === item['id']);
         if (exists) return prev;
         return [newItem, ...prev];
       });
 
       // Log analytics event
-      logEvent('add_favorite', { item_type: item.type, item_id: item.id });
+      logEvent('add_favorite', { item_type: item.type, item_id: item['id'] });
 
       // Save to Firestore if available
       if (isFirebaseEnabled && user) {
         await saveFavoriteToFirestore(user.uid, {
           type: item.type,
-          itemId: item.id,
-          title: item.title,
-          name: item.name,
-          thumbnail: item.thumbnail,
+          itemId: item['id'],
+          ...(item['title'] !== undefined && { title: item['title'] }),
+          ...(item['name'] !== undefined && { name: item['name'] }),
+          ...(item['thumbnail'] !== undefined && { thumbnail: item['thumbnail'] }),
         });
       }
     },
@@ -172,8 +172,8 @@ export function useFirestoreFavorites() {
 
   const toggleFavorite = useCallback(
     async (item: Omit<FirestoreFavoriteItem, 'addedAt'>) => {
-      if (isFavorite(item.type, item.id)) {
-        await removeFavorite(item.type, item.id);
+      if (isFavorite(item.type, item['id'])) {
+        await removeFavorite(item.type, item['id']);
       } else {
         await addFavorite(item);
       }

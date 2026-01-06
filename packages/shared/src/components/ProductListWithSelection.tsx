@@ -93,9 +93,9 @@ export function ProductListWithSelection({
   // コールバックをメモ化
   const handleToggleProduct = useCallback((product: Product) => {
     toggleItem({
-      id: product.id,
-      title: product.title,
-      imageUrl: product.thumbnailUrl || product.imageUrl || null,
+      id: product['id'],
+      title: product['title'],
+      imageUrl: product['thumbnailUrl'] || product.imageUrl || null,
     });
   }, [toggleItem]);
 
@@ -145,10 +145,10 @@ export function ProductListWithSelection({
       <div className={className}>
         {products.map((product, index) => (
           <ProductItem
-            key={product.id}
+            key={product['id']}
             product={product}
             index={index}
-            isSelected={compareSet.has(String(product.id))}
+            isSelected={compareSet.has(String(product['id']))}
             isSelectionMode={isSelectionMode}
             theme={theme}
             onToggle={handleToggleProduct}

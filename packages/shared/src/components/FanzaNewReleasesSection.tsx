@@ -126,8 +126,8 @@ export function FanzaNewReleasesSection({
         <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
           {products.slice(0, 8).map((product, index) => (
             <a
-              key={product.id}
-              href={`${FANZA_SITE_URL}/products/${product.id}?hl=${locale}`}
+              key={product['id']}
+              href={`${FANZA_SITE_URL}/products/${product['id']}?hl=${locale}`}
               target="_blank"
               rel="noopener noreferrer"
               className="group relative bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-pink-500/50 transition-all"
@@ -136,7 +136,7 @@ export function FanzaNewReleasesSection({
                 {product.imageUrl ? (
                   <Image
                     src={product.imageUrl}
-                    alt={product.title}
+                    alt={product['title']}
                     fill
                     sizes="(max-width: 768px) 25vw, 12.5vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -156,9 +156,9 @@ export function FanzaNewReleasesSection({
                     <span className="bg-red-600 text-white text-[8px] sm:text-[10px] font-bold px-1 py-0.5 rounded">
                       {t.sale}
                     </span>
-                    {product.discount && product.discount >= 30 && (
+                    {product['discount'] && product['discount'] >= 30 && (
                       <span className="bg-linear-to-r from-yellow-400 to-orange-500 text-black text-[8px] sm:text-[10px] font-bold px-1 py-0.5 rounded">
-                        -{product.discount}%
+                        -{product['discount']}%
                       </span>
                     )}
                   </div>
@@ -172,7 +172,7 @@ export function FanzaNewReleasesSection({
               </div>
               <div className="p-1.5">
                 <p className="text-gray-200 text-[10px] sm:text-xs font-medium line-clamp-2 group-hover:text-pink-300 transition-colors">
-                  {product.title}
+                  {product['title']}
                 </p>
               </div>
             </a>

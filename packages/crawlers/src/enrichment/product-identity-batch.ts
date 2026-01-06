@@ -55,19 +55,19 @@ function parseArgs(): CliArgs {
         result.mode = mode;
       }
     } else if (arg.startsWith('--batch-size=')) {
-      result.batchSize = parseInt(arg.split('=')[1], 10);
+      result.batchSize = parseInt(arg.split('=')[1] ?? '500', 10);
     } else if (arg.startsWith('--min-confidence=')) {
-      result.minConfidence = parseInt(arg.split('=')[1], 10);
+      result.minConfidence = parseInt(arg.split('=')[1] ?? '50', 10);
     } else if (arg === '--dry-run') {
       result.dryRun = true;
     } else if (arg === '--verbose' || arg === '-v') {
       result.verbose = true;
     } else if (arg.startsWith('--asps=')) {
-      result.targetAsps = arg.split('=')[1].split(',');
+      result.targetAsps = (arg.split('=')[1] ?? '').split(',');
     } else if (arg.startsWith('--limit=')) {
-      result.limit = parseInt(arg.split('=')[1], 10);
+      result.limit = parseInt(arg.split('=')[1] ?? '0', 10);
     } else if (arg.startsWith('--offset=')) {
-      result.offset = parseInt(arg.split('=')[1], 10);
+      result.offset = parseInt(arg.split('=')[1] ?? '0', 10);
     }
   }
 
@@ -95,7 +95,7 @@ function logProgress(current: number, total: number, stats: BatchProcessingStats
     `\r[${percent}%] ${current}/${total} | ` +
     `New: ${stats.newGroupsCreated} | Added: ${stats.addedToExistingGroups} | ` +
     `Skip: ${stats.skippedAlreadyGrouped + stats.skippedNoMatch} | ` +
-    `Err: ${stats.errorCount} | ${rate}/sec`
+    `Err: ${stats['errorCount']} | ${rate}/sec`
   );
 }
 
@@ -114,7 +114,7 @@ function logSummary(stats: BatchProcessingStats): void {
   console.log(`Added to Existing: ${stats.addedToExistingGroups}`);
   console.log(`Skipped (Already Grouped): ${stats.skippedAlreadyGrouped}`);
   console.log(`Skipped (No Match): ${stats.skippedNoMatch}`);
-  console.log(`Errors: ${stats.errorCount}`);
+  console.log(`Errors: ${stats['errorCount']}`);
   console.log('');
   console.log('Matching Methods:');
   for (const [method, count] of Object.entries(stats.matchMethodStats)) {
@@ -192,7 +192,7 @@ async function main(): Promise<void> {
           // ドライラン: 実際に保存しない
           stats.processedCount++;
           if (args.verbose) {
-            log(`[DRY-RUN] Would process: ${product.id} - ${product.title.substring(0, 50)}...`, true);
+            log(`[DRY-RUN] Would process: ${product['id']} - ${product['title'].substring(0, 50)}...`, true);
           }
         } else {
           const result = await processProductIdentity(product, config);
@@ -219,7 +219,7 @@ async function main(): Promise<void> {
 
           if (args.verbose && result.matchResult) {
             log(
-              `${product.id}: ${result.action} (${result.matchResult.matchingMethod}, ` +
+              `${product['id']}: ${result.action} (${result.matchResult.matchingMethod}, ` +
               `confidence: ${result.matchResult.confidenceScore})`,
               true
             );
@@ -231,9 +231,9 @@ async function main(): Promise<void> {
           logProgress(processed, Math.min(limit, totalUngrouped), stats);
         }
       } catch (error) {
-        stats.errorCount++;
+        stats['errorCount']++;
         if (args.verbose) {
-          console.error(`Error processing product ${product.id}:`, error);
+          console.error(`Error processing product ${product['id']}:`, error);
         }
       }
 

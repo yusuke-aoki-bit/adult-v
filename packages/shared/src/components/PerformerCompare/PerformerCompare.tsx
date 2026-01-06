@@ -18,7 +18,7 @@ function getRadarDataPoints(cx: number, cy: number, values: number[]): string {
   const points: string[] = [];
   for (let i = 0; i < values.length; i++) {
     const angle = (Math.PI * 2 * i) / values.length - Math.PI / 2;
-    const r = values[i];
+    const r = values[i] ?? 0;
     const x = cx + Math.cos(angle) * r;
     const y = cy + Math.sin(angle) * r;
     points.push(`${x},${y}`);
@@ -153,7 +153,7 @@ export function PerformerCompare({
     if (performers.length < 2) return [];
     const allTags = performers.map(p => new Set(p.tags || []));
     const first = allTags[0];
-    return [...first].filter(tag => allTags.every(set => set.has(tag)));
+    return Array.from(first ?? []).filter(tag => allTags.every(set => set.has(tag)));
   }, [performers]);
 
   // 共通のサービスを見つける
@@ -161,7 +161,7 @@ export function PerformerCompare({
     if (performers.length < 2) return [];
     const allServices = performers.map(p => new Set(p.services || []));
     const first = allServices[0];
-    return [...first].filter(service => allServices.every(set => set.has(service)));
+    return Array.from(first ?? []).filter(service => allServices.every(set => set.has(service)));
   }, [performers]);
 
   // 空の状態
@@ -236,7 +236,7 @@ export function PerformerCompare({
 
           return (
             <div
-              key={performer.id}
+              key={performer['id']}
               className={`relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] ${
                 isDark
                   ? 'bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-700 hover:border-gray-600'
@@ -250,7 +250,7 @@ export function PerformerCompare({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    onRemovePerformer(String(performer.id));
+                    onRemovePerformer(String(performer['id']));
                   }}
                   className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                     isDark
@@ -286,12 +286,12 @@ export function PerformerCompare({
               {/* 画像 */}
               <div
                 className="cursor-pointer aspect-square relative overflow-hidden"
-                onClick={() => onPerformerClick?.(String(performer.id))}
+                onClick={() => onPerformerClick?.(String(performer['id']))}
               >
-                {performer.thumbnail || performer.heroImage ? (
+                {performer['thumbnail'] || performer['heroImage'] ? (
                   <img
-                    src={performer.thumbnail || performer.heroImage || ''}
-                    alt={performer.name}
+                    src={performer['thumbnail'] || performer['heroImage'] || ''}
+                    alt={performer['name']}
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                   />
                 ) : (
@@ -317,9 +317,9 @@ export function PerformerCompare({
                     className={`font-bold text-lg cursor-pointer hover:underline ${
                       isDark ? 'text-white' : 'text-gray-900'
                     }`}
-                    onClick={() => onPerformerClick?.(String(performer.id))}
+                    onClick={() => onPerformerClick?.(String(performer['id']))}
                   >
-                    {performer.name}
+                    {performer['name']}
                   </h3>
                   {performer.aliases && performer.aliases.length > 0 && (
                     <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -377,7 +377,7 @@ export function PerformerCompare({
                       {locale === 'ja' ? '身長' : 'Height'}
                     </div>
                     <div className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {performer.height ? `${performer.height}cm` : '-'}
+                      {performer['height'] ? `${performer['height']}cm` : '-'}
                     </div>
                   </div>
                   <div className={`p-2.5 rounded-lg text-center ${
@@ -387,7 +387,7 @@ export function PerformerCompare({
                       {locale === 'ja' ? 'カップ' : 'Cup'}
                     </div>
                     <div className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {performer.cup || '-'}
+                      {performer['cup'] || '-'}
                     </div>
                   </div>
                   <div className={`p-2.5 rounded-lg text-center ${
@@ -397,13 +397,13 @@ export function PerformerCompare({
                       {locale === 'ja' ? 'デビュー' : 'Debut'}
                     </div>
                     <div className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {performer.debutYear || '-'}
+                      {performer['debutYear'] || '-'}
                     </div>
                   </div>
                 </div>
 
                 {/* スリーサイズ */}
-                {(performer.bust || performer.waist || performer.hip) && (
+                {(performer['bust'] || performer['waist'] || performer['hip']) && (
                   <div className={`p-2.5 rounded-lg text-center ${
                     isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}>
@@ -411,7 +411,7 @@ export function PerformerCompare({
                       {locale === 'ja' ? 'スリーサイズ' : 'Measurements'}
                     </div>
                     <div className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      B{performer.bust || '-'} W{performer.waist || '-'} H{performer.hip || '-'}
+                      B{performer['bust'] || '-'} W{performer['waist'] || '-'} H{performer['hip'] || '-'}
                     </div>
                   </div>
                 )}
@@ -482,7 +482,7 @@ export function PerformerCompare({
 
                 {/* 詳細を見るボタン */}
                 <button
-                  onClick={() => onPerformerClick?.(String(performer.id))}
+                  onClick={() => onPerformerClick?.(String(performer['id']))}
                   className={`w-full py-2.5 rounded-xl text-sm font-medium transition-colors ${
                     isDark
                       ? 'bg-purple-600 hover:bg-purple-700 text-white'
@@ -566,7 +566,7 @@ export function PerformerCompare({
                     const fanNorm = maxFanScore > 0 ? ((performer.metrics?.fanScore || 0) / maxFanScore) * 80 : 0;
                     const points = getRadarDataPoints(100, 100, [releaseNorm, trendNorm, fanNorm]);
                     return (
-                      <g key={performer.id}>
+                      <g key={performer['id']}>
                         <polygon
                           points={points}
                           fill={colors[idx % colors.length]}
@@ -597,13 +597,13 @@ export function PerformerCompare({
                 {performers.map((performer, idx) => {
                   const colors = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981'];
                   return (
-                    <div key={performer.id} className="flex items-center gap-1.5">
+                    <div key={performer['id']} className="flex items-center gap-1.5">
                       <div
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: colors[idx % colors.length] }}
                       />
                       <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {performer.name.slice(0, 6)}{performer.name.length > 6 ? '…' : ''}
+                        {performer['name'].slice(0, 6)}{performer['name'].length > 6 ? '…' : ''}
                       </span>
                     </div>
                   );
@@ -627,9 +627,9 @@ export function PerformerCompare({
                       const colors = ['bg-purple-500', 'bg-pink-500', 'bg-blue-500', 'bg-emerald-500'];
                       const percent = maxReleaseCount > 0 ? ((performer.metrics?.releaseCount || 0) / maxReleaseCount) * 100 : 0;
                       return (
-                        <div key={performer.id} className="flex items-center gap-2">
+                        <div key={performer['id']} className="flex items-center gap-2">
                           <span className={`text-xs w-16 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {performer.name.slice(0, 6)}
+                            {performer['name'].slice(0, 6)}
                           </span>
                           <div className={`flex-1 h-5 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                             <div
@@ -656,9 +656,9 @@ export function PerformerCompare({
                       const colors = ['bg-purple-500', 'bg-pink-500', 'bg-blue-500', 'bg-emerald-500'];
                       const percent = maxTrendingScore > 0 ? ((performer.metrics?.trendingScore || 0) / maxTrendingScore) * 100 : 0;
                       return (
-                        <div key={performer.id} className="flex items-center gap-2">
+                        <div key={performer['id']} className="flex items-center gap-2">
                           <span className={`text-xs w-16 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {performer.name.slice(0, 6)}
+                            {performer['name'].slice(0, 6)}
                           </span>
                           <div className={`flex-1 h-5 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                             <div
@@ -685,9 +685,9 @@ export function PerformerCompare({
                       const colors = ['bg-purple-500', 'bg-pink-500', 'bg-blue-500', 'bg-emerald-500'];
                       const percent = maxFanScore > 0 ? ((performer.metrics?.fanScore || 0) / maxFanScore) * 100 : 0;
                       return (
-                        <div key={performer.id} className="flex items-center gap-2">
+                        <div key={performer['id']} className="flex items-center gap-2">
                           <span className={`text-xs w-16 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {performer.name.slice(0, 6)}
+                            {performer['name'].slice(0, 6)}
                           </span>
                           <div className={`flex-1 h-5 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                             <div

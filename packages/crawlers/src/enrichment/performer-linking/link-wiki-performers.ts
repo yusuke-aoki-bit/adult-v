@@ -44,7 +44,7 @@ function extractProductCode(normalizedId: string): string[] {
 
     // gvh00802 → GVH-802 形式に変換（先頭0を除去）
     const match = withoutFanza.match(/^([A-Z]+)(\d+)$/);
-    if (match) {
+    if (match && match[1] && match[2]) {
       const letters = match[1];
       const numbers = match[2].replace(/^0+/, ''); // 先頭の0を除去
       codes.push(`${letters}-${numbers}`);
@@ -53,7 +53,7 @@ function extractProductCode(normalizedId: string): string[] {
 
   // MGS形式: 425bdsx-01902 → BDSX-01902
   const mgsMatch = upper.match(/^\d+([A-Z]+)-?(\d+)$/);
-  if (mgsMatch) {
+  if (mgsMatch && mgsMatch[1] && mgsMatch[2]) {
     const letters = mgsMatch[1];
     const numbers = mgsMatch[2].replace(/^0+/, '');
     codes.push(`${letters}-${numbers}`);
@@ -62,7 +62,7 @@ function extractProductCode(normalizedId: string): string[] {
 
   // 数字プレフィックス + 品番形式: 425BDSX-01902 → BDSX-01902
   const numPrefixMatch = upper.match(/^(\d{2,3})([A-Z]+)-?(\d+)$/);
-  if (numPrefixMatch) {
+  if (numPrefixMatch && numPrefixMatch[2] && numPrefixMatch[3]) {
     const letters = numPrefixMatch[2];
     const numbers = numPrefixMatch[3];
     codes.push(`${letters}-${numbers}`);
@@ -102,7 +102,7 @@ async function loadWikiPerformerMappings(): Promise<Map<string, string[]>> {
       if (!performers.includes(row.performer_name)) {
         performers.push(row.performer_name);
       }
-      lastId = row.id;
+      lastId = row['id'];
     }
 
     totalLoaded += wikiData.rows.length;
@@ -136,7 +136,7 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
   let [performer] = await db
     .select()
     .from(performers)
-    .where(eq(performers.name, normalizedName))
+    .where(eq(performers['name'], normalizedName))
     .limit(1);
 
   // 存在しなければエイリアスで検索
@@ -159,13 +159,13 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
         .insert(performers)
         .values({ name: normalizedName })
         .returning();
-      return inserted.id;
+      return inserted!.id;
     } catch {
       // 競合の場合は再取得
       const [existing] = await db
         .select()
         .from(performers)
-        .where(eq(performers.name, normalizedName))
+        .where(eq(performers['name'], normalizedName))
         .limit(1);
       if (existing) {
         return existing.id;
@@ -174,7 +174,7 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
     }
   }
 
-  return performer.id;
+  return performer['id'];
 }
 
 /**
@@ -197,7 +197,7 @@ async function linkPerformerToProduct(productId: number, performerId: number): P
     return false;
   }
 
-  await db.insert(productPerformers).values({
+  await db['insert'](productPerformers).values({
     productId,
     performerId,
   });
@@ -213,10 +213,12 @@ async function main() {
   const onlyUnlinked = !args.includes('--include-linked');
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith('--limit=')) {
-      limit = parseInt(args[i].split('=')[1], 10);
-    } else if (args[i] === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1], 10);
+    const arg = args[i];
+    const nextArg = args[i + 1];
+    if (arg?.startsWith('--limit=')) {
+      limit = parseInt(arg.split('=')[1] ?? '10000', 10);
+    } else if (arg === '--limit' && nextArg) {
+      limit = parseInt(nextArg, 10);
       i++;
     }
   }
@@ -248,9 +250,9 @@ async function main() {
   // 全商品を取得
   const allProducts = await db
     .select({
-      id: products.id,
+      id: products['id'],
       normalizedProductId: products.normalizedProductId,
-      title: products.title,
+      title: products['title'],
     })
     .from(products)
     .limit(limit * 2);
@@ -270,6 +272,7 @@ async function main() {
 
   for (let i = 0; i < targetProducts.length; i++) {
     const product = targetProducts[i];
+    if (!product) continue;
     totalProducts++;
 
     if (i % 500 === 0) {

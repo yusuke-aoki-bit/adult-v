@@ -66,8 +66,8 @@ interface BeforeInstallPromptEvent extends Event {
 
 export default function PWAInstaller() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isDismissed, setIsDismissed] = useState(true); // デフォルトで非表示
@@ -78,7 +78,7 @@ export default function PWAInstaller() {
     setIsDismissed(dismissed);
 
     // Register service worker (本番環境のみ、エラーログは抑制)
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    if ('serviceWorker' in navigator && process.env['NODE_ENV'] === 'production') {
       window.addEventListener('load', () => {
         navigator.serviceWorker
           .register('/sw.js')

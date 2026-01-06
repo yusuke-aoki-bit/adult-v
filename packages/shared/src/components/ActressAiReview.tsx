@@ -81,7 +81,7 @@ interface ActressAiReviewProps {
 
 const ActressAiReview = memo(function ActressAiReview({ review, updatedAt, actressName, theme = 'dark' }: ActressAiReviewProps) {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const colors = themeConfig[theme];
 

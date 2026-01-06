@@ -72,7 +72,7 @@ export function selectProductSources<T extends { aspName: string; productId: num
         stats.matched++;
       } else if (sources.length > 0) {
         // FANZAソースがない場合は最初のソースを使用（通常は発生しない）
-        sourcesMap.set(productId, sources[0]);
+        sourcesMap.set(productId, sources[0]!);
         stats.fallback++;
       }
     }
@@ -108,7 +108,7 @@ export function selectProductSources<T extends { aspName: string; productId: num
       }
 
       // 一致するソースがない場合はFANZA以外の最初のソースを使用
-      sourcesMap.set(productId, nonFanzaSources[0]);
+      sourcesMap.set(productId, nonFanzaSources[0]!);
     }
 
     if (debug && (preferredProvidersUpper.length > 0 || stats.skipped > 0)) {

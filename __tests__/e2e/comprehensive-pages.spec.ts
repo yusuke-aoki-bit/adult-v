@@ -329,7 +329,7 @@ test.describe('Error Handling Tests', () => {
 test.describe('Performance Tests', () => {
   // Performance thresholds - relaxed for local dev environment
   // CI/Production should use stricter thresholds
-  const PERF_THRESHOLD_MS = process.env.CI ? 15000 : 45000;
+  const PERF_THRESHOLD_MS = process.env['CI'] ? 15000 : 45000;
 
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);

@@ -147,8 +147,8 @@ async function runPageSpeedCheck(
     const response = await fetch(apiUrl.toString());
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errorText}`);
+      const errorText = await response['text']();
+      throw new Error(`API error: ${response['status']} - ${errorText}`);
     }
 
     const data: PageSpeedApiResult = await response.json();
@@ -180,11 +180,15 @@ async function runPageSpeedCheck(
       si: Math.round(audits['speed-index']?.numericValue ?? 0),
     };
 
+    const lcpField = fieldMetrics?.LARGEST_CONTENTFUL_PAINT_MS?.percentile;
+    const fidField = fieldMetrics?.FIRST_INPUT_DELAY_MS?.percentile;
+    const clsField = fieldMetrics?.CUMULATIVE_LAYOUT_SHIFT_SCORE?.percentile;
+    const inpField = fieldMetrics?.INTERACTION_TO_NEXT_PAINT?.percentile;
     const fieldData = {
-      lcp: fieldMetrics?.LARGEST_CONTENTFUL_PAINT_MS?.percentile,
-      fid: fieldMetrics?.FIRST_INPUT_DELAY_MS?.percentile,
-      cls: fieldMetrics?.CUMULATIVE_LAYOUT_SHIFT_SCORE?.percentile,
-      inp: fieldMetrics?.INTERACTION_TO_NEXT_PAINT?.percentile,
+      ...(lcpField !== undefined && { lcp: lcpField }),
+      ...(fidField !== undefined && { fid: fidField }),
+      ...(clsField !== undefined && { cls: clsField }),
+      ...(inpField !== undefined && { inp: inpField }),
     };
 
     // 閾値チェック
@@ -327,8 +331,8 @@ async function main() {
       );
 
       // DBに保存
-      await db.insert(pagespeedResults).values({
-        url: result.url,
+      await db['insert'](pagespeedResults).values({
+        url: result['url'],
         strategy: result.strategy,
         performanceScore: result.scores.performance,
         accessibilityScore: result.scores.accessibility,

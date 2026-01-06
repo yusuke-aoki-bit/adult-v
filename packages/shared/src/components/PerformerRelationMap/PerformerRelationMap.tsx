@@ -93,7 +93,7 @@ export function PerformerRelationMap({
     const positions = new Map<number, { x: number; y: number }>();
 
     // 中心ノード
-    positions.set(data.performer.id, { x: centerX, y: centerY });
+    positions.set(data.performer['id'], { x: centerX, y: centerY });
 
     // ホップごとにグループ化
     const hop1 = data.relations.filter(r => r.hop === 1);
@@ -346,9 +346,9 @@ export function PerformerRelationMap({
                     <circle cx="250" cy="250" r="32" />
                   </clipPath>
                 </defs>
-                {(data.performer.thumbnailUrl || data.performer.profileImageUrl) && (
+                {(data.performer['thumbnailUrl'] || data.performer['profileImageUrl']) && (
                   <image
-                    href={data.performer.thumbnailUrl || data.performer.profileImageUrl || ''}
+                    href={data.performer['thumbnailUrl'] || data.performer['profileImageUrl'] || ''}
                     x="218"
                     y="218"
                     width="64"
@@ -357,7 +357,7 @@ export function PerformerRelationMap({
                     preserveAspectRatio="xMidYMid slice"
                   />
                 )}
-                {!data.performer.thumbnailUrl && !data.performer.profileImageUrl && (
+                {!data.performer['thumbnailUrl'] && !data.performer['profileImageUrl'] && (
                   <text
                     x="250"
                     y="255"
@@ -366,7 +366,7 @@ export function PerformerRelationMap({
                     fontSize="14"
                     fontWeight="bold"
                   >
-                    {data.performer.name.slice(0, 2)}
+                    {data.performer['name'].slice(0, 2)}
                   </text>
                 )}
               </g>

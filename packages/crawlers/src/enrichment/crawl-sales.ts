@@ -31,7 +31,7 @@ interface SaleItem {
   endAt: Date | null;
 }
 
-const rateLimiter = new RateLimiter({ minDelayMs: 1500, maxDelayMs: 3000 });
+const rateLimiter = new RateLimiter({ minDelayMs: 1500, jitterRange: 1500 });
 
 /**
  * MGSのセールページからセール情報を取得
@@ -68,11 +68,11 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
       rateLimiter.done();
 
       if (!response.ok) {
-        crawlerLog.warn(`Failed to fetch: ${response.status}`);
+        crawlerLog.warn(`Failed to fetch: ${response['status']}`);
         continue;
       }
 
-      const html = await response.text();
+      const html = await response['text']();
       const $ = cheerio.load(html);
 
       // セール商品を抽出（複数セレクタに対応）
@@ -118,10 +118,10 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
         const endTimeText = $parent.find('.sale_end, .end_time, .limit_time, .remaining').text();
         if (endTimeText) {
           const dateMatch = endTimeText.match(/(\d+)\/(\d+)/);
-          if (dateMatch) {
+          if (dateMatch && dateMatch[1] && dateMatch[2]) {
             const now = new Date();
-            const month = parseInt(dateMatch[1]);
-            const day = parseInt(dateMatch[2]);
+            const month = parseInt(dateMatch[1], 10);
+            const day = parseInt(dateMatch[2], 10);
             endAt = new Date(now.getFullYear(), month - 1, day, 23, 59, 59);
             if (endAt < now) {
               endAt.setFullYear(now.getFullYear() + 1);
@@ -132,7 +132,7 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
         // 通常価格はDBから取得するため、ここではセール価格のみ記録
         // regularPriceは後でDB照合時に設定
         saleItems.push({
-          originalProductId: productId,
+          originalProductId: productId ?? '',
           regularPrice: 0, // 後でDBから取得
           salePrice,
           discountPercent: 0, // 後で計算
@@ -185,11 +185,11 @@ async function crawlDugaSales(limit: number = 100): Promise<SaleItem[]> {
       rateLimiter.done();
 
       if (!response.ok) {
-        crawlerLog.warn(`Failed to fetch: ${response.status}`);
+        crawlerLog.warn(`Failed to fetch: ${response['status']}`);
         continue;
       }
 
-      const html = await response.text();
+      const html = await response['text']();
       const $ = cheerio.load(html);
 
       // セール商品を抽出 - DUGAの構造: .contentslist内の各商品
@@ -252,7 +252,7 @@ async function crawlDugaSales(limit: number = 100): Promise<SaleItem[]> {
         if (salePrice <= 0) return;
 
         saleItems.push({
-          originalProductId: productId,
+          originalProductId: productId ?? '',
           regularPrice: 0,
           salePrice,
           discountPercent: 0,
@@ -291,7 +291,7 @@ async function crawlSokmilSales(limit: number = 100): Promise<SaleItem[]> {
       sort: '-price', // 価格安い順
     });
 
-    if (response.status !== 'success') {
+    if (response['status'] !== 'success') {
       crawlerLog.warn(`SOKMIL API error: ${response.error}`);
       return saleItems;
     }
@@ -304,7 +304,7 @@ async function crawlSokmilSales(limit: number = 100): Promise<SaleItem[]> {
 
       // listPriceがあり、priceより高い場合はセール
       // 注意: APIでlistPriceが提供されない場合はセール検出不可
-      const price = item.price || 0;
+      const price = item['price'] || 0;
       const listPrice = (item as any).listPrice || 0; // APIレスポンスにlistPriceがあるか確認
 
       if (listPrice > 0 && price > 0 && listPrice > price) {
@@ -470,7 +470,7 @@ async function crawlFanzaSales(limit: number = 100): Promise<SaleItem[]> {
           if ($strikePrice.length > 0) {
             const text = $strikePrice.text();
             const match = text.match(/([\d,]+)/);
-            if (match) {
+            if (match?.[1]) {
               regularPrice = parseInt(match[1].replace(/,/g, ''));
             }
           }
@@ -637,8 +637,8 @@ async function crawlSokmilSalesScrape(limit: number = 100): Promise<SaleItem[]> 
           let discountPercent = 0;
           const saleLabelClass = $wrapper.find('[class*="sale-label-"]').attr('class') || '';
           const discountMatch = saleLabelClass.match(/sale-label-(\d+)/);
-          if (discountMatch) {
-            discountPercent = parseInt(discountMatch[1]);
+          if (discountMatch && discountMatch[1]) {
+            discountPercent = parseInt(discountMatch[1], 10);
           }
 
           // セール価格を抽出（.min-price-area.campaign 内の .current-price）
@@ -647,8 +647,8 @@ async function crawlSokmilSalesScrape(limit: number = 100): Promise<SaleItem[]> 
           if (salePriceEl.length > 0) {
             const priceText = salePriceEl.text();
             const priceMatch = priceText.match(/[\d,]+/);
-            if (priceMatch) {
-              salePrice = parseInt(priceMatch[0].replace(/,/g, ''));
+            if (priceMatch && priceMatch[0]) {
+              salePrice = parseInt(priceMatch[0].replace(/,/g, ''), 10);
             }
           }
 
@@ -658,8 +658,8 @@ async function crawlSokmilSalesScrape(limit: number = 100): Promise<SaleItem[]> 
             if (currentPriceEl.length > 0) {
               const priceText = currentPriceEl.text();
               const priceMatch = priceText.match(/[\d,]+/);
-              if (priceMatch) {
-                salePrice = parseInt(priceMatch[0].replace(/,/g, ''));
+              if (priceMatch && priceMatch[0]) {
+                salePrice = parseInt(priceMatch[0].replace(/,/g, ''), 10);
               }
             }
           }
@@ -676,7 +676,7 @@ async function crawlSokmilSalesScrape(limit: number = 100): Promise<SaleItem[]> 
           if (salePrice <= 0 || salePrice > 100000) return;
 
           saleItems.push({
-            originalProductId: productId,
+            originalProductId: productId ?? '',
             regularPrice,
             salePrice,
             discountPercent,
@@ -710,9 +710,16 @@ async function registerSokmilProduct(productId: string): Promise<number | null> 
 
   try {
     const sokmilClient = getSokmilClient();
-    const response = await sokmilClient.getItemDetail(productId);
+    const product = await sokmilClient.getItemById(productId);
 
-    if (response.status !== 'success' || !response.data) {
+    if (!product) {
+      crawlerLog.warn(`SOKMIL product not found via API: ${productId}`);
+      return null;
+    }
+
+    const response = { status: 'success' as const, data: product };
+
+    if (response['status'] !== 'success' || !response.data) {
       crawlerLog.warn(`SOKMIL product not found via API: ${productId}`);
       return null;
     }
@@ -731,7 +738,7 @@ async function registerSokmilProduct(productId: string): Promise<number | null> 
         default_thumbnail_url
       ) VALUES (
         ${normalizedProductId},
-        ${item.title},
+        ${item.itemName},
         ${item.description || null},
         ${item.releaseDate || null},
         ${item.duration || null},
@@ -760,8 +767,8 @@ async function registerSokmilProduct(productId: string): Promise<number | null> 
         ${productRow.id},
         'SOKMIL',
         ${productId},
-        ${item.affiliateUrl || `https://www.sokmil.com/av/item${productId}.htm`},
-        ${item.price || null},
+        ${item['affiliateUrl'] || `https://www.sokmil.com/av/item${productId}.htm`},
+        ${item['price'] || null},
         'API'
       )
       ON CONFLICT (product_id, asp_name)
@@ -867,10 +874,14 @@ async function registerDugaProduct(productId: string): Promise<number | null> {
     }
 
     const item = response.items[0];
+    if (!item) {
+      crawlerLog.warn(`DUGA product not found: ${productId}`);
+      return null;
+    }
 
     // 完全一致チェック
-    if (item.productId !== productId) {
-      crawlerLog.warn(`Product ID mismatch: expected ${productId}, got ${item.productId}`);
+    if (item['productId'] !== productId) {
+      crawlerLog.warn(`Product ID mismatch: expected ${productId}, got ${item['productId']}`);
       return null;
     }
 
@@ -886,11 +897,11 @@ async function registerDugaProduct(productId: string): Promise<number | null> {
         default_thumbnail_url
       ) VALUES (
         ${normalizedProductId},
-        ${item.title},
-        ${item.description || null},
-        ${item.releaseDate || null},
-        ${item.duration || null},
-        ${item.thumbnailUrl || null}
+        ${item['title']},
+        ${item['description'] || null},
+        ${item['releaseDate'] || null},
+        ${item['duration'] || null},
+        ${item['thumbnailUrl'] || null}
       )
       ON CONFLICT (normalized_product_id)
       DO UPDATE SET
@@ -915,8 +926,8 @@ async function registerDugaProduct(productId: string): Promise<number | null> {
         ${productRow.id},
         'DUGA',
         ${productId},
-        ${item.affiliateUrl},
-        ${item.price || null},
+        ${item['affiliateUrl']},
+        ${item['price'] || null},
         'API'
       )
       ON CONFLICT (product_id, asp_name)
@@ -1074,7 +1085,7 @@ async function main() {
   const limitIndex = args.indexOf('--limit');
 
   const targetAsp = aspIndex !== -1 ? args[aspIndex + 1]?.toUpperCase() : 'all';
-  const limit = limitIndex !== -1 ? parseInt(args[limitIndex + 1]) : 100;
+  const limit = limitIndex !== -1 ? parseInt(args[limitIndex + 1] ?? '100', 10) : 100;
 
   console.log('========================================');
   console.log('🛒 セール情報クローラー');

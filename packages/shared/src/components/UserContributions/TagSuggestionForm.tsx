@@ -70,7 +70,7 @@ export function TagSuggestionForm({
       const data = await response.json();
 
       if (!response.ok) {
-        if (response.status === 409) {
+        if (response['status'] === 409) {
           setMessage({ type: 'error', text: t.alreadySuggested });
         } else {
           setMessage({ type: 'error', text: data.error || t.error });

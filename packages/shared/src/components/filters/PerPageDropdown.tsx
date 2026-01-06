@@ -11,7 +11,7 @@ interface PerPageDropdownProps {
   options?: number[];
 }
 
-const DEFAULT_OPTIONS = [24, 36, 48];
+const DEFAULT_OPTIONS = [12, 24, 48, 96];
 
 export default function PerPageDropdown({
   perPage,
@@ -22,14 +22,14 @@ export default function PerPageDropdown({
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = getPerPageTranslation(locale);
   const themeConfig = getFilterThemeConfig(theme);
 
   const handlePerPageChange = (newPerPage: string) => {
     const urlParams = new URLSearchParams(searchParams.toString());
-    // デフォルト値(36)の場合はパラメータを削除
-    if (newPerPage === '36') {
+    // デフォルト値(48)の場合はパラメータを削除
+    if (newPerPage === '48') {
       urlParams.delete('perPage');
     } else {
       urlParams.set('perPage', newPerPage);

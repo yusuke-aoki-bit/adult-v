@@ -29,7 +29,7 @@ interface FC2Product {
   price?: number;
 }
 
-const FC2_AFFUID = process.env.FC2_AFFUID || 'TVRFNU5USTJOVEE9';
+const FC2_AFFUID = process.env['FC2_AFFUID'] || 'TVRFNU5USTJOVEE9';
 
 function generateAffiliateUrl(articleId: string): string {
   return `https://adult.contents.fc2.com/aff.php?aid=${articleId}&affuid=${FC2_AFFUID}`;
@@ -48,12 +48,12 @@ async function fetchArticleIds(page: number = 1): Promise<string[]> {
 
     if (!response.ok) return [];
 
-    const html = await response.text();
+    const html = await response['text']();
     const articleIds: string[] = [];
     const matches = html.matchAll(/\/article\/(\d+)\//g);
     for (const match of matches) {
       const id = match[1];
-      if (!articleIds.includes(id)) {
+      if (id && !articleIds.includes(id)) {
         articleIds.push(id);
       }
     }
@@ -76,16 +76,16 @@ async function parseDetailPage(articleId: string): Promise<FC2Product | null> {
 
     if (!response.ok) return null;
 
-    const html = await response.text();
+    const html = await response['text']();
 
     let title = '';
     const ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i);
-    if (ogTitleMatch) {
+    if (ogTitleMatch?.[1]) {
       title = ogTitleMatch[1].trim();
     }
     if (!title) {
       const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-      if (h1Match) {
+      if (h1Match?.[1]) {
         title = h1Match[1].trim();
       }
     }
@@ -94,42 +94,44 @@ async function parseDetailPage(articleId: string): Promise<FC2Product | null> {
     }
 
     const descMatch = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i);
-    const description = descMatch ? descMatch[1].trim().substring(0, 1000) : undefined;
+    const description = descMatch?.[1] ? descMatch[1].trim().substring(0, 1000) : undefined;
 
     const performers: string[] = [];
     const performerMatches = html.matchAll(/<a[^>]*href="[^"]*(?:actress|performer|cast)[^"]*"[^>]*>([^<]+)<\/a>/gi);
     for (const match of performerMatches) {
-      const name = match[1].trim();
+      const name = match[1]?.trim();
       if (name && !performers.includes(name) && name.length > 1 && name.length < 30) {
         performers.push(name);
       }
     }
 
     const thumbMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i);
-    const thumbnailUrl = thumbMatch ? thumbMatch[1] : undefined;
+    const thumbnailUrl = thumbMatch?.[1];
 
     const durationMatch = html.match(/(\d+)\s*分/);
-    const duration = durationMatch ? parseInt(durationMatch[1]) : undefined;
+    const duration = durationMatch?.[1] ? parseInt(durationMatch[1]) : undefined;
 
     const priceMatch = html.match(/(\d{1,3}(?:,\d{3})*)\s*(?:円|pt|ポイント)/);
-    const price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : undefined;
+    const price = priceMatch?.[1] ? parseInt(priceMatch[1].replace(/,/g, '')) : undefined;
 
     let sampleVideoUrl: string | undefined;
     const videoSrcMatch = html.match(/<source[^>]*src="([^"]+\.mp4)"/i);
-    if (videoSrcMatch) {
+    if (videoSrcMatch?.[1]) {
       sampleVideoUrl = videoSrcMatch[1];
     }
 
-    return {
+    const result: FC2Product = {
       articleId,
       title,
-      description,
       performers,
-      thumbnailUrl,
-      sampleVideoUrl,
-      duration,
-      price,
     };
+    if (description !== undefined) result.description = description;
+    if (thumbnailUrl !== undefined) result.thumbnailUrl = thumbnailUrl;
+    if (sampleVideoUrl !== undefined) result.sampleVideoUrl = sampleVideoUrl;
+    if (duration !== undefined) result.duration = duration;
+    if (price !== undefined) result.price = price;
+
+    return result;
   } catch {
     return null;
   }
@@ -160,7 +162,7 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
     };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const startPage = parseInt(url.searchParams.get('page') || '1');
       const endPage = parseInt(url.searchParams.get('endPage') || '5');
       const limit = parseInt(url.searchParams.get('limit') || '50');
@@ -196,7 +198,7 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
 
             const productResult = await db.execute(sql`
               INSERT INTO products (normalized_product_id, title, description, duration, default_thumbnail_url, updated_at)
-              VALUES (${normalizedProductId}, ${product.title}, ${product.description || null}, ${product.duration || null}, ${product.thumbnailUrl || null}, NOW())
+              VALUES (${normalizedProductId}, ${product['title']}, ${product['description'] || null}, ${product['duration'] || null}, ${product['thumbnailUrl'] || null}, NOW())
               ON CONFLICT (normalized_product_id) DO UPDATE SET
                 title = EXCLUDED.title, description = EXCLUDED.description, duration = EXCLUDED.duration,
                 default_thumbnail_url = EXCLUDED.default_thumbnail_url, updated_at = NOW()
@@ -209,7 +211,7 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
             const affiliateUrl = generateAffiliateUrl(product.articleId);
             await db.execute(sql`
               INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, data_source, last_updated)
-              VALUES (${productId}, 'FC2', ${product.articleId}, ${affiliateUrl}, ${product.price || null}, 'CRAWL', NOW())
+              VALUES (${productId}, 'FC2', ${product.articleId}, ${affiliateUrl}, ${product['price'] || null}, 'CRAWL', NOW())
               ON CONFLICT (product_id, asp_name) DO UPDATE SET
                 affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, last_updated = NOW()
             `);
@@ -226,10 +228,10 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
               `);
             }
 
-            if (product.sampleVideoUrl) {
+            if (product['sampleVideoUrl']) {
               const videoResult = await db.execute(sql`
                 INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
-                VALUES (${productId}, 'FC2', ${product.sampleVideoUrl}, 'sample', 0)
+                VALUES (${productId}, 'FC2', ${product['sampleVideoUrl']}, 'sample', 0)
                 ON CONFLICT DO NOTHING RETURNING id
               `);
               if (videoResult.rowCount && videoResult.rowCount > 0) stats.videosAdded++;

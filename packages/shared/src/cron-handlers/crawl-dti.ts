@@ -137,7 +137,7 @@ function decodeHtml(buffer: Buffer, contentType?: string, _url?: string): string
   let encoding = 'utf-8';
   if (contentType) {
     const charsetMatch = contentType.match(/charset=([^\s;]+)/i);
-    if (charsetMatch) {
+    if (charsetMatch?.[1]) {
       encoding = charsetMatch[1].toLowerCase();
     }
   }
@@ -194,7 +194,7 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
   }
 
   const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
-  let title = titleMatch ? titleMatch[1].trim() : undefined;
+  let title = titleMatch?.[1] ? titleMatch[1].trim() : undefined;
 
   const siteSuffixes = [
     /\s*\|\s*カリビアンコムプレミアム$/,
@@ -216,25 +216,25 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
   }
 
   const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']/i);
-  const description = descMatch ? descMatch[1].trim() : undefined;
+  const description = descMatch?.[1] ? descMatch[1].trim() : undefined;
 
   const performers: string[] = [];
   const brandMatch = html.match(/var\s+ec_item_brand\s*=\s*['"]([^'"]+)['"]/);
-  if (brandMatch && brandMatch[1]) {
+  if (brandMatch?.[1]) {
     performers.push(brandMatch[1]);
   }
 
   const dateMatch = html.match(/配信日[:：]?\s*(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/);
-  const releaseDate = dateMatch
+  const releaseDate = dateMatch?.[1] && dateMatch[2] && dateMatch[3]
     ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
     : undefined;
 
   const imgMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["'](.*?)["']/i);
-  const thumbnailUrl = imgMatch ? imgMatch[1] : undefined;
+  const thumbnailUrl = imgMatch?.[1];
 
   let price: number | undefined;
   const priceMatch = html.match(/var\s+ec_price\s*=\s*parseFloat\s*\(\s*['"](\d+(?:\.\d+)?)['"]\s*\)/);
-  if (priceMatch) {
+  if (priceMatch?.[1]) {
     price = Math.round(parseFloat(priceMatch[1]) * 150);
   }
 
@@ -248,7 +248,23 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
     sampleVideoUrl = `https://sample.heyzo.com/contents/3000/${paddedId}/heyzo_hd_${paddedId}_sample.mp4`;
   }
 
-  return { title, description, performers, releaseDate, thumbnailUrl, sampleVideoUrl, price };
+  const result: {
+    title?: string;
+    description?: string;
+    performers?: string[];
+    releaseDate?: string;
+    thumbnailUrl?: string;
+    sampleVideoUrl?: string;
+    price?: number;
+  } = { title, performers };
+
+  if (description !== undefined) result.description = description;
+  if (releaseDate !== undefined) result.releaseDate = releaseDate;
+  if (thumbnailUrl !== undefined) result.thumbnailUrl = thumbnailUrl;
+  if (sampleVideoUrl !== undefined) result.sampleVideoUrl = sampleVideoUrl;
+  if (price !== undefined) result.price = price;
+
+  return result;
 }
 
 interface CrawlDtiHandlerDeps {
@@ -276,7 +292,7 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
     };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const siteKey = url.searchParams.get('site') || '1pondo';
       const startId = url.searchParams.get('start');
       const limit = parseInt(url.searchParams.get('limit') || '50');

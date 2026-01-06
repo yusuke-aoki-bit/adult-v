@@ -106,9 +106,9 @@ export default function SaleAlertButton({
       productId,
       normalizedProductId,
       title,
-      thumbnailUrl,
+      ...(thumbnailUrl && { thumbnailUrl }),
       currentPrice,
-      targetPrice: targetPrice ? parseInt(targetPrice, 10) : undefined,
+      ...(targetPrice && { targetPrice: parseInt(targetPrice, 10) }),
       notifyOnAnySale: true,
     };
     addAlert(alert);

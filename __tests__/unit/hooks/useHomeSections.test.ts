@@ -46,7 +46,7 @@ describe('useHomeSections', () => {
       });
 
       expect(result.current.sections).toHaveLength(8);
-      expect(result.current.sections[0].id).toBe('sale'); // 最初のセクションは'sale'
+      expect(result.current.sections[0]!.id).toBe('sale'); // 最初のセクションは'sale'
     });
 
     it('既存の設定をlocalStorageから読み込み', async () => {
@@ -134,14 +134,14 @@ describe('useHomeSections', () => {
         expect(result.current.isLoaded).toBe(true);
       });
 
-      const originalFirstId = result.current.sections[0].id;
+      const originalFirstId = result.current.sections[0]!.id;
 
       act(() => {
         result.current.reorderSections(0, 2);
       });
 
       // 最初の要素が移動したことを確認
-      expect(result.current.sections[0].id).not.toBe(originalFirstId);
+      expect(result.current.sections[0]!.id).not.toBe(originalFirstId);
     });
 
     it('orderプロパティが更新される', async () => {
@@ -181,7 +181,7 @@ describe('useHomeSections', () => {
       });
 
       // デフォルトの順序に戻っていることを確認
-      expect(result.current.sections[0].id).toBe('sale');
+      expect(result.current.sections[0]!.id).toBe('sale');
       const trending = result.current.sections.find(s => s.id === 'trending');
       expect(trending?.visible).toBe(true);
     });
@@ -218,7 +218,7 @@ describe('useHomeSections', () => {
 
       const visible = result.current.visibleSections;
       for (let i = 0; i < visible.length - 1; i++) {
-        expect(visible[i].order).toBeLessThan(visible[i + 1].order);
+        expect(visible[i]!.order).toBeLessThan(visible[i + 1]!.order);
       }
     });
   });

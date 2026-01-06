@@ -10,9 +10,10 @@ puppeteer.use(StealthPlugin());
 async function main() {
   console.log('🔍 FANZAレビュー構造の調査');
 
+  const executablePath = process.env['PUPPETEER_EXECUTABLE_PATH'];
   const browser = await puppeteer.launch({
     headless: true,
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+    ...(executablePath && { executablePath }),
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 

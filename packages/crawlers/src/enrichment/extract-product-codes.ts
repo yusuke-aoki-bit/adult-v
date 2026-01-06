@@ -38,8 +38,8 @@ async function main() {
   const limitArg = args.find(arg => arg.startsWith('--limit='));
   const dryRun = args.includes('--dry-run');
 
-  const targetAsp = aspArg ? aspArg.split('=')[1].toLowerCase() : 'all';
-  const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 1000;
+  const targetAsp = aspArg ? (aspArg.split('=')[1] ?? 'all').toLowerCase() : 'all';
+  const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '1000') : 1000;
 
   console.log('========================================');
   console.log('=== 品番抽出バッチクローラー ===');
@@ -342,7 +342,7 @@ async function extractSokmilCodes(
       // 例: pe_sdd0723_01 → SDD-723
       if (row.image_url) {
         const urlMatch = row.image_url.match(/(?:pe|cs|pb)_([a-z]+)(\d+)_/i);
-        if (urlMatch) {
+        if (urlMatch && urlMatch[1] && urlMatch[2]) {
           const prefix = urlMatch[1].toUpperCase();
           const number = urlMatch[2].replace(/^0+/, '') || '0';
           productCode = `${prefix}-${number}`;

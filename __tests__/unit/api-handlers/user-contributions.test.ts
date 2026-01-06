@@ -179,7 +179,7 @@ describe('Performer Suggestions Handler', () => {
       const matches = performers.filter(p => p.name.includes(searchQuery));
 
       expect(matches).toHaveLength(1);
-      expect(matches[0].name).toBe('山田花子');
+      expect(matches[0]!.name).toBe('山田花子');
     });
   });
 

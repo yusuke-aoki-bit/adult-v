@@ -151,7 +151,7 @@ function ProductCardBase({
   priority = false,
 }: ProductCardBaseProps) {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = useSafeProductCardTranslations();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -302,25 +302,25 @@ function ProductCardBase({
 
   // CTA click handler - memoized to avoid recreation on each render
   const handleCtaClick = useCallback(() => {
-    resolvedTrackCtaClick('ctaButtonText', product.id, {
+    resolvedTrackCtaClick('ctaButtonText', product['id'], {
       is_sale: !!product.salePrice,
       provider: product.provider || '',
     });
-  }, [resolvedTrackCtaClick, product.id, product.salePrice, product.provider]);
+  }, [resolvedTrackCtaClick, product['id'], product.salePrice, product.provider]);
 
   // Mini size - simplest card for WeeklyHighlights, etc.
   if (resolvedSize === 'mini') {
-    const miniAffiliateUrl = getAffiliateUrl(product.affiliateUrl, affiliateUrlOptions);
+    const miniAffiliateUrl = getAffiliateUrl(product['affiliateUrl'], affiliateUrlOptions);
     const showMiniCta = miniAffiliateUrl && !(hideFanzaPurchaseLinks && product.provider === 'fanza');
 
     return (
       <div className={`group relative ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all`}>
-        <Link href={`/${locale}/products/${product.id}`}>
+        <Link href={`/${locale}/products/${product['id']}`}>
           <div className={`relative ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`} style={{ aspectRatio: '2/3' }}>
             {hasValidImageUrl ? (
               <Image
                 src={imgSrc}
-                alt={product.title}
+                alt={product['title']}
                 fill
                 sizes="(max-width: 768px) 33vw, 10vw"
                 className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isUncensored ? 'blur-[1px]' : ''}`}
@@ -335,12 +335,12 @@ function ProductCardBase({
                 </svg>
               </div>
             )}
-            {product.rating && product.rating > 0 && (
+            {product['rating'] && product['rating'] > 0 && (
               <div className="absolute top-1 right-1 bg-yellow-500 text-black text-[10px] font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
                 <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
-                {product.rating.toFixed(1)}
+                {product['rating'].toFixed(1)}
               </div>
             )}
             {/* ホバー時CTA オーバーレイ */}
@@ -356,15 +356,15 @@ function ProductCardBase({
           </div>
           <div className="p-1.5">
             <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-orange-300' : 'text-gray-800 group-hover:text-orange-600'} text-xs font-medium line-clamp-2 transition-colors`}>
-              {product.title}
+              {product['title']}
             </p>
             {/* 品番 + コピーボタン */}
             <div className="flex items-center gap-1 mt-0.5">
               <span className={`text-[9px] ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} truncate`}>
-                {product.normalizedProductId || product.id}
+                {product.normalizedProductId || product['id']}
               </span>
               <CopyButton
-                text={product.normalizedProductId || String(product.id)}
+                text={product.normalizedProductId || String(product['id'])}
                 iconOnly
                 size="xs"
                 className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
@@ -392,17 +392,17 @@ function ProductCardBase({
 
   // Compact mode
   if (resolvedSize === 'compact') {
-    const compactAffiliateUrl = getAffiliateUrl(product.affiliateUrl, affiliateUrlOptions);
+    const compactAffiliateUrl = getAffiliateUrl(product['affiliateUrl'], affiliateUrlOptions);
     const showCompactCta = compactAffiliateUrl && !(hideFanzaPurchaseLinks && product.provider === 'fanza');
 
     return (
       <>
         <div className={`relative block ${themeConfig.cardBg} rounded-lg overflow-hidden hover:ring-2 ${themeConfig.cardHoverRing} transition-all group`}>
-          <Link href={`/${locale}/products/${product.id}`}>
+          <Link href={`/${locale}/products/${product['id']}`}>
             <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
               <Image
                 src={imgSrc}
-                alt={product.title}
+                alt={product['title']}
                 fill
                 className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
                 sizes="(max-width: 768px) 33vw, 12.5vw"
@@ -421,7 +421,7 @@ function ProductCardBase({
                     </svg>
                     SALE
                   </span>
-                  {product.discount && product.discount >= 30 && (
+                  {product['discount'] && product['discount'] >= 30 && (
                     <span className="bg-linear-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded">
                       お得
                     </span>
@@ -429,38 +429,38 @@ function ProductCardBase({
                 </div>
               )}
               {/* 高評価バッジ */}
-              {product.rating && product.rating >= 4.5 && (
+              {product['rating'] && product['rating'] >= 4.5 && (
                 <div className="absolute bottom-1 right-1 bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 z-10">
                   <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
-                  {product.rating.toFixed(1)}
+                  {product['rating'].toFixed(1)}
                 </div>
               )}
             </div>
             <div className="p-1.5">
-              <h3 className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-tight`}>{product.title}</h3>
+              <h3 className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-tight`}>{product['title']}</h3>
               {/* 品番 + コピーボタン */}
               <div className="flex items-center gap-1 mt-0.5">
                 <span className={`text-[10px] ${themeConfig.textMuted} truncate`}>
-                  {product.normalizedProductId || product.id}
+                  {product.normalizedProductId || product['id']}
                 </span>
                 <CopyButton
-                  text={product.normalizedProductId || String(product.id)}
+                  text={product.normalizedProductId || String(product['id'])}
                   iconOnly
                   size="xs"
                   className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
                 />
               </div>
               {/* 女優名リンク（導線強化） */}
-              {product.performers && product.performers.length > 0 && (
+              {product.performers && product.performers.length > 0 && product.performers[0] && (
                 <div className="mt-0.5 truncate">
                   <Link
-                    href={`/${locale}/actress/${product.performers[0].id}`}
+                    href={`/${locale}/actress/${product.performers[0]['id']}`}
                     className={`text-[10px] ${themeConfig.accentColor} hover:underline`}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {product.performers[0].name}
+                    {product.performers[0]['name']}
                   </Link>
                 </div>
               )}
@@ -483,17 +483,17 @@ function ProductCardBase({
 
           {(FavoriteButton || ViewedButton) && (
             <div className="absolute top-1 right-1 flex gap-0.5 z-20">
-              {FavoriteButton && <FavoriteButton type="product" id={product.id} size="xs" />}
+              {FavoriteButton && <FavoriteButton type="product" id={product['id']} size="xs" />}
               {ViewedButton && (
                 <ViewedButton
-                  productId={String(product.id)}
-                  title={product.title}
+                  productId={String(product['id'])}
+                  title={product['title']}
                   imageUrl={product.imageUrl ?? null}
                   aspName={product.providerLabel ?? product.provider ?? 'unknown'}
-                  performerName={product.actressName ?? product.performers?.[0]?.name}
-                  performerId={product.actressId ?? product.performers?.[0]?.id}
-                  tags={product.tags}
-                  duration={product.duration}
+                  {...(product.actressName ? { performerName: product.actressName } : product.performers?.[0]?.name ? { performerName: product.performers[0].name } : {})}
+                  {...(product.actressId ? { performerId: product.actressId } : product.performers?.[0]?.id ? { performerId: product.performers[0].id } : {})}
+                  {...(product.tags ? { tags: product.tags } : {})}
+                  {...(product['duration'] !== undefined ? { duration: product['duration'] } : {})}
                   size="xs"
                   iconOnly
                 />
@@ -566,19 +566,19 @@ function ProductCardBase({
             <div className="absolute top-4 right-4 flex flex-col gap-1.5 z-20">
               {FavoriteButton && (
                 <div className={`${themeConfig.favoriteButtonBg} rounded-full shadow-md`}>
-                  <FavoriteButton type="product" id={product.id} />
+                  <FavoriteButton type="product" id={product['id']} />
                 </div>
               )}
               {ViewedButton && (
                 <ViewedButton
-                  productId={product.id}
-                  title={product.title}
+                  productId={String(product['id'])}
+                  title={product['title']}
                   imageUrl={product.imageUrl ?? null}
                   aspName={product.providerLabel ?? product.provider ?? 'unknown'}
-                  performerName={product.actressName ?? product.performers?.[0]?.name}
-                  performerId={product.actressId ?? product.performers?.[0]?.id}
-                  tags={product.tags}
-                  duration={product.duration}
+                  {...(product.actressName ? { performerName: product.actressName } : product.performers?.[0]?.name ? { performerName: product.performers[0].name } : {})}
+                  {...(product.actressId ? { performerId: product.actressId } : product.performers?.[0]?.id ? { performerId: product.performers[0].id } : {})}
+                  {...(product.tags ? { tags: product.tags } : {})}
+                  {...(product['duration'] !== undefined ? { duration: product['duration'] } : {})}
                   size="sm"
                   iconOnly
                   className="shadow-md"
@@ -711,12 +711,12 @@ function ProductCardBase({
             </span>
           </div>
         )}
-        {product.discount && !product.salePrice && (
+        {product['discount'] && !product.salePrice && (
           <span className={`absolute bottom-4 right-4 ${themeConfig.badgeBg} text-white text-xs font-bold px-3 py-1 rounded-full`}>
-            {product.discount}%OFF
+            {product['discount']}%OFF
           </span>
         )}
-        {(product.salePrice || product.price > 0) && (() => {
+        {(product.salePrice || product['price'] > 0) && (() => {
           const priceVariant = resolvedGetVariant('priceDisplayStyle');
           const isEmphasized = priceVariant === 'emphasized';
           const countdownVariant = resolvedGetVariant('saleCountdownStyle');
@@ -730,12 +730,12 @@ function ProductCardBase({
                     <span className={`font-bold ${themeConfig.salePriceColor} ${isEmphasized ? 'text-base' : 'text-sm'}`}>
                       {resolvedFormatPrice(product.salePrice, product.currency)}
                     </span>
-                    {product.discount && (
+                    {product['discount'] && (
                       <>
                         <span className={`font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} px-1 py-0.5 rounded ${isEmphasized ? 'text-xs' : 'text-[10px]'}`}>
-                          -{product.discount}%
+                          -{product['discount']}%
                         </span>
-                        {product.discount >= 30 && (
+                        {product['discount'] >= 30 && (
                           <span className="font-bold text-black bg-linear-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 rounded text-[10px]">
                             お得
                           </span>
@@ -751,7 +751,7 @@ function ProductCardBase({
                 </div>
               ) : (
                 <span className={`font-bold ${themeConfig.regularPriceColor} ${isEmphasized ? 'text-base' : 'text-sm'}`}>
-                  {resolvedFormatPrice(product.price, product.currency)}
+                  {resolvedFormatPrice(product['price'], product.currency)}
                 </span>
               )}
             </div>
@@ -779,13 +779,13 @@ function ProductCardBase({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 {product.performers.slice(0, 2).map((performer, index) => (
-                  <span key={performer.id}>
+                  <span key={performer['id']}>
                     <Link
-                      href={`/${locale}/actress/${performer.id}`}
+                      href={`/${locale}/actress/${performer['id']}`}
                       className={`${themeConfig.accentColor} ${themeConfig.accentHover} hover:underline underline-offset-2 transition-colors font-medium`}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {performer.name}
+                      {performer['name']}
                     </Link>
                     {index < Math.min(product.performers!.length, 2) - 1 && <span className={`mx-0.5 ${themeConfig.separatorColor}`}>/</span>}
                   </span>
@@ -795,24 +795,24 @@ function ProductCardBase({
               <span className={`${themeConfig.textMuted} truncate`}>{product.actressName ?? t('performerInfo')}</span>
             )}
             <span className={`${themeConfig.separatorColor} shrink-0`}>|</span>
-            <span className={`${themeConfig.textMuted} shrink-0`}>{product.releaseDate ?? t('releaseDateTbd')}</span>
+            <span className={`${themeConfig.textMuted} shrink-0`}>{product['releaseDate'] ?? t('releaseDateTbd')}</span>
           </div>
           <div className="flex items-center gap-1 mt-0.5">
-            <Link href={`/${locale}/products/${product.id}`}>
+            <Link href={`/${locale}/products/${product['id']}`}>
               <p className={`text-[10px] sm:text-xs ${themeConfig.textMuted} truncate`}>
-                {product.normalizedProductId || product.id}
+                {product.normalizedProductId || product['id']}
               </p>
             </Link>
             <CopyButton
-              text={product.normalizedProductId || String(product.id)}
+              text={product.normalizedProductId || String(product['id'])}
               iconOnly
               size="xs"
               className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
             />
           </div>
-          <Link href={`/${locale}/products/${product.id}`}>
+          <Link href={`/${locale}/products/${product['id']}`}>
             <h3 className={`font-semibold text-sm sm:text-base leading-tight mt-0.5 line-clamp-2 ${themeConfig.textPrimary} hover:opacity-80`}>
-              {product.title}
+              {product['title']}
             </h3>
           </Link>
         </div>
@@ -832,18 +832,18 @@ function ProductCardBase({
           </div>
         )}
 
-        {(product.rating || product.duration) && (
+        {(product['rating'] || product['duration']) && (
           <div className={`flex items-center gap-1.5 text-[10px] sm:text-xs ${themeConfig.textSecondary}`}>
-            {product.rating && StarRating && (
+            {product['rating'] != null && StarRating && (
               <StarRating
-                rating={product.rating}
-                reviewCount={product.reviewCount}
+                rating={product['rating'] as number}
+                {...(product['reviewCount'] !== undefined ? { reviewCount: product['reviewCount'] } : {})}
                 size="sm"
                 showCount={true}
               />
             )}
             {/* 人気バッジ: 高評価かつレビュー多数 */}
-            {product.rating && product.rating >= 4.5 && product.reviewCount && product.reviewCount >= 20 && (
+            {product['rating'] && product['rating'] >= 4.5 && product['reviewCount'] && product['reviewCount'] >= 20 && (
               <span className="text-[10px] font-bold text-white bg-linear-to-r from-pink-500 to-rose-500 px-1.5 py-0.5 rounded flex items-center gap-0.5">
                 <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
@@ -851,7 +851,7 @@ function ProductCardBase({
                 人気
               </span>
             )}
-            {product.duration && <span className="shrink-0">・{product.duration}分</span>}
+            {product['duration'] && <span className="shrink-0">・{product['duration']}分</span>}
           </div>
         )}
 
@@ -865,12 +865,12 @@ function ProductCardBase({
                 <p className={`text-[10px] sm:text-xs ${themeConfig.textMuted} line-through`}>
                   {resolvedFormatPrice(product.regularPrice, product.currency)}
                 </p>
-                {product.discount && (
+                {product['discount'] && (
                   <>
                     <span className={`text-[10px] font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} px-1 py-0.5 rounded`}>
-                      -{product.discount}%
+                      -{product['discount']}%
                     </span>
-                    {product.discount >= 30 && (
+                    {product['discount'] >= 30 && (
                       <span className="text-[10px] font-bold text-black bg-linear-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 rounded">
                         お得
                       </span>
@@ -879,9 +879,9 @@ function ProductCardBase({
                 )}
               </div>
             </div>
-          ) : product.price > 0 ? (
+          ) : product['price'] > 0 ? (
             <p className={`text-base sm:text-lg font-semibold ${themeConfig.regularPriceColor}`}>
-              {resolvedFormatPrice(product.price, product.currency)}
+              {resolvedFormatPrice(product['price'], product.currency)}
             </p>
           ) : (product.provider && isSubscriptionSite(product.provider)) ? (
             <p className={`text-sm font-semibold ${themeConfig.subscriptionColor}`}>
@@ -890,7 +890,7 @@ function ProductCardBase({
           ) : null}
 
           {(() => {
-            const affiliateUrl = getAffiliateUrl(product.affiliateUrl, affiliateUrlOptions);
+            const affiliateUrl = getAffiliateUrl(product['affiliateUrl'], affiliateUrlOptions);
             if (!affiliateUrl) return null;
             if (hideFanzaPurchaseLinks && product.provider === 'fanza') return null;
             const isSale = !!product.salePrice;
@@ -981,7 +981,7 @@ function ProductCardBase({
           isOpen={showModal}
           onClose={handleCloseModal}
           alt={generateAltText(product)}
-          detailsUrl={`/${locale}/products/${product.id}`}
+          detailsUrl={`/${locale}/products/${product['id']}`}
         />
       )}
 
@@ -1022,9 +1022,9 @@ function ProductCardBase({
 
 export default memo(ProductCardBase, (prevProps, nextProps) => {
   return (
-    prevProps.product.id === nextProps.product.id &&
+    prevProps.product['id'] === nextProps.product['id'] &&
     prevProps.product.salePrice === nextProps.product.salePrice &&
-    prevProps.product.price === nextProps.product.price &&
+    prevProps.product['price'] === nextProps.product['price'] &&
     prevProps.rankPosition === nextProps.rankPosition &&
     prevProps.compact === nextProps.compact &&
     prevProps.size === nextProps.size &&

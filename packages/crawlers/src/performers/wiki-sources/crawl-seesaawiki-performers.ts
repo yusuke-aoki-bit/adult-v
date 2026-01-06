@@ -31,7 +31,7 @@ async function fetchPage(url: string): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+    throw new Error(`HTTP ${response['status']}`);
   }
 
   // EUC-JPエンコーディングをデコード
@@ -191,7 +191,7 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const limitArg = args.find(a => a.startsWith('--limit='));
-  const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : 100;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '100', 10) : 100;
 
   console.log('=== seesaawiki.jp/av_neme クローラー ===\n');
   console.log(`Dry run: ${dryRun}`);
@@ -258,7 +258,7 @@ async function main() {
       const performer = await parsePerformerPage(url);
 
       if (performer) {
-        console.log(`  Found: ${performer.name} (maker: ${performer.maker || 'unknown'})`);
+        console.log(`  Found: ${performer['name']} (maker: ${performer.maker || 'unknown'})`);
         performers.push(performer);
         crawled++;
       } else {

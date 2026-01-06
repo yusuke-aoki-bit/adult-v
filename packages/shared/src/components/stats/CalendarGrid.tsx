@@ -323,17 +323,17 @@ export default function CalendarGrid({
                     <div className="grid grid-cols-2 gap-1">
                       {dateData.products.slice(0, 4).map((product) => (
                         <button
-                          key={product.id}
+                          key={product['id']}
                           type="button"
                           onClick={() => handleProductClick(product)}
                           className="block relative rounded overflow-hidden hover:ring-2 hover:ring-indigo-400 transition-all cursor-pointer"
                           style={{ aspectRatio: '3/4' }}
-                          title={product.title}
+                          title={product['title']}
                         >
-                          {isValidUrl(product.thumbnailUrl) ? (
+                          {isValidUrl(product['thumbnailUrl']) ? (
                             <Image
-                              src={product.thumbnailUrl!}
-                              alt={product.title}
+                              src={product['thumbnailUrl']!}
+                              alt={product['title']}
                               fill
                               sizes="80px"
                               className="object-cover"
@@ -353,22 +353,22 @@ export default function CalendarGrid({
                     <div className="flex gap-1 flex-wrap">
                       {dateData.performers.slice(0, 2).map((performer) => (
                         <Link
-                          key={performer.id}
-                          href={`${actressLinkPrefix}/${performer.id}`}
+                          key={performer['id']}
+                          href={`${actressLinkPrefix}/${performer['id']}`}
                           className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-full text-[10px] hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
-                          title={performer.name}
+                          title={performer['name']}
                         >
                           {isValidUrl(performer.imageUrl) && (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={performer.imageUrl!}
-                              alt={performer.name}
+                              alt={performer['name']}
                               width={16}
                               height={16}
                               className="rounded-full object-cover w-4 h-4"
                             />
                           )}
-                          <span className="truncate max-w-[50px]">{performer.name}</span>
+                          <span className="truncate max-w-[50px]">{performer['name']}</span>
                         </Link>
                       ))}
                     </div>

@@ -13,7 +13,7 @@ export async function generateMetadata({
     ? 'お気に入りに登録した作品・女優の一覧'
     : 'Your favorite products and actresses';
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   return {
     title,

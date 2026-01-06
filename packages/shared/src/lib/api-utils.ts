@@ -23,8 +23,8 @@ export function validatePagination(searchParams: URLSearchParams): ValidationRes
   const offsetStr = searchParams.get('offset');
 
   // Parse with parseInt for more strict validation
-  // デフォルト96件（ユーザー調整不要の最大値）
-  const limit = limitStr ? parseInt(limitStr, 10) : 96;
+  // デフォルト48件
+  const limit = limitStr ? parseInt(limitStr, 10) : 48;
   const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
 
   // Check for NaN
@@ -124,7 +124,7 @@ export function validatePriceRange(priceRange: string | null): PriceRange {
   }
 
   const parts = priceRange.split('-');
-  if (parts.length !== 2) {
+  if (parts.length !== 2 || parts[0] === undefined || parts[1] === undefined) {
     return {};
   }
 
@@ -135,10 +135,14 @@ export function validatePriceRange(priceRange: string | null): PriceRange {
     return {};
   }
 
-  return {
-    minPrice: min >= 0 ? min : undefined,
-    maxPrice: max > 0 ? max : undefined,
-  };
+  const result: PriceRange = {};
+  if (min >= 0) {
+    result.minPrice = min;
+  }
+  if (max > 0) {
+    result.maxPrice = max;
+  }
+  return result;
 }
 
 /**

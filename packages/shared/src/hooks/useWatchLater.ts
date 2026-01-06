@@ -80,8 +80,8 @@ export function useWatchLater() {
             mergedItems.push({
               productId: firestoreItem.productId,
               title: firestoreItem.title,
-              thumbnail: firestoreItem.thumbnail,
-              provider: firestoreItem.provider,
+              ...(firestoreItem.thumbnail !== undefined && { thumbnail: firestoreItem.thumbnail }),
+              ...(firestoreItem.provider !== undefined && { provider: firestoreItem.provider }),
               addedAt: Date.now(), // Firestore timestampは変換が必要なのでDate.nowを使用
             });
           }
@@ -93,8 +93,8 @@ export function useWatchLater() {
             await saveWatchlistItemToFirestore(userId, {
               productId: localItem.productId,
               title: localItem.title,
-              thumbnail: localItem.thumbnail,
-              provider: localItem.provider,
+              ...(localItem.thumbnail !== undefined && { thumbnail: localItem.thumbnail }),
+              ...(localItem.provider !== undefined && { provider: localItem.provider }),
             });
           }
         }
@@ -133,7 +133,7 @@ export function useWatchLater() {
     (item: Omit<WatchLaterItem, 'addedAt'>) => {
       setItems(prev => {
         // 既に存在する場合は追加しない
-        if (prev.some(i => i.productId === item.productId)) {
+        if (prev.some(i => i.productId === item['productId'])) {
           return prev;
         }
 
@@ -149,10 +149,10 @@ export function useWatchLater() {
         // Firestoreにも保存（ログイン済みの場合）
         if (isAuthenticated && userId) {
           saveWatchlistItemToFirestore(userId, {
-            productId: item.productId,
-            title: item.title,
-            thumbnail: item.thumbnail,
-            provider: item.provider,
+            productId: item['productId'],
+            title: item['title'],
+            ...(item['thumbnail'] !== undefined && { thumbnail: item['thumbnail'] }),
+            ...(item.provider !== undefined && { provider: item.provider }),
           }).catch(console.error);
         }
 
@@ -191,8 +191,8 @@ export function useWatchLater() {
   // トグル（追加/削除）
   const toggleItem = useCallback(
     (item: Omit<WatchLaterItem, 'addedAt'>) => {
-      if (hasItem(item.productId)) {
-        removeItem(item.productId);
+      if (hasItem(item['productId'])) {
+        removeItem(item['productId']);
       } else {
         addItem(item);
       }

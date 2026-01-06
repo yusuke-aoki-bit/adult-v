@@ -54,8 +54,8 @@ export interface LogEntry {
 // 設定
 // ============================================================
 
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-const LOG_LEVEL = (process.env.LOG_LEVEL || 'info') as LogLevel;
+const IS_PRODUCTION = process.env['NODE_ENV'] === 'production';
+const LOG_LEVEL = (process.env['LOG_LEVEL'] || 'info') as LogLevel;
 
 const LOG_LEVELS: Record<LogLevel, number> = {
   debug: 0,
@@ -87,7 +87,7 @@ function formatError(error: unknown): LogEntry['error'] | undefined {
     return {
       name: error.name,
       message: error.message,
-      stack: error.stack,
+      ...(error.stack !== undefined && { stack: error.stack }),
     };
   }
 
@@ -103,24 +103,31 @@ function createLogEntry(
   context?: LogContext,
   error?: unknown
 ): LogEntry {
-  return {
+  const entry: LogEntry = {
     severity: SEVERITY_MAP[level],
     timestamp: new Date().toISOString(),
     message,
-    context: context || undefined,
-    error: formatError(error),
   };
+  if (context) {
+    entry.context = context;
+  }
+  const formattedError = formatError(error);
+  if (formattedError) {
+    entry.error = formattedError;
+  }
+  return entry;
 }
 
 function formatForConsole(entry: LogEntry): string {
+  const timePart = entry.timestamp.split('T')[1] ?? '';
   const parts = [
     `[${entry.severity}]`,
-    entry.timestamp.split('T')[1].replace('Z', ''),
+    timePart.replace('Z', ''),
     entry.message,
   ];
 
-  if (entry.context?.operation) {
-    parts.push(`(${entry.context.operation})`);
+  if (entry.context?.['operation']) {
+    parts.push(`(${entry.context['operation']})`);
   }
 
   if (entry.context?.durationMs) {
@@ -271,7 +278,11 @@ export const logger = new Logger();
  * リクエストスコープのロガーを作成
  */
 export function createRequestLogger(requestId: string, userId?: string): Logger {
-  return new Logger({ requestId, userId });
+  const context: LogContext = { requestId };
+  if (userId !== undefined) {
+    context.userId = userId;
+  }
+  return new Logger(context);
 }
 
 /**

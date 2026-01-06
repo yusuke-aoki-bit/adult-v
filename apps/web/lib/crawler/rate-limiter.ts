@@ -142,7 +142,7 @@ export const SITE_RATE_LIMITS: Record<string, RateLimiterOptions> = {
  */
 export function getRateLimiterForSite(siteName: string): RateLimiter {
   const normalized = siteName.toLowerCase();
-  const options = SITE_RATE_LIMITS[normalized] || SITE_RATE_LIMITS.default;
+  const options = SITE_RATE_LIMITS[normalized] || SITE_RATE_LIMITS['default'];
   return new RateLimiter(options);
 }
 

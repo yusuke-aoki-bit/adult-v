@@ -142,8 +142,8 @@ const ProductDetailInfo = memo(function ProductDetailInfo({
   tagCount,
 }: ProductDetailInfoProps) {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   return (
     <div className="bg-gray-800 rounded-lg p-6 space-y-4">

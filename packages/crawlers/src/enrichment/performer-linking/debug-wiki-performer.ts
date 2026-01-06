@@ -35,8 +35,9 @@ async function main() {
     console.log('\n   黒島玲衣の検索:');
     const kuroResult = await db.execute(sql`SELECT product_code, performer_name FROM wiki_crawl_data WHERE performer_name LIKE '%黒島%' LIMIT 5`);
     if (kuroResult.rows.length > 0) {
-      kuroResult.rows.forEach((row: { product_code: string; performer_name: string }) => {
-        console.log(`   - ${row.product_code}: ${row.performer_name}`);
+      kuroResult.rows.forEach((row) => {
+        const r = row as { product_code: string; performer_name: string };
+        console.log(`   - ${r.product_code}: ${r.performer_name}`);
       });
     } else {
       console.log('   黒島玲衣の情報なし');
@@ -49,24 +50,24 @@ async function main() {
   // 品番で商品を検索
   const [product] = await db
     .select({
-      id: products.id,
+      id: products['id'],
       normalizedProductId: products.normalizedProductId,
-      title: products.title,
+      title: products['title'],
     })
     .from(products)
     .where(sql`UPPER(${products.normalizedProductId}) = ANY(ARRAY[${sql.join(searchCodes.map(c => sql`${c.toUpperCase()}`), sql`, `)}]::text[])`)
     .limit(1);
 
   if (product) {
-    console.log(`   商品ID: ${product.id}`);
+    console.log(`   商品ID: ${product['id']}`);
     console.log(`   品番: ${product.normalizedProductId}`);
-    console.log(`   タイトル: ${product.title}`);
+    console.log(`   タイトル: ${product['title']}`);
 
     const currentPerformers = await db
-      .select({ name: performers.name })
+      .select({ name: performers['name'] })
       .from(productPerformers)
-      .innerJoin(performers, eq(productPerformers.performerId, performers.id))
-      .where(eq(productPerformers.productId, product.id));
+      .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
+      .where(eq(productPerformers.productId, product['id']));
 
     if (currentPerformers.length > 0) {
       console.log(`   現在の演者: ${currentPerformers.map(p => p.name).join(', ')}`);

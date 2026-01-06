@@ -120,7 +120,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
       const result = await db
         .select()
         .from(performers)
-        .where(eq(performers.id, parseInt(id)))
+        .where(eq(performers['id'], parseInt(id)))
         .limit(1);
 
       if (result.length === 0) {
@@ -155,9 +155,9 @@ export function createActressQueries(deps: ActressQueryDeps) {
 
     // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
     return aliases.map((a: Record<string, unknown>) => ({
-      id: a.id as number,
-      aliasName: a.aliasName as string,
-      source: a.source as string | null,
+      id: a['id'] as number,
+      aliasName: a['aliasName'] as string,
+      source: a['source'] as string | null,
     }));
   }
 
@@ -191,7 +191,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
 
     return (result.rows as { site: string; count: string | number }[]).map((row) => ({
       site: row.site,
-      count: typeof row.count === 'string' ? parseInt(row.count) : row.count,
+      count: typeof row['count'] === 'string' ? parseInt(row['count']) : row['count'],
     }));
   }
 
@@ -213,8 +213,8 @@ export function createActressQueries(deps: ActressQueryDeps) {
     `);
 
     return (result.rows as { aspName: string; count: string | number }[]).map((row) => ({
-      aspName: row.aspName,
-      count: typeof row.count === 'string' ? parseInt(row.count) : row.count,
+      aspName: row['aspName'],
+      count: typeof row['count'] === 'string' ? parseInt(row['count']) : row['count'],
     }));
   }
 
@@ -334,8 +334,8 @@ export function createActressQueries(deps: ActressQueryDeps) {
         // 各女優をマッピング（N回のDB呼び出しなし）
         return rows.map(row => {
           const performer = {
-            id: row.id,
-            name: row.name,
+            id: row['id'],
+            name: row['name'],
             nameKana: row.name_kana,
             nameEn: row.name_en,
             nameZh: row.name_zh,
@@ -348,9 +348,9 @@ export function createActressQueries(deps: ActressQueryDeps) {
           };
           return mapPerformerWithBatchData(
             performer,
-            thumbnailsMap.get(row.id),
-            servicesMap.get(row.id),
-            aliasesMap.get(row.id),
+            thumbnailsMap.get(row['id']),
+            servicesMap.get(row['id']),
+            aliasesMap.get(row['id']),
             parseInt(row.product_count, 10),
             locale
           ) as T;
@@ -365,13 +365,13 @@ export function createActressQueries(deps: ActressQueryDeps) {
 
       const actressesWithDetails = await Promise.all(
         rows.map(async (actress) => {
-          const fullActress = await fetchActress(actress.id.toString(), locale);
+          const fullActress = await fetchActress(actress['id'].toString(), locale);
           if (fullActress) {
             return fullActress as T;
           }
           return {
-            id: actress.id.toString(),
-            name: actress.name,
+            id: actress['id'].toString(),
+            name: actress['name'],
             catchcopy: '',
             description: '',
             heroImage: '',
@@ -436,14 +436,16 @@ export function createActressQueries(deps: ActressQueryDeps) {
       };
 
       const yearlyStats: YearlyStat[] = yearlyResult.rows.map((row: Record<string, unknown>) => ({
-        year: row.year as number,
-        count: row.count as number,
-        products: (row.products as Array<{ id: number; title: string; releaseDate: string }>).slice(0, 5), // 各年最大5件
+        year: row['year'] as number,
+        count: row['count'] as number,
+        products: (row['products'] as Array<{ id: number; title: string; releaseDate: string }>).slice(0, 5), // 各年最大5件
       }));
 
       // 全盛期（最も作品数が多い年）
-      const peakYearData = yearlyStats.reduce((max: YearlyStat, curr: YearlyStat) =>
-        curr.count > max.count ? curr : max, yearlyStats[0]);
+      const peakYearData = yearlyStats.length > 0
+        ? yearlyStats.reduce((max: YearlyStat, curr: YearlyStat) =>
+            curr.count > max.count ? curr : max, yearlyStats[0]!)
+        : null;
 
       // デビュー作と最新作
       const firstYear = yearlyStats[0];
@@ -574,7 +576,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
         return rows.map(row => {
           const performer = {
             id: row.performer_id,
-            name: row.name,
+            name: row['name'],
             nameKana: row.name_kana,
             nameEn: row.name_en,
             nameZh: row.name_zh,
@@ -618,7 +620,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
   /**
    * ASP別人気女優を取得
    * バッチ関数が提供されている場合はN+1を回避
-   * @param options.aspName - ASP名
+   * @param options['aspName'] - ASP名
    * @param options.limit - 取得件数（デフォルト10）
    * @param options.locale - ロケール（デフォルト'ja'）
    */
@@ -691,7 +693,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
         return rows.map(row => {
           const performer = {
             id: row.performer_id,
-            name: row.name,
+            name: row['name'],
             nameKana: row.name_kana,
             nameEn: row.name_en,
             nameZh: row.name_zh,

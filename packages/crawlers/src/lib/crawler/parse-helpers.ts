@@ -43,7 +43,7 @@ export function extractPrice(text: string | null | undefined): number | null {
 
   // 数値を抽出
   const match = cleaned.match(/(\d+)/);
-  if (match) {
+  if (match && match[1]) {
     return parseInt(match[1], 10);
   }
 
@@ -64,7 +64,7 @@ export function extractPriceInfo(text: string | null | undefined): PriceInfo | n
 
   // 割引率を抽出 (33%OFF, 30%引き, etc.)
   const discountMatch = text.match(/(\d+)\s*%\s*(OFF|引き|オフ)/i);
-  if (discountMatch) {
+  if (discountMatch && discountMatch[1]) {
     result.discountPercent = parseInt(discountMatch[1], 10);
   }
 
@@ -72,9 +72,12 @@ export function extractPriceInfo(text: string | null | undefined): PriceInfo | n
   const prices: number[] = [];
   const priceMatches = text.matchAll(/[¥￥]?\s*(\d{1,3}(?:[,，]\d{3})*)\s*円?/g);
   for (const match of priceMatches) {
-    const price = parseInt(match[1].replace(/[,，]/g, ''), 10);
-    if (price > 0) {
-      prices.push(price);
+    const priceStr = match[1];
+    if (priceStr) {
+      const price = parseInt(priceStr.replace(/[,，]/g, ''), 10);
+      if (price > 0) {
+        prices.push(price);
+      }
     }
   }
 
@@ -82,18 +85,18 @@ export function extractPriceInfo(text: string | null | undefined): PriceInfo | n
     return null;
   }
 
-  if (prices.length === 1) {
-    result.price = prices[0];
-  } else if (prices.length >= 2) {
+  if (prices.length === 1 && prices[0] !== undefined) {
+    result['price'] = prices[0];
+  } else if (prices.length >= 2 && prices[0] !== undefined && prices[1] !== undefined) {
     // 2つ以上の価格がある場合、大きい方を元価格、小さい方を現在価格とする
     prices.sort((a, b) => b - a);
-    result.originalPrice = prices[0];
-    result.price = prices[1];
+    result['originalPrice'] = prices[0];
+    result['price'] = prices[1];
 
     // 割引率が未設定の場合、計算
-    if (!result.discountPercent && result.originalPrice > result.price) {
+    if (!result.discountPercent && result['originalPrice'] > result['price']) {
       result.discountPercent = Math.round(
-        ((result.originalPrice - result.price) / result.originalPrice) * 100
+        ((result['originalPrice'] - result['price']) / result['originalPrice']) * 100
       );
     }
   }
@@ -133,15 +136,15 @@ export function parsePerformerName(text: string | null | undefined): ParsedPerfo
 
   // カッコ内の読み仮名を抽出
   const kanaMatch = trimmed.match(/^(.+?)[（(]([ぁ-んァ-ン]+)[）)]$/);
-  if (kanaMatch) {
-    result.name = kanaMatch[1].trim();
-    result.nameKana = kanaMatch[2].trim();
+  if (kanaMatch && kanaMatch[1] && kanaMatch[2]) {
+    result['name'] = kanaMatch[1].trim();
+    result['nameKana'] = kanaMatch[2].trim();
   }
 
   // スラッシュで区切られた別名を抽出
   const slashMatch = trimmed.match(/^(.+?)\s*[/／]\s*(.+)$/);
-  if (slashMatch) {
-    result.name = slashMatch[1].trim();
+  if (slashMatch && slashMatch[1] && slashMatch[2]) {
+    result['name'] = slashMatch[1].trim();
     result.aliasNames = [slashMatch[2].trim()];
   }
 
@@ -204,21 +207,23 @@ export function parseDate(text: string | null | undefined): string | null {
 
   // 日本語形式: 2024年1月15日
   const jpMatch = trimmed.match(/(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/);
-  if (jpMatch) {
+  if (jpMatch && jpMatch[1] && jpMatch[2] && jpMatch[3]) {
     const [, year, month, day] = jpMatch;
     return formatDate(year, month, day);
   }
 
   // スラッシュ形式: 2024/01/15 or 01/15/2024
   const slashMatch = trimmed.match(/(\d{2,4})[/\-.](\d{1,2})[/\-.](\d{1,2})/);
-  if (slashMatch) {
-    let [, part1, part2, part3] = slashMatch;
+  if (slashMatch && slashMatch[1] && slashMatch[2] && slashMatch[3]) {
+    const part1 = slashMatch[1];
+    const part2 = slashMatch[2];
+    const part3 = slashMatch[3];
 
     // 年が最初か最後かを判定
-    if (parseInt(part1) > 12) {
+    if (parseInt(part1, 10) > 12) {
       // 年-月-日 形式
       return formatDate(part1, part2, part3);
-    } else if (parseInt(part3) > 31) {
+    } else if (parseInt(part3, 10) > 31) {
       // 月/日/年 形式 (US)
       return formatDate(part3, part1, part2);
     } else {
@@ -230,14 +235,14 @@ export function parseDate(text: string | null | undefined): string | null {
 
   // ISO形式: 2024-01-15T...
   const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) {
+  if (isoMatch && isoMatch[1] && isoMatch[2] && isoMatch[3]) {
     const [, year, month, day] = isoMatch;
     return formatDate(year, month, day);
   }
 
   // 英語形式: Jan 15, 2024
   const enMatch = trimmed.match(/([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})/);
-  if (enMatch) {
+  if (enMatch && enMatch[1] && enMatch[2] && enMatch[3]) {
     const [, monthStr, day, year] = enMatch;
     const month = parseEnglishMonth(monthStr);
     if (month) {
@@ -299,13 +304,13 @@ export function parseDuration(text: string | null | undefined): number | null {
 
   // 分形式: 120分
   const minMatch = trimmed.match(/(\d+)\s*分/);
-  if (minMatch && !trimmed.includes('時間')) {
+  if (minMatch && minMatch[1] && !trimmed.includes('時間')) {
     return parseInt(minMatch[1], 10);
   }
 
   // 時間+分形式: 2時間30分
   const hourMinMatch = trimmed.match(/(\d+)\s*時間\s*(?:(\d+)\s*分)?/);
-  if (hourMinMatch) {
+  if (hourMinMatch && hourMinMatch[1]) {
     const hours = parseInt(hourMinMatch[1], 10);
     const mins = hourMinMatch[2] ? parseInt(hourMinMatch[2], 10) : 0;
     return hours * 60 + mins;
@@ -313,7 +318,7 @@ export function parseDuration(text: string | null | undefined): number | null {
 
   // HH:MM:SS or MM:SS 形式
   const colonMatch = trimmed.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  if (colonMatch) {
+  if (colonMatch && colonMatch[1] && colonMatch[2]) {
     if (colonMatch[3]) {
       // HH:MM:SS
       const hours = parseInt(colonMatch[1], 10);
@@ -327,7 +332,7 @@ export function parseDuration(text: string | null | undefined): number | null {
 
   // 数字のみ（分とみなす）
   const numMatch = trimmed.match(/^(\d+)$/);
-  if (numMatch) {
+  if (numMatch && numMatch[1]) {
     return parseInt(numMatch[1], 10);
   }
 

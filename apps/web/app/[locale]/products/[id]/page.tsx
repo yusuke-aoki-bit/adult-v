@@ -101,7 +101,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
     if (!product) return {};
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
     // SEO最適化されたメタディスクリプション生成（セール・レーティング情報含む）
     const productId = product.normalizedProductId || product.id;

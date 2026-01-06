@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 
 // Debug flag - set NEXT_PUBLIC_DEBUG_WEB_VITALS=true to enable console logging
-const DEBUG_WEB_VITALS = process.env.NEXT_PUBLIC_DEBUG_WEB_VITALS === 'true';
+const DEBUG_WEB_VITALS = process.env['NEXT_PUBLIC_DEBUG_WEB_VITALS'] === 'true';
 
 /**
  * Core Web Vitals Performance Monitor
@@ -15,7 +15,7 @@ export default function PerformanceMonitor() {
     if (typeof window === 'undefined') return;
 
     // Only run in production
-    if (process.env.NODE_ENV !== 'production') return;
+    if (process.env['NODE_ENV'] !== 'production') return;
 
     // Import web-vitals dynamically
     import('web-vitals').then(({ onLCP, onINP, onCLS, onFCP, onTTFB }) => {

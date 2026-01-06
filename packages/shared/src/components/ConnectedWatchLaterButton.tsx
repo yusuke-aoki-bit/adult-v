@@ -41,8 +41,8 @@ export default function ConnectedWatchLaterButton({
     toggleItem({
       productId: productIdStr,
       title,
-      thumbnail,
-      provider,
+      ...(thumbnail && { thumbnail }),
+      ...(provider && { provider }),
     });
   };
 
@@ -50,15 +50,15 @@ export default function ConnectedWatchLaterButton({
     <WatchLaterButton
       productId={productId}
       title={title}
-      thumbnail={thumbnail}
-      provider={provider}
+      {...(thumbnail && { thumbnail })}
+      {...(provider && { provider })}
       size={size}
       className={className}
       theme={theme}
       isAdded={isAdded}
       isLoaded={isLoaded}
       onToggle={handleToggle}
-      labels={labels}
+      {...(labels && { labels })}
     />
   );
 }

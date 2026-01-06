@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.adult-v.com';
+const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
 export const revalidate = 3600; // 1時間キャッシュ
 

@@ -146,8 +146,8 @@ function categorizeProduct(product: EnrichedProduct): PriorityCategory {
 
 export default function BudgetPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as TranslationKey] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const t = translations[locale as TranslationKey] || translations['ja'];
 
   const { remaining } = useBudget();
   const { products, stats, isLoading } = useWatchlistAnalysis();

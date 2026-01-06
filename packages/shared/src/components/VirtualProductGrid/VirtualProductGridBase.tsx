@@ -84,7 +84,7 @@ const CellComponent = ({
     height: Number(style.height) - gap,
   };
 
-  return <>{renderProduct(product, index, adjustedStyle)}</>;
+  return <>{product && renderProduct(product, index, adjustedStyle)}</>;
 };
 
 function VirtualProductGridBase({

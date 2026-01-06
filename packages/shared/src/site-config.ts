@@ -77,7 +77,7 @@ export const siteConfigs: Record<SiteMode, SiteConfig> = {
  */
 export function getSiteMode(hostname?: string): SiteMode {
   // 環境変数による強制設定（Cloud Run用）
-  const envMode = process.env.SITE_MODE as SiteMode;
+  const envMode = process.env['SITE_MODE'] as SiteMode;
   if (envMode && (envMode === 'adult-v' || envMode === 'fanza')) {
     return envMode;
   }

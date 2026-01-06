@@ -22,14 +22,14 @@ export function createNotificationsSubscribeHandler(deps: NotificationsHandlerDe
       const subscription = await request.json() as PushSubscription;
 
       // Validate subscription object
-      if (!subscription.endpoint || !subscription.keys) {
+      if (!subscription['endpoint'] || !subscription.keys) {
         return NextResponse.json(
           { error: 'Invalid subscription object' },
           { status: 400 }
         );
       }
 
-      await deps.saveSubscription(subscription.endpoint, subscription.keys);
+      await deps.saveSubscription(subscription['endpoint'], subscription.keys);
 
       return NextResponse.json(
         { success: true, message: 'Subscription saved successfully' },

@@ -105,7 +105,7 @@ export function createUserTagSuggestionsGetHandler(deps: UserTagSuggestionsHandl
 
         suggestionsWithVotes = suggestions.map(suggestion => ({
           ...suggestion,
-          userVote: voteMap.get(suggestion.id) || null,
+          userVote: voteMap.get(suggestion['id']) || null,
         }));
       }
 
@@ -217,7 +217,7 @@ export function createUserTagSuggestionsPostHandler(deps: UserTagSuggestionsHand
 
       try {
         moderationResult = await moderateTagSuggestion({
-          productTitle: product.title,
+          productTitle: product['title'],
           suggestedTag: tagName,
           existingTags: existingTags.map(t => t.name),
           availableTags: existingTags.map(t => t.name),

@@ -35,7 +35,7 @@ export function logDbErrorAndReturn<T>(
   });
 
   // Send to Sentry in production (as warning since it's recoverable)
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env['NODE_ENV'] === 'production') {
     logError(error, { ...context, operation, severity: 'warning' });
   }
 
@@ -67,7 +67,7 @@ export function logDbErrorAndThrow(
   });
 
   // Send to Sentry in production
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env['NODE_ENV'] === 'production') {
     logError(error, { ...context, operation });
   }
 

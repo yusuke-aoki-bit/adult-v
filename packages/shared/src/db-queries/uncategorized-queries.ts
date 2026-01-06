@@ -277,18 +277,18 @@ export function createUncategorizedQueries(deps: UncategorizedQueryDeps): Uncate
       // 関連データを並列で取得
       const productsWithData = await Promise.all(
         (results.rows as unknown as RawProductRow[]).map(async (product) => {
-          const { tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(product.id);
+          const { tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(product['id']);
 
           // ローカライズ適用
           const localizedTitle = getLocalizedTitle({
-            title: product.title || '',
+            title: product['title'] || '',
             titleEn: product.title_en,
             titleZh: product.title_zh,
             titleZhTw: product.title_zh_tw,
             titleKo: product.title_ko,
           }, locale);
           const localizedDescription = getLocalizedDescription({
-            description: product.description,
+            description: product['description'],
             descriptionEn: product.description_en,
             descriptionZh: product.description_zh,
             descriptionZhTw: product.description_zh_tw,
@@ -296,11 +296,11 @@ export function createUncategorizedQueries(deps: UncategorizedQueryDeps): Uncate
           }, locale);
 
           return {
-            id: String(product.id),
+            id: String(product['id']),
             title: localizedTitle,
             description: localizedDescription,
             thumbnailUrl: product.default_thumbnail_url || '',
-            duration: product.duration || 0,
+            duration: product['duration'] || 0,
             releaseDate: product.release_date || '',
             createdAt: product.created_at || '',
             normalizedProductId: product.normalized_product_id || '',

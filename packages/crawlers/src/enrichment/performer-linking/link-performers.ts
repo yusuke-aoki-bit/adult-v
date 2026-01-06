@@ -31,30 +31,37 @@ async function loadPerformerIndex(): Promise<Map<string, number>> {
   const index = new Map<string, number>();
 
   // 本名をロード
-  const allPerformers = await db.select({
-    id: performers.id,
-    name: performers.name,
+  const allPerformers = await db['select']({
+    id: performers['id'],
+    name: performers['name'],
   }).from(performers);
 
   for (const p of allPerformers) {
-    const normalized = normalizePerformerName(p.name);
-    index.set(normalized, p.id);
-    index.set(p.name, p.id);
+    const name = p.name;
+    if (typeof name !== 'string') continue;
+    const normalized = normalizePerformerName(name);
+    if (normalized !== null) {
+      index.set(normalized, p.id);
+    }
+    index.set(name, p.id);
   }
 
   // エイリアスをロード
-  const allAliases = await db.select({
+  const allAliases = await db['select']({
     performerId: performerAliases.performerId,
     aliasName: performerAliases.aliasName,
   }).from(performerAliases);
 
   for (const a of allAliases) {
-    const normalized = normalizePerformerName(a.aliasName);
-    if (!index.has(normalized)) {
-      index.set(normalized, a.performerId);
+    const aliasName = a.aliasName;
+    const performerId = a.performerId;
+    if (typeof aliasName !== 'string' || typeof performerId !== 'number') continue;
+    const normalized = normalizePerformerName(aliasName);
+    if (normalized !== null && !index.has(normalized)) {
+      index.set(normalized, performerId);
     }
-    if (!index.has(a.aliasName)) {
-      index.set(a.aliasName, a.performerId);
+    if (!index.has(aliasName)) {
+      index.set(aliasName, performerId);
     }
   }
 
@@ -86,8 +93,8 @@ function extractPerformersFromTitle(title: string): string[] {
   for (const pattern of bracketPatterns) {
     const matches = title.matchAll(pattern);
     for (const match of matches) {
-      const name = match[1].trim();
-      if (isValidPerformerName(name) && name.length <= 20) {
+      const name = match[1]?.trim();
+      if (name && isValidPerformerName(name) && name.length <= 20) {
         extracted.push(name);
       }
     }
@@ -186,10 +193,12 @@ async function main() {
   const includeLinked = args.includes('--include-linked'); // 既存紐付け商品も対象
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith('--limit=')) {
-      limit = parseInt(args[i].split('=')[1], 10);
-    } else if (args[i] === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1], 10);
+    const arg = args[i];
+    const nextArg = args[i + 1];
+    if (arg?.startsWith('--limit=')) {
+      limit = parseInt(arg.split('=')[1] ?? '5000', 10);
+    } else if (arg === '--limit' && nextArg) {
+      limit = parseInt(nextArg, 10);
       i++;
     }
   }
@@ -211,8 +220,8 @@ async function main() {
     // 全商品を対象
     targetProducts = await db
       .select({
-        id: products.id,
-        title: products.title,
+        id: products['id'],
+        title: products['title'],
         normalizedProductId: products.normalizedProductId,
       })
       .from(products)
@@ -221,12 +230,12 @@ async function main() {
     // 演者未紐付け商品のみ
     targetProducts = await db
       .select({
-        id: products.id,
-        title: products.title,
+        id: products['id'],
+        title: products['title'],
         normalizedProductId: products.normalizedProductId,
       })
       .from(products)
-      .leftJoin(productPerformers, eq(products.id, productPerformers.productId))
+      .leftJoin(productPerformers, eq(products['id'], productPerformers.productId))
       .where(isNull(productPerformers.productId))
       .limit(limit);
   }
@@ -238,6 +247,7 @@ async function main() {
 
   for (let i = 0; i < targetProducts.length; i++) {
     const product = targetProducts[i];
+    if (!product) continue;
     totalProducts++;
 
     if (i % 500 === 0) {
@@ -253,6 +263,7 @@ async function main() {
     // 抽出した名前もマッチング
     for (const name of extractedNames) {
       const normalized = normalizePerformerName(name);
+      if (!normalized) continue;
       const performerId = performerIndex.get(normalized) || performerIndex.get(name);
 
       if (performerId && !matches.some(m => m.performerId === performerId)) {
@@ -287,7 +298,7 @@ async function main() {
             .limit(1);
 
           if (existing.length === 0) {
-            await db.insert(productPerformers).values({
+            await db['insert'](productPerformers).values({
               productId: product.id,
               performerId: match.performerId,
             });

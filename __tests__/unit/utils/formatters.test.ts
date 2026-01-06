@@ -102,17 +102,17 @@ describe('Date Formatters', () => {
     };
 
     test('formats today correctly', () => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0]!;
       expect(formatRelativeDate(today)).toBe('今日');
     });
 
     test('formats yesterday correctly', () => {
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]!;
       expect(formatRelativeDate(yesterday)).toBe('昨日');
     });
 
     test('formats days ago correctly', () => {
-      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]!;
       expect(formatRelativeDate(threeDaysAgo)).toBe('3日前');
     });
   });

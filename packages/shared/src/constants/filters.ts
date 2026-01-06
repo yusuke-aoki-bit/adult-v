@@ -180,10 +180,10 @@ export const PRICE_RANGES: { value: string; label: string; min?: number; max?: n
 export function parsePriceRange(value: string): { min?: number; max?: number } {
   if (!value) return {};
   const [minStr, maxStr] = value.split('-');
-  return {
-    min: minStr ? parseInt(minStr, 10) : undefined,
-    max: maxStr ? parseInt(maxStr, 10) : undefined,
-  };
+  const result: { min?: number; max?: number } = {};
+  if (minStr) result.min = parseInt(minStr, 10);
+  if (maxStr) result.max = parseInt(maxStr, 10);
+  return result;
 }
 
 // ============================================================

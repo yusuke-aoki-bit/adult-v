@@ -141,7 +141,7 @@ export function UserContributionsSection({
               productId={productId}
               userId={userId}
               onSuccess={handleReviewSuccess}
-              onLoginRequired={onLoginRequired}
+              {...(onLoginRequired !== undefined && { onLoginRequired })}
               translations={t.reviewForm}
             />
             <UserReviewList
@@ -161,14 +161,14 @@ export function UserContributionsSection({
               userId={userId}
               existingTags={existingTags}
               onSuccess={handleTagSuccess}
-              onLoginRequired={onLoginRequired}
+              {...(onLoginRequired !== undefined && { onLoginRequired })}
               translations={t.tagForm}
             />
             <TagSuggestionList
               key={tagKey}
               productId={productId}
               userId={userId}
-              onLoginRequired={onLoginRequired}
+              {...(onLoginRequired !== undefined && { onLoginRequired })}
               translations={t.tagList}
             />
           </div>
@@ -182,14 +182,14 @@ export function UserContributionsSection({
               userId={userId}
               existingPerformers={existingPerformers}
               onSuccess={handlePerformerSuccess}
-              onLoginRequired={onLoginRequired}
+              {...(onLoginRequired !== undefined && { onLoginRequired })}
               translations={t.performerForm}
             />
             <PerformerSuggestionList
               key={performerKey}
               productId={productId}
               userId={userId}
-              onLoginRequired={onLoginRequired}
+              {...(onLoginRequired !== undefined && { onLoginRequired })}
               translations={t.performerList}
             />
           </div>

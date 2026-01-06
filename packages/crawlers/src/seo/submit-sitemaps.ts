@@ -90,11 +90,12 @@ async function main() {
           });
 
           const sitemap = statusResponse.data;
+          const lastSubmitted = sitemap.lastSubmitted || undefined;
           results.push({
             siteUrl: site.siteUrl,
             sitemapUrl,
             success: true,
-            lastSubmitted: sitemap.lastSubmitted || undefined,
+            ...(lastSubmitted && { lastSubmitted }),
             isPending: sitemap.isPending || false,
             warnings: sitemap.warnings ? Number(sitemap.warnings) : 0,
             errors: sitemap.errors ? Number(sitemap.errors) : 0,

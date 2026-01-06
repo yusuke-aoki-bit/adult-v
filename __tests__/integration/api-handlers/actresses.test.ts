@@ -63,16 +63,17 @@ describe('Actresses API Handler Integration', () => {
       const request = new Request('http://localhost/api/actresses');
 
       const response = await handler(request);
-      const data = await response.json();
+      const data = await response!.json();
 
-      expect(response.status).toBe(200);
+      expect(response!.status).toBe(200);
       expect(data.actresses).toBeDefined();
       expect(data.total).toBe(mockActresses.length);
-      expect(mockGetActresses).toHaveBeenCalledWith({
-        limit: 96, // デフォルト
-        offset: 0,
-        query: undefined,
-      });
+      expect(mockGetActresses).toHaveBeenCalledWith(
+        expect.objectContaining({
+          limit: 48, // デフォルト
+          offset: 0,
+        })
+      );
     });
 
     it('should handle custom pagination', async () => {
@@ -124,9 +125,9 @@ describe('Actresses API Handler Integration', () => {
       const request = new Request('http://localhost/api/actresses?featured=true');
 
       const response = await handler(request);
-      const data = await response.json();
+      const data = await response!.json();
 
-      expect(response.status).toBe(200);
+      expect(response!.status).toBe(200);
       expect(mockGetFeaturedActresses).toHaveBeenCalledWith(3); // デフォルトlimit
       expect(data.actresses).toBeDefined();
     });
@@ -156,7 +157,7 @@ describe('Actresses API Handler Integration', () => {
       const request = new Request('http://localhost/api/actresses?offset=20&limit=24');
 
       const response = await handler(request);
-      const data = await response.json();
+      const data = await response!.json();
 
       expect(data).toHaveProperty('actresses');
       expect(data).toHaveProperty('total');
@@ -169,7 +170,7 @@ describe('Actresses API Handler Integration', () => {
       const request = new Request('http://localhost/api/actresses?featured=true');
 
       const response = await handler(request);
-      const data = await response.json();
+      const data = await response!.json();
 
       expect(data).toHaveProperty('actresses');
       expect(data).toHaveProperty('total');
@@ -186,7 +187,7 @@ describe('Actresses API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.headers.get('Cache-Control')).toContain('s-maxage=3600');
+      expect(response!.headers.get('Cache-Control')).toContain('s-maxage=3600');
     });
 
     it('should set 5min cache for search results', async () => {
@@ -195,7 +196,7 @@ describe('Actresses API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.headers.get('Cache-Control')).toContain('s-maxage=300');
+      expect(response!.headers.get('Cache-Control')).toContain('s-maxage=300');
     });
 
     it('should set 1hour cache for featured actresses', async () => {
@@ -204,7 +205,7 @@ describe('Actresses API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.headers.get('Cache-Control')).toContain('s-maxage=3600');
+      expect(response!.headers.get('Cache-Control')).toContain('s-maxage=3600');
     });
 
     it('should set 1hour cache for IDs-based requests', async () => {
@@ -213,7 +214,7 @@ describe('Actresses API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.headers.get('Cache-Control')).toContain('s-maxage=3600');
+      expect(response!.headers.get('Cache-Control')).toContain('s-maxage=3600');
     });
   });
 
@@ -225,8 +226,8 @@ describe('Actresses API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.status).toBe(500);
-      const data = await response.json();
+      expect(response!.status).toBe(500);
+      const data = await response!.json();
       expect(data.error).toBe('Failed to fetch actresses');
     });
 
@@ -236,7 +237,7 @@ describe('Actresses API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.status).toBe(400);
+      expect(response!.status).toBe(400);
     });
 
     it('should return 400 for invalid limit (too large)', async () => {
@@ -245,7 +246,7 @@ describe('Actresses API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.status).toBe(400);
+      expect(response!.status).toBe(400);
     });
 
     it('should return 400 for negative offset', async () => {
@@ -254,7 +255,7 @@ describe('Actresses API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.status).toBe(400);
+      expect(response!.status).toBe(400);
     });
 
     it('should return 400 for NaN limit', async () => {
@@ -263,7 +264,7 @@ describe('Actresses API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.status).toBe(400);
+      expect(response!.status).toBe(400);
     });
   });
 });

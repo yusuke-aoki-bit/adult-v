@@ -27,10 +27,10 @@ export function createKeywordsHandler(deps: KeywordsHandlerDeps) {
       }
 
       const result = await generateKeywordSuggestions({
-        title: product.title,
+        title: product['title'],
         performers: product.performers,
         tags: product.tags,
-        description: product.description || undefined,
+        ...(product['description'] && { description: product['description'] }),
       });
 
       if (!result) {

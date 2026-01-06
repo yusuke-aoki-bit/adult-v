@@ -37,11 +37,11 @@ async function fetchMgsDescription(productId: string): Promise<string | null> {
     });
 
     if (!response.ok) {
-      console.error(`  HTTP ${response.status} for ${productId}`);
+      console.error(`  HTTP ${response['status']} for ${productId}`);
       return null;
     }
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     // description抽出
@@ -62,7 +62,7 @@ async function main() {
   const limitArg = args.find(arg => arg.startsWith('--limit='));
   const dryRun = args.includes('--dry-run');
 
-  const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 1000;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '1000', 10) : 1000;
 
   console.log('========================================');
   console.log('=== MGS Description バックフィル ===');
@@ -97,6 +97,7 @@ async function main() {
 
   for (let i = 0; i < rows.rows.length; i++) {
     const row = rows.rows[i];
+    if (!row) continue;
 
     try {
       const productId = row.original_product_id;

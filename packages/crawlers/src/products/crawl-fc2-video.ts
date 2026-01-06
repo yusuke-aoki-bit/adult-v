@@ -12,7 +12,7 @@
  * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-fc2-video.ts [--limit 100] [--source video|contents] [--no-bidirectional]
  */
 
-if (!process.env.DATABASE_URL) {
+if (!process.env['DATABASE_URL']) {
   console.error('ERROR: DATABASE_URL environment variable is not set');
   process.exit(1);
 }
@@ -32,7 +32,7 @@ puppeteer.use(StealthPlugin());
 const db = getDb();
 
 // FC2アフィリエイト設定
-const FC2_AFFUID = process.env.FC2_AFFUID || 'TVRFNU5USTJOVEE9';
+const FC2_AFFUID = process.env['FC2_AFFUID'] || 'TVRFNU5USTJOVEE9';
 
 interface FC2VideoProduct {
   videoId: string;
@@ -141,7 +141,7 @@ async function fetchContentsFC2ListPage(page: any, pageNum: number): Promise<str
       document.querySelectorAll('a').forEach(link => {
         const href = link.getAttribute('href') || '';
         const match = href.match(/\/article\/(\d+)/);
-        if (match && !ids.includes(match[1])) {
+        if (match && match[1] && !ids.includes(match[1])) {
           ids.push(match[1]);
         }
       });
@@ -199,19 +199,19 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
       )
       .limit(1);
 
-    if (existingRaw.length > 0 && existingRaw[0].hash === hash) {
+    if (existingRaw.length > 0 && existingRaw[0]?.hash === hash) {
       console.log(`    ⏭️ 変更なし: ${videoId} (hash match)`);
     } else {
       const { gcsUrl, htmlContent } = await saveRawHtmlToGcs('fc2-video', videoId, html);
 
-      if (existingRaw.length > 0) {
+      if (existingRaw.length > 0 && existingRaw[0]) {
         await db
           .update(rawHtmlData)
           .set({ htmlContent, gcsUrl, hash, crawledAt: new Date(), processedAt: null })
-          .where(eq(rawHtmlData.id, existingRaw[0].id));
+          .where(eq(rawHtmlData.id, existingRaw[0]['id']));
         console.log(`    🔄 更新完了${gcsUrl ? ' (GCS)' : ' (DB)'}`);
       } else {
-        await db.insert(rawHtmlData).values({
+        await db['insert'](rawHtmlData).values({
           source: 'FC2-video',
           productId: videoId,
           url,
@@ -241,8 +241,8 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
       let duration: number | null = null;
       if (durationEl) {
         const match = durationEl.textContent?.match(/(\d+):(\d+)/);
-        if (match) {
-          // 分:秒 形式なので、分部分のみ取得（products.durationは分単位）
+        if (match && match[1]) {
+          // 分:秒 形式なので、分部分のみ取得（products['duration']は分単位）
           duration = parseInt(match[1]);
         }
       }
@@ -256,7 +256,7 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
       const delPriceEl = document.querySelector('.price del, .price s, .price strike, .original_price');
       if (delPriceEl) {
         const match = delPriceEl.textContent?.match(/(\d{1,3}(?:,\d{3})*)/);
-        if (match) {
+        if (match && match[1]) {
           regularPrice = parseInt(match[1].replace(/,/g, ''));
         }
       }
@@ -267,14 +267,14 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
         const priceText = priceEl.textContent || '';
         // 取り消し線でない価格を取得
         const match = priceText.replace(/<del>.*?<\/del>/g, '').match(/(\d{1,3}(?:,\d{3})*)/);
-        if (match) {
+        if (match && match[1]) {
           price = parseInt(match[1].replace(/,/g, ''));
         }
       }
 
       // パターン3: %OFF表記
       const offMatch = document.body.innerText.match(/(\d+)\s*%\s*(?:OFF|オフ|off)/);
-      if (offMatch) {
+      if (offMatch && offMatch[1]) {
         discountPercent = parseInt(offMatch[1]);
       }
 
@@ -285,32 +285,35 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
       return { title, thumbnailUrl, duration, price, regularPrice, discountPercent, description };
     });
 
-    if (!info.title) {
+    if (!info['title']) {
       console.log(`    ⚠️ タイトル取得失敗`);
       return null;
     }
 
     // セール情報を構築
     let saleInfo: SaleInfo | undefined;
-    if (info.regularPrice && info.price && info.regularPrice > info.price) {
+    if (info.regularPrice && info['price'] && info.regularPrice > info['price']) {
       saleInfo = {
         regularPrice: info.regularPrice,
-        salePrice: info.price,
-        discountPercent: info.discountPercent || Math.round((1 - info.price / info.regularPrice) * 100),
+        salePrice: info['price'],
+        discountPercent: info.discountPercent || Math.round((1 - info['price'] / info.regularPrice) * 100),
         saleType: 'sale',
       };
-      console.log(`    💰 Sale detected: ¥${info.regularPrice.toLocaleString()} → ¥${info.price.toLocaleString()}`);
+      console.log(`    💰 Sale detected: ¥${info.regularPrice.toLocaleString()} → ¥${info['price'].toLocaleString()}`);
     }
 
+    const thumbnailUrl = info['thumbnailUrl'] || undefined;
+    const duration = info['duration'] || undefined;
+    const price = info['price'] || undefined;
     return {
       videoId,
-      title: info.title,
-      description: info.description,
+      title: info['title'],
+      description: info['description'],
       performers: [],
-      thumbnailUrl: info.thumbnailUrl || undefined,
-      duration: info.duration || undefined,
-      price: info.price || undefined,
-      saleInfo,
+      ...(thumbnailUrl && { thumbnailUrl }),
+      ...(duration && { duration }),
+      ...(price && { price }),
+      ...(saleInfo && { saleInfo }),
       source: 'video',
     };
   } catch (error) {
@@ -347,19 +350,19 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
       )
       .limit(1);
 
-    if (existingRaw.length > 0 && existingRaw[0].hash === hash) {
+    if (existingRaw.length > 0 && existingRaw[0]?.hash === hash) {
       console.log(`    ⏭️ 変更なし: ${articleId} (hash match)`);
     } else {
       const { gcsUrl, htmlContent } = await saveRawHtmlToGcs('fc2-contents', articleId, html);
 
-      if (existingRaw.length > 0) {
+      if (existingRaw.length > 0 && existingRaw[0]) {
         await db
           .update(rawHtmlData)
           .set({ htmlContent, gcsUrl, hash, crawledAt: new Date(), processedAt: null })
-          .where(eq(rawHtmlData.id, existingRaw[0].id));
+          .where(eq(rawHtmlData.id, existingRaw[0]['id']));
         console.log(`    🔄 更新完了${gcsUrl ? ' (GCS)' : ' (DB)'}`);
       } else {
-        await db.insert(rawHtmlData).values({
+        await db['insert'](rawHtmlData).values({
           source: 'FC2-contents',
           productId: articleId,
           url,
@@ -405,35 +408,35 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
       const delPriceEl = document.querySelector('del, s, strike, .original_price, .regular_price');
       if (delPriceEl) {
         const match = delPriceEl.textContent?.match(/(\d{1,3}(?:,\d{3})*)/);
-        if (match) {
+        if (match && match[1]) {
           regularPrice = parseInt(match[1].replace(/,/g, ''));
         }
       }
 
       // パターン2: 現在価格
       const priceText = document.body.innerText.match(/(\d{1,3}(?:,\d{3})*)\s*(?:円|pt|ポイント)/);
-      if (priceText) {
+      if (priceText && priceText[1]) {
         price = parseInt(priceText[1].replace(/,/g, ''));
       }
 
       // パターン3: 定価/通常価格表記
       if (!regularPrice) {
         const regularMatch = document.body.innerText.match(/(?:定価|通常|元)[価値:]?\s*(\d{1,3}(?:,\d{3})*)/);
-        if (regularMatch) {
+        if (regularMatch && regularMatch[1]) {
           regularPrice = parseInt(regularMatch[1].replace(/,/g, ''));
         }
       }
 
       // パターン4: %OFF表記
       const offMatch = document.body.innerText.match(/(\d+)\s*%\s*(?:OFF|オフ|off)/);
-      if (offMatch) {
+      if (offMatch && offMatch[1]) {
         discountPercent = parseInt(offMatch[1]);
       }
 
       // 再生時間
       let duration: number | null = null;
       const durationText = document.body.innerText.match(/(\d+)\s*分/);
-      if (durationText) {
+      if (durationText && durationText[1]) {
         duration = parseInt(durationText[1]);
       }
 
@@ -444,32 +447,35 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
       return { title, thumbnailUrl, performers, price, regularPrice, discountPercent, duration, description };
     });
 
-    if (!info.title) {
+    if (!info['title']) {
       console.log(`    ⚠️ タイトル取得失敗`);
       return null;
     }
 
     // セール情報を構築
     let saleInfo: SaleInfo | undefined;
-    if (info.regularPrice && info.price && info.regularPrice > info.price) {
+    if (info.regularPrice && info['price'] && info.regularPrice > info['price']) {
       saleInfo = {
         regularPrice: info.regularPrice,
-        salePrice: info.price,
-        discountPercent: info.discountPercent || Math.round((1 - info.price / info.regularPrice) * 100),
+        salePrice: info['price'],
+        discountPercent: info.discountPercent || Math.round((1 - info['price'] / info.regularPrice) * 100),
         saleType: 'sale',
       };
-      console.log(`    💰 Sale detected: ¥${info.regularPrice.toLocaleString()} → ¥${info.price.toLocaleString()}`);
+      console.log(`    💰 Sale detected: ¥${info.regularPrice.toLocaleString()} → ¥${info['price'].toLocaleString()}`);
     }
 
+    const thumbnailUrl2 = info['thumbnailUrl'] || undefined;
+    const duration2 = info['duration'] || undefined;
+    const price2 = info['price'] || undefined;
     return {
       videoId: articleId,
-      title: info.title,
-      description: info.description,
+      title: info['title'],
+      description: info['description'],
       performers: info.performers,
-      saleInfo,
-      thumbnailUrl: info.thumbnailUrl || undefined,
-      duration: info.duration || undefined,
-      price: info.price || undefined,
+      ...(saleInfo && { saleInfo }),
+      ...(thumbnailUrl2 && { thumbnailUrl: thumbnailUrl2 }),
+      ...(duration2 && { duration: duration2 }),
+      ...(price2 && { price: price2 }),
       source: 'contents',
     };
   } catch (error) {
@@ -483,7 +489,7 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
  */
 async function saveProduct(product: FC2VideoProduct): Promise<number | null> {
   try {
-    const normalizedProductId = `FC2-${product.source}-${product.videoId}`;
+    const normalizedProductId = `FC2-${product['source']}-${product.videoId}`;
 
     // 既存チェック
     const existing = await db
@@ -494,62 +500,71 @@ async function saveProduct(product: FC2VideoProduct): Promise<number | null> {
 
     let productId: number;
 
-    if (existing.length > 0) {
-      productId = existing[0].id;
+    if (existing.length > 0 && existing[0]) {
+      productId = existing[0]['id'];
       console.log(`    ⏭️ 既存商品 (ID: ${productId})`);
     } else {
       // 新規商品作成
-      const [inserted] = await db
+      const insertResult = await db
         .insert(products)
         .values({
           normalizedProductId,
-          title: product.title,
-          description: product.description || '',
-          duration: product.duration,
-          defaultThumbnailUrl: product.thumbnailUrl,
+          title: product['title'],
+          description: product['description'] || '',
+          duration: product['duration'],
+          defaultThumbnailUrl: product['thumbnailUrl'],
         })
-        .returning({ id: products.id });
+        .returning({ id: products['id'] });
 
+      const inserted = insertResult[0];
+      if (!inserted) {
+        throw new Error('Failed to insert product');
+      }
       productId = inserted.id;
       console.log(`    ✅ 新規商品作成 (ID: ${productId})`);
 
       // product_sources作成
       let affiliateUrl: string;
-      if (product.source === 'video') {
+      if (product['source'] === 'video') {
         affiliateUrl = `https://video.fc2.com/a/content/${product.videoId}?aff=${FC2_AFFUID}`;
       } else {
         affiliateUrl = `https://adult.contents.fc2.com/aff.php?aid=${product.videoId}&affuid=${FC2_AFFUID}`;
       }
 
-      await db.insert(productSources).values({
+      await db['insert'](productSources).values({
         productId,
         aspName: 'FC2',
         originalProductId: product.videoId,
         affiliateUrl,
-        price: product.price,
+        price: product['price'],
         dataSource: 'CRAWL',
       });
 
       // 出演者登録
       for (const performerName of product.performers) {
-        const [performer] = await db
+        const performerResult = await db
           .select()
           .from(performers)
-          .where(eq(performers.name, performerName))
+          .where(eq(performers['name'], performerName))
           .limit(1);
 
         let performerId: number;
+        const performer = performerResult[0];
         if (performer) {
-          performerId = performer.id;
+          performerId = performer['id'];
         } else {
-          const [inserted] = await db
+          const insertedPerformerResult = await db
             .insert(performers)
             .values({ name: performerName })
-            .returning({ id: performers.id });
-          performerId = inserted.id;
+            .returning({ id: performers['id'] });
+          const insertedPerformer = insertedPerformerResult[0];
+          if (!insertedPerformer) {
+            throw new Error('Failed to insert performer');
+          }
+          performerId = insertedPerformer.id;
         }
 
-        await db.insert(productPerformers).values({
+        await db['insert'](productPerformers).values({
           productId,
           performerId,
         }).onConflictDoNothing();
@@ -586,14 +601,15 @@ async function main() {
   const bidirectional = !args.includes('--no-bidirectional');
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1]);
+    const nextArg = args[i + 1];
+    if (args[i] === '--limit' && nextArg) {
+      limit = parseInt(nextArg);
     }
-    if (args[i] === '--source' && args[i + 1]) {
-      source = args[i + 1] as 'video' | 'contents' | 'both';
+    if (args[i] === '--source' && nextArg) {
+      source = nextArg as 'video' | 'contents' | 'both';
     }
-    if (args[i] === '--start' && args[i + 1]) {
-      startPage = parseInt(args[i + 1]);
+    if (args[i] === '--start' && nextArg) {
+      startPage = parseInt(nextArg);
     }
   }
 
@@ -658,7 +674,7 @@ async function main() {
         const product = await fetchVideoDetailPage(page, videoId);
 
         if (product) {
-          console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
+          console.log(`    タイトル: ${product['title'].substring(0, 50)}...`);
 
           const savedId = await saveProduct(product);
           if (savedId) {
@@ -694,7 +710,7 @@ async function main() {
         const product = await fetchContentsDetailPage(page, articleId);
 
         if (product) {
-          console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
+          console.log(`    タイトル: ${product['title'].substring(0, 50)}...`);
 
           const savedId = await saveProduct(product);
           if (savedId) {
@@ -717,7 +733,7 @@ async function main() {
       WHERE asp_name = 'FC2'
         AND original_product_id ~ '^[0-9]+$'
     `);
-    const currentMinId = (minIdResult.rows[0]?.min_id as number) || 4800000;
+    const currentMinId = (minIdResult.rows[0]?.['min_id'] as number) || 4800000;
 
     console.log(`  現在の最小ID: ${currentMinId}`);
 
@@ -735,7 +751,7 @@ async function main() {
       const product = await fetchContentsDetailPage(page, idStr);
 
       if (product) {
-        console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
+        console.log(`    タイトル: ${product['title'].substring(0, 50)}...`);
         consecutiveNotFound = 0;
 
         const savedId = await saveProduct(product);

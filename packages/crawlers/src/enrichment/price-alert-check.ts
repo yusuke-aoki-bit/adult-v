@@ -23,9 +23,9 @@ import {
 } from '@adult-v/shared/lib/push-notification-service';
 
 // VAPID設定
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@example.com';
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_SUBJECT = process.env['VAPID_SUBJECT'] || 'mailto:admin@example.com';
+const VAPID_PUBLIC_KEY = process.env['NEXT_PUBLIC_VAPID_PUBLIC_KEY'] || '';
+const VAPID_PRIVATE_KEY = process.env['VAPID_PRIVATE_KEY'] || '';
 
 // 再通知間隔（24時間）
 const RENOTIFY_INTERVAL_HOURS = 24;
@@ -37,6 +37,7 @@ interface PriceAlert {
   targetPrice: number | null;
   notifyOnAnySale: boolean;
   lastNotifiedAt: Date | null;
+  [key: string]: unknown;
 }
 
 interface ProductPrice {
@@ -47,6 +48,7 @@ interface ProductPrice {
   originalPrice: number;
   salePrice: number | null;
   discountPercent: number | null;
+  [key: string]: unknown;
 }
 
 interface Subscription {
@@ -56,6 +58,7 @@ interface Subscription {
     p256dh: string;
     auth: string;
   };
+  [key: string]: unknown;
 }
 
 async function main() {
@@ -64,7 +67,7 @@ async function main() {
 
   // DB接続
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env['DATABASE_URL'],
   });
   const db = drizzle(pool);
 
@@ -155,8 +158,8 @@ async function main() {
     const expiredSubscriptions: number[] = [];
 
     for (const alert of activeAlerts.rows) {
-      const price = priceByProduct.get(alert.productId);
-      const subscription = subscriptionById.get(alert.subscriptionId);
+      const price = priceByProduct.get(alert['productId']);
+      const subscription = subscriptionById.get(alert['subscriptionId']);
 
       if (!price || !subscription) {
         notificationsSkipped++;
@@ -169,18 +172,18 @@ async function main() {
       let payload = null;
 
       // 目標価格チェック
-      if (alert.targetPrice && effectivePrice <= alert.targetPrice) {
+      if (alert['targetPrice'] && effectivePrice <= alert['targetPrice']) {
         shouldNotify = true;
         payload = createTargetPriceReachedPayload(
           price.productTitle,
-          alert.targetPrice,
+          alert['targetPrice'],
           effectivePrice,
           `/ja/products/${price.productId}`,
           'ja'
         );
       }
       // セール通知チェック
-      else if (alert.notifyOnAnySale && isOnSale) {
+      else if (alert['notifyOnAnySale'] && isOnSale) {
         shouldNotify = true;
         payload = createPriceAlertPayload(
           price.productTitle,
@@ -200,7 +203,7 @@ async function main() {
         }
 
         const subscriptionData: PushSubscriptionData = {
-          endpoint: subscription.endpoint,
+          endpoint: subscription['endpoint'],
           keys: subscription.keys,
         };
 
@@ -218,7 +221,7 @@ async function main() {
           await db.execute(sql`
             UPDATE price_alerts
             SET last_notified_at = NOW(), updated_at = NOW()
-            WHERE id = ${alert.id}
+            WHERE id = ${alert['id']}
           `);
 
           // 通知履歴を記録
@@ -229,8 +232,8 @@ async function main() {
               original_price, sale_price, discount_percent,
               was_successful
             ) VALUES (
-              ${alert.id}, ${alert.subscriptionId}, ${alert.productId},
-              ${alert.targetPrice ? 'target_reached' : 'sale_start'},
+              ${alert['id']}, ${alert['subscriptionId']}, ${alert['productId']},
+              ${alert['targetPrice'] ? 'target_reached' : 'sale_start'},
               ${payload.title}, ${payload.body},
               ${price.originalPrice}, ${effectivePrice}, ${price.discountPercent || 0},
               true
@@ -240,8 +243,8 @@ async function main() {
           console.log(`  ✗ 通知失敗: ${result.error}`);
 
           // 購読が無効になった場合は記録
-          if (result.statusCode === 410 || result.statusCode === 404) {
-            expiredSubscriptions.push(alert.subscriptionId);
+          if (result['statusCode'] === 410 || result['statusCode'] === 404) {
+            expiredSubscriptions.push(alert['subscriptionId']);
           }
 
           // エラー履歴を記録
@@ -251,7 +254,7 @@ async function main() {
               notification_type, title, body,
               was_successful, error_message
             ) VALUES (
-              ${alert.id}, ${alert.subscriptionId}, ${alert.productId},
+              ${alert['id']}, ${alert['subscriptionId']}, ${alert['productId']},
               'error', ${payload.title}, ${payload.body},
               false, ${result.error || 'Unknown error'}
             )

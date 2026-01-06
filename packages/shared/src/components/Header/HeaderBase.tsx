@@ -39,7 +39,7 @@ const AspBadgeList = memo(function AspBadgeList({
         <Link
           href={localizedHref('/products?onSale=true', locale)}
           className="asp-badge asp-badge-sale"
-          onClick={onLinkClick}
+          {...(onLinkClick && { onClick: onLinkClick })}
         >
           <span className="font-bold">{saleLabel}</span>
           <span className="ml-1 opacity-90">{saleStats.totalSales.toLocaleString()}</span>
@@ -56,7 +56,7 @@ const AspBadgeList = memo(function AspBadgeList({
             href={localizedHref(`/products?includeAsp=${asp.aspName}`, locale)}
             className="asp-badge"
             style={{ background: `linear-gradient(to right, ${colors.from}, ${colors.to})` }}
-            onClick={onLinkClick}
+            {...(onLinkClick && { onClick: onLinkClick })}
           >
             <span className="font-bold">{meta?.label || asp.aspName}</span>
           </Link>
@@ -481,39 +481,6 @@ export const HeaderBase = memo(function HeaderBase({
               </Link>
             </DropdownMenu>
 
-            {/* マイページメニュー */}
-            <DropdownMenu
-              label={t.menuMy}
-              isOpen={openDropdown === 'my'}
-              onToggle={() => handleDropdownToggle('my')}
-              onClose={handleDropdownClose}
-            >
-              <Link
-                href={localizedHref('/favorites', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
-                onClick={handleDropdownClose}
-              >
-                <FavoritesIcon />
-                {t.favorites}
-              </Link>
-              <Link
-                href={localizedHref('/watchlist', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
-                onClick={handleDropdownClose}
-              >
-                <WatchlistIcon />
-                {t.watchlist}
-              </Link>
-              <Link
-                href={localizedHref('/diary', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
-                onClick={handleDropdownClose}
-              >
-                <DiaryIcon />
-                {t.diary}
-              </Link>
-            </DropdownMenu>
-
             {/* 通知・言語切り替え・ユーザーメニュー */}
             <div className="flex items-center gap-2 ml-2">
               <NotificationSubscriber />
@@ -631,40 +598,6 @@ export const HeaderBase = memo(function HeaderBase({
                 >
                   <ProfileIcon />
                   <span className="ml-2">{t.profile}</span>
-                </Link>
-              </div>
-            </div>
-
-            {/* マイページ */}
-            <div className="theme-nav pt-2 border-t theme-border" role="list">
-              <p className="text-xs font-semibold theme-text-muted uppercase tracking-wider px-1 py-1">{t.menuMy}</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-0">
-                <Link
-                  href={localizedHref('/favorites', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-favorites transition-colors text-sm"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <FavoritesIcon />
-                  <span className="ml-2">{t.favorites}</span>
-                </Link>
-                <Link
-                  href={localizedHref('/watchlist', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-watchlist transition-colors text-sm"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <WatchlistIcon />
-                  <span className="ml-2">{t.watchlist}</span>
-                </Link>
-                <Link
-                  href={localizedHref('/diary', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-diary transition-colors text-sm"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <DiaryIcon />
-                  <span className="ml-2">{t.diary}</span>
                 </Link>
               </div>
             </div>

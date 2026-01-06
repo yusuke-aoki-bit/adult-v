@@ -90,7 +90,7 @@ async function main() {
     LIMIT ${limit}
   `);
 
-  const images = imagesResult.rows as ImageRow[];
+  const images = imagesResult.rows as unknown as ImageRow[];
   console.log(`対象画像: ${images.length}件`);
 
   for (const img of images) {

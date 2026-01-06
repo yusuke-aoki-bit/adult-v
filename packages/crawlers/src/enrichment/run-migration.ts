@@ -54,7 +54,7 @@ async function main() {
     `);
 
     console.log('✅ マイグレーション完了');
-    console.log('  Translation columns:', result.rows.map((r: { column_name: string }) => r.column_name));
+    console.log('  Translation columns:', (result.rows as Array<{ column_name: string }>).map((r) => r.column_name));
   } finally {
     await closeDb();
   }

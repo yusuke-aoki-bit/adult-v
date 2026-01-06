@@ -11,8 +11,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const CRON_SECRET = process.env.CRON_SECRET;
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const CRON_SECRET = process.env['CRON_SECRET'];
+const IS_PRODUCTION = process.env['NODE_ENV'] === 'production';
 
 /**
  * Cloud Schedulerからのリクエストを認証
@@ -39,7 +39,7 @@ export function verifyCronRequest(request: NextRequest): boolean {
 
   // セキュリティ: クエリパラメータでの認証は禁止
   // URLに機密情報が露出するリスクがあるため
-  const url = new URL(request.url);
+  const url = new URL(request['url']);
   if (url.searchParams.has('secret')) {
     console.error('[cron-auth] Query parameter auth attempted - this is not allowed');
   }
@@ -58,7 +58,7 @@ export function unauthorizedResponse(): NextResponse {
 // Admin API認証
 // ============================================================
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const ADMIN_SECRET = process.env['ADMIN_SECRET'];
 
 /**
  * Admin APIリクエストを認証

@@ -83,7 +83,7 @@ export function usePerformerCompareList() {
   const addItem = useCallback((item: Omit<PerformerCompareItem, 'addedAt'>) => {
     setItems(prev => {
       // 既に存在する場合は追加しない
-      if (prev.some(i => String(i.id) === String(item.id))) {
+      if (prev.some(i => String(i.id) === String(item['id']))) {
         return prev;
       }
 
@@ -121,8 +121,8 @@ export function usePerformerCompareList() {
   }, [compareSet]);
 
   const toggleItem = useCallback((item: Omit<PerformerCompareItem, 'addedAt'>) => {
-    if (compareSet.has(String(item.id))) {
-      removeItem(item.id);
+    if (compareSet.has(String(item['id']))) {
+      removeItem(item['id']);
     } else {
       addItem(item);
     }

@@ -14,7 +14,7 @@ interface Experiment {
 }
 
 // ストレージキープレフィックス（サイト別に設定可能）
-let storageKeyPrefix = 'ab_test_';
+let storageKeyPrefix: string = 'ab_test_';
 
 /**
  * ストレージキープレフィックスを設定
@@ -123,16 +123,20 @@ function assignVariant(experiment: Experiment): ExperimentVariant {
 
     let cumulative = 0;
     for (let i = 0; i < variants.length; i++) {
-      cumulative += weights[i];
-      if (random < cumulative) {
-        return variants[i];
+      const weight = weights[i];
+      const variant = variants[i];
+      if (weight !== undefined && variant !== undefined) {
+        cumulative += weight;
+        if (random < cumulative) {
+          return variant;
+        }
       }
     }
   }
 
   // 均等選択
   const randomIndex = Math.floor(Math.random() * variants.length);
-  return variants[randomIndex];
+  return variants[randomIndex] ?? 'control';
 }
 
 /**
@@ -178,7 +182,8 @@ export function trackImpression(
 ) {
   const params: Record<string, string | number | boolean> = {};
   if (productId) {
-    params.product_id = String(productId);
+    // eslint-disable-next-line @typescript-eslint/dot-notation
+    params['product_id'] = String(productId);
   }
   trackExperimentEvent('experiment_impression', experimentId, params);
 }

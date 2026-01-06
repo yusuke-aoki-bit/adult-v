@@ -75,7 +75,7 @@ export default function RankingWidget({
   locale,
   title,
 }: RankingWidgetProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const [ranking, setRanking] = useState<RankingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'monthly'>(period);
@@ -89,7 +89,7 @@ export default function RankingWidget({
       const data = await response.json();
       setRanking(data.ranking || []);
     } catch (error: unknown) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.warn('[RankingWidget] Failed to fetch ranking:', error);
       }
       setRanking([]);

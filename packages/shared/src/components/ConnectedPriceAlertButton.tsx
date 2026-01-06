@@ -38,7 +38,7 @@ export default function ConnectedPriceAlertButton({
       productId: productIdStr,
       normalizedProductId: productIdStr,
       title,
-      thumbnailUrl: thumbnail,
+      ...(thumbnail && { thumbnailUrl: thumbnail }),
       currentPrice: currentPrice || 0,
       targetPrice,
       notifyOnAnySale: true,
@@ -53,11 +53,11 @@ export default function ConnectedPriceAlertButton({
     <PriceAlertButton
       productId={productId}
       title={title}
-      thumbnail={thumbnail}
-      provider={provider}
-      currentPrice={currentPrice}
+      {...(thumbnail && { thumbnail })}
+      {...(provider && { provider })}
+      {...(currentPrice !== undefined && { currentPrice })}
       hasAlert={hasAlert(productIdStr)}
-      existingTargetPrice={alert?.targetPrice}
+      {...(alert?.targetPrice !== undefined && { existingTargetPrice: alert.targetPrice })}
       isLoaded={true}
       size={size}
       theme={theme}

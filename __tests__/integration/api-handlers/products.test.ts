@@ -63,13 +63,13 @@ describe('Products API Handler Integration', () => {
       const request = new Request('http://localhost/api/products');
 
       const response = await handler(request);
-      const data = await response.json();
+      const data = await response!.json();
 
-      expect(response.status).toBe(200);
+      expect(response!.status).toBe(200);
       expect(data.products).toBeDefined();
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
-          limit: 96, // デフォルトは96
+          limit: 48, // デフォルトは48
           offset: 0,
         })
       );
@@ -188,11 +188,9 @@ describe('Products API Handler Integration', () => {
 
       await handler(request);
 
-      expect(mockGetProducts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sortBy: undefined,
-        })
-      );
+      // 無効なsortは無視されるので、sortByプロパティが含まれないか、undefinedになる
+      const callArgs = mockGetProducts.mock.calls[0][0];
+      expect(callArgs.sortBy === undefined || !('sortBy' in callArgs)).toBe(true);
     });
 
     it('should handle priceRange filter (range format)', async () => {
@@ -256,7 +254,7 @@ describe('Products API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.status).toBe(400);
+      expect(response!.status).toBe(400);
     });
 
     it('should return 400 for limit out of range (too large)', async () => {
@@ -265,7 +263,7 @@ describe('Products API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.status).toBe(400);
+      expect(response!.status).toBe(400);
     });
 
     it('should return 400 for negative offset', async () => {
@@ -274,7 +272,7 @@ describe('Products API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.status).toBe(400);
+      expect(response!.status).toBe(400);
     });
 
     it('should return 400 for invalid limit (NaN)', async () => {
@@ -283,7 +281,7 @@ describe('Products API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.status).toBe(400);
+      expect(response!.status).toBe(400);
     });
 
     it('should handle database errors gracefully', async () => {
@@ -293,8 +291,8 @@ describe('Products API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.status).toBe(500);
-      const data = await response.json();
+      expect(response!.status).toBe(500);
+      const data = await response!.json();
       expect(data.error).toBeDefined();
     });
   });
@@ -306,7 +304,7 @@ describe('Products API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.headers.get('Cache-Control')).toBeTruthy();
+      expect(response!.headers.get('Cache-Control')).toBeTruthy();
     });
 
     it('should set 5min cache for general list', async () => {
@@ -315,7 +313,7 @@ describe('Products API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.headers.get('Cache-Control')).toContain('s-maxage=300');
+      expect(response!.headers.get('Cache-Control')).toContain('s-maxage=300');
     });
 
     it('should set 1hour cache for ID-based requests', async () => {
@@ -324,7 +322,7 @@ describe('Products API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.headers.get('Cache-Control')).toContain('s-maxage=3600');
+      expect(response!.headers.get('Cache-Control')).toContain('s-maxage=3600');
     });
 
     it('should set 1hour cache for actressId requests', async () => {
@@ -333,7 +331,7 @@ describe('Products API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.headers.get('Cache-Control')).toContain('s-maxage=3600');
+      expect(response!.headers.get('Cache-Control')).toContain('s-maxage=3600');
     });
 
     it('should set 1min cache for search query requests', async () => {
@@ -342,7 +340,7 @@ describe('Products API Handler Integration', () => {
 
       const response = await handler(request);
 
-      expect(response.headers.get('Cache-Control')).toContain('s-maxage=60');
+      expect(response!.headers.get('Cache-Control')).toContain('s-maxage=60');
     });
   });
 
@@ -384,7 +382,7 @@ describe('Products API Handler Integration', () => {
       const request = new Request('http://localhost/api/products');
 
       const response = await handler(request);
-      const data = await response.json();
+      const data = await response!.json();
 
       expect(data).toHaveProperty('products');
       expect(data).toHaveProperty('total');

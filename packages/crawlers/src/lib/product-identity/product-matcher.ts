@@ -68,7 +68,7 @@ export async function processProductIdentity(
   matchResult?: MatchResult;
 }> {
   // 既にグループに所属しているか確認
-  const existingGroup = await getProductGroup(product.id);
+  const existingGroup = await getProductGroup(product['id']);
   if (existingGroup) {
     return { action: 'skipped', groupId: existingGroup.id };
   }
@@ -135,17 +135,17 @@ export async function fetchProductForMatching(productId: number): Promise<Produc
     LIMIT 1
   `);
 
-  if (result.rows.length === 0) {
+  const row = result.rows[0];
+  if (!row) {
     return null;
   }
 
-  const row = result.rows[0];
   return {
     id: row.id,
     normalizedProductId: row.normalized_product_id,
     makerProductCode: row.maker_product_code,
     title: row.title,
-    normalizedTitle: row.normalized_title ?? undefined,
+    ...(row.normalized_title !== null && { normalizedTitle: row.normalized_title }),
     releaseDate: row.release_date ? new Date(row.release_date) : null,
     duration: row.duration,
     aspName: row.asp_name,
@@ -206,13 +206,13 @@ export async function fetchUngroupedProducts(
   }>(query);
 
   return result.rows.map(row => ({
-    id: row.id,
+    id: row['id'],
     normalizedProductId: row.normalized_product_id,
     makerProductCode: row.maker_product_code,
-    title: row.title,
-    normalizedTitle: row.normalized_title ?? undefined,
+    title: row['title'],
+    ...(row.normalized_title !== null && { normalizedTitle: row.normalized_title }),
     releaseDate: row.release_date ? new Date(row.release_date) : null,
-    duration: row.duration,
+    duration: row['duration'],
     aspName: row.asp_name,
     performers: row.performers ? row.performers.split(',') : [],
   }));
@@ -263,13 +263,13 @@ export async function fetchRecentProducts(
   `);
 
   return result.rows.map(row => ({
-    id: row.id,
+    id: row['id'],
     normalizedProductId: row.normalized_product_id,
     makerProductCode: row.maker_product_code,
-    title: row.title,
-    normalizedTitle: row.normalized_title ?? undefined,
+    title: row['title'],
+    ...(row.normalized_title !== null && { normalizedTitle: row.normalized_title }),
     releaseDate: row.release_date ? new Date(row.release_date) : null,
-    duration: row.duration,
+    duration: row['duration'],
     aspName: row.asp_name,
     performers: row.performers ? row.performers.split(',') : [],
   }));
@@ -295,5 +295,5 @@ export async function countUngroupedProducts(targetAsps?: string[]): Promise<num
   }
 
   const result = await db.execute<{ count: number }>(query);
-  return result.rows[0]?.count || 0;
+  return result.rows[0]?.['count'] || 0;
 }

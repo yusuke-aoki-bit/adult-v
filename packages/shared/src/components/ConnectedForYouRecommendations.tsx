@@ -32,8 +32,8 @@ export default function ConnectedForYouRecommendations({
           theme={theme}
           limit={limit}
           showAnalysis={showAnalysis}
-          defaultOpen={defaultOpen}
-          className={className}
+          {...(defaultOpen !== undefined && { defaultOpen })}
+          {...(className && { className })}
         />
       </div>
     </section>

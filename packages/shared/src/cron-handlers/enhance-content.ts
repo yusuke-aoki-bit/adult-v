@@ -105,7 +105,7 @@ async function enhanceWithVisionAPI(
             analyzed_at
           )
           VALUES (
-            ${product.id},
+            ${product['id']},
             ${faces.length},
             ${labelsLiteral}::text[],
             NOW()
@@ -119,7 +119,7 @@ async function enhanceWithVisionAPI(
 
         stats.success++;
         results.push({
-          productId: product.id,
+          productId: product['id'],
           normalizedProductId: product.normalized_product_id,
           faceCount: faces.length,
           labels: labels.slice(0, 5).map(l => l.description),
@@ -130,7 +130,7 @@ async function enhanceWithVisionAPI(
 
       await new Promise(r => setTimeout(r, 500));
     } catch (error) {
-      console.error(`[enhance-content] Vision error for ${product.id}:`, error);
+      console.error(`[enhance-content] Vision error for ${product['id']}:`, error);
       stats.errors++;
     }
   }
@@ -175,7 +175,7 @@ async function enhanceWithTranslation(
       const translations: Record<string, string> = {};
 
       for (const lang of targetLanguages) {
-        const result = await deps.translateText(product.title, lang, 'ja');
+        const result = await deps.translateText(product['title'], lang, 'ja');
         if (result) {
           translations[lang] = result.translatedText;
         }
@@ -192,10 +192,10 @@ async function enhanceWithTranslation(
             translated_at
           )
           VALUES (
-            ${product.id},
-            ${translations.en || null},
-            ${translations.zh || null},
-            ${translations.ko || null},
+            ${product['id']},
+            ${translations['en'] ?? null},
+            ${translations['zh'] ?? null},
+            ${translations['ko'] ?? null},
             NOW()
           )
           ON CONFLICT (product_id)
@@ -208,7 +208,7 @@ async function enhanceWithTranslation(
 
         stats.success++;
         results.push({
-          productId: product.id,
+          productId: product['id'],
           normalizedProductId: product.normalized_product_id,
           translations,
         });
@@ -216,7 +216,7 @@ async function enhanceWithTranslation(
         stats.skipped++;
       }
     } catch (error) {
-      console.error(`[enhance-content] Translation error for ${product.id}:`, error);
+      console.error(`[enhance-content] Translation error for ${product['id']}:`, error);
       stats.errors++;
     }
   }
@@ -256,8 +256,8 @@ async function enhanceWithYouTube(
     try {
       let videos = await deps.searchYouTubeVideos(product.normalized_product_id, 3);
 
-      if (videos.length === 0 && product.title) {
-        const nameMatch = product.title.match(/[\u4E00-\u9FAF\u3040-\u309F\u30A0-\u30FF]{2,8}/g);
+      if (videos.length === 0 && product['title']) {
+        const nameMatch = product['title'].match(/[\u4E00-\u9FAF\u3040-\u309F\u30A0-\u30FF]{2,8}/g);
         if (nameMatch && nameMatch.length > 0) {
           const keywords = nameMatch.filter(w =>
             !['無料', '動画', '女優', '作品', '収録', '出演'].includes(w)
@@ -269,9 +269,8 @@ async function enhanceWithYouTube(
         }
       }
 
-      if (videos.length > 0) {
-        const video = videos[0];
-
+      const video = videos[0];
+      if (video) {
         await db.execute(sql`
           INSERT INTO product_youtube_videos (
             product_id,
@@ -282,7 +281,7 @@ async function enhanceWithYouTube(
             linked_at
           )
           VALUES (
-            ${product.id},
+            ${product['id']},
             ${video.id},
             ${video.title},
             ${video.thumbnailUrl},
@@ -298,7 +297,7 @@ async function enhanceWithYouTube(
 
         stats.success++;
         results.push({
-          productId: product.id,
+          productId: product['id'],
           normalizedProductId: product.normalized_product_id,
           video: {
             id: video.id,
@@ -311,7 +310,7 @@ async function enhanceWithYouTube(
 
       await new Promise(r => setTimeout(r, 1000));
     } catch (error) {
-      console.error(`[enhance-content] YouTube error for ${product.id}:`, error);
+      console.error(`[enhance-content] YouTube error for ${product['id']}:`, error);
       stats.errors++;
     }
   }

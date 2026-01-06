@@ -419,5 +419,6 @@ export const ASP_BADGE_COLORS: Record<string, { bg: string; text: string; border
  */
 export function getAspBadgeColor(aspName: string): { bg: string; text: string; border: string } {
   const normalized = normalizeAspName(aspName);
-  return ASP_BADGE_COLORS[normalized] || ASP_BADGE_COLORS.default;
+  const color = ASP_BADGE_COLORS[normalized];
+  return color ?? ASP_BADGE_COLORS['default']!;
 }

@@ -43,7 +43,7 @@ export function NotificationPreferences({
   const [hasChanges, setHasChanges] = useState(false);
 
   const isDark = theme === 'dark';
-  const categoryDefs = defaultCategories[locale] || defaultCategories.en;
+  const categoryDefs = defaultCategories[locale] ?? defaultCategories['en'] ?? [];
 
   const t = {
     title: locale === 'ja' ? '通知設定' : 'Notification Settings',

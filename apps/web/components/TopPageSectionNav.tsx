@@ -61,7 +61,7 @@ export default function TopPageSectionNav({
   hasRecentlyViewed,
   hasRecommendations,
 }: TopPageSectionNavProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const sections: SectionItem[] = [];
 

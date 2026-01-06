@@ -72,16 +72,16 @@ export default function SimilarActresses({
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
         {actresses.map((actress) => (
           <Link
-            key={actress.id}
-            href={`/${locale}/actress/${actress.id}`}
+            key={actress['id']}
+            href={`/${locale}/actress/${actress['id']}`}
             className="group text-center"
           >
             <div className={`relative aspect-square rounded-lg overflow-hidden mb-2 ring-2 ring-transparent transition-all ${
               isDark ? 'bg-gray-700 group-hover:ring-purple-500' : 'bg-gray-200 group-hover:ring-purple-400'
             }`}>
               <Image
-                src={actress.heroImageUrl || actress.thumbnailUrl || PLACEHOLDER_IMAGE}
-                alt={actress.name}
+                src={actress.heroImageUrl || actress['thumbnailUrl'] || PLACEHOLDER_IMAGE}
+                alt={actress['name']}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform"
                 sizes="(max-width: 768px) 33vw, (max-width: 1200px) 16vw, 10vw"
@@ -106,7 +106,7 @@ export default function SimilarActresses({
             <p className={`text-sm transition-colors line-clamp-1 ${
               isDark ? 'text-white group-hover:text-purple-400' : 'text-gray-900 group-hover:text-purple-600'
             }`}>
-              {actress.name}
+              {actress['name']}
             </p>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
               {actress.productCount}{translations.productCount}

@@ -503,7 +503,7 @@ export function mapPerformerToActressTypeSync(
     .filter((id): id is ProviderId => id !== undefined);
 
   return {
-    id: String(performer.id),
+    id: String(performer['id']),
     name: getLocalizedPerformerName(performer, locale),
     nameKana: performer.nameKana || undefined,
     bio: getLocalizedPerformerBio(performer, locale),

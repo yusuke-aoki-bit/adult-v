@@ -60,14 +60,14 @@ test.describe('AB Testing Framework', () => {
       const validPriceVariants = ['control', 'emphasized'];
       const validCountdownVariants = ['control', 'animated'];
 
-      if (variantsAfter.ctaButtonText) {
-        expect(validCtaVariants).toContain(variantsAfter.ctaButtonText);
+      if (variantsAfter['ctaButtonText']) {
+        expect(validCtaVariants).toContain(variantsAfter['ctaButtonText']);
       }
-      if (variantsAfter.priceDisplayStyle) {
-        expect(validPriceVariants).toContain(variantsAfter.priceDisplayStyle);
+      if (variantsAfter['priceDisplayStyle']) {
+        expect(validPriceVariants).toContain(variantsAfter['priceDisplayStyle']);
       }
-      if (variantsAfter.saleCountdownStyle) {
-        expect(validCountdownVariants).toContain(variantsAfter.saleCountdownStyle);
+      if (variantsAfter['saleCountdownStyle']) {
+        expect(validCountdownVariants).toContain(variantsAfter['saleCountdownStyle']);
       }
     } else {
       // No product links found, skip this test
@@ -144,7 +144,7 @@ test.describe('AB Testing Framework', () => {
 
     // Run multiple variant assignments to check distribution
     const distribution = await page.evaluate(() => {
-      const results: Record<string, number> = {
+      const results = {
         control: 0,
         urgency: 0,
         action: 0,
@@ -155,9 +155,9 @@ test.describe('AB Testing Framework', () => {
 
       // Simulate 100 assignments (by clearing and re-assigning)
       for (let i = 0; i < 100; i++) {
-        const variants = ['control', 'urgency', 'action'];
+        const variants = ['control', 'urgency', 'action'] as const;
         const randomIndex = Math.floor(Math.random() * variants.length);
-        const variant = variants[randomIndex];
+        const variant = variants[randomIndex]!;
         results[variant]++;
       }
 
@@ -166,12 +166,12 @@ test.describe('AB Testing Framework', () => {
 
     // Each variant should appear at least once (with 100 trials, extremely unlikely to get 0 for any)
     // This is a basic sanity check for the random distribution
-    expect(distribution.control).toBeGreaterThan(0);
-    expect(distribution.urgency).toBeGreaterThan(0);
-    expect(distribution.action).toBeGreaterThan(0);
+    expect(distribution['control']).toBeGreaterThan(0);
+    expect(distribution['urgency']).toBeGreaterThan(0);
+    expect(distribution['action']).toBeGreaterThan(0);
 
     // Check rough distribution (each should be between 10-50% with 100 trials)
-    const total = distribution.control + distribution.urgency + distribution.action;
+    const total = distribution['control']! + distribution['urgency']! + distribution['action']!;
     expect(total).toBe(100);
   });
 });
@@ -199,7 +199,7 @@ test.describe('AB Test UI Components', () => {
 
       // Check for CTA button presence (any variant)
       const ctaButtons = page.locator('button, a').filter({
-        hasText: /(購入|今すぐ|ゲット|Buy|Get|Purchase)/i,
+        hasText: /(購入|今すぐ|ゲチE��|Buy|Get|Purchase)/i,
       });
 
       const count = await ctaButtons.count();
@@ -228,7 +228,7 @@ test.describe('AB Test UI Components', () => {
       await expect(firstPrice).toBeVisible();
     } else {
       // Price might be displayed with different markup, check for yen symbol
-      const yenPrices = page.locator('text=/¥\\d+|\\d+円/');
+      const yenPrices = page.locator('text=/¥\\d+|\\d+冁E');
       const yenCount = await yenPrices.count();
 
       if (yenCount > 0) {

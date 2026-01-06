@@ -128,6 +128,7 @@ export async function fetchMultipleWithStealth(
 
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
+      if (!url) continue;
       console.log(`[${i + 1}/${urls.length}] Fetching: ${url}`);
 
       try {
@@ -231,6 +232,6 @@ export async function simpleFetch(
     },
   });
 
-  const html = await response.text();
-  return { html, status: response.status };
+  const html = await response['text']();
+  return { html, status: response['status'] };
 }

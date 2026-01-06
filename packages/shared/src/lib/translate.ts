@@ -10,7 +10,7 @@
 
 // DeepL API設定（キーの末尾で自動判定）
 function getDeepLApiUrl(): string {
-  const apiKey = process.env.DEEPL_API_KEY || '';
+  const apiKey = process.env['DEEPL_API_KEY'] || '';
   // Free版のキーは :fx で終わる
   if (apiKey.endsWith(':fx')) {
     return 'https://api-free.deepl.com/v2/translate';
@@ -19,7 +19,7 @@ function getDeepLApiUrl(): string {
 }
 
 function isProVersion(): boolean {
-  const apiKey = process.env.DEEPL_API_KEY || '';
+  const apiKey = process.env['DEEPL_API_KEY'] || '';
   return !apiKey.endsWith(':fx');
 }
 
@@ -40,7 +40,7 @@ async function translateWithDeepL(
   targetLang: string,
   retries = 3
 ): Promise<string[]> {
-  const apiKey = process.env.DEEPL_API_KEY;
+  const apiKey = process.env['DEEPL_API_KEY'];
   if (!apiKey) {
     throw new Error('DEEPL_API_KEY environment variable is not set');
   }
@@ -63,7 +63,7 @@ async function translateWithDeepL(
         }),
       });
 
-      if (response.status === 429) {
+      if (response['status'] === 429) {
         // レート制限の場合、指数バックオフで待機してリトライ
         const waitTime = Math.pow(2, attempt) * 2000; // 2秒、4秒、8秒
         console.warn(`[DeepL] Rate limited. Waiting ${waitTime}ms before retry...`);
@@ -72,8 +72,8 @@ async function translateWithDeepL(
       }
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`DeepL API error: ${response.status} - ${errorText}`);
+        const errorText = await response['text']();
+        throw new Error(`DeepL API error: ${response['status']} - ${errorText}`);
       }
 
       const data = await response.json();
@@ -156,7 +156,10 @@ export async function translateBatch(
     try {
       const translated = await translateWithDeepL(batch, sourceLang, targetLang);
       translated.forEach((text, j) => {
-        results[batchIndices[j]] = text;
+        const idx = batchIndices[j];
+        if (idx !== undefined) {
+          results[idx] = text;
+        }
       });
     } catch (error) {
       console.error(`[DeepL] Batch translation failed:`, error);

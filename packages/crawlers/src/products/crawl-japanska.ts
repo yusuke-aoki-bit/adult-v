@@ -14,7 +14,7 @@
  * DATABASE_URL="..." npx tsx scripts/crawlers/crawl-japanska.ts --full-scan [--start-id=1000] [--end-id=10000]
  */
 
-if (!process.env.DATABASE_URL) {
+if (!process.env['DATABASE_URL']) {
   console.error('ERROR: DATABASE_URL environment variable is not set');
   process.exit(1);
 }
@@ -52,14 +52,14 @@ async function initBrowser(): Promise<Browser> {
   console.log('🌐 Puppeteerブラウザを起動中...');
 
   // 環境変数からChromiumのパスを取得（Dockerコンテナ用）
-  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+  const executablePath = process.env['PUPPETEER_EXECUTABLE_PATH'];
   if (executablePath) {
     console.log(`  Chromium path: ${executablePath}`);
   }
 
   browser = await puppeteer.launch({
     headless: true,
-    executablePath,
+    ...(executablePath && { executablePath }),
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -265,7 +265,7 @@ async function fetchPageWithPuppeteer(url: string, referer?: string, maxRetries:
         throw new Error('No response received');
       }
 
-      const status = response.status();
+      const status = response['status']();
       if (status >= 400) {
         return { html: null, status };
       }
@@ -341,14 +341,14 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
 
     // パターン1: <div class="movie_ttl"><p>タイトル</p></div> (Japanska固有)
     const movieTtlMatch = html.match(/<div[^>]*class="movie_ttl"[^>]*>\s*<p>([^<]+)<\/p>/i);
-    if (movieTtlMatch) {
+    if (movieTtlMatch?.[1]) {
       title = movieTtlMatch[1].trim();
     }
 
     // パターン2: og:title meta tag
     if (!title) {
       const ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i);
-      if (ogTitleMatch && !ogTitleMatch[1].includes('JAPANSKA')) {
+      if (ogTitleMatch?.[1] && !ogTitleMatch[1].includes('JAPANSKA')) {
         title = ogTitleMatch[1].trim();
       }
     }
@@ -356,9 +356,9 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
     // パターン3: titleタグからサイト名を除去
     if (!title) {
       const titleTagMatch = html.match(/<title>([^<]+)<\/title>/i);
-      if (titleTagMatch) {
+      if (titleTagMatch?.[1]) {
         const parts = titleTagMatch[1].split(/[\|｜]/);
-        if (parts.length > 1 && !parts[0].includes('JAPANSKA')) {
+        if (parts.length > 1 && parts[0] && !parts[0].includes('JAPANSKA')) {
           title = parts[0].trim();
         }
       }
@@ -373,7 +373,7 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
     const descMatch = html.match(/<div[^>]*class="[^"]*comment[^"]*"[^>]*>([\s\S]*?)<\/div>/i) ||
                       html.match(/<p[^>]*class="[^"]*description[^"]*"[^>]*>([\s\S]*?)<\/p>/i) ||
                       html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i);
-    const description = descMatch ? descMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 1000) : undefined;
+    const description = descMatch?.[1] ? descMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 1000) : undefined;
 
     // 出演者抽出（より具体的なパターン + 共通バリデーション）
     const performersList: string[] = [];
@@ -384,7 +384,7 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
       // 例: "青木桃(朝日芹奈・堤セリナ・新セリナ)" → ["青木桃", "朝日芹奈", "堤セリナ", "新セリナ"]
       const mainName = rawName.replace(/[（(].*[）)]/g, '').trim();
       const aliasMatch = rawName.match(/[（(]([^）)]+)[）)]/);
-      const aliases = aliasMatch ? aliasMatch[1].split(/[・、,\/]/).map(n => n.trim()) : [];
+      const aliases = aliasMatch?.[1] ? aliasMatch[1].split(/[・、,\/]/).map(n => n.trim()) : [];
 
       const allNames = [mainName, ...aliases].filter(n => n.length > 0);
 
@@ -403,13 +403,13 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
 
     // パターン1: act_name クラス内のリンク（Japanska固有の女優名表示）
     const actNameMatch = html.match(/<p[^>]*class="act_name"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/i);
-    if (actNameMatch) {
+    if (actNameMatch?.[1]) {
       addPerformer(actNameMatch[1].trim());
     }
 
     // パターン2: 女優名ラベル内のリンク
     const jooyuuNameMatch = html.match(/女優名[\s\S]*?<dd>[\s\S]*?<a[^>]*>([^<]+)<\/a>/i);
-    if (jooyuuNameMatch && performersList.length === 0) {
+    if (jooyuuNameMatch?.[1] && performersList.length === 0) {
       addPerformer(jooyuuNameMatch[1].trim());
     }
 
@@ -417,14 +417,16 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
     if (performersList.length === 0) {
       const actressLinkMatches = html.matchAll(/<a[^>]*href="[^"]*actress[^"]*"[^>]*>([^<]+)<\/a>/gi);
       for (const match of actressLinkMatches) {
-        addPerformer(match[1].trim());
+        if (match[1]) {
+          addPerformer(match[1].trim());
+        }
       }
     }
 
     // パターン4: 出演者ラベル後のテキスト
     if (performersList.length === 0) {
       const actorLabelMatch = html.match(/出演[者：:]\s*([^<\n]+)/i);
-      if (actorLabelMatch) {
+      if (actorLabelMatch?.[1]) {
         const names = actorLabelMatch[1].split(/[,、\/]/).map(n => n.trim());
         for (const rawName of names.slice(0, 10)) {
           addPerformer(rawName);
@@ -502,7 +504,7 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
 
     // 再生時間抽出
     const durationMatch = html.match(/(\d+)分(\d+)?秒?/);
-    const duration = durationMatch
+    const duration = durationMatch?.[1]
       ? parseInt(durationMatch[1]) + (durationMatch[2] ? Math.round(parseInt(durationMatch[2]) / 60) : 0)
       : undefined;
 
@@ -539,7 +541,7 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
     // パターン3: video source タグ
     if (sampleVideos.length === 0) {
       const videoSrcMatch = html.match(/<source[^>]*src="([^"]+\.mp4)"/i);
-      if (videoSrcMatch) {
+      if (videoSrcMatch?.[1]) {
         const videoUrl = videoSrcMatch[1].startsWith('http')
           ? videoSrcMatch[1]
           : `https://img01.japanska-xxx.com/${videoSrcMatch[1]}`;
@@ -572,13 +574,13 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
       product: {
         movieId,
         title,
-        description,
+        ...(description && { description }),
         performers: performersList,
-        thumbnailUrl,
+        ...(thumbnailUrl && { thumbnailUrl }),
         sampleImages,
-        sampleVideoUrl,
+        ...(sampleVideoUrl && { sampleVideoUrl }),
         sampleVideos,
-        duration,
+        ...(duration && { duration }),
       },
       rawDataId: upsertResult.id,
       shouldSkip: false,
@@ -595,8 +597,8 @@ async function parseDetailPage(movieId: string, forceReprocess: boolean = false)
 async function saveProduct(product: JapanskaProduct): Promise<number | null> {
   // 商品データの検証
   const validation = validateProductData({
-    title: product.title,
-    description: product.description,
+    title: product['title'],
+    ...(product['description'] && { description: product['description'] }),
     aspName: 'Japanska',
     originalId: product.movieId,
   });
@@ -618,28 +620,32 @@ async function saveProduct(product: JapanskaProduct): Promise<number | null> {
 
     let productId: number;
 
-    if (existing.length > 0) {
-      productId = existing[0].id;
+    if (existing.length > 0 && existing[0]) {
+      productId = existing[0]['id'];
       console.log(`    ⏭️ 既存商品 (ID: ${productId})`);
     } else {
       // 新規商品作成
-      const [inserted] = await db
+      const insertResult = await db
         .insert(products)
         .values({
           normalizedProductId,
-          title: product.title,
-          description: product.description || '',
-          duration: product.duration,
-          defaultThumbnailUrl: product.thumbnailUrl,
+          title: product['title'],
+          description: product['description'] || '',
+          duration: product['duration'],
+          defaultThumbnailUrl: product['thumbnailUrl'],
         })
-        .returning({ id: products.id });
+        .returning({ id: products['id'] });
 
+      const inserted = insertResult[0];
+      if (!inserted) {
+        throw new Error('Failed to insert product');
+      }
       productId = inserted.id;
       console.log(`    ✓ 新規商品作成 (ID: ${productId})`);
 
       // product_sources作成
       const affiliateUrl = generateAffiliateUrl(product.movieId);
-      await db.insert(productSources).values({
+      await db['insert'](productSources).values({
         productId,
         aspName: 'Japanska',
         originalProductId: product.movieId,
@@ -652,18 +658,22 @@ async function saveProduct(product: JapanskaProduct): Promise<number | null> {
         const [performer] = await db
           .select()
           .from(performers)
-          .where(eq(performers.name, performerName))
+          .where(eq(performers['name'], performerName))
           .limit(1);
 
         let performerId: number;
         if (performer) {
-          performerId = performer.id;
+          performerId = performer['id'];
         } else {
-          const [inserted] = await db
+          const performerInsertResult = await db
             .insert(performers)
             .values({ name: performerName })
-            .returning({ id: performers.id });
-          performerId = inserted.id;
+            .returning({ id: performers['id'] });
+          const insertedPerformer = performerInsertResult[0];
+          if (!insertedPerformer) {
+            throw new Error('Failed to insert performer');
+          }
+          performerId = insertedPerformer.id;
         }
 
         // 商品-出演者リンク
@@ -679,7 +689,7 @@ async function saveProduct(product: JapanskaProduct): Promise<number | null> {
           .limit(1);
 
         if (existingLink.length === 0) {
-          await db.insert(productPerformers).values({
+          await db['insert'](productPerformers).values({
             productId,
             performerId,
           });
@@ -687,10 +697,10 @@ async function saveProduct(product: JapanskaProduct): Promise<number | null> {
       }
 
       // サンプル画像保存
-      if (product.thumbnailUrl) {
-        await db.insert(productImages).values({
+      if (product['thumbnailUrl']) {
+        await db['insert'](productImages).values({
           productId,
-          imageUrl: product.thumbnailUrl,
+          imageUrl: product['thumbnailUrl'],
           imageType: 'thumbnail',
           displayOrder: 0,
           aspName: 'Japanska',
@@ -698,25 +708,31 @@ async function saveProduct(product: JapanskaProduct): Promise<number | null> {
       }
 
       for (let i = 0; i < product.sampleImages.length; i++) {
-        await db.insert(productImages).values({
-          productId,
-          imageUrl: product.sampleImages[i],
-          imageType: 'sample',
-          displayOrder: i + 1,
-          aspName: 'Japanska',
-        }).onConflictDoNothing();
+        const imageUrl = product.sampleImages[i];
+        if (imageUrl) {
+          await db['insert'](productImages).values({
+            productId,
+            imageUrl,
+            imageType: 'sample',
+            displayOrder: i + 1,
+            aspName: 'Japanska',
+          }).onConflictDoNothing();
+        }
       }
 
       // サンプル動画保存（複数対応）
       if (product.sampleVideos && product.sampleVideos.length > 0) {
         for (let i = 0; i < product.sampleVideos.length; i++) {
-          await db.insert(productVideos).values({
-            productId,
-            videoUrl: product.sampleVideos[i],
-            videoType: 'sample',
-            aspName: 'Japanska',
-            displayOrder: i,
-          }).onConflictDoNothing();
+          const videoUrl = product.sampleVideos[i];
+          if (videoUrl) {
+            await db['insert'](productVideos).values({
+              productId,
+              videoUrl,
+              videoType: 'sample',
+              aspName: 'Japanska',
+              displayOrder: i,
+            }).onConflictDoNothing();
+          }
         }
         console.log(`    🎬 サンプル動画保存完了 (${product.sampleVideos.length}件)`);
       }
@@ -745,8 +761,8 @@ async function generateAIContent(
   const aiHelper = getAIHelper();
   const result = await aiHelper.processProduct(
     {
-      title: product.title,
-      description: product.description,
+      title: product['title'],
+      ...(product['description'] && { description: product['description'] }),
       performers: product.performers,
     },
     {
@@ -765,10 +781,10 @@ async function generateAIContent(
   let aiTags: JapanskaProduct['aiTags'];
 
   // AI説明文
-  if (result.description) {
-    aiDescription = result.description;
+  if (result['description']) {
+    aiDescription = result['description'];
     console.log(`      ✅ AI説明文生成完了`);
-    console.log(`         キャッチコピー: ${result.description.catchphrase}`);
+    console.log(`         キャッチコピー: ${result['description'].catchphrase}`);
   }
 
   // AIタグ
@@ -779,7 +795,10 @@ async function generateAIContent(
     console.log(`         属性: ${result.tags.attributes.join(', ') || 'なし'}`);
   }
 
-  return { aiDescription, aiTags };
+  return {
+    ...(aiDescription && { aiDescription }),
+    ...(aiTags && { aiTags }),
+  };
 }
 
 /**
@@ -798,20 +817,20 @@ async function saveAIContent(
     const updateData: Record<string, any> = {};
 
     if (aiDescription) {
-      updateData.aiDescription = JSON.stringify(aiDescription);
-      updateData.aiCatchphrase = aiDescription.catchphrase;
-      updateData.aiShortDescription = aiDescription.shortDescription;
+      updateData['aiDescription'] = JSON.stringify(aiDescription);
+      updateData['aiCatchphrase'] = aiDescription.catchphrase;
+      updateData['aiShortDescription'] = aiDescription.shortDescription;
     }
 
     if (aiTags) {
-      updateData.aiTags = JSON.stringify(aiTags);
+      updateData['aiTags'] = JSON.stringify(aiTags);
     }
 
     if (Object.keys(updateData).length > 0) {
       await db
         .update(products)
         .set(updateData)
-        .where(eq(products.id, productId));
+        .where(eq(products['id'], productId));
       console.log(`    💾 AI生成データを保存しました`);
     }
   } catch (error) {
@@ -846,35 +865,35 @@ async function translateAndSave(
     const updateData: Record<string, any> = {};
 
     if (translation.en) {
-      updateData.titleEn = translation.en.title;
+      updateData['titleEn'] = translation.en.title;
       if (translation.en.description) {
-        updateData.descriptionEn = translation.en.description;
+        updateData['descriptionEn'] = translation.en.description;
       }
       console.log(`      EN: ${translation.en.title.slice(0, 50)}...`);
     }
 
     if (translation.zh) {
-      updateData.titleZh = translation.zh.title;
+      updateData['titleZh'] = translation.zh.title;
       if (translation.zh.description) {
-        updateData.descriptionZh = translation.zh.description;
+        updateData['descriptionZh'] = translation.zh.description;
       }
       console.log(`      ZH: ${translation.zh.title.slice(0, 50)}...`);
     }
 
     if (translation.ko) {
-      updateData.titleKo = translation.ko.title;
+      updateData['titleKo'] = translation.ko.title;
       if (translation.ko.description) {
-        updateData.descriptionKo = translation.ko.description;
+        updateData['descriptionKo'] = translation.ko.description;
       }
       console.log(`      KO: ${translation.ko.title.slice(0, 50)}...`);
     }
 
     if (Object.keys(updateData).length > 0) {
-      updateData.updatedAt = new Date();
+      updateData['updatedAt'] = new Date();
       await db
         .update(products)
         .set(updateData)
-        .where(eq(products.id, productId));
+        .where(eq(products['id'], productId));
       console.log(`    💾 翻訳データを保存しました`);
     }
   } catch (error) {
@@ -906,7 +925,7 @@ async function getMovieIdsFromListPage(pageNum: number = 0): Promise<string[]> {
   const linkMatches = html.matchAll(/\/movie\/detail_(\d+)\.html/g);
   for (const match of linkMatches) {
     const movieId = match[1];
-    if (!movieIds.includes(movieId)) {
+    if (movieId && !movieIds.includes(movieId)) {
       movieIds.push(movieId);
     }
   }
@@ -955,7 +974,7 @@ async function runFullScan(
     }
 
     if (product) {
-      console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
+      console.log(`    タイトル: ${product['title'].substring(0, 50)}...`);
       consecutiveNotFound = 0;
 
       const savedId = await saveProduct(product);
@@ -963,7 +982,7 @@ async function runFullScan(
         if (enableAI) {
           const { aiDescription, aiTags } = await generateAIContent(product, enableAI);
           await saveAIContent(savedId, aiDescription, aiTags);
-          await translateAndSave(savedId, product.title, product.description, enableAI);
+          await translateAndSave(savedId, product['title'], product['description'], enableAI);
         }
 
         if (rawDataId) {
@@ -1015,20 +1034,28 @@ async function main() {
   let endId = 10000;   // デフォルトID終了
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--pages' && args[i + 1]) {
-      pages = parseInt(args[i + 1]);
+    const arg = args[i];
+    const nextArg = args[i + 1];
+    if (arg === '--pages' && nextArg) {
+      pages = parseInt(nextArg);
     }
-    if (args[i] === '--start-page' && args[i + 1]) {
-      startPage = parseInt(args[i + 1]);
+    if (arg === '--start-page' && nextArg) {
+      startPage = parseInt(nextArg);
     }
-    if (args[i] === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1]);
+    if (arg === '--limit' && nextArg) {
+      limit = parseInt(nextArg);
     }
-    if (args[i].startsWith('--start-id=')) {
-      startId = parseInt(args[i].split('=')[1]);
+    if (arg?.startsWith('--start-id=')) {
+      const value = arg.split('=')[1];
+      if (value) {
+        startId = parseInt(value);
+      }
     }
-    if (args[i].startsWith('--end-id=')) {
-      endId = parseInt(args[i].split('=')[1]);
+    if (arg?.startsWith('--end-id=')) {
+      const value = arg.split('=')[1];
+      if (value) {
+        endId = parseInt(value);
+      }
     }
   }
 
@@ -1081,7 +1108,7 @@ async function main() {
       WHERE asp_name = 'Japanska'
         AND original_product_id ~ '^[0-9]+$'
     `);
-    const currentMinId = minIdResult.rows[0]?.min_id as number || 10000;
+    const currentMinId = minIdResult.rows[0]?.['min_id'] as number || 10000;
 
     console.log(`  現在の最小ID: ${currentMinId}`);
 
@@ -1121,7 +1148,7 @@ async function main() {
     }
 
     if (product) {
-      console.log(`    タイトル: ${product.title.substring(0, 50)}...`);
+      console.log(`    タイトル: ${product['title'].substring(0, 50)}...`);
       console.log(`    出演者: ${product.performers.join(', ') || '不明'}`);
       console.log(`    📷 サンプル画像: ${product.sampleImages.length}件`);
       console.log(`    🎬 サンプル動画: ${product.sampleVideos.length}件`);
@@ -1136,7 +1163,7 @@ async function main() {
         }
         // 翻訳機能: タイトルと説明を多言語翻訳
         if (enableAI) {
-          await translateAndSave(savedId, product.title, product.description, enableAI);
+          await translateAndSave(savedId, product['title'], product['description'], enableAI);
         }
 
         // 処理済みマーク
@@ -1163,7 +1190,7 @@ async function main() {
     FROM product_sources
     WHERE asp_name = 'Japanska'
   `);
-  console.log(`\nJapanska総商品数: ${stats.rows[0].count}`);
+  console.log(`\nJapanska総商品数: ${stats.rows[0]?.['count'] ?? 0}`);
 
   // ブラウザを終了
   await closeBrowser();

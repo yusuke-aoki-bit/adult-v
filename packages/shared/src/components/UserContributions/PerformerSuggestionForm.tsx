@@ -83,8 +83,8 @@ export function PerformerSuggestionForm({
   }, [performerName, selectedPerformerId, searchPerformers]);
 
   const handleSelectPerformer = (performer: PerformerMatch) => {
-    setPerformerName(performer.name);
-    setSelectedPerformerId(performer.id);
+    setPerformerName(performer['name']);
+    setSelectedPerformerId(performer['id']);
     setShowDropdown(false);
     setMatchingPerformers([]);
   };
@@ -132,7 +132,7 @@ export function PerformerSuggestionForm({
       const data = await response.json();
 
       if (!response.ok) {
-        if (response.status === 409) {
+        if (response['status'] === 409) {
           setMessage({ type: 'error', text: t.alreadySuggested });
         } else {
           setMessage({ type: 'error', text: data.error || t.error });
@@ -190,13 +190,13 @@ export function PerformerSuggestionForm({
                 </div>
                 {matchingPerformers.map((performer) => (
                   <button
-                    key={performer.id}
+                    key={performer['id']}
                     type="button"
                     onClick={() => handleSelectPerformer(performer)}
                     className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-900 dark:text-white flex items-center gap-2"
                   >
                     <User className="w-4 h-4 text-gray-400" />
-                    <span>{performer.name}</span>
+                    <span>{performer['name']}</span>
                     {performer.nameRomaji && (
                       <span className="text-gray-500 text-xs">({performer.nameRomaji})</span>
                     )}

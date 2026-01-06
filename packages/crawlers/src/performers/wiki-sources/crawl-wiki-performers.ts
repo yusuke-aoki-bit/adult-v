@@ -15,8 +15,8 @@
  */
 
 // Set DATABASE_URL if not already set
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres';
+if (!process.env['DATABASE_URL']) {
+  process.env['DATABASE_URL'] = 'postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres';
 }
 
 import * as cheerio from 'cheerio';
@@ -67,13 +67,13 @@ function detectEncoding(buffer: Buffer, url: string): string {
 
   // Pattern 1: <meta charset="xxx">
   const charsetMatch1 = head.match(/<meta\s+charset=["']?([^"'\s>]+)/i);
-  if (charsetMatch1) {
+  if (charsetMatch1?.[1]) {
     return charsetMatch1[1].toLowerCase();
   }
 
   // Pattern 2: <meta http-equiv="Content-Type" content="text/html; charset=xxx">
   const charsetMatch2 = head.match(/charset=([^"'\s>]+)/i);
-  if (charsetMatch2) {
+  if (charsetMatch2?.[1]) {
     return charsetMatch2[1].toLowerCase();
   }
 
@@ -92,7 +92,7 @@ async function fetchHtml(url: string): Promise<string | null> {
     });
 
     if (!response.ok) {
-      console.log(`  ✗ HTTP ${response.status} for ${url}`);
+      console.log(`  ✗ HTTP ${response['status']} for ${url}`);
       return null;
     }
 
@@ -139,15 +139,15 @@ function parseAvWiki(html: string, url: string): { performers: PerformerData[], 
   for (const row of tableRows) {
     // Extract product ID
     const productIdMatch = row.match(/([A-Z]{2,10}-?\d{3,6})/i);
-    if (productIdMatch) {
+    if (productIdMatch?.[1]) {
       const productId = productIdMatch[1].toUpperCase();
 
       // Save previous product if exists
       if (currentProductId && currentPerformers.length > 0) {
         productMap.set(currentProductId, {
           productId: currentProductId,
-          title: currentTitle || undefined,
-          releaseDate: currentReleaseDate || undefined,
+          ...(currentTitle && { title: currentTitle }),
+          ...(currentReleaseDate && { releaseDate: currentReleaseDate }),
           performers: currentPerformers,
           source: 'av-wiki'
         });
@@ -172,7 +172,7 @@ function parseAvWiki(html: string, url: string): { performers: PerformerData[], 
     // Extract title
     if (row.includes('タイトル') || row.includes('作品名')) {
       const titleMatch = row.match(/>([^<>]{5,100})</);
-      if (titleMatch) {
+      if (titleMatch?.[1]) {
         currentTitle = titleMatch[1].trim();
       }
     }
@@ -196,7 +196,7 @@ function parseAvWiki(html: string, url: string): { performers: PerformerData[], 
     // Extract release date
     if (row.includes('発売日') || row.includes('配信日')) {
       const dateMatch = row.match(/(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/);
-      if (dateMatch) {
+      if (dateMatch?.[1]) {
         currentReleaseDate = dateMatch[1];
       }
     }
@@ -206,8 +206,8 @@ function parseAvWiki(html: string, url: string): { performers: PerformerData[], 
   if (currentProductId && currentPerformers.length > 0) {
     productMap.set(currentProductId, {
       productId: currentProductId,
-      title: currentTitle || undefined,
-      releaseDate: currentReleaseDate || undefined,
+      ...(currentTitle && { title: currentTitle }),
+      ...(currentReleaseDate && { releaseDate: currentReleaseDate }),
       performers: currentPerformers,
       source: 'av-wiki'
     });
@@ -252,15 +252,15 @@ function parseSeesaawiki(html: string, url: string): { performers: PerformerData
   for (const row of tableRows) {
     // Extract product ID
     const productIdMatch = row.match(/([A-Z]{2,10}-?\d{3,6})/i);
-    if (productIdMatch) {
+    if (productIdMatch?.[1]) {
       const productId = productIdMatch[1].toUpperCase();
 
       // Save previous product
       if (currentProductId && currentPerformers.length > 0) {
         productMap.set(currentProductId, {
           productId: currentProductId,
-          title: currentTitle || undefined,
-          releaseDate: currentReleaseDate || undefined,
+          ...(currentTitle && { title: currentTitle }),
+          ...(currentReleaseDate && { releaseDate: currentReleaseDate }),
           performers: currentPerformers,
           source: 'seesaawiki'
         });
@@ -284,7 +284,7 @@ function parseSeesaawiki(html: string, url: string): { performers: PerformerData
     // Extract title
     if (row.includes('タイトル') || row.includes('作品名')) {
       const titleMatch = row.match(/>([^<>]{5,100})</);
-      if (titleMatch) {
+      if (titleMatch?.[1]) {
         currentTitle = titleMatch[1].trim();
       }
     }
@@ -307,7 +307,7 @@ function parseSeesaawiki(html: string, url: string): { performers: PerformerData
     // Extract release date
     if (row.includes('発売') || row.includes('配信')) {
       const dateMatch = row.match(/(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/);
-      if (dateMatch) {
+      if (dateMatch?.[1]) {
         currentReleaseDate = dateMatch[1];
       }
     }
@@ -317,8 +317,8 @@ function parseSeesaawiki(html: string, url: string): { performers: PerformerData
   if (currentProductId && currentPerformers.length > 0) {
     productMap.set(currentProductId, {
       productId: currentProductId,
-      title: currentTitle || undefined,
-      releaseDate: currentReleaseDate || undefined,
+      ...(currentTitle && { title: currentTitle }),
+      ...(currentReleaseDate && { releaseDate: currentReleaseDate }),
       performers: currentPerformers,
       source: 'seesaawiki'
     });
@@ -345,13 +345,13 @@ async function getOrCreatePerformer(db: any, name: string): Promise<number> {
   const normalizedName = name.trim();
 
   // Check if performer exists
-  const existing = await db.select()
+  const existing = await db['select']()
     .from(performers)
-    .where(eq(performers.name, normalizedName))
+    .where(eq(performers['name'], normalizedName))
     .limit(1);
 
   if (existing.length > 0) {
-    return existing[0].id;
+    return existing[0]['id'];
   }
 
   // Create new performer
@@ -359,15 +359,15 @@ async function getOrCreatePerformer(db: any, name: string): Promise<number> {
     .replace(/\s+/g, '-')
     .replace(/[^\w\-]/g, '');
 
-  const result = await db.insert(performers)
+  const result = await db['insert'](performers)
     .values({
       name: normalizedName,
       slug: slug + '-' + Date.now(),
     })
-    .returning({ id: performers.id });
+    .returning({ id: performers['id'] });
 
   console.log(`  ✨ Created new performer: ${normalizedName}`);
-  return result[0].id;
+  return result[0]['id'];
 }
 
 /**
@@ -377,7 +377,7 @@ async function getOrCreateProduct(db: any, productData: ProductData): Promise<nu
   const normalizedId = productData.productId.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
   // Check if product exists by normalizedProductId
-  const existing = await db.select()
+  const existing = await db['select']()
     .from(products)
     .where(eq(products.normalizedProductId, normalizedId))
     .limit(1);
@@ -386,21 +386,21 @@ async function getOrCreateProduct(db: any, productData: ProductData): Promise<nu
     // Update product if we have new information
     if (productData.title || productData.releaseDate) {
       const updateData: any = {};
-      if (productData.title) updateData.title = productData.title;
-      if (productData.releaseDate) updateData.releaseDate = new Date(productData.releaseDate);
+      if (productData.title) updateData['title'] = productData.title;
+      if (productData.releaseDate) updateData['releaseDate'] = new Date(productData.releaseDate);
 
       if (Object.keys(updateData).length > 0) {
-        await db.update(products)
+        await db['update'](products)
           .set(updateData)
-          .where(eq(products.id, existing[0].id));
+          .where(eq(products['id'], existing[0]['id']));
         console.log(`  📝 Updated product: ${productData.productId}`);
       }
     }
-    return existing[0].id;
+    return existing[0]['id'];
   }
 
   // Create new product
-  const newProduct = await db.insert(products)
+  const newProduct = await db['insert'](products)
     .values({
       id: productData.productId,
       normalizedProductId: normalizedId,
@@ -408,10 +408,10 @@ async function getOrCreateProduct(db: any, productData: ProductData): Promise<nu
       releaseDate: productData.releaseDate ? new Date(productData.releaseDate) : null,
       thumbnailUrl: productData.thumbnailUrl,
     })
-    .returning({ id: products.id });
+    .returning({ id: products['id'] });
 
   console.log(`  ✨ Created new product: ${productData.productId}`);
-  return newProduct[0].id;
+  return newProduct[0]['id'];
 }
 
 /**
@@ -423,7 +423,7 @@ async function linkPerformerToProduct(
   productId: number
 ): Promise<void> {
   // Check if link already exists
-  const existingLink = await db.select()
+  const existingLink = await db['select']()
     .from(productPerformers)
     .where(and(
       eq(productPerformers.productId, productId),
@@ -436,7 +436,7 @@ async function linkPerformerToProduct(
   }
 
   // Create link
-  await db.insert(productPerformers)
+  await db['insert'](productPerformers)
     .values({
       productId,
       performerId,
@@ -721,7 +721,7 @@ async function searchAvWiki(productCode: string): Promise<string[]> {
     return performers;
   } catch (error: unknown) {
     // 外部サイトへのリクエスト失敗は静かに処理
-    if (process.env.DEBUG) {
+    if (process.env['DEBUG']) {
       console.warn(`[seesaa-wiki] Error:`, error instanceof Error ? error.message : error);
     }
     return [];
@@ -783,7 +783,7 @@ async function searchShiroutoname(productCode: string): Promise<string[]> {
 
     return performers;
   } catch (error: unknown) {
-    if (process.env.DEBUG) {
+    if (process.env['DEBUG']) {
       console.warn(`[shiroutoname] Error:`, error instanceof Error ? error.message : error);
     }
     return [];
@@ -819,7 +819,7 @@ async function saveToWikiCrawlData(
       saved++;
     } catch (error: unknown) {
       // DB制約違反は無視（重複データ）
-      if (process.env.DEBUG) {
+      if (process.env['DEBUG']) {
         console.warn(`[saveToWikiCrawlData] Insert failed for ${name}:`, error instanceof Error ? error.message : error);
       }
     }
@@ -933,7 +933,7 @@ async function crawlShiroutoname(db: any, limit: number = 100): Promise<void> {
       OR normalized_product_id LIKE 'siro%'
       OR normalized_product_id LIKE 'ara%'
     )
-    AND NOT EXISTS (SELECT 1 FROM product_performers pp WHERE pp.product_id = products.id)
+    AND NOT EXISTS (SELECT 1 FROM product_performers pp WHERE pp.product_id = products['id'])
     ORDER BY normalized_product_id DESC
     LIMIT ${limit}
   `);
@@ -998,7 +998,7 @@ async function crawlAvWikiBatch(db: ReturnType<typeof getDb>, limit: number = 10
   let processed = 0;
   let found = 0;
 
-  for (const row of result.rows as ProductCodeRow[]) {
+  for (const row of result.rows as unknown as ProductCodeRow[]) {
     const code = row.normalized_product_id;
     console.log(`[${processed + 1}/${result.rows.length}] ${code}`);
 
@@ -1044,11 +1044,11 @@ async function crawlAvWikiAllPages(db: any, limit: number = 10000): Promise<void
       });
 
       if (!response.ok) {
-        console.log(`    - ${response.status} ${response.statusText}`);
+        console.log(`    - ${response['status']} ${response.statusText}`);
         continue;
       }
 
-      const xml = await response.text();
+      const xml = await response['text']();
 
       // URLを抽出
       const urlMatches = xml.match(/<loc>([^<]+)<\/loc>/g) || [];
@@ -1082,7 +1082,7 @@ async function crawlAvWikiAllPages(db: any, limit: number = 10000): Promise<void
               }
             } catch (error: unknown) {
               // サブsitemap取得失敗は無視
-              if (process.env.DEBUG) {
+              if (process.env['DEBUG']) {
                 console.warn(`[sitemap] Sub-sitemap fetch failed:`, error instanceof Error ? error.message : error);
               }
             }
@@ -1114,7 +1114,7 @@ async function crawlAvWikiAllPages(db: any, limit: number = 10000): Promise<void
       });
 
       if (!response.ok) {
-        console.log(`  ✗ ${response.status}`);
+        console.log(`  ✗ ${response['status']}`);
         processed++;
         continue;
       }
@@ -1171,7 +1171,7 @@ function extractAvWikiPageData($: cheerio.CheerioAPI, url: string): { products: 
 
   // URLから品番を抽出
   const urlMatch = url.match(/\/([a-z]{2,10}-?\d{3,6})\/?$/i);
-  if (urlMatch) {
+  if (urlMatch?.[1]) {
     titleCodes.push(urlMatch[1]);
   }
 
@@ -1253,7 +1253,7 @@ async function crawlSeesaawikiAllPages(db: any, limit: number = 10000): Promise<
       });
 
       if (!response.ok) {
-        console.log(`    - ${response.status} ${response.statusText}`);
+        console.log(`    - ${response['status']} ${response.statusText}`);
         break;
       }
 
@@ -1311,7 +1311,7 @@ async function crawlSeesaawikiAllPages(db: any, limit: number = 10000): Promise<
       });
 
       if (!response.ok) {
-        console.log(`  ✗ ${response.status}`);
+        console.log(`  ✗ ${response['status']}`);
         processed++;
         continue;
       }
@@ -1369,7 +1369,7 @@ function extractSeesaawikiPageData($: cheerio.CheerioAPI, url: string): { produc
   // titleタグからも取得（バックアップ）
   const titleTag = $('title').text();
   const titleMatch = titleTag.match(/^([^-]+)/);
-  const performerFromTitle = titleMatch ? titleMatch[1].trim() : '';
+  const performerFromTitle = titleMatch?.[1]?.trim() ?? '';
 
   // 有効な女優名を決定
   let performerName = '';
@@ -1447,11 +1447,11 @@ async function crawlShiroutonameAllPages(db: any, limit: number = 10000): Promis
       });
 
       if (!response.ok) {
-        console.log(`    - ${response.status} ${response.statusText}`);
+        console.log(`    - ${response['status']} ${response.statusText}`);
         continue;
       }
 
-      const xml = await response.text();
+      const xml = await response['text']();
       const urlMatches = xml.match(/<loc>([^<]+)<\/loc>/g) || [];
       for (const match of urlMatches) {
         const url = match.replace(/<\/?loc>/g, '');
@@ -1485,22 +1485,22 @@ async function crawlShiroutonameAllPages(db: any, limit: number = 10000): Promis
       });
 
       if (!response.ok) {
-        console.log(`  ✗ ${response.status}`);
+        console.log(`  ✗ ${response['status']}`);
         processed++;
         continue;
       }
 
-      const html = await response.text();
+      const html = await response['text']();
       const $ = cheerio.load(html);
 
       // URLから品番を抽出: /siro/siro003/190500/ → SIRO-003
       const urlParts = url.replace(/\/$/, '').split('/');
-      const makerSeries = urlParts[urlParts.length - 2]; // e.g., "siro003"
+      const makerSeries = urlParts[urlParts.length - 2] ?? ''; // e.g., "siro003"
 
       // 品番パターン抽出
       let productCode = '';
       const codeMatch = makerSeries.match(/([a-zA-Z]+)(\d+)/i);
-      if (codeMatch) {
+      if (codeMatch?.[1] && codeMatch[2]) {
         productCode = `${codeMatch[1].toUpperCase()}-${codeMatch[2]}`;
       }
 
@@ -1515,7 +1515,7 @@ async function crawlShiroutonameAllPages(db: any, limit: number = 10000): Promis
       // 1. AV女優名（プロ名義）を探す - 「AV女優【XXX】の」パターン
       const content = $('body').text();
       const actressMatch = content.match(/AV女優【([^】]+)】の/);
-      if (actressMatch) {
+      if (actressMatch?.[1]) {
         const name = actressMatch[1].trim();
         if (name.length >= 2 && name.length <= 20 && isValidPerformerName(name)) {
           performers.push(name);
@@ -1591,11 +1591,11 @@ async function crawlFc2BlogAllPages(db: any, limit: number = 10000): Promise<voi
       });
 
       if (!response.ok) {
-        console.log(`    - ${response.status}`);
+        console.log(`    - ${response['status']}`);
         continue;
       }
 
-      const html = await response.text();
+      const html = await response['text']();
       const $ = cheerio.load(html);
 
       // 女優ページへのリンクを抽出
@@ -1637,12 +1637,12 @@ async function crawlFc2BlogAllPages(db: any, limit: number = 10000): Promise<voi
       });
 
       if (!response.ok) {
-        console.log(`  ✗ ${response.status}`);
+        console.log(`  ✗ ${response['status']}`);
         processed++;
         continue;
       }
 
-      const html = await response.text();
+      const html = await response['text']();
       const $ = cheerio.load(html);
 
       // タイトルから出演者名を抽出: 「川愛加奈（三ノ宮飛鳥）【＋エロ画像...」
@@ -1651,7 +1651,7 @@ async function crawlFc2BlogAllPages(db: any, limit: number = 10000): Promise<voi
 
       // 主名義: タイトルの先頭
       const mainNameMatch = title.match(/^([^（【\s]+)/);
-      if (mainNameMatch) {
+      if (mainNameMatch?.[1]) {
         const name = mainNameMatch[1].trim();
         if (name.length >= 2 && name.length <= 20 && isValidPerformerName(name)) {
           performers.push(name);
@@ -1660,7 +1660,7 @@ async function crawlFc2BlogAllPages(db: any, limit: number = 10000): Promise<voi
 
       // 別名: （）内
       const aliasMatch = title.match(/（([^）]+)）/);
-      if (aliasMatch) {
+      if (aliasMatch?.[1]) {
         const aliases = aliasMatch[1].split(/[・、]/);
         for (const alias of aliases) {
           const name = alias.trim();
@@ -1683,9 +1683,12 @@ async function crawlFc2BlogAllPages(db: any, limit: number = 10000): Promise<voi
       for (const link of movieLinks) {
         const codeMatch = link.match(/moviepages\/([^\/]+)\/|movies\/([^\/]+)\//);
         if (codeMatch) {
-          const code = (codeMatch[1] || codeMatch[2]).toUpperCase().replace(/_/g, '-');
-          if (!productCodes.includes(code) && code.match(/^\d{6}-\d{3}$|^\d{6}-\d{4}$/)) {
-            productCodes.push(code);
+          const rawCode = codeMatch[1] ?? codeMatch[2];
+          if (rawCode) {
+            const code = rawCode.toUpperCase().replace(/_/g, '-');
+            if (!productCodes.includes(code) && code.match(/^\d{6}-\d{3}$|^\d{6}-\d{4}$/)) {
+              productCodes.push(code);
+            }
           }
         }
       }
@@ -1760,7 +1763,7 @@ async function main() {
 
   // wiki_crawl_data反映モード
   if (args[0] === '--process') {
-    const limit = parseInt(args[1]) || 1000;
+    const limit = parseInt(args[1] ?? '1000') || 1000;
     console.log(`📥 Processing wiki_crawl_data (limit: ${limit})...\n`);
 
     const db = getDb();
@@ -1771,8 +1774,8 @@ async function main() {
 
   // --forceを除いた引数を取得
   const nonFlagArgs = args.filter(arg => !arg.startsWith('--'));
-  const site = nonFlagArgs[0] || 'both'; // av-wiki, seesaawiki, shiroutoname, av-wiki-batch, av-wiki-all, or both
-  const limit = parseInt(nonFlagArgs[1]) || 100;
+  const site = nonFlagArgs[0] ?? 'both'; // av-wiki, seesaawiki, shiroutoname, av-wiki-batch, av-wiki-all, or both
+  const limit = parseInt(nonFlagArgs[1] ?? '100') || 100;
 
   console.log('🚀 Starting wiki performer crawler...');
   console.log(`Site: ${site}, Limit: ${limit}`);

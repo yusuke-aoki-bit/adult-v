@@ -70,7 +70,7 @@ test.describe('Performance Tests - After Migration 0026', () => {
         const observer = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           if (entries.length > 0) {
-            lcpValue = entries[entries.length - 1].startTime;
+            lcpValue = entries[entries.length - 1]!.startTime;
           }
         });
         try {

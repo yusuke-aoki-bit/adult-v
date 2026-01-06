@@ -38,7 +38,7 @@ type Translation = typeof profileTranslations[TranslationKey];
 
 export default function ProfilePage() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t: Translation = profileTranslations[locale as TranslationKey] || profileTranslations.ja;
 
   const analysis = usePreferenceAnalysis(locale);

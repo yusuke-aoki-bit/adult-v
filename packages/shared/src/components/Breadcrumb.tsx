@@ -49,7 +49,7 @@ export function generateBreadcrumbSchema(items: BreadcrumbItem[], baseUrl?: stri
       '@type': 'ListItem' as const,
       position: index + 1,
       name: item.label,
-      item: baseUrl && item.href ? `${baseUrl}${item.href}` : item.href,
+      item: baseUrl && item.href ? `${baseUrl}${item.href}` : item.href ?? '',
     }));
 
   // 最後のアイテム（現在のページ）も追加（itemは省略可能）

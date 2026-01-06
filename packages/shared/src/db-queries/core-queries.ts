@@ -76,7 +76,7 @@ export interface CoreQueryDeps {
 export interface ProductRelatedData {
   performerData: Array<{ id: number; name: string; nameKana: string | null }>;
   tagData: Array<{ id: number; name: string; category: string | null }>;
-  sourceData: MapperSourceData | undefined;
+  sourceData?: MapperSourceData;
   imagesData: Array<{
     productId: number;
     imageUrl: string;
@@ -353,7 +353,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     if (siteMode === 'fanza-only') {
       return sql`EXISTS (
         SELECT 1 FROM ${productSources} ps_fanza
-        WHERE ps_fanza.product_id = ${products.id}
+        WHERE ps_fanza.product_id = ${products['id']}
         AND ps_fanza.asp_name = 'FANZA'
       )`;
     }
@@ -361,11 +361,11 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     // adult-v: FANZA専用商品を除外
     return sql`(EXISTS (
       SELECT 1 FROM ${productSources} ps_check
-      WHERE ps_check.product_id = ${products.id}
+      WHERE ps_check.product_id = ${products['id']}
       AND ps_check.asp_name != 'FANZA'
     ) OR NOT EXISTS (
       SELECT 1 FROM ${productSources} ps_fanza
-      WHERE ps_fanza.product_id = ${products.id}
+      WHERE ps_fanza.product_id = ${products['id']}
       AND ps_fanza.asp_name = 'FANZA'
     ))`;
   }
@@ -378,16 +378,16 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
     const baseQuery = db
       .select({
-        id: tags.id,
-        name: tags.name,
-        category: tags.category,
+        id: tags['id'],
+        name: tags['name'],
+        category: tags['category'],
       })
       .from(tags);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const results: any[] = category
-      ? await baseQuery.where(eq(tags.category, category)).orderBy(asc(tags.name))
-      : await baseQuery.orderBy(asc(tags.name));
+      ? await baseQuery.where(eq(tags['category'], category)).orderBy(asc(tags['name']))
+      : await baseQuery.orderBy(asc(tags['name']));
 
     return results.map((r) => ({
       id: r.id as number,
@@ -404,12 +404,12 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
     const result = await db
       .select({
-        id: tags.id,
-        name: tags.name,
-        category: tags.category,
+        id: tags['id'],
+        name: tags['name'],
+        category: tags['category'],
       })
       .from(tags)
-      .where(eq(tags.id, tagId))
+      .where(eq(tags['id'], tagId))
       .limit(1);
 
     if (result.length === 0) return null;
@@ -451,7 +451,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
     const counts: Record<string, number> = {};
     for (const row of result.rows as { provider: string; count: string | number }[]) {
-      counts[row.provider] = typeof row.count === 'string' ? parseInt(row.count) : row.count;
+      counts[row.provider] = typeof row['count'] === 'string' ? parseInt(row['count']) : row['count'];
     }
     return counts;
   }
@@ -555,8 +555,8 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       category: string | null;
       productCount: string | number;
     }>).map((row) => ({
-      id: row.id,
-      name: row.name,
+      id: row['id'],
+      name: row['name'],
       category: row.category,
       productCount:
         typeof row.productCount === 'string'
@@ -578,13 +578,13 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
     if (table === 'products') {
       const result = await db
-        .select({ id: products.id })
+        .select({ id: products['id'] })
         .from(products)
         .where(
           or(
-            ilike(products.title, `%${escapedTerm}%`),
-            ilike(products.normalizedProductId, `%${escapedTerm}%`),
-            ilike(products.description, `%${escapedTerm}%`)
+            ilike(products['title'], `%${escapedTerm}%`),
+            ilike(products['normalizedProductId'], `%${escapedTerm}%`),
+            ilike(products['description'], `%${escapedTerm}%`)
           )
         )
         .limit(limit);
@@ -592,12 +592,12 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     }
 
     const result = await db
-      .select({ id: performers.id })
+      .select({ id: performers['id'] })
       .from(performers)
       .where(
         or(
-          ilike(performers.name, `%${escapedTerm}%`),
-          ilike(performers.nameKana, `%${escapedTerm}%`)
+          ilike(performers['name'], `%${escapedTerm}%`),
+          ilike(performers['nameKana'], `%${escapedTerm}%`)
         )
       )
       .limit(limit);
@@ -612,14 +612,14 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       const db = getDb();
       const sources = await db
         .select({
-          aspName: productSources.aspName,
-          originalProductId: productSources.originalProductId,
-          price: productSources.price,
-          currency: productSources.currency,
-          affiliateUrl: productSources.affiliateUrl,
+          aspName: productSources['aspName'],
+          originalProductId: productSources['originalProductId'],
+          price: productSources['price'],
+          currency: productSources['currency'],
+          affiliateUrl: productSources['affiliateUrl'],
         })
         .from(productSources)
-        .where(eq(productSources.productId, productId));
+        .where(eq(productSources['productId'], productId));
 
       return sources;
     } catch (error) {
@@ -641,9 +641,9 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
       // まず女優の作品IDを取得
       const actressProductIds = await db
-        .selectDistinct({ productId: productPerformers.productId })
+        .selectDistinct({ productId: productPerformers['productId'] })
         .from(productPerformers)
-        .where(eq(productPerformers.performerId, performerId));
+        .where(eq(productPerformers['performerId'], performerId));
 
       if (actressProductIds.length === 0) {
         return [];
@@ -654,19 +654,19 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       // 女優の作品に含まれるタグを取得（件数カウントなし）
       const results = await db
         .selectDistinct({
-          id: tags.id,
-          name: tags.name,
-          category: tags.category,
+          id: tags['id'],
+          name: tags['name'],
+          category: tags['category'],
         })
         .from(tags)
-        .innerJoin(productTags, eq(tags.id, productTags.tagId))
+        .innerJoin(productTags, eq(tags['id'], productTags['tagId']))
         .where(
           and(
-            category ? eq(tags.category, category) : undefined,
-            inArray(productTags.productId, productIdList)
+            category ? eq(tags['category'], category) : undefined,
+            inArray(productTags['productId'], productIdList)
           )
         )
-        .orderBy(tags.name);
+        .orderBy(tags['name']);
 
       // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
       return results.map((r) => ({
@@ -695,16 +695,16 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       const aliases = await db
         .select()
         .from(performerAliases)
-        .where(eq(performerAliases.performerId, performerId))
-        .orderBy(desc(performerAliases.isPrimary), asc(performerAliases.aliasName));
+        .where(eq(performerAliases['performerId'], performerId))
+        .orderBy(desc(performerAliases['isPrimary']), asc(performerAliases['aliasName']));
 
       // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
       return aliases.map((a) => ({
-        id: a.id as number,
-        aliasName: a.aliasName as string,
-        source: a.source as string | null,
-        isPrimary: a.isPrimary as boolean | null,
-        createdAt: a.createdAt as Date,
+        id: a['id'] as number,
+        aliasName: a['aliasName'] as string,
+        source: a['source'] as string | null,
+        isPrimary: a['isPrimary'] as boolean | null,
+        createdAt: a['createdAt'] as Date,
       }));
     } catch (error) {
       return logDbErrorAndReturn(error, [], 'getPerformerAliases', { performerId });
@@ -728,19 +728,19 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
       const results = await db
         .select({
-          siteName: tags.name,
-          count: sql<number>`COUNT(DISTINCT ${products.id})`,
+          siteName: tags['name'],
+          count: sql<number>`COUNT(DISTINCT ${products['id']})`,
         })
         .from(products)
-        .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
-        .innerJoin(productTags, eq(products.id, productTags.productId))
-        .innerJoin(tags, eq(productTags.tagId, tags.id))
+        .innerJoin(productPerformers, eq(products['id'], productPerformers['productId']))
+        .innerJoin(productTags, eq(products['id'], productTags['productId']))
+        .innerJoin(tags, eq(productTags['tagId'], tags['id']))
         .where(and(
-          eq(productPerformers.performerId, performerId),
-          eq(tags.category, 'site')
+          eq(productPerformers['performerId'], performerId),
+          eq(tags['category'], 'site')
         ))
-        .groupBy(tags.name)
-        .orderBy(desc(sql<number>`COUNT(DISTINCT ${products.id})`));
+        .groupBy(tags['name'])
+        .orderBy(desc(sql<number>`COUNT(DISTINCT ${products['id']})`));
 
       // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
       return results.map((r) => ({
@@ -763,77 +763,77 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       // 出演者情報を取得
       db
         .select({
-          id: performers.id,
-          name: performers.name,
-          nameKana: performers.nameKana,
+          id: performers['id'],
+          name: performers['name'],
+          nameKana: performers['nameKana'],
         })
         .from(productPerformers)
-        .innerJoin(performers, eq(productPerformers.performerId, performers.id))
-        .where(eq(productPerformers.productId, productId)),
+        .innerJoin(performers, eq(productPerformers['performerId'], performers['id']))
+        .where(eq(productPerformers['productId'], productId)),
 
       // タグ情報を取得
       db
         .select({
-          id: tags.id,
-          name: tags.name,
-          category: tags.category,
+          id: tags['id'],
+          name: tags['name'],
+          category: tags['category'],
         })
         .from(productTags)
-        .innerJoin(tags, eq(productTags.tagId, tags.id))
-        .where(eq(productTags.productId, productId)),
+        .innerJoin(tags, eq(productTags['tagId'], tags['id']))
+        .where(eq(productTags['productId'], productId)),
 
       // ASP情報を取得
       db
         .select({
-          aspName: productSources.aspName,
-          originalProductId: productSources.originalProductId,
-          affiliateUrl: productSources.affiliateUrl,
-          price: productSources.price,
-          currency: productSources.currency,
+          aspName: productSources['aspName'],
+          originalProductId: productSources['originalProductId'],
+          affiliateUrl: productSources['affiliateUrl'],
+          price: productSources['price'],
+          currency: productSources['currency'],
         })
         .from(productSources)
-        .where(eq(productSources.productId, productId))
+        .where(eq(productSources['productId'], productId))
         .limit(1),
 
       // サンプル画像を取得
       db
         .select({
-          productId: productImages.productId,
-          imageUrl: productImages.imageUrl,
-          imageType: productImages.imageType,
-          displayOrder: productImages.displayOrder,
+          productId: productImages['productId'],
+          imageUrl: productImages['imageUrl'],
+          imageType: productImages['imageType'],
+          displayOrder: productImages['displayOrder'],
         })
         .from(productImages)
-        .where(eq(productImages.productId, productId))
-        .orderBy(asc(productImages.displayOrder)),
+        .where(eq(productImages['productId'], productId))
+        .orderBy(asc(productImages['displayOrder'])),
 
       // サンプル動画を取得
       db
         .select({
-          productId: productVideos.productId,
-          videoUrl: productVideos.videoUrl,
-          videoType: productVideos.videoType,
-          quality: productVideos.quality,
-          duration: productVideos.duration,
+          productId: productVideos['productId'],
+          videoUrl: productVideos['videoUrl'],
+          videoType: productVideos['videoType'],
+          quality: productVideos['quality'],
+          duration: productVideos['duration'],
         })
         .from(productVideos)
-        .where(eq(productVideos.productId, productId)),
+        .where(eq(productVideos['productId'], productId)),
 
       // セール情報を取得（アクティブなもののみ）
       db
         .select({
-          regularPrice: productSales.regularPrice,
-          salePrice: productSales.salePrice,
-          discountPercent: productSales.discountPercent,
-          endAt: productSales.endAt,
+          regularPrice: productSales['regularPrice'],
+          salePrice: productSales['salePrice'],
+          discountPercent: productSales['discountPercent'],
+          endAt: productSales['endAt'],
         })
         .from(productSales)
-        .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
+        .innerJoin(productSources, eq(productSales['productSourceId'], productSources['id']))
         .where(
           and(
-            eq(productSources.productId, productId),
-            eq(productSales.isActive, true),
-            sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
+            eq(productSources['productId'], productId),
+            eq(productSales['isActive'], true),
+            sql`(${productSales['endAt']} IS NULL OR ${productSales['endAt']} > NOW())`
           )
         )
         .limit(1),
@@ -842,7 +842,17 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     // 型変換ヘルパーを使用してas anyを回避
     const performerData = toPerformerRows(rawPerformerData);
     const tagData = toTagRows(rawTagData);
-    const sourceData = toSourceRow(rawSourceData[0]);
+    const rawSource = toSourceRow(rawSourceData[0]);
+    // exactOptionalPropertyTypes対応: undefinedを直接代入せず条件付きスプレッドを使用
+    const sourceData: MapperSourceData | undefined = rawSource
+      ? {
+          ...(rawSource.aspName !== undefined && { aspName: rawSource.aspName }),
+          ...(rawSource.affiliateUrl !== undefined && { affiliateUrl: rawSource.affiliateUrl }),
+          ...(rawSource.price !== undefined && { price: rawSource.price }),
+          ...(rawSource.currency !== undefined && { currency: rawSource.currency }),
+          ...(rawSource.originalProductId !== undefined && { originalProductId: rawSource.originalProductId }),
+        }
+      : undefined;
     const imagesData = toImageRows(rawImagesData);
     const videosData = toVideoRows(rawVideosData);
 
@@ -859,10 +869,10 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     return {
       performerData: performerData.filter(isValidPerformer),
       tagData,
-      sourceData,
+      ...(sourceData !== undefined && { sourceData }),
       imagesData,
       videosData,
-      saleData,
+      ...(saleData !== undefined && { saleData }),
     };
   }
 
@@ -919,14 +929,14 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         `)
       : db
           .select({
-            productId: productImages.productId,
-            imageUrl: productImages.imageUrl,
-            imageType: productImages.imageType,
-            displayOrder: productImages.displayOrder,
+            productId: productImages['productId'],
+            imageUrl: productImages['imageUrl'],
+            imageType: productImages['imageType'],
+            displayOrder: productImages['displayOrder'],
           })
           .from(productImages)
-          .where(inArray(productImages.productId, productIds))
-          .orderBy(asc(productImages.displayOrder));
+          .where(inArray(productImages['productId'], productIds))
+          .orderBy(asc(productImages['displayOrder']));
 
     // 動画クエリ: LIMITが指定されている場合はROW_NUMBERで商品あたりの件数を制限
     const videosQuery = limitVideos
@@ -947,14 +957,14 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         `)
       : db
           .select({
-            productId: productVideos.productId,
-            videoUrl: productVideos.videoUrl,
-            videoType: productVideos.videoType,
-            quality: productVideos.quality,
-            duration: productVideos.duration,
+            productId: productVideos['productId'],
+            videoUrl: productVideos['videoUrl'],
+            videoType: productVideos['videoType'],
+            quality: productVideos['quality'],
+            duration: productVideos['duration'],
           })
           .from(productVideos)
-          .where(inArray(productVideos.productId, productIds));
+          .where(inArray(productVideos['productId'], productIds));
 
     const lightMode = options?.lightMode ?? false;
 
@@ -963,28 +973,28 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       // 演者
       db
         .select({
-          productId: productPerformers.productId,
-          id: performers.id,
-          name: performers.name,
-          nameKana: performers.nameKana,
+          productId: productPerformers['productId'],
+          id: performers['id'],
+          name: performers['name'],
+          nameKana: performers['nameKana'],
         })
         .from(productPerformers)
-        .innerJoin(performers, eq(productPerformers.performerId, performers.id))
-        .where(inArray(productPerformers.productId, productIds)),
+        .innerJoin(performers, eq(productPerformers['performerId'], performers['id']))
+        .where(inArray(productPerformers['productId'], productIds)),
       // ソース
       db
         .select({
-          id: productSources.id,
-          productId: productSources.productId,
-          aspName: productSources.aspName,
-          originalProductId: productSources.originalProductId,
-          affiliateUrl: productSources.affiliateUrl,
-          price: productSources.price,
-          currency: productSources.currency,
-          productType: productSources.productType,
+          id: productSources['id'],
+          productId: productSources['productId'],
+          aspName: productSources['aspName'],
+          originalProductId: productSources['originalProductId'],
+          affiliateUrl: productSources['affiliateUrl'],
+          price: productSources['price'],
+          currency: productSources['currency'],
+          productType: productSources['productType'],
         })
         .from(productSources)
-        .where(inArray(productSources.productId, productIds)),
+        .where(inArray(productSources['productId'], productIds)),
       // 画像
       imagesQuery,
       // 動画
@@ -996,30 +1006,30 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       // タグ
       db
         .select({
-          productId: productTags.productId,
-          id: tags.id,
-          name: tags.name,
-          category: tags.category,
+          productId: productTags['productId'],
+          id: tags['id'],
+          name: tags['name'],
+          category: tags['category'],
         })
         .from(productTags)
-        .innerJoin(tags, eq(productTags.tagId, tags.id))
-        .where(inArray(productTags.productId, productIds)),
+        .innerJoin(tags, eq(productTags['tagId'], tags['id']))
+        .where(inArray(productTags['productId'], productIds)),
       // アクティブなセール情報
       db
         .select({
-          productId: productSources.productId,
-          regularPrice: productSales.regularPrice,
-          salePrice: productSales.salePrice,
-          discountPercent: productSales.discountPercent,
-          endAt: productSales.endAt,
+          productId: productSources['productId'],
+          regularPrice: productSales['regularPrice'],
+          salePrice: productSales['salePrice'],
+          discountPercent: productSales['discountPercent'],
+          endAt: productSales['endAt'],
         })
         .from(productSales)
-        .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
+        .innerJoin(productSources, eq(productSales['productSourceId'], productSources['id']))
         .where(
           and(
-            inArray(productSources.productId, productIds),
-            eq(productSales.isActive, true),
-            sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
+            inArray(productSources['productId'], productIds),
+            eq(productSales['isActive'], true),
+            sql`(${productSales['endAt']} IS NULL OR ${productSales['endAt']} > NOW())`
           )
         ),
     ];
@@ -1073,7 +1083,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     const sourcesByProduct = groupSourcesByProduct(typedSources);
     const { sourcesMap } = selectProductSources(sourcesByProduct, {
       siteMode,
-      preferredProviders,
+      ...(preferredProviders !== undefined && { preferredProviders }),
       debug: true,
     });
 
@@ -1186,8 +1196,8 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       const rows = (result.rows || []) as CategoryRow[];
 
       return rows.map(row => ({
-        id: row.id,
-        name: row.name,
+        id: row['id'],
+        name: row['name'],
         nameEn: row.name_en,
         nameZh: row.name_zh,
         nameKo: row.name_ko,
@@ -1268,12 +1278,12 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       return {
         aspStats: aspRows.map(row => ({
           aspName: row.asp_name,
-          count: parseInt(row.count, 10),
+          count: parseInt(row['count'], 10),
         })),
         patternStats: patternRows.map(row => ({
           pattern: row.pattern,
           label: patternLabels[row.pattern] || row.pattern,
-          count: parseInt(row.count, 10),
+          count: parseInt(row['count'], 10),
         })),
         totalCount: parseInt(totalRows[0]?.count || '0', 10),
       };
@@ -1303,7 +1313,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       const rows = (result.rows || []) as PerformerRow[];
       return rows.map(row => ({
         name: row.performer_name,
-        source: row.source,
+        source: row['source'],
       }));
     } catch (error) {
       return logDbErrorAndReturn(error, [], 'getCandidatePerformers');
@@ -1418,7 +1428,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       const rows = result.rows as { asp_name: string; count: string }[];
       return rows.map((row) => ({
         aspName: row.asp_name,
-        count: parseInt(row.count, 10),
+        count: parseInt(row['count'], 10),
       }));
     } catch (error) {
       return logDbErrorAndReturn(error, [], 'getAspStatsByCategory');
@@ -1436,7 +1446,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       const tagResult = await db
         .select()
         .from(tags)
-        .where(and(eq(tags.id, seriesTagId), eq(tags.category, 'series')))
+        .where(and(eq(tags['id'], seriesTagId), eq(tags['category'], 'series')))
         .limit(1);
 
       if (tagResult.length === 0) return null;
@@ -1477,21 +1487,21 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       return {
-        id: tag.id,
-        name: tag.name,
-        nameEn: tag.nameEn,
-        nameZh: tag.nameZh,
-        nameKo: tag.nameKo,
-        totalProducts: Number(stats.total_products) || 0,
-        totalDuration: Number(stats.total_duration) || 0,
-        firstReleaseDate: stats.first_release ? String(stats.first_release) : null,
-        lastReleaseDate: stats.last_release ? String(stats.last_release) : null,
+        id: tag['id'],
+        name: tag['name'],
+        nameEn: tag['nameEn'],
+        nameZh: tag['nameZh'],
+        nameKo: tag['nameKo'],
+        totalProducts: Number(stats['total_products']) || 0,
+        totalDuration: Number(stats['total_duration']) || 0,
+        firstReleaseDate: stats['first_release'] ? String(stats['first_release']) : null,
+        lastReleaseDate: stats['last_release'] ? String(stats['last_release']) : null,
         topPerformers: (performersResult.rows || []).map((row: Record<string, unknown>) => ({
-          id: Number(row.id),
-          name: String(row.name),
-          count: Number(row.count),
+          id: Number(row['id']),
+          name: String(row['name']),
+          count: Number(row['count']),
         })),
-        averageRating: stats.avg_rating ? Number(stats.avg_rating) : null,
+        averageRating: stats['avg_rating'] ? Number(stats['avg_rating']) : null,
       };
     } catch (error) {
       return logDbErrorAndReturn(error, null, 'getSeriesInfo');
@@ -1525,13 +1535,13 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       return (result.rows || []).map((row: Record<string, unknown>) => ({
-        id: Number(row.id),
-        name: String(row.name),
-        nameEn: row.name_en ? String(row.name_en) : null,
-        nameZh: row.name_zh ? String(row.name_zh) : null,
-        nameKo: row.name_ko ? String(row.name_ko) : null,
-        productCount: Number(row.product_count),
-        latestReleaseDate: row.latest_release ? String(row.latest_release) : null,
+        id: Number(row['id']),
+        name: String(row['name']),
+        nameEn: row['name_en'] ? String(row['name_en']) : null,
+        nameZh: row['name_zh'] ? String(row['name_zh']) : null,
+        nameKo: row['name_ko'] ? String(row['name_ko']) : null,
+        productCount: Number(row['product_count']),
+        latestReleaseDate: row['latest_release'] ? String(row['latest_release']) : null,
       }));
     } catch (error) {
       return logDbErrorAndReturn(error, [], 'getPopularSeries');
@@ -1577,10 +1587,10 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       return (result.rows || []).map((row: Record<string, unknown>) => ({
-        id: Number(row.id),
-        name: String(row.name),
-        category: String(row.category),
-        productCount: Number(row.product_count),
+        id: Number(row['id']),
+        name: String(row['name']),
+        category: String(row['category']),
+        productCount: Number(row['product_count']),
       }));
     } catch (error) {
       return logDbErrorAndReturn(error, [], 'getPopularMakers');
@@ -1621,11 +1631,11 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       return (result.rows || []).map((row: Record<string, unknown>) => ({
-        makerId: Number(row.maker_id),
-        makerName: String(row.maker_name),
-        category: String(row.category),
-        count: parseInt(String(row.count), 10),
-        averageRating: row.avg_rating ? parseFloat(String(row.avg_rating)) : null,
+        makerId: Number(row['maker_id']),
+        makerName: String(row['maker_name']),
+        category: String(row['category']),
+        count: parseInt(String(row['count']), 10),
+        averageRating: row['avg_rating'] ? parseFloat(String(row['avg_rating'])) : null,
       }));
     } catch (error) {
       return logDbErrorAndReturn(error, [], 'analyzeMakerPreference');
@@ -1651,10 +1661,10 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       }
 
       const tag = tagResult.rows[0] as Record<string, unknown>;
-      const makerName = locale === 'en' ? (tag.name_en || tag.name)
-        : locale === 'zh' ? (tag.name_zh || tag.name)
-        : locale === 'ko' ? (tag.name_ko || tag.name)
-        : tag.name;
+      const makerName = locale === 'en' ? (tag['name_en'] || tag['name'])
+        : locale === 'zh' ? (tag['name_zh'] || tag['name'])
+        : locale === 'ko' ? (tag['name_ko'] || tag['name'])
+        : tag['name'];
 
       // 作品数と平均評価を取得
       const statsResult = await db.execute(sql`
@@ -1667,9 +1677,9 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       const statsRow = statsResult.rows?.[0] as Record<string, unknown> | undefined;
-      const productCount = parseInt(String(statsRow?.count || '0'), 10);
-      const averageRating = statsRow?.avg_rating
-        ? parseFloat(String(statsRow.avg_rating))
+      const productCount = parseInt(String(statsRow?.['count'] || '0'), 10);
+      const averageRating = statsRow?.['avg_rating']
+        ? parseFloat(String(statsRow['avg_rating']))
         : null;
 
       // 人気女優トップ5
@@ -1688,9 +1698,9 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       const topPerformers = (performersResult.rows || []).map((row: Record<string, unknown>) => ({
-        id: Number(row.performer_id),
-        name: String(row.performer_name),
-        productCount: parseInt(String(row.product_count), 10),
+        id: Number(row['performer_id']),
+        name: String(row['performer_name']),
+        productCount: parseInt(String(row['product_count']), 10),
       }));
 
       // 人気ジャンルトップ5
@@ -1714,9 +1724,9 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       const topGenres = (genresResult.rows || []).map((row: Record<string, unknown>) => ({
-        id: Number(row.genre_id),
-        name: String(row.genre_name),
-        productCount: parseInt(String(row.product_count), 10),
+        id: Number(row['genre_id']),
+        name: String(row['genre_name']),
+        productCount: parseInt(String(row['product_count']), 10),
       }));
 
       // 年別統計
@@ -1733,8 +1743,8 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       const yearlyStats = (yearlyResult.rows || []).map((row: Record<string, unknown>) => ({
-        year: parseInt(String(row.year), 10),
-        count: parseInt(String(row.count), 10),
+        year: parseInt(String(row['year']), 10),
+        count: parseInt(String(row['count']), 10),
       }));
 
       // 最新作品5件
@@ -1757,16 +1767,16 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       const recentProducts = (recentResult.rows || []).map((row: Record<string, unknown>) => ({
-        id: Number(row.id),
-        title: String(row.title),
-        imageUrl: String(row.image_url || ''),
-        releaseDate: row.release_date ? String(row.release_date) : null,
+        id: Number(row['id']),
+        title: String(row['title']),
+        imageUrl: String(row['image_url'] || ''),
+        releaseDate: row['release_date'] ? String(row['release_date']) : null,
       }));
 
       return {
         id: makerId,
         name: String(makerName),
-        category: String(tag.category) as 'maker' | 'label',
+        category: String(tag['category']) as 'maker' | 'label',
         productCount,
         averageRating,
         topPerformers,
@@ -1798,10 +1808,10 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       }
 
       const tag = tagResult.rows[0] as Record<string, unknown>;
-      const tagName = locale === 'en' ? (tag.name_en || tag.name)
-        : locale === 'zh' ? (tag.name_zh || tag.name)
-        : locale === 'ko' ? (tag.name_ko || tag.name)
-        : tag.name;
+      const tagName = locale === 'en' ? (tag['name_en'] || tag['name'])
+        : locale === 'zh' ? (tag['name_zh'] || tag['name'])
+        : locale === 'ko' ? (tag['name_ko'] || tag['name'])
+        : tag['name'];
 
       // タイトルのローカライズ
       const titleColumn = locale === 'en' ? sql`COALESCE(p.title_en, p.title)`
@@ -1831,12 +1841,12 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       const seriesProducts = (productsResult.rows || []).map((row: Record<string, unknown>) => ({
-        id: row.id as number,
-        title: row.title as string,
-        imageUrl: row.image_url as string,
-        releaseDate: row.release_date as string | null,
-        duration: row.duration as number | null,
-        price: row.price as number | null,
+        id: row['id'] as number,
+        title: row['title'] as string,
+        imageUrl: row['image_url'] as string,
+        releaseDate: row['release_date'] as string | null,
+        duration: row['duration'] as number | null,
+        price: row['price'] as number | null,
       }));
 
       const totalDuration = seriesProducts.reduce((sum: number, p: { duration: number | null }) => sum + (p.duration || 0), 0);
@@ -1925,20 +1935,24 @@ export function createCoreQueries(deps: CoreQueryDeps) {
           : sql`p.release_date ASC NULLS LAST`}
       `);
 
-      return (result.rows || []).map((row: Record<string, unknown>) => ({
-        id: String(row.id),
-        normalizedProductId: String(row.normalized_product_id || ''),
-        title: String(row.localized_title || row.title),
-        releaseDate: row.release_date ? String(row.release_date) : undefined,
-        duration: row.duration ? Number(row.duration) : undefined,
-        thumbnail: String(row.thumbnail_url || row.default_thumbnail_url || ''),
-        performers: (row.performers as Array<{ id: number; name: string }>) || [],
-        price: row.min_price ? Number(row.min_price) : undefined,
-        rating: row.avg_rating ? Number(row.avg_rating) : undefined,
-        reviewCount: row.total_reviews ? Number(row.total_reviews) : undefined,
-        hasVideo: Boolean(row.has_video),
-        aiCatchphrase: row.ai_catchphrase ? String(row.ai_catchphrase) : undefined,
-      }));
+      return (result.rows || []).map((row: Record<string, unknown>): SeriesProduct => {
+        const base: SeriesProduct = {
+          id: String(row['id']),
+          normalizedProductId: String(row['normalized_product_id'] || ''),
+          title: String(row['localized_title'] || row['title']),
+          thumbnail: String(row['thumbnail_url'] || row['default_thumbnail_url'] || ''),
+          performers: (row['performers'] as Array<{ id: number; name: string }>) || [],
+          hasVideo: Boolean(row['has_video']),
+        };
+        // exactOptionalPropertyTypes対応: 条件付きで追加
+        if (row['release_date']) base.releaseDate = String(row['release_date']);
+        if (row['duration']) base.duration = Number(row['duration']);
+        if (row['min_price']) base.price = Number(row['min_price']);
+        if (row['avg_rating']) base.rating = Number(row['avg_rating']);
+        if (row['total_reviews']) base.reviewCount = Number(row['total_reviews']);
+        if (row['ai_catchphrase']) base.aiCatchphrase = String(row['ai_catchphrase']);
+        return base;
+      });
     } catch (error) {
       return logDbErrorAndReturn(error, [], 'getSeriesProducts');
     }

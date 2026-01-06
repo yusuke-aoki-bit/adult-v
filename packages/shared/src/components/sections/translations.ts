@@ -223,5 +223,5 @@ export function getTranslation<T extends Record<string, unknown>>(
   translations: Record<Locale | string, T>,
   locale: string
 ): T {
-  return (translations[locale as Locale] || translations.ja) as T;
+  return (translations[locale as Locale] || translations['ja']) as T;
 }

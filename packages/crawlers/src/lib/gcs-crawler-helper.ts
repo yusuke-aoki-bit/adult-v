@@ -129,7 +129,7 @@ export function logGcsStats(stats: {
  * 使用例:
  * ```
  * const { gcsUrl, htmlContent } = await saveRawHtml('mgs', productId, html);
- * await db.insert(rawHtmlData).values({
+ * await db['insert'](rawHtmlData).values({
  *   source: 'MGS',
  *   productId,
  *   url,

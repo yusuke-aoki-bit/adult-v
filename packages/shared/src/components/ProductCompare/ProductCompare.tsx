@@ -18,7 +18,7 @@ function getRadarDataPoints(cx: number, cy: number, values: number[]): string {
   const points: string[] = [];
   for (let i = 0; i < values.length; i++) {
     const angle = (Math.PI * 2 * i) / values.length - Math.PI / 2;
-    const r = values[i];
+    const r = values[i] ?? 0;
     const x = cx + Math.cos(angle) * r;
     const y = cy + Math.sin(angle) * r;
     points.push(`${x},${y}`);
@@ -258,12 +258,12 @@ export function ProductCompare({
           const bestPrice = getBestPrice(product);
           const isLowestPrice = bestPrice !== null && bestPrice === lowestPrice;
           const hasSale = product.sources.some(s => s.salePrice !== null);
-          const isLongest = product.duration === maxDuration && maxDuration > 0;
-          const isHighestRated = product.rating.average === maxRating && maxRating > 0;
+          const isLongest = product['duration'] === maxDuration && maxDuration > 0;
+          const isHighestRated = product['rating'].average === maxRating && maxRating > 0;
 
           return (
             <div
-              key={product.id}
+              key={product['id']}
               className={`relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] ${
                 isDark
                   ? 'bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-700 hover:border-gray-600'
@@ -323,7 +323,7 @@ export function ProductCompare({
                 {product.imageUrl ? (
                   <img
                     src={product.imageUrl}
-                    alt={product.title}
+                    alt={product['title']}
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                   />
                 ) : (
@@ -373,7 +373,7 @@ export function ProductCompare({
                   }`}
                   onClick={() => onProductClick?.(product.normalizedProductId)}
                 >
-                  {product.title}
+                  {product['title']}
                 </h3>
 
                 {/* 価格 */}
@@ -401,7 +401,7 @@ export function ProductCompare({
                     <div className={`text-sm font-semibold ${
                       isLongest ? 'text-purple-500' : isDark ? 'text-white' : 'text-gray-900'
                     }`}>
-                      {formatDuration(product.duration)}
+                      {formatDuration(product['duration'])}
                     </div>
                   </div>
                   <div className={`p-2.5 rounded-lg text-center ${
@@ -413,10 +413,10 @@ export function ProductCompare({
                     <div className={`text-sm font-semibold flex items-center justify-center gap-1 ${
                       isHighestRated ? 'text-yellow-500' : isDark ? 'text-white' : 'text-gray-900'
                     }`}>
-                      {product.rating.average !== null ? (
+                      {product['rating'].average !== null ? (
                         <>
                           <span className="text-yellow-500">★</span>
-                          {product.rating.average.toFixed(1)}
+                          {product['rating'].average.toFixed(1)}
                         </>
                       ) : '-'}
                     </div>
@@ -431,7 +431,7 @@ export function ProductCompare({
                       {locale === 'ja' ? '発売日' : 'Release'}
                     </div>
                     <div className={`text-xs font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {formatDate(product.releaseDate)}
+                      {formatDate(product['releaseDate'])}
                     </div>
                   </div>
                   {/* レビュー件数 */}
@@ -440,7 +440,7 @@ export function ProductCompare({
                       {locale === 'ja' ? 'レビュー' : 'Reviews'}
                     </div>
                     <div className={`text-xs font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {product.rating.count > 0 ? `${product.rating.count}件` : '-'}
+                      {product['rating'].count > 0 ? `${product['rating'].count}件` : '-'}
                     </div>
                   </div>
                 </div>
@@ -639,13 +639,13 @@ export function ProductCompare({
 
                     // 価格は逆転（安いほど高スコア）
                     const priceScore = maxPrice > 0 ? (1 - (getBestPrice(product) || maxPrice) / maxPrice) * 80 : 40;
-                    const durationScore = maxDuration > 0 ? ((product.duration || 0) / maxDuration) * 80 : 0;
-                    const ratingScore = ((product.rating.average || 0) / 5) * 80;
-                    const reviewScore = maxReviewCount > 0 ? (product.rating.count / maxReviewCount) * 80 : 0;
+                    const durationScore = maxDuration > 0 ? ((product['duration'] || 0) / maxDuration) * 80 : 0;
+                    const ratingScore = ((product['rating'].average || 0) / 5) * 80;
+                    const reviewScore = maxReviewCount > 0 ? (product['rating'].count / maxReviewCount) * 80 : 0;
 
                     const points = getRadarDataPoints(100, 100, [priceScore, durationScore, ratingScore, reviewScore]);
                     return (
-                      <g key={product.id}>
+                      <g key={product['id']}>
                         <polygon
                           points={points}
                           fill={colors[idx % colors.length]}
@@ -675,13 +675,13 @@ export function ProductCompare({
                 {products.map((product, idx) => {
                   const colors = ['#3b82f6', '#ec4899', '#8b5cf6', '#10b981'];
                   return (
-                    <div key={product.id} className="flex items-center gap-1.5">
+                    <div key={product['id']} className="flex items-center gap-1.5">
                       <div
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: colors[idx % colors.length] }}
                       />
                       <span className={`text-[10px] ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {product.title.slice(0, 12)}{product.title.length > 12 ? '…' : ''}
+                        {product['title'].slice(0, 12)}{product['title'].length > 12 ? '…' : ''}
                       </span>
                     </div>
                   );
@@ -708,9 +708,9 @@ export function ProductCompare({
                         const price = getBestPrice(product) || maxPrice;
                         const percent = maxPrice > 0 ? ((maxPrice - price) / maxPrice) * 100 : 0;
                         return (
-                          <div key={product.id} className="flex items-center gap-2">
+                          <div key={product['id']} className="flex items-center gap-2">
                             <span className={`text-[10px] w-20 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {product.title.slice(0, 8)}
+                              {product['title'].slice(0, 8)}
                             </span>
                             <div className={`flex-1 h-5 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                               <div
@@ -736,11 +736,11 @@ export function ProductCompare({
                   <div className="space-y-1.5">
                     {products.map((product, idx) => {
                       const colors = ['bg-blue-500', 'bg-pink-500', 'bg-purple-500', 'bg-emerald-500'];
-                      const percent = maxDuration > 0 ? ((product.duration || 0) / maxDuration) * 100 : 0;
+                      const percent = maxDuration > 0 ? ((product['duration'] || 0) / maxDuration) * 100 : 0;
                       return (
-                        <div key={product.id} className="flex items-center gap-2">
+                        <div key={product['id']} className="flex items-center gap-2">
                           <span className={`text-[10px] w-20 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {product.title.slice(0, 8)}
+                            {product['title'].slice(0, 8)}
                           </span>
                           <div className={`flex-1 h-5 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                             <div
@@ -748,7 +748,7 @@ export function ProductCompare({
                               style={{ width: `${Math.max(percent, 5)}%` }}
                             >
                               <span className="text-[10px] text-white font-semibold">
-                                {formatDuration(product.duration)}
+                                {formatDuration(product['duration'])}
                               </span>
                             </div>
                           </div>
@@ -765,11 +765,11 @@ export function ProductCompare({
                   <div className="space-y-1.5">
                     {products.map((product, idx) => {
                       const colors = ['bg-blue-500', 'bg-pink-500', 'bg-purple-500', 'bg-emerald-500'];
-                      const percent = ((product.rating.average || 0) / 5) * 100;
+                      const percent = ((product['rating'].average || 0) / 5) * 100;
                       return (
-                        <div key={product.id} className="flex items-center gap-2">
+                        <div key={product['id']} className="flex items-center gap-2">
                           <span className={`text-[10px] w-20 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {product.title.slice(0, 8)}
+                            {product['title'].slice(0, 8)}
                           </span>
                           <div className={`flex-1 h-5 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                             <div
@@ -777,7 +777,7 @@ export function ProductCompare({
                               style={{ width: `${Math.max(percent, 5)}%` }}
                             >
                               <span className="text-[10px] text-white font-semibold">
-                                ★{(product.rating.average || 0).toFixed(1)}
+                                ★{(product['rating'].average || 0).toFixed(1)}
                               </span>
                             </div>
                           </div>

@@ -103,7 +103,7 @@ export function createWikiPerformerSearchQueries(
     const nameMatch = title.match(
       /(?:G[-]?AREA|Tokyo247|S-Cute)\s+([^\s【】（）\(\)]+)/i
     );
-    const extractedName = nameMatch ? nameMatch[1] : title;
+    const extractedName = nameMatch?.[1] ?? title;
 
     const results = await db
       .select()
@@ -186,11 +186,11 @@ export function createWikiPerformerSearchQueries(
         const afterMaker = productTitle.replace(pattern, '').trim();
         // 最初の単語（スペース、カッコの前まで）を名前として取得
         const nameMatch = afterMaker.match(/^([^\s【】（）\(\)]+)/);
-        if (nameMatch) {
+        if (nameMatch?.[1]) {
           const name = nameMatch[1];
           const results = await searchPerformerByMakerAndTitle(maker, name);
           if (results.length > 0) {
-            return results[0];
+            return results[0] ?? null;
           }
         }
       }

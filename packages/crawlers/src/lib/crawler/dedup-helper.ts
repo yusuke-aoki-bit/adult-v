@@ -123,7 +123,7 @@ export async function checkDugaRawData(
     exists: true,
     existingId: existing.id,
     hasChanged: existing.hash !== newHash,
-    existingHash: existing.hash ?? undefined,
+    ...(existing.hash !== undefined && existing.hash !== null && { existingHash: existing.hash }),
     newHash,
     isProcessed: existing.processedAt !== null,
   };
@@ -163,7 +163,7 @@ export async function checkSokmilRawData(
     exists: true,
     existingId: existing.id,
     hasChanged: existing.hash !== newHash,
-    existingHash: existing.hash ?? undefined,
+    ...(existing.hash !== undefined && existing.hash !== null && { existingHash: existing.hash }),
     newHash,
     isProcessed: existing.processedAt !== null,
   };
@@ -197,7 +197,7 @@ export async function checkMgsRawData(
     exists: true,
     existingId: existing.id,
     hasChanged: existing.hash !== newHash,
-    existingHash: existing.hash ?? undefined,
+    ...(existing.hash !== undefined && existing.hash !== null && { existingHash: existing.hash }),
     newHash,
     isProcessed: existing.processedAt !== null,
   };
@@ -231,7 +231,7 @@ export async function checkRawHtmlData(
     exists: true,
     existingId: existing.id,
     hasChanged: existing.hash !== newHash,
-    existingHash: existing.hash ?? undefined,
+    ...(existing.hash !== undefined && existing.hash !== null && { existingHash: existing.hash }),
     newHash,
     isProcessed: existing.processedAt !== null,
   };
@@ -278,7 +278,7 @@ export async function upsertDugaRawData(
     })
     .returning({ id: dugaRawResponses.id });
 
-  return { id: inserted.id, isNew: true };
+  return { id: inserted!.id, isNew: true };
 }
 
 /**
@@ -325,7 +325,7 @@ export async function upsertSokmilRawData(
     })
     .returning({ id: sokmilRawResponses.id });
 
-  return { id: inserted.id, isNew: true };
+  return { id: inserted!.id, isNew: true };
 }
 
 /**
@@ -374,7 +374,7 @@ export async function upsertMgsRawData(
     })
     .returning({ id: mgsRawPages.id });
 
-  return { id: inserted.id, isNew: true };
+  return { id: inserted!.id, isNew: true };
 }
 
 // ============================================================
@@ -440,7 +440,7 @@ export async function upsertDugaRawDataWithGcs(
     })
     .returning({ id: dugaRawResponses.id });
 
-  return { id: inserted.id, isNew: true, gcsUrl, shouldSkip: false };
+  return { id: inserted!.id, isNew: true, gcsUrl, shouldSkip: false };
 }
 
 /**
@@ -504,7 +504,7 @@ export async function upsertSokmilRawDataWithGcs(
     })
     .returning({ id: sokmilRawResponses.id });
 
-  return { id: inserted.id, isNew: true, gcsUrl, shouldSkip: false };
+  return { id: inserted!.id, isNew: true, gcsUrl, shouldSkip: false };
 }
 
 /**
@@ -570,7 +570,7 @@ export async function upsertMgsRawDataWithGcs(
     })
     .returning({ id: mgsRawPages.id });
 
-  return { id: inserted.id, isNew: true, gcsUrl, shouldSkip: false };
+  return { id: inserted!.id, isNew: true, gcsUrl, shouldSkip: false };
 }
 
 /**
@@ -633,7 +633,7 @@ export async function upsertRawHtmlDataWithGcs(
     })
     .returning({ id: rawHtmlData.id });
 
-  return { id: inserted.id, isNew: true, gcsUrl, shouldSkip: false };
+  return { id: inserted!.id, isNew: true, gcsUrl, shouldSkip: false };
 }
 
 // ============================================================
@@ -696,7 +696,7 @@ export async function linkProductToRawData(
 
   return {
     created: true,
-    linkId: inserted.id,
+    linkId: inserted!.id,
     needsReprocessing: false,
   };
 }

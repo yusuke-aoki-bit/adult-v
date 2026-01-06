@@ -49,7 +49,7 @@ class MemoryCache {
 
     const now = Date.now();
     if (now - entry.timestamp >= entry.ttl) {
-      this.cache.delete(key);
+      this.cache['delete'](key);
       return null;
     }
 
@@ -64,7 +64,7 @@ class MemoryCache {
     if (this.cache.size >= this.maxEntries) {
       // 最も古いエントリを削除
       const oldestKey = this.cache.keys().next().value;
-      if (oldestKey) this.cache.delete(oldestKey);
+      if (oldestKey) this.cache['delete'](oldestKey);
     }
 
     this.cache.set(key, {
@@ -88,7 +88,7 @@ class MemoryCache {
     const now = Date.now();
     for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp >= entry.ttl) {
-        this.cache.delete(key);
+        this.cache['delete'](key);
       }
     }
   }

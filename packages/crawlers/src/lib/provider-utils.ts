@@ -1,4 +1,4 @@
-import type { ProviderId } from '@/types/product';
+import type { ProviderId } from './providers';
 
 /**
  * Valid provider IDs

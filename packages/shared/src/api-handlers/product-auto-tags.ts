@@ -29,8 +29,8 @@ export function createAutoTagsHandler(deps: AutoTagsHandlerDeps) {
       const availableTags = await deps.getAvailableTags();
 
       const result = await generateAutoTags({
-        title: product.title,
-        description: product.description || undefined,
+        title: product['title'],
+        ...(product['description'] && { description: product['description'] }),
         existingTags: product.existingTags,
         availableTags,
       });

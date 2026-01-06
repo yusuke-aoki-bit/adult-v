@@ -53,7 +53,7 @@ async function OverviewWidget({ theme }: { theme: string }) {
         </div>
       </div>
       <p className="text-xs text-gray-400 mt-3 text-center">
-        Powered by <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">Adult Viewer Lab</a>
+        Powered by <a href={process.env['NEXT_PUBLIC_SITE_URL'] || '/'} target="_blank" rel="noopener" className="underline">Adult Viewer Lab</a>
       </p>
     </div>
   );
@@ -82,7 +82,7 @@ async function TopPerformersWidget({ theme, limit }: { theme: string; limit: num
         ))}
       </ol>
       <p className="text-xs text-gray-400 mt-3 text-center">
-        Powered by <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">Adult Viewer Lab</a>
+        Powered by <a href={process.env['NEXT_PUBLIC_SITE_URL'] || '/'} target="_blank" rel="noopener" className="underline">Adult Viewer Lab</a>
       </p>
     </div>
   );
@@ -113,7 +113,7 @@ async function TopGenresWidget({ theme, limit }: { theme: string; limit: number 
         ))}
       </div>
       <p className="text-xs text-gray-400 mt-3 text-center">
-        Powered by <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">Adult Viewer Lab</a>
+        Powered by <a href={process.env['NEXT_PUBLIC_SITE_URL'] || '/'} target="_blank" rel="noopener" className="underline">Adult Viewer Lab</a>
       </p>
     </div>
   );
@@ -139,7 +139,7 @@ async function MonthlyReleasesWidget({ theme }: { theme: string }) {
         ))}
       </div>
       <p className="text-xs text-gray-400 mt-3 text-center">
-        Powered by <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">Adult Viewer Lab</a>
+        Powered by <a href={process.env['NEXT_PUBLIC_SITE_URL'] || '/'} target="_blank" rel="noopener" className="underline">Adult Viewer Lab</a>
       </p>
     </div>
   );

@@ -118,9 +118,9 @@ export function PerformerSuggestionList({
       <div className="space-y-2">
         {suggestions.map((suggestion) => (
           <div
-            key={suggestion.id}
+            key={suggestion['id']}
             className={`flex items-center justify-between p-3 rounded-lg ${
-              suggestion.status === 'approved'
+              suggestion['status'] === 'approved'
                 ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
                 : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
             }`}
@@ -128,12 +128,12 @@ export function PerformerSuggestionList({
             <div className="flex items-center gap-3">
               <div
                 className={`p-1.5 rounded-full ${
-                  suggestion.status === 'approved'
+                  suggestion['status'] === 'approved'
                     ? 'bg-green-100 dark:bg-green-900'
                     : 'bg-gray-200 dark:bg-gray-700'
                 }`}
               >
-                {suggestion.status === 'approved' ? (
+                {suggestion['status'] === 'approved' ? (
                   <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                 ) : (
                   <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -143,7 +143,7 @@ export function PerformerSuggestionList({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-gray-900 dark:text-white">
-                    {suggestion.performerName}
+                    {suggestion['performerName']}
                   </span>
                   {suggestion.existingPerformerId && (
                     <span className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
@@ -154,20 +154,20 @@ export function PerformerSuggestionList({
                 </div>
                 <span
                   className={`text-xs ${
-                    suggestion.status === 'approved'
+                    suggestion['status'] === 'approved'
                       ? 'text-green-600 dark:text-green-400'
                       : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
-                  {suggestion.status === 'approved' ? t.approved : t.pending}
+                  {suggestion['status'] === 'approved' ? t.approved : t.pending}
                 </span>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <button
-                onClick={() => handleVote(suggestion.id, 'up')}
-                disabled={votingId === suggestion.id}
+                onClick={() => handleVote(suggestion['id'], 'up')}
+                disabled={votingId === suggestion['id']}
                 className={`p-1.5 rounded transition-colors ${
                   suggestion.userVote === 'up'
                     ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400'
@@ -182,8 +182,8 @@ export function PerformerSuggestionList({
               </span>
 
               <button
-                onClick={() => handleVote(suggestion.id, 'down')}
-                disabled={votingId === suggestion.id}
+                onClick={() => handleVote(suggestion['id'], 'down')}
+                disabled={votingId === suggestion['id']}
                 className={`p-1.5 rounded transition-colors ${
                   suggestion.userVote === 'down'
                     ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400'

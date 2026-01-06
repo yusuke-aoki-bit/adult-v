@@ -14,7 +14,7 @@ const providerMetaForChips: Record<string, { label: string; [key: string]: unkno
 // Convert ASP_TO_PROVIDER_ID to compatible type (filter out undefined values)
 const aspToProviderIdForChips: Record<string, string> = {};
 Object.entries(ASP_TO_PROVIDER_ID).forEach(([key, value]) => {
-  if (value) {
+  if (value !== undefined && typeof value === 'string') {
     aspToProviderIdForChips[key] = value;
   }
 });

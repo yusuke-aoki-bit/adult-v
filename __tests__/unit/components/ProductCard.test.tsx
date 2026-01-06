@@ -31,7 +31,7 @@ vi.mock('@adult-v/shared/lib/theme', () => ({
 
 // Sample product data
 const mockProduct = {
-  id: 12345,
+  id: '12345',
   title: 'テスト商品タイトル',
   description: 'テスト商品の説明文です',
   thumbnailUrl: 'https://example.com/thumbnail.jpg',
@@ -39,11 +39,11 @@ const mockProduct = {
   price: 1980,
   salePrice: 1480,
   discount: 25,
-  provider: 'FANZA',
+  provider: 'fanza' as const,
   providerLabel: 'FANZA',
   affiliateUrl: 'https://example.com/affiliate',
   releaseDate: '2024-01-15',
-  actresses: [{ id: 1, name: '女優名' }],
+  actresses: [{ id: '1', name: '女優名' }],
   genres: [{ id: 1, name: 'ジャンル1' }],
   rating: 4.5,
   reviewCount: 100,
@@ -66,7 +66,7 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
+          ImageLightbox={() => <div />}
           StarRating={() => <div>★★★★☆</div>}
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
@@ -87,7 +87,7 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
+          ImageLightbox={() => <div />}
           StarRating={() => <div>★★★★☆</div>}
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
@@ -110,7 +110,7 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
+          ImageLightbox={() => <div />}
           StarRating={() => <div>★★★★☆</div>}
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
@@ -132,7 +132,7 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button data-testid="favorite-btn">Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
+          ImageLightbox={() => <div />}
           StarRating={() => <div>★★★★☆</div>}
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
@@ -154,7 +154,7 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
+          ImageLightbox={() => <div />}
           StarRating={() => <div>★★★★☆</div>}
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
@@ -178,7 +178,7 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
+          ImageLightbox={() => <div />}
           StarRating={() => <div>★★★★☆</div>}
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
@@ -203,7 +203,7 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
+          ImageLightbox={() => <div />}
           StarRating={() => <div>★★★★☆</div>}
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
@@ -227,7 +227,7 @@ describe('ProductCard Component', () => {
           placeholderImage="https://example.com/placeholder.jpg"
           FavoriteButton={() => <button>Favorite</button>}
           ViewedButton={() => <button>Viewed</button>}
-          ImageLightbox={({ children }: { children: React.ReactNode }) => <div>{children}</div>}
+          ImageLightbox={() => <div />}
           StarRating={() => <div>★★★★☆</div>}
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}

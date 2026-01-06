@@ -321,8 +321,8 @@ function DiaryEntryCard({
 
 export default function DiaryPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const {
     entries,

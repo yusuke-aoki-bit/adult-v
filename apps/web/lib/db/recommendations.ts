@@ -202,7 +202,7 @@ export async function getRecommendationsFromFavorites(
 
   // Strategy 2: Products with favorite tags (if need more)
   if (recommendations.length < limit && tagIds.length > 0) {
-    const existingIds = recommendations.map((r) => r.id);
+    const existingIds = recommendations.map((r) => r['id']);
     const allExcludedIds = [...favoriteProductIds, ...existingIds];
 
     const tagMatches = await db

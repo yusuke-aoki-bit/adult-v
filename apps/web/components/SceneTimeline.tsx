@@ -126,7 +126,7 @@ export default function SceneTimeline({
   totalDuration,
   locale = 'ja',
 }: SceneTimelineProps) {
-  const t = translations[locale as TranslationKey] || translations.ja;
+  const t = translations[locale as TranslationKey] || translations['ja'];
   const { sceneInfo, isLoaded, addScene, voteScene, removeScene, getVoteStatus } = useSceneInfo(productId);
 
   const handleRemove = (sceneId: string) => {

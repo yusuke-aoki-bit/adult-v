@@ -48,7 +48,7 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
       const sokmilClient = deps.getSokmilClient();
 
       // クエリパラメータ
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const perPage = parseInt(url.searchParams.get('limit') || '100');
       const page = parseInt(url.searchParams.get('page') || '1');
 
@@ -89,10 +89,10 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
             VALUES (
               ${normalizedProductId},
               ${item.itemName || ''},
-              ${item.description || null},
-              ${item.releaseDate || null},
-              ${item.duration || null},
-              ${item.thumbnailUrl || null},
+              ${item['description'] || null},
+              ${item['releaseDate'] || null},
+              ${item['duration'] || null},
+              ${item['thumbnailUrl'] || null},
               NOW()
             )
             ON CONFLICT (normalized_product_id)
@@ -130,8 +130,8 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
               ${productId},
               'Sokmil',
               ${item.itemId},
-              ${item.affiliateUrl || ''},
-              ${item.price || null},
+              ${item['affiliateUrl'] || ''},
+              ${item['price'] || null},
               'API',
               NOW()
             )
@@ -159,7 +159,7 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
           `);
 
           // サンプル動画URL
-          if (item.sampleVideoUrl) {
+          if (item['sampleVideoUrl']) {
             const videoResult = await db.execute(sql`
               INSERT INTO product_videos (
                 product_id,
@@ -171,7 +171,7 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
               VALUES (
                 ${productId},
                 'Sokmil',
-                ${item.sampleVideoUrl},
+                ${item['sampleVideoUrl']},
                 'sample',
                 0
               )

@@ -135,8 +135,8 @@ function FavoritesSkeleton() {
 
 export default function FavoritesPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const { favorites, isLoaded, clearFavorites, getFavoritesByType, removeFavorite } = useFavorites();
   const { products: enrichedProducts, isLoading: isLoadingAnalysis } = useWatchlistAnalysis();

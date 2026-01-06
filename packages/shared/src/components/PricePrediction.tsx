@@ -70,7 +70,7 @@ export function PricePrediction({
           historicalLow: currentPrice * 0.5,
           historicalHigh: currentPrice * 1.2,
           priceHistory: Array.from({ length: 30 }, (_, i) => ({
-            date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? '',
             price: currentPrice * (0.8 + Math.random() * 0.4),
           })),
           salePattern: 'regular',

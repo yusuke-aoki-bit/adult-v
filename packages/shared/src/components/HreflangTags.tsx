@@ -52,7 +52,7 @@ export default function HreflangTags() {
   const searchParams = useSearchParams();
 
   // サイトのベースURL
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   return (
     <>

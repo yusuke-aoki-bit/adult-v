@@ -36,7 +36,7 @@ export function useRecentlyViewed() {
   const addItem = useCallback((item: Omit<RecentlyViewedItem, 'viewedAt'>) => {
     setItems((prev) => {
       // 既存のアイテムを除外
-      const filtered = prev.filter((i) => i.id !== item.id);
+      const filtered = prev.filter((i) => i.id !== item['id']);
 
       // 新しいアイテムを先頭に追加
       const newItem: RecentlyViewedItem = {

@@ -151,7 +151,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
     // サイトモード別ASPフィルタ
     if (siteMode === 'all' && 'ids' in (options || {}) && (options as GetActressesOptions)?.ids && (options as GetActressesOptions).ids!.length > 0) {
       // IDsが指定されている場合は、そのIDのみで絞り込み
-      conditions.push(inArray(performers.id, (options as GetActressesOptions).ids!));
+      conditions.push(inArray(performers['id'], (options as GetActressesOptions).ids!));
     } else {
       // サイトモードに応じたASPフィルタを追加
       conditions.push(createActressAspFilterCondition(performers, siteMode));
@@ -161,7 +161,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productPerformers} pp
-            WHERE pp.performer_id = ${performers.id}
+            WHERE pp.performer_id = ${performers['id']}
           )`
         );
       }
@@ -171,7 +171,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
     if (options?.excludeInitials) {
       conditions.push(
         sql`NOT (
-          LEFT(${performers.name}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
+          LEFT(${performers['name']}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
         )`
       );
     }
@@ -188,7 +188,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
 
         if (performerIds.length > 0) {
           const performerIdValues = extractPerformerIds(performerIds);
-          conditions.push(inArray(performers.id, performerIdValues));
+          conditions.push(inArray(performers['id'], performerIdValues));
         } else {
           return { conditions, earlyReturn: true };
         }
@@ -207,7 +207,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
 
         if (excludedPerformerIds.length > 0) {
           const excludedPerformerIdValues = extractPerformerIds(excludedPerformerIds);
-          conditions.push(notInArray(performers.id, excludedPerformerIdValues));
+          conditions.push(notInArray(performers['id'], excludedPerformerIdValues));
         }
       }
     }
@@ -222,7 +222,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
 
       if (performerIds.length > 0) {
         const performerIdValues = extractPerformerIds(performerIds);
-        conditions.push(inArray(performers.id, performerIdValues));
+        conditions.push(inArray(performers['id'], performerIdValues));
       } else {
         return { conditions, earlyReturn: true };
       }
@@ -238,7 +238,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
 
       if (excludedPerformerIds.length > 0) {
         const excludedPerformerIdValues = extractPerformerIds(excludedPerformerIds);
-        conditions.push(notInArray(performers.id, excludedPerformerIdValues));
+        conditions.push(notInArray(performers['id'], excludedPerformerIdValues));
       }
     }
 
@@ -251,7 +251,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
 
       if (performerIds.length > 0) {
         const performerIdValues = extractPerformerIds(performerIds);
-        conditions.push(inArray(performers.id, performerIdValues));
+        conditions.push(inArray(performers['id'], performerIdValues));
       } else {
         return { conditions, earlyReturn: true };
       }
@@ -266,7 +266,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
 
       if (performerIds.length > 0) {
         const performerIdValues = extractPerformerIds(performerIds);
-        conditions.push(inArray(performers.id, performerIdValues));
+        conditions.push(inArray(performers['id'], performerIdValues));
       } else {
         return { conditions, earlyReturn: true };
       }
@@ -282,24 +282,24 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
       // カップサイズフィルタ
       if (options?.cupSizes && options.cupSizes.length > 0) {
         conditions.push(
-          sql`${performers.cup} IN (${sql.join(options.cupSizes.map(c => sql`${c}`), sql`, `)})`
+          sql`${performers['cup']} IN (${sql.join(options.cupSizes.map(c => sql`${c}`), sql`, `)})`
         );
       }
 
       // 身長フィルタ（最小）
       if (options?.heightMin !== undefined) {
-        conditions.push(sql`${performers.height} >= ${options.heightMin}`);
+        conditions.push(sql`${performers['height']} >= ${options.heightMin}`);
       }
 
       // 身長フィルタ（最大）
       if (options?.heightMax !== undefined) {
-        conditions.push(sql`${performers.height} <= ${options.heightMax}`);
+        conditions.push(sql`${performers['height']} <= ${options.heightMax}`);
       }
 
       // 血液型フィルタ
       if (options?.bloodTypes && options.bloodTypes.length > 0) {
         conditions.push(
-          sql`${performers.bloodType} IN (${sql.join(options.bloodTypes.map(b => sql`${b}`), sql`, `)})`
+          sql`${performers['bloodType']} IN (${sql.join(options.bloodTypes.map(b => sql`${b}`), sql`, `)})`
         );
       }
     }
@@ -323,27 +323,27 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
       // getActressesの場合はAIレビュー検索も含める、getActressesCountの場合は含めない
       const isGetActresses = 'limit' in (options || {});
       const nameConditions = isInitialSearch
-        ? sql`${performers.nameKana} IS NOT NULL AND ${performers.nameKana} ILIKE ${searchPattern}`
+        ? sql`${performers['nameKana']} IS NOT NULL AND ${performers['nameKana']} ILIKE ${searchPattern}`
         : isGetActresses
           ? or(
-              sql`similarity(${performers.name}, ${options.query}) > 0.2`,
-              sql`similarity(${performers.nameKana}, ${options.query}) > 0.2`,
-              sql`${performers.name} ILIKE ${searchPattern}`,
-              sql`${performers.nameKana} ILIKE ${searchPattern}`,
+              sql`similarity(${performers['name']}, ${options.query}) > 0.2`,
+              sql`similarity(${performers['nameKana']}, ${options.query}) > 0.2`,
+              sql`${performers['name']} ILIKE ${searchPattern}`,
+              sql`${performers['nameKana']} ILIKE ${searchPattern}`,
               sql`${performers.aiReview} ILIKE ${searchPattern}`
             )!
           : or(
-              sql`similarity(${performers.name}, ${options.query}) > 0.2`,
-              sql`similarity(${performers.nameKana}, ${options.query}) > 0.2`,
-              sql`${performers.name} ILIKE ${searchPattern}`,
-              sql`${performers.nameKana} ILIKE ${searchPattern}`
+              sql`similarity(${performers['name']}, ${options.query}) > 0.2`,
+              sql`similarity(${performers['nameKana']}, ${options.query}) > 0.2`,
+              sql`${performers['name']} ILIKE ${searchPattern}`,
+              sql`${performers['nameKana']} ILIKE ${searchPattern}`
             )!;
 
       if (matchingPerformerIds.length > 0) {
         conditions.push(
           or(
             nameConditions,
-            inArray(performers.id, extractPerformerIds(matchingPerformerIds))
+            inArray(performers['id'], extractPerformerIds(matchingPerformerIds))
           )!
         );
       } else {
@@ -380,7 +380,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
             sortBy === 'productCountDesc'
               ? desc(sql`COALESCE(${performers.releaseCount}, 0)`)
               : asc(sql`COALESCE(${performers.releaseCount}, 0)`),
-            desc(performers.id)
+            desc(performers['id'])
           )
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
@@ -393,7 +393,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           .where(whereClause)
           .orderBy(
             desc(sql`COALESCE(${performers.latestReleaseDate}, '1900-01-01')`),
-            desc(performers.id)
+            desc(performers['id'])
           )
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
@@ -402,13 +402,13 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
         let orderByClauses;
         switch (sortBy) {
           case 'nameAsc':
-            orderByClauses = [asc(sql`COALESCE(${performers.nameKana}, '龠')`), asc(performers.id)];
+            orderByClauses = [asc(sql`COALESCE(${performers['nameKana']}, '龠')`), asc(performers['id'])];
             break;
           case 'nameDesc':
-            orderByClauses = [desc(sql`COALESCE(${performers.nameKana}, '')`), desc(performers.id)];
+            orderByClauses = [desc(sql`COALESCE(${performers['nameKana']}, '')`), desc(performers['id'])];
             break;
           default:
-            orderByClauses = [asc(sql`COALESCE(${performers.nameKana}, '龠')`), asc(performers.id)];
+            orderByClauses = [asc(sql`COALESCE(${performers['nameKana']}, '龠')`), asc(performers['id'])];
         }
 
         results = await db
@@ -431,8 +431,8 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
       const locale = options?.locale || 'ja';
       // DIパターンのためDrizzle型推論が効かない - 明示的な型アサーションが必要
       const actresses = results.map((performer: Record<string, unknown>) => {
-        const id = performer.id as number;
-        const releaseCount = (performer.releaseCount as number | null) ?? 0;
+        const id = performer['id'] as number;
+        const releaseCount = (performer['releaseCount'] as number | null) ?? 0;
         return mapPerformerToActress(
           performer,
           releaseCount,

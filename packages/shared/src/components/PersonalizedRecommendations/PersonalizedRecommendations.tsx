@@ -85,8 +85,8 @@ export function PersonalizedRecommendations({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           history: recentlyViewed.map(item => ({
-            id: item.id,
-            title: item.title,
+            id: item['id'],
+            title: item['title'],
           })),
           limit,
         }),
@@ -220,12 +220,12 @@ export function PersonalizedRecommendations({
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
           {recommendations.map((product) => (
             <ProductCardBase
-              key={product.id}
+              key={product['id']}
               product={{
-                id: String(product.id),
-                title: product.title,
-                imageUrl: product.imageUrl ?? undefined,
-                releaseDate: product.releaseDate ?? undefined,
+                id: String(product['id']),
+                title: product['title'],
+                ...(product.imageUrl && { imageUrl: product.imageUrl }),
+                ...(product['releaseDate'] && { releaseDate: product['releaseDate'] }),
                 price: 0,
               }}
               size="mini"
@@ -247,7 +247,7 @@ export function PersonalizedRecommendations({
     <AccordionSection
       icon={<Target className="w-5 h-5" />}
       title={locale === 'ja' ? 'あなたへのおすすめ' : 'Recommended for You'}
-      itemCount={hasExpanded && recommendations.length > 0 ? recommendations.length : undefined}
+      {...(hasExpanded && recommendations.length > 0 && { itemCount: recommendations.length })}
       defaultOpen={defaultOpen}
       onToggle={handleToggle}
       iconColorClass={iconColorClass}

@@ -150,18 +150,18 @@ export async function getRandomProducts(params: {
   return result.rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      id: r.id as number,
-      title: r.title as string,
-      imageUrl: r.image_url as string,
-      sampleImages: r.sample_images as string[] | null,
-      releaseDate: r.release_date as string | null,
-      duration: r.duration as number | null,
-      price: r.price as number | null,
-      provider: r.provider as string | null,
-      affiliateUrl: r.affiliate_url as string | null,
-      performers: (r.performers as string[] | null)?.filter(Boolean) || [],
-      genres: (r.genres as string[] | null) || [],
-      maker: r.maker as string | null,
+      id: r['id'] as number,
+      title: r['title'] as string,
+      imageUrl: r['image_url'] as string,
+      sampleImages: r['sample_images'] as string[] | null,
+      releaseDate: r['release_date'] as string | null,
+      duration: r['duration'] as number | null,
+      price: r['price'] as number | null,
+      provider: r['provider'] as string | null,
+      affiliateUrl: r['affiliate_url'] as string | null,
+      performers: (r['performers'] as string[] | null)?.filter(Boolean) || [],
+      genres: (r['genres'] as string[] | null) || [],
+      maker: r['maker'] as string | null,
     };
   });
 }

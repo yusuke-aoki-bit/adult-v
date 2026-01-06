@@ -447,7 +447,7 @@ describe('type-guards', () => {
     it('欠損値にデフォルト値を設定', () => {
       const rows = [{}];
       const result = toPerformerRows(rows);
-      expect(result[0]).toEqual({ id: 0, name: '', nameKana: null });
+      expect(result[0]!).toEqual({ id: 0, name: '', nameKana: null });
     });
   });
 
@@ -496,7 +496,7 @@ describe('type-guards', () => {
         { productId: 1, imageUrl: 'url1', imageType: 'thumbnail', displayOrder: 1 },
       ];
       const result = toImageRows(rows);
-      expect(result[0]).toEqual({
+      expect(result[0]!).toEqual({
         productId: 1,
         imageUrl: 'url1',
         imageType: 'thumbnail',
@@ -511,7 +511,7 @@ describe('type-guards', () => {
         { productId: 1, videoUrl: 'url1', videoType: 'sample', quality: 'HD', duration: 120 },
       ];
       const result = toVideoRows(rows);
-      expect(result[0]).toEqual({
+      expect(result[0]!).toEqual({
         productId: 1,
         videoUrl: 'url1',
         videoType: 'sample',
@@ -525,15 +525,15 @@ describe('type-guards', () => {
     it('キャメルケースを変換', () => {
       const rows = [{ productId: 1, aspName: 'FANZA', originalProductId: 'abc' }];
       const result = toBatchSourceRows(rows);
-      expect(result[0].productId).toBe(1);
-      expect(result[0].aspName).toBe('FANZA');
+      expect(result[0]!.productId).toBe(1);
+      expect(result[0]!.aspName).toBe('FANZA');
     });
 
     it('スネークケースを変換', () => {
       const rows = [{ product_id: 1, asp_name: 'FANZA', original_product_id: 'abc' }];
       const result = toBatchSourceRows(rows);
-      expect(result[0].productId).toBe(1);
-      expect(result[0].aspName).toBe('FANZA');
+      expect(result[0]!.productId).toBe(1);
+      expect(result[0]!.aspName).toBe('FANZA');
     });
   });
 
@@ -541,7 +541,7 @@ describe('type-guards', () => {
     it('スネークケースを変換', () => {
       const rows = [{ product_id: 1, image_url: 'url', image_type: 'thumbnail', display_order: 1 }];
       const result = toBatchImageRows(rows);
-      expect(result[0]).toEqual({
+      expect(result[0]!).toEqual({
         productId: 1,
         imageUrl: 'url',
         imageType: 'thumbnail',
@@ -554,7 +554,7 @@ describe('type-guards', () => {
     it('スネークケースを変換', () => {
       const rows = [{ product_id: 1, video_url: 'url', video_type: 'sample', quality: 'HD', duration: 120 }];
       const result = toBatchVideoRows(rows);
-      expect(result[0]).toEqual({
+      expect(result[0]!).toEqual({
         productId: 1,
         videoUrl: 'url',
         videoType: 'sample',
@@ -568,7 +568,7 @@ describe('type-guards', () => {
     it('スネークケースを変換', () => {
       const rows = [{ product_id: 1, regular_price: 1000, sale_price: 800, discount_percent: 20, end_at: null }];
       const result = toBatchSaleRows(rows);
-      expect(result[0]).toEqual({
+      expect(result[0]!).toEqual({
         productId: 1,
         regularPrice: 1000,
         salePrice: 800,

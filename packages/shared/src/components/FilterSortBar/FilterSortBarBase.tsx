@@ -134,7 +134,7 @@ function FilterSortBarBase({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const config = themeConfigs[theme];
 
@@ -178,27 +178,27 @@ function FilterSortBarBase({
 
     // ソート
     if (newSort === defaultSort) {
-      params.delete('sort');
+      params['delete']('sort');
     } else {
       params.set('sort', newSort);
     }
 
     // プロバイダー（includeAspパラメータを使用、ヘッダーと統一）
-    params.delete('provider'); // 古いパラメータは削除
+    params['delete']('provider'); // 古いパラメータは削除
     if (providers.size === 0) {
-      params.delete('includeAsp');
+      params['delete']('includeAsp');
     } else {
       params.set('includeAsp', Array.from(providers).join(','));
     }
 
     // 価格帯
     if (priceRanges.size === 0) {
-      params.delete('priceRange');
+      params['delete']('priceRange');
     } else {
       params.set('priceRange', Array.from(priceRanges).join(','));
     }
 
-    params.delete('page');
+    params['delete']('page');
 
     const queryString = params.toString();
     router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
@@ -301,7 +301,7 @@ function FilterSortBarBase({
           <select
             value={sortBy}
             onChange={(e) => handleSortChange(e.target.value as SortOption)}
-            className={config.select}
+            className={config['select']}
             aria-label={t.sort}
           >
             {sortOptions.map((option) => (

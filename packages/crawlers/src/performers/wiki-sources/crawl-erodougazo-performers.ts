@@ -57,13 +57,13 @@ async function fetchPerformersFromPage(makerName: string, productionId: number, 
   });
 
   if (!response.ok) {
-    if (response.status === 404) {
+    if (response['status'] === 404) {
       return []; // ページ終了
     }
-    throw new Error(`HTTP ${response.status}`);
+    throw new Error(`HTTP ${response['status']}`);
   }
 
-  const html = await response.text();
+  const html = await response['text']();
   const $ = cheerio.load(html);
 
   const performers: PerformerEntry[] = [];
@@ -74,7 +74,7 @@ async function fetchPerformersFromPage(makerName: string, productionId: number, 
 
   // "件。" の後にある名前リストを抽出
   const namesMatch = metaDescription.match(/件。(.+?)$/);
-  if (namesMatch) {
+  if (namesMatch && namesMatch[1]) {
     const namesStr = namesMatch[1];
     // スラッシュ区切りで分割
     const names = namesStr.split(' / ').map(n => n.trim()).filter(n => {
@@ -266,8 +266,9 @@ async function main() {
     for (const [, p] of uniquePerformers) {
       const japaneseNames = generateJapaneseVariants(p.performerName);
       const isEnglishName = /^[A-Z]+$/.test(p.performerName);
-      const performerDisplayName = isEnglishName && japaneseNames.length > 0
-        ? japaneseNames[0]  // 日本語名がある場合はそちらを使用
+      const firstJapaneseName = japaneseNames[0];
+      const performerDisplayName = isEnglishName && firstJapaneseName
+        ? firstJapaneseName  // 日本語名がある場合はそちらを使用
         : p.performerName;
 
       try {

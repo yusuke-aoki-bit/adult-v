@@ -232,7 +232,10 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
       // 2. 各アイテムを処理
       for (let index = 0; index < items.length; index++) {
-        await this.processItem(items[index], index, items.length);
+        const item = items[index];
+        if (item !== undefined) {
+          await this.processItem(item, index, items.length);
+        }
       }
 
       // 3. 完了処理
@@ -278,6 +281,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       if (arg.startsWith('--')) {
         const [key, value] = arg.slice(2).split('=');
         if (
+          key &&
           !['limit', 'offset', 'no-ai', 'force', 'skip-reviews', 'full-scan', 'year', 'month', 'start-id'].includes(key)
         ) {
           customArgs[key] = value !== undefined ? value : true;
@@ -285,6 +289,9 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       }
     });
 
+    const yearArg = getArg('year');
+    const monthArg = getArg('month');
+    const startIdArg = getArg('start-id');
     return {
       limit: parseInt(getArg('limit') || '100', 10),
       offset: parseInt(getArg('offset') || '0', 10),
@@ -292,9 +299,9 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       forceReprocess: hasFlag('force'),
       skipReviews: hasFlag('skip-reviews'),
       fullScan: hasFlag('full-scan'),
-      year: getArg('year') ? parseInt(getArg('year')!, 10) : undefined,
-      month: getArg('month') ? parseInt(getArg('month')!, 10) : undefined,
-      startId: getArg('start-id'),
+      ...(yearArg !== undefined && { year: parseInt(yearArg, 10) }),
+      ...(monthArg !== undefined && { month: parseInt(monthArg, 10) }),
+      ...(startIdArg !== undefined && { startId: startIdArg }),
       customArgs,
     };
   }
@@ -323,7 +330,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
    * ログ出力
    */
   protected log(level: 'info' | 'warn' | 'error' | 'success', message: string, ...args: unknown[]): void {
-    const prefix = `[${this.options.name}]`;
+    const prefix = `[${this.options['name']}]`;
     switch (level) {
       case 'info':
         console.log(`${prefix} ${message}`, ...args);
@@ -345,7 +352,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
    */
   protected logProgress(current: number, total: number, message: string): void {
     const percent = Math.round((current / total) * 100);
-    console.log(`[${this.options.name}] [${current}/${total}] (${percent}%) ${message}`);
+    console.log(`[${this.options['name']}] [${current}/${total}] (${percent}%) ${message}`);
   }
 
   /**
@@ -353,7 +360,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
    */
   protected async fetch(url: string, init?: RequestInit): Promise<Response> {
     return robustFetch(url, {
-      init,
+      ...(init !== undefined && { init }),
       rateLimiter: this.rateLimiter,
     });
   }
@@ -371,9 +378,9 @@ export abstract class BaseCrawler<TRawItem = unknown> {
    */
   protected validateProduct(data: { title: string; description?: string; originalId: string }): ProductValidation {
     return validateProductData({
-      title: data.title,
-      description: data.description,
-      aspName: this.options.aspName,
+      title: data['title'],
+      ...(data['description'] !== undefined && { description: data['description'] }),
+      aspName: this.options['aspName'],
       originalId: data.originalId,
     });
   }
@@ -404,7 +411,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       // 2. 検証
       const validation = this.validateProduct({
         title: parsed.title,
-        description: parsed.description,
+        ...(parsed.description !== undefined && { description: parsed.description }),
         originalId: parsed.originalId,
       });
 
@@ -468,7 +475,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         throw new DatabaseError(
           `トランザクション失敗: ${crawlerError.message}`,
           CrawlerErrorCode.DB_TRANSACTION,
-          { operation: 'processItem', originalError: error instanceof Error ? error : undefined }
+          { operation: 'processItem', ...(error instanceof Error && { originalError: error }) }
         );
       }
 
@@ -491,7 +498,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
    * 生データを保存
    */
   protected async saveRawData(originalId: string, rawData: Record<string, unknown>): Promise<UpsertRawDataResult> {
-    return upsertRawHtmlDataWithGcs(this.options.aspName, originalId, '', JSON.stringify(rawData));
+    return upsertRawHtmlDataWithGcs(this.options['aspName'], originalId, '', JSON.stringify(rawData));
   }
 
   /**
@@ -512,11 +519,11 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       )
       VALUES (
         ${data.normalizedProductId},
-        ${data.title},
-        ${data.description || null},
-        ${data.releaseDate || null},
-        ${data.duration || null},
-        ${data.thumbnailUrl || null},
+        ${data['title']},
+        ${data['description'] || null},
+        ${data['releaseDate'] || null},
+        ${data['duration'] || null},
+        ${data['thumbnailUrl'] || null},
         NOW()
       )
       ON CONFLICT (normalized_product_id)
@@ -555,10 +562,10 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       )
       VALUES (
         ${productId},
-        ${this.options.aspName},
+        ${this.options['aspName']},
         ${data.originalId},
-        ${data.affiliateUrl || ''},
-        ${data.price || null},
+        ${data['affiliateUrl'] || ''},
+        ${data['price'] || null},
         'API',
         NOW()
       )
@@ -599,9 +606,9 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       const result = await processProductPerformers(
         productId,
         data.performers,
-        data.title,
+        data['title'],
         data.originalId, // 品番（wiki検索用）
-        this.options.aspName, // ASPプレフィックス
+        this.options['aspName'], // ASPプレフィックス
         tx
       );
       console.log(`  ✓ 出演者保存完了 (${result.added}/${result.total}人)`);
@@ -615,7 +622,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     // セール情報
     if (data.saleInfo) {
       try {
-        const saved = await saveSaleInfo(this.options.aspName, data.originalId, data.saleInfo);
+        const saved = await saveSaleInfo(this.options['aspName'], data.originalId, data.saleInfo);
         if (saved) {
           this.stats.salesSaved++;
           console.log(
@@ -649,10 +656,10 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         id: productId,
         normalizedProductId: data.normalizedProductId,
         makerProductCode: null, // maker_product_code は後でDBから取得するか、parsedに追加する必要がある
-        title: data.title,
-        releaseDate: data.releaseDate ? new Date(data.releaseDate) : null,
-        duration: data.duration || null,
-        aspName: this.options.aspName,
+        title: data['title'],
+        releaseDate: data['releaseDate'] ? new Date(data['releaseDate']) : null,
+        duration: data['duration'] || null,
+        aspName: this.options['aspName'],
         performers: data.performers || [],
       };
 
@@ -685,7 +692,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     await dbCtx.execute(sql`
       DELETE FROM product_images
       WHERE product_id = ${productId}
-      AND asp_name = ${this.options.aspName}
+      AND asp_name = ${this.options['aspName']}
       AND image_type = 'sample'
     `);
 
@@ -702,7 +709,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         )
         VALUES (
           ${productId},
-          ${this.options.aspName},
+          ${this.options['aspName']},
           ${imageUrl},
           'sample',
           ${index}
@@ -729,7 +736,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       )
       VALUES (
         ${productId},
-        ${this.options.aspName},
+        ${this.options['aspName']},
         ${imageUrl},
         'package',
         0
@@ -752,7 +759,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     await dbCtx.execute(sql`
       DELETE FROM product_videos
       WHERE product_id = ${productId}
-      AND asp_name = ${this.options.aspName}
+      AND asp_name = ${this.options['aspName']}
     `);
 
     // 新しい動画を挿入
@@ -768,7 +775,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         )
         VALUES (
           ${productId},
-          ${this.options.aspName},
+          ${this.options['aspName']},
           ${videoUrl},
           'sample',
           ${index}
@@ -858,11 +865,11 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         )
         VALUES (
           ${productId},
-          ${this.options.aspName},
+          ${this.options['aspName']},
           ${review.reviewerName || null},
-          ${review.rating},
+          ${review['rating']},
           5,
-          ${review.title || null},
+          ${review['title'] || null},
           ${review.content || null},
           ${review.date ? new Date(review.date) : null},
           ${review.helpfulYes || null},
@@ -908,7 +915,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       )
       VALUES (
         ${productId},
-        ${this.options.aspName},
+        ${this.options['aspName']},
         ${rating.averageRating},
         ${rating.bestRating},
         ${rating.reviewCount},
@@ -937,10 +944,10 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       // CrawlerAIHelperを使用して全AI処理を並列実行
       const aiResult = await this.aiHelper.processProduct(
         {
-          title: data.title,
-          description: data.description,
-          performers: data.performers,
-          genres: data.categories,
+          title: data['title'],
+          ...(data['description'] !== undefined && { description: data['description'] }),
+          ...(data.performers !== undefined && { performers: data.performers }),
+          ...(data.categories !== undefined && { genres: data.categories }),
         },
         {
           extractTags: true,
@@ -1069,7 +1076,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
    */
   protected printHeader(): void {
     console.log('========================================');
-    console.log(`=== ${this.options.name} クローラー ===`);
+    console.log(`=== ${this.options['name']} クローラー ===`);
     console.log('========================================');
     console.log(`取得範囲: offset=${this.cliArgs.offset}, limit=${this.cliArgs.limit}`);
     console.log(`AI機能: ${this.getEffectiveEnableAI() ? '有効' : '無効'}`);
@@ -1152,6 +1159,7 @@ export function parseCliArgs(): ParsedCliArgs {
     if (arg.startsWith('--')) {
       const [key, value] = arg.slice(2).split('=');
       if (
+        key &&
         !['limit', 'offset', 'no-ai', 'force', 'skip-reviews', 'full-scan', 'year', 'month', 'start-id'].includes(key)
       ) {
         customArgs[key] = value !== undefined ? value : true;
@@ -1159,6 +1167,9 @@ export function parseCliArgs(): ParsedCliArgs {
     }
   });
 
+  const yearArg2 = getArg('year');
+  const monthArg2 = getArg('month');
+  const startIdArg2 = getArg('start-id');
   return {
     limit: parseInt(getArg('limit') || '100', 10),
     offset: parseInt(getArg('offset') || '0', 10),
@@ -1166,9 +1177,9 @@ export function parseCliArgs(): ParsedCliArgs {
     forceReprocess: hasFlag('force'),
     skipReviews: hasFlag('skip-reviews'),
     fullScan: hasFlag('full-scan'),
-    year: getArg('year') ? parseInt(getArg('year')!, 10) : undefined,
-    month: getArg('month') ? parseInt(getArg('month')!, 10) : undefined,
-    startId: getArg('start-id'),
+    ...(yearArg2 !== undefined && { year: parseInt(yearArg2, 10) }),
+    ...(monthArg2 !== undefined && { month: parseInt(monthArg2, 10) }),
+    ...(startIdArg2 !== undefined && { startId: startIdArg2 }),
     customArgs,
   };
 }

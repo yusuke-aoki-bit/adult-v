@@ -81,7 +81,7 @@ export function createPriceHistoryQueries(getDb: () => any) {
       const daysBack = options?.daysBack ?? 365;
 
       const aspFilter = options?.aspName
-        ? sql`AND ps.asp_name = ${options.aspName}`
+        ? sql`AND ps.asp_name = ${options['aspName']}`
         : sql``;
 
       const result = await db.execute(sql`

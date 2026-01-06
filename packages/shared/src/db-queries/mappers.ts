@@ -199,12 +199,12 @@ export function mapProductToType(
   // 通貨情報を取得（デフォルトJPY）
   const currency = (source?.currency as 'JPY' | 'USD') || 'JPY';
 
-  // サムネイル画像を取得（product.defaultThumbnailUrl → imagesDataのthumbnail → imagesDataの最初の画像）
-  let imageUrl = cache?.thumbnailUrl || product.defaultThumbnailUrl;
+  // サムネイル画像を取得（product['defaultThumbnailUrl'] → imagesDataのthumbnail → imagesDataの最初の画像）
+  let imageUrl = cache?.thumbnailUrl || product['defaultThumbnailUrl'];
   if (!imageUrl && imagesData && imagesData.length > 0) {
     // thumbnailタイプの画像を優先、なければ最初の画像
     const thumbnailImg = imagesData.find(img => img.imageType === 'thumbnail');
-    imageUrl = thumbnailImg?.imageUrl || imagesData[0].imageUrl;
+    imageUrl = thumbnailImg?.imageUrl || imagesData[0]!.imageUrl;
   }
   if (!imageUrl) {
     imageUrl = PRODUCT_PLACEHOLDER;
@@ -221,8 +221,9 @@ export function mapProductToType(
   const category: ProductCategory = 'premium';
 
   // 出演者情報（後方互換性のため最初の1人も保持）- ローカライズ対応
-  const actressId = performerData.length > 0 ? String(performerData[0].id) : undefined;
-  const actressName = performerData.length > 0 ? getLocalizedPerformerName(performerData[0], locale) : undefined;
+  const firstPerformer = performerData[0];
+  const actressId = firstPerformer ? String(firstPerformer['id']) : undefined;
+  const actressName = firstPerformer ? getLocalizedPerformerName(firstPerformer, locale) : undefined;
 
   // 全出演者情報 - ローカライズ対応
   const performersList = performerData.map(p => ({
@@ -234,8 +235,8 @@ export function mapProductToType(
   const tagsList = tagData.map(t => getLocalizedTagName(t, locale));
 
   // 新作判定・発売予定判定
-  const { isNew, isFuture } = product.releaseDate ? (() => {
-    const releaseDate = new Date(product.releaseDate);
+  const { isNew, isFuture } = product['releaseDate'] ? (() => {
+    const releaseDate = new Date(product['releaseDate']);
     const now = new Date();
     const diffTime = now.getTime() - releaseDate.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -249,21 +250,21 @@ export function mapProductToType(
 
   // サンプル動画を整形
   const sampleVideos = videosData && videosData.length > 0
-    ? videosData.map(video => ({
-        url: video.videoUrl,
-        type: video.videoType || 'sample',
-        quality: video.quality || undefined,
-        duration: video.duration || undefined,
-      }))
+    ? videosData.map(video => {
+        const item: { url: string; type: string; quality?: string; duration?: number } = {
+          url: video.videoUrl,
+          type: video.videoType || 'sample',
+        };
+        if (video.quality) item.quality = video.quality;
+        if (video.duration) item.duration = video.duration;
+        return item;
+      })
     : undefined;
 
-  return {
-    id: String(product.id),
-    normalizedProductId: product.normalizedProductId || undefined,
-    makerProductCode: product.makerProductCode || undefined,  // メーカー品番
-    originalProductId: source?.originalProductId || undefined,
+  // 必須プロパティで基本オブジェクトを作成
+  const result: ProductType = {
+    id: String(product['id']),
     title: getLocalizedTitle(product, locale),
-    description: getLocalizedDescription(product, locale),
     price,
     currency,
     category,
@@ -271,31 +272,34 @@ export function mapProductToType(
     affiliateUrl,
     provider: mappedProvider,
     providerLabel,
-    actressId,
-    actressName,
-    performers: performersList.length > 0 ? performersList : undefined,
-    releaseDate: product.releaseDate || undefined,
-    duration: product.duration || undefined,
-    format: undefined,
-    rating: undefined,
-    reviewCount: undefined,
     tags: tagsList,
     isFeatured: false,
     isNew,
     isFuture,
-    productType: source?.productType as 'haishin' | 'dvd' | 'monthly' | undefined,
-    discount: saleData?.discountPercent || undefined,
-    salePrice: saleData?.salePrice,
-    regularPrice: saleData?.regularPrice,
-    saleEndAt: saleData?.endAt?.toISOString(),
-    reviewHighlight: undefined,
-    ctaLabel: undefined,
-    sampleImages,
-    sampleVideos,
-    // AI生成コンテンツ
-    aiReview: product.aiReview || undefined,
-    aiReviewUpdatedAt: product.aiReviewUpdatedAt?.toISOString(),
   };
+
+  // オプショナルプロパティは値がある場合のみ設定（exactOptionalPropertyTypes対応）
+  if (product.normalizedProductId) result.normalizedProductId = product.normalizedProductId;
+  if (product.makerProductCode) result.makerProductCode = product.makerProductCode;
+  if (source?.originalProductId) result.originalProductId = source.originalProductId;
+  const description = getLocalizedDescription(product, locale);
+  if (description) result.description = description;
+  if (actressId) result.actressId = actressId;
+  if (actressName) result.actressName = actressName;
+  if (performersList.length > 0) result.performers = performersList;
+  if (product['releaseDate']) result.releaseDate = product['releaseDate'];
+  if (product['duration']) result.duration = product['duration'];
+  if (source?.productType) result.productType = source.productType as 'haishin' | 'dvd' | 'monthly';
+  if (saleData?.discountPercent) result.discount = saleData.discountPercent;
+  if (saleData?.salePrice) result.salePrice = saleData.salePrice;
+  if (saleData?.regularPrice) result.regularPrice = saleData.regularPrice;
+  if (saleData?.endAt) result.saleEndAt = saleData.endAt.toISOString();
+  if (sampleImages) result.sampleImages = sampleImages;
+  if (sampleVideos) result.sampleVideos = sampleVideos;
+  if (product.aiReview) result.aiReview = product.aiReview;
+  if (product.aiReviewUpdatedAt) result.aiReviewUpdatedAt = product.aiReviewUpdatedAt.toISOString();
+
+  return result;
 }
 
 // ============================================================
@@ -341,11 +345,10 @@ export function mapPerformerToActressTypeSync(
   // バイオをローカライズ
   const bio = getLocalizedPerformerBio(performer, locale);
 
-  return {
-    id: String(performer.id),
+  const result: ActressType = {
+    id: String(performer['id']),
     name: getLocalizedPerformerName(performer, locale),
     catchcopy: '',
-    description: bio,
     heroImage: imageUrl,
     thumbnail: imageUrl,
     primaryGenres: ['premium'],
@@ -357,10 +360,15 @@ export function mapPerformerToActressTypeSync(
     },
     highlightWorks: [],
     tags: [],
-    aliases: aliases && aliases.length > 0 ? aliases : undefined,
-    aiReview,
-    aiReviewUpdatedAt: performer.aiReviewUpdatedAt?.toISOString(),
   };
+
+  // オプショナルプロパティは値がある場合のみ設定
+  if (bio) result.description = bio;
+  if (aliases && aliases.length > 0) result.aliases = aliases;
+  if (aiReview) result.aiReview = aiReview;
+  if (performer.aiReviewUpdatedAt) result.aiReviewUpdatedAt = performer.aiReviewUpdatedAt.toISOString();
+
+  return result;
 }
 
 // ============================================================
@@ -392,12 +400,12 @@ export function mapProductsWithBatchData(
   const { isValidPerformer, ...productMapperDeps } = deps;
 
   return productList.map((product) => {
-    const performerData = (batchData.performersMap.get(product.id) || []).filter(isValidPerformer);
-    const tagData = batchData.tagsMap.get(product.id) || [];
-    const imagesData = batchData.imagesMap.get(product.id);
-    const videosData = batchData.videosMap.get(product.id);
-    const saleData = batchData.salesMap.get(product.id);
-    const mainSource = batchData.sourcesMap.get(product.id);
+    const performerData = (batchData.performersMap.get(product['id']) || []).filter(isValidPerformer);
+    const tagData = batchData.tagsMap.get(product['id']) || [];
+    const imagesData = batchData.imagesMap.get(product['id']);
+    const videosData = batchData.videosMap.get(product['id']);
+    const saleData = batchData.salesMap.get(product['id']);
+    const mainSource = batchData.sourcesMap.get(product['id']);
 
     const mappedProduct = mapProductToType(
       product,
@@ -413,7 +421,7 @@ export function mapProductsWithBatchData(
     );
 
     // 他ASPソースを alternativeSources として追加
-    const allSources = batchData.allSourcesMap?.get(product.id) || [];
+    const allSources = batchData.allSourcesMap?.get(product['id']) || [];
     if (allSources.length > 1 && mainSource) {
       const mainAspName = mainSource.aspName?.toUpperCase();
       // メインソース以外のソースをalternativeSourcesに追加
@@ -425,15 +433,16 @@ export function mapProductsWithBatchData(
           // FANZAの場合はf.adult-v.comの商品詳細ページへのリンクを生成
           // localeはgetパラメータ（?hl=）で渡す
           const affiliateUrl = isFanza
-            ? `https://www.f.adult-v.com/products/${product.id}${locale !== 'ja' ? `?hl=${locale}` : ''}`
+            ? `https://www.f.adult-v.com/products/${product['id']}${locale !== 'ja' ? `?hl=${locale}` : ''}`
             : (s.affiliateUrl || '');
-          return {
+          const item: { aspName: string; price: number; salePrice?: number; affiliateUrl: string; productId: number } = {
             aspName: s.aspName,
             price: s.price ?? 0,
-            salePrice: undefined as number | undefined,
             affiliateUrl,
-            productId: product.id,
+            productId: product['id'],
           };
+          // salePriceは値がある場合のみ設定（exactOptionalPropertyTypes対応）
+          return item;
         });
 
       if (alternatives.length > 0) {

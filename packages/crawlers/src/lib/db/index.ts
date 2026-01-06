@@ -21,7 +21,7 @@ function getDb() {
   if (!dbStore.instance) {
     try {
       // 環境変数から接続情報を取得
-      const connectionString = process.env.DATABASE_URL || '';
+      const connectionString = process.env['DATABASE_URL'] || '';
 
       if (!connectionString) {
         throw new Error('DATABASE_URL environment variable is not set');
@@ -35,12 +35,12 @@ function getDb() {
       const cleanConnectionString = `postgresql://${url.username}:${url.password}@${url.host}${url.pathname}`;
 
       // クローラー用の接続設定（長時間実行に対応）
-      const isCrawler = process.env.CRAWLER_MODE === 'true' || process.argv.some(arg => arg.includes('crawl'));
+      const isCrawler = process.env['CRAWLER_MODE'] === 'true' || process.argv.some(arg => arg.includes('crawl'));
 
       dbStore.pool = new Pool({
         connectionString: cleanConnectionString,
         // Cloud SQL Proxy経由の場合はSSL不要、それ以外は環境に応じて設定
-        ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
+        ssl: isCloudSqlProxy ? false : (process.env['NODE_ENV'] === 'production' ? { rejectUnauthorized: false } : false),
         max: isCrawler ? 5 : 50, // クローラーは少ない接続数で十分
         min: isCrawler ? 1 : 10, // クローラーは最小限
         idleTimeoutMillis: isCrawler ? 600000 : 60000, // クローラー: 10分、通常: 60秒

@@ -149,11 +149,11 @@ export class CrawlerAIHelper {
     try {
       return await generateProductDescription({
         title: input.title,
-        originalDescription: input.description,
-        performers: input.performers,
-        genres: input.genres,
-        maker: input.maker,
-        releaseDate: input.releaseDate,
+        ...(input.description !== undefined && { originalDescription: input.description }),
+        ...(input.performers !== undefined && { performers: input.performers }),
+        ...(input.genres !== undefined && { genres: input.genres }),
+        ...(input.maker !== undefined && { maker: input.maker }),
+        ...(input.releaseDate !== undefined && { releaseDate: input.releaseDate }),
       });
     } catch (error) {
       console.error('[CrawlerAI] Description generation failed:', error);
@@ -193,7 +193,9 @@ export class CrawlerAIHelper {
       promises.push(
         this.extractTags(input.title, input.description)
           .then((tags) => {
-            result.tags = tags || undefined;
+            if (tags) {
+              result.tags = tags;
+            }
           })
           .catch((error) => {
             result.errors.push(`Tag extraction: ${error.message}`);
@@ -207,7 +209,9 @@ export class CrawlerAIHelper {
       promises.push(
         this.translate(input.title, input.description)
           .then((translations) => {
-            result.translations = translations || undefined;
+            if (translations) {
+              result.translations = translations;
+            }
           })
           .catch((error) => {
             result.errors.push(`Translation: ${error.message}`);
@@ -221,7 +225,9 @@ export class CrawlerAIHelper {
       promises.push(
         this.generateDescription(input)
           .then((description) => {
-            result.description = description || undefined;
+            if (description) {
+              result['description'] = description;
+            }
           })
           .catch((error) => {
             result.errors.push(`Description generation: ${error.message}`);

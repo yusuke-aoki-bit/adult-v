@@ -20,17 +20,19 @@ function parseArgs(): { limit: number; source: string; dryRun: boolean } {
   let dryRun = false;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1], 10);
+    const arg = args[i];
+    const nextArg = args[i + 1];
+    if (arg === '--limit' && nextArg) {
+      limit = parseInt(nextArg, 10);
       i++;
-    } else if (args[i].startsWith('--limit=')) {
-      limit = parseInt(args[i].split('=')[1], 10);
-    } else if (args[i] === '--source' && args[i + 1]) {
-      source = args[i + 1];
+    } else if (arg?.startsWith('--limit=')) {
+      limit = parseInt(arg.split('=')[1] ?? '10000', 10);
+    } else if (arg === '--source' && nextArg) {
+      source = nextArg;
       i++;
-    } else if (args[i].startsWith('--source=')) {
-      source = args[i].split('=')[1];
-    } else if (args[i] === '--dry-run') {
+    } else if (arg?.startsWith('--source=')) {
+      source = arg.split('=')[1] ?? 'all';
+    } else if (arg === '--dry-run') {
       dryRun = true;
     }
   }
@@ -53,8 +55,8 @@ function extractFanzaVideos(html: string): string[] {
   // パターン1: litevideo MP4
   const liteVideoMatches = html.matchAll(/src="(https:\/\/[^"]*litevideo[^"]*\.mp4[^"]*)"/gi);
   for (const match of liteVideoMatches) {
-    const url = match[1].split('?')[0];
-    if (!videoUrlSet.has(url)) {
+    const url = match[1]?.split('?')[0] ?? '';
+    if (url && !videoUrlSet.has(url)) {
       videoUrlSet.add(url);
       videos.push(url);
     }
@@ -63,8 +65,8 @@ function extractFanzaVideos(html: string): string[] {
   // パターン2: data-src属性のサンプル動画
   const dataSrcMatches = html.matchAll(/data-src="(https:\/\/[^"]*(?:sample|preview)[^"]*\.mp4[^"]*)"/gi);
   for (const match of dataSrcMatches) {
-    const url = match[1].split('?')[0];
-    if (!videoUrlSet.has(url)) {
+    const url = match[1]?.split('?')[0] ?? '';
+    if (url && !videoUrlSet.has(url)) {
       videoUrlSet.add(url);
       videos.push(url);
     }
@@ -73,8 +75,8 @@ function extractFanzaVideos(html: string): string[] {
   // パターン3: cc3001.dmm.co.jp からのサンプル動画
   const cc3001Matches = html.matchAll(/["'](https:\/\/cc3001\.dmm\.co\.jp\/[^"']*\.mp4[^"']*)["']/gi);
   for (const match of cc3001Matches) {
-    const url = match[1].split('?')[0];
-    if (!videoUrlSet.has(url)) {
+    const url = match[1]?.split('?')[0] ?? '';
+    if (url && !videoUrlSet.has(url)) {
       videoUrlSet.add(url);
       videos.push(url);
     }
@@ -83,8 +85,8 @@ function extractFanzaVideos(html: string): string[] {
   // パターン4: sample.mp4 や _sm_w.mp4 などのパターン
   const sampleMp4Matches = html.matchAll(/["'](https:\/\/[^"']*(?:_sm_|sample|_sample_)[^"']*\.mp4[^"']*)["']/gi);
   for (const match of sampleMp4Matches) {
-    const url = match[1].split('?')[0];
-    if (!videoUrlSet.has(url)) {
+    const url = match[1]?.split('?')[0] ?? '';
+    if (url && !videoUrlSet.has(url)) {
       videoUrlSet.add(url);
       videos.push(url);
     }
@@ -128,7 +130,7 @@ function extractMgsVideos(html: string): string[] {
     const scriptContent = $('script:contains("sample_url")').html();
     if (scriptContent) {
       const sampleUrlMatch = scriptContent.match(/sample_url['":\s]+['"]([^'"]+)['"]/);
-      if (sampleUrlMatch) {
+      if (sampleUrlMatch && sampleUrlMatch[1]) {
         const url = sampleUrlMatch[1].startsWith('http')
           ? sampleUrlMatch[1]
           : `https://www.mgstage.com${sampleUrlMatch[1]}`;

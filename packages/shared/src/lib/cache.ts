@@ -35,8 +35,8 @@ async function getRedisClient(): Promise<RedisClientType | null> {
   if (redisInitialized) return redisClient;
   redisInitialized = true;
 
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env['UPSTASH_REDIS_REST_URL'];
+  const token = process.env['UPSTASH_REDIS_REST_TOKEN'];
 
   if (url && token) {
     try {
@@ -91,7 +91,7 @@ class InMemoryCache {
     if (!item) return null;
 
     if (Date.now() > item.expires) {
-      this.cache.delete(key);
+      this.cache['delete'](key);
       return null;
     }
 
@@ -106,7 +106,7 @@ class InMemoryCache {
   }
 
   delete(key: string): void {
-    this.cache.delete(key);
+    this.cache['delete'](key);
   }
 
   clear(): void {
@@ -118,7 +118,7 @@ class InMemoryCache {
     const now = Date.now();
     for (const [key, item] of this.cache.entries()) {
       if (now > item.expires) {
-        this.cache.delete(key);
+        this.cache['delete'](key);
       }
     }
   }

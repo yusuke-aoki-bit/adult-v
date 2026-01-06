@@ -48,7 +48,7 @@ export function useFavorites() {
     setFavorites((prev) => {
       // Check if already exists
       const exists = prev.some(
-        (f) => f.type === item.type && f.id === item.id
+        (f) => f.type === item.type && f.id === item['id']
       );
       if (exists) return prev;
 
@@ -73,8 +73,8 @@ export function useFavorites() {
   };
 
   const toggleFavorite = (item: Omit<FavoriteItem, 'addedAt'>) => {
-    if (isFavorite(item.type, item.id)) {
-      removeFavorite(item.type, item.id);
+    if (isFavorite(item.type, item['id'])) {
+      removeFavorite(item.type, item['id']);
     } else {
       addFavorite(item);
     }

@@ -15,11 +15,11 @@
 // 環境変数
 // =============================================================================
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
-const GOOGLE_CUSTOM_SEARCH_ENGINE_ID = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID || '';
+const GOOGLE_API_KEY = process.env['GOOGLE_API_KEY'] || process.env['GEMINI_API_KEY'] || '';
+const GOOGLE_CUSTOM_SEARCH_ENGINE_ID = process.env['GOOGLE_CUSTOM_SEARCH_ENGINE_ID'] || '';
 // サービスアカウントキー（JSON文字列として環境変数に設定、またはファイルパス）
-const GOOGLE_SERVICE_ACCOUNT_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || '';
-const GOOGLE_SERVICE_ACCOUNT_KEY_FILE = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE || '';
+const GOOGLE_SERVICE_ACCOUNT_KEY = process.env['GOOGLE_SERVICE_ACCOUNT_KEY'] || '';
+const GOOGLE_SERVICE_ACCOUNT_KEY_FILE = process.env['GOOGLE_SERVICE_ACCOUNT_KEY_FILE'] || '';
 
 // サービスアカウントの認証情報をパース
 interface ServiceAccountCredentials {
@@ -132,7 +132,7 @@ async function getAccessToken(): Promise<string | null> {
     });
 
     if (!response.ok) {
-      const error = await response.text();
+      const error = await response['text']();
       console.error('[Google APIs] Token request failed:', error);
       return null;
     }
@@ -252,7 +252,7 @@ function extractPerformersFromSearchResults(items: CustomSearchResult[]): string
   const seenNames = new Set<string>();
 
   for (const item of items) {
-    const text = `${item.title} ${item.snippet}`;
+    const text = `${item['title']} ${item.snippet}`;
 
     // パターン1: 「出演：○○」「出演者：○○」
     const castMatch = text.match(/出演[者]?[：:]\s*([^。\n,、]+)/g);
@@ -286,7 +286,7 @@ function extractPerformersFromSearchResults(items: CustomSearchResult[]): string
 
     // パターン3: タイトル内の人名パターン「○○ 作品名」
     // Wikipediaやプロフィールページのタイトル形式
-    const titleNameMatch = item.title.match(/^([ぁ-んァ-ヶー一-龯]+(?:\s[ぁ-んァ-ヶー一-龯]+)?)\s*[-–—|]|^([ぁ-んァ-ヶー一-龯]+(?:\s[ぁ-んァ-ヶー一-龯]+)?)\s*\(/);
+    const titleNameMatch = item['title'].match(/^([ぁ-んァ-ヶー一-龯]+(?:\s[ぁ-んァ-ヶー一-龯]+)?)\s*[-–—|]|^([ぁ-んァ-ヶー一-龯]+(?:\s[ぁ-んァ-ヶー一-龯]+)?)\s*\(/);
     if (titleNameMatch) {
       const name = (titleNameMatch[1] || titleNameMatch[2])?.trim();
       const cleaned = cleanPerformerName(name);
@@ -298,7 +298,7 @@ function extractPerformersFromSearchResults(items: CustomSearchResult[]): string
 
     // パターン4: スニペット内の「○○の」で始まるパターン（プロフィール紹介）
     const profileMatch = text.match(/([ぁ-んァ-ヶー一-龯]{2,}(?:\s[ぁ-んァ-ヶー一-龯]{2,})?)[のは](?:AV女優|女優|グラビア|セクシー女優)/);
-    if (profileMatch) {
+    if (profileMatch?.[1]) {
       const cleaned = cleanPerformerName(profileMatch[1].trim());
       if (cleaned && !seenNames.has(cleaned)) {
         seenNames.add(cleaned);
@@ -414,25 +414,25 @@ export async function searchActressReading(actressName: string): Promise<string 
  */
 function extractReadingFromResults(actressName: string, items: CustomSearchResult[]): string | null {
   for (const item of items) {
-    const text = `${item.title} ${item.snippet}`;
+    const text = `${item['title']} ${item.snippet}`;
 
     // パターン1: Wikipedia形式「名前（ひらがな ひらがな、...）」- スペース含むフルネーム
     // 例: 三上 悠亜（みかみ ゆあ、本名：...）
     const wikiFullMatch = text.match(/[（(]([ぁ-ゖー]+\s+[ぁ-ゖー]+)[、,）)]/);
-    if (wikiFullMatch) {
+    if (wikiFullMatch?.[1]) {
       // スペースを除去して返す
       return wikiFullMatch[1].replace(/\s+/g, '');
     }
 
     // パターン2: 「名前（ひらがな）」形式（スペースなし）
     const parenMatch = text.match(new RegExp(`${escapeRegExp(actressName)}[（(]([ぁ-ゖー]+)[）)]`));
-    if (parenMatch && parenMatch[1].length >= 4) {
+    if (parenMatch?.[1] && parenMatch[1].length >= 4) {
       return parenMatch[1];
     }
 
     // パターン3: 「名前、ひらがな」形式
     const commaMatch = text.match(new RegExp(`${escapeRegExp(actressName)}[、,]\\s*([ぁ-ゖー]+)`));
-    if (commaMatch && commaMatch[1].length >= 4) {
+    if (commaMatch?.[1] && commaMatch[1].length >= 4) {
       return commaMatch[1];
     }
 
@@ -440,7 +440,7 @@ function extractReadingFromResults(actressName: string, items: CustomSearchResul
     if (item.link.includes('wikipedia')) {
       // 「姓 名（せい めい」パターン
       const snippetFullMatch = item.snippet.match(/[（(]([ぁ-ゖー]+)\s+([ぁ-ゖー]+)/);
-      if (snippetFullMatch) {
+      if (snippetFullMatch?.[1] && snippetFullMatch?.[2]) {
         return snippetFullMatch[1] + snippetFullMatch[2];
       }
     }
@@ -798,8 +798,8 @@ export async function detectFaces(imageUrl: string): Promise<FaceAnnotation[]> {
     );
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('[Vision API] HTTP error:', response.status, error);
+      const error = await response['text']();
+      console.error('[Vision API] HTTP error:', response['status'], error);
       return [];
     }
 
@@ -860,8 +860,8 @@ export async function labelImage(imageUrl: string): Promise<LabelAnnotation[]> {
     );
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('[Vision API] HTTP error:', response.status, error);
+      const error = await response['text']();
+      console.error('[Vision API] HTTP error:', response['status'], error);
       return [];
     }
 
@@ -979,14 +979,14 @@ export async function analyzeImage(imageUrl: string): Promise<ImageAnalysisResul
     );
 
     if (!response.ok) {
-      const error = await response.text();
+      const error = await response['text']();
       return {
         faces: [],
         labels: [],
         hasFace: false,
         faceCount: 0,
         isValid: false,
-        invalidReason: `HTTP ${response.status}: ${error}`,
+        invalidReason: `HTTP ${response['status']}: ${error}`,
       };
     }
 
@@ -1041,15 +1041,20 @@ export async function analyzeImage(imageUrl: string): Promise<ImageAnalysisResul
       invalidReason = 'スプーフィング画像の可能性';
     }
 
-    return {
+    const imageResult: ImageAnalysisResult = {
       faces,
       labels,
-      safeSearch,
       hasFace: faces.length > 0,
       faceCount: faces.length,
       isValid,
-      invalidReason,
     };
+    if (safeSearch) {
+      imageResult.safeSearch = safeSearch;
+    }
+    if (invalidReason) {
+      imageResult.invalidReason = invalidReason;
+    }
+    return imageResult;
   } catch (error) {
     console.error('[Vision API] analyzeImage failed:', error);
     return {
@@ -1242,10 +1247,12 @@ export async function translatePerformer(
 
   for (const lang of languages) {
     const translations = await translateBatch(textsToTranslate, lang, 'ja');
-    if (translations && translations.length > 0) {
+    const firstTranslation = translations?.[0];
+    const secondTranslation = translations?.[1];
+    if (firstTranslation) {
       result[lang] = {
-        name: translations[0].translatedText,
-        ...(translations[1] && { profile: translations[1].translatedText }),
+        name: firstTranslation.translatedText,
+        ...(secondTranslation && { profile: secondTranslation.translatedText }),
       };
     }
   }
@@ -1275,10 +1282,11 @@ export async function translatePerformersBatch(
 
   for (let i = 0; i < performers.length; i++) {
     const p = performers[i];
+    if (!p) continue;
     allTexts.push(p.name);
     indexMap.push({ performerIndex: i, field: 'name' });
 
-    if (p.profile && p.profile.trim()) {
+    if (p.profile?.trim()) {
       allTexts.push(p.profile);
       indexMap.push({ performerIndex: i, field: 'profile' });
     }
@@ -1289,17 +1297,22 @@ export async function translatePerformersBatch(
     const translations = await translateBatch(allTexts, lang, 'ja');
     if (translations) {
       for (let i = 0; i < translations.length && i < indexMap.length; i++) {
-        const { performerIndex, field } = indexMap[i];
+        const indexEntry = indexMap[i];
+        if (!indexEntry) continue;
+        const { performerIndex, field } = indexEntry;
         const result = results[performerIndex] as PerformerTranslation;
 
         if (!result[lang]) {
           result[lang] = { name: '' };
         }
 
-        if (field === 'name') {
-          result[lang]!.name = translations[i].translatedText;
-        } else {
-          result[lang]!.profile = translations[i].translatedText;
+        const langResult = result[lang];
+        if (langResult) {
+          if (field === 'name') {
+            langResult.name = translations[i]?.translatedText ?? '';
+          } else {
+            langResult.profile = translations[i]?.translatedText ?? '';
+          }
         }
       }
     }
@@ -1329,16 +1342,18 @@ export async function translateProduct(
 
   // タイトルと説明をまとめて翻訳（API呼び出し回数削減）
   const textsToTranslate = [title];
-  if (description && description.trim()) {
+  if (description?.trim()) {
     textsToTranslate.push(description);
   }
 
   for (const lang of languages) {
     const translations = await translateBatch(textsToTranslate, lang, 'ja');
-    if (translations && translations.length > 0) {
+    const firstTranslation = translations?.[0];
+    const secondTranslation = translations?.[1];
+    if (firstTranslation) {
       result[lang] = {
-        title: translations[0].translatedText,
-        ...(translations[1] && { description: translations[1].translatedText }),
+        title: firstTranslation.translatedText,
+        ...(secondTranslation && { description: secondTranslation.translatedText }),
       };
     }
   }
@@ -1368,10 +1383,11 @@ export async function translateProductsBatch(
 
   for (let i = 0; i < products.length; i++) {
     const p = products[i];
+    if (!p) continue;
     allTexts.push(p.title);
     indexMap.push({ productIndex: i, field: 'title' });
 
-    if (p.description && p.description.trim()) {
+    if (p.description?.trim()) {
       allTexts.push(p.description);
       indexMap.push({ productIndex: i, field: 'description' });
     }
@@ -1382,17 +1398,22 @@ export async function translateProductsBatch(
     const translations = await translateBatch(allTexts, lang, 'ja');
     if (translations) {
       for (let i = 0; i < translations.length && i < indexMap.length; i++) {
-        const { productIndex, field } = indexMap[i];
+        const indexEntry = indexMap[i];
+        if (!indexEntry) continue;
+        const { productIndex, field } = indexEntry;
         const result = results[productIndex] as ProductTranslation;
 
         if (!result[lang]) {
           result[lang] = { title: '' };
         }
 
-        if (field === 'title') {
-          result[lang]!.title = translations[i].translatedText;
-        } else {
-          result[lang]!.description = translations[i].translatedText;
+        const langResult = result[lang];
+        if (langResult) {
+          if (field === 'title') {
+            langResult.title = translations[i]?.translatedText ?? '';
+          } else {
+            langResult.description = translations[i]?.translatedText ?? '';
+          }
         }
       }
     }
@@ -1450,7 +1471,7 @@ export async function requestIndexing(
       console.error('[Indexing API] Error:', error);
 
       const errorMessage = error?.error?.message || 'Unknown error';
-      const errorCode = error?.error?.code || response.status;
+      const errorCode = error?.error?.code || response['status'];
 
       // URL所有権確認エラーの検出
       const requiresOwnershipVerification =
@@ -1601,7 +1622,7 @@ export async function searchYouTubeVideos(
 
     const data = await response.json();
     return (data.items || []).map((item: any) => ({
-      id: item.id?.videoId,
+      id: item['id']?.videoId,
       title: item.snippet?.title,
       description: item.snippet?.description,
       thumbnailUrl: item.snippet?.thumbnails?.medium?.url,
@@ -1647,7 +1668,7 @@ export async function getYouTubeVideoDetails(
     if (!item) return null;
 
     return {
-      id: item.id,
+      id: item['id'],
       title: item.snippet?.title,
       description: item.snippet?.description,
       thumbnailUrl: item.snippet?.thumbnails?.medium?.url,
@@ -1665,7 +1686,7 @@ export async function getYouTubeVideoDetails(
 // Gemini API - AI商品説明生成
 // =============================================================================
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || GOOGLE_API_KEY;
+const GEMINI_API_KEY = process.env['GEMINI_API_KEY'] || GOOGLE_API_KEY;
 
 export interface GeneratedDescription {
   shortDescription: string;  // 短い紹介文（50-100文字）
@@ -1769,8 +1790,8 @@ ${reviewInfo}
     );
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('[Gemini API] HTTP error:', response.status, error);
+      const error = await response['text']();
+      console.error('[Gemini API] HTTP error:', response['status'], error);
       return null;
     }
 
@@ -1917,15 +1938,22 @@ export async function batchGenerateDescriptions(
     const batch = products.slice(i, i + concurrency);
 
     const promises = batch.map(async (product) => {
-      const result = await generateProductDescription({
-        title: product.title,
-        originalDescription: product.originalDescription,
-        performers: product.performers,
-        genres: product.genres,
-      });
+      const params: Parameters<typeof generateProductDescription>[0] = {
+        title: product['title'],
+      };
+      if (product.originalDescription !== undefined) {
+        params.originalDescription = product.originalDescription;
+      }
+      if (product.performers !== undefined) {
+        params.performers = product.performers;
+      }
+      if (product.genres !== undefined) {
+        params.genres = product.genres;
+      }
+      const result = await generateProductDescription(params);
 
       if (result) {
-        results.set(product.id, result);
+        results.set(product['id'], result);
       }
 
       return result;
@@ -2055,8 +2083,8 @@ ${reviewTexts}
     );
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('[Gemini API] generateProductReview HTTP error:', response.status, error);
+      const error = await response['text']();
+      console.error('[Gemini API] generateProductReview HTTP error:', response['status'], error);
       return null;
     }
 
@@ -2129,16 +2157,23 @@ export async function batchGenerateProductReviews(
         return null;
       }
 
-      const result = await generateProductReview({
-        title: product.title,
-        description: product.description,
-        performers: product.performers,
-        genres: product.genres,
+      const params: Parameters<typeof generateProductReview>[0] = {
+        title: product['title'],
         reviews: product.reviews,
-      });
+      };
+      if (product['description'] !== undefined) {
+        params.description = product['description'];
+      }
+      if (product.performers !== undefined) {
+        params.performers = product.performers;
+      }
+      if (product.genres !== undefined) {
+        params.genres = product.genres;
+      }
+      const result = await generateProductReview(params);
 
       if (result) {
-        results.set(product.id, result);
+        results.set(product['id'], result);
       }
 
       return result;
@@ -2275,8 +2310,8 @@ ${existingInfo}
     );
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('[Gemini API] generatePerformerReview HTTP error:', response.status, error);
+      const error = await response['text']();
+      console.error('[Gemini API] generatePerformerReview HTTP error:', response['status'], error);
       return null;
     }
 
@@ -2341,17 +2376,28 @@ export async function batchGeneratePerformerReviews(
     const batch = performers.slice(i, i + concurrency);
 
     const promises = batch.map(async (performer) => {
-      const result = await generatePerformerReview({
-        performerName: performer.name,
-        aliases: performer.aliases,
-        productTitles: performer.productTitles,
-        genres: performer.genres,
-        productCount: performer.productCount,
-        existingReview: performer.existingReview,
-      });
+      const params: Parameters<typeof generatePerformerReview>[0] = {
+        performerName: performer['name'],
+      };
+      if (performer.aliases !== undefined) {
+        params.aliases = performer.aliases;
+      }
+      if (performer.productTitles !== undefined) {
+        params.productTitles = performer.productTitles;
+      }
+      if (performer.genres !== undefined) {
+        params.genres = performer.genres;
+      }
+      if (performer.productCount !== undefined) {
+        params.productCount = performer.productCount;
+      }
+      if (performer.existingReview !== undefined) {
+        params.existingReview = performer.existingReview;
+      }
+      const result = await generatePerformerReview(params);
 
       if (result) {
-        results.set(performer.id, result);
+        results.set(performer['id'], result);
       }
 
       return result;
@@ -2401,7 +2447,7 @@ export function checkGoogleApiConfig(): {
 // Cloud Storage API - 大容量データ保存
 // =============================================================================
 
-const GCS_BUCKET_NAME = process.env.GCS_RAW_DATA_BUCKET || 'adult-v-raw-data';
+const GCS_BUCKET_NAME = process.env['GCS_RAW_DATA_BUCKET'] || 'adult-v-raw-data';
 
 export interface GcsUploadResult {
   success: boolean;
@@ -2515,8 +2561,8 @@ export async function uploadToGcs(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[GCS] Upload failed:', response.status, errorText);
+      const errorText = await response['text']();
+      console.error('[GCS] Upload failed:', response['status'], errorText);
       return null;
     }
 
@@ -2549,7 +2595,7 @@ export async function downloadFromGcs(gcsUrl: string): Promise<string | null> {
   try {
     // gs://bucket/path 形式をパース
     const match = gcsUrl.match(/^gs:\/\/([^/]+)\/(.+)$/);
-    if (!match) {
+    if (!match?.[1] || !match[2]) {
       console.error('[GCS] Invalid GCS URL:', gcsUrl);
       return null;
     }
@@ -2564,13 +2610,13 @@ export async function downloadFromGcs(gcsUrl: string): Promise<string | null> {
     });
 
     if (!response.ok) {
-      console.error('[GCS] Download failed:', response.status);
+      console.error('[GCS] Download failed:', response['status']);
       return null;
     }
 
     // gzip圧縮されている場合は解凍
     const buffer = Buffer.from(await response.arrayBuffer());
-    if (objectPath.endsWith('.gz')) {
+    if (objectPath?.endsWith('.gz')) {
       const zlib = await import('zlib');
       const decompressed = zlib.gunzipSync(buffer);
       return decompressed.toString('utf-8');

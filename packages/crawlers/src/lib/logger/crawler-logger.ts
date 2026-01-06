@@ -39,12 +39,12 @@ const LOG_LEVELS: Record<LogLevel, number> = {
 /**
  * 現在のログレベル（環境変数で設定可能）
  */
-const CURRENT_LOG_LEVEL: LogLevel = (process.env.CRAWLER_LOG_LEVEL as LogLevel) || 'info';
+const CURRENT_LOG_LEVEL: LogLevel = (process.env['CRAWLER_LOG_LEVEL'] as LogLevel) || 'info';
 
 /**
  * JSON形式でログを出力するか（本番環境用）
  */
-const USE_JSON_LOGS = process.env.CRAWLER_JSON_LOGS === 'true' || process.env.NODE_ENV === 'production';
+const USE_JSON_LOGS = process.env['CRAWLER_JSON_LOGS'] === 'true' || process.env['NODE_ENV'] === 'production';
 
 /**
  * ログを出力するべきか判定
@@ -121,7 +121,7 @@ export class CrawlerLogger {
   }
 
   private createLog(level: LogLevel, message: string, context?: LogContext, error?: Error): StructuredLog {
-    return {
+    const log: StructuredLog = {
       timestamp: new Date().toISOString(),
       level,
       message,
@@ -129,14 +129,15 @@ export class CrawlerLogger {
         crawler: this.crawlerName,
         ...context,
       },
-      error: error
-        ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-          }
-        : undefined,
     };
+    if (error) {
+      log.error = {
+        name: error.name,
+        message: error.message,
+        ...(error.stack !== undefined && { stack: error.stack }),
+      };
+    }
+    return log;
   }
 
   debug(message: string, context?: LogContext): void {
@@ -213,7 +214,7 @@ export const log = {
       timestamp: new Date().toISOString(),
       level: 'debug',
       message,
-      context,
+      ...(context !== undefined && { context }),
     });
   },
   info: (message: string, context?: LogContext) => {
@@ -221,7 +222,7 @@ export const log = {
       timestamp: new Date().toISOString(),
       level: 'info',
       message,
-      context,
+      ...(context !== undefined && { context }),
     });
   },
   warn: (message: string, context?: LogContext) => {
@@ -229,7 +230,7 @@ export const log = {
       timestamp: new Date().toISOString(),
       level: 'warn',
       message,
-      context,
+      ...(context !== undefined && { context }),
     });
   },
   error: (message: string, error?: Error | unknown, context?: LogContext) => {
@@ -238,14 +239,14 @@ export const log = {
       timestamp: new Date().toISOString(),
       level: 'error',
       message,
-      context,
-      error: err
-        ? {
-            name: err.name,
-            message: err.message,
-            stack: err.stack,
-          }
-        : undefined,
+      ...(context !== undefined && { context }),
+      ...(err !== undefined && {
+        error: {
+          name: err.name,
+          message: err.message,
+          ...(err.stack !== undefined && { stack: err.stack }),
+        },
+      }),
     });
   },
 };

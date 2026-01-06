@@ -177,12 +177,12 @@ export async function fetchWithRetry(
       const response = await fetch(url, init);
 
       // リトライ可能なステータスコードの場合はエラーとして扱う
-      if (!response.ok && isRetryableStatus(response.status)) {
-        const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as Error & {
+      if (!response.ok && isRetryableStatus(response['status'])) {
+        const error = new Error(`HTTP ${response['status']}: ${response.statusText}`) as Error & {
           status: number;
         };
         error.name = 'HTTPError';
-        (error as any).status = response.status;
+        (error as any).status = response['status'];
         throw error;
       }
 

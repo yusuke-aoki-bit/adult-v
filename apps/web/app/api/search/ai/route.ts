@@ -63,9 +63,9 @@ export async function POST(request: NextRequest) {
 
     // キーワードクエリ
     if (analysis.expandedQuery) {
-      searchParams.q = analysis.expandedQuery;
+      searchParams['q'] = analysis.expandedQuery;
     } else if (analysis.keywords.length > 0) {
-      searchParams.q = analysis.keywords.join(' ');
+      searchParams['q'] = analysis.keywords.join(' ');
     }
 
     // ジャンルフィルター
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         .from(tags)
         .where(sql`${tags.category} = 'genre' AND ${tags.name} = ANY(${genreNames})`);
       if (genreIdsResult.length > 0) {
-        searchParams.include = genreIdsResult.map(r => String(r.id));
+        searchParams['include'] = genreIdsResult.map(r => String(r.id));
       }
     }
 
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         .from(tags)
         .where(sql`${tags.category} = 'genre' AND ${tags.name} = ANY(${excludeNames})`);
       if (excludeIdsResult.length > 0) {
-        searchParams.exclude = excludeIdsResult.map(r => String(r.id));
+        searchParams['exclude'] = excludeIdsResult.map(r => String(r.id));
       }
     }
 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     // セール中フィルター
     if (analysis.suggestedFilters?.onSale) {
-      searchParams.onSale = 'true';
+      searchParams['onSale'] = 'true';
     }
 
     return NextResponse.json({

@@ -14,7 +14,7 @@ export interface RankingActressesHandlerDeps {
 export function createRankingActressesHandler(deps: RankingActressesHandlerDeps) {
   return async function GET(request: NextRequest) {
     try {
-      const { searchParams } = new URL(request.url);
+      const { searchParams } = new URL(request['url']);
       const period = (searchParams.get('period') || 'weekly') as RankingPeriod;
       const limit = parseInt(searchParams.get('limit') || '20', 10);
 
@@ -56,11 +56,11 @@ export function createRankingActressesHandler(deps: RankingActressesHandlerDeps)
       return NextResponse.json({
         period,
         ranking: ranking.rows.map((row) => ({
-          rank: Number(row.rank),
-          performerId: row.id,
-          name: row.name,
-          image: row.image,
-          viewCount: Number(row.view_count),
+          rank: Number(row['rank']),
+          performerId: row['id'],
+          name: row['name'],
+          image: row['image'],
+          viewCount: Number(row['view_count']),
         })),
       });
     } catch (error) {

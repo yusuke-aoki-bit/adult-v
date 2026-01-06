@@ -145,7 +145,7 @@ export async function navigateWithRedirectCheck(
       success: true,
       finalUrl,
       wasRedirected: redirectInfo.isRedirected,
-      redirectType: redirectInfo.redirectType,
+      ...(redirectInfo.redirectType !== undefined && { redirectType: redirectInfo.redirectType }),
     };
   } catch {
     return {
@@ -309,7 +309,7 @@ export async function fetchPerformersFromGoogleSearch(
  * N+1クエリを防ぐためのバッチ処理関数
  *
  * 演者名の検索順序:
- * 1. performers.name で完全一致を検索
+ * 1. performers['name'] で完全一致を検索
  * 2. performer_aliases.alias_name で別名を検索
  * 3. 見つからなければ新規作成
  *
@@ -329,13 +329,13 @@ export async function savePerformersBatch(
 
   const performerMap = new Map<string, number>();
 
-  // 1. まず performers.name で既存の演者を検索
+  // 1. まず performers['name'] で既存の演者を検索
   const existingPerformers = await db.execute(sql`
     SELECT id, name FROM performers
     WHERE name = ANY(ARRAY[${sql.join(performerNames.map(n => sql`${n}`), sql`, `)}]::text[])
   `);
   for (const row of existingPerformers.rows as { id: number; name: string }[]) {
-    performerMap.set(row.name, row.id);
+    performerMap.set(row['name'], row['id']);
   }
 
   // 2. 見つからなかった名前について performer_aliases で別名検索
@@ -364,7 +364,7 @@ export async function savePerformersBatch(
       RETURNING id, name
     `);
     for (const row of upsertResult.rows as { id: number; name: string }[]) {
-      performerMap.set(row.name, row.id);
+      performerMap.set(row['name'], row['id']);
     }
   }
 
@@ -457,7 +457,7 @@ export async function saveTagsBatch(
 
   const tagMap = new Map<string, number>();
   for (const row of upsertResult.rows as { id: number; name: string }[]) {
-    tagMap.set(row.name, row.id);
+    tagMap.set(row['name'], row['id']);
   }
 
   // 2. product_tags リレーションを一括作成
@@ -498,7 +498,7 @@ export function extractProductCodes(normalizedId: string): string[] {
 
     // gvh00802 → GVH-802 形式に変換（先頭0を除去）
     const match = withoutFanza.match(/^([A-Z]+)(\d+)$/);
-    if (match) {
+    if (match && match[1] && match[2]) {
       const letters = match[1];
       const numbers = match[2].replace(/^0+/, ''); // 先頭の0を除去
       codes.push(`${letters}-${numbers}`);
@@ -508,7 +508,7 @@ export function extractProductCodes(normalizedId: string): string[] {
 
   // MGS形式: 425bdsx-01902 → BDSX-01902
   const mgsMatch = upper.match(/^\d+([A-Z]+)-?(\d+)$/);
-  if (mgsMatch) {
+  if (mgsMatch && mgsMatch[1] && mgsMatch[2]) {
     const letters = mgsMatch[1];
     const numbers = mgsMatch[2].replace(/^0+/, '');
     codes.push(`${letters}-${numbers}`);
@@ -517,7 +517,7 @@ export function extractProductCodes(normalizedId: string): string[] {
 
   // 数字プレフィックス + 品番形式: 425BDSX-01902 → BDSX-01902
   const numPrefixMatch = upper.match(/^(\d{2,3})([A-Z]+)-?(\d+)$/);
-  if (numPrefixMatch) {
+  if (numPrefixMatch && numPrefixMatch[2] && numPrefixMatch[3]) {
     const letters = numPrefixMatch[2];
     const numbers = numPrefixMatch[3];
     codes.push(`${letters}-${numbers}`);

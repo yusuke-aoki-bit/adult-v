@@ -286,7 +286,7 @@ export default function UserContributionsWrapper({
   existingPerformers = [],
 }: UserContributionsWrapperProps) {
   const { user, linkGoogle } = useFirebaseAuth();
-  const t = translations[locale] || translations.ja;
+  const t = translations[locale] || translations['ja'];
 
   const handleLoginRequired = () => {
     // Googleログインをトリガー

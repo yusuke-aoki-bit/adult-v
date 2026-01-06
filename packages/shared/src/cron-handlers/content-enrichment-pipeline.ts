@@ -51,7 +51,7 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
     const startTime = Date.now();
     const db = deps.getDb();
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request['url']);
     const limit = parseInt(searchParams.get('limit') || '100', 10);
     const phasesParam = searchParams.get('phases') || 'translation,seo,performer';
     const phases = phasesParam.split(',').map(p => p.trim());
@@ -71,7 +71,7 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
         console.log('\n[Phase 1] Translation backfill...');
         const phaseStart = Date.now();
         const result = await runTranslationPhase(db, limit, deps);
-        result.duration = Date.now() - phaseStart;
+        result['duration'] = Date.now() - phaseStart;
         stats.phases.push(result);
         console.log(`  Processed: ${result.processed}, Success: ${result.success}, Errors: ${result.errors}`);
       }
@@ -81,7 +81,7 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
         console.log('\n[Phase 2] SEO indexing...');
         const phaseStart = Date.now();
         const result = await runSeoPhase(db, limit, deps);
-        result.duration = Date.now() - phaseStart;
+        result['duration'] = Date.now() - phaseStart;
         stats.phases.push(result);
         console.log(`  Processed: ${result.processed}, Success: ${result.success}, Skipped: ${result.skipped}`);
       }
@@ -91,14 +91,14 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
         console.log('\n[Phase 3] Performer linking...');
         const phaseStart = Date.now();
         const result = await runPerformerPhase(db, limit);
-        result.duration = Date.now() - phaseStart;
+        result['duration'] = Date.now() - phaseStart;
         stats.phases.push(result);
         console.log(`  Processed: ${result.processed}, New links: ${result.success}`);
       }
 
-      stats.totalDuration = Date.now() - startTime;
+      stats['totalDuration'] = Date.now() - startTime;
 
-      console.log(`\n[content-enrichment-pipeline] Complete in ${stats.totalDuration}ms`);
+      console.log(`\n[content-enrichment-pipeline] Complete in ${stats['totalDuration']}ms`);
 
       return NextResponse.json({
         success: true,
@@ -106,7 +106,7 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
       });
     } catch (error) {
       console.error('[content-enrichment-pipeline] Error:', error);
-      stats.totalDuration = Date.now() - startTime;
+      stats['totalDuration'] = Date.now() - startTime;
 
       return NextResponse.json({
         success: false,
@@ -161,20 +161,20 @@ async function runTranslationPhase(
 
     try {
       // 英語に翻訳
-      const translatedTitle = await deps.translateText(product.title, 'EN');
+      const translatedTitle = await deps.translateText(product['title'], 'EN');
       if (!translatedTitle) {
         result.skipped++;
         continue;
       }
 
-      const translatedDescription = product.description
-        ? await deps.translateText(product.description, 'EN')
+      const translatedDescription = product['description']
+        ? await deps.translateText(product['description'], 'EN')
         : null;
 
       // 翻訳を保存
       await db.execute(sql`
         INSERT INTO product_translations (product_id, language, title, description)
-        VALUES (${product.id}, 'en', ${translatedTitle}, ${translatedDescription})
+        VALUES (${product['id']}, 'en', ${translatedTitle}, ${translatedDescription})
         ON CONFLICT (product_id, language) DO UPDATE SET
           title = EXCLUDED.title,
           description = EXCLUDED.description,
@@ -186,7 +186,7 @@ async function runTranslationPhase(
       // レート制限対策
       await new Promise(r => setTimeout(r, 50));
     } catch (error) {
-      console.error(`  Translation error for product ${product.id}:`, error);
+      console.error(`  Translation error for product ${product['id']}:`, error);
       result.errors++;
     }
   }
@@ -217,7 +217,7 @@ async function runSeoPhase(
     return result;
   }
 
-  const siteBaseUrl = deps.siteBaseUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://adult-v.com';
+  const siteBaseUrl = deps.siteBaseUrl || process.env['NEXT_PUBLIC_SITE_URL'] || 'https://adult-v.com';
 
   // インデックス未登録の商品を取得
   const products = await db.execute(sql`
@@ -244,7 +244,7 @@ async function runSeoPhase(
       if (indexResult.success) {
         await db.execute(sql`
           INSERT INTO seo_indexing_status (url, product_id, status, last_requested_at)
-          VALUES (${productUrl}, ${product.id}, 'requested', NOW())
+          VALUES (${productUrl}, ${product['id']}, 'requested', NOW())
           ON CONFLICT (url) DO UPDATE SET
             status = 'requested',
             last_requested_at = NOW()
@@ -257,7 +257,7 @@ async function runSeoPhase(
       // レート制限対策
       await new Promise(r => setTimeout(r, 100));
     } catch (error) {
-      console.error(`  Indexing error for product ${product.id}:`, error);
+      console.error(`  Indexing error for product ${product['id']}:`, error);
       result.errors++;
     }
   }
@@ -339,7 +339,7 @@ async function runPerformerPhase(
         // 紐付け
         await db.execute(sql`
           INSERT INTO product_performers (product_id, performer_id)
-          VALUES (${product.id}, ${performerId})
+          VALUES (${product['id']}, ${performerId})
           ON CONFLICT DO NOTHING
         `);
 

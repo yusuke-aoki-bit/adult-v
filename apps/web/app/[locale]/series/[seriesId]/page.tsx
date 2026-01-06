@@ -131,13 +131,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const seriesInfo = await getSeriesInfo(parseInt(seriesId));
   if (!seriesInfo) return {};
 
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const name = locale === 'en' && seriesInfo.nameEn ? seriesInfo.nameEn
     : locale === 'zh' && seriesInfo.nameZh ? seriesInfo.nameZh
     : locale === 'ko' && seriesInfo.nameKo ? seriesInfo.nameKo
     : seriesInfo.name;
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   return {
     ...generateBaseMetadata(
@@ -165,7 +165,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
   const { seriesId, locale } = await params;
   const { sort } = await searchParams;
   const tNav = await getTranslations('nav');
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const seriesInfo = await getSeriesInfo(parseInt(seriesId));
   if (!seriesInfo) notFound();

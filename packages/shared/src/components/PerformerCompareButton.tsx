@@ -21,7 +21,7 @@ export function PerformerCompareButton({
 }: PerformerCompareButtonProps) {
   const { toggleItem, isInCompareList, isFull, maxItems } = usePerformerCompareList();
 
-  const isInList = isInCompareList(performer.id);
+  const isInList = isInCompareList(performer['id']);
   const isDark = theme === 'dark';
 
   const sizeClasses = {

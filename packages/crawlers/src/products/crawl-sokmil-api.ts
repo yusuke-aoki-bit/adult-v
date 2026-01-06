@@ -69,10 +69,10 @@ async function main() {
   const yearArg = args.find(arg => arg.startsWith('--year='));
   const monthArg = args.find(arg => arg.startsWith('--month='));
 
-  const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 100;
-  const offset = offsetArg ? parseInt(offsetArg.split('=')[1]) : 0;
-  const targetYear = yearArg ? parseInt(yearArg.split('=')[1]) : null;
-  const targetMonth = monthArg ? parseInt(monthArg.split('=')[1]) : null;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1]!) : 100;
+  const offset = offsetArg ? parseInt(offsetArg.split('=')[1]!) : 0;
+  const targetYear = yearArg ? parseInt(yearArg.split('=')[1]!) : null;
+  const targetMonth = monthArg ? parseInt(monthArg.split('=')[1]!) : null;
 
   console.log('========================================');
   console.log('=== SOKMIL APIクローラー (GCS対応) ===');
@@ -235,14 +235,14 @@ async function main() {
             sort: 'date',  // 新着順
           });
 
-          if (response.status !== 'success') {
+          if (response['status'] !== 'success') {
             crawlerLog.error(`API エラー: ${response.error}`);
             break;
           }
 
           // 最初のリクエストで総件数をログ
-          if (currentOffset === offset + 1 && response.totalCount) {
-            totalCount = response.totalCount;
+          if (currentOffset === offset + 1 && response['totalCount']) {
+            totalCount = response['totalCount'];
             console.log(`📊 API総件数: ${totalCount.toLocaleString()}件`);
             console.log(`🎯 取得目標: ${limit === 99999 ? '全件' : limit + '件'}\n`);
           }
@@ -291,7 +291,7 @@ async function main() {
         // 商品データの検証
         const validation = validateProductData({
           title: item.itemName,
-          description: item.description || '',
+          description: item['description'] || '',
           aspName: SOURCE_NAME,
           originalId: item.itemId,
         });
@@ -325,7 +325,7 @@ async function main() {
         // 2. 正規化されたデータを保存
         const normalizedProductId = `sokmil-${item.itemId}`;
         // packageImageUrl (pe_xxx.jpg) はフルサイズ、thumbnailUrl (pef_xxx_100x142.jpg) は小さい
-        const thumbnailUrl = item.packageImageUrl || item.thumbnailUrl;
+        const thumbnailUrl = item.packageImageUrl || item['thumbnailUrl'];
 
         const productResult = await db.execute(sql`
           INSERT INTO products (
@@ -338,9 +338,9 @@ async function main() {
           ) VALUES (
             ${normalizedProductId},
             ${item.itemName},
-            ${item.description || null},
-            ${item.releaseDate || null},
-            ${item.duration || null},
+            ${item['description'] || null},
+            ${item['releaseDate'] || null},
+            ${item['duration'] || null},
             ${thumbnailUrl || null}
           )
           ON CONFLICT (normalized_product_id)
@@ -378,8 +378,8 @@ async function main() {
             ${productId},
             ${SOURCE_NAME},
             ${item.itemId},
-            ${item.affiliateUrl},
-            ${item.price || null},
+            ${item['affiliateUrl']},
+            ${item['price'] || null},
             'API'
           )
           ON CONFLICT (product_id, asp_name)
@@ -405,7 +405,7 @@ async function main() {
 
         if (imageUrls.length > 0) {
           const imageTypes = imageUrls.map((url) =>
-            url === item.thumbnailUrl || url === item.packageImageUrl ? 'thumbnail' : 'sample'
+            url === item['thumbnailUrl'] || url === item.packageImageUrl ? 'thumbnail' : 'sample'
           );
           const displayOrders = imageUrls.map((_, i) => i);
 
@@ -422,10 +422,10 @@ async function main() {
         }
 
         // 6. 動画を保存
-        if (item.sampleVideoUrl) {
+        if (item['sampleVideoUrl']) {
           await db.execute(sql`
             INSERT INTO product_videos (product_id, video_url, video_type, asp_name)
-            VALUES (${productId}, ${item.sampleVideoUrl}, 'sample', ${SOURCE_NAME})
+            VALUES (${productId}, ${item['sampleVideoUrl']}, 'sample', ${SOURCE_NAME})
             ON CONFLICT (product_id, video_url) DO NOTHING
           `);
         }
@@ -450,7 +450,7 @@ async function main() {
             // 出演者ID-名前マップを作成
             const performerIdMap = new Map<string, number>();
             for (const row of performerResults.rows as { id: number; name: string }[]) {
-              performerIdMap.set(row.name, row.id);
+              performerIdMap.set(row['name'], row['id']);
             }
 
             // バッチでproduct_performersにリレーション作成
@@ -484,7 +484,7 @@ async function main() {
           // タグID-名前マップを作成
           const tagIdMap = new Map<string, number>();
           for (const row of tagResults.rows as { id: number; name: string }[]) {
-            tagIdMap.set(row.name, row.id);
+            tagIdMap.set(row['name'], row['id']);
           }
 
           // バッチでproduct_tagsにリレーション作成
@@ -506,7 +506,7 @@ async function main() {
         if (item.maker) {
           const categoryResult = await db.execute(sql`
             INSERT INTO categories (name)
-            VALUES (${item.maker.name})
+            VALUES (${item.maker['name']})
             ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
             RETURNING id
           `);

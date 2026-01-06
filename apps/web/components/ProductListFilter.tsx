@@ -209,8 +209,8 @@ export default function ProductListFilter({
   const searchParams = useSearchParams();
   const params = useParams();
   const [isPending, startTransition] = useTransition();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const { isFanzaSite } = useSite();
 
   // FANZAサイトではASPフィルターを非表示にする

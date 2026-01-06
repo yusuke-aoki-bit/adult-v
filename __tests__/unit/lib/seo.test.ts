@@ -95,10 +95,10 @@ describe('SEO Utilities', () => {
       );
 
       expect(schema['@type']).toBe('Product');
-      expect(schema.name).toBe('テスト商品');
-      expect(schema.description).toBe('商品説明');
-      expect(schema.image).toBe('https://example.com/image.jpg');
-      expect(schema.offers).toBeDefined();
+      expect(schema['name']).toBe('テスト商品');
+      expect(schema['description']).toBe('商品説明');
+      expect(schema['image']).toBe('https://example.com/image.jpg');
+      expect(schema['offers']).toBeDefined();
     });
 
     it('should include rating when provided', () => {
@@ -112,8 +112,8 @@ describe('SEO Utilities', () => {
         { ratingValue: 4.5, reviewCount: 50 }
       );
 
-      expect(schema.aggregateRating).toBeDefined();
-      const rating = schema.aggregateRating as { ratingValue: number; reviewCount: number };
+      expect(schema['aggregateRating']).toBeDefined();
+      const rating = schema['aggregateRating'] as { ratingValue: number; reviewCount: number };
       expect(rating.ratingValue).toBe(4.5);
       expect(rating.reviewCount).toBe(50);
     });
@@ -130,7 +130,7 @@ describe('SEO Utilities', () => {
         980 // salePrice
       );
 
-      expect(schema.offers).toBeDefined();
+      expect(schema['offers']).toBeDefined();
     });
 
     it('should include SKU when provided', () => {
@@ -147,7 +147,7 @@ describe('SEO Utilities', () => {
         'SSIS-865' // sku
       );
 
-      expect(schema.sku).toBe('SSIS-865');
+      expect(schema['sku']).toBe('SSIS-865');
     });
   });
 
@@ -162,8 +162,8 @@ describe('SEO Utilities', () => {
       );
 
       expect(schema['@type']).toBe('Person');
-      expect(schema.name).toBe('三上悠亜');
-      expect(schema.description).toBe('AV女優');
+      expect(schema['name']).toBe('三上悠亜');
+      expect(schema['description']).toBe('AV女優');
     });
 
     it('should include workCount when provided', () => {
@@ -175,7 +175,7 @@ describe('SEO Utilities', () => {
         { workCount: 100 }
       );
 
-      expect(schema.knowsAbout).toBe('100作品以上に出演');
+      expect(schema['knowsAbout']).toBe('100作品以上に出演');
     });
 
     it('should include aliases when provided', () => {
@@ -187,7 +187,7 @@ describe('SEO Utilities', () => {
         { aliases: ['鬼頭桃菜'] }
       );
 
-      expect(schema.alternateName).toContain('鬼頭桃菜');
+      expect(schema['alternateName']).toContain('鬼頭桃菜');
     });
   });
 
@@ -202,10 +202,10 @@ describe('SEO Utilities', () => {
 
       expect(schema['@type']).toBe('FAQPage');
       expect(schema.mainEntity).toHaveLength(2);
-      expect(schema.mainEntity[0]['@type']).toBe('Question');
-      expect(schema.mainEntity[0].name).toBe('質問1');
-      expect(schema.mainEntity[0].acceptedAnswer['@type']).toBe('Answer');
-      expect(schema.mainEntity[0].acceptedAnswer.text).toBe('回答1');
+      expect(schema.mainEntity[0]!['@type']).toBe('Question');
+      expect(schema.mainEntity[0]!.name).toBe('質問1');
+      expect(schema.mainEntity[0]!.acceptedAnswer['@type']).toBe('Answer');
+      expect(schema.mainEntity[0]!.acceptedAnswer.text).toBe('回答1');
     });
 
     it('should handle empty FAQ list', () => {
@@ -226,8 +226,8 @@ describe('SEO Utilities', () => {
 
       expect(schema['@type']).toBe('BreadcrumbList');
       expect(schema.itemListElement).toHaveLength(3);
-      expect(schema.itemListElement[0].position).toBe(1);
-      expect(schema.itemListElement[2].position).toBe(3);
+      expect(schema.itemListElement[0]!.position).toBe(1);
+      expect(schema.itemListElement[2]!.position).toBe(3);
     });
   });
 
@@ -287,7 +287,7 @@ describe('generateHowToSchema', () => {
     expect(schema.name).toContain('テスト動画');
     expect(schema.name).toContain('FANZA');
     expect(schema.step).toHaveLength(4);
-    expect(schema.step[0]['@type']).toBe('HowToStep');
+    expect(schema.step[0]!['@type']).toBe('HowToStep');
     expect(schema.totalTime).toBe('PT5M');
   });
 
@@ -302,7 +302,7 @@ describe('generateHowToSchema', () => {
     expect(schema['@type']).toBe('HowTo');
     expect(schema.name).toContain('How to watch');
     expect(schema.step).toHaveLength(4);
-    expect(schema.step[0].text).toContain('Click');
+    expect(schema.step[0]!.text).toContain('Click');
   });
 
   it('should include affiliate URL in first step', () => {
@@ -313,8 +313,8 @@ describe('generateHowToSchema', () => {
       'ja'
     );
 
-    expect(schema.step[0].url).toBe('https://example.com/buy');
-    expect(schema.step[1].url).toBeUndefined();
+    expect(schema.step[0]!.url).toBe('https://example.com/buy');
+    expect(schema.step[1]!.url).toBeUndefined();
   });
 });
 
@@ -360,8 +360,8 @@ describe('generateAggregateOfferSchema', () => {
 
     const schema = generateAggregateOfferSchema(offers);
 
-    expect(schema!.offers[0].seller['@type']).toBe('Organization');
-    expect(schema!.offers[0].seller.name).toBe('FANZA');
+    expect(schema!.offers[0]!.seller['@type']).toBe('Organization');
+    expect(schema!.offers[0]!.seller.name).toBe('FANZA');
   });
 });
 
@@ -378,9 +378,9 @@ describe('generateProductItemListSchema', () => {
     expect(schema.name).toBe('関連商品');
     expect(schema.numberOfItems).toBe(2);
     expect(schema.itemListElement).toHaveLength(2);
-    expect(schema.itemListElement[0].position).toBe(1);
-    expect(schema.itemListElement[0].item['@type']).toBe('Product');
-    expect(schema.itemListElement[0].item.name).toBe('商品1');
+    expect(schema.itemListElement[0]!.position).toBe(1);
+    expect(schema.itemListElement[0]!.item['@type']).toBe('Product');
+    expect(schema.itemListElement[0]!.item.name).toBe('商品1');
   });
 
   it('should include offer info when price is provided', () => {
@@ -390,9 +390,9 @@ describe('generateProductItemListSchema', () => {
 
     const schema = generateProductItemListSchema(products, 'テスト');
 
-    expect(schema.itemListElement[0].item.offers).toBeDefined();
-    expect(schema.itemListElement[0].item.offers['@type']).toBe('Offer');
-    expect(schema.itemListElement[0].item.offers.price).toBe(1980);
+    expect(schema.itemListElement[0]!.item.offers).toBeDefined();
+    expect(schema.itemListElement[0]!.item.offers!['@type']).toBe('Offer');
+    expect(schema.itemListElement[0]!.item.offers!.price).toBe(1980);
   });
 
   it('should use sale price when provided', () => {
@@ -402,14 +402,14 @@ describe('generateProductItemListSchema', () => {
 
     const schema = generateProductItemListSchema(products, 'テスト');
 
-    expect(schema.itemListElement[0].item.offers.price).toBe(980);
+    expect(schema.itemListElement[0]!.item.offers!.price).toBe(980);
   });
 
   it('should include locale in product URL', () => {
     const products = [{ id: 123, title: 'Test' }];
     const schema = generateProductItemListSchema(products, 'Test', 'en');
 
-    expect(schema.itemListElement[0].item.url).toContain('/en/products/123');
+    expect(schema.itemListElement[0]!.item.url).toContain('/en/products/123');
   });
 });
 
@@ -425,9 +425,9 @@ describe('generatePerformerItemListSchema', () => {
     expect(schema['@type']).toBe('ItemList');
     expect(schema.name).toBe('類似女優');
     expect(schema.numberOfItems).toBe(2);
-    expect(schema.itemListElement[0].item['@type']).toBe('Person');
-    expect(schema.itemListElement[0].item.name).toBe('女優A');
-    expect(schema.itemListElement[0].item.jobTitle).toBe('AV女優');
+    expect(schema.itemListElement[0]!.item['@type']).toBe('Person');
+    expect(schema.itemListElement[0]!.item.name).toBe('女優A');
+    expect(schema.itemListElement[0]!.item.jobTitle).toBe('AV女優');
   });
 
   it('should include productCount in knowsAbout', () => {
@@ -437,14 +437,14 @@ describe('generatePerformerItemListSchema', () => {
 
     const schema = generatePerformerItemListSchema(performers, 'テスト');
 
-    expect(schema.itemListElement[0].item.knowsAbout).toBe('100作品以上に出演');
+    expect(schema.itemListElement[0]!.item.knowsAbout).toBe('100作品以上に出演');
   });
 
   it('should include locale in performer URL', () => {
     const performers = [{ id: 456, name: 'Test' }];
     const schema = generatePerformerItemListSchema(performers, 'Test', 'ko');
 
-    expect(schema.itemListElement[0].item.url).toContain('/ko/actress/456');
+    expect(schema.itemListElement[0]!.item.url).toContain('/ko/actress/456');
   });
 });
 

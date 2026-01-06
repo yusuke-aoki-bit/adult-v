@@ -94,7 +94,7 @@ function PreferenceChartComponent({
   // データポリゴンの生成
   const dataPath = useMemo(() => {
     const points = data.map((item, i) => {
-      const point = getPoint(i, item.value);
+      const point = getPoint(i, item['value']);
       return `${point.x},${point.y}`;
     });
     return `M ${points.join(' L ')} Z`;
@@ -121,7 +121,7 @@ function PreferenceChartComponent({
       if (Math.cos(angle) > 0.1) textAnchor = 'start';
       else if (Math.cos(angle) < -0.1) textAnchor = 'end';
 
-      return { x, y, textAnchor, label: item.label, value: item.value };
+      return { x, y, textAnchor, label: item.label, value: item['value'] };
     });
   }, [data, getAngle, center, maxRadius]);
 
@@ -169,7 +169,7 @@ function PreferenceChartComponent({
 
       {/* データポイント */}
       {data.map((item, i) => {
-        const point = getPoint(i, item.value);
+        const point = getPoint(i, item['value']);
         return (
           <circle
             key={`point-${i}`}
@@ -232,12 +232,12 @@ function PreferenceBarChartComponent({
         <div key={item.label}>
           <div className="flex justify-between text-sm mb-1">
             <span className={colors.barLabelClass}>{item.label}</span>
-            <span className={`${colors.barValueClass} font-medium`}>{item.value}%</span>
+            <span className={`${colors.barValueClass} font-medium`}>{item['value']}%</span>
           </div>
           <div className={`h-2 ${colors.barBgClass} rounded-full overflow-hidden`}>
             <div
               className={`h-full ${colors.barFillClass} rounded-full transition-all duration-500`}
-              style={{ width: `${item.value}%` }}
+              style={{ width: `${item['value']}%` }}
             />
           </div>
         </div>

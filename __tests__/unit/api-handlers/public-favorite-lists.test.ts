@@ -48,9 +48,9 @@ describe('Public Favorite Lists Handler', () => {
       ];
 
       const sorted = [...lists].sort((a, b) => b.likeCount - a.likeCount);
-      expect(sorted[0].likeCount).toBe(20);
-      expect(sorted[1].likeCount).toBe(10);
-      expect(sorted[2].likeCount).toBe(5);
+      expect(sorted[0]!.likeCount).toBe(20);
+      expect(sorted[1]!.likeCount).toBe(10);
+      expect(sorted[2]!.likeCount).toBe(5);
     });
   });
 
@@ -164,7 +164,7 @@ describe('Public Favorite Lists Handler', () => {
       const remainingItems = items.filter(i => i.listId !== listIdToDelete);
 
       expect(remainingItems).toHaveLength(1);
-      expect(remainingItems[0].listId).toBe(2);
+      expect(remainingItems[0]!.listId).toBe(2);
     });
   });
 });
@@ -209,7 +209,7 @@ describe('List Items Handler', () => {
       const remainingItems = items.filter(i => i.productId !== productIdToRemove);
 
       expect(remainingItems).toHaveLength(1);
-      expect(remainingItems[0].productId).toBe(456);
+      expect(remainingItems[0]!.productId).toBe(456);
     });
   });
 });
@@ -285,7 +285,7 @@ describe('AddToListButton Component Logic', () => {
     lists.push(newList);
 
     expect(lists).toHaveLength(1);
-    expect(lists[0].title).toBe('New Collection');
+    expect(lists[0]!.title).toBe('New Collection');
   });
 
   it('should toggle product in list', () => {

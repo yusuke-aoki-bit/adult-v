@@ -109,7 +109,7 @@ describe('Price Alerts Handler', () => {
       const remainingAlerts = alerts.filter(a => a.id !== alertIdToDelete);
 
       expect(remainingAlerts).toHaveLength(1);
-      expect(remainingAlerts[0].id).toBe(2);
+      expect(remainingAlerts[0]!.id).toBe(2);
     });
 
     it('should verify subscription ownership before deletion', () => {

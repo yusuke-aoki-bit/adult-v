@@ -66,8 +66,12 @@ export class CrawlerError extends Error {
     this.name = 'CrawlerError';
     this.code = code;
     this.retryable = options?.retryable ?? isRetryableErrorCode(code);
-    this.context = options?.context;
-    this.originalError = options?.originalError;
+    if (options?.context !== undefined) {
+      this.context = options.context;
+    }
+    if (options?.originalError !== undefined) {
+      this.originalError = options.originalError;
+    }
 
     // Error.captureStackTraceが利用可能な場合は使用
     if (Error.captureStackTrace) {
@@ -104,13 +108,13 @@ export class NetworkError extends CrawlerError {
       originalError?: Error;
     }
   ) {
+    const networkContext: Record<string, unknown> = {};
+    if (options?.url !== undefined) networkContext['url'] = options['url'];
+    if (options?.statusCode !== undefined) networkContext['statusCode'] = options['statusCode'];
     super(message, code, {
       retryable: true,
-      context: {
-        url: options?.url,
-        statusCode: options?.statusCode,
-      },
-      originalError: options?.originalError,
+      context: networkContext,
+      ...(options?.originalError !== undefined && { originalError: options.originalError }),
     });
     this.name = 'NetworkError';
   }
@@ -128,13 +132,13 @@ export class ParseError extends CrawlerError {
       originalError?: Error;
     }
   ) {
+    const parseContext: Record<string, unknown> = {};
+    if (options?.productId !== undefined) parseContext['productId'] = options['productId'];
+    if (options?.field !== undefined) parseContext['field'] = options['field'];
     super(message, CrawlerErrorCode.PARSE_ERROR, {
       retryable: false,
-      context: {
-        productId: options?.productId,
-        field: options?.field,
-      },
-      originalError: options?.originalError,
+      context: parseContext,
+      ...(options?.originalError !== undefined && { originalError: options.originalError }),
     });
     this.name = 'ParseError';
   }
@@ -153,13 +157,13 @@ export class DatabaseError extends CrawlerError {
       originalError?: Error;
     }
   ) {
+    const dbContext: Record<string, unknown> = {};
+    if (options?.operation !== undefined) dbContext['operation'] = options['operation'];
+    if (options?.table !== undefined) dbContext['table'] = options['table'];
     super(message, code, {
       retryable: code === CrawlerErrorCode.DB_CONNECTION,
-      context: {
-        operation: options?.operation,
-        table: options?.table,
-      },
-      originalError: options?.originalError,
+      context: dbContext,
+      ...(options?.originalError !== undefined && { originalError: options.originalError }),
     });
     this.name = 'DatabaseError';
   }
@@ -177,13 +181,13 @@ export class ValidationError extends CrawlerError {
       value?: unknown;
     }
   ) {
+    const validationContext: Record<string, unknown> = {};
+    if (options?.productId !== undefined) validationContext['productId'] = options['productId'];
+    if (options?.field !== undefined) validationContext['field'] = options['field'];
+    if (options?.value !== undefined) validationContext['value'] = options['value'];
     super(message, CrawlerErrorCode.VALIDATION_ERROR, {
       retryable: false,
-      context: {
-        productId: options?.productId,
-        field: options?.field,
-        value: options?.value,
-      },
+      context: validationContext,
     });
     this.name = 'ValidationError';
   }
@@ -215,12 +219,12 @@ export function wrapError(error: unknown, context?: Record<string, unknown>): Cr
     }
 
     return new CrawlerError(error.message, code, {
-      context,
+      ...(context !== undefined && { context }),
       originalError: error,
     });
   }
 
   return new CrawlerError(String(error), CrawlerErrorCode.UNKNOWN, {
-    context,
+    ...(context !== undefined && { context }),
   });
 }

@@ -83,8 +83,8 @@ interface AnalyticsData {
 
 export default function AnalyticsDashboard() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,7 +97,7 @@ export default function AnalyticsDashboard() {
       const analyticsData = await response.json();
       setData(analyticsData);
     } catch (error: unknown) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.warn('[AnalyticsDashboard] Failed to fetch analytics:', error);
       }
     } finally {

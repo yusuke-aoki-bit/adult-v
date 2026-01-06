@@ -66,7 +66,7 @@ export default function ViewingPatterns({
   locale,
   className = '',
 }: ViewingPatternsProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

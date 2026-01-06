@@ -33,7 +33,7 @@ function getMatchColor(percent: number): string {
 
 export default function RelatedActresses({ actresses, currentActressName }: RelatedActressesProps) {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = useTranslations('relatedActresses');
 
   if (actresses.length === 0) {

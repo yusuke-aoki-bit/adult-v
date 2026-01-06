@@ -85,9 +85,9 @@ async function main() {
   let failCount = 0;
 
   for (const row of productsWithoutSamples.rows as { id: number; original_product_id: string; title: string }[]) {
-    const productId = row.id;
+    const productId = row['id'];
     const originalProductId = row.original_product_id;
-    const title = row.title;
+    const title = row['title'];
 
     processed++;
     console.log(`[${processed}/${productsWithoutSamples.rows.length}] Processing: ${originalProductId}`);
@@ -114,7 +114,7 @@ async function main() {
     }));
 
     try {
-      await db.insert(productImages).values(imagesToInsert).onConflictDoNothing();
+      await db['insert'](productImages).values(imagesToInsert).onConflictDoNothing();
       console.log(`  💾 Saved ${imagesToInsert.length} sample images`);
       successCount++;
     } catch (error) {

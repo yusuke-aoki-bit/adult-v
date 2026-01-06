@@ -81,7 +81,7 @@ export default function ProductPriceSection({
     },
   };
 
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   return (
     <div className="bg-gray-800 rounded-lg p-6 mt-8">

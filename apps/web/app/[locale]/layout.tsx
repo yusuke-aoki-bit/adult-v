@@ -33,7 +33,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const description = localeDescriptions[locale] || localeDescriptions.ja;
+  const description = localeDescriptions[locale] || localeDescriptions['ja'];
 
   return {
     description,

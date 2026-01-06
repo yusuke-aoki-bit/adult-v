@@ -116,7 +116,7 @@ interface BudgetTrackerProps {
 }
 
 export default function BudgetTracker({ locale, className = '' }: BudgetTrackerProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = translations[locale as keyof typeof translations] || translations['ja'];
   const {
     stats,
     isLoading,

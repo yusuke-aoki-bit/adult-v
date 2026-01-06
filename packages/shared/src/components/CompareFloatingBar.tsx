@@ -108,14 +108,14 @@ export function CompareFloatingBar({
         <div className="flex items-center -space-x-1">
           {items.map((item, index) => (
             <div
-              key={item.id}
+              key={item['id']}
               className="relative"
               style={{ zIndex: items.length - index }}
             >
               {item.imageUrl ? (
                 <img
                   src={item.imageUrl}
-                  alt={item.title}
+                  alt={item['title']}
                   className={`w-10 h-10 rounded-lg object-cover border-2 ${
                     isDark ? 'border-gray-800' : 'border-white'
                   }`}
@@ -135,12 +135,12 @@ export function CompareFloatingBar({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  removeItem(item.id);
+                  removeItem(item['id']);
                 }}
                 className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shadow-md ${
                   isDark ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-red-500 hover:bg-red-400 text-white'
                 }`}
-                aria-label={`Remove ${item.title}`}
+                aria-label={`Remove ${item['title']}`}
               >
                 ×
               </button>

@@ -90,7 +90,7 @@ export function AlsoViewed({
 
   const handleProductClick = (product: AlsoViewedProduct) => {
     if (onProductClick) {
-      onProductClick(String(product.id));
+      onProductClick(String(product['id']));
     }
   };
 
@@ -137,7 +137,7 @@ export function AlsoViewed({
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         {products.map((product) => (
           <div
-            key={product.id}
+            key={product['id']}
             onClick={() => handleProductClick(product)}
             className={`group cursor-pointer rounded-lg overflow-hidden transition-transform hover:scale-[1.02] ${
               isDark ? 'bg-gray-900' : 'bg-white'
@@ -148,7 +148,7 @@ export function AlsoViewed({
               {product.imageUrl ? (
                 <img
                   src={product.imageUrl}
-                  alt={product.title}
+                  alt={product['title']}
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   loading="lazy"
                 />
@@ -177,7 +177,7 @@ export function AlsoViewed({
               <h4 className={`text-[10px] sm:text-xs font-medium line-clamp-2 ${
                 isDark ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                {product.title}
+                {product['title']}
               </h4>
             </div>
           </div>

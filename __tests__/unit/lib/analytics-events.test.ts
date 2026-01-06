@@ -26,22 +26,22 @@ describe('A/B Testing Events', () => {
 
   describe('experiments configuration', () => {
     test('ctaButtonText experiment is defined correctly', () => {
-      expect(experiments.ctaButtonText).toBeDefined();
-      expect(experiments.ctaButtonText.variants).toContain('control');
-      expect(experiments.ctaButtonText.variants).toContain('urgency');
-      expect(experiments.ctaButtonText.variants).toContain('action');
+      expect(experiments['ctaButtonText']).toBeDefined();
+      expect(experiments['ctaButtonText']!.variants).toContain('control');
+      expect(experiments['ctaButtonText']!.variants).toContain('urgency');
+      expect(experiments['ctaButtonText']!.variants).toContain('action');
     });
 
     test('priceDisplayStyle experiment is defined correctly', () => {
-      expect(experiments.priceDisplayStyle).toBeDefined();
-      expect(experiments.priceDisplayStyle.variants).toContain('control');
-      expect(experiments.priceDisplayStyle.variants).toContain('emphasized');
+      expect(experiments['priceDisplayStyle']).toBeDefined();
+      expect(experiments['priceDisplayStyle']!.variants).toContain('control');
+      expect(experiments['priceDisplayStyle']!.variants).toContain('emphasized');
     });
 
     test('saleCountdownStyle experiment is defined correctly', () => {
-      expect(experiments.saleCountdownStyle).toBeDefined();
-      expect(experiments.saleCountdownStyle.variants).toContain('control');
-      expect(experiments.saleCountdownStyle.variants).toContain('animated');
+      expect(experiments['saleCountdownStyle']).toBeDefined();
+      expect(experiments['saleCountdownStyle']!.variants).toContain('control');
+      expect(experiments['saleCountdownStyle']!.variants).toContain('animated');
     });
   });
 
@@ -53,7 +53,7 @@ describe('A/B Testing Events', () => {
 
     test('returns a valid variant for known experiment', () => {
       const variant = getVariant('ctaButtonText');
-      expect(experiments.ctaButtonText.variants).toContain(variant);
+      expect(experiments['ctaButtonText']!.variants).toContain(variant);
     });
 
     test('persists variant on subsequent calls', () => {
@@ -115,9 +115,9 @@ describe('A/B Testing Events', () => {
     test('returns valid variants for each experiment', () => {
       const allVariants = getAllVariants();
 
-      expect(experiments.ctaButtonText.variants).toContain(allVariants.ctaButtonText);
-      expect(experiments.priceDisplayStyle.variants).toContain(allVariants.priceDisplayStyle);
-      expect(experiments.saleCountdownStyle.variants).toContain(allVariants.saleCountdownStyle);
+      expect(experiments['ctaButtonText']!.variants).toContain(allVariants['ctaButtonText']);
+      expect(experiments['priceDisplayStyle']!.variants).toContain(allVariants['priceDisplayStyle']);
+      expect(experiments['saleCountdownStyle']!.variants).toContain(allVariants['saleCountdownStyle']);
     });
   });
 

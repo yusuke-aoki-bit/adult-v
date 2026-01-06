@@ -53,7 +53,7 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
     const startTime = Date.now();
     const db = deps.getDb();
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request['url']);
     const asp = searchParams.get('asp') || undefined;
     const limit = parseInt(searchParams.get('limit') || '500', 10);
     const sources = (searchParams.get('source') || 'nakiny,minnano-av').split(',');
@@ -112,9 +112,9 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
         console.log('\n[Phase 3] Skipping fake performer merge (skipMerge=true)');
       }
 
-      stats.totalDuration = Date.now() - startTime;
+      stats['totalDuration'] = Date.now() - startTime;
 
-      console.log(`\n[performer-pipeline] Complete in ${stats.totalDuration}ms`);
+      console.log(`\n[performer-pipeline] Complete in ${stats['totalDuration']}ms`);
 
       return NextResponse.json({
         success: true,
@@ -122,7 +122,7 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
       });
     } catch (error) {
       console.error('[performer-pipeline] Error:', error);
-      stats.totalDuration = Date.now() - startTime;
+      stats['totalDuration'] = Date.now() - startTime;
 
       return NextResponse.json({
         success: false,
@@ -222,7 +222,7 @@ async function linkPerformersFromLookup(
         // 紐付け
         await db.execute(sql`
           INSERT INTO product_performers (product_id, performer_id)
-          VALUES (${product.id}, ${performerId})
+          VALUES (${product['id']}, ${performerId})
           ON CONFLICT DO NOTHING
         `);
 
@@ -295,9 +295,11 @@ function normalizeProductCodeForSearch(code: string): string[] {
   const match = upper.match(/^(\d+)([A-Z]+)-?(\d+)$/);
   if (match) {
     const [, numPrefix, letters, number] = match;
-    codes.push(`${numPrefix}${letters}-${number}`);
-    codes.push(`${numPrefix}${letters}${number}`);
-    codes.push(`${numPrefix}${letters}-${parseInt(number, 10)}`);
+    if (numPrefix && letters && number) {
+      codes.push(`${numPrefix}${letters}-${number}`);
+      codes.push(`${numPrefix}${letters}${number}`);
+      codes.push(`${numPrefix}${letters}-${parseInt(number, 10)}`);
+    }
   }
 
   return [...new Set(codes)];
@@ -316,7 +318,7 @@ async function getPerformersFromWiki(
     SELECT DISTINCT performer_name
     FROM wiki_crawl_data
     WHERE UPPER(product_code) = ANY(ARRAY[${sql.join(
-      searchCodes.map((c) => sql`${c.toUpperCase()}`),
+      searchCodes.map((c: string) => sql`${c.toUpperCase()}`),
       sql`, `
     )}]::text[])
   `);
@@ -356,7 +358,7 @@ async function findPerformersFromFanza(
   `);
 
   return (result.rows as { id: number; name: string }[])
-    .filter((row) => !isFakePerformerName(row.name));
+    .filter((row) => !isFakePerformerName(row['name']));
 }
 
 /**
@@ -503,7 +505,7 @@ async function mergeFakePerformers(
     const productCode = product.normalized_product_id.replace(/^[A-Z]+-/, '').toUpperCase();
 
     // wiki_crawl_dataから正しい演者を検索
-    let correctPerformerName: string | null = null;
+    let correctPerformerName: string | null | undefined = null;
     let correctPerformerId: number | null = null;
 
     const wikiPerformers = await getPerformersFromWiki(db, productCode);
@@ -512,9 +514,9 @@ async function mergeFakePerformers(
     } else {
       // FANZAから検索
       const fanzaPerformers = await findPerformersFromFanza(db, productCode);
-      if (fanzaPerformers.length > 0) {
-        correctPerformerName = fanzaPerformers[0].name;
-        correctPerformerId = fanzaPerformers[0].id;
+      if (fanzaPerformers.length > 0 && fanzaPerformers[0]) {
+        correctPerformerName = fanzaPerformers[0]['name'];
+        correctPerformerId = fanzaPerformers[0]['id'];
       }
     }
 

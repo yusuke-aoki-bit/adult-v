@@ -36,7 +36,7 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
 
     try {
       const db = getDb() as Record<string, unknown>;
-      const { searchParams } = new URL(request.url);
+      const { searchParams } = new URL(request['url']);
       const limit = parseInt(searchParams.get('limit') || '20', 10);
       const page = parseInt(searchParams.get('page') || '1', 10);
       const offset = (page - 1) * limit;
@@ -46,28 +46,28 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
       const rookieYear = currentYear - 1; // 今年と前年を新人とする
 
       // 新人演者を取得（作品数でソート）
-      const rookiePerformersQuery = await (db.select as CallableFunction)({
-        id: (performers as Record<string, unknown>).id,
-        name: (performers as Record<string, unknown>).name,
-        imageUrl: (performers as Record<string, unknown>).profileImageUrl,
-        debutYear: (performers as Record<string, unknown>).debutYear,
-        productCount: (sql as CallableFunction)`CAST(COUNT(DISTINCT ${(productPerformers as Record<string, unknown>).productId}) AS INTEGER)`,
+      const rookiePerformersQuery = await (db['select'] as CallableFunction)({
+        id: (performers as Record<string, unknown>)['id'],
+        name: (performers as Record<string, unknown>)['name'],
+        imageUrl: (performers as Record<string, unknown>)['profileImageUrl'],
+        debutYear: (performers as Record<string, unknown>)['debutYear'],
+        productCount: (sql as CallableFunction)`CAST(COUNT(DISTINCT ${(productPerformers as Record<string, unknown>)['productId']}) AS INTEGER)`,
       })
         .from(performers)
         .leftJoin(
           productPerformers,
-          eq((productPerformers as Record<string, unknown>).performerId, (performers as Record<string, unknown>).id)
+          eq((productPerformers as Record<string, unknown>)['performerId'], (performers as Record<string, unknown>)['id'])
         )
         .where(
-          gte((performers as Record<string, unknown>).debutYear, rookieYear)
+          gte((performers as Record<string, unknown>)['debutYear'], rookieYear)
         )
         .groupBy(
-          (performers as Record<string, unknown>).id,
-          (performers as Record<string, unknown>).name,
-          (performers as Record<string, unknown>).profileImageUrl,
-          (performers as Record<string, unknown>).debutYear
+          (performers as Record<string, unknown>)['id'],
+          (performers as Record<string, unknown>)['name'],
+          (performers as Record<string, unknown>)['profileImageUrl'],
+          (performers as Record<string, unknown>)['debutYear']
         )
-        .orderBy(desc((sql as CallableFunction)`COUNT(DISTINCT ${(productPerformers as Record<string, unknown>).productId})`))
+        .orderBy(desc((sql as CallableFunction)`COUNT(DISTINCT ${(productPerformers as Record<string, unknown>)['productId']})`))
         .limit(limit)
         .offset(offset);
 
@@ -78,27 +78,27 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
 
       if (rookieIds.length > 0) {
         // 各演者の最新作品を取得
-        const latestProducts = await (db.select as CallableFunction)({
-          performerId: (productPerformers as Record<string, unknown>).performerId,
-          title: (products as Record<string, unknown>).title,
-          releaseDate: (products as Record<string, unknown>).releaseDate,
+        const latestProducts = await (db['select'] as CallableFunction)({
+          performerId: (productPerformers as Record<string, unknown>)['performerId'],
+          title: (products as Record<string, unknown>)['title'],
+          releaseDate: (products as Record<string, unknown>)['releaseDate'],
         })
           .from(productPerformers)
           .innerJoin(
             products,
-            eq((productPerformers as Record<string, unknown>).productId, (products as Record<string, unknown>).id)
+            eq((productPerformers as Record<string, unknown>)['productId'], (products as Record<string, unknown>)['id'])
           )
           .where(
-            (sql as CallableFunction)`${(productPerformers as Record<string, unknown>).performerId} = ANY(${rookieIds})`
+            (sql as CallableFunction)`${(productPerformers as Record<string, unknown>)['performerId']} = ANY(${rookieIds})`
           )
-          .orderBy(desc((products as Record<string, unknown>).releaseDate));
+          .orderBy(desc((products as Record<string, unknown>)['releaseDate']));
 
         // 各演者の最新作品をマップに格納（最初に見つかったものが最新）
         for (const product of latestProducts as Array<{ performerId: number; title: string; releaseDate: string }>) {
-          if (!latestProductsMap[product.performerId]) {
-            latestProductsMap[product.performerId] = {
-              title: product.title,
-              releaseDate: product.releaseDate,
+          if (!latestProductsMap[product['performerId']]) {
+            latestProductsMap[product['performerId']] = {
+              title: product['title'],
+              releaseDate: product['releaseDate'],
             };
           }
         }
@@ -122,12 +122,12 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
       }));
 
       // 総数を取得
-      const totalCountResult = await (db.select as CallableFunction)({
+      const totalCountResult = await (db['select'] as CallableFunction)({
         count: (sql as CallableFunction)`COUNT(*)`,
       })
         .from(performers)
         .where(
-          gte((performers as Record<string, unknown>).debutYear, rookieYear)
+          gte((performers as Record<string, unknown>)['debutYear'], rookieYear)
         );
 
       const totalCount = Number(totalCountResult[0]?.count || 0);

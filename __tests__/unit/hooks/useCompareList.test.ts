@@ -81,8 +81,8 @@ describe('useCompareList', () => {
       });
 
       expect(result.current.items).toHaveLength(1);
-      expect(result.current.items[0].id).toBe('123');
-      expect(result.current.items[0].title).toBe('Test Product');
+      expect(result.current.items[0]!.id).toBe('123');
+      expect(result.current.items[0]!.title).toBe('Test Product');
     });
 
     it('同じIDは重複追加しない', () => {
@@ -140,7 +140,7 @@ describe('useCompareList', () => {
       });
 
       expect(result.current.items).toHaveLength(1);
-      expect(result.current.items[0].id).toBe('2');
+      expect(result.current.items[0]!.id).toBe('2');
     });
 
     it('存在しないIDを削除しても問題なし', () => {

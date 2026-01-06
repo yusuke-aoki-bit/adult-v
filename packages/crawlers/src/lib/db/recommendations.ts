@@ -15,7 +15,7 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
   const currentProduct = await db
     .select()
     .from(products)
-    .where(eq(products.id, productIdNum))
+    .where(eq(products['id'], productIdNum))
     .limit(1);
 
   if (currentProduct.length === 0) {
@@ -54,23 +54,23 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
   if (performerIds.length > 0) {
     const samePerformerProducts = await db
       .select({
-        id: products.id,
-        title: products.title,
+        id: products['id'],
+        title: products['title'],
         normalizedProductId: products.normalizedProductId,
-        releaseDate: products.releaseDate,
-        imageUrl: products.defaultThumbnailUrl,
+        releaseDate: products['releaseDate'],
+        imageUrl: products['defaultThumbnailUrl'],
         matchScore: sql<number>`COUNT(DISTINCT ${productPerformers.performerId})`.as('match_score'),
       })
       .from(products)
-      .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
+      .innerJoin(productPerformers, eq(products['id'], productPerformers.productId))
       .where(
         and(
           inArray(productPerformers.performerId, performerIds),
-          ne(products.id, productIdNum)
+          ne(products['id'], productIdNum)
         )
       )
-      .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
-      .orderBy(desc(sql`match_score`), desc(products.releaseDate))
+      .groupBy(products['id'], products['title'], products.normalizedProductId, products['releaseDate'], products['defaultThumbnailUrl'])
+      .orderBy(desc(sql`match_score`), desc(products['releaseDate']))
       .limit(limit);
 
     relatedProducts = samePerformerProducts.map((p) => ({
@@ -85,24 +85,24 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
 
     const sameTagProducts = await db
       .select({
-        id: products.id,
-        title: products.title,
+        id: products['id'],
+        title: products['title'],
         normalizedProductId: products.normalizedProductId,
-        releaseDate: products.releaseDate,
-        imageUrl: products.defaultThumbnailUrl,
+        releaseDate: products['releaseDate'],
+        imageUrl: products['defaultThumbnailUrl'],
         matchScore: sql<number>`COUNT(DISTINCT ${productTags.tagId})`.as('match_score'),
       })
       .from(products)
-      .innerJoin(productTags, eq(products.id, productTags.productId))
+      .innerJoin(productTags, eq(products['id'], productTags.productId))
       .where(
         and(
           inArray(productTags.tagId, tagIds),
-          ne(products.id, productIdNum),
-          existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`
+          ne(products['id'], productIdNum),
+          existingIds.length > 0 ? sql`${products['id']} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`
         )
       )
-      .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
-      .orderBy(desc(sql`match_score`), desc(products.releaseDate))
+      .groupBy(products['id'], products['title'], products.normalizedProductId, products['releaseDate'], products['defaultThumbnailUrl'])
+      .orderBy(desc(sql`match_score`), desc(products['releaseDate']))
       .limit(limit - relatedProducts.length);
 
     relatedProducts.push(
@@ -119,20 +119,20 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
 
     const recentProducts = await db
       .select({
-        id: products.id,
-        title: products.title,
+        id: products['id'],
+        title: products['title'],
         normalizedProductId: products.normalizedProductId,
-        releaseDate: products.releaseDate,
-        imageUrl: products.defaultThumbnailUrl,
+        releaseDate: products['releaseDate'],
+        imageUrl: products['defaultThumbnailUrl'],
       })
       .from(products)
       .where(
         and(
-          ne(products.id, productIdNum),
-          existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`
+          ne(products['id'], productIdNum),
+          existingIds.length > 0 ? sql`${products['id']} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`
         )
       )
-      .orderBy(desc(products.releaseDate))
+      .orderBy(desc(products['releaseDate']))
       .limit(limit - relatedProducts.length);
 
     relatedProducts.push(
@@ -158,23 +158,23 @@ export async function getPerformerOtherProducts(performerId: number, currentProd
 
   const query = db
     .select({
-      id: products.id,
-      title: products.title,
+      id: products['id'],
+      title: products['title'],
       normalizedProductId: products.normalizedProductId,
-      releaseDate: products.releaseDate,
-      imageUrl: products.defaultThumbnailUrl,
+      releaseDate: products['releaseDate'],
+      imageUrl: products['defaultThumbnailUrl'],
     })
     .from(products)
-    .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
+    .innerJoin(productPerformers, eq(products['id'], productPerformers.productId))
     .where(
       currentProductIdNum
         ? and(
             eq(productPerformers.performerId, performerId),
-            ne(products.id, currentProductIdNum)
+            ne(products['id'], currentProductIdNum)
           )
         : eq(productPerformers.performerId, performerId)
     )
-    .orderBy(desc(products.releaseDate))
+    .orderBy(desc(products['releaseDate']))
     .limit(limit);
 
   return await query;
@@ -188,16 +188,16 @@ export async function getProductsByTag(tagId: number, limit: number = 20) {
 
   const productsByTag = await db
     .select({
-      id: products.id,
-      title: products.title,
+      id: products['id'],
+      title: products['title'],
       normalizedProductId: products.normalizedProductId,
-      releaseDate: products.releaseDate,
-      imageUrl: products.defaultThumbnailUrl,
+      releaseDate: products['releaseDate'],
+      imageUrl: products['defaultThumbnailUrl'],
     })
     .from(products)
-    .innerJoin(productTags, eq(products.id, productTags.productId))
+    .innerJoin(productTags, eq(products['id'], productTags.productId))
     .where(eq(productTags.tagId, tagId))
-    .orderBy(desc(products.releaseDate))
+    .orderBy(desc(products['releaseDate']))
     .limit(limit);
 
   return productsByTag;
@@ -281,23 +281,23 @@ export async function getRecommendationsFromFavorites(
   if (performerIds.length > 0) {
     const performerMatches = await db
       .select({
-        id: products.id,
-        title: products.title,
+        id: products['id'],
+        title: products['title'],
         normalizedProductId: products.normalizedProductId,
-        releaseDate: products.releaseDate,
-        imageUrl: products.defaultThumbnailUrl,
+        releaseDate: products['releaseDate'],
+        imageUrl: products['defaultThumbnailUrl'],
         matchScore: sql<number>`COUNT(DISTINCT ${productPerformers.performerId})`.as('match_score'),
       })
       .from(products)
-      .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
+      .innerJoin(productPerformers, eq(products['id'], productPerformers.productId))
       .where(
         and(
           inArray(productPerformers.performerId, performerIds),
-          sql`${products.id} NOT IN (${sql.join(favoriteProductIds, sql`, `)})`
+          sql`${products['id']} NOT IN (${sql.join(favoriteProductIds, sql`, `)})`
         )
       )
-      .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
-      .orderBy(desc(sql`match_score`), desc(products.releaseDate))
+      .groupBy(products['id'], products['title'], products.normalizedProductId, products['releaseDate'], products['defaultThumbnailUrl'])
+      .orderBy(desc(sql`match_score`), desc(products['releaseDate']))
       .limit(limit);
 
     recommendations = performerMatches.map((p) => ({
@@ -313,23 +313,23 @@ export async function getRecommendationsFromFavorites(
 
     const tagMatches = await db
       .select({
-        id: products.id,
-        title: products.title,
+        id: products['id'],
+        title: products['title'],
         normalizedProductId: products.normalizedProductId,
-        releaseDate: products.releaseDate,
-        imageUrl: products.defaultThumbnailUrl,
+        releaseDate: products['releaseDate'],
+        imageUrl: products['defaultThumbnailUrl'],
         matchScore: sql<number>`COUNT(DISTINCT ${productTags.tagId})`.as('match_score'),
       })
       .from(products)
-      .innerJoin(productTags, eq(products.id, productTags.productId))
+      .innerJoin(productTags, eq(products['id'], productTags.productId))
       .where(
         and(
           inArray(productTags.tagId, tagIds),
-          sql`${products.id} NOT IN (${sql.join(allExcludedIds, sql`, `)})`
+          sql`${products['id']} NOT IN (${sql.join(allExcludedIds, sql`, `)})`
         )
       )
-      .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
-      .orderBy(desc(sql`match_score`), desc(products.releaseDate))
+      .groupBy(products['id'], products['title'], products.normalizedProductId, products['releaseDate'], products['defaultThumbnailUrl'])
+      .orderBy(desc(sql`match_score`), desc(products['releaseDate']))
       .limit(limit - recommendations.length);
 
     recommendations.push(

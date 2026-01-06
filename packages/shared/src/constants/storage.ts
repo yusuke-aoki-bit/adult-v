@@ -1,5 +1,5 @@
 // サイト識別子（localhostでの開発時にセッションが共有されないように）
-const SITE_MODE = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SITE_MODE || 'adult-v';
+const SITE_MODE = typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_MODE'] || 'adult-v';
 
 // LocalStorage keys（サイトごとに分離）
 export const STORAGE_KEYS = {

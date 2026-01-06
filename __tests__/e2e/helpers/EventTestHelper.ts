@@ -77,10 +77,8 @@ export class EventTestHelper {
       window.__capturedEvents = [];
 
       // gtagをラップ
-      // @ts-expect-error グローバル変数
-      const originalGtag = window.gtag;
-      // @ts-expect-error グローバル変数
-      window.gtag = function(...args: unknown[]) {
+      const originalGtag = (window as any).gtag;
+      (window as any).gtag = function(...args: unknown[]) {
         if (args[0] === 'event' && typeof args[1] === 'string') {
           // @ts-expect-error グローバル変数
           window.__capturedEvents.push({
@@ -91,18 +89,14 @@ export class EventTestHelper {
           });
         }
         if (originalGtag) {
-          // @ts-expect-error グローバル変数
           originalGtag.apply(this, args);
         }
       };
 
       // dataLayerのpushメソッドをラップ (GTM/GA4用)
-      // @ts-expect-error グローバル変数
-      window.dataLayer = window.dataLayer || [];
-      // @ts-expect-error グローバル変数
-      const originalPush = window.dataLayer.push;
-      // @ts-expect-error グローバル変数
-      window.dataLayer.push = function(...args: unknown[]) {
+      (window as any).dataLayer = (window as any).dataLayer || [];
+      const originalPush = (window as any).dataLayer.push;
+      (window as any).dataLayer.push = function(...args: unknown[]) {
         for (const arg of args) {
           if (arg && typeof arg === 'object' && 'event' in arg) {
             const eventObj = arg as { event: string; [key: string]: unknown };
@@ -170,9 +164,9 @@ export class EventTestHelper {
     // キャプチャしたイベントをカウント
     for (const event of this.capturedEvents) {
       if (events[event.name] !== undefined) {
-        events[event.name].fired = true;
-        events[event.name].count++;
-        events[event.name].lastParams = event.params as Record<string, unknown>;
+        events[event.name]!.fired = true;
+        events[event.name]!.count++;
+        events[event.name]!.lastParams = event.params as Record<string, unknown>;
       }
     }
 
@@ -233,21 +227,21 @@ export class EventTestHelper {
 
     report += '--- Analytics Events ---\n';
     for (const name of ALL_EVENTS.analytics) {
-      const event = coverage.events[name];
+      const event = coverage.events[name]!;
       const status = event.fired ? '✓' : '✗';
       report += `${status} ${name}: ${event.count} fires\n`;
     }
 
     report += '\n--- A/B Testing Events ---\n';
     for (const name of ALL_EVENTS.abTesting) {
-      const event = coverage.events[name];
+      const event = coverage.events[name]!;
       const status = event.fired ? '✓' : '✗';
       report += `${status} ${name}: ${event.count} fires\n`;
     }
 
     report += '\n--- Performance Events ---\n';
     for (const name of ALL_EVENTS.performance) {
-      const event = coverage.events[name];
+      const event = coverage.events[name]!;
       const status = event.fired ? '✓' : '✗';
       report += `${status} ${name}: ${event.count} fires\n`;
     }

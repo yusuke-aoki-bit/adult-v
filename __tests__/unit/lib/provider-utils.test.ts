@@ -126,7 +126,7 @@ describe('Hiragana Groups', () => {
   it('should have all keys in HIRAGANA_GROUPS', () => {
     for (const key of HIRAGANA_KEYS) {
       expect(HIRAGANA_GROUPS[key]).toBeDefined();
-      expect(HIRAGANA_GROUPS[key].length).toBeGreaterThan(0);
+      expect(HIRAGANA_GROUPS[key]!.length).toBeGreaterThan(0);
     }
   });
 });
@@ -143,7 +143,7 @@ describe('Alphabet', () => {
 
   it('should be in order', () => {
     for (let i = 1; i < ALPHABET.length; i++) {
-      expect(ALPHABET[i].charCodeAt(0)).toBe(ALPHABET[i - 1].charCodeAt(0) + 1);
+      expect(ALPHABET[i]!.charCodeAt(0)).toBe(ALPHABET[i - 1]!.charCodeAt(0) + 1);
     }
   });
 });
@@ -174,7 +174,7 @@ describe('Price Ranges', () => {
   it('should have an "all" option', () => {
     const allOption = PRICE_RANGES.find(r => r.value === '');
     expect(allOption).toBeDefined();
-    expect(allOption?.label).toBe('すべて');
+    expect(allOption!.label).toBe('すべて');
   });
 
   it('should have valid min/max values', () => {

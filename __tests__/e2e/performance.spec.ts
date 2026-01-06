@@ -100,7 +100,7 @@ test.describe('Core Web Vitals', () => {
       return new Promise<number>((resolve) => {
         new PerformanceObserver((list) => {
           const entries = list.getEntries();
-          const lastEntry = entries[entries.length - 1];
+          const lastEntry = entries[entries.length - 1]!;
           resolve(lastEntry.startTime);
         }).observe({ type: 'largest-contentful-paint', buffered: true });
 
@@ -217,7 +217,7 @@ test.describe('Resource Loading', () => {
     const blockingResources = await page.evaluate(() => {
       const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
       return resources
-        .filter(r => r.renderBlockingStatus === 'blocking')
+        .filter(r => (r as any).renderBlockingStatus === 'blocking')
         .map(r => r.name);
     });
 
@@ -239,7 +239,7 @@ test.describe('Caching', () => {
   });
 
   test('static assets have cache headers', async ({ page }) => {
-    const cacheableAssets: Array<{ url: string; cacheControl: string | null }> = [];
+    const cacheableAssets: Array<{ url: string; cacheControl: string | undefined }> = [];
 
     page.on('response', (response) => {
       const url = response.url();

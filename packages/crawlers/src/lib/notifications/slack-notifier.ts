@@ -43,7 +43,7 @@ interface SlackBlock {
  * Slack Webhook URLを取得
  */
 function getSlackWebhookUrl(): string | null {
-  return process.env.SLACK_CRAWLER_WEBHOOK_URL || null;
+  return process.env['SLACK_CRAWLER_WEBHOOK_URL'] || null;
 }
 
 /**
@@ -67,7 +67,7 @@ async function sendSlackMessage(message: SlackMessage): Promise<boolean> {
     });
 
     if (!response.ok) {
-      console.error('[SlackNotifier] Failed to send message:', response.status);
+      console.error('[SlackNotifier] Failed to send message:', response['status']);
       return false;
     }
 

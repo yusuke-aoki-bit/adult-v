@@ -207,7 +207,7 @@ describe('Performance Tests', () => {
       ids.forEach((id, i) => {
         normalizeProductIdForSearch(id);
         formatProductCodeForDisplay(id);
-        normalizeAspName(aspNames[i % 3]);
+        normalizeAspName(aspNames[i % 3]!);
         generateCacheKey('product', { id });
       });
 

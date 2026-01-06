@@ -237,7 +237,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
     const currentProduct = await db
       .select()
       .from(products)
-      .where(eq(products.id, productIdNum))
+      .where(eq(products['id'], productIdNum))
       .limit(1);
 
     if (currentProduct.length === 0) {
@@ -261,7 +261,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
 
     // ASPフィルター条件
     const aspFilterCondition = aspName && productSources
-      ? sql`EXISTS (SELECT 1 FROM ${productSources} ps WHERE ps.product_id = ${products.id} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
+      ? sql`EXISTS (SELECT 1 FROM ${productSources} ps WHERE ps.product_id = ${products['id']} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
       : sql`1=1`;
 
     // Strategy 1: Same performers (highest priority)
@@ -279,24 +279,24 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
     if (performerIds.length > 0) {
       const samePerformerProducts = await db
         .select({
-          id: products.id,
-          title: products.title,
+          id: products['id'],
+          title: products['title'],
           normalizedProductId: products.normalizedProductId,
-          releaseDate: products.releaseDate,
-          imageUrl: products.defaultThumbnailUrl,
+          releaseDate: products['releaseDate'],
+          imageUrl: products['defaultThumbnailUrl'],
           matchScore: sql<number>`COUNT(DISTINCT ${productPerformers.performerId})`.as('match_score'),
         })
         .from(products)
-        .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
+        .innerJoin(productPerformers, eq(products['id'], productPerformers.productId))
         .where(
           and(
             inArray(productPerformers.performerId, performerIds),
-            ne(products.id, productIdNum),
+            ne(products['id'], productIdNum),
             aspFilterCondition
           )
         )
-        .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
-        .orderBy(desc(sql`match_score`), desc(products.releaseDate))
+        .groupBy(products['id'], products['title'], products.normalizedProductId, products['releaseDate'], products['defaultThumbnailUrl'])
+        .orderBy(desc(sql`match_score`), desc(products['releaseDate']))
         .limit(limit);
 
       relatedProducts = samePerformerProducts.map((p: RelatedProduct) => ({
@@ -311,25 +311,25 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
 
       const sameTagProducts = await db
         .select({
-          id: products.id,
-          title: products.title,
+          id: products['id'],
+          title: products['title'],
           normalizedProductId: products.normalizedProductId,
-          releaseDate: products.releaseDate,
-          imageUrl: products.defaultThumbnailUrl,
+          releaseDate: products['releaseDate'],
+          imageUrl: products['defaultThumbnailUrl'],
           matchScore: sql<number>`COUNT(DISTINCT ${productTags.tagId})`.as('match_score'),
         })
         .from(products)
-        .innerJoin(productTags, eq(products.id, productTags.productId))
+        .innerJoin(productTags, eq(products['id'], productTags.productId))
         .where(
           and(
             inArray(productTags.tagId, tagIds),
-            ne(products.id, productIdNum),
-            existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`,
+            ne(products['id'], productIdNum),
+            existingIds.length > 0 ? sql`${products['id']} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`,
             aspFilterCondition
           )
         )
-        .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
-        .orderBy(desc(sql`match_score`), desc(products.releaseDate))
+        .groupBy(products['id'], products['title'], products.normalizedProductId, products['releaseDate'], products['defaultThumbnailUrl'])
+        .orderBy(desc(sql`match_score`), desc(products['releaseDate']))
         .limit(limit - relatedProducts.length);
 
       relatedProducts.push(
@@ -346,21 +346,21 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
 
       const recentProducts = await db
         .select({
-          id: products.id,
-          title: products.title,
+          id: products['id'],
+          title: products['title'],
           normalizedProductId: products.normalizedProductId,
-          releaseDate: products.releaseDate,
-          imageUrl: products.defaultThumbnailUrl,
+          releaseDate: products['releaseDate'],
+          imageUrl: products['defaultThumbnailUrl'],
         })
         .from(products)
         .where(
           and(
-            ne(products.id, productIdNum),
-            existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`,
+            ne(products['id'], productIdNum),
+            existingIds.length > 0 ? sql`${products['id']} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`,
             aspFilterCondition
           )
         )
-        .orderBy(desc(products.releaseDate))
+        .orderBy(desc(products['releaseDate']))
         .limit(limit - relatedProducts.length);
 
       relatedProducts.push(
@@ -379,9 +379,9 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
       const releaseDate = p.releaseDate as Date | string | null;
       if (releaseDate) {
         if (releaseDate instanceof Date) {
-          releaseDateStr = releaseDate.toISOString().split('T')[0];
+          releaseDateStr = releaseDate.toISOString().split('T')[0] ?? null;
         } else if (typeof releaseDate === 'string') {
-          releaseDateStr = releaseDate.split('T')[0];
+          releaseDateStr = releaseDate.split('T')[0] ?? null;
         }
       }
       return {
@@ -1166,9 +1166,9 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
       }
 
       return (similarActresses.rows as SimilarActressRow[]).map(row => ({
-        id: row.id,
-        name: row.name,
-        thumbnailUrl: row.thumbnailUrl,
+        id: row['id'],
+        name: row['name'],
+        thumbnailUrl: row['thumbnailUrl'],
         heroImageUrl: row.heroImageUrl,
         productCount: typeof row.productCount === 'string' ? parseInt(row.productCount) : row.productCount,
         matchingTags: typeof row.matchingTags === 'string' ? parseInt(row.matchingTags) : row.matchingTags,
@@ -1246,15 +1246,15 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
       }
 
       return (topProducts.rows as TopProductRow[]).map(row => ({
-        id: row.id,
-        title: row.title || '',
+        id: row['id'],
+        title: row['title'] || '',
         normalizedProductId: row.normalizedProductId,
         imageUrl: row.imageUrl,
-        releaseDate: row.releaseDate,
-        rating: row.rating ? Number(row.rating) : null,
-        reviewCount: Number(row.reviewCount),
-        viewCount: Number(row.viewCount),
-        rank: Number(row.rank),
+        releaseDate: row['releaseDate'],
+        rating: row['rating'] ? Number(row['rating']) : null,
+        reviewCount: Number(row['reviewCount']),
+        viewCount: Number(row['viewCount']),
+        rank: Number(row['rank']),
         salePrice: row.salePrice ? Number(row.salePrice) : null,
         saleEndAt: row.saleEndAt,
       }));
@@ -1317,12 +1317,12 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
       }
 
       return (onSaleProducts.rows as OnSaleProductRow[]).map(row => ({
-        id: row.id,
-        title: row.title || '',
+        id: row['id'],
+        title: row['title'] || '',
         normalizedProductId: row.normalizedProductId,
         imageUrl: row.imageUrl,
-        releaseDate: row.releaseDate,
-        originalPrice: row.originalPrice ? Number(row.originalPrice) : null,
+        releaseDate: row['releaseDate'],
+        originalPrice: row['originalPrice'] ? Number(row['originalPrice']) : null,
         salePrice: Number(row.salePrice),
         saleEndAt: row.saleEndAt,
         discountPercent: Number(row.discountPercent),

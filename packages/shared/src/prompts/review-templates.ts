@@ -136,13 +136,13 @@ export function buildReviewPrompt(
   // ユーザープロンプト構築
   const productDetails = [
     `【作品情報】`,
-    `タイトル: ${product.title}`,
+    `タイトル: ${product['title']}`,
     product.performers?.length ? `出演者: ${product.performers.join('、')}` : '',
     product.genres?.length ? `ジャンル: ${product.genres.join('、')}` : '',
     product.studio ? `メーカー: ${product.studio}` : '',
-    product.duration ? `収録時間: ${product.duration}分` : '',
-    product.releaseDate ? `発売日: ${product.releaseDate}` : '',
-    product.description ? `\n【公式説明】\n${product.description}` : '',
+    product['duration'] ? `収録時間: ${product['duration']}分` : '',
+    product['releaseDate'] ? `発売日: ${product['releaseDate']}` : '',
+    product['description'] ? `\n【公式説明】\n${product['description']}` : '',
   ]
     .filter(Boolean)
     .join('\n');
@@ -186,7 +186,7 @@ export function buildScorePrompt(
 }`
       : `You are an expert adult video critic. Rate the work on 5 criteria (1-10) and output in JSON format.`;
 
-  const userPrompt = `${product.title}
+  const userPrompt = `${product['title']}
 ${product.performers?.join(', ') || ''}
 ${product.genres?.join(', ') || ''}
 
@@ -214,7 +214,7 @@ export function buildCatchcopyPrompt(
 - 過激すぎない表現`
       : `You are a copywriter for adult videos. Propose 3 short catchphrases (max 20 chars each) that convey the work's appeal.`;
 
-  const userPrompt = `${product.title}
+  const userPrompt = `${product['title']}
 ${product.performers?.join(', ') || ''}
 ${product.genres?.join(', ') || ''}`;
 

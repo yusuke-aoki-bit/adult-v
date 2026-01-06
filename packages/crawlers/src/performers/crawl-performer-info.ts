@@ -132,7 +132,7 @@ function extractAliasesFromWikipedia(html: string, actressName: string): string[
   for (const pattern of namePatterns) {
     let match;
     while ((match = pattern.exec(leadText)) !== null) {
-      const alias = match[1].trim();
+      const alias = match[1]?.trim();
       if (alias && alias !== actressName && alias.length < 20 && alias.length >= 2) {
         aliases.push(alias);
       }
@@ -156,13 +156,13 @@ function extractProfileFromWikipedia(html: string): ActressData['profile'] {
     // 身長
     if (header.includes('身長')) {
       const match = value.match(/(\d+)/);
-      if (match) profile.height = parseInt(match[1]);
+      if (match?.[1]) profile.height = parseInt(match[1]);
     }
 
     // スリーサイズ
     if (header.includes('スリーサイズ') || header.includes('身体サイズ')) {
       const match = value.match(/(\d+)\s*[-/]\s*(\d+)\s*[-/]\s*(\d+)/);
-      if (match) {
+      if (match?.[1] && match[2] && match[3]) {
         profile.bust = parseInt(match[1]);
         profile.waist = parseInt(match[2]);
         profile.hip = parseInt(match[3]);
@@ -172,13 +172,13 @@ function extractProfileFromWikipedia(html: string): ActressData['profile'] {
     // カップ
     if (header.includes('カップ') || header.includes('バスト')) {
       const cupMatch = value.match(/([A-K])\s*カップ/i);
-      if (cupMatch) profile.cup = cupMatch[1].toUpperCase();
+      if (cupMatch?.[1]) profile.cup = cupMatch[1].toUpperCase();
     }
 
     // 生年月日
     if (header.includes('生年月日') || header.includes('誕生日')) {
       const dateMatch = value.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-      if (dateMatch) {
+      if (dateMatch?.[1] && dateMatch[2] && dateMatch[3]) {
         profile.birthday = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
       }
     }
@@ -191,7 +191,7 @@ function extractProfileFromWikipedia(html: string): ActressData['profile'] {
     // 血液型
     if (header.includes('血液型')) {
       const bloodMatch = value.match(/([ABO]|AB)/i);
-      if (bloodMatch) profile.bloodType = bloodMatch[1].toUpperCase();
+      if (bloodMatch?.[1]) profile.bloodType = bloodMatch[1].toUpperCase();
     }
 
     // 趣味
@@ -251,7 +251,7 @@ async function fetchFromWikipedia(actressName: string): Promise<ActressData | nu
     name: actressName,
     aliases,
     productIds,
-    profile,
+    ...(profile && { profile }),
   };
 }
 
@@ -271,11 +271,11 @@ async function fetchFromAvWikiNet(actressName: string): Promise<ActressData | nu
     });
 
     if (!response.ok) {
-      console.log(`  [av-wiki.net] HTTP ${response.status}`);
+      console.log(`  [av-wiki.net] HTTP ${response['status']}`);
       return null;
     }
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     // 検索結果から名前が完全一致する記事を探す
@@ -314,8 +314,10 @@ async function fetchFromAvWikiNet(actressName: string): Promise<ActressData | nu
         const valueMatch = text.match(/別名[：:]\s*(.+)|旧芸名[：:]\s*(.+)/);
         if (valueMatch) {
           const value = valueMatch[1] || valueMatch[2];
-          const parts = value.split(/[,、/]/).map(a => a.trim()).filter(a => a && a !== actressName);
-          aliases.push(...parts);
+          if (value) {
+            const parts = value.split(/[,、/]/).map(a => a.trim()).filter(a => a && a !== actressName);
+            aliases.push(...parts);
+          }
         }
       }
     });
@@ -359,9 +361,9 @@ async function saveActressData(
 
   // 別名を保存
   for (const alias of data.aliases) {
-    if (!alias || alias === data.name || alias.length < 2) continue;
+    if (!alias || alias === data['name'] || alias.length < 2) continue;
     try {
-      await db.insert(performerAliases).values({
+      await db['insert'](performerAliases).values({
         performerId,
         aliasName: alias,
         source,
@@ -378,14 +380,14 @@ async function saveActressData(
     try {
       const normalizedCode = productId.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
-      const existingProduct = await db.select()
+      const existingProduct = await db['select']()
         .from(products)
         .where(eq(products.normalizedProductId, normalizedCode))
         .limit(1);
 
-      if (existingProduct.length > 0) {
-        await db.insert(productPerformers).values({
-          productId: existingProduct[0].id,
+      if (existingProduct.length > 0 && existingProduct[0]) {
+        await db['insert'](productPerformers).values({
+          productId: existingProduct[0]['id'],
           performerId,
         }).onConflictDoNothing();
         result.productsLinked++;
@@ -399,21 +401,21 @@ async function saveActressData(
   if (data.profile && Object.keys(data.profile).length > 0) {
     try {
       const updateData: Record<string, any> = {};
-      if (data.profile.height) updateData.height = data.profile.height;
-      if (data.profile.bust) updateData.bust = data.profile.bust;
-      if (data.profile.waist) updateData.waist = data.profile.waist;
-      if (data.profile.hip) updateData.hip = data.profile.hip;
-      if (data.profile.cup) updateData.cup = data.profile.cup;
-      if (data.profile.birthday) updateData.birthday = new Date(data.profile.birthday);
-      if (data.profile.birthplace) updateData.birthplace = data.profile.birthplace;
-      if (data.profile.bloodType) updateData.bloodType = data.profile.bloodType;
-      if (data.profile.hobbies) updateData.hobbies = data.profile.hobbies;
-      if (data.profile.debutYear) updateData.debutYear = data.profile.debutYear;
+      if (data.profile.height) updateData['height'] = data.profile.height;
+      if (data.profile.bust) updateData['bust'] = data.profile.bust;
+      if (data.profile.waist) updateData['waist'] = data.profile.waist;
+      if (data.profile.hip) updateData['hip'] = data.profile.hip;
+      if (data.profile.cup) updateData['cup'] = data.profile.cup;
+      if (data.profile.birthday) updateData['birthday'] = new Date(data.profile.birthday);
+      if (data.profile.birthplace) updateData['birthplace'] = data.profile.birthplace;
+      if (data.profile.bloodType) updateData['bloodType'] = data.profile.bloodType;
+      if (data.profile.hobbies) updateData['hobbies'] = data.profile.hobbies;
+      if (data.profile.debutYear) updateData['debutYear'] = data.profile.debutYear;
 
       if (Object.keys(updateData).length > 0) {
-        await db.update(performers)
+        await db['update'](performers)
           .set(updateData)
-          .where(eq(performers.id, performerId));
+          .where(eq(performers['id'], performerId));
         result.profileUpdated = true;
       }
     } catch (error) {
@@ -431,7 +433,7 @@ async function main() {
   const args = process.argv.slice(2);
 
   const limitArg = args.find(a => a.startsWith('--limit='));
-  const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 100;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '100') : 100;
 
   const sourceArg = args.find(a => a.startsWith('--source='));
   const sourceFilter = sourceArg ? sourceArg.split('=')[1] : null;
@@ -448,13 +450,13 @@ async function main() {
 
   if (specificName) {
     // 特定の女優を検索
-    const found = await db.select()
+    const found = await db['select']()
       .from(performers)
-      .where(eq(performers.name, specificName))
+      .where(eq(performers['name'], specificName))
       .limit(1);
 
-    if (found.length > 0) {
-      actressesToProcess = [{ id: found[0].id, name: found[0].name }];
+    if (found.length > 0 && found[0]) {
+      actressesToProcess = [{ id: found[0]['id'], name: found[0]['name'] }];
     } else {
       console.log(`Actress not found: ${specificName}`);
       process.exit(1);
@@ -485,13 +487,13 @@ async function main() {
   let processed = 0;
 
   for (const actress of actressesToProcess) {
-    console.log(`[${++processed}/${actressesToProcess.length}] ${actress.name} (ID: ${actress.id})`);
+    console.log(`[${++processed}/${actressesToProcess.length}] ${actress['name']} (ID: ${actress['id']})`);
 
     // Wikipedia
     if (!sourceFilter || sourceFilter === 'wikipedia') {
-      const wikiData = await fetchFromWikipedia(actress.name);
+      const wikiData = await fetchFromWikipedia(actress['name']);
       if (wikiData) {
-        const result = await saveActressData(db, actress.id, wikiData, 'wikipedia-ja');
+        const result = await saveActressData(db, actress['id'], wikiData, 'wikipedia-ja');
         totalAliases += result.aliasesAdded;
         totalProducts += result.productsLinked;
         if (result.profileUpdated) totalProfiles++;
@@ -502,9 +504,9 @@ async function main() {
 
     // av-wiki.net (オプション)
     if (sourceFilter === 'av-wiki-net') {
-      const avWikiData = await fetchFromAvWikiNet(actress.name);
+      const avWikiData = await fetchFromAvWikiNet(actress['name']);
       if (avWikiData) {
-        const result = await saveActressData(db, actress.id, avWikiData, 'av-wiki-net');
+        const result = await saveActressData(db, actress['id'], avWikiData, 'av-wiki-net');
         totalAliases += result.aliasesAdded;
         totalProducts += result.productsLinked;
         console.log(`    Saved: +${result.aliasesAdded} aliases, +${result.productsLinked} products`);

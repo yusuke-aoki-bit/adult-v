@@ -11,7 +11,7 @@ export interface ActressesHandlerDeps {
 export function createActressesHandler(deps: ActressesHandlerDeps) {
   return async function GET(request: Request) {
     try {
-      const { searchParams } = new URL(request.url);
+      const { searchParams } = new URL(request['url']);
 
       // Check if requesting featured actresses
       const featured = searchParams.get('featured') === 'true';
@@ -52,7 +52,11 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
 
       const query = validateSearchQuery(searchParams.get('query'));
 
-      const actresses = await deps.getActresses({ limit, offset, query });
+      const actresses = await deps.getActresses({
+        limit,
+        offset,
+        ...(query && { query }),
+      });
 
       // Search results cache shorter, static lists cache longer
       const cacheControl = query ? CACHE.FIVE_MIN : CACHE.ONE_HOUR;

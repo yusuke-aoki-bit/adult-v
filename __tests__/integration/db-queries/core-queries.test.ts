@@ -76,7 +76,7 @@ describe('Core Queries Integration', () => {
 
       expect(performersMap.get(1)).toHaveLength(2);
       expect(performersMap.get(2)).toHaveLength(1);
-      expect(performersMap.get(1)?.[0].name).toBe('女優A');
+      expect(performersMap.get(1)![0]!.name).toBe('女優A');
     });
 
     it('should group tags by product ID', () => {
@@ -116,7 +116,7 @@ describe('Core Queries Integration', () => {
       }
 
       expect(imagesMap.get(1)).toHaveLength(2);
-      expect(imagesMap.get(1)?.[0].imageType).toBe('thumbnail');
+      expect(imagesMap.get(1)![0]!.imageType).toBe('thumbnail');
     });
   });
 
@@ -138,7 +138,7 @@ describe('Core Queries Integration', () => {
       );
 
       expect(filtered).toHaveLength(1);
-      expect(filtered[0].productId).toBe(1);
+      expect(filtered[0]!.productId).toBe(1);
     });
 
     it('should filter active sales', () => {
@@ -158,7 +158,7 @@ describe('Core Queries Integration', () => {
         new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
       );
 
-      expect(sorted[0].id).toBe(1); // 2024-01-15 is later
+      expect(sorted[0]!.id).toBe(1); // 2024-01-15 is later
     });
 
     it('should sort by release date ascending', () => {
@@ -166,7 +166,7 @@ describe('Core Queries Integration', () => {
         new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime()
       );
 
-      expect(sorted[0].id).toBe(2); // 2024-01-10 is earlier
+      expect(sorted[0]!.id).toBe(2); // 2024-01-10 is earlier
     });
 
     it('should sort by price (via source)', () => {
@@ -177,7 +177,7 @@ describe('Core Queries Integration', () => {
         (productPrices.get(a.id) || 0) - (productPrices.get(b.id) || 0)
       );
 
-      expect(sorted[0].id).toBe(1); // 1980 < 2980
+      expect(sorted[0]!.id).toBe(1); // 1980 < 2980
     });
   });
 
@@ -199,8 +199,8 @@ describe('Core Queries Integration', () => {
       const paged = allProducts.slice(offset, offset + limit);
 
       expect(paged).toHaveLength(10);
-      expect(paged[0].id).toBe(11);
-      expect(paged[9].id).toBe(20);
+      expect(paged[0]!.id).toBe(11);
+      expect(paged[9]!.id).toBe(20);
     });
 
     it('should handle last page with fewer items', () => {
@@ -212,7 +212,7 @@ describe('Core Queries Integration', () => {
       const paged = allProducts.slice(offset, offset + limit);
 
       expect(paged).toHaveLength(5);
-      expect(paged[0].id).toBe(21);
+      expect(paged[0]!.id).toBe(21);
     });
   });
 

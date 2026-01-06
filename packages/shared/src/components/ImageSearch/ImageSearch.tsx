@@ -328,7 +328,7 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {results.map((result) => (
               <div
-                key={result.id}
+                key={result['id']}
                 className={`rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 ${themeClasses.card}`}
                 onClick={() => handleProductClick(result)}
               >
@@ -336,7 +336,7 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
                   {result.imageUrl ? (
                     <img
                       src={result.imageUrl}
-                      alt={result.title}
+                      alt={result['title']}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -352,7 +352,7 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
                   </div>
                 </div>
                 <div className="p-2">
-                  <p className={`text-xs line-clamp-2 ${themeClasses.text}`}>{result.title}</p>
+                  <p className={`text-xs line-clamp-2 ${themeClasses.text}`}>{result['title']}</p>
                   <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>{result.matchReason}</p>
                 </div>
               </div>

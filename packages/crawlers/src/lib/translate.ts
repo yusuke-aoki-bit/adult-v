@@ -10,10 +10,10 @@
 import { GoogleAuth } from 'google-auth-library';
 
 // Google Cloud Translation API設定
-const GOOGLE_PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT || 'adult-v';
+const GOOGLE_PROJECT_ID = process.env['GOOGLE_CLOUD_PROJECT'] || process.env['GCP_PROJECT'] || 'adult-v';
 
 // DeepL API設定
-const DEEPL_API_KEY = process.env.DEEPL_API_KEY || '';
+const DEEPL_API_KEY = process.env['DEEPL_API_KEY'] || '';
 const DEEPL_API_URL = DEEPL_API_KEY.endsWith(':fx')
   ? 'https://api-free.deepl.com/v2/translate'
   : 'https://api.deepl.com/v2/translate';
@@ -252,8 +252,8 @@ async function translateWithGoogleCloud(
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[Google Cloud] API error: ${response.status} - ${errorText}`);
+      const errorText = await response['text']();
+      console.error(`[Google Cloud] API error: ${response['status']} - ${errorText}`);
       return null;
     }
 
@@ -288,7 +288,7 @@ async function translateProductGoogleCloud(
   try {
     for (const lang of languages) {
       const translations = await translateWithGoogleCloud(texts, lang.code, 'ja');
-      if (translations && translations.length > 0) {
+      if (translations && translations.length > 0 && translations[0]) {
         result[lang.key] = {
           title: translations[0],
           ...(translations[1] && { description: translations[1] }),
@@ -335,8 +335,8 @@ async function translateWithDeepL(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[DeepL] API error: ${response.status} - ${errorText}`);
+      const errorText = await response['text']();
+      console.error(`[DeepL] API error: ${response['status']} - ${errorText}`);
       return null;
     }
 

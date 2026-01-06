@@ -12,8 +12,8 @@ export function generateAltText(product: Product): string {
   const parts: string[] = [];
 
   // タイトル（必須）
-  if (product.title) {
-    parts.push(product.title);
+  if (product['title']) {
+    parts.push(product['title']);
   }
 
   // 女優名
@@ -28,13 +28,13 @@ export function generateAltText(product: Product): string {
   }
 
   // リリース日
-  if (product.releaseDate) {
-    parts.push(product.releaseDate);
+  if (product['releaseDate']) {
+    parts.push(product['releaseDate']);
   }
 
   // 作品ID
-  if (product.normalizedProductId || product.id) {
-    parts.push(product.normalizedProductId || product.id);
+  if (product.normalizedProductId || product['id']) {
+    parts.push(product.normalizedProductId || product['id']);
   }
 
   return parts.join(' | ');
@@ -53,12 +53,12 @@ export function generateMetaDescription(product: Product): string {
   }
 
   // タイトル
-  if (product.title) {
+  if (product['title']) {
     // 150文字以内に収める
     const maxTitleLength = 80;
-    const title = product.title.length > maxTitleLength
-      ? product.title.substring(0, maxTitleLength) + '...'
-      : product.title;
+    const title = product['title'].length > maxTitleLength
+      ? product['title'].substring(0, maxTitleLength) + '...'
+      : product['title'];
     parts.push(title);
   }
 
@@ -69,8 +69,8 @@ export function generateMetaDescription(product: Product): string {
   }
 
   // リリース日
-  if (product.releaseDate) {
-    parts.push(`配信日: ${product.releaseDate}`);
+  if (product['releaseDate']) {
+    parts.push(`配信日: ${product['releaseDate']}`);
   }
 
   // 作品ID
@@ -92,12 +92,12 @@ export function generateMetaDescription(product: Product): string {
 export function generatePageTitle(product: Product, siteName: string = 'Adult-V'): string {
   const parts: string[] = [];
 
-  if (product.title) {
+  if (product['title']) {
     // 60文字以内に収める
     const maxTitleLength = 50;
-    const title = product.title.length > maxTitleLength
-      ? product.title.substring(0, maxTitleLength) + '...'
-      : product.title;
+    const title = product['title'].length > maxTitleLength
+      ? product['title'].substring(0, maxTitleLength) + '...'
+      : product['title'];
     parts.push(title);
   }
 
@@ -117,12 +117,12 @@ export function generateVideoSchema(product: Product, siteUrl: string) {
   return {
     '@context': 'https://schema.org',
     '@type': 'VideoObject',
-    name: product.title,
+    name: product['title'],
     description: generateMetaDescription(product),
     thumbnailUrl: product.imageUrl || '',
-    uploadDate: product.releaseDate || new Date().toISOString().split('T')[0],
-    contentUrl: `${siteUrl}/products/${product.id}`,
-    // duration: product.duration ? `PT${product.duration}M` : undefined, // ISO 8601 format
+    uploadDate: product['releaseDate'] || new Date().toISOString().split('T')[0],
+    contentUrl: `${siteUrl}/products/${product['id']}`,
+    // duration: product['duration'] ? `PT${product['duration']}M` : undefined, // ISO 8601 format
     ...(product.actressName && {
       actor: {
         '@type': 'Person',
@@ -146,9 +146,9 @@ export function generatePerformerSchema(performer: {
   return {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: performer.name,
-    ...(performer.profileImageUrl && {
-      image: performer.profileImageUrl,
+    name: performer['name'],
+    ...(performer['profileImageUrl'] && {
+      image: performer['profileImageUrl'],
     }),
     ...(performer.aliases && performer.aliases.length > 0 && {
       alternateName: performer.aliases,
@@ -168,8 +168,8 @@ export function generateBreadcrumbSchema(
     itemListElement: items.map((item, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      name: item.name,
-      item: item.url,
+      name: item['name'],
+      item: item['url'],
     })),
   };
 }
@@ -187,7 +187,7 @@ export function generateActressAltText(actress: {
   const parts: string[] = [];
 
   // 女優名（必須）
-  parts.push(actress.name);
+  parts.push(actress['name']);
 
   // 別名がある場合は追加
   if (actress.aliases && actress.aliases.length > 0) {
@@ -217,7 +217,7 @@ export function generateSampleImageAltText(
 ): string {
   const parts: string[] = [];
 
-  parts.push(product.title);
+  parts.push(product['title']);
 
   if (product.actressName) {
     parts.push(product.actressName);

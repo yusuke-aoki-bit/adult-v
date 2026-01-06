@@ -195,7 +195,8 @@ export function UnifiedSearchBar({
         const modes: SearchMode[] = ['product', 'actress', 'image', 'ai'];
         const currentIndex = modes.indexOf(mode);
         const nextIndex = (currentIndex + 1) % modes.length;
-        setMode(modes[nextIndex]);
+        const nextMode = modes[nextIndex];
+        if (nextMode) setMode(nextMode);
       }
     };
 

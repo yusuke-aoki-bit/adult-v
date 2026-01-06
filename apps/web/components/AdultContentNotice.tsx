@@ -11,8 +11,8 @@ const translations = {
 
 export default function AdultContentNotice() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
-  const message = translations[locale as keyof typeof translations] || translations.ja;
+  const locale = (params?.['locale'] as string) || 'ja';
+  const message = translations[locale as keyof typeof translations] || translations['ja'];
 
   return (
     <div className="bg-amber-900/20 border-b border-amber-700 relative z-40">

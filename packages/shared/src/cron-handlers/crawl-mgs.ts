@@ -50,7 +50,7 @@ async function getProductUrlsFromList(page: number): Promise<string[]> {
 
   if (!response.ok) return [];
 
-  const html = await response.text();
+  const html = await response['text']();
   const $ = cheerio.load(html);
   const urls: string[] = [];
 
@@ -78,12 +78,12 @@ async function parseMgsDetailPage(productUrl: string): Promise<MgsProduct | null
 
     if (!response.ok) return null;
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     // 商品ID抽出
     const productIdMatch = productUrl.match(/product_detail\/([^\/]+)/);
-    if (!productIdMatch) return null;
+    if (!productIdMatch || !productIdMatch[1]) return null;
     const productId = productIdMatch[1];
 
     // タイトル
@@ -128,7 +128,7 @@ async function parseMgsDetailPage(productUrl: string): Promise<MgsProduct | null
     let price: number | undefined;
     const priceText = $('th:contains("価格")').next('td').text().trim();
     const priceMatch = priceText.match(/(\d+(?:,\d+)*)/);
-    if (priceMatch) {
+    if (priceMatch?.[1]) {
       price = parseInt(priceMatch[1].replace(/,/g, ''));
     }
 
@@ -148,12 +148,12 @@ async function parseMgsDetailPage(productUrl: string): Promise<MgsProduct | null
     return {
       productId,
       title,
-      description,
+      ...(description !== undefined && { description }),
       performers,
-      thumbnailUrl,
-      sampleVideoUrl,
-      releaseDate,
-      price,
+      ...(thumbnailUrl !== undefined && { thumbnailUrl }),
+      ...(sampleVideoUrl !== undefined && { sampleVideoUrl }),
+      ...(releaseDate !== undefined && { releaseDate }),
+      ...(price !== undefined && { price }),
       affiliateWidget: generateAffiliateWidget(productId),
     };
   } catch {
@@ -186,7 +186,7 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
     };
 
     try {
-      const url = new URL(request.url);
+      const url = new URL(request['url']);
       const page = parseInt(url.searchParams.get('page') || '1');
       const limit = parseInt(url.searchParams.get('limit') || '30');
 
@@ -228,7 +228,7 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
 
           await db.execute(sql`
             INSERT INTO raw_html_data (source, product_id, url, html_content, hash)
-            VALUES ('MGS', ${product.productId}, ${productUrl}, ${html}, ${hash})
+            VALUES ('MGS', ${product['productId']}, ${productUrl}, ${html}, ${hash})
             ON CONFLICT (source, product_id) DO UPDATE SET
               html_content = EXCLUDED.html_content,
               hash = EXCLUDED.hash,
@@ -237,7 +237,7 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
           stats.rawDataSaved++;
 
           // 商品データを保存
-          const normalizedProductId = product.productId.toLowerCase();
+          const normalizedProductId = product['productId'].toLowerCase();
 
           const productResult = await db.execute(sql`
             INSERT INTO products (
@@ -245,9 +245,9 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
               default_thumbnail_url, updated_at
             )
             VALUES (
-              ${normalizedProductId}, ${product.title}, ${product.description || null},
-              ${product.releaseDate ? new Date(product.releaseDate) : null},
-              ${product.thumbnailUrl || null}, NOW()
+              ${normalizedProductId}, ${product['title']}, ${product['description'] || null},
+              ${product['releaseDate'] ? new Date(product['releaseDate']) : null},
+              ${product['thumbnailUrl'] || null}, NOW()
             )
             ON CONFLICT (normalized_product_id) DO UPDATE SET
               title = EXCLUDED.title,
@@ -271,8 +271,8 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
               product_id, asp_name, original_product_id, affiliate_url, price, data_source, last_updated
             )
             VALUES (
-              ${productId}, 'MGS', ${product.productId}, ${product.affiliateWidget},
-              ${product.price || null}, 'CRAWL', NOW()
+              ${productId}, 'MGS', ${product['productId']}, ${product.affiliateWidget},
+              ${product['price'] || null}, 'CRAWL', NOW()
             )
             ON CONFLICT (product_id, asp_name) DO UPDATE SET
               affiliate_url = EXCLUDED.affiliate_url,
@@ -296,10 +296,10 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
           }
 
           // サンプル動画
-          if (product.sampleVideoUrl) {
+          if (product['sampleVideoUrl']) {
             const videoResult = await db.execute(sql`
               INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
-              VALUES (${productId}, 'MGS', ${product.sampleVideoUrl}, 'sample', 0)
+              VALUES (${productId}, 'MGS', ${product['sampleVideoUrl']}, 'sample', 0)
               ON CONFLICT DO NOTHING
               RETURNING id
             `);
@@ -308,7 +308,7 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
             }
           }
 
-          console.log(`[crawl-mgs] Processed: ${product.productId} - ${product.title.substring(0, 30)}...`);
+          console.log(`[crawl-mgs] Processed: ${product['productId']} - ${product['title'].substring(0, 30)}...`);
 
           // レート制限
           await new Promise(r => setTimeout(r, 1000));

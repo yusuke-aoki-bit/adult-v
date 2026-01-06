@@ -235,11 +235,11 @@ export function TrendAnalysis({
         <div className="space-y-2">
           {(activeTab === 'tags' ? data.tags : data.performers).map((item, index) => (
             <div
-              key={item.name}
+              key={item['name']}
               className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
                 isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
               }`}
-              onClick={() => activeTab === 'tags' ? onTagClick?.(item.name) : onPerformerClick?.(item.name)}
+              onClick={() => activeTab === 'tags' ? onTagClick?.(item['name']) : onPerformerClick?.(item['name'])}
             >
               {/* Rank */}
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -253,10 +253,10 @@ export function TrendAnalysis({
               {/* Name */}
               <div className="flex-1 min-w-0">
                 <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {item.name}
+                  {item['name']}
                 </p>
                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {item.count} {locale === 'ja' ? '作品' : 'releases'}
+                  {item['count']} {locale === 'ja' ? '作品' : 'releases'}
                 </p>
               </div>
 

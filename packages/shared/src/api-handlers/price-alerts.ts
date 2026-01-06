@@ -42,43 +42,43 @@ export function createPriceAlertsHandler(deps: PriceAlertsHandlerDeps) {
         }
 
         // 購読情報を取得
-        const subscriptionResult = await (db.select as CallableFunction)()
+        const subscriptionResult = await (db['select'] as CallableFunction)()
           .from(pushSubscriptions)
-          .where(eq((pushSubscriptions as Record<string, unknown>).endpoint, endpoint))
+          .where(eq((pushSubscriptions as Record<string, unknown>)['endpoint'], endpoint))
           .limit(1);
 
         if (subscriptionResult.length === 0) {
           return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
         }
 
-        const subscriptionId = subscriptionResult[0].id;
+        const subscriptionId = subscriptionResult[0]['id'];
 
         // 既存のアラートをチェック
-        const existingAlert = await (db.select as CallableFunction)()
+        const existingAlert = await (db['select'] as CallableFunction)()
           .from(priceAlerts)
           .where(
             and(
-              eq((priceAlerts as Record<string, unknown>).subscriptionId, subscriptionId),
-              eq((priceAlerts as Record<string, unknown>).productId, productId)
+              eq((priceAlerts as Record<string, unknown>)['subscriptionId'], subscriptionId),
+              eq((priceAlerts as Record<string, unknown>)['productId'], productId)
             )
           )
           .limit(1);
 
         if (existingAlert.length > 0) {
           // 更新
-          await (db.update as CallableFunction)(priceAlerts)
+          await (db['update'] as CallableFunction)(priceAlerts)
             .set({
               targetPrice,
               notifyOnAnySale,
               isActive: true,
               updatedAt: new Date(),
             })
-            .where(eq((priceAlerts as Record<string, unknown>).id, existingAlert[0].id));
+            .where(eq((priceAlerts as Record<string, unknown>)['id'], existingAlert[0]['id']));
 
-          return NextResponse.json({ success: true, action: 'updated', alertId: existingAlert[0].id });
+          return NextResponse.json({ success: true, action: 'updated', alertId: existingAlert[0]['id'] });
         } else {
           // 新規登録
-          const insertResult = await (db.insert as CallableFunction)(priceAlerts)
+          const insertResult = await (db['insert'] as CallableFunction)(priceAlerts)
             .values({
               subscriptionId,
               productId,
@@ -87,12 +87,12 @@ export function createPriceAlertsHandler(deps: PriceAlertsHandlerDeps) {
             })
             .returning();
 
-          return NextResponse.json({ success: true, action: 'created', alertId: insertResult[0].id });
+          return NextResponse.json({ success: true, action: 'created', alertId: insertResult[0]['id'] });
         }
       }
 
       if (request.method === 'GET') {
-        const { searchParams } = new URL(request.url);
+        const { searchParams } = new URL(request['url']);
         const endpoint = searchParams.get('endpoint');
 
         if (!endpoint) {
@@ -100,37 +100,37 @@ export function createPriceAlertsHandler(deps: PriceAlertsHandlerDeps) {
         }
 
         // 購読情報を取得
-        const subscriptionResult = await (db.select as CallableFunction)()
+        const subscriptionResult = await (db['select'] as CallableFunction)()
           .from(pushSubscriptions)
-          .where(eq((pushSubscriptions as Record<string, unknown>).endpoint, endpoint))
+          .where(eq((pushSubscriptions as Record<string, unknown>)['endpoint'], endpoint))
           .limit(1);
 
         if (subscriptionResult.length === 0) {
           return NextResponse.json({ alerts: [] });
         }
 
-        const subscriptionId = subscriptionResult[0].id;
+        const subscriptionId = subscriptionResult[0]['id'];
 
         // アラート一覧を取得
-        const alerts = await (db.select as CallableFunction)({
-          id: (priceAlerts as Record<string, unknown>).id,
-          productId: (priceAlerts as Record<string, unknown>).productId,
-          targetPrice: (priceAlerts as Record<string, unknown>).targetPrice,
-          notifyOnAnySale: (priceAlerts as Record<string, unknown>).notifyOnAnySale,
-          isActive: (priceAlerts as Record<string, unknown>).isActive,
-          createdAt: (priceAlerts as Record<string, unknown>).createdAt,
-          productTitle: (products as Record<string, unknown>).title,
-          productThumbnail: (products as Record<string, unknown>).defaultThumbnailUrl,
+        const alerts = await (db['select'] as CallableFunction)({
+          id: (priceAlerts as Record<string, unknown>)['id'],
+          productId: (priceAlerts as Record<string, unknown>)['productId'],
+          targetPrice: (priceAlerts as Record<string, unknown>)['targetPrice'],
+          notifyOnAnySale: (priceAlerts as Record<string, unknown>)['notifyOnAnySale'],
+          isActive: (priceAlerts as Record<string, unknown>)['isActive'],
+          createdAt: (priceAlerts as Record<string, unknown>)['createdAt'],
+          productTitle: (products as Record<string, unknown>)['title'],
+          productThumbnail: (products as Record<string, unknown>)['defaultThumbnailUrl'],
         })
           .from(priceAlerts)
           .innerJoin(
             products,
-            eq((priceAlerts as Record<string, unknown>).productId, (products as Record<string, unknown>).id)
+            eq((priceAlerts as Record<string, unknown>)['productId'], (products as Record<string, unknown>)['id'])
           )
           .where(
             and(
-              eq((priceAlerts as Record<string, unknown>).subscriptionId, subscriptionId),
-              eq((priceAlerts as Record<string, unknown>).isActive, true)
+              eq((priceAlerts as Record<string, unknown>)['subscriptionId'], subscriptionId),
+              eq((priceAlerts as Record<string, unknown>)['isActive'], true)
             )
           );
 
@@ -146,24 +146,24 @@ export function createPriceAlertsHandler(deps: PriceAlertsHandlerDeps) {
         }
 
         // 購読情報を取得
-        const subscriptionResult = await (db.select as CallableFunction)()
+        const subscriptionResult = await (db['select'] as CallableFunction)()
           .from(pushSubscriptions)
-          .where(eq((pushSubscriptions as Record<string, unknown>).endpoint, endpoint))
+          .where(eq((pushSubscriptions as Record<string, unknown>)['endpoint'], endpoint))
           .limit(1);
 
         if (subscriptionResult.length === 0) {
           return NextResponse.json({ success: true });  // 購読がなければ何もしない
         }
 
-        const subscriptionId = subscriptionResult[0].id;
+        const subscriptionId = subscriptionResult[0]['id'];
 
         // アラートを非アクティブ化
-        await (db.update as CallableFunction)(priceAlerts)
+        await (db['update'] as CallableFunction)(priceAlerts)
           .set({ isActive: false, updatedAt: new Date() })
           .where(
             and(
-              eq((priceAlerts as Record<string, unknown>).subscriptionId, subscriptionId),
-              eq((priceAlerts as Record<string, unknown>).productId, productId)
+              eq((priceAlerts as Record<string, unknown>)['subscriptionId'], subscriptionId),
+              eq((priceAlerts as Record<string, unknown>)['productId'], productId)
             )
           );
 

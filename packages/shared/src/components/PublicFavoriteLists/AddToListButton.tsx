@@ -123,7 +123,7 @@ export function AddToListButton({
         setShowCreateForm(false);
 
         // Auto-add product to new list
-        await handleToggleList(data.list.id);
+        await handleToggleList(data.list['id']);
       }
     } catch {
       console.error('Failed to create list');
@@ -179,17 +179,17 @@ export function AddToListButton({
                 <div className="space-y-1">
                   {lists.map((list) => (
                     <button
-                      key={list.id}
-                      onClick={() => handleToggleList(list.id)}
-                      disabled={actionListId === list.id}
+                      key={list['id']}
+                      onClick={() => handleToggleList(list['id'])}
+                      disabled={actionListId === list['id']}
                       className="w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                       <span className="truncate text-gray-900 dark:text-white">
-                        {list.title}
+                        {list['title']}
                       </span>
-                      {actionListId === list.id ? (
+                      {actionListId === list['id'] ? (
                         <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                      ) : productInLists.has(list.id) ? (
+                      ) : productInLists.has(list['id']) ? (
                         <Check className="w-4 h-4 text-green-500" />
                       ) : null}
                     </button>

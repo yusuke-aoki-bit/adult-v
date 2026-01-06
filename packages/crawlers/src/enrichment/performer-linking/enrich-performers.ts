@@ -12,7 +12,7 @@ import { getDb } from '../../lib/db';
 import { products, productSources, performers, productPerformers } from '../../lib/db/schema';
 import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../../lib/performer-validation';
-import type { SokmilClient } from '../../lib/providers/sokmil-client';
+import type { SokmilApiClient } from '../../lib/providers/sokmil-client';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import type { Browser, Page } from 'puppeteer';
@@ -22,14 +22,14 @@ puppeteer.use(StealthPlugin());
 const db = getDb();
 
 // Lazy initialization for SOKMIL client
-let sokmilClient: SokmilClient | null = null;
-function getSokmilClientLazy(): SokmilClient {
+let sokmilClient: SokmilApiClient | null = null;
+function getSokmilClientLazy(): SokmilApiClient {
   if (!sokmilClient) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getSokmilClient } = require('../../lib/providers/sokmil-client');
     sokmilClient = getSokmilClient();
   }
-  return sokmilClient;
+  return sokmilClient!;
 }
 
 let browser: Browser | null = null;
@@ -189,7 +189,7 @@ async function getPerformersFromSokmil(itemId: string): Promise<string[]> {
   try {
     const product = await getSokmilClientLazy().getItemById(itemId);
     if (product && product.actors && product.actors.length > 0) {
-      return product.actors.map(a => a.name);
+      return product.actors.map((a: { name: string }) => a.name);
     }
     return [];
   } catch (error) {
@@ -208,12 +208,13 @@ async function linkPerformersToProduct(productId: number, performerNames: string
     if (!isValidPerformerName(name)) continue;
 
     const normalizedName = normalizePerformerName(name);
+    if (!normalizedName) continue;
 
     // 既存の演者を検索
     let [performer] = await db
       .select()
       .from(performers)
-      .where(eq(performers.name, normalizedName))
+      .where(eq(performers['name'], normalizedName))
       .limit(1);
 
     // 存在しなければ作成
@@ -222,7 +223,7 @@ async function linkPerformersToProduct(productId: number, performerNames: string
         .insert(performers)
         .values({ name: normalizedName })
         .returning();
-      performer = inserted;
+      performer = inserted!;
     }
 
     // リンクが存在するかチェック
@@ -238,7 +239,7 @@ async function linkPerformersToProduct(productId: number, performerNames: string
       .limit(1);
 
     if (existingLink.length === 0) {
-      await db.insert(productPerformers).values({
+      await db['insert'](productPerformers).values({
         productId,
         performerId: performer.id,
       });
@@ -256,15 +257,17 @@ async function main() {
   let aspFilter: string | null = null;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith('--limit=')) {
-      limit = parseInt(args[i].split('=')[1], 10);
-    } else if (args[i] === '--limit' && args[i + 1]) {
-      limit = parseInt(args[i + 1], 10);
+    const arg = args[i];
+    const nextArg = args[i + 1];
+    if (arg?.startsWith('--limit=')) {
+      limit = parseInt(arg.split('=')[1] ?? '100', 10);
+    } else if (arg === '--limit' && nextArg) {
+      limit = parseInt(nextArg, 10);
       i++;
-    } else if (args[i].startsWith('--asp=')) {
-      aspFilter = args[i].split('=')[1].toUpperCase();
-    } else if (args[i] === '--asp' && args[i + 1]) {
-      aspFilter = args[i + 1].toUpperCase();
+    } else if (arg?.startsWith('--asp=')) {
+      aspFilter = (arg.split('=')[1] ?? '').toUpperCase();
+    } else if (arg === '--asp' && nextArg) {
+      aspFilter = nextArg.toUpperCase();
       i++;
     }
   }
@@ -290,13 +293,13 @@ async function main() {
   const targetAsps = aspFilter ? [aspFilter] : supportedAsps;
   const allProducts = await db
     .select({
-      productId: products.id,
-      title: products.title,
+      productId: products['id'],
+      title: products['title'],
       aspName: productSources.aspName,
       originalProductId: productSources.originalProductId,
     })
     .from(products)
-    .innerJoin(productSources, eq(products.id, productSources.productId))
+    .innerJoin(productSources, eq(products['id'], productSources.productId))
     .where(inArray(productSources.aspName, targetAsps))
     .limit(limit * 5);
 
@@ -314,6 +317,7 @@ async function main() {
 
   for (let i = 0; i < filteredProducts.length; i++) {
     const product = filteredProducts[i];
+    if (!product) continue;
     totalProcessed++;
 
     if (i % 10 === 0) {

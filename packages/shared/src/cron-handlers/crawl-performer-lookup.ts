@@ -64,7 +64,7 @@ async function crawlNakiny(page: number): Promise<LookupEntry[]> {
 
     if (!response.ok) return entries;
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     $('article, .post, .entry').each((_, article) => {
@@ -74,7 +74,7 @@ async function crawlNakiny(page: number): Promise<LookupEntry[]> {
       const sourceUrl = titleEl.attr('href') || '';
 
       const productCodeMatch = title.match(/([A-Z]{2,6}[-_]?\d{3,5})/i);
-      if (!productCodeMatch) return;
+      if (!productCodeMatch?.[1]) return;
 
       const productCode = productCodeMatch[1].toUpperCase();
       const performers: string[] = [];
@@ -87,7 +87,7 @@ async function crawlNakiny(page: number): Promise<LookupEntry[]> {
       });
 
       const bracketMatch = title.match(/【([^】]+)】/);
-      if (bracketMatch) {
+      if (bracketMatch?.[1]) {
         bracketMatch[1].split(/[,、・]/).forEach(n => {
           const name = n.trim();
           if (isValidPerformerName(name)) {
@@ -128,7 +128,7 @@ async function crawlAVSommelier(page: number): Promise<LookupEntry[]> {
 
     if (!response.ok) return entries;
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     $('article, .entry, .post').each((_, article) => {
@@ -138,7 +138,7 @@ async function crawlAVSommelier(page: number): Promise<LookupEntry[]> {
       const sourceUrl = titleEl.attr('href') || '';
 
       const productCodeMatch = title.match(/([A-Z]{2,6}[-_]?\d{3,5})/i);
-      if (!productCodeMatch) return;
+      if (!productCodeMatch?.[1]) return;
 
       const productCode = productCodeMatch[1].toUpperCase();
       const performers: string[] = [];
@@ -153,7 +153,7 @@ async function crawlAVSommelier(page: number): Promise<LookupEntry[]> {
       $article.find('.entry-meta, .post-meta').each((_, meta) => {
         const text = $(meta).text();
         const actressMatch = text.match(/出演[：:]\s*([^/\n]+)/);
-        if (actressMatch) {
+        if (actressMatch?.[1]) {
           actressMatch[1].split(/[,、・]/).forEach(n => {
             const name = n.trim();
             if (isValidPerformerName(name)) {
@@ -195,7 +195,7 @@ async function crawlShiroutoMatome(page: number): Promise<LookupEntry[]> {
 
     if (!response.ok) return entries;
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     $('article, .entry, .post').each((_, article) => {
@@ -205,13 +205,13 @@ async function crawlShiroutoMatome(page: number): Promise<LookupEntry[]> {
       const sourceUrl = titleEl.attr('href') || '';
 
       const productCodeMatch = title.match(/([A-Z]{2,6}[-_]?\d{3,5})/i);
-      if (!productCodeMatch) return;
+      if (!productCodeMatch?.[1]) return;
 
       const productCode = productCodeMatch[1].toUpperCase();
       const performers: string[] = [];
 
       const bracketMatch = title.match(/【([^】]+)】/);
-      if (bracketMatch) {
+      if (bracketMatch?.[1]) {
         bracketMatch[1].split(/[,、・]/).forEach(n => {
           const name = n.trim();
           if (isValidPerformerName(name)) {
@@ -221,7 +221,7 @@ async function crawlShiroutoMatome(page: number): Promise<LookupEntry[]> {
       }
 
       const nameMatch = title.match(/^([\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]{2,10})\s+[A-Z]/);
-      if (nameMatch && isValidPerformerName(nameMatch[1])) {
+      if (nameMatch?.[1] && isValidPerformerName(nameMatch[1])) {
         performers.push(nameMatch[1]);
       }
 
@@ -257,7 +257,7 @@ async function crawlMinnanoAV(page: number): Promise<LookupEntry[]> {
 
     if (!response.ok) return entries;
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     $('tr, .item, .video-item').each((_, item) => {
@@ -267,7 +267,7 @@ async function crawlMinnanoAV(page: number): Promise<LookupEntry[]> {
 
       const productCodeMatch = title.match(/([A-Z]{2,6}[-_]?\d{3,5})/i) ||
                                sourceUrl.match(/product=([A-Z0-9-]+)/i);
-      if (!productCodeMatch) return;
+      if (!productCodeMatch?.[1]) return;
 
       const productCode = productCodeMatch[1].toUpperCase();
       const performers: string[] = [];
@@ -311,7 +311,7 @@ async function crawlSeesaaWiki(page: number): Promise<LookupEntry[]> {
 
     if (!response.ok) return entries;
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     $('a[href*="/d/"]').each((_, el) => {
@@ -319,7 +319,7 @@ async function crawlSeesaaWiki(page: number): Promise<LookupEntry[]> {
       const href = $(el).attr('href') || '';
 
       const productCodeMatch = text.match(/^([A-Z]{2,6}[-_]?\d{3,5})$/i);
-      if (productCodeMatch) {
+      if (productCodeMatch?.[1]) {
         const productCode = productCodeMatch[1].toUpperCase();
         entries.push({
           productCode,
@@ -351,7 +351,7 @@ async function crawlAVWiki(page: number): Promise<LookupEntry[]> {
 
     if (!response.ok) return entries;
 
-    const html = await response.text();
+    const html = await response['text']();
     const $ = cheerio.load(html);
 
     $('tr, .item').each((_, item) => {
@@ -360,7 +360,7 @@ async function crawlAVWiki(page: number): Promise<LookupEntry[]> {
       const sourceUrl = $item.find('a').first().attr('href') || '';
 
       const productCodeMatch = title.match(/([A-Z]{2,6}[-_]?\d{3,5})/i);
-      if (!productCodeMatch) return;
+      if (!productCodeMatch?.[1]) return;
 
       const productCode = productCodeMatch[1].toUpperCase();
       const performers: string[] = [];
@@ -414,8 +414,8 @@ async function saveEntries(
           source, title, source_url, crawled_at
         )
         VALUES (
-          ${entry.productCode}, ${entry.productCodeNormalized}, ${entry.performerNames},
-          ${source}, ${entry.title || null}, ${entry.sourceUrl || null}, NOW()
+          ${entry['productCode']}, ${entry.productCodeNormalized}, ${entry.performerNames},
+          ${source}, ${entry['title'] || null}, ${entry['sourceUrl'] || null}, NOW()
         )
         ON CONFLICT (product_code_normalized, source)
         DO UPDATE SET
@@ -433,7 +433,7 @@ async function saveEntries(
         updated++;
       }
     } catch (error) {
-      console.error(`[crawl-performer-lookup] Error saving entry ${entry.productCode}:`, error);
+      console.error(`[crawl-performer-lookup] Error saving entry ${entry['productCode']}:`, error);
     }
   }
 
@@ -447,7 +447,7 @@ export function createCrawlPerformerLookupHandler(deps: CrawlPerformerLookupHand
     }
 
     const db = deps.getDb();
-    const url = new URL(request.url);
+    const url = new URL(request['url']);
     const source = url.searchParams.get('source') || 'nakiny';
     const page = parseInt(url.searchParams.get('page') || '1');
     const pages = parseInt(url.searchParams.get('pages') || '10');

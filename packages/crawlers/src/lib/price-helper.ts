@@ -214,7 +214,7 @@ export async function getProductPrices(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return result.rows.map((row: any) => ({
     priceType: row.price_type as PriceType,
-    price: Number(row.price),
+    price: Number(row['price']),
     currency: row.currency || 'JPY',
   }));
 }

@@ -40,7 +40,7 @@ export interface DiscoverHandlerDeps {
 export function createDiscoverHandler(deps: DiscoverHandlerDeps) {
   return async function GET(request: NextRequest) {
     try {
-      const { searchParams } = new URL(request.url);
+      const { searchParams } = new URL(request['url']);
 
       const excludeIdsParam = searchParams.get('excludeIds');
       const excludeIds = excludeIdsParam ? excludeIdsParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id)) : [];

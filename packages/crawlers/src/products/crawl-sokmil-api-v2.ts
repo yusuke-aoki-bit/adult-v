@@ -94,7 +94,7 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
           sort: 'date',
         });
 
-        if (response.status !== 'success') {
+        if (response['status'] !== 'success') {
           this.log('error', `API エラー: ${response.error}`);
           break;
         }
@@ -288,7 +288,7 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
           lte_date: range.end,
         });
 
-        if (response.status !== 'success') {
+        if (response['status'] !== 'success') {
           this.log('error', `API エラー: ${response.error}`);
           break;
         }
@@ -314,25 +314,27 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
     }
 
     // packageImageUrl (pe_xxx.jpg) はフルサイズ、thumbnailUrl (pef_xxx_100x142.jpg) は小さい
-    const thumbnailUrl = item.packageImageUrl || item.thumbnailUrl;
+    const thumbnailUrl = item.packageImageUrl || item['thumbnailUrl'];
+    const sampleVideos = item['sampleVideoUrl'] ? [item['sampleVideoUrl']] : undefined;
+    const performers = item.actors?.map(a => a.name);
 
     return {
       normalizedProductId: `sokmil-${item.itemId}`,
       originalId: item.itemId,
       title: item.itemName,
-      description: item.description,
-      releaseDate: item.releaseDate,
-      duration: item.duration,
-      thumbnailUrl,
-      sampleImages: item.sampleImages,
-      packageUrl: item.packageImageUrl,
-      sampleVideos: item.sampleVideoUrl ? [item.sampleVideoUrl] : undefined,
-      affiliateUrl: item.affiliateUrl,
-      price: item.price,
-      performers: item.actors?.map(a => a.name),
+      ...(item['description'] && { description: item['description'] }),
+      ...(item['releaseDate'] && { releaseDate: item['releaseDate'] }),
+      ...(item['duration'] !== undefined && { duration: item['duration'] }),
+      ...(thumbnailUrl && { thumbnailUrl }),
+      ...(item.sampleImages && item.sampleImages.length > 0 && { sampleImages: item.sampleImages }),
+      ...(item.packageImageUrl && { packageUrl: item.packageImageUrl }),
+      ...(sampleVideos && { sampleVideos }),
+      ...(item['affiliateUrl'] && { affiliateUrl: item['affiliateUrl'] }),
+      ...(item['price'] !== undefined && { price: item['price'] }),
+      ...(performers && performers.length > 0 && { performers }),
       categories: [
         ...(item.genres?.map(g => g.name) || []),
-        ...(item.maker ? [item.maker.name] : []),
+        ...(item.maker ? [item.maker['name']] : []),
       ],
     };
   }

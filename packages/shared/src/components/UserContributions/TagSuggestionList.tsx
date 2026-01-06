@@ -117,14 +117,14 @@ export function TagSuggestionList({
       <div className="flex flex-wrap gap-2">
         {suggestions.map((suggestion) => (
           <div
-            key={suggestion.id}
+            key={suggestion['id']}
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
-              suggestion.status === 'approved'
+              suggestion['status'] === 'approved'
                 ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
             }`}
           >
-            {suggestion.status === 'approved' ? (
+            {suggestion['status'] === 'approved' ? (
               <CheckCircle className="w-3.5 h-3.5" />
             ) : (
               <Clock className="w-3.5 h-3.5" />
@@ -133,8 +133,8 @@ export function TagSuggestionList({
 
             <div className="flex items-center gap-1 ml-1 border-l border-gray-300 dark:border-gray-600 pl-2">
               <button
-                onClick={() => handleVote(suggestion.id, 'up')}
-                disabled={votingId === suggestion.id}
+                onClick={() => handleVote(suggestion['id'], 'up')}
+                disabled={votingId === suggestion['id']}
                 className={`p-0.5 rounded transition-colors ${
                   suggestion.userVote === 'up'
                     ? 'text-green-600 dark:text-green-400'
@@ -147,8 +147,8 @@ export function TagSuggestionList({
                 {suggestion.upvotes - suggestion.downvotes}
               </span>
               <button
-                onClick={() => handleVote(suggestion.id, 'down')}
-                disabled={votingId === suggestion.id}
+                onClick={() => handleVote(suggestion['id'], 'down')}
+                disabled={votingId === suggestion['id']}
                 className={`p-0.5 rounded transition-colors ${
                   suggestion.userVote === 'down'
                     ? 'text-red-600 dark:text-red-400'

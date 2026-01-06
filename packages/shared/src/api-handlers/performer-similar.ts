@@ -124,11 +124,11 @@ export function createPerformerSimilarHandler(
         return { error: 'Performer not found', status: 404 };
       }
 
-      const performer = performerData[0];
+      const performer = performerData[0]!;
       const limitPerHop = Math.ceil(safeLimit / 2);
 
       // プロフィールデータがあるかチェック
-      const hasProfile = performer.height || performer.bust || performer.cup;
+      const hasProfile = performer['height'] || performer['bust'] || performer['cup'];
 
       let hop1Results: Array<{
         id: number;
@@ -162,32 +162,32 @@ export function createPerformerSimilarHandler(
             1 as hop,
             -- プロフィール類似度スコア計算
             (
-              CASE WHEN ${performer.height}::int IS NOT NULL AND p.height IS NOT NULL
-                THEN GREATEST(0, 1.0 - ABS(p.height - ${performer.height}::int) / 20.0)
+              CASE WHEN ${performer['height']}::int IS NOT NULL AND p.height IS NOT NULL
+                THEN GREATEST(0, 1.0 - ABS(p.height - ${performer['height']}::int) / 20.0)
                 ELSE 0 END +
-              CASE WHEN ${performer.bust}::int IS NOT NULL AND p.bust IS NOT NULL
-                THEN GREATEST(0, 1.0 - ABS(p.bust - ${performer.bust}::int) / 15.0)
+              CASE WHEN ${performer['bust']}::int IS NOT NULL AND p.bust IS NOT NULL
+                THEN GREATEST(0, 1.0 - ABS(p.bust - ${performer['bust']}::int) / 15.0)
                 ELSE 0 END +
-              CASE WHEN ${performer.waist}::int IS NOT NULL AND p.waist IS NOT NULL
-                THEN GREATEST(0, 1.0 - ABS(p.waist - ${performer.waist}::int) / 10.0)
+              CASE WHEN ${performer['waist']}::int IS NOT NULL AND p.waist IS NOT NULL
+                THEN GREATEST(0, 1.0 - ABS(p.waist - ${performer['waist']}::int) / 10.0)
                 ELSE 0 END +
-              CASE WHEN ${performer.hip}::int IS NOT NULL AND p.hip IS NOT NULL
-                THEN GREATEST(0, 1.0 - ABS(p.hip - ${performer.hip}::int) / 15.0)
+              CASE WHEN ${performer['hip']}::int IS NOT NULL AND p.hip IS NOT NULL
+                THEN GREATEST(0, 1.0 - ABS(p.hip - ${performer['hip']}::int) / 15.0)
                 ELSE 0 END +
-              CASE WHEN ${performer.cup || ''} != '' AND p.cup IS NOT NULL AND p.cup != ''
+              CASE WHEN ${performer['cup'] || ''} != '' AND p.cup IS NOT NULL AND p.cup != ''
                 THEN CASE
-                  WHEN p.cup = ${performer.cup || ''} THEN 1.0
-                  WHEN ABS(ASCII(p.cup) - ASCII(${performer.cup || 'A'})) = 1 THEN 0.7
-                  WHEN ABS(ASCII(p.cup) - ASCII(${performer.cup || 'A'})) = 2 THEN 0.4
+                  WHEN p.cup = ${performer['cup'] || ''} THEN 1.0
+                  WHEN ABS(ASCII(p.cup) - ASCII(${performer['cup'] || 'A'})) = 1 THEN 0.7
+                  WHEN ABS(ASCII(p.cup) - ASCII(${performer['cup'] || 'A'})) = 2 THEN 0.4
                   ELSE 0 END
                 ELSE 0 END
             ) as profile_score
           FROM performers p
           WHERE p.id != ${performerId}
             AND (
-              (${performer.height}::int IS NOT NULL AND p.height IS NOT NULL AND ABS(p.height - ${performer.height}::int) <= 10) OR
-              (${performer.bust}::int IS NOT NULL AND p.bust IS NOT NULL AND ABS(p.bust - ${performer.bust}::int) <= 10) OR
-              (${performer.cup || ''} != '' AND p.cup IS NOT NULL AND p.cup = ${performer.cup || ''})
+              (${performer['height']}::int IS NOT NULL AND p.height IS NOT NULL AND ABS(p.height - ${performer['height']}::int) <= 10) OR
+              (${performer['bust']}::int IS NOT NULL AND p.bust IS NOT NULL AND ABS(p.bust - ${performer['bust']}::int) <= 10) OR
+              (${performer['cup'] || ''} != '' AND p.cup IS NOT NULL AND p.cup = ${performer['cup'] || ''})
             )
           ORDER BY profile_score DESC
           LIMIT ${limitPerHop}
@@ -310,20 +310,20 @@ export function createPerformerSimilarHandler(
         let hipSim = 0;
         let cupSim = 0;
 
-        if (performer.height && other.height) {
-          heightSim = Math.max(0, 1 - Math.abs(performer.height - other.height) / 20);
+        if (performer['height'] && other.height) {
+          heightSim = Math.max(0, 1 - Math.abs(performer['height'] - other.height) / 20);
         }
-        if (performer.bust && other.bust) {
-          bustSim = Math.max(0, 1 - Math.abs(performer.bust - other.bust) / 15);
+        if (performer['bust'] && other.bust) {
+          bustSim = Math.max(0, 1 - Math.abs(performer['bust'] - other.bust) / 15);
         }
-        if (performer.waist && other.waist) {
-          waistSim = Math.max(0, 1 - Math.abs(performer.waist - other.waist) / 10);
+        if (performer['waist'] && other.waist) {
+          waistSim = Math.max(0, 1 - Math.abs(performer['waist'] - other.waist) / 10);
         }
-        if (performer.hip && other.hip) {
-          hipSim = Math.max(0, 1 - Math.abs(performer.hip - other.hip) / 15);
+        if (performer['hip'] && other.hip) {
+          hipSim = Math.max(0, 1 - Math.abs(performer['hip'] - other.hip) / 15);
         }
-        if (performer.cup && other.cup) {
-          const cupDiff = Math.abs(performer.cup.charCodeAt(0) - other.cup.charCodeAt(0));
+        if (performer['cup'] && other.cup) {
+          const cupDiff = Math.abs(performer['cup'].charCodeAt(0) - other.cup.charCodeAt(0));
           if (cupDiff === 0) cupSim = 1.0;
           else if (cupDiff === 1) cupSim = 0.7;
           else if (cupDiff === 2) cupSim = 0.4;
@@ -426,6 +426,7 @@ export function createPerformerSimilarHandler(
       const maxSharedGenres = hop2Results.length > 0 ? Math.max(...hop2Results.map(r => r.shared_genres)) : 1;
       for (let i = 0; i < hop2Results.length; i++) {
         const r = hop2Results[i];
+        if (!r) continue;
         // ジャンル共通数をスコアに変換（0.4-0.8の範囲）
         const genreScore = 0.4 + 0.4 * (r.shared_genres / maxSharedGenres);
 
@@ -498,10 +499,10 @@ export function createPerformerSimilarHandler(
       const response: PerformerSimilarityResponse = {
         success: true,
         performer: {
-          id: performer.id,
-          name: performer.name,
-          nameEn: performer.nameEn,
-          profileImageUrl: performer.profileImageUrl,
+          id: performer['id'],
+          name: performer['name'],
+          nameEn: performer['nameEn'],
+          profileImageUrl: performer['profileImageUrl'],
           thumbnailUrl: centerThumbnail,
         },
         similar: finalResults,

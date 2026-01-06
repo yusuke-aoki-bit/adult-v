@@ -228,12 +228,12 @@ export function WeeklyHighlightsSection({
                       <div className="grid grid-cols-3 gap-2">
                         {data.trendingActresses.slice(0, 3).map((actress) => (
                           <ActressCardBase
-                            key={actress.id}
+                            key={actress['id']}
                             actress={{
-                              id: String(actress.id),
-                              name: actress.name,
-                              thumbnail: actress.thumbnailUrl ?? undefined,
-                              heroImage: actress.heroImageUrl ?? undefined,
+                              id: String(actress['id']),
+                              name: actress['name'],
+                              ...(actress['thumbnailUrl'] && { thumbnail: actress['thumbnailUrl'] }),
+                              ...(actress.heroImageUrl && { heroImage: actress.heroImageUrl }),
                               metrics: {
                                 releaseCount: actress.productCount,
                                 trendingScore: actress.growthRate,
@@ -258,13 +258,13 @@ export function WeeklyHighlightsSection({
                       <div className="grid grid-cols-3 gap-2">
                         {data.hotNewReleases.slice(0, 3).map((product) => (
                           <ProductCardBase
-                            key={product.id}
+                            key={product['id']}
                             product={{
-                              id: String(product.id),
-                              title: product.title,
-                              imageUrl: product.imageUrl ?? undefined,
-                              releaseDate: product.releaseDate ?? undefined,
-                              rating: product.rating ?? undefined,
+                              id: String(product['id']),
+                              title: product['title'],
+                              ...(product.imageUrl && { imageUrl: product.imageUrl }),
+                              ...(product['releaseDate'] && { releaseDate: product['releaseDate'] }),
+                              ...(product['rating'] !== undefined && product['rating'] !== null && { rating: product['rating'] }),
                               price: 0,
                             }}
                             size="mini"
@@ -284,13 +284,13 @@ export function WeeklyHighlightsSection({
                       </h3>
                       <div className="grid grid-cols-3 gap-2">
                         {data.rediscoveredClassics.slice(0, 3).map((product) => (
-                          <div key={product.id} className="relative">
+                          <div key={product['id']} className="relative">
                             <ProductCardBase
                               product={{
-                                id: String(product.id),
-                                title: product.title,
-                                imageUrl: product.imageUrl ?? undefined,
-                                releaseDate: product.releaseDate ?? undefined,
+                                id: String(product['id']),
+                                title: product['title'],
+                                ...(product.imageUrl && { imageUrl: product.imageUrl }),
+                                ...(product['releaseDate'] && { releaseDate: product['releaseDate'] }),
                                 price: 0,
                               }}
                               size="mini"

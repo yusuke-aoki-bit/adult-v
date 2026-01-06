@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         meta: {
           type,
           generatedAt: new Date().toISOString(),
-          source: process.env.NEXT_PUBLIC_SITE_URL || 'Adult Viewer Lab',
+          source: process.env['NEXT_PUBLIC_SITE_URL'] || 'Adult Viewer Lab',
         },
       },
       { headers: getCorsHeaders() }

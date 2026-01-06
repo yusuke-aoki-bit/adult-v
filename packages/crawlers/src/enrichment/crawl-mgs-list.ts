@@ -130,10 +130,10 @@ async function crawlSingleProduct(
     });
 
     if (!response.ok) {
-      return { success: false, isNew: false, isUpdated: false, isSkipped: false, error: `HTTP ${response.status}` };
+      return { success: false, isNew: false, isUpdated: false, isSkipped: false, error: `HTTP ${response['status']}` };
     }
 
-    const html = await response.text();
+    const html = await response['text']();
     const mgsProduct = parseMgsProductPage(html, url);
 
     if (!mgsProduct) {
@@ -180,6 +180,7 @@ async function processBatchParallel(
 
   for (let chunkIdx = 0; chunkIdx < chunks.length; chunkIdx++) {
     const chunk = chunks[chunkIdx];
+    if (!chunk) continue;
     const chunkStartIdx = startIndex + chunkIdx * CONCURRENCY;
 
     // 並列実行
@@ -187,7 +188,7 @@ async function processBatchParallel(
       chunk.map(async (url, idx) => {
         const globalIdx = chunkStartIdx + idx + 1;
         const productIdMatch = url.match(/product_detail\/([^\/]+)/);
-        const productId = productIdMatch ? productIdMatch[1] : 'unknown';
+        const productId = productIdMatch?.[1] ?? 'unknown';
 
         const result = await crawlSingleProduct(url, productType, enableAI);
 
@@ -268,10 +269,10 @@ async function fetchProductUrlsFromCategory(
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
   }
 
-  const html = await response.text();
+  const html = await response['text']();
   const $ = cheerio.load(html);
 
   const productUrls: string[] = [];
@@ -291,7 +292,7 @@ async function fetchProductUrlsFromCategory(
   // 総件数を取得（例: "112,166件"）
   let totalCount: number | null = null;
   const countMatch = html.match(/(\d{1,3}(?:,\d{3})+)\s*件/);
-  if (countMatch) {
+  if (countMatch && countMatch[1]) {
     totalCount = parseInt(countMatch[1].replace(/,/g, ''), 10);
   }
 
@@ -299,16 +300,16 @@ async function fetchProductUrlsFromCategory(
   let totalPages = 1;
   const paginationText = $('.pager_num').text().trim();
   const totalMatch = paginationText.match(/\/\s*(\d+)/);
-  if (totalMatch) {
-    totalPages = parseInt(totalMatch[1]);
+  if (totalMatch && totalMatch[1]) {
+    totalPages = parseInt(totalMatch[1], 10);
   } else {
     // ページネーションリンクから最大ページを推定
     let maxPage = 1;
     $('a[href*="page="]').each((_, elem) => {
       const href = $(elem).attr('href') || '';
       const pageMatch = href.match(/page=(\d+)/);
-      if (pageMatch) {
-        const pageNum = parseInt(pageMatch[1]);
+      if (pageMatch && pageMatch[1]) {
+        const pageNum = parseInt(pageMatch[1], 10);
         if (pageNum > maxPage) maxPage = pageNum;
       }
     });
@@ -346,10 +347,10 @@ async function fetchProductUrlsFromChannel(
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
   }
 
-  const html = await response.text();
+  const html = await response['text']();
   const $ = cheerio.load(html);
 
   const productUrls: string[] = [];
@@ -371,8 +372,8 @@ async function fetchProductUrlsFromChannel(
   $('a[href*="page="]').each((_, elem) => {
     const href = $(elem).attr('href') || '';
     const pageMatch = href.match(/page=(\d+)/);
-    if (pageMatch) {
-      const pageNum = parseInt(pageMatch[1]);
+    if (pageMatch && pageMatch[1]) {
+      const pageNum = parseInt(pageMatch[1], 10);
       if (pageNum > totalPages) totalPages = pageNum;
     }
   });
@@ -606,10 +607,10 @@ async function fetchProductUrlsBySeries(
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
   }
 
-  const html = await response.text();
+  const html = await response['text']();
   const $ = cheerio.load(html);
 
   const productUrls: string[] = [];
@@ -630,14 +631,14 @@ async function fetchProductUrlsBySeries(
   let totalPages = 1;
   const paginationText = $('.pager_num').text().trim();
   const totalMatch = paginationText.match(/\/\s*(\d+)/);
-  if (totalMatch) {
-    totalPages = parseInt(totalMatch[1]);
+  if (totalMatch && totalMatch[1]) {
+    totalPages = parseInt(totalMatch[1], 10);
   } else {
     // ページネーションの最大値から推定
     let maxPage = 1;
     $('.pager_num a, .pager a').each((_, elem) => {
       const text = $(elem).text().trim();
-      const pageNum = parseInt(text);
+      const pageNum = parseInt(text, 10);
       if (!isNaN(pageNum) && pageNum > maxPage) {
         maxPage = pageNum;
       }
@@ -747,10 +748,10 @@ async function fetchProductUrls(page: number): Promise<string[]> {
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
   }
 
-  const html = await response.text();
+  const html = await response['text']();
   const $ = cheerio.load(html);
 
   const productUrls: string[] = [];
@@ -787,7 +788,7 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
 
   // 商品IDを抽出
   const productIdMatch = productUrl.match(/product_detail\/([^\/]+)/);
-  if (!productIdMatch) return null;
+  if (!productIdMatch || !productIdMatch[1]) return null;
   const productId = productIdMatch[1];
 
   // タイトル
@@ -921,7 +922,7 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
     const scriptContent = $('script:contains("sample_url")').html();
     if (scriptContent) {
       const sampleUrlMatch = scriptContent.match(/sample_url['":\s]+['"]([^'"]+)['"]/);
-      if (sampleUrlMatch) {
+      if (sampleUrlMatch?.[1]) {
         sampleVideoUrl = sampleUrlMatch[1].startsWith('http')
           ? sampleUrlMatch[1]
           : `${BASE_URL}${sampleUrlMatch[1]}`;
@@ -940,8 +941,8 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
   const downloadHdPriceText = $('#download_hd_price').text().trim();
   if (downloadHdPriceText) {
     const priceMatch = downloadHdPriceText.match(/(\d+(?:,\d+)*)/);
-    if (priceMatch) {
-      price = parseInt(priceMatch[1].replace(/,/g, ''));
+    if (priceMatch && priceMatch[1]) {
+      price = parseInt(priceMatch[1].replace(/,/g, ''), 10);
     }
   }
 
@@ -952,8 +953,8 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
     if (priceValue) {
       // Format: download_hd,0,uuid,PRODUCT-ID,1480
       const parts = priceValue.split(',');
-      if (parts.length >= 5) {
-        const extractedPrice = parseInt(parts[4]);
+      if (parts.length >= 5 && parts[4]) {
+        const extractedPrice = parseInt(parts[4], 10);
         if (!isNaN(extractedPrice) && extractedPrice > 0) {
           price = extractedPrice;
         }
@@ -966,8 +967,8 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
     const streamingPriceText = $('#streaming_price').text().trim();
     if (streamingPriceText) {
       const priceMatch = streamingPriceText.match(/(\d+(?:,\d+)*)/);
-      if (priceMatch) {
-        price = parseInt(priceMatch[1].replace(/,/g, ''));
+      if (priceMatch && priceMatch[1]) {
+        price = parseInt(priceMatch[1].replace(/,/g, ''), 10);
       }
     }
   }
@@ -977,8 +978,8 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
   const delPrice = priceListDiv.find('del, .price_del, s, strike').text().trim();
   const delPriceMatch = delPrice.match(/(\d+(?:,\d+)*)/);
 
-  if (delPriceMatch && price) {
-    const regularPrice = parseInt(delPriceMatch[1].replace(/,/g, ''));
+  if (delPriceMatch && delPriceMatch[1] && price) {
+    const regularPrice = parseInt(delPriceMatch[1].replace(/,/g, ''), 10);
     if (price < regularPrice) {
       // This is a sale
       const discountPercent = Math.round((1 - price / regularPrice) * 100);
@@ -996,8 +997,8 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
     const priceTd = $('th:contains("価格")').next('td');
     const priceText = priceTd.text().trim();
     const priceMatch = priceText.match(/(\d+(?:,\d+)*)/g);
-    if (priceMatch) {
-      price = parseInt(priceMatch[0].replace(/,/g, ''));
+    if (priceMatch && priceMatch[0]) {
+      price = parseInt(priceMatch[0].replace(/,/g, ''), 10);
     }
   }
 
@@ -1011,20 +1012,23 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
     if (genre) genres.push(genre);
   });
 
-  return {
+  const result: MgsProduct = {
     productId,
     url: productUrl,
     title,
-    releaseDate,
-    performerNames,
-    thumbnailUrl,
-    sampleImages: sampleImages.length > 0 ? sampleImages : undefined,
-    sampleVideoUrl,
-    price,
-    saleInfo,
-    description,
-    genres: genres.length > 0 ? genres : undefined,
   };
+
+  if (releaseDate !== undefined) result.releaseDate = releaseDate;
+  if (performerNames.length > 0) result.performerNames = performerNames;
+  if (thumbnailUrl !== undefined) result.thumbnailUrl = thumbnailUrl;
+  if (sampleImages.length > 0) result.sampleImages = sampleImages;
+  if (sampleVideoUrl !== undefined) result.sampleVideoUrl = sampleVideoUrl;
+  if (price !== undefined) result.price = price;
+  if (saleInfo !== undefined) result.saleInfo = saleInfo;
+  if (description !== undefined) result.description = description;
+  if (genres.length > 0) result.genres = genres;
+
+  return result;
 }
 
 /**
@@ -1062,7 +1066,7 @@ async function saveProduct(
       .where(and(eq(rawHtmlData.source, SOURCE_NAME), eq(rawHtmlData.productId, mgsProduct.productId)))
       .limit(1);
 
-    if (existingRaw.length > 0 && existingRaw[0].hash === hash) {
+    if (existingRaw.length > 0 && existingRaw[0]?.hash === hash) {
       console.log(`    ⏭️ No changes, skipping`);
       stats.skippedUnchanged++;
       return;
@@ -1075,9 +1079,9 @@ async function saveProduct(
       await db
         .update(rawHtmlData)
         .set({ htmlContent, gcsUrl, hash, crawledAt: new Date(), processedAt: null })
-        .where(eq(rawHtmlData.id, existingRaw[0].id));
+        .where(eq(rawHtmlData.id, existingRaw[0]!.id));
     } else {
-      await db.insert(rawHtmlData).values({
+      await db['insert'](rawHtmlData).values({
         source: SOURCE_NAME,
         productId: mgsProduct.productId,
         url: mgsProduct.url,
@@ -1102,25 +1106,25 @@ async function saveProduct(
         .values({
           normalizedProductId,
           title: mgsProduct.title,
-          releaseDate: mgsProduct.releaseDate ? new Date(mgsProduct.releaseDate) : undefined,
+          releaseDate: mgsProduct.releaseDate ? String(mgsProduct.releaseDate) : null,
           defaultThumbnailUrl: mgsProduct.thumbnailUrl,
         })
         .returning();
 
-      productId = newProduct.id;
+      productId = newProduct!.id;
       stats.newProducts++;
       console.log(`    ✓ New product (id: ${productId})`);
     } else {
-      productId = productRecord[0].id;
+      productId = productRecord[0]!.id;
       await db
         .update(products)
         .set({
           title: mgsProduct.title,
-          releaseDate: mgsProduct.releaseDate ? new Date(mgsProduct.releaseDate) : undefined,
+          releaseDate: mgsProduct.releaseDate ?? null,
           defaultThumbnailUrl: mgsProduct.thumbnailUrl,
           updatedAt: new Date(),
         })
-        .where(eq(products.id, productId));
+        .where(eq(products['id'], productId));
       stats.updatedProducts++;
       console.log(`    ✓ Updated (id: ${productId})`);
     }
@@ -1143,9 +1147,9 @@ async function saveProduct(
           productType: mgsProduct.productType,
           lastUpdated: new Date(),
         })
-        .where(eq(productSources.id, existingSource[0].id));
+        .where(eq(productSources.id, existingSource[0]!.id));
     } else {
-      await db.insert(productSources).values({
+      await db['insert'](productSources).values({
         productId,
         aspName: SOURCE_NAME,
         originalProductId: mgsProduct.productId,
@@ -1162,15 +1166,15 @@ async function saveProduct(
         const performerRecord = await db
           .select()
           .from(performers)
-          .where(eq(performers.name, name))
+          .where(eq(performers['name'], name))
           .limit(1);
 
         let performerId: number;
         if (performerRecord.length === 0) {
-          const [newPerformer] = await db.insert(performers).values({ name }).returning();
-          performerId = newPerformer.id;
+          const [newPerformer] = await db['insert'](performers).values({ name }).returning();
+          performerId = newPerformer!.id;
         } else {
-          performerId = performerRecord[0].id;
+          performerId = performerRecord[0]!.id;
         }
 
         const existingLink = await db
@@ -1180,7 +1184,7 @@ async function saveProduct(
           .limit(1);
 
         if (existingLink.length === 0) {
-          await db.insert(productPerformers).values({ productId, performerId });
+          await db['insert'](productPerformers).values({ productId, performerId });
         }
       }
     }
@@ -1194,7 +1198,7 @@ async function saveProduct(
         .limit(1);
 
       if (existing.length === 0) {
-        await db.insert(productImages).values({
+        await db['insert'](productImages).values({
           productId,
           imageUrl: mgsProduct.thumbnailUrl,
           imageType: 'thumbnail',
@@ -1207,6 +1211,7 @@ async function saveProduct(
     if (mgsProduct.sampleImages) {
       for (let i = 0; i < mgsProduct.sampleImages.length; i++) {
         const imageUrl = mgsProduct.sampleImages[i];
+        if (!imageUrl) continue;
         const existing = await db
           .select()
           .from(productImages)
@@ -1214,7 +1219,7 @@ async function saveProduct(
           .limit(1);
 
         if (existing.length === 0) {
-          await db.insert(productImages).values({
+          await db['insert'](productImages).values({
             productId,
             imageUrl,
             imageType: 'sample',
@@ -1234,7 +1239,7 @@ async function saveProduct(
         .limit(1);
 
       if (existing.length === 0) {
-        await db.insert(productVideos).values({
+        await db['insert'](productVideos).values({
           productId,
           videoUrl: mgsProduct.sampleVideoUrl,
           videoType: 'sample',
@@ -1257,9 +1262,9 @@ async function saveProduct(
         const aiResult = await aiHelper.processProduct(
           {
             title: mgsProduct.title,
-            description: mgsProduct.description,
-            performers: mgsProduct.performerNames,
-            genres: mgsProduct.genres,
+            ...(mgsProduct.description !== undefined && { description: mgsProduct.description }),
+            ...(mgsProduct.performerNames !== undefined && { performers: mgsProduct.performerNames }),
+            ...(mgsProduct.genres !== undefined && { genres: mgsProduct.genres }),
           },
           {
             extractTags: true,
@@ -1283,7 +1288,7 @@ async function saveProduct(
               aiShortDescription: aiResult.description?.shortDescription,
               aiTags: (aiResult.tags && (aiResult.tags.genres.length > 0 || aiResult.tags.attributes.length > 0)) ? JSON.stringify(aiResult.tags) : undefined,
             })
-            .where(eq(products.id, productId));
+            .where(eq(products['id'], productId));
         }
 
         // 翻訳を保存
@@ -1298,7 +1303,7 @@ async function saveProduct(
               descriptionZh: aiResult.translations.zh?.description,
               descriptionKo: aiResult.translations.ko?.description,
             })
-            .where(eq(products.id, productId));
+            .where(eq(products['id'], productId));
         }
       } catch (error) {
         console.error('    ⚠️ AI processing failed:', error);
@@ -1306,14 +1311,14 @@ async function saveProduct(
     }
 
     // MGSタグと紐付け
-    const mgsTag = await db.select().from(tags).where(eq(tags.name, SOURCE_NAME)).limit(1);
+    const mgsTag = await db['select']().from(tags).where(eq(tags.name, SOURCE_NAME)).limit(1);
     let providerTagId: number;
 
     if (mgsTag.length === 0) {
-      const [newTag] = await db.insert(tags).values({ name: SOURCE_NAME, category: 'provider' }).returning();
-      providerTagId = newTag.id;
+      const [newTag] = await db['insert'](tags).values({ name: SOURCE_NAME, category: 'provider' }).returning();
+      providerTagId = newTag!.id;
     } else {
-      providerTagId = mgsTag[0].id;
+      providerTagId = mgsTag[0]!.id;
     }
 
     const existingTagLink = await db
@@ -1323,7 +1328,7 @@ async function saveProduct(
       .limit(1);
 
     if (existingTagLink.length === 0) {
-      await db.insert(productTags).values({ productId, tagId: providerTagId });
+      await db['insert'](productTags).values({ productId, tagId: providerTagId });
     }
 
     // ジャンルタグを保存
@@ -1342,9 +1347,9 @@ async function saveProduct(
             .insert(tags)
             .values({ name: genreName, category: 'genre' })
             .returning();
-          genreTagId = newGenreTag.id;
+          genreTagId = newGenreTag!.id;
         } else {
-          genreTagId = existingGenreTag[0].id;
+          genreTagId = existingGenreTag[0]!.id;
         }
 
         // 商品とジャンルタグの紐付け
@@ -1355,7 +1360,7 @@ async function saveProduct(
           .limit(1);
 
         if (existingGenreLink.length === 0) {
-          await db.insert(productTags).values({ productId, tagId: genreTagId });
+          await db['insert'](productTags).values({ productId, tagId: genreTagId });
         }
       }
     }
@@ -1399,6 +1404,7 @@ async function runFullScan(
 
   for (let seriesIdx = 0; seriesIdx < seriesToCrawl.length; seriesIdx++) {
     const series = seriesToCrawl[seriesIdx];
+    if (!series) continue;
     console.log(`\n========================================`);
     console.log(`[${seriesIdx + 1}/${seriesToCrawl.length}] Processing series: ${series}`);
     console.log(`========================================`);
@@ -1478,8 +1484,8 @@ async function main() {
   // 使い方: npx tsx crawl-mgs-list.ts --category-crawl [--category=haishin|dvd|monthly] [--max-pages=100] [--start-page=1] [--no-ai]
   if (categoryCrawl) {
     const targetCategory = categoryArg ? categoryArg.split('=')[1] : undefined;
-    const maxPages = maxPagesArg ? parseInt(maxPagesArg.split('=')[1]) : 1000;
-    const startPage = startPageArg ? parseInt(startPageArg.split('=')[1]) : 1;
+    const maxPages = maxPagesArg ? parseInt(maxPagesArg.split('=')[1] ?? '1000', 10) : 1000;
+    const startPage = startPageArg ? parseInt(startPageArg.split('=')[1] ?? '1', 10) : 1;
 
     await runCategoryCrawl(enableAI, targetCategory, maxPages, startPage);
     process.exit(0);
@@ -1489,7 +1495,7 @@ async function main() {
   // フルスキャンモード（シリーズベース）
   if (fullScan) {
     const targetSeries = seriesArg ? seriesArg.split('=')[1] : undefined;
-    const maxPagesPerSeries = maxPagesArg ? parseInt(maxPagesArg.split('=')[1]) : 500;
+    const maxPagesPerSeries = maxPagesArg ? parseInt(maxPagesArg.split('=')[1] ?? '500', 10) : 500;
 
     await runFullScan(enableAI, targetSeries, maxPagesPerSeries);
     process.exit(0);
@@ -1497,9 +1503,9 @@ async function main() {
   }
 
   // 通常モード
-  const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 1000;
-  const maxPages = pagesArg ? parseInt(pagesArg.split('=')[1]) : Math.ceil(limit / ITEMS_PER_PAGE);
-  const startPage = startPageArg ? parseInt(startPageArg.split('=')[1]) : 1;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '1000', 10) : 1000;
+  const maxPages = pagesArg ? parseInt(pagesArg.split('=')[1] ?? '0', 10) : Math.ceil(limit / ITEMS_PER_PAGE);
+  const startPage = startPageArg ? parseInt(startPageArg.split('=')[1] ?? '1', 10) : 1;
   const endPage = startPage + maxPages - 1;
 
   console.log('=== MGS一覧クローラー ===');
@@ -1567,8 +1573,8 @@ async function main() {
   const withPriceCount = await db.execute(sql`
     SELECT COUNT(*) as count FROM product_sources WHERE asp_name = 'MGS' AND price > 0
   `);
-  console.log(`\nMGS総商品数: ${totalMgsCount.rows[0].count}`);
-  console.log(`  - 価格あり: ${withPriceCount.rows[0].count}`);
+  console.log(`\nMGS総商品数: ${totalMgsCount.rows[0]?.['count']}`);
+  console.log(`  - 価格あり: ${withPriceCount.rows[0]?.['count']}`);
 
   process.exit(0);
 }

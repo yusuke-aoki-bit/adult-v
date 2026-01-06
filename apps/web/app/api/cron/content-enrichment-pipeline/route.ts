@@ -17,7 +17,7 @@ export const maxDuration = 300;
 
 // DeepL翻訳関数
 async function translateText(text: string, targetLang: string): Promise<string | null> {
-  const apiKey = process.env.DEEPL_API_KEY;
+  const apiKey = process.env['DEEPL_API_KEY'];
   if (!apiKey) return null;
 
   try {
@@ -52,5 +52,5 @@ export const GET = createContentEnrichmentPipelineHandler({
   getDb,
   translateText,
   requestIndexing: checkGoogleApiConfig().indexing ? requestIndexing : undefined,
-  siteBaseUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://adult-v.com',
+  siteBaseUrl: process.env['NEXT_PUBLIC_SITE_URL'] || 'https://adult-v.com',
 });

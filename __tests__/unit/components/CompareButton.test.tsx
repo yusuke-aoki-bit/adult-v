@@ -132,7 +132,7 @@ describe('CompareButton', () => {
 
       // 削除されたことを確認
       const calls = localStorageMock.setItem.mock.calls;
-      const lastCall = calls[calls.length - 1];
+      const lastCall = calls[calls.length - 1]!;
       expect(lastCall[1]).not.toContain('test-123');
     });
   });
