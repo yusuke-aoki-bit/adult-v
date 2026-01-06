@@ -665,7 +665,10 @@ export default function DiscoverPage() {
                     setPendingFilters(prev => {
                       const newFilters = { ...prev };
                       if (e.target.checked) {
-                        newFilters.releasedAfter = oneYearAgo.toISOString().split('T')[0];
+                        const dateStr = oneYearAgo.toISOString().split('T')[0];
+                        if (dateStr) {
+                          newFilters.releasedAfter = dateStr;
+                        }
                       } else {
                         delete newFilters.releasedAfter;
                       }

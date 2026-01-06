@@ -189,8 +189,8 @@ describe('Products API Handler Integration', () => {
       await handler(request);
 
       // 無効なsortは無視されるので、sortByプロパティが含まれないか、undefinedになる
-      const callArgs = mockGetProducts.mock.calls[0][0];
-      expect(callArgs.sortBy === undefined || !('sortBy' in callArgs)).toBe(true);
+      const callArgs = mockGetProducts.mock.calls[0]?.[0];
+      expect(callArgs?.sortBy === undefined || (callArgs && !('sortBy' in callArgs))).toBe(true);
     });
 
     it('should handle priceRange filter (range format)', async () => {

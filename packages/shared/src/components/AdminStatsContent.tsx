@@ -156,6 +156,12 @@ interface TableRowCount {
   count: string;
 }
 
+interface DailyGrowth {
+  table_name: string;
+  today: string;
+  yesterday: string;
+}
+
 interface StatsData {
   aspSummary: ASPSummary[];
   videoStats: VideoStats[];
@@ -171,6 +177,7 @@ interface StatsData {
   performerAiStats: PerformerAIStat[];
   translationStats: TranslationStat[];
   tableRowCounts: TableRowCount[];
+  dailyGrowth?: DailyGrowth[];
   seoIndexingByStatus?: SeoIndexingByStatus[];
   seoIndexingSummary?: SeoIndexingSummary | null;
   generatedAt: string;
@@ -223,6 +230,375 @@ const getThemeClasses = (darkMode: boolean) => ({
   statusSucceeded: darkMode ? 'text-green-400' : 'text-green-600',
   statusFailed: darkMode ? 'text-red-400' : 'text-red-600',
 });
+
+// ASP colors for chart
+const ASP_COLORS: Record<string, string> = {
+  'DUGA': '#f59e0b',      // amber
+  'Sokmil': '#10b981',    // emerald
+  'MGS': '#ef4444',       // red
+  'FC2': '#3b82f6',       // blue
+  'B10F': '#8b5cf6',      // violet
+  'FANZA': '#ec4899',     // pink
+  'DTI: Heyzo': '#06b6d4',// cyan
+  'DTI: 1Pondo': '#14b8a6', // teal
+  'DTI: Caribbean': '#84cc16', // lime
+  'DTI: Caribbeancompr': '#22c55e', // green
+  'Japanska': '#f97316',  // orange
+  'Tokyohot': '#a855f7',  // purple
+};
+
+function getAspColor(aspName: string): string {
+  // DTIサブサービスの特別処理
+  if (aspName.startsWith('DTI:')) {
+    return ASP_COLORS[aspName] || '#6b7280';
+  }
+  return ASP_COLORS[aspName] || '#6b7280';
+}
+
+// Collection Rate Donut Chart Component
+function CollectionRateChart({ data, darkMode }: { data: CollectionRate[]; darkMode: boolean }) {
+  const theme = getThemeClasses(darkMode);
+
+  // 上位8件のみ表示
+  const topData = data.slice(0, 8);
+  const total = topData.reduce((sum, d) => sum + d.collected, 0);
+
+  // 円グラフのパス生成
+  let currentAngle = -90; // 12時方向から開始
+  const radius = 80;
+  const centerX = 100;
+  const centerY = 100;
+
+  const slices = topData.map((item, index) => {
+    const percentage = (item.collected / total) * 100;
+    const angle = (percentage / 100) * 360;
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + angle;
+    currentAngle = endAngle;
+
+    // パスの計算
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+    const x1 = centerX + radius * Math.cos(startRad);
+    const y1 = centerY + radius * Math.sin(startRad);
+    const x2 = centerX + radius * Math.cos(endRad);
+    const y2 = centerY + radius * Math.sin(endRad);
+    const largeArc = angle > 180 ? 1 : 0;
+
+    const color = getAspColor(item.asp_name);
+    const path = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+    return { path, color, asp: item.asp_name, collected: item.collected, percentage, index };
+  });
+
+  return (
+    <div className="flex flex-col md:flex-row items-center gap-6">
+      {/* ドーナツチャート */}
+      <div className="relative">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          {slices.map((slice) => (
+            <path
+              key={slice.asp}
+              d={slice.path}
+              fill={slice.color}
+              className="transition-opacity hover:opacity-80 cursor-pointer"
+            >
+              <title>{`${slice.asp}: ${slice.collected.toLocaleString()} (${slice.percentage.toFixed(1)}%)`}</title>
+            </path>
+          ))}
+          {/* 中央の白い円（ドーナツ効果） */}
+          <circle cx={centerX} cy={centerY} r="50" fill={darkMode ? '#1f2937' : '#ffffff'} />
+          {/* 中央のテキスト */}
+          <text x={centerX} y={centerY - 8} textAnchor="middle" className={`text-2xl font-bold ${theme.text}`} fill="currentColor">
+            {(total / 1000).toFixed(0)}K
+          </text>
+          <text x={centerX} y={centerY + 12} textAnchor="middle" className={`text-xs ${theme.textMuted}`} fill="currentColor">
+            Total
+          </text>
+        </svg>
+      </div>
+
+      {/* 凡例 */}
+      <div className="grid grid-cols-2 gap-2">
+        {topData.map((item) => (
+          <div key={item.asp_name} className="flex items-center gap-2">
+            <div
+              className="w-3 h-3 rounded-sm shrink-0"
+              style={{ backgroundColor: getAspColor(item.asp_name) }}
+            />
+            <div className="min-w-0">
+              <div className={`text-xs font-medium truncate ${theme.text}`}>{item.asp_name}</div>
+              <div className={`text-xs ${theme.textMuted}`}>
+                {(item.collected / 1000).toFixed(1)}K
+                {item.rate && <span className="ml-1">({parseFloat(item.rate).toFixed(0)}%)</span>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// AI Content Progress Chart
+function AIContentChart({ data, darkMode }: { data: AIContentStat[]; darkMode: boolean }) {
+  const theme = getThemeClasses(darkMode);
+  const stat = data[0];
+  if (!stat) return null;
+
+  const total = parseInt(stat.total);
+  const metrics = [
+    { label: 'AI Description', value: parseInt(stat.with_ai_description), color: '#3b82f6' },
+    { label: 'AI Tags', value: parseInt(stat.with_ai_tags), color: '#10b981' },
+    { label: 'AI Review', value: parseInt(stat.with_ai_review), color: '#f59e0b' },
+    { label: 'AI Catchphrase', value: parseInt(stat.with_ai_catchphrase), color: '#8b5cf6' },
+  ];
+
+  return (
+    <div className="space-y-3">
+      {metrics.map((m) => {
+        const pct = total > 0 ? (m.value / total) * 100 : 0;
+        return (
+          <div key={m.label}>
+            <div className="flex justify-between text-sm mb-1">
+              <span className={theme.textMuted}>{m.label}</span>
+              <span className={theme.text}>{m.value.toLocaleString()} ({pct.toFixed(1)}%)</span>
+            </div>
+            <div className={`h-4 ${theme.progressBg} rounded-full overflow-hidden`}>
+              <div
+                className="h-full rounded-full transition-all relative group"
+                style={{ width: `${pct}%`, backgroundColor: m.color }}
+              >
+                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Translation Progress Chart
+function TranslationChart({ data, darkMode }: { data: TranslationStat[]; darkMode: boolean }) {
+  const theme = getThemeClasses(darkMode);
+
+  const languages = [
+    { code: 'en', label: 'English', color: '#3b82f6' },
+    { code: 'zh', label: '简体中文', color: '#ef4444' },
+    { code: 'zh_tw', label: '繁體中文', color: '#f97316' },
+    { code: 'ko', label: '한국어', color: '#22c55e' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {data.map((table) => {
+        const total = parseInt(table.total);
+        return (
+          <div key={table.table_name} className={`${theme.cardInner} rounded-lg p-3`}>
+            <div className={`text-sm font-medium mb-2 ${theme.text}`}>{table.table_name}</div>
+            <div className="flex gap-1">
+              {languages.map((lang) => {
+                const value = parseInt(table[lang.code as keyof TranslationStat] as string) || 0;
+                const pct = total > 0 ? (value / total) * 100 : 0;
+                return (
+                  <div
+                    key={lang.code}
+                    className="flex-1 relative group"
+                    title={`${lang.label}: ${value.toLocaleString()} (${pct.toFixed(1)}%)`}
+                  >
+                    <div className={`h-6 ${theme.progressBg} rounded overflow-hidden`}>
+                      <div
+                        className="h-full transition-all"
+                        style={{ width: `${pct}%`, backgroundColor: lang.color }}
+                      />
+                    </div>
+                    <div className={`text-xs text-center mt-1 ${theme.textMuted}`}>
+                      {lang.code.toUpperCase()}
+                    </div>
+                    {/* ホバー時のツールチップ */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                      {lang.label}: {pct.toFixed(1)}%
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Table Size Bar Chart
+function TableSizeChart({ data, darkMode }: { data: TableRowCount[]; darkMode: boolean }) {
+  const theme = getThemeClasses(darkMode);
+
+  // 上位10件のみ表示
+  const topData = data.slice(0, 10);
+  const maxCount = Math.max(...topData.map((t) => parseInt(t.count)));
+
+  // テーブル名に応じた色
+  const getTableColor = (name: string): string => {
+    if (name.includes('product_images')) return '#f59e0b';
+    if (name.includes('product_tags')) return '#3b82f6';
+    if (name.includes('products')) return '#ef4444';
+    if (name.includes('performer')) return '#ec4899';
+    if (name.includes('video')) return '#8b5cf6';
+    if (name.includes('wiki')) return '#06b6d4';
+    if (name.includes('tag')) return '#22c55e';
+    return '#6b7280';
+  };
+
+  return (
+    <div className="space-y-2">
+      {topData.map((table) => {
+        const count = parseInt(table.count);
+        const pct = (count / maxCount) * 100;
+        return (
+          <div key={table.table_name} className="flex items-center gap-2">
+            <div className={`w-36 text-xs ${theme.textMuted} truncate shrink-0`} title={table.table_name}>
+              {table.table_name}
+            </div>
+            <div className={`flex-1 h-5 ${theme.progressBg} rounded overflow-hidden relative group`}>
+              <div
+                className="h-full rounded transition-all"
+                style={{ width: `${pct}%`, backgroundColor: getTableColor(table.table_name) }}
+              />
+              <div className="absolute inset-y-0 right-2 flex items-center">
+                <span className={`text-xs font-mono ${theme.text}`}>
+                  {count >= 1000000 ? `${(count / 1000000).toFixed(1)}M` : count >= 1000 ? `${(count / 1000).toFixed(0)}K` : count}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Daily Collection Chart Component
+function DailyCollectionChart({ data, darkMode }: { data: DailyCollection[]; darkMode: boolean }) {
+  const theme = getThemeClasses(darkMode);
+
+  // データを日付ごとにグループ化
+  const dateMap = new Map<string, Map<string, number>>();
+  const aspSet = new Set<string>();
+
+  data.forEach((item) => {
+    const date = item.date.split('T')[0] || item.date;
+    aspSet.add(item.asp_name);
+    if (!dateMap.has(date)) {
+      dateMap.set(date, new Map());
+    }
+    dateMap.get(date)!.set(item.asp_name, parseInt(item.count) || 0);
+  });
+
+  // 日付を昇順にソート
+  const dates = Array.from(dateMap.keys()).sort();
+  const asps = Array.from(aspSet).sort();
+
+  // 各日付の合計を計算して最大値を求める
+  let maxTotal = 0;
+  const dateTotals = dates.map((date) => {
+    const aspData = dateMap.get(date)!;
+    let total = 0;
+    asps.forEach((asp) => {
+      total += aspData.get(asp) || 0;
+    });
+    maxTotal = Math.max(maxTotal, total);
+    return { date, total, aspData };
+  });
+
+  // スケールを計算（最大値の110%を上限に）
+  const scale = maxTotal > 0 ? maxTotal * 1.1 : 100;
+
+  return (
+    <div className="space-y-4">
+      {/* 凡例 */}
+      <div className="flex flex-wrap gap-3 mb-4">
+        {asps.map((asp) => (
+          <div key={asp} className="flex items-center gap-1.5 text-xs">
+            <div
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: getAspColor(asp) }}
+            />
+            <span className={theme.textMuted}>{asp}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* チャート */}
+      <div className="space-y-2">
+        {dateTotals.map(({ date, total, aspData }) => {
+          const shortDate = date.slice(5); // MM-DD形式
+          return (
+            <div key={date} className="flex items-center gap-2">
+              <div className={`w-16 text-xs ${theme.textMuted} text-right shrink-0`}>
+                {shortDate}
+              </div>
+              <div className={`flex-1 h-6 ${theme.progressBg} rounded overflow-hidden flex`}>
+                {asps.map((asp) => {
+                  const count = aspData.get(asp) || 0;
+                  const width = (count / scale) * 100;
+                  if (width < 0.5) return null;
+                  return (
+                    <div
+                      key={asp}
+                      className="h-full transition-all relative group"
+                      style={{
+                        width: `${width}%`,
+                        backgroundColor: getAspColor(asp),
+                      }}
+                      title={`${asp}: ${count.toLocaleString()}`}
+                    >
+                      {/* ホバー時にツールチップ表示 */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                        {asp}: {count.toLocaleString()}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className={`w-16 text-xs ${theme.textMuted} text-right shrink-0`}>
+                {total.toLocaleString()}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* サマリー */}
+      <div className={`mt-4 pt-4 border-t ${theme.border}`}>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {asps.slice(0, 12).map((asp) => {
+            const totalForAsp = dateTotals.reduce(
+              (sum, { aspData }) => sum + (aspData.get(asp) || 0),
+              0
+            );
+            return (
+              <div
+                key={asp}
+                className={`${theme.cardInner} rounded p-2 text-center`}
+              >
+                <div
+                  className="text-xs font-medium truncate"
+                  style={{ color: getAspColor(asp) }}
+                >
+                  {asp}
+                </div>
+                <div className="text-sm font-bold">{totalForAsp.toLocaleString()}</div>
+                <div className={`text-xs ${theme.textMuted}`}>14d total</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ProgressBar({ value, max = 100, darkMode = false }: { value: number | null; max?: number; darkMode?: boolean }) {
   const pct = value ?? 0;
@@ -345,7 +721,7 @@ export default function AdminStatsContent({
     );
   }
 
-  const { aspSummary, videoStats, performerStats, totalStats, topPerformers, noImagePerformers, collectionRates, latestReleases, dailyCollection, rawDataCounts, generatedAt } = data;
+  const { aspSummary, videoStats, performerStats, totalStats, topPerformers, noImagePerformers, collectionRates, latestReleases, dailyCollection, rawDataCounts, dailyGrowth, generatedAt } = data;
 
   return (
     <div className={`min-h-screen ${theme.bg} ${theme.text} p-8`}>
@@ -388,6 +764,52 @@ export default function AdminStatsContent({
             <div className={`text-sm ${theme.textMuted}`}>With Performer</div>
           </div>
         </div>
+
+        {/* Daily Growth Stats */}
+        {dailyGrowth && dailyGrowth.length > 0 && (
+          <div className={`${theme.card} rounded-lg p-6 mb-8`}>
+            <h2 className="text-xl font-semibold mb-4">Daily Growth (Today vs Yesterday)</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {dailyGrowth.map((item) => {
+                const today = parseInt(item.today) || 0;
+                const yesterday = parseInt(item.yesterday) || 0;
+                const isActiveSales = item.table_name === 'product_sales_active';
+                return (
+                  <div key={item.table_name} className={`${theme.cardInner} rounded-lg p-4`}>
+                    <div className="text-sm font-medium mb-2">
+                      {item.table_name === 'products' ? 'Products' :
+                       item.table_name === 'product_sources' ? 'Sources' :
+                       item.table_name === 'performers' ? 'Performers' :
+                       item.table_name === 'product_sales_active' ? 'Active Sales' :
+                       item.table_name}
+                    </div>
+                    {isActiveSales ? (
+                      <div className="text-2xl font-bold text-orange-400">{formatNumber(today)}</div>
+                    ) : (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-green-400">+{formatNumber(today)}</span>
+                        <span className={`text-sm ${theme.textMuted}`}>today</span>
+                      </div>
+                    )}
+                    {!isActiveSales && (
+                      <div className={`text-sm ${theme.textMuted}`}>
+                        Yesterday: +{formatNumber(yesterday)}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Daily Collection Chart - 過去14日間のASP別収集推移 */}
+        {dailyCollection && dailyCollection.length > 0 && (
+          <div className={`${theme.card} rounded-lg p-6 mb-8`}>
+            <h2 className="text-xl font-semibold mb-4">Daily Collection Trend (Last 14 Days)</h2>
+            <DailyCollectionChart data={dailyCollection} darkMode={darkMode} />
+          </div>
+        )}
 
         {/* Cloud Run Jobs Status */}
         {jobsData && (
@@ -630,6 +1052,12 @@ export default function AdminStatsContent({
         <div className={`${theme.card} rounded-lg p-6 mb-8`}>
           <h2 className="text-xl font-semibold mb-4">Collection Rate (vs Estimated Total)</h2>
           <p className={`text-xs ${theme.textSecondary} mb-4`}>推定値は各ASPのAPI/サイトから動的に取得（1時間キャッシュ）</p>
+
+          {/* ドーナツチャート */}
+          <div className="mb-6">
+            <CollectionRateChart data={collectionRates} darkMode={darkMode} />
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -876,15 +1304,11 @@ export default function AdminStatsContent({
         {/* Table Row Counts */}
         {data.tableRowCounts && data.tableRowCounts.length > 0 && (
           <div className={`${theme.card} rounded-lg p-6 mb-8`}>
-            <h2 className="text-xl font-semibold mb-4">Database Table Row Counts</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {data.tableRowCounts.map((t) => (
-                <div key={t.table_name} className={`${theme.cardInner} rounded p-3 flex justify-between items-center`}>
-                  <span className={`text-sm ${theme.text}`}>{t.table_name}</span>
-                  <span className="font-mono text-blue-400">{formatNumber(t.count)}</span>
-                </div>
-              ))}
-            </div>
+            <h2 className="text-xl font-semibold mb-4">Database Table Sizes</h2>
+
+            {/* 棒グラフ */}
+            <TableSizeChart data={data.tableRowCounts} darkMode={darkMode} />
+
             <div className={`mt-4 pt-4 border-t ${theme.border} flex justify-between`}>
               <span className={theme.textMuted}>Total Records</span>
               <span className="font-mono font-bold text-green-400">
@@ -898,31 +1322,8 @@ export default function AdminStatsContent({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {data.aiContentStats && data.aiContentStats.length > 0 && (
             <div className={`${theme.card} rounded-lg p-6`}>
-              <h2 className="text-xl font-semibold mb-4">AI Content (Products)</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className={`text-left ${theme.textMuted} border-b ${theme.border}`}>
-                      <th className="pb-3">Table</th>
-                      <th className="pb-3 text-right">Total</th>
-                      <th className="pb-3 text-right">AI Desc</th>
-                      <th className="pb-3 text-right">AI Tags</th>
-                      <th className="pb-3 text-right">AI Review</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.aiContentStats.map((s) => (
-                      <tr key={s.table_name} className={`border-b ${theme.borderLight}`}>
-                        <td className="py-2">{s.table_name}</td>
-                        <td className="py-2 text-right font-mono">{formatNumber(s.total)}</td>
-                        <td className="py-2 text-right font-mono text-green-400">{formatNumber(s.with_ai_description)}</td>
-                        <td className="py-2 text-right font-mono text-blue-400">{formatNumber(s.with_ai_tags)}</td>
-                        <td className="py-2 text-right font-mono text-purple-400">{formatNumber(s.with_ai_review)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <h2 className="text-xl font-semibold mb-4">AI Content Progress</h2>
+              <AIContentChart data={data.aiContentStats} darkMode={darkMode} />
             </div>
           )}
 
@@ -967,51 +1368,7 @@ export default function AdminStatsContent({
         {data.translationStats && data.translationStats.length > 0 && (
           <div className={`${theme.card} rounded-lg p-6 mb-8`}>
             <h2 className="text-xl font-semibold mb-4">Translation Coverage</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className={`text-left ${theme.textMuted} border-b ${theme.border}`}>
-                    <th className="pb-3">Table</th>
-                    <th className="pb-3 text-right">Total</th>
-                    <th className="pb-3 text-right">EN</th>
-                    <th className="pb-3 text-right">ZH</th>
-                    <th className="pb-3 text-right">ZH-TW</th>
-                    <th className="pb-3 text-right">KO</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.translationStats.map((s) => {
-                    const total = parseInt(s.total);
-                    const enPct = total > 0 ? ((parseInt(s.en) / total) * 100).toFixed(1) : '0';
-                    const zhPct = total > 0 ? ((parseInt(s.zh) / total) * 100).toFixed(1) : '0';
-                    const zhTwPct = total > 0 ? ((parseInt(s.zh_tw) / total) * 100).toFixed(1) : '0';
-                    const koPct = total > 0 ? ((parseInt(s.ko) / total) * 100).toFixed(1) : '0';
-                    return (
-                      <tr key={s.table_name} className={`border-b ${theme.borderLight}`}>
-                        <td className="py-2">{s.table_name}</td>
-                        <td className="py-2 text-right font-mono">{formatNumber(s.total)}</td>
-                        <td className="py-2 text-right">
-                          <span className="font-mono">{formatNumber(s.en)}</span>
-                          <span className={`text-xs ${theme.textSecondary} ml-1`}>({enPct}%)</span>
-                        </td>
-                        <td className="py-2 text-right">
-                          <span className="font-mono">{formatNumber(s.zh)}</span>
-                          <span className={`text-xs ${theme.textSecondary} ml-1`}>({zhPct}%)</span>
-                        </td>
-                        <td className="py-2 text-right">
-                          <span className="font-mono">{formatNumber(s.zh_tw)}</span>
-                          <span className={`text-xs ${theme.textSecondary} ml-1`}>({zhTwPct}%)</span>
-                        </td>
-                        <td className="py-2 text-right">
-                          <span className="font-mono">{formatNumber(s.ko)}</span>
-                          <span className={`text-xs ${theme.textSecondary} ml-1`}>({koPct}%)</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <TranslationChart data={data.translationStats} darkMode={darkMode} />
           </div>
         )}
 

@@ -20,39 +20,42 @@ export interface JobStatus {
   consoleUrl?: string;
 }
 
-// 主要なクローラージョブのリスト
+// 主要なクローラージョブのリスト（実際のCloud Run Job名に合わせる）
 const MAIN_CRAWLER_JOBS = [
-  'mgs-crawler',
-  'duga-crawler',
-  'sokmil-crawler',
-  'fc2-crawler',
-  'b10f-crawler',
-  'heyzo-crawler',
-  'ippondo-crawler',
-  'caribbeancom-crawler',
-  'caribbeancompr-crawler',
-  'japanska-crawler',
-  'performer-info-crawler',
-  'run-migration',
-  'generate-reviews',
+  'mgs-daily',
+  'crawl-duga',
+  'crawl-sokmil',
+  'crawl-fc2',
+  'crawl-b10f',
+  'crawl-dti-all',
+  'crawl-japanska',
+  'crawl-tokyohot',
+  'crawl-sales',
+  'fanza-daily',
+  'enrich-performers',
+  'link-wiki-performers',
   'crawl-avwiki-net',
+  'generate-reviews',
+  'run-migration',
 ];
 
-// 主要なスケジューラーのリスト
+// 主要なスケジューラーのリスト（実際のCloud Scheduler名に合わせる）
 const MAIN_SCHEDULERS = [
-  'mgs-parallel-all',
-  'mgs-parallel-all-2',
-  'mgs-parallel-all-3',
-  'duga-crawler-daily',
-  'sokmil-crawler-daily',
-  'fc2-crawler-daily',
+  'mgs-daily-scheduler',
+  'crawl-duga-scheduler',
+  'crawl-sokmil-scheduler',
+  'crawl-fc2-scheduler',
+  'crawl-b10f-scheduler',
+  'crawl-dti-all-daily',
+  'crawl-japanska-scheduler',
+  'crawl-tokyohot-scheduler',
+  'crawl-sales-scheduler',
+  'fanza-daily-scheduler',
   'performer-pipeline-daily',
   'content-enrichment-daily',
-  'seo-enhance-daily',
-  'backfill-images-daily',
-  'backfill-videos-daily',
   'crawl-avwiki-scheduler',
   'generate-reviews-weekly',
+  'seo-enhance-daily',
 ];
 
 export interface SchedulerStatus {
@@ -66,24 +69,37 @@ export interface SchedulerStatus {
 }
 
 const PROJECT_ID = 'adult-v';
-const REGION = 'us-central1';
+const REGION = 'asia-northeast1';
 
 export async function GET() {
   try {
     // gcloud コマンドで Cloud Run Jobs の詳細情報を取得
-    const { stdout } = await execAsync(
-      `gcloud run jobs list --project=${PROJECT_ID} --region=${REGION} --format="json(name,status.latestCreatedExecution.name,status.latestCreatedExecution.completionStatus,status.latestCreatedExecution.completionTime,status.latestCreatedExecution.startTime)" 2>/dev/null || echo "[]"`,
-      { timeout: 30000 }
-    );
+    // JSONフォーマットではcompletionTimestamp, creationTimestampが使われる
+    // Windows/Unix両対応のコマンド
+    const isWindows = process.platform === 'win32';
+    const jobsCommand = isWindows
+      ? `gcloud run jobs list --project=${PROJECT_ID} --region=${REGION} --format="json(metadata.name,status.latestCreatedExecution)"`
+      : `gcloud run jobs list --project=${PROJECT_ID} --region=${REGION} --format="json(metadata.name,status.latestCreatedExecution)" 2>/dev/null || echo "[]"`;
+
+    let stdout = '[]';
+    try {
+      const result = await execAsync(jobsCommand, { timeout: 30000 });
+      stdout = result.stdout;
+    } catch {
+      // コマンド失敗時は空配列
+      stdout = '[]';
+    }
 
     let allJobs: Array<{
-      name: string;
+      metadata?: {
+        name?: string;
+      };
       status?: {
         latestCreatedExecution?: {
           name?: string;
           completionStatus?: string;
-          completionTime?: string;
-          startTime?: string;
+          completionTimestamp?: string;
+          creationTimestamp?: string;
         };
       };
     }> = [];
@@ -97,7 +113,7 @@ export async function GET() {
 
     // 主要なクローラージョブのみをフィルタして整形
     const jobStatuses: JobStatus[] = MAIN_CRAWLER_JOBS.map((jobName) => {
-      const job = allJobs.find((j) => j.name?.endsWith(`/${jobName}`));
+      const job = allJobs.find((j) => j.metadata?.name === jobName);
 
       if (!job) {
         return {
@@ -110,32 +126,32 @@ export async function GET() {
       const execution = job.status?.latestCreatedExecution;
       let status: JobStatus['status'] = 'unknown';
 
-      // Cloud Run Jobsのステータス（RUNNING, SUCCEEDED, FAILEDなど）
-      // 完了時刻がなく開始時刻がある場合は実行中とみなす
+      // Cloud Run Jobsのステータス（EXECUTION_SUCCEEDED, EXECUTION_FAILEDなど）
+      // 完了時刻がなく作成時刻がある場合は実行中とみなす
       const completionStatus = execution?.completionStatus?.toUpperCase() || '';
-      if (completionStatus.includes('RUNNING') || (execution?.startTime && !execution?.completionTime)) {
+      if (completionStatus.includes('RUNNING') || (execution?.creationTimestamp && !execution?.completionTimestamp)) {
         status = 'running';
-      } else if (completionStatus.includes('SUCCEEDED') || completionStatus === 'SUCCEEDED') {
+      } else if (completionStatus.includes('SUCCEEDED')) {
         status = 'succeeded';
       } else if (completionStatus.includes('FAILED') || completionStatus.includes('CANCELLED')) {
         status = 'failed';
-      } else if (execution?.completionTime) {
+      } else if (execution?.completionTimestamp) {
         // 完了時刻があるが上記に該当しない場合は成功とみなす（古いフォーマット対応）
         status = 'succeeded';
       }
 
       // 実行時間の計算
       let duration: string | undefined;
-      if (execution?.startTime) {
-        const startTime = new Date(execution.startTime);
-        const endTime = execution?.completionTime ? new Date(execution.completionTime) : new Date();
+      if (execution?.creationTimestamp) {
+        const startTime = new Date(execution.creationTimestamp);
+        const endTime = execution?.completionTimestamp ? new Date(execution.completionTimestamp) : new Date();
         const durationMs = endTime.getTime() - startTime.getTime();
         const minutes = Math.floor(durationMs / 60000);
         const seconds = Math.floor((durationMs % 60000) / 1000);
         duration = `${minutes}m ${seconds}s`;
       }
 
-      const executionName = execution?.name?.split('/').pop() || null;
+      const executionName = execution?.name || null;
 
       // Cloud Console URLの生成
       const consoleUrl = `https://console.cloud.google.com/run/jobs/details/${REGION}/${jobName}/executions?project=${PROJECT_ID}`;
@@ -149,8 +165,8 @@ export async function GET() {
         name: jobName,
         executionName,
         status,
-        completedAt: execution?.completionTime,
-        startedAt: execution?.startTime,
+        completedAt: execution?.completionTimestamp,
+        startedAt: execution?.creationTimestamp,
         duration,
         logsUrl,
         consoleUrl,
@@ -170,10 +186,17 @@ export async function GET() {
     let schedulerSummary = { enabled: 0, paused: 0, failed: 0, succeeded: 0 };
 
     try {
-      const { stdout: schedulerStdout } = await execAsync(
-        `gcloud scheduler jobs list --project=${PROJECT_ID} --location=asia-northeast1 --format="json(name,schedule,timeZone,state,status.lastAttemptTime,status.lastAttemptResult.message,scheduleTime)" 2>/dev/null || echo "[]"`,
-        { timeout: 30000 }
-      );
+      const schedulerCommand = isWindows
+        ? `gcloud scheduler jobs list --project=${PROJECT_ID} --location=asia-northeast1 --format="json(name,schedule,timeZone,state,status.lastAttemptTime,status.lastAttemptResult.message,scheduleTime)"`
+        : `gcloud scheduler jobs list --project=${PROJECT_ID} --location=asia-northeast1 --format="json(name,schedule,timeZone,state,status.lastAttemptTime,status.lastAttemptResult.message,scheduleTime)" 2>/dev/null || echo "[]"`;
+
+      let schedulerStdout = '[]';
+      try {
+        const schedulerResult = await execAsync(schedulerCommand, { timeout: 30000 });
+        schedulerStdout = schedulerResult.stdout;
+      } catch {
+        schedulerStdout = '[]';
+      }
 
       let allSchedulers: Array<{
         name: string;

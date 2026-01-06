@@ -20,40 +20,47 @@ export interface JobStatus {
   consoleUrl?: string;
 }
 
-// 主要なクローラージョブのリスト
+// 主要なクローラージョブのリスト（実際のCloud Run Job名に合わせる）
 const MAIN_CRAWLER_JOBS = [
-  'mgs-crawler',
-  'duga-crawler',
-  'sokmil-crawler',
-  'fc2-crawler',
-  'b10f-crawler',
-  'heyzo-crawler',
-  'ippondo-crawler',
-  'caribbeancom-crawler',
-  'caribbeancompr-crawler',
-  'japanska-crawler',
-  'performer-info-crawler',
+  'mgs-daily',
+  'crawl-duga',
+  'crawl-sokmil',
+  'crawl-fc2',
+  'crawl-b10f',
+  'crawl-dti-all',
+  'crawl-japanska',
+  'crawl-tokyohot',
+  'crawl-sales',
+  'fanza-daily',
+  'enrich-performers',
+  'link-wiki-performers',
+  'crawl-avwiki-net',
+  'generate-reviews',
+  'run-migration',
 ];
 
 const PROJECT_ID = 'adult-v';
-const REGION = 'us-central1';
+const REGION = 'asia-northeast1';
 
 export async function GET() {
   try {
     // gcloud コマンドで Cloud Run Jobs の詳細情報を取得
+    // JSONフォーマットではcompletionTimestamp, creationTimestampが使われる
     const { stdout } = await execAsync(
-      `gcloud run jobs list --project=${PROJECT_ID} --region=${REGION} --format="json(name,status.latestCreatedExecution.name,status.latestCreatedExecution.completionStatus,status.latestCreatedExecution.completionTime,status.latestCreatedExecution.startTime)" 2>/dev/null || echo "[]"`,
+      `gcloud run jobs list --project=${PROJECT_ID} --region=${REGION} --format="json(metadata.name,status.latestCreatedExecution)" 2>/dev/null || echo "[]"`,
       { timeout: 30000 }
     );
 
     let allJobs: Array<{
-      name: string;
+      metadata?: {
+        name?: string;
+      };
       status?: {
         latestCreatedExecution?: {
           name?: string;
           completionStatus?: string;
-          completionTime?: string;
-          startTime?: string;
+          completionTimestamp?: string;
+          creationTimestamp?: string;
         };
       };
     }> = [];
@@ -67,7 +74,7 @@ export async function GET() {
 
     // 主要なクローラージョブのみをフィルタして整形
     const jobStatuses: JobStatus[] = MAIN_CRAWLER_JOBS.map((jobName) => {
-      const job = allJobs.find((j) => j.name?.endsWith(`/${jobName}`));
+      const job = allJobs.find((j) => j.metadata?.name === jobName);
 
       if (!job) {
         return {
@@ -80,32 +87,32 @@ export async function GET() {
       const execution = job.status?.latestCreatedExecution;
       let status: JobStatus['status'] = 'unknown';
 
-      // Cloud Run Jobsのステータス（RUNNING, SUCCEEDED, FAILEDなど）
-      // 完了時刻がなく開始時刻がある場合は実行中とみなす
+      // Cloud Run Jobsのステータス（EXECUTION_SUCCEEDED, EXECUTION_FAILEDなど）
+      // 完了時刻がなく作成時刻がある場合は実行中とみなす
       const completionStatus = execution?.completionStatus?.toUpperCase() || '';
-      if (completionStatus.includes('RUNNING') || (execution?.startTime && !execution?.completionTime)) {
+      if (completionStatus.includes('RUNNING') || (execution?.creationTimestamp && !execution?.completionTimestamp)) {
         status = 'running';
-      } else if (completionStatus.includes('SUCCEEDED') || completionStatus === 'SUCCEEDED') {
+      } else if (completionStatus.includes('SUCCEEDED')) {
         status = 'succeeded';
       } else if (completionStatus.includes('FAILED') || completionStatus.includes('CANCELLED')) {
         status = 'failed';
-      } else if (execution?.completionTime) {
+      } else if (execution?.completionTimestamp) {
         // 完了時刻があるが上記に該当しない場合は成功とみなす（古いフォーマット対応）
         status = 'succeeded';
       }
 
       // 実行時間の計算
       let duration: string | undefined;
-      if (execution?.startTime) {
-        const startTime = new Date(execution.startTime);
-        const endTime = execution?.completionTime ? new Date(execution.completionTime) : new Date();
+      if (execution?.creationTimestamp) {
+        const startTime = new Date(execution.creationTimestamp);
+        const endTime = execution?.completionTimestamp ? new Date(execution.completionTimestamp) : new Date();
         const durationMs = endTime.getTime() - startTime.getTime();
         const minutes = Math.floor(durationMs / 60000);
         const seconds = Math.floor((durationMs % 60000) / 1000);
         duration = `${minutes}m ${seconds}s`;
       }
 
-      const executionName = execution?.name?.split('/').pop() || null;
+      const executionName = execution?.name || null;
 
       // Cloud Console URLの生成
       const consoleUrl = `https://console.cloud.google.com/run/jobs/details/${REGION}/${jobName}/executions?project=${PROJECT_ID}`;
@@ -119,8 +126,8 @@ export async function GET() {
         name: jobName,
         executionName,
         status,
-        completedAt: execution?.completionTime,
-        startedAt: execution?.startTime,
+        completedAt: execution?.completionTimestamp,
+        startedAt: execution?.creationTimestamp,
         duration,
         logsUrl,
         consoleUrl,

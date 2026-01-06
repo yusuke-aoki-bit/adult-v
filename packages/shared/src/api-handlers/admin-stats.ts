@@ -282,6 +282,29 @@ export function createAdminStatsHandler(
           ORDER BY count DESC
         `)),
 
+        // 14.5 日別増加量（今日と昨日の比較）
+        safeQuery(db, () => db.execute(sql`
+          SELECT
+            'products' as table_name,
+            (SELECT COUNT(*) FROM products WHERE created_at >= CURRENT_DATE) as today,
+            (SELECT COUNT(*) FROM products WHERE created_at >= CURRENT_DATE - INTERVAL '1 day' AND created_at < CURRENT_DATE) as yesterday
+          UNION ALL
+          SELECT
+            'product_sources',
+            (SELECT COUNT(*) FROM product_sources WHERE created_at >= CURRENT_DATE),
+            (SELECT COUNT(*) FROM product_sources WHERE created_at >= CURRENT_DATE - INTERVAL '1 day' AND created_at < CURRENT_DATE)
+          UNION ALL
+          SELECT
+            'performers',
+            (SELECT COUNT(*) FROM performers WHERE created_at >= CURRENT_DATE),
+            (SELECT COUNT(*) FROM performers WHERE created_at >= CURRENT_DATE - INTERVAL '1 day' AND created_at < CURRENT_DATE)
+          UNION ALL
+          SELECT
+            'product_sales_active',
+            (SELECT COUNT(*) FROM product_sales WHERE is_active = true),
+            0
+        `)),
+
         // 15. ASP総数を動的に取得
         deps.getAllASPTotals(),
 
@@ -331,9 +354,10 @@ export function createAdminStatsHandler(
         performerAiStats,
         translationStats,
         tableRowCounts,
+        dailyGrowth,
         aspTotals,
         aliasResult,
-      ] = results.slice(0, 16) as [
+      ] = results.slice(0, 17) as [
         { rows: unknown[] },
         { rows: unknown[] },
         { rows: unknown[] },
@@ -344,6 +368,7 @@ export function createAdminStatsHandler(
         { rows: unknown[] },
         { rows: unknown[] },
         { rows: unknown[] },
+        unknown[],
         unknown[],
         unknown[],
         unknown[],
@@ -355,9 +380,9 @@ export function createAdminStatsHandler(
       // SEO results (if enabled)
       let seoIndexingByStatus: unknown[] = [];
       let seoIndexingSummary: unknown[] = [];
-      if (includeSeoIndexing && results.length > 16) {
-        seoIndexingByStatus = results[16] as unknown[];
-        seoIndexingSummary = results[17] as unknown[];
+      if (includeSeoIndexing && results.length > 17) {
+        seoIndexingByStatus = results[17] as unknown[];
+        seoIndexingSummary = results[18] as unknown[];
       }
 
       // total_aliasesを追加
@@ -408,6 +433,7 @@ export function createAdminStatsHandler(
         performerAiStats,
         translationStats,
         tableRowCounts,
+        dailyGrowth,
         generatedAt: new Date().toISOString(),
       };
 

@@ -949,6 +949,26 @@ async function registerDugaProduct(productId: string): Promise<number | null> {
 }
 
 /**
+ * 指定ASPの全アクティブセールを非アクティブに
+ * クロール開始時に呼び出し、取得できたものだけを再度アクティブにする
+ */
+async function deactivateAllSalesForAsp(aspName: string): Promise<number> {
+  const db = getDb();
+
+  const result = await db.execute(sql`
+    UPDATE product_sales ps
+    SET is_active = FALSE, updated_at = NOW()
+    FROM product_sources src
+    WHERE ps.product_source_id = src.id
+    AND src.asp_name = ${aspName}
+    AND ps.is_active = TRUE
+    RETURNING ps.id
+  `);
+
+  return result.rows.length;
+}
+
+/**
  * セール情報をDBに保存
  * regularPriceが0の場合はDBから既存の価格を取得して比較
  * DBにない商品の場合はAPIから自動登録を試みる
@@ -956,6 +976,10 @@ async function registerDugaProduct(productId: string): Promise<number | null> {
 async function saveSaleItems(aspName: string, items: SaleItem[]): Promise<number> {
   const db = getDb();
   let savedCount = 0;
+
+  // クロール開始時に、このASPの全アクティブセールを非アクティブに
+  const deactivatedCount = await deactivateAllSalesForAsp(aspName);
+  crawlerLog.info(`[${aspName}] Deactivated ${deactivatedCount} existing sales before update`);
 
   for (const item of items) {
     try {
@@ -1019,15 +1043,9 @@ async function saveSaleItems(aspName: string, items: SaleItem[]): Promise<number
         continue;
       }
 
-      // 既存のアクティブなセールを非アクティブに
-      await db.execute(sql`
-        UPDATE product_sales
-        SET is_active = FALSE, updated_at = NOW()
-        WHERE product_source_id = ${productSourceId}
-        AND is_active = TRUE
-      `);
-
       // 新しいセール情報を挿入
+      // 事前に全アクティブセールを非アクティブにしているので、
+      // 取得できた商品だけが新規にアクティブなセールレコードを持つ
       await db.execute(sql`
         INSERT INTO product_sales (
           product_source_id,

@@ -52,7 +52,9 @@ function shuffleArray<T>(array: T[], seed: number): T[] {
   let m = result.length;
   while (m) {
     const i = Math.floor(seededRandom(seed + m) * m--);
-    [result[m], result[i]] = [result[i], result[m]];
+    const temp = result[m];
+    result[m] = result[i] as T;
+    result[i] = temp as T;
   }
   return result;
 }
@@ -112,11 +114,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       product.releaseDate,
       productId,
       {
-        salePrice: product.salePrice,
-        regularPrice: product.regularPrice,
-        discount: product.discount,
-        rating: product.rating,
-        reviewCount: product.reviewCount,
+        ...(product.salePrice != null && { salePrice: product.salePrice }),
+        ...(product.regularPrice != null && { regularPrice: product.regularPrice }),
+        ...(product.discount != null && { discount: product.discount }),
+        ...(product.rating != null && { rating: product.rating }),
+        ...(product.reviewCount != null && { reviewCount: product.reviewCount }),
       },
     );
 

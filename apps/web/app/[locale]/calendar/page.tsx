@@ -36,12 +36,12 @@ export async function generateMetadata({
   };
 
   return generateBaseMetadata(
-    titles[locale] || titles['ja'],
-    descriptions[locale] || descriptions['ja'],
+    titles[locale] ?? titles['ja'],
+    descriptions[locale] ?? descriptions['ja'],
     undefined,
     '/calendar',
     undefined,
-    locale,
+    locale ?? 'ja',
   );
 }
 
@@ -122,7 +122,7 @@ export default async function CalendarPage({
           <Breadcrumb
             items={[
               { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: pageTitle[locale] || pageTitle['ja'] },
+              { label: pageTitle[locale] ?? pageTitle['ja'] },
             ]}
             className="mb-2 sm:mb-3"
           />

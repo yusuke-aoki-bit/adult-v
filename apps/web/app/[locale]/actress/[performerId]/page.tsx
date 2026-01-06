@@ -270,7 +270,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     workCount: total,
     aliases: nonPrimaryAliases.map(a => a.aliasName),
   };
-  if (careerAnalysis?.debutYear !== undefined) {
+  if (careerAnalysis?.debutYear != null) {
     personSchemaOptions.debutYear = careerAnalysis.debutYear;
   }
 
@@ -304,7 +304,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     name: actress.name,
     productCount: total,
   };
-  if (careerAnalysis?.debutYear !== undefined) {
+  if (careerAnalysis?.debutYear != null) {
     actressFaqOptions.debutYear = careerAnalysis.debutYear;
   }
   if (works[0]?.releaseDate) {

@@ -415,10 +415,10 @@ export default function FavoritesPage() {
                       <FavoriteButton
                         type={item.type}
                         id={item.id}
-                        title={item.title}
-                        name={item.name}
-                        thumbnail={item.thumbnail}
-                        image={item.image}
+                        {...(item.title && { title: item.title })}
+                        {...(item.name && { name: item.name })}
+                        {...(item.thumbnail && { thumbnail: item.thumbnail })}
+                        {...(item.image && { image: item.image })}
                         size="sm"
                       />
                     </div>
