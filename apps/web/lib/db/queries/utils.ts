@@ -6,7 +6,7 @@
 import { getDb } from '../index';
 import { products, performers, productPerformers, tags, productTags, productSources, productImages, productVideos, productSales } from '../schema';
 import { eq, and, asc, sql, inArray } from 'drizzle-orm';
-import type { Product as ProductType, Actress as ActressType, ProductCategory, ProviderId } from '@/types/product';
+import type { Product as ProductType, Actress as ActressType, Actress, ProductCategory, ProviderId } from '@/types/product';
 import type { InferSelectModel } from 'drizzle-orm';
 import { mapLegacyProvider } from '@/lib/provider-utils';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
@@ -502,22 +502,15 @@ export function mapPerformerToActressTypeSync(
     .map(s => ASP_TO_PROVIDER_ID[s])
     .filter((id): id is ProviderId => id !== undefined);
 
-  return {
+  const result: Actress = {
     id: String(performer['id']),
     name: getLocalizedPerformerName(performer, locale),
-    nameKana: performer.nameKana || undefined,
     bio: getLocalizedPerformerBio(performer, locale),
     imageUrl,
     aliases: aliases || [],
     releaseCount,
-    services: providerIds.length > 0 ? providerIds : undefined,
-    // 将来のフィールド用のプレースホルダー
-    age: undefined,
-    birthDate: undefined,
-    height: undefined,
-    bust: undefined,
-    waist: undefined,
-    hip: undefined,
-    cupSize: undefined,
   };
+  if (performer.nameKana) result.nameKana = performer.nameKana;
+  if (providerIds.length > 0) result.services = providerIds;
+  return result;
 }

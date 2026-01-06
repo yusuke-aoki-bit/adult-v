@@ -196,7 +196,7 @@ interface SaleProduct {
 
 export default function DiscoverPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as TranslationKey] || translations.ja;
 
   const { addFavorite, isFavorite } = useFavorites();
@@ -334,6 +334,7 @@ export default function DiscoverPage() {
     if (history.length === 0) return;
 
     const lastItem = history[history.length - 1];
+    if (!lastItem) return;
     setHistory(prev => prev.slice(0, -1));
     setExcludeIds(prev => prev.filter(id => id !== lastItem.product.id));
     setProducts(prev => [lastItem.product, ...prev]);
@@ -402,7 +403,7 @@ export default function DiscoverPage() {
           hasSale: saleProducts.length > 0,
           hasRecentlyViewed: true,
           mainSectionId: 'discover',
-          mainSectionLabel: sectionLabels[locale]?.discover || sectionLabels.ja.discover,
+          mainSectionLabel: sectionLabels[locale]?.['discover'] ?? sectionLabels['ja']?.['discover'] ?? 'Discover',
           hasRecommendations: true,
           hasWeeklyHighlights: true,
           hasTrending: true,
@@ -676,11 +677,20 @@ export default function DiscoverPage() {
                 {durationOptions.map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => setPendingFilters(prev => ({
-                      ...prev,
-                      minDuration: option.min,
-                      maxDuration: option.max,
-                    }))}
+                    onClick={() => setPendingFilters(prev => {
+                      const newFilters = { ...prev };
+                      if (option.min !== undefined) {
+                        newFilters.minDuration = option.min;
+                      } else {
+                        delete newFilters.minDuration;
+                      }
+                      if (option.max !== undefined) {
+                        newFilters.maxDuration = option.max;
+                      } else {
+                        delete newFilters.maxDuration;
+                      }
+                      return newFilters;
+                    })}
                     className={`py-2 px-3 rounded-lg text-sm transition-colors ${
                       getDurationValue() === option.value
                         ? 'bg-rose-500 text-white'
@@ -699,10 +709,15 @@ export default function DiscoverPage() {
                 <input
                   type="checkbox"
                   checked={pendingFilters.hasPerformer || false}
-                  onChange={(e) => setPendingFilters(prev => ({
-                    ...prev,
-                    hasPerformer: e.target.checked || undefined,
-                  }))}
+                  onChange={(e) => setPendingFilters(prev => {
+                    const newFilters = { ...prev };
+                    if (e.target.checked) {
+                      newFilters.hasPerformer = true;
+                    } else {
+                      delete newFilters.hasPerformer;
+                    }
+                    return newFilters;
+                  })}
                   className="w-4 h-4 rounded border-gray-300 text-rose-500 focus:ring-rose-500"
                 />
                 <span className="text-sm text-gray-700 flex items-center gap-1.5">

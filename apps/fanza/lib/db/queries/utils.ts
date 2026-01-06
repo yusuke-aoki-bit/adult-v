@@ -6,7 +6,7 @@
 import { getDb } from '../index';
 import { products, performers, productPerformers, tags, productTags, productSources, productImages, productVideos, productSales } from '../schema';
 import { eq, and, asc, sql, inArray } from 'drizzle-orm';
-import type { Product as ProductType, Actress as ActressType, ProductCategory, ProviderId } from '@/types/product';
+import type { Product as ProductType, Actress as ActressType, Actress, ProductCategory, ProviderId } from '@/types/product';
 import type { InferSelectModel } from 'drizzle-orm';
 import { mapLegacyProvider } from '@/lib/provider-utils';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
@@ -24,23 +24,6 @@ export type TagData = { id: number; name: string; category: string | null };
 export type ImageData = { productId: number; imageUrl: string; imageType: string; displayOrder: number | null };
 export type VideoData = { productId: number; videoUrl: string; videoType: string | null; quality: string | null; duration: number | null };
 export type SaleData = { productId: number; regularPrice: number; salePrice: number; discountPercent: number | null; endAt: Date | null };
-
-// Source/Cache types for mapProductToType
-export interface SourceData {
-  aspName?: string;
-  price?: number | null;
-  currency?: string | null;
-  affiliateUrl?: string;
-  originalProductId?: string;
-  productType?: string | null;
-}
-
-export interface CacheData {
-  price?: number;
-  thumbnailUrl?: string;
-  affiliateUrl?: string;
-  sampleImages?: string[];
-}
 
 export interface BatchRelatedDataResult {
   performersMap: Map<number, PerformerData[]>;
@@ -118,8 +101,6 @@ export function generateActressId(name: string): string {
  * 複数商品の関連データをバッチ取得するヘルパー関数
  * N+1問題を解消し、商品一覧の高速化に使用
  * @param preferredProviders - 優先プロバイダー（フィルター用）
- *
- * 注意: FANZA版ではFANZAソースも使用可能
  */
 export async function batchFetchProductRelatedData(
   db: ReturnType<typeof getDb>,
@@ -226,12 +207,20 @@ export async function batchFetchProductRelatedData(
   }
 
   // 各商品で優先プロバイダーに一致するソースを選択
-  // FANZA版: FANZAソースも使用可能
+  // 重要: adult-vサイトではFANZAソースを絶対に使用しない（規約違反防止）
   let matchedCount = 0;
   let fallbackCount = 0;
+  let skippedFanzaOnly = 0;
   for (const [productId, sources] of sourcesByProduct) {
+    const nonFanzaSources = sources.filter(s => s.aspName.toUpperCase() !== 'FANZA');
+
+    if (nonFanzaSources.length === 0) {
+      skippedFanzaOnly++;
+      continue;
+    }
+
     if (preferredProvidersUpper.length > 0) {
-      const preferredSource = sources.find(s =>
+      const preferredSource = nonFanzaSources.find(s =>
         preferredProvidersUpper.includes(s.aspName.toUpperCase())
       );
       if (preferredSource) {
@@ -241,12 +230,11 @@ export async function batchFetchProductRelatedData(
       }
       fallbackCount++;
     }
-    // 一致するソースがない場合は最初のソースを使用
-    sourcesMap.set(productId, sources[0]);
+    sourcesMap.set(productId, nonFanzaSources[0]);
   }
 
-  if (preferredProvidersUpper.length > 0) {
-    console.log(`[batchFetch] Provider filter: ${preferredProvidersUpper.join(',')} - matched: ${matchedCount}, fallback: ${fallbackCount}`);
+  if (preferredProvidersUpper.length > 0 || skippedFanzaOnly > 0) {
+    console.log(`[batchFetch] Provider filter: ${preferredProvidersUpper.join(',') || 'none'} - matched: ${matchedCount}, fallback: ${fallbackCount}, skipped FANZA-only: ${skippedFanzaOnly}`);
   }
 
   const imagesMap = new Map<number, ImageData[]>();
@@ -333,12 +321,33 @@ const ACTRESS_PLACEHOLDER = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+
  * データベースの商品をProduct型に変換
  * @param locale - ロケール（'ja' | 'en' | 'zh' | 'ko'）。指定された言語のタイトル/説明を使用
  */
+// Type for source data from product_sources table
+interface SourceData {
+  aspName?: string;
+  originalProductId?: string;
+  affiliateUrl?: string;
+  price?: number | null;
+  currency?: string | null;
+  productType?: string | null;
+}
+
+// Type for cache/stats data
+interface CacheData {
+  viewCount?: number;
+  clickCount?: number;
+  favoriteCount?: number;
+  price?: number;
+  thumbnailUrl?: string;
+  affiliateUrl?: string;
+  sampleImages?: string[];
+}
+
 export function mapProductToType(
   product: DbProduct,
   performerData: Array<{ id: number; name: string; nameKana: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
   tagData: Array<{ id: number; name: string; category: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
-  source?: SourceData,
-  cache?: CacheData,
+  source?: SourceData | null,
+  cache?: CacheData | null,
   imagesData?: Array<{ imageUrl: string; imageType: string; displayOrder: number | null }>,
   videosData?: Array<{ videoUrl: string; videoType: string | null; quality: string | null; duration: number | null }>,
   locale: string = 'ja',
@@ -352,7 +361,6 @@ export function mapProductToType(
     'DUGA': 'DUGA',
     'DTI': 'DTI',
     'DMM': 'DMM',
-    'FANZA': 'FANZA',
     'MGS': 'MGS動画',
     'SOKMIL': 'ソクミル',
     'ソクミル': 'ソクミル',
@@ -494,22 +502,15 @@ export function mapPerformerToActressTypeSync(
     .map(s => ASP_TO_PROVIDER_ID[s])
     .filter((id): id is ProviderId => id !== undefined);
 
-  return {
-    id: String(performer.id),
+  const result: Actress = {
+    id: String(performer['id']),
     name: getLocalizedPerformerName(performer, locale),
-    nameKana: performer.nameKana || undefined,
     bio: getLocalizedPerformerBio(performer, locale),
     imageUrl,
     aliases: aliases || [],
     releaseCount,
-    services: providerIds.length > 0 ? providerIds : undefined,
-    // 将来のフィールド用のプレースホルダー
-    age: undefined,
-    birthDate: undefined,
-    height: undefined,
-    bust: undefined,
-    waist: undefined,
-    hip: undefined,
-    cupSize: undefined,
   };
+  if (performer.nameKana) result.nameKana = performer.nameKana;
+  if (providerIds.length > 0) result.services = providerIds;
+  return result;
 }

@@ -291,12 +291,13 @@ export async function getProductMaker(productId: number): Promise<{
     )
     .limit(1);
 
-  if (result.length === 0) return null;
+  const item = result[0];
+  if (!item) return null;
 
   return {
-    id: result[0].id,
-    name: result[0].name,
-    category: result[0].category as 'maker' | 'label',
+    id: item.id,
+    name: item.name,
+    category: item.category as 'maker' | 'label',
   };
 }
 
@@ -364,11 +365,12 @@ export async function getProductSeries(productId: number): Promise<{
     )
     .limit(1);
 
-  if (result.length === 0) return null;
+  const seriesItem = result[0];
+  if (!seriesItem) return null;
 
   return {
-    id: result[0].id,
-    name: result[0].name,
+    id: seriesItem.id,
+    name: seriesItem.name,
   };
 }
 

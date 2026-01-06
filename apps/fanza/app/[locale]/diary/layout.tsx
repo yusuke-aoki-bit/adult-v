@@ -13,7 +13,7 @@ export async function generateMetadata({
     ? '視聴した作品の記録と日記を管理'
     : 'Track and manage your viewing history and notes';
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   return {
     title,

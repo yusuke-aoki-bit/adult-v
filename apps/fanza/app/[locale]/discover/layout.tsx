@@ -13,7 +13,7 @@ export async function generateMetadata({
     ? 'ランダムな作品を発見して、お気に入りを見つけよう'
     : 'Discover random products and find your favorites';
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   return {
     title,

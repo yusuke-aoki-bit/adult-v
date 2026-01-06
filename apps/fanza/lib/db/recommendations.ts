@@ -1,11 +1,10 @@
 /**
- * レコメンデーションDBクエリ (FANZA版)
+ * レコメンデーションDBクエリ
  * 共有パッケージのファクトリーを使用
  */
 import { getDb } from './index';
 import { products, productPerformers, productTags, productSources } from './schema';
 import { createRecommendationsQueries } from '@adult-v/shared/db-queries';
-import { sql } from 'drizzle-orm';
 
 // 共有クエリファクトリーでクエリを作成
 const queries = createRecommendationsQueries({
@@ -16,22 +15,10 @@ const queries = createRecommendationsQueries({
   productSources,
 });
 
-// 関数をエクスポート（FANZA専用にラップ）
-export async function getRelatedProducts(productId: string, limit: number = 6, aspName?: string) {
-  return queries.getRelatedProducts(productId, limit, aspName);
-}
-
-// FANZA専用のWeeklyHighlightsを取得
-export async function getWeeklyHighlights() {
-  const fanzaFilter = sql`EXISTS (
-    SELECT 1 FROM product_sources ps
-    WHERE ps.product_id = p.id
-    AND LOWER(ps.asp_name) = 'fanza'
-  )`;
-  return queries.getWeeklyHighlights(fanzaFilter);
-}
-
+// 関数をエクスポート
 export const {
+  getRelatedProducts,
+  getWeeklyHighlights,
   getViewingPatternStats,
   getRecommendedActressesFromFavorites,
   getRelatedPerformers,
@@ -58,20 +45,14 @@ export type {
 // 以下は個別実装のまま（特殊なロジックがあるため）
 
 import { products as productsTable, productPerformers as ppTable, productTags as ptTable, tags as tagsTable } from './schema';
-import { eq, and, inArray, ne, desc } from 'drizzle-orm';
+import { eq, and, inArray, ne, sql, desc } from 'drizzle-orm';
 
 /**
  * Get performer's other products
- * @param aspName - ASPフィルター（例: 'fanza'）。指定時は該当ASPの商品のみ返す
  */
-export async function getPerformerOtherProducts(performerId: number, currentProductId?: string, limit: number = 12, aspName?: string) {
+export async function getPerformerOtherProducts(performerId: number, currentProductId?: string, limit: number = 12) {
   const db = getDb();
   const currentProductIdNum = currentProductId ? (typeof currentProductId === 'string' ? parseInt(currentProductId) : currentProductId) : undefined;
-
-  // ASPフィルター条件
-  const aspFilterCondition = aspName
-    ? sql`EXISTS (SELECT 1 FROM product_sources ps WHERE ps.product_id = ${productsTable.id} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
-    : sql`1=1`;
 
   const query = db
     .select({
@@ -87,13 +68,9 @@ export async function getPerformerOtherProducts(performerId: number, currentProd
       currentProductIdNum
         ? and(
             eq(ppTable.performerId, performerId),
-            ne(productsTable.id, currentProductIdNum),
-            aspFilterCondition
+            ne(productsTable.id, currentProductIdNum)
           )
-        : and(
-            eq(ppTable.performerId, performerId),
-            aspFilterCondition
-          )
+        : eq(ppTable.performerId, performerId)
     )
     .orderBy(desc(productsTable.releaseDate))
     .limit(limit);
@@ -225,7 +202,7 @@ export async function getRecommendationsFromFavorites(
 
   // Strategy 2: Products with favorite tags (if need more)
   if (recommendations.length < limit && tagIds.length > 0) {
-    const existingIds = recommendations.map((r) => r.id);
+    const existingIds = recommendations.map((r) => r['id']);
     const allExcludedIds = [...favoriteProductIds, ...existingIds];
 
     const tagMatches = await db
@@ -314,25 +291,24 @@ export async function getProductMaker(productId: number): Promise<{
     )
     .limit(1);
 
-  if (result.length === 0) return null;
+  const item = result[0];
+  if (!item) return null;
 
   return {
-    id: result[0].id,
-    name: result[0].name,
-    category: result[0].category as 'maker' | 'label',
+    id: item.id,
+    name: item.name,
+    category: item.category as 'maker' | 'label',
   };
 }
 
 /**
  * Get same maker products
  * 同じメーカーの他の商品を取得
- * @param aspName - ASPフィルター（例: 'fanza'）。指定時は該当ASPの商品のみ返す
  */
 export async function getSameMakerProducts(
   makerId: number,
   currentProductId: number,
-  limit: number = 6,
-  aspName?: string
+  limit: number = 6
 ): Promise<Array<{
   id: number;
   title: string | null;
@@ -341,11 +317,6 @@ export async function getSameMakerProducts(
   imageUrl: string | null;
 }>> {
   const db = getDb();
-
-  // ASPフィルター条件
-  const aspFilterCondition = aspName
-    ? sql`EXISTS (SELECT 1 FROM product_sources ps WHERE ps.product_id = ${productsTable.id} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
-    : sql`1=1`;
 
   const result = await db
     .select({
@@ -360,8 +331,7 @@ export async function getSameMakerProducts(
     .where(
       and(
         eq(ptTable.tagId, makerId),
-        ne(productsTable.id, currentProductId),
-        aspFilterCondition
+        ne(productsTable.id, currentProductId)
       )
     )
     .orderBy(desc(productsTable.releaseDate))
@@ -395,24 +365,23 @@ export async function getProductSeries(productId: number): Promise<{
     )
     .limit(1);
 
-  if (result.length === 0) return null;
+  const seriesItem = result[0];
+  if (!seriesItem) return null;
 
   return {
-    id: result[0].id,
-    name: result[0].name,
+    id: seriesItem.id,
+    name: seriesItem.name,
   };
 }
 
 /**
  * Get same series products
  * 同じシリーズの他の商品を取得
- * @param aspName - ASPフィルター（例: 'fanza'）。指定時は該当ASPの商品のみ返す
  */
 export async function getSameSeriesProducts(
   seriesId: number,
   currentProductId: number,
-  limit: number = 6,
-  aspName?: string
+  limit: number = 6
 ): Promise<Array<{
   id: number;
   title: string | null;
@@ -421,11 +390,6 @@ export async function getSameSeriesProducts(
   imageUrl: string | null;
 }>> {
   const db = getDb();
-
-  // ASPフィルター条件
-  const aspFilterCondition = aspName
-    ? sql`EXISTS (SELECT 1 FROM product_sources ps WHERE ps.product_id = ${productsTable.id} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
-    : sql`1=1`;
 
   const result = await db
     .select({
@@ -440,8 +404,7 @@ export async function getSameSeriesProducts(
     .where(
       and(
         eq(ptTable.tagId, seriesId),
-        ne(productsTable.id, currentProductId),
-        aspFilterCondition
+        ne(productsTable.id, currentProductId)
       )
     )
     .orderBy(desc(productsTable.releaseDate))

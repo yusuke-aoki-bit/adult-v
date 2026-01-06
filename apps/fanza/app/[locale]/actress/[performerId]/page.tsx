@@ -135,7 +135,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     // 通常のメタデータ
     const releaseCount = actress.metrics?.releaseCount ?? actress.releaseCount ?? 0;
     const title = t('metaTitle', { name: actress.name, count: releaseCount });
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
     const metadata = generateBaseMetadata(
       title,
@@ -220,15 +220,23 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     : [];
 
   // Common filter options for products query
-  const productFilterOptions = {
+  const productFilterOptions: {
+    actressId: string;
+    tags?: string[];
+    excludeTags?: string[];
+    hasVideo?: true;
+    hasImage?: true;
+    performerType?: 'solo' | 'multi';
+    providers?: string[];
+  } = {
     actressId: actress.id,
-    tags: includeTags.length > 0 ? includeTags : undefined,
-    excludeTags: excludeTags.length > 0 ? excludeTags : undefined,
-    hasVideo: hasVideo || undefined,
-    hasImage: hasImage || undefined,
-    performerType: performerType || undefined,
-    providers: includeAsps.length > 0 ? includeAsps : undefined,
   };
+  if (includeTags.length > 0) productFilterOptions.tags = includeTags;
+  if (excludeTags.length > 0) productFilterOptions.excludeTags = excludeTags;
+  if (hasVideo) productFilterOptions.hasVideo = true;
+  if (hasImage) productFilterOptions.hasImage = true;
+  if (performerType) productFilterOptions.performerType = performerType;
+  if (includeAsps.length > 0) productFilterOptions.providers = includeAsps;
 
   // Parallel fetch for all actress data (performance optimization)
   // Uses DB-level pagination instead of fetching all 1000 products
@@ -256,16 +264,17 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // Structured data with enhanced Person Schema
   // aiReviewがオブジェクト型の場合は空文字列を使用
   const aiReviewText = typeof actress.aiReview === 'string' ? actress.aiReview : '';
+  const personSchemaOptions: Parameters<typeof generatePersonSchema>[4] = {
+    workCount: total,
+    aliases: nonPrimaryAliases.map(a => a.aliasName),
+  };
+  if (careerAnalysis?.debutYear != null) personSchemaOptions.debutYear = careerAnalysis.debutYear;
   const personSchema = generatePersonSchema(
     actress.name,
     aiReviewText,
     actress.heroImage || actress.thumbnail || '',
     basePath,
-    {
-      workCount: total,
-      debutYear: careerAnalysis?.debutYear ?? undefined,
-      aliases: nonPrimaryAliases.map(a => a.aliasName),
-    }
+    personSchemaOptions,
   );
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: tNav('home'), url: localizedHref('/', locale) },
@@ -277,16 +286,18 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   ) : null;
 
   // FAQ Schema生成（リッチリザルト対応）
-  const actressFaqs = getActressPageFAQs(locale, {
+  const actressFaqOptions: Parameters<typeof getActressPageFAQs>[1] = {
     name: actress.name,
     productCount: total,
-    debutYear: careerAnalysis?.debutYear ?? undefined,
-    latestReleaseDate: works[0]?.releaseDate ? new Date(works[0].releaseDate).toLocaleDateString('ja-JP') : undefined,
-    aliases: nonPrimaryAliases.length > 0 ? nonPrimaryAliases.map(a => a.aliasName) : undefined,
-    topGenres: genreTags.length > 0 ? genreTags.slice(0, 5).map(t => t.name) : undefined,
-    aspNames: productCountByAsp.length > 0 ? productCountByAsp.map(a => a.aspName) : undefined,
-    isRetired: careerAnalysis ? !careerAnalysis.isActive : undefined,
-  });
+  };
+  if (careerAnalysis?.debutYear != null) actressFaqOptions.debutYear = careerAnalysis.debutYear;
+  const firstWork = works[0];
+  if (firstWork?.releaseDate) actressFaqOptions.latestReleaseDate = new Date(firstWork.releaseDate).toLocaleDateString('ja-JP');
+  if (nonPrimaryAliases.length > 0) actressFaqOptions.aliases = nonPrimaryAliases.map(a => a.aliasName);
+  if (genreTags.length > 0) actressFaqOptions.topGenres = genreTags.slice(0, 5).map(tag => tag.name);
+  if (productCountByAsp.length > 0) actressFaqOptions.aspNames = productCountByAsp.map(a => a.aspName);
+  if (careerAnalysis) actressFaqOptions.isRetired = !careerAnalysis.isActive;
+  const actressFaqs = getActressPageFAQs(locale, actressFaqOptions);
   const faqSchema = generateFAQSchema(actressFaqs);
 
   return (
@@ -332,7 +343,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   <ActressFavoriteButton
                     id={actress.id}
                     name={actress.name}
-                    thumbnail={actress.heroImage || actress.thumbnail}
+                    thumbnail={actress.heroImage || actress.thumbnail || ''}
                   />
                 </div>
                 <p className="text-sm sm:text-base theme-text-secondary">{t('totalProducts', { count: total })}</p>
@@ -376,7 +387,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
             <div id="ai-review" className="mb-8">
               <ActressAiReview
                 review={actress.aiReview}
-                updatedAt={actress.aiReviewUpdatedAt}
+                updatedAt={actress.aiReviewUpdatedAt ?? ''}
                 actressName={actress.name}
               />
             </div>

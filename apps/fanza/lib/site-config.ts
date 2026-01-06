@@ -76,13 +76,13 @@ export const siteConfigs: Record<SiteMode, SiteConfig> = {
  */
 export function getSiteMode(hostname?: string): SiteMode {
   // 環境変数による強制設定（Cloud Run用、ローカル開発用）
-  const envMode = process.env.SITE_MODE as SiteMode;
+  const envMode = process.env['SITE_MODE'] as SiteMode;
   if (envMode && (envMode === 'adult-v' || envMode === 'fanza')) {
     return envMode;
   }
 
   // Next.js環境変数（クライアント側でも参照可能）
-  const nextPublicMode = process.env.NEXT_PUBLIC_SITE_MODE as SiteMode;
+  const nextPublicMode = process.env['NEXT_PUBLIC_SITE_MODE'] as SiteMode;
   if (nextPublicMode && (nextPublicMode === 'adult-v' || nextPublicMode === 'fanza')) {
     return nextPublicMode;
   }

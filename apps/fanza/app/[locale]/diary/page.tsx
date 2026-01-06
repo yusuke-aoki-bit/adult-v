@@ -339,7 +339,7 @@ function DiaryEntryCard({
 
 export default function DiaryPage() {
   const params = useParams();
-  const locale = (params?.locale as string) || 'ja';
+  const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
   const {
@@ -418,7 +418,7 @@ export default function DiaryPage() {
           hasSale: saleProducts.length > 0,
           hasRecentlyViewed: true,
           mainSectionId: 'diary',
-          mainSectionLabel: sectionLabels[locale]?.diary || sectionLabels.ja.diary,
+          mainSectionLabel: sectionLabels[locale]?.['diary'] ?? sectionLabels['ja']?.['diary'] ?? 'Diary',
           hasRecommendations: true,
           hasWeeklyHighlights: true,
           hasTrending: true,

@@ -203,43 +203,42 @@ export default async function ProductDetailPage({ params }: PageProps) {
   ]);
 
   // VideoObject Schema（サンプル動画がある場合）
-  const videoSchema = product.sampleVideos && product.sampleVideos.length > 0
+  const firstVideo = product.sampleVideos?.[0];
+  const videoSchema = firstVideo
     ? generateVideoObjectSchema(
         product.title,
         product.description || `${product.title}のサンプル動画`,
         product.imageUrl,
-        product.sampleVideos[0].url,
+        firstVideo.url,
         product.duration,
         product.releaseDate,
       )
     : null;
 
   // FAQ Schema（商品ページ用）
-  const productFaqs = getProductPageFAQs(locale, {
-    productId: product.normalizedProductId || undefined,
+  const faqOptions: Parameters<typeof getProductPageFAQs>[1] = {
     title: product.title,
-    duration: product.duration,
-    releaseDate: product.releaseDate,
-    provider: product.providerLabel,
-    actressName: product.actressName || product.performers?.[0]?.name,
     isHD: true, // 基本的にHD対応と仮定
-  });
+  };
+  if (product.normalizedProductId) faqOptions.productId = product.normalizedProductId;
+  if (product.duration) faqOptions.duration = product.duration;
+  if (product.releaseDate) faqOptions.releaseDate = product.releaseDate;
+  if (product.providerLabel) faqOptions.provider = product.providerLabel;
+  const actressNameForFaq = product.actressName || product.performers?.[0]?.name;
+  if (actressNameForFaq) faqOptions.actressName = actressNameForFaq;
+  const productFaqs = getProductPageFAQs(locale, faqOptions);
   const faqSchema = generateFAQSchema(productFaqs);
 
   // Review Schema（AIレビューがある場合）
-  const reviewSchema = product.aiReview
-    ? generateReviewSchema(
-        product.aiReview,
-        product.title,
-        basePath,
-        {
-          ratingValue: product.rating,
-          productImage: product.imageUrl ?? undefined,
-          productId: product.normalizedProductId || undefined,
-          datePublished: product.releaseDate || undefined,
-        }
-      )
-    : null;
+  let reviewSchema = null;
+  if (product.aiReview) {
+    const reviewOptions: Parameters<typeof generateReviewSchema>[3] = {};
+    if (product.rating != null) reviewOptions.ratingValue = product.rating;
+    if (product.imageUrl) reviewOptions.productImage = product.imageUrl;
+    if (product.normalizedProductId) reviewOptions.productId = product.normalizedProductId;
+    if (product.releaseDate) reviewOptions.datePublished = product.releaseDate;
+    reviewSchema = generateReviewSchema(product.aiReview, product.title, basePath, reviewOptions);
+  }
 
   // HowTo Schema（視聴方法ガイド - リッチスニペット表示）
   const howToSchema = product.providerLabel && product.affiliateUrl
@@ -265,9 +264,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
 
   // 複数女優の場合、それぞれのパンくずリストを追加
-  if (product.performers && product.performers.length > 0) {
+  const mainPerformer = product.performers?.[0];
+  if (mainPerformer) {
     // メイン女優のみ表示（パンくずが長くなりすぎないように）
-    const mainPerformer = product.performers[0];
     breadcrumbItems.push({
       label: mainPerformer.name,
       href: localizedHref(`/actress/${mainPerformer.id}`, locale),
@@ -340,13 +339,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
   // AggregateOffer Schema（複数ASP価格比較 - リッチスニペット表示）
   const aggregateOfferSchema = sourcesWithSales.length > 1
     ? generateAggregateOfferSchema(
-        sourcesWithSales.map(source => ({
-          providerName: source.aspName,
-          price: source.regularPrice ?? 0,
-          salePrice: source.salePrice ?? undefined,
-          url: source.affiliateUrl || '',
-          availability: 'InStock' as const,
-        })),
+        sourcesWithSales.map(source => {
+          const offer: { providerName: string; price: number; salePrice?: number; url: string; availability?: 'InStock' | 'OutOfStock' } = {
+            providerName: source.aspName,
+            price: source.regularPrice ?? 0,
+            url: source.affiliateUrl || '',
+            availability: 'InStock',
+          };
+          if (source.salePrice != null) offer.salePrice = source.salePrice;
+          return offer;
+        }),
         'JPY',
       )
     : null;
@@ -406,7 +408,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               {/* Product Image Gallery */}
               <ProductImageGallery
                 mainImage={product.imageUrl ?? null}
-                sampleImages={product.sampleImages}
+                sampleImages={product.sampleImages ?? []}
                 productTitle={product.title}
                 crossAspImages={crossAspSampleImages}
               />
@@ -429,10 +431,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       title={product.title}
                       imageUrl={product.imageUrl ?? null}
                       provider={product.provider || ''}
-                      performerName={product.actressName || product.performers?.[0]?.name}
-                      performerId={product.actressId || product.performers?.[0]?.id}
-                      tags={product.tags}
-                      duration={product.duration}
+                      performerName={product.actressName || product.performers?.[0]?.name || ''}
+                      performerId={product.actressId || product.performers?.[0]?.id || ''}
+                      tags={product.tags ?? []}
+                      duration={product.duration ?? 0}
                       locale={locale}
                     />
                   </div>
@@ -449,7 +451,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <div className="inline-flex items-center gap-1">
                       <CopyButton text={product.title} label="タイトル" size="xs" />
                     </div>
-                    {sources.length > 0 && sources[0].originalProductId &&
+                    {sources[0]?.originalProductId &&
                      sources[0].originalProductId !== displayProductCode && (
                       <span className="inline-flex items-center px-2 py-1 bg-gray-700 rounded-md text-gray-300 text-xs font-mono">
                         {sources[0].originalProductId}

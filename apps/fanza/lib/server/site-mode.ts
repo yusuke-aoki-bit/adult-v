@@ -7,7 +7,7 @@ import { getSiteMode, getSiteConfig, type SiteMode, type SiteConfig } from '@/li
  */
 export async function getServerSiteMode(): Promise<SiteMode> {
   // 環境変数を最優先でチェック（Cloud Run / ローカル開発用）
-  const envMode = process.env.SITE_MODE as SiteMode;
+  const envMode = process.env['SITE_MODE'] as SiteMode;
   if (envMode === 'fanza' || envMode === 'adult-v') {
     return envMode;
   }

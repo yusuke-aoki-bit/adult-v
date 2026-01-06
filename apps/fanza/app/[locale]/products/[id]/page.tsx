@@ -301,13 +301,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
     sameSeriesProducts,
   ] = await Promise.all([
     primaryPerformerId
-      ? getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6, 'fanza')
+      ? getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6)
       : Promise.resolve([]),
     maker
-      ? getSameMakerProducts(maker.id, productId, 6, 'fanza')
+      ? getSameMakerProducts(maker.id, productId, 6)
       : Promise.resolve([]),
     series
-      ? getSameSeriesProducts(series.id, productId, 6, 'fanza')
+      ? getSameSeriesProducts(series.id, productId, 6)
       : Promise.resolve([]),
   ]);
 

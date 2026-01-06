@@ -10,23 +10,22 @@ if (!dsn) {
   console.warn('[Sentry] DSN not configured, Sentry is disabled');
 } else {
   console.log('[Sentry] Initializing with DSN:', dsn.substring(0, 30) + '...');
+  Sentry.init({
+    dsn,
+
+    // Adjust this value in production, or use tracesSampler for greater control
+    tracesSampleRate: 0.1,
+
+    // Setting this option to true will print useful information to the console while you're setting up Sentry.
+    debug: process.env.NODE_ENV === 'development',
+
+    // Uncomment the line below to enable Spotlight (https://spotlightjs.com)
+    // spotlight: process.env.NODE_ENV === 'development',
+
+    // Ensure errors are sent even with low sample rate
+    beforeSend(event) {
+      // Always send errors
+      return event;
+    },
+  });
 }
-
-Sentry.init({
-  dsn,
-
-  // Adjust this value in production, or use tracesSampler for greater control
-  tracesSampleRate: 0.1,
-
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: process.env.NODE_ENV === 'development',
-
-  // Uncomment the line below to enable Spotlight (https://spotlightjs.com)
-  // spotlight: process.env.NODE_ENV === 'development',
-
-  // Ensure errors are sent even with low sample rate
-  beforeSend(event) {
-    // Always send errors
-    return event;
-  },
-});

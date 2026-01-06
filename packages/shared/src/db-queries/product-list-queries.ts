@@ -62,7 +62,7 @@ export interface ProductListQueryDeps {
   fetchProductRelatedData?: (productId: number) => Promise<{
     performerData: unknown[];
     tagData: unknown[];
-    sourceData: unknown;
+    sourceData?: unknown;
     imagesData: unknown[];
     videosData: unknown[];
   }>;

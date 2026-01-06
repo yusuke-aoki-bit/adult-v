@@ -56,7 +56,7 @@ export interface ProductQueryDeps {
   ) => Promise<{
     performerData: unknown[];
     tagData: unknown[];
-    sourceData: unknown;
+    sourceData?: unknown;
     imagesData: unknown[];
     videosData: unknown[];
     saleData?: {

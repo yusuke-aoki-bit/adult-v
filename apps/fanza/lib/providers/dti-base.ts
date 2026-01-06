@@ -93,7 +93,7 @@ export function detectEncoding(
   // Check Content-Type header first
   if (contentType) {
     const charsetMatch = contentType.match(/charset=([^\s;]+)/i);
-    if (charsetMatch) {
+    if (charsetMatch?.[1]) {
       return charsetMatch[1].toLowerCase();
     }
   }
@@ -115,13 +115,13 @@ export function detectEncoding(
 
   // Pattern 1: <meta charset="xxx">
   const charsetMatch1 = head.match(/<meta\s+charset=["']?([^"'\s>]+)/i);
-  if (charsetMatch1) {
+  if (charsetMatch1?.[1]) {
     return charsetMatch1[1].toLowerCase();
   }
 
   // Pattern 2: <meta http-equiv="Content-Type" content="text/html; charset=xxx">
   const charsetMatch2 = head.match(/content=["'][^"']*charset=([^"'\s;]+)/i);
-  if (charsetMatch2) {
+  if (charsetMatch2?.[1]) {
     return charsetMatch2[1].toLowerCase();
   }
 
@@ -193,7 +193,10 @@ export function generateNextId(
 
   if (format === 'MMDDYY_NNN' || format === 'MMDDYY_NNNN') {
     // Date-based format: MMDDYY_NNN or MMDDYY_NNNN
-    const [datePart, seqPart] = currentId.split('_');
+    const parts = currentId.split('_');
+    const datePart = parts[0];
+    const seqPart = parts[1];
+    if (!datePart || !seqPart) return null;
     const maxSeq = format === 'MMDDYY_NNN' ? 10 : 20;
     const seqLen = format === 'MMDDYY_NNN' ? 3 : 4;
 
@@ -433,7 +436,7 @@ export function extractBasicInfo(html: string): {
     /<meta\s+property=["']og:image["']\s+content=["'](.*?)["']/i
   );
 
-  let rawTitle = titleMatch ? titleMatch[1].trim() : undefined;
+  let rawTitle = titleMatch?.[1]?.trim();
 
   // Remove site suffixes
   if (rawTitle) {
@@ -442,11 +445,11 @@ export function extractBasicInfo(html: string): {
     }
   }
 
-  return {
-    rawTitle,
-    description: descMatch ? descMatch[1].trim() : undefined,
-    imageUrl: imgMatch ? imgMatch[1] : undefined,
-  };
+  const result: { rawTitle?: string; description?: string; imageUrl?: string } = {};
+  if (rawTitle) result.rawTitle = rawTitle;
+  if (descMatch?.[1]) result.description = descMatch[1].trim();
+  if (imgMatch?.[1]) result.imageUrl = imgMatch[1];
+  return result;
 }
 
 /**
@@ -471,7 +474,7 @@ export function extractPrice(html: string): {
   const priceMatch = html.match(
     /var\s+ec_price\s*=\s*parseFloat\s*\(\s*['"](\d+(?:\.\d+)?)['"]\s*\)/
   );
-  if (priceMatch) {
+  if (priceMatch?.[1]) {
     const usdPrice = parseFloat(priceMatch[1]);
     price = Math.round(usdPrice * 150);
   }
@@ -481,7 +484,7 @@ export function extractPrice(html: string): {
     const itemPriceMatch = html.match(
       /ec_item_price\s*=\s*['"]?(\d+(?:\.\d+)?)['"]?/
     );
-    if (itemPriceMatch) {
+    if (itemPriceMatch?.[1]) {
       const usdPrice = parseFloat(itemPriceMatch[1]);
       price = Math.round(usdPrice * 150);
     }
@@ -490,7 +493,7 @@ export function extractPrice(html: string): {
   // Pattern 3: Japanese yen price
   if (!price) {
     const yenMatch = html.match(/[¥￥]?\s*(\d{1,3}(?:,\d{3})*)\s*円/);
-    if (yenMatch) {
+    if (yenMatch?.[1]) {
       price = parseInt(yenMatch[1].replace(/,/g, ''));
     }
   }
@@ -501,14 +504,14 @@ export function extractPrice(html: string): {
   );
   const discountMatch = html.match(/(\d+)\s*%\s*(?:OFF|オフ|off|割引)/);
 
-  if (originalPriceMatch && price) {
+  if (originalPriceMatch?.[1] && price) {
     const originalUsd = parseFloat(originalPriceMatch[1]);
     const regularPrice = Math.round(originalUsd * 150);
     if (regularPrice > price) {
       saleInfo = {
         regularPrice,
         salePrice: price,
-        discountPercent: discountMatch
+        discountPercent: discountMatch?.[1]
           ? parseInt(discountMatch[1])
           : Math.round((1 - price / regularPrice) * 100),
         saleType: 'sale',
@@ -520,7 +523,7 @@ export function extractPrice(html: string): {
   const regularPriceVar = html.match(
     /(?:ec_regular_price|regular_price|original_price)\s*=\s*(?:parseFloat\s*\(\s*)?['"]?(\d+(?:\.\d+)?)['"]?/
   );
-  if (regularPriceVar && price && !saleInfo) {
+  if (regularPriceVar?.[1] && price && !saleInfo) {
     const regularUsd = parseFloat(regularPriceVar[1]);
     const regularPrice = Math.round(regularUsd * 150);
     if (regularPrice > price) {
@@ -533,7 +536,10 @@ export function extractPrice(html: string): {
     }
   }
 
-  return { price, saleInfo };
+  const result: { price?: number; saleInfo?: SaleInfo } = {};
+  if (price !== undefined) result.price = price;
+  if (saleInfo) result.saleInfo = saleInfo;
+  return result;
 }
 
 /**
@@ -551,9 +557,10 @@ export function extractActors(html: string, title?: string): string[] {
   // Pattern 2: Title format "女優名 【ふりがな】 タイトル" (HEYZO系)
   if (rawActors.length === 0) {
     const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
-    if (titleMatch) {
-      const titleActorMatch = titleMatch[1].match(/^([^\s【]+)\s*【[^】]+】/);
-      if (titleActorMatch) {
+    const titleText = titleMatch?.[1];
+    if (titleText) {
+      const titleActorMatch = titleText.match(/^([^\s【]+)\s*【[^】]+】/);
+      if (titleActorMatch?.[1]) {
         rawActors = [titleActorMatch[1]];
       }
     }
@@ -562,7 +569,7 @@ export function extractActors(html: string, title?: string): string[] {
   // Pattern 3: HTML content with 出演者 label
   if (rawActors.length === 0) {
     const actorMatches = html.match(/出演者?[:：]?\s*([^<\n]+)/i);
-    if (actorMatches) {
+    if (actorMatches?.[1]) {
       rawActors = actorMatches[1]
         .split(/[、,]/)
         .map((a) => a.trim())
@@ -586,9 +593,8 @@ export function extractReleaseDate(html: string): string | undefined {
   const dateMatch = html.match(
     /配信日[:：]?\s*(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/
   );
-  return dateMatch
-    ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
-    : undefined;
+  if (!dateMatch?.[1] || !dateMatch?.[2] || !dateMatch?.[3]) return undefined;
+  return `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
 }
 
 /**
@@ -623,31 +629,32 @@ export function extractReviews(html: string): DtiReview[] {
   let match;
   while ((match = reviewBlockRegex.exec(html)) !== null) {
     const ratingHtml = match[1];
-    const content = match[2].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
-    const reviewerRaw = match[3].trim();
-    const dateRaw = match[4].trim();
+    const contentRaw = match[2];
+    const reviewerRaw = match[3];
+    const dateRaw = match[4];
+    if (!ratingHtml || !contentRaw || !reviewerRaw || !dateRaw) continue;
+
+    const content = contentRaw.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
 
     // Extract rating from star count
     const starCount = (ratingHtml.match(/★/g) || []).length;
     const rating = Math.min(starCount, 5);
 
     // Extract reviewer name (remove "by " prefix)
-    const reviewerName = reviewerRaw.replace(/^by\s+/i, '').trim();
+    const reviewerName = reviewerRaw.trim().replace(/^by\s+/i, '').trim();
 
     // Parse date (format: YYYY-MM-DD HH:MM:SS)
-    let reviewDate: string | undefined;
-    const dateMatch = dateRaw.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})/);
-    if (dateMatch) {
-      reviewDate = dateMatch[1].replace(/\//g, '-');
-    }
+    const dateMatch = dateRaw.trim().match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})/);
+    const reviewDate = dateMatch?.[1]?.replace(/\//g, '-');
 
     if (reviewerName && content) {
-      reviews.push({
+      const review: DtiReview = {
         reviewerName,
         rating,
         content,
-        reviewDate,
-      });
+      };
+      if (reviewDate) review.reviewDate = reviewDate;
+      reviews.push(review);
     }
   }
 
@@ -666,7 +673,7 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
     html.matchAll(/<a[^>]*href=["']([^"']*members[^"']*gallery[^"']*\.jpg)["']/gi)
   );
   for (const match of memberGalleryMatches) {
-    imageSet.add(match[1]);
+    if (match[1]) imageSet.add(match[1]);
   }
 
   // Pattern 2: Movie thumb images
@@ -674,7 +681,7 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
     html.matchAll(/<img[^>]*src=["']([^"']*moviepages[^"']*\.jpg)["']/gi)
   );
   for (const match of movieThumbMatches) {
-    imageSet.add(match[1]);
+    if (match[1]) imageSet.add(match[1]);
   }
 
   // Pattern 3: Sample image links
@@ -682,7 +689,7 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
     html.matchAll(/<a[^>]*href=["']([^"']*\/posters\/[^"']*\.jpg)["']/gi)
   );
   for (const match of sampleLinkMatches) {
-    imageSet.add(match[1]);
+    if (match[1]) imageSet.add(match[1]);
   }
 
   // Pattern 4: HEYZO sample images
@@ -690,7 +697,7 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
     html.matchAll(/<img[^>]*src=["']([^"']*\/contents\/[^"']*sample[^"']*\.jpg)["']/gi)
   );
   for (const match of heyzoMatches) {
-    imageSet.add(match[1]);
+    if (match[1]) imageSet.add(match[1]);
   }
 
   // Pattern 5: Generic sample image patterns
@@ -698,7 +705,7 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
     html.matchAll(/<img[^>]*src=["']([^"']*sample[^"']*\.jpg)["']/gi)
   );
   for (const match of genericSampleMatches) {
-    imageSet.add(match[1]);
+    if (match[1]) imageSet.add(match[1]);
   }
 
   // Remove main image URL if provided
@@ -793,6 +800,7 @@ export async function saveProductImages(
       let savedCount = 0;
       for (let i = 0; i < sampleImages.length; i++) {
         const imageUrl = sampleImages[i];
+        if (!imageUrl) continue;
 
         const existing = await db
           .select()
@@ -881,12 +889,13 @@ export async function saveProduct(
 
   try {
     // Validate product data
-    const validation = validateProductData({
-      title: productData.title,
-      description: productData.description,
+    const validationData: { title?: string; description?: string; aspName: string; originalId: string } = {
       aspName: aspName,
       originalId: productId,
-    });
+    };
+    if (productData.title) validationData.title = productData.title;
+    if (productData.description) validationData.description = productData.description;
+    const validation = validateProductData(validationData);
 
     if (!validation.isValid) {
       console.log(`  ⚠️ バリデーションスキップ: ${validation.reason}`);
@@ -903,15 +912,16 @@ export async function saveProduct(
     let productDbId: number;
     let isNew = false;
 
-    if (existingProduct.length > 0) {
-      productDbId = existingProduct[0].id;
+    const existingProductItem = existingProduct[0];
+    if (existingProductItem) {
+      productDbId = existingProductItem.id;
     } else {
       isNew = true;
       const thumbnailUrl =
         productData.imageUrl ||
         generateDtiImageUrlFallback(config.siteName, productId);
 
-      const [insertedProduct] = await db
+      const insertResult = await db
         .insert(products)
         .values({
           normalizedProductId,
@@ -922,6 +932,8 @@ export async function saveProduct(
         })
         .returning({ id: products.id });
 
+      const insertedProduct = insertResult[0];
+      if (!insertedProduct) throw new Error('Failed to insert product');
       productDbId = insertedProduct.id;
 
       // Generate affiliate URL
@@ -973,14 +985,17 @@ export async function saveProduct(
 
           let performerId: number;
 
-          if (existingPerformer.length > 0) {
-            performerId = existingPerformer[0].id;
+          const existingPerformerItem = existingPerformer[0];
+          if (existingPerformerItem) {
+            performerId = existingPerformerItem.id;
           } else {
-            const [insertedPerformer] = await db
+            const insertPerformerResult = await db
               .insert(performers)
               .values({ name: actorName })
               .returning({ id: performers.id });
 
+            const insertedPerformer = insertPerformerResult[0];
+            if (!insertedPerformer) throw new Error('Failed to insert performer');
             performerId = insertedPerformer.id;
           }
 
@@ -1012,8 +1027,9 @@ export async function saveProduct(
         .where(eq(tags.name, config.siteName))
         .limit(1);
 
-      if (existingSiteTag.length > 0) {
-        const tagId = existingSiteTag[0].id;
+      const siteTagItem = existingSiteTag[0];
+      if (siteTagItem) {
+        const tagId = siteTagItem.id;
 
         const existingTagLink = await db
           .select()
@@ -1060,11 +1076,12 @@ async function runAIFeatures(
     console.log(`  🤖 AI機能を実行中...`);
 
     // AI description generation
-    const aiResult = await generateProductDescription({
+    const aiInput: { title: string; originalDescription?: string; performers?: string[] } = {
       title: productData.title || '',
-      originalDescription: productData.description,
-      performers: productData.actors,
-    });
+    };
+    if (productData.description) aiInput.originalDescription = productData.description;
+    if (productData.actors) aiInput.performers = productData.actors;
+    const aiResult = await generateProductDescription(aiInput);
 
     if (aiResult) {
       console.log(`    ✅ AI説明文生成完了`);
