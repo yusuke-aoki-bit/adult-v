@@ -30,17 +30,29 @@ function getDb() {
       // Cloud SQL Proxy経由かどうかを判定（Unix socketパスを含むかチェック）
       const isCloudSqlProxy = connectionString.includes('/cloudsql/');
 
-      // URLから接続情報をパースして、スペースなどの余分な文字を除去
+      // URLから接続情報をパース
       const url = new URL(connectionString);
+
+      // sslmodeパラメータを確認（VPC内部接続などでSSL無効の場合）
+      const sslMode = url.searchParams.get('sslmode');
+      const sslDisabled = sslMode === 'disable' || sslMode === 'allow' || sslMode === 'prefer';
+
+      // プライベートIP（10.x.x.x, 172.16-31.x.x, 192.168.x.x）またはlocalhost/127.0.0.1への接続はSSL不要
+      const isPrivateIp = /^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|127\.|localhost)/.test(url.hostname);
+
+      // URLから接続情報をパースして、スペースなどの余分な文字を除去
       const cleanConnectionString = `postgresql://${url.username}:${url.password}@${url.host}${url.pathname}`;
 
       // 開発環境と本番環境で接続プール設定を分ける
       const isDev = process.env.NODE_ENV !== 'production';
 
+      // SSL設定: Cloud SQL Proxy、sslmode=disable、プライベートIPの場合はSSL無効
+      const shouldDisableSsl = isCloudSqlProxy || sslDisabled || isPrivateIp;
+
       dbStore.pool = new Pool({
         connectionString: cleanConnectionString,
-        // Cloud SQL Proxy経由の場合はSSL不要、それ以外は環境に応じて設定
-        ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
+        // SSL設定: 無効化条件に該当しない本番環境のみSSL有効
+        ssl: shouldDisableSsl ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
         max: isDev ? 10 : 50, // 開発環境では10、本番は50
         min: isDev ? 2 : 10, // 開発環境では2、本番は10
         idleTimeoutMillis: isDev ? 30000 : 60000, // 開発環境では30秒、本番は60秒
