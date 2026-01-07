@@ -377,11 +377,12 @@ export const HeaderBase = memo(function HeaderBase({
         isHidden ? '-translate-y-full' : 'translate-y-0'
       }`}
     >
-      {/* 成人向けコンテンツ注意文 */}
+      {/* 広告表記・成人向けコンテンツ注意文（景品表示法・ステマ規制対応） */}
       <div className="theme-header-notice border-b">
         <div className="container mx-auto px-3 sm:px-4 py-1">
           <p className="text-[10px] sm:text-xs theme-header-notice-text text-center leading-tight">
-            {t.adultNotice}
+            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1 rounded mr-1">PR</span>
+            {t.adultNotice.replace(/^【PR】|^\[PR\]|^【广告】/, '')}
           </p>
         </div>
       </div>

@@ -100,7 +100,7 @@ export const headerTranslations = {
     sale: 'SALE',
     saleItems: '件セール中',
     fanzaSite: 'FANZA専用',
-    adultNotice: '※このページは成人向けコンテンツを含みます。表示価格は税込みです。販売サイトにより価格が異なる場合がありますので、購入前に各サイトで最新価格をご確認ください。',
+    adultNotice: '【PR】当サイトはアフィリエイト広告を利用しています。※成人向けコンテンツを含みます。価格は販売サイトにより異なる場合があります。',
     // ドロップダウンメニュー
     menuBrowse: 'コンテンツ',
     menuTools: 'ツール',
@@ -125,7 +125,7 @@ export const headerTranslations = {
     sale: 'SALE',
     saleItems: 'items on sale',
     fanzaSite: 'FANZA Site',
-    adultNotice: '※This page contains adult content. Prices shown include tax. Prices may vary by retailer, so please check the latest prices on each site before purchasing.',
+    adultNotice: '[PR] This site uses affiliate advertising. *Contains adult content. Prices may vary by retailer.',
     // Dropdown menus
     menuBrowse: 'Browse',
     menuTools: 'Tools',
@@ -150,7 +150,7 @@ export const headerTranslations = {
     sale: 'SALE',
     saleItems: '件特卖中',
     fanzaSite: 'FANZA专区',
-    adultNotice: '※本页面包含成人内容。显示价格含税。价格可能因销售网站而异，请在购买前确认各网站的最新价格。',
+    adultNotice: '【广告】本站使用联盟广告。※包含成人内容。价格可能因销售网站而异。',
     // 下拉菜单
     menuBrowse: '浏览',
     menuTools: '工具',
@@ -175,7 +175,7 @@ export const headerTranslations = {
     sale: 'SALE',
     saleItems: '개 세일 중',
     fanzaSite: 'FANZA 전용',
-    adultNotice: '※이 페이지는 성인용 콘텐츠를 포함합니다. 표시 가격은 세금 포함입니다. 판매 사이트에 따라 가격이 다를 수 있으니 구매 전 각 사이트에서 최신 가격을 확인하세요.',
+    adultNotice: '【PR】이 사이트는 제휴 광고를 사용합니다. ※성인용 콘텐츠를 포함합니다. 판매 사이트에 따라 가격이 다를 수 있습니다.',
     // 드롭다운 메뉴
     menuBrowse: '둘러보기',
     menuTools: '도구',

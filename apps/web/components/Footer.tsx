@@ -11,6 +11,7 @@ import { DtiCredit } from './credits/DtiCredit';
 import { B10fCredit } from './credits/B10fCredit';
 import { Fc2Credit } from './credits/Fc2Credit';
 import { JapanskaCredit } from './credits/JapanskaCredit';
+import { DxliveCredit } from './credits/DxliveCredit';
 
 // パートナーバナーコンポーネント（FANZAバナー付き）
 function PartnerBanners() {
@@ -24,7 +25,7 @@ function PartnerBanners() {
       <FanzaSiteBanner locale={locale} variant="footer" />
 
       {/* ASPパートナーバナー */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 justify-items-center">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4 justify-items-center">
         <div className="w-[180px] h-[50px] flex items-center justify-center">
           <DugaCredit />
         </div>
@@ -45,6 +46,9 @@ function PartnerBanners() {
         </div>
         <div className="w-[180px] h-[50px] flex items-center justify-center">
           <JapanskaCredit />
+        </div>
+        <div className="w-[180px] h-[50px] flex items-center justify-center">
+          <DxliveCredit />
         </div>
       </div>
     </div>
