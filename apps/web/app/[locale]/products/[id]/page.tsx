@@ -379,7 +379,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
         <div className="container mx-auto px-4 py-8">
           {/* パンくずリスト */}
-          <Breadcrumb items={breadcrumbItems} className="mb-6" />
+          <Breadcrumb items={breadcrumbItems} className="mb-4" />
+
+          {/* PR表記（景品表示法・ステマ規制対応） */}
+          <p className="text-xs text-gray-400 mb-6">
+            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+            当ページには広告・アフィリエイトリンクが含まれています
+          </p>
 
           {/* サンプル動画セクション */}
           {product.sampleVideos && product.sampleVideos.length > 0 && (
