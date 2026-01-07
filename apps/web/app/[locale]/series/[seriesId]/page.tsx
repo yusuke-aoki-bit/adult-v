@@ -203,8 +203,14 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
               { label: t.backToList.split(' ')[0], href: localizedHref('/series', locale) },
               { label: name },
             ]}
-            className="mb-6"
+            className="mb-4"
           />
+
+          {/* PR表記（景品表示法・ステマ規制対応） */}
+          <p className="text-xs theme-text-muted mb-6">
+            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+            当ページには広告・アフィリエイトリンクが含まれています
+          </p>
 
           {/* ヘッダー */}
           <div className="theme-card rounded-lg p-6 mb-8">

@@ -350,8 +350,14 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               { label: tNav('home'), href: localizedHref('/', locale) },
               { label: actress.name },
             ]}
-            className="mb-6"
+            className="mb-4"
           />
+
+          {/* PR表記（景品表示法・ステマ規制対応） */}
+          <p className="text-xs theme-text-muted mb-6">
+            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+            当ページには広告・アフィリエイトリンクが含まれています
+          </p>
 
           {/* Header */}
           <div id="profile" className="mb-6 sm:mb-8">

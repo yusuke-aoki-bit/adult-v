@@ -348,6 +348,12 @@ export default function DiscoverPage() {
     <div className="theme-body min-h-screen">
       <div id="discover" className="min-h-screen bg-gray-900">
         <div className="container mx-auto px-4 py-6">
+          {/* PR表記（景品表示法・ステマ規制対応） */}
+          <p className="text-xs text-gray-400 mb-4 text-center">
+            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+            当ページには広告・アフィリエイトリンクが含まれています
+          </p>
+
           {/* Header */}
           <div className="text-center mb-6">
             <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center justify-center gap-2">
