@@ -23,6 +23,7 @@ import { getAIHelper } from '../lib/crawler';
 import type { GeneratedDescription } from '../lib/google-apis';
 import { saveRawHtml, calculateHash } from '../lib/gcs-crawler-helper';
 import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
+import { mgsFetch, getProxyInfo } from '../lib/proxy-fetch';
 
 const AFFILIATE_CODE = '6CS5PGEBQDUYPZLHYEM33TBZFJ';
 const SOURCE_NAME = 'MGS';
@@ -122,12 +123,8 @@ async function crawlSingleProduct(
   const productId = productIdMatch ? productIdMatch[1] : 'unknown';
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Cookie': 'adc=1',
-      },
-    });
+    // Proxy対応のmgsFetchを使用（年齢確認Cookie自動付与）
+    const response = await mgsFetch(url);
 
     if (!response.ok) {
       return { success: false, isNew: false, isUpdated: false, isSkipped: false, error: `HTTP ${response['status']}` };
@@ -261,12 +258,8 @@ async function fetchProductUrlsFromCategory(
 
   console.log(`  📄 Fetching category page ${page}: ${url}`);
 
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Cookie': 'adc=1',
-    },
-  });
+  // Proxy対応のmgsFetchを使用
+  const response = await mgsFetch(url);
 
   if (!response.ok) {
     throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
@@ -339,12 +332,8 @@ async function fetchProductUrlsFromChannel(
 
   console.log(`  📄 Fetching channel page ${page}: ${url}`);
 
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Cookie': 'adc=1',
-    },
-  });
+  // Proxy対応のmgsFetchを使用
+  const response = await mgsFetch(url);
 
   if (!response.ok) {
     throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
@@ -599,12 +588,8 @@ async function fetchProductUrlsBySeries(
 
   console.log(`  📄 [${seriesKeyword}] Page ${page}: ${url}`);
 
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Cookie': 'adc=1',
-    },
-  });
+  // Proxy対応のmgsFetchを使用
+  const response = await mgsFetch(url);
 
   if (!response.ok) {
     throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
@@ -740,12 +725,8 @@ async function fetchProductUrls(page: number): Promise<string[]> {
   const url = `${BASE_URL}/search/cSearch.php?search_word=&sort=new&list_cnt=${ITEMS_PER_PAGE}&page=${page}`;
   console.log(`  📄 Fetching page ${page}: ${url}`);
 
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Cookie': 'adc=1',
-    },
-  });
+  // Proxy対応のmgsFetchを使用
+  const response = await mgsFetch(url);
 
   if (!response.ok) {
     throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
@@ -1479,6 +1460,10 @@ async function main() {
   const enableAI = !args.includes('--no-ai');
   const fullScan = args.includes('--full-scan');
   const categoryCrawl = args.includes('--category-crawl');
+
+  // Proxy設定情報をログ出力
+  const proxyInfo = getProxyInfo();
+  console.log(`Proxy: ${proxyInfo.enabled ? `enabled (${proxyInfo.url})` : 'disabled'}`);
 
   // カテゴリクロールモード
   // 使い方: npx tsx crawl-mgs-list.ts --category-crawl [--category=haishin|dvd|monthly] [--max-pages=100] [--start-page=1] [--no-ai]

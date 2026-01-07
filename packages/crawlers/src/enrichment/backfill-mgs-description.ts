@@ -11,6 +11,7 @@
 import { getDb } from '../lib/db';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
+import { mgsFetch } from '../lib/proxy-fetch';
 
 interface BackfillStats {
   total: number;
@@ -29,12 +30,8 @@ async function fetchMgsDescription(productId: string): Promise<string | null> {
   const url = `https://www.mgstage.com/product/product_detail/${productId}/`;
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Cookie': 'adc=1',  // Age verification cookie
-      },
-    });
+    // Proxy対応のmgsFetchを使用
+    const response = await mgsFetch(url);
 
     if (!response.ok) {
       console.error(`  HTTP ${response['status']} for ${productId}`);

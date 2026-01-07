@@ -22,6 +22,7 @@ import { saveRawHtml, calculateHash } from '../lib/gcs-crawler-helper';
 import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
 import { buildPriceInfoList, saveProductPricesBySourceId } from '../lib/price-helper';
 import { getMgsPath, getMakerByProductCode } from '../lib/maker-mapping';
+import { mgsFetch, getProxyInfo } from '../lib/proxy-fetch';
 
 const AFFILIATE_CODE = '6CS5PGEBQDUYPZLHYEM33TBZFJ'; // MGSアフィリエイトコード
 const SOURCE_NAME = 'MGS';
@@ -122,12 +123,8 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
   try {
     console.log(`Crawling: ${productUrl}`);
 
-    const response = await fetch(productUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Cookie': 'adc=1',  // Age verification cookie
-      },
-    });
+    // Proxy対応のmgsFetchを使用（年齢確認Cookie自動付与）
+    const response = await mgsFetch(productUrl);
 
     if (!response.ok) {
       console.error(`HTTP error! status: ${response['status']}`);
@@ -1327,13 +1324,8 @@ async function main() {
         continue;
       }
 
-      // HTMLを保存（将来的な再解析のため）
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Cookie': 'adc=1',  // Age verification cookie
-        },
-      });
+      // HTMLを保存（将来的な再解析のため）- Proxy対応
+      const response = await mgsFetch(url);
       const html = await response['text']();
       await saveRawHtmlData(mgsProduct.productId, url, html);
 

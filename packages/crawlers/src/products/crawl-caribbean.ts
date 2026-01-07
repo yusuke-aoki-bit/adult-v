@@ -36,6 +36,7 @@ interface DtiSiteConfig {
   detailPagePattern: string;
   encoding: string;
   aspName: string;
+  isSpa?: boolean;  // SPAサイトはホームページから取得
 }
 
 const DTI_SITES: Record<string, DtiSiteConfig> = {
@@ -58,10 +59,11 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
   '1pondo': {
     name: '一本道',
     baseUrl: 'https://www.1pondo.tv',
-    listPageUrl: 'https://www.1pondo.tv/listpages/all{page}.html', // Note: 1pondo is SPA
+    listPageUrl: 'https://www.1pondo.tv/listpages/all{page}.html',
     detailPagePattern: '/movies/{id}/',
     encoding: 'utf-8',
     aspName: '1PONDO',
+    isSpa: true,  // SPAサイト - ホームページから取得
   },
   heyzo: {
     name: 'HEYZO',
@@ -78,6 +80,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/moviepages/{id}/index.html',
     encoding: 'euc-jp',
     aspName: '10MUSUME',
+    isSpa: true,  // SPAサイト - ホームページから取得
   },
   pacopacomama: {
     name: 'パコパコママ',
@@ -86,6 +89,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/moviepages/{id}/index.html',
     encoding: 'euc-jp',
     aspName: 'PACOPACOMAMA',
+    isSpa: true,  // SPAサイト - ホームページから取得
   },
   muramura: {
     name: 'むらむら',
@@ -102,6 +106,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/moviepages/{id}/index.html',
     encoding: 'utf-8',
     aspName: 'H4610',
+    isSpa: true,  // SPAサイト - ホームページから取得
   },
   h0930: {
     name: '人妻斬り',
@@ -110,6 +115,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/moviepages/{id}/index.html',
     encoding: 'utf-8',
     aspName: 'H0930',
+    isSpa: true,  // SPAサイト - ホームページから取得
   },
   c0930: {
     name: '人妻斬り（熟女）',
@@ -118,6 +124,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/moviepages/{id}/index.html',
     encoding: 'utf-8',
     aspName: 'C0930',
+    isSpa: true,  // SPAサイト - ホームページから取得
   },
   kin8tengoku: {
     name: '金髪天國',
@@ -222,7 +229,7 @@ async function extractProductIdsFromList(
   // moviepages/XXXXX-XXX/index.html パターンを抽出
   $('a[href*="moviepages"]').each((_, el) => {
     const href = $(el).attr('href') || '';
-    const match = href.match(/moviepages\/([0-9-]+)\/index\.html/);
+    const match = href.match(/moviepages\/([0-9a-zA-Z-]+)\/(?:index\.html)?/);
     if (match && match[1]) {
       const productId = match[1];
       if (!productIds.includes(productId)) {
@@ -232,6 +239,49 @@ async function extractProductIdsFromList(
   });
 
   console.log(`  Found ${productIds.length} products on page ${pageNum}`);
+  return productIds;
+}
+
+/**
+ * ホームページから商品IDを抽出（SPAサイト用）
+ * SPAサイトはlistpagesが使えないため、ホームページに表示されている商品IDを取得
+ */
+async function extractProductIdsFromHomepage(
+  siteConfig: DtiSiteConfig
+): Promise<string[]> {
+  const url = siteConfig.baseUrl + '/';
+  console.log(`📄 Fetching homepage (SPA mode): ${url}`);
+
+  const html = await fetchPage(url, siteConfig.encoding);
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const productIds: string[] = [];
+
+  // moviepages/XXXXX/index.html または moviepages/XXXXX/ パターンを抽出
+  // c0930/h0930/h4610等のパターン: hitozuma1550, ki260106, ori1933, gol221 など
+  $('a[href*="moviepages"]').each((_, el) => {
+    const href = $(el).attr('href') || '';
+    // 自サイトのリンクのみ抽出（他サイトへのリンクは除外）
+    const isOwnSite = href.includes(siteConfig.baseUrl) ||
+                      href.startsWith('/moviepages') ||
+                      href.startsWith('//www.' + siteConfig.baseUrl.replace('https://www.', ''));
+
+    if (!isOwnSite && href.includes('//')) {
+      return; // 他サイトへのリンクはスキップ
+    }
+
+    const match = href.match(/moviepages\/([a-zA-Z0-9_-]+)(?:\/|\/index\.html)?/);
+    if (match && match[1]) {
+      const productId = match[1];
+      // images などのパスは除外
+      if (productId !== 'images' && !productIds.includes(productId)) {
+        productIds.push(productId);
+      }
+    }
+  });
+
+  console.log(`  Found ${productIds.length} products from homepage`);
   return productIds;
 }
 
@@ -541,57 +591,93 @@ async function main(): Promise<void> {
   }
 
   console.log(`📍 Site: ${siteConfig.name}`);
-  console.log(`📄 Pages: ${startPage} to ${startPage + pages - 1}`);
+  console.log(`📄 Mode: ${siteConfig.isSpa ? 'SPA (homepage only)' : `Pages ${startPage} to ${startPage + pages - 1}`}`);
   console.log(`🔄 強制再処理: ${forceReprocess ? '有効' : '無効'}\n`);
 
   let totalNew = 0;
   let totalUpdated = 0;
   let totalSkippedUnchanged = 0;
   let totalErrors = 0;
-  let consecutiveEmptyPages = 0;
-  const MAX_CONSECUTIVE_EMPTY_PAGES = 200;
 
-  for (let pageNum = startPage; pageNum < startPage + pages; pageNum++) {
-    console.log(`\n📖 Processing page ${pageNum}...`);
+  // SPAサイトの場合はホームページからのみ取得
+  if (siteConfig.isSpa) {
+    console.log(`\n📖 Processing homepage (SPA mode)...`);
 
-    const productIds = await extractProductIdsFromList(siteConfig, pageNum);
+    const productIds = await extractProductIdsFromHomepage(siteConfig);
 
     if (productIds.length === 0) {
-      consecutiveEmptyPages++;
-      console.log(`  空ページ検出 (${consecutiveEmptyPages}/${MAX_CONSECUTIVE_EMPTY_PAGES})`);
-      if (consecutiveEmptyPages >= MAX_CONSECUTIVE_EMPTY_PAGES) {
-        console.log('  連続空ページ上限到達、終了します');
-        break;
+      console.log('  ホームページから商品が見つかりませんでした');
+    } else {
+      for (const productId of productIds) {
+        await rateLimit();
+
+        const product = await extractProductDetails(siteConfig, productId);
+        if (!product) {
+          totalErrors++;
+          continue;
+        }
+
+        const result = await saveProduct(siteConfig, product, forceReprocess);
+        if (result.saved) {
+          if (result.isNew) {
+            totalNew++;
+          } else {
+            totalUpdated++;
+          }
+        } else if (result.skippedUnchanged) {
+          totalSkippedUnchanged++;
+        } else {
+          totalErrors++;
+        }
       }
-      await rateLimit();
-      continue;
     }
-    consecutiveEmptyPages = 0; // リセット
+  } else {
+    // 通常のlistpagesベースのクロール
+    let consecutiveEmptyPages = 0;
+    const MAX_CONSECUTIVE_EMPTY_PAGES = 200;
 
-    for (const productId of productIds) {
-      await rateLimit();
+    for (let pageNum = startPage; pageNum < startPage + pages; pageNum++) {
+      console.log(`\n📖 Processing page ${pageNum}...`);
 
-      const product = await extractProductDetails(siteConfig, productId);
-      if (!product) {
-        totalErrors++;
+      const productIds = await extractProductIdsFromList(siteConfig, pageNum);
+
+      if (productIds.length === 0) {
+        consecutiveEmptyPages++;
+        console.log(`  空ページ検出 (${consecutiveEmptyPages}/${MAX_CONSECUTIVE_EMPTY_PAGES})`);
+        if (consecutiveEmptyPages >= MAX_CONSECUTIVE_EMPTY_PAGES) {
+          console.log('  連続空ページ上限到達、終了します');
+          break;
+        }
+        await rateLimit();
         continue;
       }
+      consecutiveEmptyPages = 0; // リセット
 
-      const result = await saveProduct(siteConfig, product, forceReprocess);
-      if (result.saved) {
-        if (result.isNew) {
-          totalNew++;
-        } else {
-          totalUpdated++;
+      for (const productId of productIds) {
+        await rateLimit();
+
+        const product = await extractProductDetails(siteConfig, productId);
+        if (!product) {
+          totalErrors++;
+          continue;
         }
-      } else if (result.skippedUnchanged) {
-        totalSkippedUnchanged++;
-      } else {
-        totalErrors++;
-      }
-    }
 
-    await rateLimit();
+        const result = await saveProduct(siteConfig, product, forceReprocess);
+        if (result.saved) {
+          if (result.isNew) {
+            totalNew++;
+          } else {
+            totalUpdated++;
+          }
+        } else if (result.skippedUnchanged) {
+          totalSkippedUnchanged++;
+        } else {
+          totalErrors++;
+        }
+      }
+
+      await rateLimit();
+    }
   }
 
   console.log('\n========================================');
