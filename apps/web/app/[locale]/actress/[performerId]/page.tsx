@@ -39,9 +39,9 @@ import ActressSectionNav from '@/components/ActressSectionNav';
 import PerPageDropdown from '@/components/PerPageDropdown';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISRキャッシュ: 10分（SEO改善のため、検索エンジンクローラーの効率を向上）
-// searchParamsはNext.jsで自動的に動的になるが、revalidateでキャッシュを有効化
-export const revalidate = 600;
+// getTranslationsを使用するServer ComponentsはISRとの互換性がないため、
+// force-dynamicを設定して動的レンダリングを強制
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ performerId: string; locale: string }>;
