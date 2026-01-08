@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, ExternalLink } from 'lucide-react';
+import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, ExternalLink, Star, Users, Gem, Vote, List } from 'lucide-react';
 import { TopPageMenuSection, ProductCardBase, ActressCardBase, HomeSectionManager } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { useRecentlyViewed, useHomeSections } from '@adult-v/shared/hooks';
@@ -620,6 +620,107 @@ export function TopPageLowerSections({
 
       {/* 分割線 */}
       <div className="border-t border-gray-700/50 my-2" />
+
+      {/* オリジナルコンテンツ */}
+      {isSectionVisible('original-content') && (
+        <div id="original-content" className="scroll-mt-20">
+          <TopPageMenuSection
+            type="accordion"
+            icon={<Sparkles className="w-5 h-5" />}
+            title={locale === 'ja' ? 'オリジナルコンテンツ' : 'Original Content'}
+            subtitle={locale === 'ja' ? '独自の分析・特集ページ' : 'Exclusive analysis and features'}
+            theme="dark"
+            defaultOpen={false}
+          >
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <a
+                href={localizedHref('/weekly-report', locale)}
+                className="flex items-center gap-2 p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
+              >
+                <TrendingUp className="w-5 h-5 text-green-400" />
+                <div>
+                  <div className="text-sm font-medium text-white">
+                    {locale === 'ja' ? '週間トレンド' : 'Weekly Trends'}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {locale === 'ja' ? 'AIによる自動分析' : 'AI-powered analysis'}
+                  </div>
+                </div>
+              </a>
+              <a
+                href={localizedHref('/rookies', locale)}
+                className="flex items-center gap-2 p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
+              >
+                <Star className="w-5 h-5 text-rose-400" />
+                <div>
+                  <div className="text-sm font-medium text-white">
+                    {locale === 'ja' ? '新人デビュー' : 'New Debuts'}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {locale === 'ja' ? '注目の新人特集' : 'Featured newcomers'}
+                  </div>
+                </div>
+              </a>
+              <a
+                href={localizedHref('/hidden-gems', locale)}
+                className="flex items-center gap-2 p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
+              >
+                <Gem className="w-5 h-5 text-yellow-400" />
+                <div>
+                  <div className="text-sm font-medium text-white">
+                    {locale === 'ja' ? '隠れた名作' : 'Hidden Gems'}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {locale === 'ja' ? '見過ごされた名作' : 'Overlooked classics'}
+                  </div>
+                </div>
+              </a>
+              <a
+                href={localizedHref('/reviewers', locale)}
+                className="flex items-center gap-2 p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
+              >
+                <Users className="w-5 h-5 text-blue-400" />
+                <div>
+                  <div className="text-sm font-medium text-white">
+                    {locale === 'ja' ? 'レビュアー' : 'Reviewers'}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {locale === 'ja' ? 'アクティブなレビュアー' : 'Top reviewers'}
+                  </div>
+                </div>
+              </a>
+              <a
+                href={localizedHref('/lists/ranking', locale)}
+                className="flex items-center gap-2 p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
+              >
+                <List className="w-5 h-5 text-purple-400" />
+                <div>
+                  <div className="text-sm font-medium text-white">
+                    {locale === 'ja' ? 'リストランキング' : 'List Rankings'}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {locale === 'ja' ? '人気の公開リスト' : 'Popular lists'}
+                  </div>
+                </div>
+              </a>
+              <a
+                href={localizedHref('/vote', locale)}
+                className="flex items-center gap-2 p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
+              >
+                <Vote className="w-5 h-5 text-orange-400" />
+                <div>
+                  <div className="text-sm font-medium text-white">
+                    {locale === 'ja' ? 'ランキング投票' : 'Vote Rankings'}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {locale === 'ja' ? 'あなたの一票で決まる' : 'Your vote counts'}
+                  </div>
+                </div>
+              </a>
+            </div>
+          </TopPageMenuSection>
+        </div>
+      )}
 
       {/* 商品一覧へのリンク */}
       {isSectionVisible('all-products') && (

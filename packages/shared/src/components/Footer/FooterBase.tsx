@@ -221,6 +221,21 @@ export function FooterBase({
                 </Link>
               </li>
               <li>
+                <Link href={localizedHref('/weekly-report', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? '週間トレンド' : 'Weekly Trends'}
+                </Link>
+              </li>
+              <li>
+                <Link href={localizedHref('/rookies', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? '新人デビュー' : 'New Debuts'}
+                </Link>
+              </li>
+              <li>
+                <Link href={localizedHref('/hidden-gems', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? '隠れた名作' : 'Hidden Gems'}
+                </Link>
+              </li>
+              <li>
                 <Link href={localizedHref('/categories', locale)} className="theme-footer-link transition-colors">
                   {t.categories || (locale === 'ja' ? 'カテゴリ一覧' : 'Categories')}
                 </Link>
@@ -228,6 +243,35 @@ export function FooterBase({
               <li>
                 <Link href={localizedHref('/calendar', locale)} className="theme-footer-link transition-colors">
                   {t.calendar || (locale === 'ja' ? 'カレンダー' : 'Calendar')}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* コミュニティセクション */}
+          <div>
+            <h3 className="theme-footer-heading font-semibold mb-3">
+              {locale === 'ja' ? 'コミュニティ' : 'Community'}
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href={localizedHref('/lists', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? '公開リスト' : 'Public Lists'}
+                </Link>
+              </li>
+              <li>
+                <Link href={localizedHref('/lists/ranking', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? 'リストランキング' : 'List Rankings'}
+                </Link>
+              </li>
+              <li>
+                <Link href={localizedHref('/reviewers', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? 'レビュアー' : 'Reviewers'}
+                </Link>
+              </li>
+              <li>
+                <Link href={localizedHref('/vote', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? 'ランキング投票' : 'Vote Rankings'}
                 </Link>
               </li>
               <li>
