@@ -1017,6 +1017,31 @@ export const userPerformerVotes = pgTable(
   }),
 );
 
+/**
+ * 作品ランキング投票テーブル
+ * ユーザーが作品に投票できる機能
+ */
+export const productRankingVotes = pgTable(
+  'product_ranking_votes',
+  {
+    id: serial('id').primaryKey(),
+    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 255 }).notNull(), // Firebase UID
+    category: varchar('category', { length: 50 }).notNull(), // 'best', 'trending', 'classic'
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    productIdx: index('idx_product_ranking_votes_product').on(table.productId),
+    userIdx: index('idx_product_ranking_votes_user').on(table.userId),
+    categoryIdx: index('idx_product_ranking_votes_category').on(table.category),
+    productCategoryUserUnique: uniqueIndex('idx_product_ranking_votes_unique').on(
+      table.productId,
+      table.category,
+      table.userId,
+    ),
+  }),
+);
+
 // 型エクスポート
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
