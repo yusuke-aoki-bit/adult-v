@@ -221,6 +221,11 @@ export function FooterBase({
                 </Link>
               </li>
               <li>
+                <Link href={localizedHref('/search/semantic', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? 'AI検索' : 'AI Search'}
+                </Link>
+              </li>
+              <li>
                 <Link href={localizedHref('/weekly-report', locale)} className="theme-footer-link transition-colors">
                   {locale === 'ja' ? '週間トレンド' : 'Weekly Trends'}
                 </Link>

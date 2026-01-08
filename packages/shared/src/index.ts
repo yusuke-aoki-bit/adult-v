@@ -200,3 +200,16 @@ export {
   type GeneratedActressProfile,
   type ChatResponse,
 } from './lib/llm-service';
+
+// Embedding Service (for semantic search)
+export {
+  generateEmbedding,
+  generateEmbeddingBatch,
+  generateQueryEmbedding,
+  buildProductEmbeddingText,
+  buildPerformerEmbeddingText,
+  generateTextHash,
+  cosineSimilarity,
+  type EmbeddingResult,
+  type BatchEmbeddingResult,
+} from './lib/embedding-service';

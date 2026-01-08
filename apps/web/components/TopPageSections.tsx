@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, ExternalLink, Star, Users, Gem, Vote, List } from 'lucide-react';
+import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, ExternalLink, Star, Users, Gem, Vote, List, Search } from 'lucide-react';
 import { TopPageMenuSection, ProductCardBase, ActressCardBase, HomeSectionManager } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { useRecentlyViewed, useHomeSections } from '@adult-v/shared/hooks';
@@ -714,6 +714,20 @@ export function TopPageLowerSections({
                   </div>
                   <div className="text-xs text-gray-400">
                     {locale === 'ja' ? 'あなたの一票で決まる' : 'Your vote counts'}
+                  </div>
+                </div>
+              </a>
+              <a
+                href={localizedHref('/search/semantic', locale)}
+                className="flex items-center gap-2 p-3 rounded-lg bg-gradient-to-r from-purple-700/50 to-pink-700/50 hover:from-purple-700 hover:to-pink-700 transition-colors"
+              >
+                <Search className="w-5 h-5 text-purple-300" />
+                <div>
+                  <div className="text-sm font-medium text-white">
+                    {locale === 'ja' ? 'AI検索' : 'AI Search'}
+                  </div>
+                  <div className="text-xs text-gray-300">
+                    {locale === 'ja' ? '自然言語で検索' : 'Natural language search'}
                   </div>
                 </div>
               </a>
