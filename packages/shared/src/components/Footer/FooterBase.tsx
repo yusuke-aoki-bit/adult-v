@@ -214,15 +214,20 @@ export function FooterBase({
             <h3 className="theme-footer-heading font-semibold mb-3">
               {t.discoverContent || (locale === 'ja' ? 'コンテンツを探す' : 'Discover Content')}
             </h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-1.5 text-xs">
               <li>
-                <Link href={localizedHref('/discover', locale)} className="theme-footer-link transition-colors">
-                  {t.discover || (locale === 'ja' ? '発見' : 'Discover')}
+                <Link href={localizedHref('/daily-pick', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? '今日の1本' : "Today's Pick"}
                 </Link>
               </li>
               <li>
-                <Link href={localizedHref('/search/semantic', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? 'AI検索' : 'AI Search'}
+                <Link href={localizedHref('/birthdays', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? '誕生日カレンダー' : 'Birthdays'}
+                </Link>
+              </li>
+              <li>
+                <Link href={localizedHref(`/best/${new Date().getFullYear() - 1}`, locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? '年間ベスト' : 'Annual Best'}
                 </Link>
               </li>
               <li>
@@ -232,7 +237,7 @@ export function FooterBase({
               </li>
               <li>
                 <Link href={localizedHref('/rookies', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? '新人デビュー' : 'New Debuts'}
+                  {locale === 'ja' ? '新人デビュー' : 'Rookies'}
                 </Link>
               </li>
               <li>
@@ -241,13 +246,13 @@ export function FooterBase({
                 </Link>
               </li>
               <li>
-                <Link href={localizedHref('/categories', locale)} className="theme-footer-link transition-colors">
-                  {t.categories || (locale === 'ja' ? 'カテゴリ一覧' : 'Categories')}
+                <Link href={localizedHref('/search/semantic', locale)} className="theme-footer-link transition-colors">
+                  {locale === 'ja' ? 'AI検索' : 'AI Search'}
                 </Link>
               </li>
               <li>
-                <Link href={localizedHref('/calendar', locale)} className="theme-footer-link transition-colors">
-                  {t.calendar || (locale === 'ja' ? 'カレンダー' : 'Calendar')}
+                <Link href={localizedHref('/discover', locale)} className="theme-footer-link transition-colors">
+                  {t.discover || (locale === 'ja' ? '発見' : 'Discover')}
                 </Link>
               </li>
             </ul>
@@ -258,7 +263,7 @@ export function FooterBase({
             <h3 className="theme-footer-heading font-semibold mb-3">
               {locale === 'ja' ? 'コミュニティ' : 'Community'}
             </h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-1.5 text-xs">
               <li>
                 <Link href={localizedHref('/lists', locale)} className="theme-footer-link transition-colors">
                   {locale === 'ja' ? '公開リスト' : 'Public Lists'}
@@ -290,7 +295,7 @@ export function FooterBase({
           {/* 法的ページリンク */}
           <div>
             <h3 className="theme-footer-heading font-semibold mb-3">{t.legal}</h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-1.5 text-xs">
               <li>
                 <Link href={localizedHref('/privacy', locale)} className="theme-footer-link transition-colors">
                   {t.privacy}
