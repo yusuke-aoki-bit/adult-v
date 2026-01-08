@@ -181,9 +181,9 @@ export default async function YearBestPage({ params }: Props) {
     LIMIT 10
   `);
 
-  const bestProducts = bestProductsResult.rows as RankedProduct[];
-  const topActresses = topActressesResult.rows as TopActress[];
-  const topGenres = topGenresResult.rows as TopGenre[];
+  const bestProducts = bestProductsResult.rows as unknown as RankedProduct[];
+  const topActresses = topActressesResult.rows as unknown as TopActress[];
+  const topGenres = topGenresResult.rows as unknown as TopGenre[];
 
   // 利用可能な年のリストを生成
   const availableYears = Array.from({ length: currentYear - 2009 }, (_, i) => currentYear - i);

@@ -200,7 +200,7 @@ export default async function DailyPickPage({ params }: Props) {
     ) d3
   `);
 
-  const todayPick = todayPickResult.rows[0] as DailyProduct | undefined;
+  const todayPick = todayPickResult.rows[0] as unknown as DailyProduct | undefined;
   const previousPicks = previousPicksResult.rows as Array<{
     id: number;
     normalized_product_id: string;

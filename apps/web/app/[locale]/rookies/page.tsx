@@ -198,13 +198,13 @@ async function getRookiesData(): Promise<RookiesData> {
     LIMIT 10
   `);
 
-  const thisYearRookies = (thisYearResult.rows as Array<RookiePerformer>).map(row => ({
+  const thisYearRookies = (thisYearResult.rows as unknown as Array<RookiePerformer>).map(row => ({
     ...row,
     avgRating: row.avgRating ? Number(row.avgRating) : null,
     tags: row.tags || [],
   }));
 
-  const lastYearRookies = (lastYearResult.rows as Array<RookiePerformer>).map(row => ({
+  const lastYearRookies = (lastYearResult.rows as unknown as Array<RookiePerformer>).map(row => ({
     ...row,
     avgRating: row.avgRating ? Number(row.avgRating) : null,
     tags: row.tags || [],
@@ -212,7 +212,7 @@ async function getRookiesData(): Promise<RookiesData> {
 
   // 月別にグループ化
   const monthlyMap = new Map<string, RookiePerformer[]>();
-  for (const row of monthlyResult.rows as Array<RookiePerformer & { year: number }>) {
+  for (const row of monthlyResult.rows as unknown as Array<RookiePerformer & { year: number }>) {
     const key = `${row.year}-${row.debutMonth}`;
     if (!monthlyMap.has(key)) {
       monthlyMap.set(key, []);

@@ -133,9 +133,9 @@ export default async function BirthdaysPage({ params }: Props) {
     LIMIT 100
   `);
 
-  const todayBirthdays = todayBirthdaysResult.rows as BirthdayActress[];
-  const thisWeekBirthdays = thisWeekResult.rows as BirthdayActress[];
-  const thisMonthBirthdays = thisMonthResult.rows as BirthdayActress[];
+  const todayBirthdays = todayBirthdaysResult.rows as unknown as BirthdayActress[];
+  const thisWeekBirthdays = thisWeekResult.rows as unknown as BirthdayActress[];
+  const thisMonthBirthdays = thisMonthResult.rows as unknown as BirthdayActress[];
 
   const calculateAge = (birthday: string): number | null => {
     if (!birthday) return null;
