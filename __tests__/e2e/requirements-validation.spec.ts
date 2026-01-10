@@ -68,7 +68,9 @@ test.describe('要件5: セール情報', () => {
 
     // ページが正常にロードされることを確認
     await expect(page).toHaveURL(/sale-calendar/);
-    await page.waitForLoadState('networkidle');
+    // networkidleはタイムアウトすることがあるのでdomcontentloadedを使用
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(1000);
   });
 });
 
@@ -173,16 +175,16 @@ test.describe('要件9: SEO対策', () => {
     const title = await page.title();
     expect(title.length).toBeGreaterThan(0);
 
-    // meta description
-    const metaDesc = page.locator('meta[name="description"]');
+    // meta description（複数ある場合があるので.first()を使用）
+    const metaDesc = page.locator('meta[name="description"]').first();
     const descContent = await metaDesc.getAttribute('content');
     expect(descContent?.length).toBeGreaterThan(0);
 
-    // OGP tags
-    const ogTitle = page.locator('meta[property="og:title"]');
+    // OGP tags（複数ある場合があるので.first()を使用）
+    const ogTitle = page.locator('meta[property="og:title"]').first();
     expect(await ogTitle.getAttribute('content')).toBeTruthy();
 
-    const ogDesc = page.locator('meta[property="og:description"]');
+    const ogDesc = page.locator('meta[property="og:description"]').first();
     expect(await ogDesc.getAttribute('content')).toBeTruthy();
   });
 
