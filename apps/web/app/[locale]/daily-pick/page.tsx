@@ -108,8 +108,14 @@ export default async function DailyPickPage({ params }: Props) {
                         month === 12 || month <= 2 ? 'コタツ,温泉,鍋' :
                         month >= 3 && month <= 5 ? '新生活,入学,制服' : '';
 
+  // product_viewsテーブルはview_countカラムがなく、各閲覧が1行として記録される
   const todayPickResult = await db.execute(sql`
-    WITH ranked_products AS (
+    WITH product_view_counts AS (
+      SELECT product_id, COUNT(*) as view_count
+      FROM product_views
+      GROUP BY product_id
+    ),
+    ranked_products AS (
       SELECT
         p.id,
         p.normalized_product_id,
@@ -119,8 +125,8 @@ export default async function DailyPickPage({ params }: Props) {
         p.duration,
         p.description,
         COALESCE(AVG(pr.rating), 0) as avg_rating,
-        COUNT(pr.id) as review_count,
-        COALESCE(SUM(pv.view_count), 0) as view_count,
+        COUNT(DISTINCT pr.id) as review_count,
+        COALESCE(pvc.view_count, 0) as view_count,
         (
           SELECT MIN(pp.price)
           FROM product_prices pp
@@ -144,18 +150,18 @@ export default async function DailyPickPage({ params }: Props) {
         -- スコア計算: 評価 + レビュー数 + 閲覧数 + 発売日の新しさ
         (
           COALESCE(AVG(pr.rating), 3) * 20 +
-          LEAST(COUNT(pr.id), 50) * 2 +
-          LEAST(COALESCE(SUM(pv.view_count), 0) / 100, 50) +
+          LEAST(COUNT(DISTINCT pr.id), 50) * 2 +
+          LEAST(COALESCE(pvc.view_count, 0) / 100, 50) +
           CASE WHEN p.release_date > CURRENT_DATE - INTERVAL '180 days' THEN 30 ELSE 0 END
         ) as score
       FROM products p
       LEFT JOIN product_reviews pr ON p.id = pr.product_id
-      LEFT JOIN product_views pv ON p.id = pv.product_id
+      LEFT JOIN product_view_counts pvc ON p.id = pvc.product_id
       WHERE p.default_thumbnail_url IS NOT NULL
         AND p.release_date IS NOT NULL
         AND p.release_date <= CURRENT_DATE
-      GROUP BY p.id
-      HAVING COUNT(pr.id) >= 3 OR COALESCE(SUM(pv.view_count), 0) >= 100
+      GROUP BY p.id, pvc.view_count
+      HAVING COUNT(DISTINCT pr.id) >= 3 OR COALESCE(pvc.view_count, 0) >= 100
       ORDER BY score DESC
       LIMIT 100
     )
@@ -167,7 +173,12 @@ export default async function DailyPickPage({ params }: Props) {
 
   // 過去3日間のピック
   const previousPicksResult = await db.execute(sql`
-    WITH ranked_products AS (
+    WITH product_view_counts AS (
+      SELECT product_id, COUNT(*) as view_count
+      FROM product_views
+      GROUP BY product_id
+    ),
+    ranked_products AS (
       SELECT
         p.id,
         p.normalized_product_id,
@@ -175,15 +186,15 @@ export default async function DailyPickPage({ params }: Props) {
         p.default_thumbnail_url,
         (
           COALESCE(AVG(pr.rating), 3) * 20 +
-          LEAST(COUNT(pr.id), 50) * 2 +
-          LEAST(COALESCE(SUM(pv.view_count), 0) / 100, 50)
+          LEAST(COUNT(DISTINCT pr.id), 50) * 2 +
+          LEAST(COALESCE(pvc.view_count, 0) / 100, 50)
         ) as score
       FROM products p
       LEFT JOIN product_reviews pr ON p.id = pr.product_id
-      LEFT JOIN product_views pv ON p.id = pv.product_id
+      LEFT JOIN product_view_counts pvc ON p.id = pvc.product_id
       WHERE p.default_thumbnail_url IS NOT NULL
-      GROUP BY p.id
-      HAVING COUNT(pr.id) >= 3 OR COALESCE(SUM(pv.view_count), 0) >= 100
+      GROUP BY p.id, pvc.view_count
+      HAVING COUNT(DISTINCT pr.id) >= 3 OR COALESCE(pvc.view_count, 0) >= 100
       ORDER BY score DESC
       LIMIT 100
     )

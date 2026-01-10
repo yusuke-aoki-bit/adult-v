@@ -130,7 +130,7 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
         product_id,
         COUNT(*) as review_count,
         MAX(created_at) as last_review_at
-      FROM reviews
+      FROM product_reviews
       WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
       GROUP BY product_id
     )

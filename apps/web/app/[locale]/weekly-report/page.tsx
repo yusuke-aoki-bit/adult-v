@@ -158,10 +158,20 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
   });
 
   // 今週の高評価作品
+  // productsテーブルにはrating/review_count/thumbnailがないため、product_reviewsとdefault_thumbnail_urlを使用
   const topRatedResult = await db.execute(sql`
+    WITH product_stats AS (
+      SELECT
+        product_id,
+        AVG(rating::float) as avg_rating,
+        COUNT(*) as review_count
+      FROM product_reviews
+      GROUP BY product_id
+    )
     SELECT
-      p.id, p.title, p.thumbnail as "imageUrl", p.rating, p.review_count as "reviewCount",
-      p.release_date as "releaseDate",
+      p.id, p.title, p.default_thumbnail_url as "imageUrl",
+      ps.avg_rating as rating, ps.review_count as "reviewCount",
+      p.release_date::text as "releaseDate",
       COALESCE(
         (SELECT array_agg(pf.name) FROM product_performers pp
          INNER JOIN performers pf ON pp.performer_id = pf.id
@@ -169,10 +179,11 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
         ARRAY[]::text[]
       ) as performers
     FROM products p
+    INNER JOIN product_stats ps ON p.id = ps.product_id
     WHERE p.release_date >= ${weekStart.toISOString().split('T')[0]}
-      AND p.rating IS NOT NULL
-      AND p.rating > 0
-    ORDER BY p.rating DESC, p.review_count DESC NULLS LAST
+      AND ps.avg_rating IS NOT NULL
+      AND ps.avg_rating > 0
+    ORDER BY ps.avg_rating DESC, ps.review_count DESC NULLS LAST
     LIMIT 5
   `);
 

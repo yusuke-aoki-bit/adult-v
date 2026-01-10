@@ -108,8 +108,14 @@ export default async function YearBestPage({ params }: Props) {
   }
 
   // 年間ベスト100を取得
+  // product_viewsテーブルはview_countカラムがなく、各閲覧が1行として記録される
   const bestProductsResult = await db.execute(sql`
-    WITH product_scores AS (
+    WITH product_view_counts AS (
+      SELECT product_id, COUNT(*) as view_count
+      FROM product_views
+      GROUP BY product_id
+    ),
+    product_scores AS (
       SELECT
         p.id,
         p.normalized_product_id,
@@ -117,8 +123,8 @@ export default async function YearBestPage({ params }: Props) {
         p.release_date,
         p.default_thumbnail_url,
         COALESCE(AVG(pr.rating), 0) as avg_rating,
-        COUNT(pr.id) as review_count,
-        COALESCE(SUM(pv.view_count), 0) as view_count,
+        COUNT(DISTINCT pr.id) as review_count,
+        COALESCE(pvc.view_count, 0) as view_count,
         (
           SELECT json_agg(json_build_object('id', pe.id, 'name', pe.name))
           FROM product_performers ppr
@@ -129,16 +135,16 @@ export default async function YearBestPage({ params }: Props) {
         -- スコア計算
         (
           COALESCE(AVG(pr.rating), 3) * 25 +
-          LEAST(COUNT(pr.id), 100) * 1.5 +
-          LEAST(COALESCE(SUM(pv.view_count), 0) / 50, 100)
+          LEAST(COUNT(DISTINCT pr.id), 100) * 1.5 +
+          LEAST(COALESCE(pvc.view_count, 0) / 50, 100)
         ) as score
       FROM products p
       LEFT JOIN product_reviews pr ON p.id = pr.product_id
-      LEFT JOIN product_views pv ON p.id = pv.product_id
+      LEFT JOIN product_view_counts pvc ON p.id = pvc.product_id
       WHERE p.release_date IS NOT NULL
         AND EXTRACT(YEAR FROM p.release_date) = ${year}
         AND p.default_thumbnail_url IS NOT NULL
-      GROUP BY p.id
+      GROUP BY p.id, pvc.view_count
       ORDER BY score DESC
       LIMIT 100
     )

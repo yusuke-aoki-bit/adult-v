@@ -48,15 +48,22 @@ async function getRookiesData(): Promise<RookiesData> {
   const lastYear = currentYear - 1;
 
   // 今年デビューの新人（詳細情報付き）
+  // productsテーブルにはrating/review_countがないため、product_reviewsから集計
   const thisYearResult = await db.execute(sql`
-    WITH performer_products AS (
+    WITH product_stats AS (
+      SELECT
+        product_id,
+        AVG(rating::float) as avg_rating,
+        COUNT(*) as review_count
+      FROM product_reviews
+      GROUP BY product_id
+    ),
+    performer_products AS (
       SELECT
         pp.performer_id,
         p.id as product_id,
         p.title,
         p.release_date,
-        p.rating,
-        p.review_count,
         ROW_NUMBER() OVER (PARTITION BY pp.performer_id ORDER BY p.release_date DESC) as rn
       FROM product_performers pp
       INNER JOIN products p ON pp.product_id = p.id
@@ -76,17 +83,18 @@ async function getRookiesData(): Promise<RookiesData> {
       pf.name,
       pf.profile_image_url as "imageUrl",
       pf.debut_year as "debutYear",
-      EXTRACT(MONTH FROM MIN(pr.release_date))::int as "debutMonth",
-      COUNT(DISTINCT pr.product_id)::int as "productCount",
+      EXTRACT(MONTH FROM MIN(p.release_date))::int as "debutMonth",
+      COUNT(DISTINCT p.id)::int as "productCount",
       (SELECT title FROM performer_products WHERE performer_id = pf.id AND rn = 1) as "latestProductTitle",
       (SELECT release_date FROM performer_products WHERE performer_id = pf.id AND rn = 1)::text as "latestProductDate",
       (SELECT product_id FROM performer_products WHERE performer_id = pf.id AND rn = 1) as "latestProductId",
-      AVG(pr.rating) as "avgRating",
-      COALESCE(SUM(pr.review_count), 0)::int as "totalReviews",
+      AVG(ps.avg_rating) as "avgRating",
+      COALESCE(SUM(ps.review_count), 0)::int as "totalReviews",
       COALESCE(pt.tags, ARRAY[]::text[]) as tags
     FROM performers pf
     INNER JOIN product_performers pp ON pf.id = pp.performer_id
-    INNER JOIN products pr ON pp.product_id = pr.id
+    INNER JOIN products p ON pp.product_id = p.id
+    LEFT JOIN product_stats ps ON p.id = ps.product_id
     LEFT JOIN performer_tags pt ON pf.id = pt.performer_id
     WHERE pf.debut_year = ${currentYear}
     GROUP BY pf.id, pf.name, pf.profile_image_url, pf.debut_year, pt.tags
@@ -96,14 +104,20 @@ async function getRookiesData(): Promise<RookiesData> {
 
   // 昨年デビューの新人
   const lastYearResult = await db.execute(sql`
-    WITH performer_products AS (
+    WITH product_stats AS (
+      SELECT
+        product_id,
+        AVG(rating::float) as avg_rating,
+        COUNT(*) as review_count
+      FROM product_reviews
+      GROUP BY product_id
+    ),
+    performer_products AS (
       SELECT
         pp.performer_id,
         p.id as product_id,
         p.title,
         p.release_date,
-        p.rating,
-        p.review_count,
         ROW_NUMBER() OVER (PARTITION BY pp.performer_id ORDER BY p.release_date DESC) as rn
       FROM product_performers pp
       INNER JOIN products p ON pp.product_id = p.id
@@ -123,17 +137,18 @@ async function getRookiesData(): Promise<RookiesData> {
       pf.name,
       pf.profile_image_url as "imageUrl",
       pf.debut_year as "debutYear",
-      EXTRACT(MONTH FROM MIN(pr.release_date))::int as "debutMonth",
-      COUNT(DISTINCT pr.product_id)::int as "productCount",
+      EXTRACT(MONTH FROM MIN(p.release_date))::int as "debutMonth",
+      COUNT(DISTINCT p.id)::int as "productCount",
       (SELECT title FROM performer_products WHERE performer_id = pf.id AND rn = 1) as "latestProductTitle",
       (SELECT release_date FROM performer_products WHERE performer_id = pf.id AND rn = 1)::text as "latestProductDate",
       (SELECT product_id FROM performer_products WHERE performer_id = pf.id AND rn = 1) as "latestProductId",
-      AVG(pr.rating) as "avgRating",
-      COALESCE(SUM(pr.review_count), 0)::int as "totalReviews",
+      AVG(ps.avg_rating) as "avgRating",
+      COALESCE(SUM(ps.review_count), 0)::int as "totalReviews",
       COALESCE(pt.tags, ARRAY[]::text[]) as tags
     FROM performers pf
     INNER JOIN product_performers pp ON pf.id = pp.performer_id
-    INNER JOIN products pr ON pp.product_id = pr.id
+    INNER JOIN products p ON pp.product_id = p.id
+    LEFT JOIN product_stats ps ON p.id = ps.product_id
     LEFT JOIN performer_tags pt ON pf.id = pt.performer_id
     WHERE pf.debut_year = ${lastYear}
     GROUP BY pf.id, pf.name, pf.profile_image_url, pf.debut_year, pt.tags

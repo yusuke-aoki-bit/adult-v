@@ -37,6 +37,34 @@ interface ReviewersData {
 async function getReviewersData(): Promise<ReviewersData> {
   const db = getDb();
 
+  // user_reviewsテーブルが存在するか確認（マイグレーション未適用の場合エラー回避）
+  try {
+    const tableCheck = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'user_reviews'
+      ) as exists
+    `);
+    const tableExists = (tableCheck.rows[0] as { exists: boolean })?.exists;
+    if (!tableExists) {
+      // テーブルが存在しない場合は空のデータを返す
+      return {
+        topReviewers: [],
+        monthlyTopReviewers: [],
+        mostHelpful: [],
+        stats: { totalReviewers: 0, totalReviews: 0, avgReviewsPerUser: 0 },
+      };
+    }
+  } catch {
+    // エラー時も空のデータを返す
+    return {
+      topReviewers: [],
+      monthlyTopReviewers: [],
+      mostHelpful: [],
+      stats: { totalReviewers: 0, totalReviews: 0, avgReviewsPerUser: 0 },
+    };
+  }
+
   // トップレビュアー（全期間）
   const topReviewersResult = await db.execute(sql`
     WITH reviewer_stats AS (
