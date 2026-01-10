@@ -171,11 +171,21 @@ function ProductCardBase({
     [formatPrice]
   );
 
+  // Hydration state - ABテストのバリアントはHydration後にのみ適用
+  const [isHydrated, setIsHydrated] = useState(false);
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   // Default getVariant if not provided - memoize fallback
-  const resolvedGetVariant = useMemo(() =>
-    getVariant ?? (() => 'default'),
-    [getVariant]
-  );
+  // Hydration前はデフォルト値を返すことで、サーバー/クライアント間の不整合を防止
+  const resolvedGetVariant = useMemo(() => {
+    if (!isHydrated) {
+      // SSR/Hydration中はデフォルト値を返す
+      return () => 'default';
+    }
+    return getVariant ?? (() => 'default');
+  }, [getVariant, isHydrated]);
 
   // Default trackCtaClick if not provided - memoize fallback
   const resolvedTrackCtaClick = useMemo(() =>
