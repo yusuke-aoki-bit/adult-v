@@ -41,6 +41,32 @@ interface ListRankingData {
 async function getListRankingData(): Promise<ListRankingData> {
   const db = getDb();
 
+  // テーブル存在チェック（マイグレーション未適用の場合エラー回避）
+  try {
+    const tableCheck = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'public_favorite_lists'
+      ) as exists
+    `);
+    const tableExists = (tableCheck.rows[0] as { exists: boolean })?.exists;
+    if (!tableExists) {
+      return {
+        popularLists: [],
+        recentLists: [],
+        trendingLists: [],
+        stats: { totalLists: 0, totalItems: 0, totalLikes: 0 },
+      };
+    }
+  } catch {
+    return {
+      popularLists: [],
+      recentLists: [],
+      trendingLists: [],
+      stats: { totalLists: 0, totalItems: 0, totalLikes: 0 },
+    };
+  }
+
   // 人気リスト（いいね数順）TOP 20
   const popularListsResult = await db.execute(sql`
     WITH list_stats AS (
