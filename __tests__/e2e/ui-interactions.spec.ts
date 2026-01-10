@@ -29,8 +29,8 @@ test.describe('UI Interactions', () => {
 
     console.log(`Found ${count} product-related elements on homepage`);
 
-    // 何らかのコンテンツが表示されていることを確認
-    await expect(page.locator('main, [role="main"], body')).toBeVisible();
+    // 何らかのコンテンツが表示されていることを確認（.first()でstrict mode violation回避）
+    await expect(page.locator('main, [role="main"], body').first()).toBeVisible();
   });
 
   test('Product detail page displays correctly', async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe('UI Interactions', () => {
       expect(currentUrl).toContain('/products/');
 
       // 何らかのコンテンツが表示されていることを確認
-      await expect(page.locator('main, [role="main"], body')).toBeVisible();
+      await expect(page.locator('main, [role="main"], body').first()).toBeVisible();
     } else {
       console.log('No product links found on homepage');
       test.skip();
@@ -200,7 +200,7 @@ test.describe('UI Interactions', () => {
         await page.waitForLoadState('domcontentloaded');
 
         // ページが遷移したことを確認
-        await expect(page.locator('main, [role="main"], body')).toBeVisible();
+        await expect(page.locator('main, [role="main"], body').first()).toBeVisible();
       }
     }
   });
@@ -352,7 +352,7 @@ test.describe('Mobile Responsiveness', () => {
     await page.waitForLoadState('networkidle');
 
     // モバイルでもコンテンツが表示されることを確認
-    await expect(page.locator('main, [role="main"], body')).toBeVisible();
+    await expect(page.locator('main, [role="main"], body').first()).toBeVisible();
 
     // ハンバーガーメニューがあるか確認
     const menuButton = page.locator([

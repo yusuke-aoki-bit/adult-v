@@ -50,6 +50,12 @@ const IGNORED_PATTERNS = [
   'useTranslations',
   // 検索エラー（テスト環境でのタイミング問題）
   'Search error: TypeError: Failed to fetch',
+  // CI環境ではDBがない
+  'Database initialization failed',
+  'DATABASE_URL',
+  'getActressesCount failed',
+  'getPopularSeries failed',
+  'Error getting popular tags',
 ];
 
 // 深刻なエラーパターン（テスト失敗の原因）

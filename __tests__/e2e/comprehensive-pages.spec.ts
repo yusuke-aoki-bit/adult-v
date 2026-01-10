@@ -83,7 +83,9 @@ test.describe('Homepage Tests', () => {
       !e.includes('ResizeObserver') &&
       !e.includes('Non-Error promise rejection') &&
       !e.includes('installations/request-failed') && // Firebase installation errors in test env
-      !e.includes('PERMISSION_DENIED')
+      !e.includes('PERMISSION_DENIED') &&
+      !e.includes('Database initialization failed') && // CI環境ではDBがない
+      !e.includes('DATABASE_URL') // CI環境ではDBがない
     );
     expect(criticalErrors).toHaveLength(0);
   });
