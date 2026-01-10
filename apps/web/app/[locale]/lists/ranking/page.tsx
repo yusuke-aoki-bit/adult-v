@@ -41,6 +41,13 @@ interface ListRankingData {
 async function getListRankingData(): Promise<ListRankingData> {
   const db = getDb();
 
+  const emptyResult: ListRankingData = {
+    popularLists: [],
+    recentLists: [],
+    trendingLists: [],
+    stats: { totalLists: 0, totalItems: 0, totalLikes: 0 },
+  };
+
   // テーブル存在チェック（マイグレーション未適用の場合エラー回避）
   try {
     const tableCheck = await db.execute(sql`
@@ -51,24 +58,15 @@ async function getListRankingData(): Promise<ListRankingData> {
     `);
     const tableExists = (tableCheck.rows[0] as { exists: boolean })?.exists;
     if (!tableExists) {
-      return {
-        popularLists: [],
-        recentLists: [],
-        trendingLists: [],
-        stats: { totalLists: 0, totalItems: 0, totalLikes: 0 },
-      };
+      return emptyResult;
     }
   } catch {
-    return {
-      popularLists: [],
-      recentLists: [],
-      trendingLists: [],
-      stats: { totalLists: 0, totalItems: 0, totalLikes: 0 },
-    };
+    return emptyResult;
   }
 
-  // 人気リスト（いいね数順）TOP 20
-  const popularListsResult = await db.execute(sql`
+  try {
+    // 人気リスト（いいね数順）TOP 20
+    const popularListsResult = await db.execute(sql`
     WITH list_stats AS (
       SELECT
         pfl.id,
@@ -224,16 +222,20 @@ async function getListRankingData(): Promise<ListRankingData> {
 
   const stats = statsResult.rows[0] as { total_lists: number; total_items: number; total_likes: number };
 
-  return {
-    popularLists: (popularListsResult.rows as Array<Record<string, unknown>>).map(mapList),
-    recentLists: (recentListsResult.rows as Array<Record<string, unknown>>).map(mapList),
-    trendingLists: (trendingListsResult.rows as Array<Record<string, unknown>>).map(mapList),
-    stats: {
-      totalLists: stats?.total_lists || 0,
-      totalItems: stats?.total_items || 0,
-      totalLikes: stats?.total_likes || 0,
-    },
-  };
+    return {
+      popularLists: (popularListsResult.rows as Array<Record<string, unknown>>).map(mapList),
+      recentLists: (recentListsResult.rows as Array<Record<string, unknown>>).map(mapList),
+      trendingLists: (trendingListsResult.rows as Array<Record<string, unknown>>).map(mapList),
+      stats: {
+        totalLists: stats?.total_lists || 0,
+        totalItems: stats?.total_items || 0,
+        totalLikes: stats?.total_likes || 0,
+      },
+    };
+  } catch (error) {
+    console.error('Failed to fetch list ranking data:', error);
+    return emptyResult;
+  }
 }
 
 const translations = {

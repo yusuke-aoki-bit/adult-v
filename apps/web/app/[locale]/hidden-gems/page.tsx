@@ -40,8 +40,17 @@ interface HiddenGemsData {
 async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
   const db = getDb();
 
-  // 高評価だが視聴数が少ない作品（隠れた名作の代表例）
-  const highRatedLowViewsResult = await db.execute(sql`
+  const emptyResult: HiddenGemsData = {
+    highRatedLowViews: [],
+    underratedClassics: [],
+    sleepersWithReviews: [],
+    recentDiscoveries: [],
+    stats: { totalHiddenGems: 0, avgRating: 0, avgViews: 0 },
+  };
+
+  try {
+    // 高評価だが視聴数が少ない作品（隠れた名作の代表例）
+    const highRatedLowViewsResult = await db.execute(sql`
     WITH product_views_count AS (
       SELECT product_id, COUNT(*) as view_count
       FROM product_views
@@ -258,17 +267,21 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
 
   const stats = statsResult.rows[0] as { total: number; avg_rating: number; avg_views: number };
 
-  return {
-    highRatedLowViews: (highRatedLowViewsResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[0])),
-    underratedClassics: (underratedClassicsResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[1])),
-    sleepersWithReviews: (sleepersWithReviewsResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[2])),
-    recentDiscoveries: (recentDiscoveriesResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[3])),
-    stats: {
-      totalHiddenGems: stats?.total || 0,
-      avgRating: stats?.avg_rating || 0,
-      avgViews: stats?.avg_views || 0,
-    },
-  };
+    return {
+      highRatedLowViews: (highRatedLowViewsResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[0])),
+      underratedClassics: (underratedClassicsResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[1])),
+      sleepersWithReviews: (sleepersWithReviewsResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[2])),
+      recentDiscoveries: (recentDiscoveriesResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[3])),
+      stats: {
+        totalHiddenGems: stats?.total || 0,
+        avgRating: stats?.avg_rating || 0,
+        avgViews: stats?.avg_views || 0,
+      },
+    };
+  } catch (error) {
+    console.error('Failed to fetch hidden gems data:', error);
+    return emptyResult;
+  }
 }
 
 const translations = {

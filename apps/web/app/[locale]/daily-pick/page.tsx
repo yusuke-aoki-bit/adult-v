@@ -108,108 +108,202 @@ export default async function DailyPickPage({ params }: Props) {
                         month === 12 || month <= 2 ? 'コタツ,温泉,鍋' :
                         month >= 3 && month <= 5 ? '新生活,入学,制服' : '';
 
-  // product_viewsテーブルはview_countカラムがなく、各閲覧が1行として記録される
-  const todayPickResult = await db.execute(sql`
-    WITH product_view_counts AS (
-      SELECT product_id, COUNT(*) as view_count
-      FROM product_views
-      GROUP BY product_id
-    ),
-    ranked_products AS (
-      SELECT
-        p.id,
-        p.normalized_product_id,
-        p.title,
-        p.release_date,
-        p.default_thumbnail_url,
-        p.duration,
-        p.description,
-        COALESCE(AVG(pr.rating), 0) as avg_rating,
-        COUNT(DISTINCT pr.id) as review_count,
-        COALESCE(pvc.view_count, 0) as view_count,
-        (
-          SELECT MIN(pp.price)
-          FROM product_prices pp
-          JOIN product_sources ps ON pp.source_id = ps.id
-          WHERE ps.product_id = p.id AND pp.price > 0
-        ) as min_price,
-        (
-          SELECT json_agg(json_build_object('id', pe.id, 'name', pe.name))
-          FROM product_performers ppr
-          JOIN performers pe ON ppr.performer_id = pe.id
-          WHERE ppr.product_id = p.id
-          LIMIT 5
-        ) as performers,
-        (
-          SELECT json_agg(json_build_object('id', t.id, 'name', t.name))
-          FROM product_tags pt
-          JOIN tags t ON pt.tag_id = t.id
-          WHERE pt.product_id = p.id
-          LIMIT 8
-        ) as tags,
-        -- スコア計算: 評価 + レビュー数 + 閲覧数 + 発売日の新しさ
-        (
-          COALESCE(AVG(pr.rating), 3) * 20 +
-          LEAST(COUNT(DISTINCT pr.id), 50) * 2 +
-          LEAST(COALESCE(pvc.view_count, 0) / 100, 50) +
-          CASE WHEN p.release_date > CURRENT_DATE - INTERVAL '180 days' THEN 30 ELSE 0 END
-        ) as score
-      FROM products p
-      LEFT JOIN product_reviews pr ON p.id = pr.product_id
-      LEFT JOIN product_view_counts pvc ON p.id = pvc.product_id
-      WHERE p.default_thumbnail_url IS NOT NULL
-        AND p.release_date IS NOT NULL
-        AND p.release_date <= CURRENT_DATE
-      GROUP BY p.id, pvc.view_count
-      HAVING COUNT(DISTINCT pr.id) >= 3 OR COALESCE(pvc.view_count, 0) >= 100
-      ORDER BY score DESC
-      LIMIT 100
-    )
-    SELECT *
-    FROM ranked_products
-    OFFSET ${Math.floor(seededRandom(todaySeed) * 50)}
-    LIMIT 1
-  `);
+  // product_viewsテーブルが存在しない場合も動作するようにする
+  let todayPickResult;
+  try {
+    todayPickResult = await db.execute(sql`
+      WITH product_view_counts AS (
+        SELECT product_id, COUNT(*) as view_count
+        FROM product_views
+        GROUP BY product_id
+      ),
+      ranked_products AS (
+        SELECT
+          p.id,
+          p.normalized_product_id,
+          p.title,
+          p.release_date,
+          p.default_thumbnail_url,
+          p.duration,
+          p.description,
+          COALESCE(AVG(pr.rating), 0) as avg_rating,
+          COUNT(DISTINCT pr.id) as review_count,
+          COALESCE(pvc.view_count, 0) as view_count,
+          (
+            SELECT MIN(pp.price)
+            FROM product_prices pp
+            JOIN product_sources ps ON pp.source_id = ps.id
+            WHERE ps.product_id = p.id AND pp.price > 0
+          ) as min_price,
+          (
+            SELECT json_agg(json_build_object('id', pe.id, 'name', pe.name))
+            FROM product_performers ppr
+            JOIN performers pe ON ppr.performer_id = pe.id
+            WHERE ppr.product_id = p.id
+            LIMIT 5
+          ) as performers,
+          (
+            SELECT json_agg(json_build_object('id', t.id, 'name', t.name))
+            FROM product_tags pt
+            JOIN tags t ON pt.tag_id = t.id
+            WHERE pt.product_id = p.id
+            LIMIT 8
+          ) as tags,
+          -- スコア計算: 評価 + レビュー数 + 閲覧数 + 発売日の新しさ
+          (
+            COALESCE(AVG(pr.rating), 3) * 20 +
+            LEAST(COUNT(DISTINCT pr.id), 50) * 2 +
+            LEAST(COALESCE(pvc.view_count, 0) / 100, 50) +
+            CASE WHEN p.release_date > CURRENT_DATE - INTERVAL '180 days' THEN 30 ELSE 0 END
+          ) as score
+        FROM products p
+        LEFT JOIN product_reviews pr ON p.id = pr.product_id
+        LEFT JOIN product_view_counts pvc ON p.id = pvc.product_id
+        WHERE p.default_thumbnail_url IS NOT NULL
+          AND p.release_date IS NOT NULL
+          AND p.release_date <= CURRENT_DATE
+        GROUP BY p.id, pvc.view_count
+        HAVING COUNT(DISTINCT pr.id) >= 3 OR COALESCE(pvc.view_count, 0) >= 100
+        ORDER BY score DESC
+        LIMIT 100
+      )
+      SELECT *
+      FROM ranked_products
+      OFFSET ${Math.floor(seededRandom(todaySeed) * 50)}
+      LIMIT 1
+    `);
+  } catch {
+    // product_viewsテーブルが存在しない場合はview_countなしでクエリ
+    todayPickResult = await db.execute(sql`
+      WITH ranked_products AS (
+        SELECT
+          p.id,
+          p.normalized_product_id,
+          p.title,
+          p.release_date,
+          p.default_thumbnail_url,
+          p.duration,
+          p.description,
+          COALESCE(AVG(pr.rating), 0) as avg_rating,
+          COUNT(DISTINCT pr.id) as review_count,
+          0 as view_count,
+          (
+            SELECT MIN(pp.price)
+            FROM product_prices pp
+            JOIN product_sources ps ON pp.source_id = ps.id
+            WHERE ps.product_id = p.id AND pp.price > 0
+          ) as min_price,
+          (
+            SELECT json_agg(json_build_object('id', pe.id, 'name', pe.name))
+            FROM product_performers ppr
+            JOIN performers pe ON ppr.performer_id = pe.id
+            WHERE ppr.product_id = p.id
+            LIMIT 5
+          ) as performers,
+          (
+            SELECT json_agg(json_build_object('id', t.id, 'name', t.name))
+            FROM product_tags pt
+            JOIN tags t ON pt.tag_id = t.id
+            WHERE pt.product_id = p.id
+            LIMIT 8
+          ) as tags,
+          (
+            COALESCE(AVG(pr.rating), 3) * 20 +
+            LEAST(COUNT(DISTINCT pr.id), 50) * 2 +
+            CASE WHEN p.release_date > CURRENT_DATE - INTERVAL '180 days' THEN 30 ELSE 0 END
+          ) as score
+        FROM products p
+        LEFT JOIN product_reviews pr ON p.id = pr.product_id
+        WHERE p.default_thumbnail_url IS NOT NULL
+          AND p.release_date IS NOT NULL
+          AND p.release_date <= CURRENT_DATE
+        GROUP BY p.id
+        HAVING COUNT(DISTINCT pr.id) >= 1
+        ORDER BY score DESC
+        LIMIT 100
+      )
+      SELECT *
+      FROM ranked_products
+      OFFSET ${Math.floor(seededRandom(todaySeed) * 50)}
+      LIMIT 1
+    `);
+  }
 
   // 過去3日間のピック
-  const previousPicksResult = await db.execute(sql`
-    WITH product_view_counts AS (
-      SELECT product_id, COUNT(*) as view_count
-      FROM product_views
-      GROUP BY product_id
-    ),
-    ranked_products AS (
-      SELECT
-        p.id,
-        p.normalized_product_id,
-        p.title,
-        p.default_thumbnail_url,
-        (
-          COALESCE(AVG(pr.rating), 3) * 20 +
-          LEAST(COUNT(DISTINCT pr.id), 50) * 2 +
-          LEAST(COALESCE(pvc.view_count, 0) / 100, 50)
-        ) as score
-      FROM products p
-      LEFT JOIN product_reviews pr ON p.id = pr.product_id
-      LEFT JOIN product_view_counts pvc ON p.id = pvc.product_id
-      WHERE p.default_thumbnail_url IS NOT NULL
-      GROUP BY p.id, pvc.view_count
-      HAVING COUNT(DISTINCT pr.id) >= 3 OR COALESCE(pvc.view_count, 0) >= 100
-      ORDER BY score DESC
-      LIMIT 100
-    )
-    SELECT * FROM (
-      SELECT *, 1 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 1) * 50)} LIMIT 1
-    ) d1
-    UNION ALL
-    SELECT * FROM (
-      SELECT *, 2 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 2) * 50)} LIMIT 1
-    ) d2
-    UNION ALL
-    SELECT * FROM (
-      SELECT *, 3 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 3) * 50)} LIMIT 1
-    ) d3
-  `);
+  let previousPicksResult;
+  try {
+    previousPicksResult = await db.execute(sql`
+      WITH product_view_counts AS (
+        SELECT product_id, COUNT(*) as view_count
+        FROM product_views
+        GROUP BY product_id
+      ),
+      ranked_products AS (
+        SELECT
+          p.id,
+          p.normalized_product_id,
+          p.title,
+          p.default_thumbnail_url,
+          (
+            COALESCE(AVG(pr.rating), 3) * 20 +
+            LEAST(COUNT(DISTINCT pr.id), 50) * 2 +
+            LEAST(COALESCE(pvc.view_count, 0) / 100, 50)
+          ) as score
+        FROM products p
+        LEFT JOIN product_reviews pr ON p.id = pr.product_id
+        LEFT JOIN product_view_counts pvc ON p.id = pvc.product_id
+        WHERE p.default_thumbnail_url IS NOT NULL
+        GROUP BY p.id, pvc.view_count
+        HAVING COUNT(DISTINCT pr.id) >= 3 OR COALESCE(pvc.view_count, 0) >= 100
+        ORDER BY score DESC
+        LIMIT 100
+      )
+      SELECT * FROM (
+        SELECT *, 1 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 1) * 50)} LIMIT 1
+      ) d1
+      UNION ALL
+      SELECT * FROM (
+        SELECT *, 2 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 2) * 50)} LIMIT 1
+      ) d2
+      UNION ALL
+      SELECT * FROM (
+        SELECT *, 3 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 3) * 50)} LIMIT 1
+      ) d3
+    `);
+  } catch {
+    // product_viewsテーブルが存在しない場合はview_countなしでクエリ
+    previousPicksResult = await db.execute(sql`
+      WITH ranked_products AS (
+        SELECT
+          p.id,
+          p.normalized_product_id,
+          p.title,
+          p.default_thumbnail_url,
+          (
+            COALESCE(AVG(pr.rating), 3) * 20 +
+            LEAST(COUNT(DISTINCT pr.id), 50) * 2
+          ) as score
+        FROM products p
+        LEFT JOIN product_reviews pr ON p.id = pr.product_id
+        WHERE p.default_thumbnail_url IS NOT NULL
+        GROUP BY p.id
+        HAVING COUNT(DISTINCT pr.id) >= 1
+        ORDER BY score DESC
+        LIMIT 100
+      )
+      SELECT * FROM (
+        SELECT *, 1 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 1) * 50)} LIMIT 1
+      ) d1
+      UNION ALL
+      SELECT * FROM (
+        SELECT *, 2 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 2) * 50)} LIMIT 1
+      ) d2
+      UNION ALL
+      SELECT * FROM (
+        SELECT *, 3 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 3) * 50)} LIMIT 1
+      ) d3
+    `);
+  }
 
   const todayPick = todayPickResult.rows[0] as unknown as DailyProduct | undefined;
   const previousPicks = previousPicksResult.rows as Array<{
