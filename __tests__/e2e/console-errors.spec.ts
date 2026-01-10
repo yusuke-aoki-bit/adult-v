@@ -272,10 +272,21 @@ test.describe('User Interaction Console Errors', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/', { waitUntil: 'networkidle' });
 
+    // 年齢確認モーダルが表示されている場合は閉じる
+    const ageModal = page.locator('div.fixed.inset-0.bg-gray-900.z-50');
+    if (await ageModal.isVisible({ timeout: 2000 }).catch(() => false)) {
+      // 「はい」ボタンをクリックして閉じる
+      const confirmButton = page.locator('button:has-text("はい"), button:has-text("Yes"), button:has-text("Enter")').first();
+      if (await confirmButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await confirmButton.click();
+        await page.waitForTimeout(500);
+      }
+    }
+
     const errors = await collectConsoleErrors(page, async () => {
       // ハンバーガーメニューを探してクリック
       const menuButton = page.locator('[data-testid="mobile-menu"], button[aria-label*="menu"], button[aria-label*="メニュー"]').first();
-      if (await menuButton.count() > 0) {
+      if (await menuButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         await menuButton.click();
         await page.waitForTimeout(500);
       }
