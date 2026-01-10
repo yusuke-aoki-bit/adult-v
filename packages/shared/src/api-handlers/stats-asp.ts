@@ -81,7 +81,8 @@ export function createStatsAspHandler(
       return NextResponse.json(enrichedStats);
     } catch (error) {
       logDbErrorAndReturn(error, [], 'getAspStats');
-      return NextResponse.json([], { status: 500 });
+      // DBエラー時も空配列で200を返す（graceful degradation）
+      return NextResponse.json([]);
     }
   };
 }

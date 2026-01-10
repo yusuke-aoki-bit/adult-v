@@ -25,7 +25,8 @@ export function createStatsSalesHandler(
       return NextResponse.json(stats);
     } catch (error) {
       logDbErrorAndReturn(error, { totalSales: 0, byAsp: [] }, 'getSaleStats');
-      return NextResponse.json({ totalSales: 0, byAsp: [] }, { status: 500 });
+      // DBエラー時も空データで200を返す（graceful degradation）
+      return NextResponse.json({ totalSales: 0, byAsp: [] });
     }
   };
 }

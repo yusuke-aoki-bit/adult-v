@@ -27,7 +27,8 @@ export function createMakersGetHandler(deps: MakersHandlerDeps) {
       return NextResponse.json({ makers });
     } catch (error) {
       logDbErrorAndReturn(error, [], 'getPopularMakers');
-      return NextResponse.json({ makers: [] }, { status: 500 });
+      // DBエラー時も空配列で200を返す（graceful degradation）
+      return NextResponse.json({ makers: [] });
     }
   };
 }
@@ -47,7 +48,8 @@ export function createMakersPostHandler(deps: MakersHandlerDeps) {
       return NextResponse.json({ makers });
     } catch (error) {
       logDbErrorAndReturn(error, [], 'analyzeMakerPreference');
-      return NextResponse.json({ makers: [] }, { status: 500 });
+      // DBエラー時も空配列で200を返す（graceful degradation）
+      return NextResponse.json({ makers: [] });
     }
   };
 }
