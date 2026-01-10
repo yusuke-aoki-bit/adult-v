@@ -24,7 +24,8 @@ export function createWeeklyHighlightsHandler(deps: WeeklyHighlightsHandlerDeps)
         rediscoveredClassics: [],
       };
       logDbErrorAndReturn(error, defaultHighlights, 'getWeeklyHighlights');
-      return NextResponse.json(defaultHighlights, { status: 500 });
+      // DBエラー時も空配列で200を返す（graceful degradation）
+      return NextResponse.json(defaultHighlights);
     }
   };
 }
