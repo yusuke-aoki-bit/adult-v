@@ -232,7 +232,7 @@ export const HeaderBase = memo(function HeaderBase({
 }: HeaderBaseProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<'browse' | 'tools' | 'my' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'browse' | 'tools' | 'my' | 'community' | null>(null);
   const lastScrollY = useRef(0);
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -240,7 +240,7 @@ export const HeaderBase = memo(function HeaderBase({
   const mobileMenuRef = useRef<HTMLElement>(null);
 
   // ドロップダウン制御
-  const handleDropdownToggle = useCallback((menu: 'browse' | 'tools' | 'my') => {
+  const handleDropdownToggle = useCallback((menu: 'browse' | 'tools' | 'my' | 'community') => {
     setOpenDropdown(prev => prev === menu ? null : menu);
   }, []);
 
@@ -447,6 +447,35 @@ export const HeaderBase = memo(function HeaderBase({
                 <DiscoverIcon />
                 {t.discover}
               </Link>
+              <div className="border-t theme-border my-1" />
+              <Link
+                href={localizedHref('/daily-pick', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                {t.dailyPick}
+              </Link>
+              <Link
+                href={localizedHref('/weekly-report', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                {t.weeklyTrends}
+              </Link>
+              <Link
+                href={localizedHref('/hidden-gems', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                {t.hiddenGems}
+              </Link>
+              <Link
+                href={localizedHref('/rookies', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                {t.rookies}
+              </Link>
             </DropdownMenu>
 
             {/* ツールメニュー */}
@@ -479,6 +508,43 @@ export const HeaderBase = memo(function HeaderBase({
               >
                 <ProfileIcon />
                 {t.profile}
+              </Link>
+            </DropdownMenu>
+
+            {/* コミュニティメニュー */}
+            <DropdownMenu
+              label={t.menuCommunity}
+              isOpen={openDropdown === 'community'}
+              onToggle={() => handleDropdownToggle('community')}
+              onClose={handleDropdownClose}
+            >
+              <Link
+                href={localizedHref('/lists', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                {t.publicLists}
+              </Link>
+              <Link
+                href={localizedHref('/lists/ranking', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                {t.listRanking}
+              </Link>
+              <Link
+                href={localizedHref('/reviewers', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                {t.reviewers}
+              </Link>
+              <Link
+                href={localizedHref('/vote', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                onClick={handleDropdownClose}
+              >
+                {t.voteRanking}
               </Link>
             </DropdownMenu>
 
@@ -566,6 +632,38 @@ export const HeaderBase = memo(function HeaderBase({
                   <DiscoverIcon />
                   <span className="ml-2">{t.discover}</span>
                 </Link>
+                <Link
+                  href={localizedHref('/daily-pick', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <span className="ml-6">{t.dailyPick}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/weekly-report', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <span className="ml-6">{t.weeklyTrends}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/hidden-gems', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <span className="ml-6">{t.hiddenGems}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/rookies', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <span className="ml-6">{t.rookies}</span>
+                </Link>
               </div>
             </div>
 
@@ -599,6 +697,45 @@ export const HeaderBase = memo(function HeaderBase({
                 >
                   <ProfileIcon />
                   <span className="ml-2">{t.profile}</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* コミュニティ */}
+            <div className="theme-nav pt-2 border-t theme-border" role="list">
+              <p className="text-xs font-semibold theme-text-muted uppercase tracking-wider px-1 py-1">{t.menuCommunity}</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+                <Link
+                  href={localizedHref('/lists', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <span className="ml-6">{t.publicLists}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/lists/ranking', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <span className="ml-6">{t.listRanking}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/reviewers', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <span className="ml-6">{t.reviewers}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/vote', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <span className="ml-6">{t.voteRanking}</span>
                 </Link>
               </div>
             </div>

@@ -35,7 +35,9 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-export const revalidate = 600; // 10分キャッシュ
+// Force dynamic rendering to avoid DYNAMIC_SERVER_USAGE errors with getTranslations
+// ISR with revalidate is not compatible with dynamic server functions
+export const dynamic = 'force-dynamic';
 
 /**
  * 配列をシャッフル（Fisher-Yates algorithm）

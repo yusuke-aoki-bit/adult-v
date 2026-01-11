@@ -49,15 +49,16 @@ async function getListRankingData(): Promise<ListRankingData> {
   };
 
   // テーブル存在チェック（マイグレーション未適用の場合エラー回避）
+  // public_favorite_lists, public_list_items, public_list_likes, user_profilesが必要
   try {
     const tableCheck = await db.execute(sql`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables
-        WHERE table_name = 'public_favorite_lists'
-      ) as exists
+      SELECT
+        (SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'public_favorite_lists')) as has_lists,
+        (SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'public_list_items')) as has_items,
+        (SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'public_list_likes')) as has_likes
     `);
-    const tableExists = (tableCheck.rows[0] as { exists: boolean })?.exists;
-    if (!tableExists) {
+    const check = tableCheck.rows[0] as { has_lists: boolean; has_items: boolean; has_likes: boolean };
+    if (!check?.has_lists || !check?.has_items || !check?.has_likes) {
       return emptyResult;
     }
   } catch {

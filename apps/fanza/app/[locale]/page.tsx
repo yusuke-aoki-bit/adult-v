@@ -90,9 +90,8 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 60秒ごとに再検証（searchParamsがあるため完全な静的生成は不可）
-// 注: searchParamsを使用しているため、実際のキャッシュはNext.jsの判断による
-export const revalidate = 60;
+// Force dynamic rendering to avoid DYNAMIC_SERVER_USAGE errors with getTranslations
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ locale: string }>;

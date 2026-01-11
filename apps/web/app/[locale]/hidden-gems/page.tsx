@@ -48,191 +48,330 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
     stats: { totalHiddenGems: 0, avgRating: 0, avgViews: 0 },
   };
 
+  // product_viewsテーブルの存在チェック
+  let hasProductViews = false;
+  try {
+    const tableCheck = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'product_views'
+      ) as exists
+    `);
+    hasProductViews = (tableCheck.rows[0] as { exists: boolean })?.exists ?? false;
+  } catch {
+    hasProductViews = false;
+  }
+
   try {
     // 高評価だが視聴数が少ない作品（隠れた名作の代表例）
-    const highRatedLowViewsResult = await db.execute(sql`
-    WITH product_views_count AS (
-      SELECT product_id, COUNT(*) as view_count
-      FROM product_views
-      GROUP BY product_id
-    ),
-    avg_views AS (
-      SELECT AVG(view_count) as avg_view FROM product_views_count
-    )
-    SELECT
-      p.id,
-      p.title,
-      p.default_thumbnail_url as "imageUrl",
-      p.rating,
-      p.review_count as "reviewCount",
-      COALESCE(pvc.view_count, 0)::int as "viewCount",
-      p.release_date::text as "releaseDate",
-      p.ai_short_description as "aiDescription",
-      COALESCE(
-        (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
-         INNER JOIN performers pf ON pp.performer_id = pf.id
-         WHERE pp.product_id = p.id),
-        ARRAY[]::text[]
-      ) as performers,
-      COALESCE(
-        (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
-         INNER JOIN tags t ON pt.tag_id = t.id
-         WHERE pt.product_id = p.id AND t.category = 'genre'),
-        ARRAY[]::text[]
-      ) as genres
-    FROM products p
-    LEFT JOIN product_views_count pvc ON p.id = pvc.product_id
-    CROSS JOIN avg_views av
-    WHERE p.rating >= 4.0
-      AND p.review_count >= 3
-      AND COALESCE(pvc.view_count, 0) < av.avg_view * 0.5
-    ORDER BY p.rating DESC, p.review_count DESC
-    LIMIT 10
-  `);
+    let highRatedLowViewsResult;
+    if (hasProductViews) {
+      highRatedLowViewsResult = await db.execute(sql`
+        WITH product_views_count AS (
+          SELECT product_id, COUNT(*) as view_count
+          FROM product_views
+          GROUP BY product_id
+        ),
+        avg_views AS (
+          SELECT AVG(view_count) as avg_view FROM product_views_count
+        )
+        SELECT
+          p.id,
+          p.title,
+          p.default_thumbnail_url as "imageUrl",
+          p.rating,
+          p.review_count as "reviewCount",
+          COALESCE(pvc.view_count, 0)::int as "viewCount",
+          p.release_date::text as "releaseDate",
+          p.ai_short_description as "aiDescription",
+          COALESCE(
+            (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
+             INNER JOIN performers pf ON pp.performer_id = pf.id
+             WHERE pp.product_id = p.id),
+            ARRAY[]::text[]
+          ) as performers,
+          COALESCE(
+            (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
+             INNER JOIN tags t ON pt.tag_id = t.id
+             WHERE pt.product_id = p.id AND t.category = 'genre'),
+            ARRAY[]::text[]
+          ) as genres
+        FROM products p
+        LEFT JOIN product_views_count pvc ON p.id = pvc.product_id
+        CROSS JOIN avg_views av
+        WHERE p.rating >= 4.0
+          AND p.review_count >= 3
+          AND COALESCE(pvc.view_count, 0) < av.avg_view * 0.5
+        ORDER BY p.rating DESC, p.review_count DESC
+        LIMIT 10
+      `);
+    } else {
+      // product_viewsがない場合はレビュー数だけで判定
+      highRatedLowViewsResult = await db.execute(sql`
+        SELECT
+          p.id,
+          p.title,
+          p.default_thumbnail_url as "imageUrl",
+          p.rating,
+          p.review_count as "reviewCount",
+          0::int as "viewCount",
+          p.release_date::text as "releaseDate",
+          p.ai_short_description as "aiDescription",
+          COALESCE(
+            (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
+             INNER JOIN performers pf ON pp.performer_id = pf.id
+             WHERE pp.product_id = p.id),
+            ARRAY[]::text[]
+          ) as performers,
+          COALESCE(
+            (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
+             INNER JOIN tags t ON pt.tag_id = t.id
+             WHERE pt.product_id = p.id AND t.category = 'genre'),
+            ARRAY[]::text[]
+          ) as genres
+        FROM products p
+        WHERE p.rating >= 4.0
+          AND p.review_count >= 3
+          AND p.review_count <= 10
+        ORDER BY p.rating DESC, p.review_count ASC
+        LIMIT 10
+      `);
+    }
 
   // 1年以上前の名作（クラシック）
-  const underratedClassicsResult = await db.execute(sql`
-    WITH product_views_count AS (
-      SELECT product_id, COUNT(*) as view_count
-      FROM product_views
-      GROUP BY product_id
-    )
-    SELECT
-      p.id,
-      p.title,
-      p.default_thumbnail_url as "imageUrl",
-      p.rating,
-      p.review_count as "reviewCount",
-      COALESCE(pvc.view_count, 0)::int as "viewCount",
-      p.release_date::text as "releaseDate",
-      p.ai_short_description as "aiDescription",
-      COALESCE(
-        (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
-         INNER JOIN performers pf ON pp.performer_id = pf.id
-         WHERE pp.product_id = p.id),
-        ARRAY[]::text[]
-      ) as performers,
-      COALESCE(
-        (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
-         INNER JOIN tags t ON pt.tag_id = t.id
-         WHERE pt.product_id = p.id AND t.category = 'genre'),
-        ARRAY[]::text[]
-      ) as genres
-    FROM products p
-    LEFT JOIN product_views_count pvc ON p.id = pvc.product_id
-    WHERE p.rating >= 4.0
-      AND p.review_count >= 5
-      AND p.release_date < CURRENT_DATE - INTERVAL '1 year'
-    ORDER BY p.rating DESC, p.review_count DESC
-    LIMIT 10
-  `);
+  let underratedClassicsResult;
+  if (hasProductViews) {
+    underratedClassicsResult = await db.execute(sql`
+      WITH product_views_count AS (
+        SELECT product_id, COUNT(*) as view_count
+        FROM product_views
+        GROUP BY product_id
+      )
+      SELECT
+        p.id,
+        p.title,
+        p.default_thumbnail_url as "imageUrl",
+        p.rating,
+        p.review_count as "reviewCount",
+        COALESCE(pvc.view_count, 0)::int as "viewCount",
+        p.release_date::text as "releaseDate",
+        p.ai_short_description as "aiDescription",
+        COALESCE(
+          (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
+           INNER JOIN performers pf ON pp.performer_id = pf.id
+           WHERE pp.product_id = p.id),
+          ARRAY[]::text[]
+        ) as performers,
+        COALESCE(
+          (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
+           INNER JOIN tags t ON pt.tag_id = t.id
+           WHERE pt.product_id = p.id AND t.category = 'genre'),
+          ARRAY[]::text[]
+        ) as genres
+      FROM products p
+      LEFT JOIN product_views_count pvc ON p.id = pvc.product_id
+      WHERE p.rating >= 4.0
+        AND p.review_count >= 5
+        AND p.release_date < CURRENT_DATE - INTERVAL '1 year'
+      ORDER BY p.rating DESC, p.review_count DESC
+      LIMIT 10
+    `);
+  } else {
+    underratedClassicsResult = await db.execute(sql`
+      SELECT
+        p.id,
+        p.title,
+        p.default_thumbnail_url as "imageUrl",
+        p.rating,
+        p.review_count as "reviewCount",
+        0::int as "viewCount",
+        p.release_date::text as "releaseDate",
+        p.ai_short_description as "aiDescription",
+        COALESCE(
+          (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
+           INNER JOIN performers pf ON pp.performer_id = pf.id
+           WHERE pp.product_id = p.id),
+          ARRAY[]::text[]
+        ) as performers,
+        COALESCE(
+          (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
+           INNER JOIN tags t ON pt.tag_id = t.id
+           WHERE pt.product_id = p.id AND t.category = 'genre'),
+          ARRAY[]::text[]
+        ) as genres
+      FROM products p
+      WHERE p.rating >= 4.0
+        AND p.review_count >= 5
+        AND p.release_date < CURRENT_DATE - INTERVAL '1 year'
+      ORDER BY p.rating DESC, p.review_count DESC
+      LIMIT 10
+    `);
+  }
 
   // レビューが熱い隠れた作品
-  const sleepersWithReviewsResult = await db.execute(sql`
-    WITH product_views_count AS (
-      SELECT product_id, COUNT(*) as view_count
-      FROM product_views
-      GROUP BY product_id
-    ),
-    review_activity AS (
+  let sleepersWithReviewsResult;
+  if (hasProductViews) {
+    sleepersWithReviewsResult = await db.execute(sql`
+      WITH product_views_count AS (
+        SELECT product_id, COUNT(*) as view_count
+        FROM product_views
+        GROUP BY product_id
+      ),
+      review_activity AS (
+        SELECT
+          product_id,
+          COUNT(*) as review_count,
+          MAX(created_at) as last_review_at
+        FROM product_reviews
+        WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY product_id
+      )
       SELECT
-        product_id,
-        COUNT(*) as review_count,
-        MAX(created_at) as last_review_at
-      FROM product_reviews
-      WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
-      GROUP BY product_id
-    )
-    SELECT
-      p.id,
-      p.title,
-      p.default_thumbnail_url as "imageUrl",
-      p.rating,
-      p.review_count as "reviewCount",
-      COALESCE(pvc.view_count, 0)::int as "viewCount",
-      p.release_date::text as "releaseDate",
-      p.ai_short_description as "aiDescription",
-      COALESCE(
-        (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
-         INNER JOIN performers pf ON pp.performer_id = pf.id
-         WHERE pp.product_id = p.id),
-        ARRAY[]::text[]
-      ) as performers,
-      COALESCE(
-        (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
-         INNER JOIN tags t ON pt.tag_id = t.id
-         WHERE pt.product_id = p.id AND t.category = 'genre'),
-        ARRAY[]::text[]
-      ) as genres
-    FROM products p
-    INNER JOIN review_activity ra ON p.id = ra.product_id
-    LEFT JOIN product_views_count pvc ON p.id = pvc.product_id
-    WHERE p.rating >= 3.5
-      AND p.release_date < CURRENT_DATE - INTERVAL '6 months'
-    ORDER BY ra.review_count DESC, p.rating DESC
-    LIMIT 10
-  `);
+        p.id,
+        p.title,
+        p.default_thumbnail_url as "imageUrl",
+        p.rating,
+        p.review_count as "reviewCount",
+        COALESCE(pvc.view_count, 0)::int as "viewCount",
+        p.release_date::text as "releaseDate",
+        p.ai_short_description as "aiDescription",
+        COALESCE(
+          (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
+           INNER JOIN performers pf ON pp.performer_id = pf.id
+           WHERE pp.product_id = p.id),
+          ARRAY[]::text[]
+        ) as performers,
+        COALESCE(
+          (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
+           INNER JOIN tags t ON pt.tag_id = t.id
+           WHERE pt.product_id = p.id AND t.category = 'genre'),
+          ARRAY[]::text[]
+        ) as genres
+      FROM products p
+      INNER JOIN review_activity ra ON p.id = ra.product_id
+      LEFT JOIN product_views_count pvc ON p.id = pvc.product_id
+      WHERE p.rating >= 3.5
+        AND p.release_date < CURRENT_DATE - INTERVAL '6 months'
+      ORDER BY ra.review_count DESC, p.rating DESC
+      LIMIT 10
+    `);
+  } else {
+    sleepersWithReviewsResult = await db.execute(sql`
+      WITH review_activity AS (
+        SELECT
+          product_id,
+          COUNT(*) as review_count,
+          MAX(created_at) as last_review_at
+        FROM product_reviews
+        WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY product_id
+      )
+      SELECT
+        p.id,
+        p.title,
+        p.default_thumbnail_url as "imageUrl",
+        p.rating,
+        p.review_count as "reviewCount",
+        0::int as "viewCount",
+        p.release_date::text as "releaseDate",
+        p.ai_short_description as "aiDescription",
+        COALESCE(
+          (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
+           INNER JOIN performers pf ON pp.performer_id = pf.id
+           WHERE pp.product_id = p.id),
+          ARRAY[]::text[]
+        ) as performers,
+        COALESCE(
+          (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
+           INNER JOIN tags t ON pt.tag_id = t.id
+           WHERE pt.product_id = p.id AND t.category = 'genre'),
+          ARRAY[]::text[]
+        ) as genres
+      FROM products p
+      INNER JOIN review_activity ra ON p.id = ra.product_id
+      WHERE p.rating >= 3.5
+        AND p.release_date < CURRENT_DATE - INTERVAL '6 months'
+      ORDER BY ra.review_count DESC, p.rating DESC
+      LIMIT 10
+    `);
+  }
 
   // 最近発見された名作（最近視聴数が増えている古い作品）
-  const recentDiscoveriesResult = await db.execute(sql`
-    WITH recent_views AS (
-      SELECT product_id, COUNT(*) as recent_count
-      FROM product_views
-      WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days'
-      GROUP BY product_id
-    ),
-    older_views AS (
-      SELECT product_id, COUNT(*) as older_count
-      FROM product_views
-      WHERE viewed_at >= CURRENT_DATE - INTERVAL '30 days'
-        AND viewed_at < CURRENT_DATE - INTERVAL '7 days'
-      GROUP BY product_id
-    )
-    SELECT
-      p.id,
-      p.title,
-      p.default_thumbnail_url as "imageUrl",
-      p.rating,
-      p.review_count as "reviewCount",
-      COALESCE(rv.recent_count, 0)::int as "viewCount",
-      p.release_date::text as "releaseDate",
-      p.ai_short_description as "aiDescription",
-      COALESCE(
-        (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
-         INNER JOIN performers pf ON pp.performer_id = pf.id
-         WHERE pp.product_id = p.id),
-        ARRAY[]::text[]
-      ) as performers,
-      COALESCE(
-        (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
-         INNER JOIN tags t ON pt.tag_id = t.id
-         WHERE pt.product_id = p.id AND t.category = 'genre'),
-        ARRAY[]::text[]
-      ) as genres
-    FROM products p
-    INNER JOIN recent_views rv ON p.id = rv.product_id
-    LEFT JOIN older_views ov ON p.id = ov.product_id
-    WHERE p.release_date < CURRENT_DATE - INTERVAL '3 months'
-      AND p.rating >= 3.5
-      AND COALESCE(rv.recent_count, 0) > COALESCE(ov.older_count, 0) * 2
-    ORDER BY (COALESCE(rv.recent_count, 0) - COALESCE(ov.older_count, 0)) DESC
-    LIMIT 10
-  `);
+  // product_viewsがない場合は空の結果を返す
+  let recentDiscoveriesResult = { rows: [] };
+  if (hasProductViews) {
+    recentDiscoveriesResult = await db.execute(sql`
+      WITH recent_views AS (
+        SELECT product_id, COUNT(*) as recent_count
+        FROM product_views
+        WHERE viewed_at >= CURRENT_DATE - INTERVAL '7 days'
+        GROUP BY product_id
+      ),
+      older_views AS (
+        SELECT product_id, COUNT(*) as older_count
+        FROM product_views
+        WHERE viewed_at >= CURRENT_DATE - INTERVAL '30 days'
+          AND viewed_at < CURRENT_DATE - INTERVAL '7 days'
+        GROUP BY product_id
+      )
+      SELECT
+        p.id,
+        p.title,
+        p.default_thumbnail_url as "imageUrl",
+        p.rating,
+        p.review_count as "reviewCount",
+        COALESCE(rv.recent_count, 0)::int as "viewCount",
+        p.release_date::text as "releaseDate",
+        p.ai_short_description as "aiDescription",
+        COALESCE(
+          (SELECT array_agg(pf.name ORDER BY pf.name) FROM product_performers pp
+           INNER JOIN performers pf ON pp.performer_id = pf.id
+           WHERE pp.product_id = p.id),
+          ARRAY[]::text[]
+        ) as performers,
+        COALESCE(
+          (SELECT array_agg(t.name ORDER BY t.name) FROM product_tags pt
+           INNER JOIN tags t ON pt.tag_id = t.id
+           WHERE pt.product_id = p.id AND t.category = 'genre'),
+          ARRAY[]::text[]
+        ) as genres
+      FROM products p
+      INNER JOIN recent_views rv ON p.id = rv.product_id
+      LEFT JOIN older_views ov ON p.id = ov.product_id
+      WHERE p.release_date < CURRENT_DATE - INTERVAL '3 months'
+        AND p.rating >= 3.5
+        AND COALESCE(rv.recent_count, 0) > COALESCE(ov.older_count, 0) * 2
+      ORDER BY (COALESCE(rv.recent_count, 0) - COALESCE(ov.older_count, 0)) DESC
+      LIMIT 10
+    `);
+  }
 
   // 統計
-  const statsResult = await db.execute(sql`
-    SELECT
-      COUNT(*)::int as total,
-      AVG(rating)::float as avg_rating,
-      AVG(COALESCE(sub.view_count, 0))::float as avg_views
-    FROM products p
-    LEFT JOIN (
-      SELECT product_id, COUNT(*) as view_count
-      FROM product_views
-      GROUP BY product_id
-    ) sub ON p.id = sub.product_id
-    WHERE p.rating >= 4.0 AND p.review_count >= 3
-  `);
+  let statsResult;
+  if (hasProductViews) {
+    statsResult = await db.execute(sql`
+      SELECT
+        COUNT(*)::int as total,
+        AVG(rating)::float as avg_rating,
+        AVG(COALESCE(sub.view_count, 0))::float as avg_views
+      FROM products p
+      LEFT JOIN (
+        SELECT product_id, COUNT(*) as view_count
+        FROM product_views
+        GROUP BY product_id
+      ) sub ON p.id = sub.product_id
+      WHERE p.rating >= 4.0 AND p.review_count >= 3
+    `);
+  } else {
+    statsResult = await db.execute(sql`
+      SELECT
+        COUNT(*)::int as total,
+        AVG(rating)::float as avg_rating,
+        0::float as avg_views
+      FROM products p
+      WHERE p.rating >= 4.0 AND p.review_count >= 3
+    `);
+  }
 
   const whyHiddenReasons = {
     ja: [

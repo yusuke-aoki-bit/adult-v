@@ -160,10 +160,11 @@ function ActressCardBaseComponent({
               src={imgSrc}
               alt={actress['name']}
               fill
-              sizes="(max-width: 768px) 33vw, 10vw"
+              sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 10vw"
               className={`object-cover group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
-              loading={priority ? undefined : "lazy"}
+              loading={priority ? "eager" : "lazy"}
               priority={priority}
+              fetchPriority={priority ? "high" : "low"}
               onError={handleImageError}
             />
           ) : (
@@ -222,9 +223,9 @@ function ActressCardBaseComponent({
               fill
               sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 16vw"
               className={`object-cover opacity-90 group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
-              loading={priority ? undefined : "lazy"}
+              loading={priority ? "eager" : "lazy"}
               priority={priority}
-              fetchPriority={priority ? "high" : "auto"}
+              fetchPriority={priority ? "high" : "low"}
               placeholder="blur"
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
               onError={handleImageError}
@@ -328,7 +329,9 @@ function ActressCardBaseComponent({
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className={`object-cover opacity-90 group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"}
+            priority={priority}
+            fetchPriority={priority ? "high" : "low"}
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             onError={handleImageError}

@@ -83,8 +83,8 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 1分キャッシュ（searchParamsで自動的に動的になるが、キャッシュを有効化）
-export const revalidate = 60;
+// Force dynamic rendering to avoid DYNAMIC_SERVER_USAGE errors with getTranslations
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ locale: string }>;

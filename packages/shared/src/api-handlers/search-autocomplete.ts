@@ -28,6 +28,9 @@ interface DbClient {
         };
       };
       where: (condition: unknown) => {
+        orderBy: (order: unknown) => {
+          limit: (n: number) => Promise<Record<string, unknown>[]>;
+        };
         limit: (n: number) => Promise<Record<string, unknown>[]>;
       };
     };
@@ -121,28 +124,19 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
             thumbnail: string | null;
           }[]>,
 
-        // 2. 女優名検索
+        // 2. 女優名検索（release_countカラムを使用してJOINを回避）
         db
           .select({
             id: deps.performers['id'],
             name: deps.performers['name'],
             image: deps.performers['profileImageUrl'],
-            productCount: sql<number>`COUNT(DISTINCT pp.product_id)`.as(
+            productCount: sql<number>`COALESCE(${deps.performers}.release_count, 0)`.as(
               'product_count'
             ),
           })
           .from(deps.performers)
-          .leftJoin(
-            sql`product_performers pp`,
-            sql`${deps.performers['id']} = pp.performer_id`
-          )
           .where(ilike(deps.performers['name'] as never, `%${query}%`))
-          .groupBy(
-            deps.performers['id'],
-            deps.performers['name'],
-            deps.performers['profileImageUrl']
-          )
-          .orderBy(desc(sql`product_count`))
+          .orderBy(desc(sql`COALESCE(${deps.performers}.release_count, 0)`))
           .limit(limit) as Promise<{
             id: number;
             name: string;
@@ -150,26 +144,19 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
             productCount: number;
           }[]>,
 
-        // 3. タグ検索
+        // 3. タグ検索（JOINなしでシンプルに - カウントは省略）
         db
           .select({
             id: deps.tags.id,
             name: deps.tags.name,
             category: deps.tags.category,
-            productCount: sql<number>`COUNT(DISTINCT pt.product_id)`.as(
-              'product_count'
-            ),
           })
           .from(deps.tags)
-          .leftJoin(sql`product_tags pt`, sql`${deps.tags.id} = pt.tag_id`)
           .where(ilike(deps.tags.name as never, `%${query}%`))
-          .groupBy(deps.tags.id, deps.tags.name, deps.tags.category)
-          .orderBy(desc(sql`product_count`))
           .limit(limit) as Promise<{
             id: number;
             name: string;
             category: string | null;
-            productCount: number;
           }[]>,
 
         // 4. 商品タイトル検索（FTS使用）
@@ -225,7 +212,6 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
           type: 'tag',
           id: match.id,
           name: match.name,
-          count: Number(match.productCount || 0),
           category: match.category || 'タグ',
         });
       });

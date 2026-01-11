@@ -332,10 +332,11 @@ function ProductCardBase({
                 src={imgSrc}
                 alt={product['title']}
                 fill
-                sizes="(max-width: 768px) 33vw, 10vw"
+                sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 10vw"
                 className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isUncensored ? 'blur-[1px]' : ''}`}
-                loading={priority ? undefined : "lazy"}
+                loading={priority ? "eager" : "lazy"}
                 priority={priority}
+                fetchPriority={priority ? "high" : "low"}
                 onError={handleImageError}
               />
             ) : (
@@ -415,13 +416,14 @@ function ProductCardBase({
                 alt={product['title']}
                 fill
                 className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
-                sizes="(max-width: 768px) 33vw, 12.5vw"
-                loading={priority ? undefined : "lazy"}
+                sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 12.5vw"
+                loading={priority ? "eager" : "lazy"}
                 priority={priority}
+                fetchPriority={priority ? "high" : "low"}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
                 onError={handleImageError}
-                quality={75}
+                quality={70}
               />
               {product.salePrice && (
                 <div className="absolute top-1 left-1 flex gap-1 z-10">
@@ -607,13 +609,14 @@ function ProductCardBase({
             alt={generateAltText(product)}
             fill
             className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            loading={priority ? undefined : "lazy"}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            loading={priority ? "eager" : "lazy"}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
             onError={handleImageError}
             priority={priority}
-            quality={80}
+            fetchPriority={priority ? "high" : "low"}
+            quality={75}
           />
           {hasSampleVideo && (
             <button

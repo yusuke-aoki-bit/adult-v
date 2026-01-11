@@ -7,8 +7,8 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { getPopularTags } from '@/lib/db/queries';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// カテゴリ一覧は変更頻度が低いためISRで1時間キャッシュ
-export const revalidate = 3600;
+// Force dynamic rendering to avoid DYNAMIC_SERVER_USAGE errors with getTranslations
+export const dynamic = 'force-dynamic';
 
 // Tag type from getPopularTags
 interface Tag {
