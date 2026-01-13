@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ReactNode, useMemo, useCallback, memo } from 'react';
+import { useState, ReactNode, useMemo, useCallback, memo, useRef, useEffect } from 'react';
 import { usePerformerCompareList } from '../hooks/usePerformerCompareList';
 import { SelectableCard } from './SelectableCard';
 import { PerformerCompareFloatingBar } from './PerformerCompareFloatingBar';
@@ -18,6 +18,10 @@ interface PerformerListWithSelectionProps {
   theme?: 'dark' | 'light';
   children: (performer: Performer, index: number) => ReactNode;
   className?: string;
+  /** 初期表示アイテム数（デフォルト: 24） */
+  initialItems?: number;
+  /** 追加読み込みアイテム数（デフォルト: 24） */
+  loadMoreItems?: number;
 }
 
 // 個別の演者アイテムをメモ化するコンポーネント
@@ -70,16 +74,75 @@ const PerformerItem = memo(function PerformerItem({
   );
 });
 
+// プレースホルダーコンポーネント（スケルトン）
+const PerformerPlaceholder = memo(function PerformerPlaceholder() {
+  return (
+    <div className="animate-pulse">
+      <div className="bg-gray-700 rounded-lg aspect-2/3" />
+      <div className="mt-2 h-4 bg-gray-700 rounded w-3/4" />
+    </div>
+  );
+});
+
+// Intersection Observer フック
+function useIntersectionObserver(
+  callback: () => void,
+  options?: IntersectionObserverInit
+) {
+  const targetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const target = targetRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          callback();
+        }
+      },
+      { rootMargin: '200px', ...options }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [callback, options]);
+
+  return targetRef;
+}
+
 export function PerformerListWithSelection({
   performers,
   locale,
   theme = 'dark',
   children,
   className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4',
+  initialItems = 24,
+  loadMoreItems = 24,
 }: PerformerListWithSelectionProps) {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const { toggleItem, compareSet, count, maxItems, isFull } = usePerformerCompareList();
   const isDark = theme === 'dark';
+
+  // 遅延読み込み状態
+  const [visibleCount, setVisibleCount] = useState(initialItems);
+  const hasMore = visibleCount < performers.length;
+
+  // 追加読み込みコールバック
+  const loadMore = useCallback(() => {
+    if (hasMore) {
+      setVisibleCount(prev => Math.min(prev + loadMoreItems, performers.length));
+    }
+  }, [hasMore, loadMoreItems, performers.length]);
+
+  // Intersection Observer で自動読み込み
+  const loadMoreRef = useIntersectionObserver(loadMore);
+
+  // 表示するアイテム
+  const visiblePerformers = useMemo(
+    () => performers.slice(0, visibleCount),
+    [performers, visibleCount]
+  );
 
   // 翻訳オブジェクトをメモ化
   const t = useMemo(() => ({
@@ -143,7 +206,7 @@ export function PerformerListWithSelection({
 
       {/* 演者グリッド */}
       <div className={className}>
-        {performers.map((performer, index) => (
+        {visiblePerformers.map((performer, index) => (
           <PerformerItem
             key={performer['id']}
             performer={performer}
@@ -155,6 +218,19 @@ export function PerformerListWithSelection({
             renderChild={children}
           />
         ))}
+
+        {/* 遅延読み込みセンチネル */}
+        {hasMore && (
+          <div ref={loadMoreRef} className="col-span-full flex justify-center py-4">
+            <div className="flex items-center gap-2 text-gray-400">
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span className="text-sm">読み込み中...</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 比較フローティングバー（選択モード時のみ表示） */}

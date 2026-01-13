@@ -90,15 +90,24 @@ const nextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [32, 48, 64, 96, 128, 256, 384],
-    qualities: [75, 80, 85],
-    minimumCacheTTL: 14400, // 4 hours (Next.js 16 recommended)
+    // 小さい画像サイズを追加してサムネイル最適化
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 604800, // 1週間キャッシュ
   },
   compress: true,
-  // Next.js 16 experimental features
+  // パフォーマンス最適化
   experimental: {
     optimizePackageImports,
+    // Partial Prerendering（静的+動的のハイブリッド）
+    ppr: 'incremental',
+    // 未使用CSSの自動削除
+    optimizeCss: true,
+  },
+  // スクリプト最適化
+  compiler: {
+    // 本番ビルドでconsole.logを削除
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
   reactStrictMode: true,
   output: 'standalone',
