@@ -99,8 +99,6 @@ const nextConfig = {
   // パフォーマンス最適化
   experimental: {
     optimizePackageImports,
-    // Partial Prerendering（静的+動的のハイブリッド）
-    ppr: 'incremental',
     // 未使用CSSの自動削除
     optimizeCss: true,
   },
