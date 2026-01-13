@@ -97,6 +97,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
     if (!product) return {};
 
+    // FANZAサイトでは FANZA/DMM 以外の商品はメタデータを返さない
+    const allowedProviders = ['FANZA', 'DMM'];
+    if (product.provider && !allowedProviders.includes(product.provider)) {
+      return {};
+    }
+
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
     // SEO最適化されたメタディスクリプション生成（セール/評価情報を含む）
@@ -167,6 +173,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
   ]);
   const t = productDetailTranslations[locale as keyof typeof productDetailTranslations] || productDetailTranslations.ja;
   if (!product) notFound();
+
+  // FANZAサイトでは FANZA/DMM 以外の商品は404を返す
+  // DUGA, MGS, DTI等の商品URLにアクセスされた場合のエラー防止
+  const allowedProviders = ['FANZA', 'DMM'];
+  if (product.provider && !allowedProviders.includes(product.provider)) {
+    notFound();
+  }
 
   // 品番でアクセスした場合でもリダイレクトしない（SEO: Google検索で品番URLがインデックスされる）
   // canonical URLで正規URLを指定（重複コンテンツ対策）
