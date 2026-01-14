@@ -543,6 +543,8 @@ export function generateBaseMetadata(
       title: pageTitle,
       description: pageDescription,
       images: [pageImage],
+      site: '@AdultViewerLab',
+      creator: '@AdultViewerLab',
     },
     robots: {
       index: true,

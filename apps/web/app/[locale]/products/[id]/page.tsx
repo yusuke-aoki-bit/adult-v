@@ -659,13 +659,57 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       {genreTags.map((tag) => (
                         <Link
                           key={tag.id}
-                          href={localizedHref(`/products?tags=${tag.id}`, locale)}
+                          href={localizedHref(`/tags/${tag.id}`, locale)}
                           className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-full text-sm transition-colors"
                         >
                           {tag.name}
                         </Link>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* シリーズ・メーカー情報 */}
+                {(series || maker) && (
+                  <div className="bg-gray-700/50 rounded-lg p-4 space-y-3">
+                    {series && (
+                      <div>
+                        <h2 className="text-xs font-semibold text-gray-400 mb-1.5 flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                          </svg>
+                          シリーズ
+                        </h2>
+                        <Link
+                          href={localizedHref(`/series/${series.id}`, locale)}
+                          className="inline-flex items-center gap-1.5 text-rose-400 hover:text-rose-300 text-sm font-medium transition-colors"
+                        >
+                          {series.name}
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      </div>
+                    )}
+                    {maker && (
+                      <div>
+                        <h2 className="text-xs font-semibold text-gray-400 mb-1.5 flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          メーカー/レーベル
+                        </h2>
+                        <Link
+                          href={localizedHref(`/makers/${maker.id}`, locale)}
+                          className="inline-flex items-center gap-1.5 text-rose-400 hover:text-rose-300 text-sm font-medium transition-colors"
+                        >
+                          {maker.name}
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 )}
 
