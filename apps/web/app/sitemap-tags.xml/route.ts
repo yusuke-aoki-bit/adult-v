@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { tags, productTags } from '@/lib/db/schema';
-import { desc, sql, eq } from 'drizzle-orm';
+import { desc, sql, eq, inArray } from 'drizzle-orm';
 
 const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
@@ -33,18 +33,20 @@ export async function GET() {
   try {
     const db = getDb();
 
-    // ジャンルタグ（上位1000件）
-    const genreTags = await db
+    // 全てのジャンル系タグを取得（genre, situation, play, body, costume）
+    const genreCategories = ['genre', 'situation', 'play', 'body', 'costume'] as const;
+
+    const allGenreTags = await db
       .select({
         id: tags.id,
         category: tags.category,
       })
       .from(tags)
       .leftJoin(productTags, eq(tags.id, productTags.tagId))
-      .where(eq(tags.category, 'genre'))
+      .where(inArray(tags.category, [...genreCategories]))
       .groupBy(tags.id, tags.category)
       .orderBy(desc(sql`COUNT(DISTINCT ${productTags.productId})`))
-      .limit(1000);
+      .limit(2000);
 
     // メーカータグ（上位500件）
     const makerTags = await db
@@ -76,7 +78,7 @@ export async function GET() {
 
     // カテゴリ別にURLパスを生成
     const allUrls = [
-      ...genreTags.map(tag => ({ path: `/tags/${tag.id}`, priority: '0.6' })),
+      ...allGenreTags.map(tag => ({ path: `/tags/${tag.id}`, priority: '0.6' })),
       ...makerTags.map(tag => ({ path: `/makers/${tag.id}`, priority: '0.6' })),
       ...seriesTags.map(tag => ({ path: `/series/${tag.id}`, priority: '0.6' })),
     ];
