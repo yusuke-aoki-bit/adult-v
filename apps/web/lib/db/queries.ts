@@ -497,7 +497,44 @@ export async function getProductsByActress(actressId: string, locale: string = '
  */
 export type { ActressSortOption };
 export type GetActressesOptions = SharedGetActressesOptions;
+
+/**
+ * トップページ用キャッシュ付き女優一覧取得
+ * フィルターなし・デフォルトソートの場合のみキャッシュを使用
+ */
+function getCachedTopActresses(limit: number, offset: number, locale: string) {
+  const cached = unstable_cache(
+    () => getActressesShared<ActressType>({ limit, offset, sortBy: 'recent', locale }),
+    [`actresses-top-${offset}-${limit}-${locale}`],
+    { revalidate: 60, tags: ['actresses-list'] }
+  );
+  return cached();
+}
+
 export async function getActresses(options?: GetActressesOptions): Promise<ActressType[]> {
+  // トップページ（フィルターなし、ソート=recent）の場合のみキャッシュを使用
+  const hasFilters = options && (
+    options.query ||
+    options.includeTags?.length ||
+    options.excludeTags?.length ||
+    options.includeAsps?.length ||
+    options.excludeAsps?.length ||
+    options.hasVideo ||
+    options.hasImage ||
+    options.hasReview ||
+    options.excludeInitials ||
+    options.cupSizes?.length ||
+    options.heightMin ||
+    options.heightMax ||
+    options.bloodTypes?.length
+  );
+  const sortBy = options?.sortBy || 'recent';
+  const isDefaultSort = sortBy === 'recent';
+
+  if (!hasFilters && isDefaultSort && options?.limit && options?.offset !== undefined) {
+    return getCachedTopActresses(options.limit, options.offset, options.locale || 'ja');
+  }
+
   return getActressesShared<ActressType>(options);
 }
 
@@ -629,7 +666,38 @@ export async function getTagsForActress(actressId: string, category?: string): P
  * 共通ファクトリーを使用
  */
 export type GetActressesCountOptions = SharedGetActressesCountOptions;
+
+/**
+ * トップページ用キャッシュ付き女優カウント
+ */
+const getCachedActressesCount = unstable_cache(
+  () => getActressesCountShared(),
+  ['actresses-count-top'],
+  { revalidate: 60, tags: ['actresses-count'] }
+);
+
 export async function getActressesCount(options?: GetActressesCountOptions): Promise<number> {
+  // フィルターなしの場合はキャッシュを使用
+  const hasFilters = options && (
+    options.query ||
+    options.includeTags?.length ||
+    options.excludeTags?.length ||
+    options.includeAsps?.length ||
+    options.excludeAsps?.length ||
+    options.hasVideo ||
+    options.hasImage ||
+    options.hasReview ||
+    options.excludeInitials ||
+    options.cupSizes?.length ||
+    options.heightMin ||
+    options.heightMax ||
+    options.bloodTypes?.length
+  );
+
+  if (!hasFilters) {
+    return getCachedActressesCount();
+  }
+
   return getActressesCountShared(options);
 }
 
@@ -1143,7 +1211,17 @@ export async function getUncategorizedProducts(options?: UncategorizedProductsOp
  * 出演者なし作品（未整理作品）の数を取得
  * 注: Adult-VサイトではFANZA専用商品を除外（規約によりadult-vサイトでは表示禁止）
  */
+const getCachedUncategorizedCount = unstable_cache(
+  () => getUncategorizedProductsCountShared(),
+  ['uncategorized-count'],
+  { revalidate: 300, tags: ['uncategorized-count'] }
+);
+
 export async function getUncategorizedProductsCount(options?: UncategorizedProductsCountOptions): Promise<number> {
+  // オプションなしの場合はキャッシュを使用
+  if (!options || Object.keys(options).length === 0) {
+    return getCachedUncategorizedCount();
+  }
   return getUncategorizedProductsCountShared(options);
 }
 
@@ -1368,7 +1446,20 @@ export async function getCandidatePerformers(productCode: string): Promise<Array
 }
 
 // getSaleProducts は @adult-v/shared の createSaleQueries から取得 (getSaleProductsShared)
-export const getSaleProducts = getSaleProductsShared;
+// トップページ用にunstable_cacheでラップ
+const getCachedSaleProducts = unstable_cache(
+  (limit: number) => getSaleProductsShared({ limit }),
+  ['sale-products-top'],
+  { revalidate: 60, tags: ['sale-products'] }
+);
+
+export async function getSaleProducts(options?: { limit?: number; aspName?: string; minDiscount?: number }): Promise<SaleProduct[]> {
+  // シンプルなlimitのみのリクエストはキャッシュを使用
+  if (!options?.aspName && !options?.minDiscount) {
+    return getCachedSaleProducts(options?.limit || 20);
+  }
+  return getSaleProductsShared(options);
+}
 
 /**
  * セール情報の統計を取得（共有版）
