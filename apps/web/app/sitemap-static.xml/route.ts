@@ -28,8 +28,7 @@ export async function GET() {
   const staticPages = [
     { path: '/', priority: '1.0', changefreq: 'daily' },
     { path: '/products', priority: '0.9', changefreq: 'daily' },
-    // TODO: /actressesページのルーティング問題を修正後に追加
-    // { path: '/actresses', priority: '0.8', changefreq: 'daily' },
+    { path: '/actresses', priority: '0.8', changefreq: 'daily' },
     { path: '/categories', priority: '0.8', changefreq: 'weekly' },
     { path: '/tags', priority: '0.8', changefreq: 'weekly' },
     { path: '/series', priority: '0.7', changefreq: 'weekly' },
