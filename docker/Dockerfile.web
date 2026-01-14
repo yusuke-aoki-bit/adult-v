@@ -3,17 +3,31 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+# Copy package files for monorepo
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/database/package.json ./packages/database/
 
 # Install dependencies
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
-# Copy source code
-COPY . .
+# Copy source files
+COPY tsconfig.json ./
+COPY apps/web/ ./apps/web/
+COPY packages/shared/ ./packages/shared/
+COPY packages/database/ ./packages/database/
+
+# Build environment variables
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV SITE_MODE=adult-v
+ENV NEXT_PUBLIC_SITE_MODE=adult-v
 
 # Build the application
-RUN npm run build
+RUN pnpm --filter @adult-v/web build
 
 # Production stage
 FROM node:20-alpine AS runner
@@ -23,14 +37,21 @@ WORKDIR /app
 # Set production environment
 ENV NODE_ENV=production
 ENV PORT=8080
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
 # Copy necessary files from builder
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/apps/web/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+
+USER nextjs
 
 # Expose port
 EXPOSE 8080
 
 # Start the application
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]
