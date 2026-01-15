@@ -383,18 +383,27 @@ function ProductCardBase({
             </div>
           </div>
         </Link>
-        {/* 外部リンクCTA（ホバー時のみ表示） */}
+        {/* 購入CTA（miniモード）- 常時表示でクリック率向上 */}
         {showMiniCta && (
           <a
             href={miniAffiliateUrl}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            onClick={(e) => e.stopPropagation()}
-            className={`absolute bottom-0 left-0 right-0 py-1.5 text-center text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
-              product.salePrice ? 'bg-linear-to-r from-orange-500 to-red-500' : 'bg-linear-to-r from-pink-500 to-rose-500'
+            onClick={(e) => {
+              e.stopPropagation();
+              resolvedTrackCtaClick('ctaButtonText', product['id'], {
+                is_sale: !!product.salePrice,
+                provider: product.provider || '',
+                card_size: 'mini',
+              });
+            }}
+            className={`absolute bottom-0 left-0 right-0 py-1 text-center text-[9px] font-bold text-white transition-all duration-200 hover:py-1.5 ${
+              product.salePrice
+                ? 'bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400'
+                : 'bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400'
             }`}
           >
-            {product.providerLabel}で見る
+            {product.salePrice ? 'SALE ' : ''}{product.providerLabel} →
           </a>
         )}
       </div>
@@ -513,22 +522,29 @@ function ProductCardBase({
             </div>
           )}
 
-          {/* ホバー時CTA（compactモード） */}
+          {/* 購入CTA（compactモード）- 常時表示でクリック率向上 */}
           {showCompactCta && (
             <a
               href={compactAffiliateUrl}
               target="_blank"
               rel="noopener noreferrer sponsored"
-              onClick={(e) => e.stopPropagation()}
-              className={`absolute bottom-0 left-0 right-0 py-1.5 text-center text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 ${
+              onClick={(e) => {
+                e.stopPropagation();
+                resolvedTrackCtaClick('ctaButtonText', product['id'], {
+                  is_sale: !!product.salePrice,
+                  provider: product.provider || '',
+                  card_size: 'compact',
+                });
+              }}
+              className={`absolute bottom-0 left-0 right-0 py-1.5 text-center text-[10px] font-bold text-white transition-all duration-200 z-30 hover:py-2 ${
                 product.salePrice
-                  ? 'bg-linear-to-r from-orange-500 to-red-500'
+                  ? 'bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400'
                   : theme === 'dark'
-                    ? 'bg-linear-to-r from-rose-500 to-pink-500'
-                    : 'bg-linear-to-r from-pink-500 to-rose-500'
+                    ? 'bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400'
+                    : 'bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400'
               }`}
             >
-              {product.providerLabel}で{product.salePrice ? 'お得に' : ''}見る
+              {product.salePrice ? `${product['discount'] || ''}%OFF ` : ''}{product.providerLabel}で見る →
             </a>
           )}
         </div>

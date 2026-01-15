@@ -115,9 +115,10 @@ export function StickyCtaBase({
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      const scrollThreshold = 300;
+      // クリック率向上のため早期表示（100px）
+      const scrollThreshold = 100;
 
-      // デスクトップ用：300px以上スクロールしたら表示
+      // デスクトップ用：100px以上スクロールしたら表示
       const shouldShowDesktop = currentScrollY > scrollThreshold;
       setIsVisible(shouldShowDesktop);
 

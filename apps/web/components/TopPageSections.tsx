@@ -526,6 +526,15 @@ export function TopPageUpperSections({
             defaultOpen={false}
           >
             <SaleProductsContent products={saleProducts} />
+            {/* セール一覧ページへのリンク */}
+            <a
+              href={localizedHref('/sales', locale)}
+              className="mt-4 flex items-center justify-center gap-2 w-full py-3 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-bold rounded-lg transition-all"
+            >
+              <span className="text-lg">🔥</span>
+              セール中の全商品を見る ({saleProducts.length}件+)
+              <ExternalLink className="w-4 h-4" />
+            </a>
           </TopPageMenuSection>
         </div>
       )}

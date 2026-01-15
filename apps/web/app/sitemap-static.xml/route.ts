@@ -28,6 +28,7 @@ export async function GET() {
   const staticPages = [
     { path: '/', priority: '1.0', changefreq: 'daily' },
     { path: '/products', priority: '0.9', changefreq: 'daily' },
+    { path: '/sales', priority: '0.9', changefreq: 'hourly' }, // セール情報は頻繁に更新
     { path: '/actresses', priority: '0.8', changefreq: 'daily' },
     { path: '/categories', priority: '0.8', changefreq: 'weekly' },
     { path: '/tags', priority: '0.8', changefreq: 'weekly' },

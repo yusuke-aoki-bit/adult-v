@@ -476,6 +476,15 @@ export const HeaderBase = memo(function HeaderBase({
               >
                 {t.rookies}
               </Link>
+              <div className="border-t theme-border my-1" />
+              <Link
+                href={localizedHref('/sales', locale)}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-orange-400 hover:bg-orange-500/20"
+                onClick={handleDropdownClose}
+              >
+                <span className="text-lg">🔥</span>
+                {locale === 'ja' ? 'セール' : 'Sales'}
+              </Link>
             </DropdownMenu>
 
             {/* ツールメニュー */}
@@ -663,6 +672,15 @@ export const HeaderBase = memo(function HeaderBase({
                   role="listitem"
                 >
                   <span className="ml-6">{t.rookies}</span>
+                </Link>
+                <Link
+                  href={localizedHref('/sales', locale)}
+                  className="py-2.5 min-h-[44px] flex items-center text-orange-400 font-bold transition-colors text-sm col-span-2"
+                  onClick={handleMobileMenuClose}
+                  role="listitem"
+                >
+                  <span className="text-lg mr-2">🔥</span>
+                  {locale === 'ja' ? 'セール中の作品' : 'On Sale'}
                 </Link>
               </div>
             </div>

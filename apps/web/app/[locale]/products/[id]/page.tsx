@@ -588,12 +588,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         </p>
                       )}
                     </div>
-                    {/* ファーストビューCTA - 目立つ購入ボタン */}
-                    {product.affiliateUrl && product.provider !== 'fanza' && (
+                    {/* ファーストビューCTA - 目立つ購入ボタン（全ASP対応） */}
+                    {product.affiliateUrl && (
                       <a
                         href={product.affiliateUrl}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel="noopener noreferrer sponsored"
                         className="flex items-center justify-center gap-2 w-full mt-4 py-3 bg-linear-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-bold text-lg rounded-lg shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 transition-all transform hover:scale-[1.02]"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -10,6 +10,7 @@ import {
   PerformerTopProducts,
   PerformerOnSaleProducts,
   SectionVisibility,
+  SocialShareButtons,
 } from '@adult-v/shared/components';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -379,6 +380,14 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   />
                 </div>
                 <p className="text-sm sm:text-base theme-text-secondary">{t('totalProducts', { count: total })}</p>
+                {/* SNSシェアボタン */}
+                <div className="mt-2">
+                  <SocialShareButtons
+                    title={`${actress.name} - ${t('totalProducts', { count: total })}`}
+                    compact
+                    hashtags={['AV女優', actress.name.replace(/\s/g, '')]}
+                  />
+                </div>
                 {nonPrimaryAliases.length > 0 && (
                   <p className="mt-1 text-xs sm:text-sm theme-text-muted truncate">
                     {t('aliases')}: {nonPrimaryAliases.map(a => a.aliasName).join(', ')}
