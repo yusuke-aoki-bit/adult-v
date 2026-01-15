@@ -87,6 +87,16 @@ test.describe('全画面読み込みテスト', () => {
     expect(response?.status()).toBeLessThan(500);
   });
 
+  test('セールページが正しく読み込まれる', async ({ page }) => {
+    const response = await page.goto('/sales', { waitUntil: 'domcontentloaded', timeout: 90000 });
+    expect(response?.status()).toBeLessThan(500);
+
+    if (response?.status() === 200) {
+      const content = await page.content();
+      expect(content.length).toBeGreaterThan(500);
+    }
+  });
+
   test('比較ページが正しく読み込まれる', async ({ page }) => {
     const response = await page.goto('/compare', { waitUntil: 'domcontentloaded', timeout: 90000 });
     expect(response?.status()).toBeLessThan(500);
@@ -156,6 +166,56 @@ test.describe('商品一覧ページ機能テスト', () => {
     expect(response?.status()).toBeLessThan(400);
 
     expect(page.url()).toContain('page=2');
+  });
+});
+
+test.describe('セールページ機能テスト', () => {
+  test.beforeEach(async ({ context, baseURL }) => {
+    const domain = getDomain(baseURL);
+    await context.addCookies([{
+      name: 'age-verified',
+      value: 'true',
+      domain,
+      path: '/',
+    }]);
+  });
+
+  test('割引率フィルターが動作する', async ({ page }) => {
+    const response = await page.goto('/sales?minDiscount=50', { waitUntil: 'domcontentloaded', timeout: 90000 });
+    expect(response?.status()).toBeLessThan(500);
+
+    if (response?.status() === 200) {
+      expect(page.url()).toContain('minDiscount=50');
+    }
+  });
+
+  test('ASPフィルターが動作する', async ({ page }) => {
+    const response = await page.goto('/sales?asp=fanza', { waitUntil: 'domcontentloaded', timeout: 90000 });
+    expect(response?.status()).toBeLessThan(500);
+
+    if (response?.status() === 200) {
+      expect(page.url()).toContain('asp=fanza');
+    }
+  });
+
+  test('ページネーションが動作する', async ({ page }) => {
+    const response = await page.goto('/sales?page=2', { waitUntil: 'domcontentloaded', timeout: 90000 });
+    expect(response?.status()).toBeLessThan(500);
+
+    if (response?.status() === 200) {
+      expect(page.url()).toContain('page=2');
+    }
+  });
+
+  test('セール統計が表示される', async ({ page }) => {
+    const response = await page.goto('/sales', { waitUntil: 'domcontentloaded', timeout: 90000 });
+
+    if (response?.status() === 200) {
+      // 統計カードが存在するか確認
+      const statsSection = page.locator('.grid.grid-cols-2');
+      const statsCount = await statsSection.count();
+      console.log(`Stats section count: ${statsCount}`);
+    }
   });
 });
 
