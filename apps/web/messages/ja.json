@@ -111,7 +111,10 @@
     "metaDescription": "DUGA、MGS、DTI系サイトなど、全ての配信サイトの作品を横断検索できます。",
     "description": "{count}件の作品を掲載中",
     "noProducts": "作品が見つかりませんでした",
-    "viewActressListDesc": "女優から作品を探す"
+    "viewActressListDesc": "女優から作品を探す",
+    "loading": "読み込み中...",
+    "loadMore": "さらに{count}件を表示",
+    "allLoaded": "すべて表示しました（{count}件）"
   },
   "relatedProducts": {
     "title": "関連作品",

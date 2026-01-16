@@ -111,7 +111,10 @@
     "metaDescription": "Search across all distribution sites including DUGA, MGS, DTI and more.",
     "description": "{count} videos available",
     "noProducts": "No videos found",
-    "viewActressListDesc": "Browse videos by actress"
+    "viewActressListDesc": "Browse videos by actress",
+    "loading": "Loading...",
+    "loadMore": "Load {count} more",
+    "allLoaded": "All loaded ({count} items)"
   },
   "relatedProducts": {
     "title": "Related Videos",

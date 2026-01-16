@@ -251,13 +251,13 @@ function RecommendationsContent({ locale }: { locale: string }) {
   }, [hasFetched, recentlyViewed.length, locale]);
 
   useEffect(() => {
-    if (!historyLoading && recentlyViewed.length >= 3) {
+    if (!historyLoading && recentlyViewed.length >= 1) {
       fetchRecommendations();
     }
   }, [historyLoading, recentlyViewed.length, fetchRecommendations]);
 
-  if (historyLoading || recentlyViewed.length < 3) {
-    return <p className="text-gray-500 text-sm">閲覧履歴が3件以上必要です</p>;
+  if (historyLoading || recentlyViewed.length < 1) {
+    return <p className="text-gray-500 text-sm">閲覧履歴に基づいたおすすめを表示します</p>;
   }
 
   if (loading) {

@@ -251,13 +251,13 @@ function RecommendationsContent({ locale }: { locale: string }) {
   }, [hasFetched, recentlyViewed.length, locale]);
 
   useEffect(() => {
-    if (!historyLoading && recentlyViewed.length >= 3) {
+    if (!historyLoading && recentlyViewed.length >= 1) {
       fetchRecommendations();
     }
   }, [historyLoading, recentlyViewed.length, fetchRecommendations]);
 
-  if (historyLoading || recentlyViewed.length < 3) {
-    return <p className="text-gray-400 text-sm">閲覧履歴が3件以上必要です</p>;
+  if (historyLoading || recentlyViewed.length < 1) {
+    return <p className="text-gray-400 text-sm">閲覧履歴に基づいたおすすめを表示します</p>;
   }
 
   if (loading) {
@@ -583,7 +583,7 @@ export function TopPageLowerSections({
 
   return (
     <div className="space-y-3">
-      {/* あなたへのおすすめ */}
+      {/* あなたへのおすすめ - エンゲージメント向上のためデフォルトOPEN */}
       {isSectionVisible('recommendations') && (
         <div id="recommendations" className="scroll-mt-20">
           <TopPageMenuSection
@@ -592,7 +592,7 @@ export function TopPageLowerSections({
             title="あなたへのおすすめ"
             subtitle="閲覧履歴に基づくレコメンド"
             theme="dark"
-            defaultOpen={false}
+            defaultOpen={true}
           >
             <RecommendationsContent locale={locale} />
           </TopPageMenuSection>

@@ -10,6 +10,7 @@ import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { Users, TrendingUp, Star, Film, Search } from 'lucide-react';
 import Pagination from '@/components/Pagination';
+import LoadMoreActresses from '@/components/LoadMoreActresses';
 import { unstable_cache } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
@@ -116,6 +117,9 @@ const translations = {
     works: '作品',
     debut: 'デビュー',
     noResults: '該当する女優が見つかりませんでした',
+    loading: '読み込み中...',
+    loadMore: 'さらに{count}名を表示',
+    allLoaded: 'すべて表示しました（{count}名）',
   },
   en: {
     title: 'Actresses',
@@ -127,6 +131,9 @@ const translations = {
     works: 'works',
     debut: 'Debut',
     noResults: 'No actresses found',
+    loading: 'Loading...',
+    loadMore: 'Load {count} more',
+    allLoaded: 'All loaded ({count} actresses)',
   },
 };
 
@@ -215,63 +222,81 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
 
         {/* Performers Grid */}
         {performers.length > 0 ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
-            {performers.map((performer) => (
-              <Link
-                key={performer.id}
-                href={localizedHref(`/actress/${performer.id}`, locale)}
-                className="group"
-              >
-                <div className="aspect-[3/4] relative rounded-lg overflow-hidden bg-gray-800 mb-2">
-                  {performer.imageUrl ? (
-                    <Image
-                      src={performer.imageUrl}
-                      alt={performer.name}
-                      fill
-                      sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 12vw"
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Users className="w-8 h-8 text-gray-600" />
+          page === 1 ? (
+            /* 1ページ目: 無限スクロール（エンゲージメント向上） */
+            <LoadMoreActresses
+              initialPerformers={performers}
+              totalCount={total}
+              perPage={ITEMS_PER_PAGE}
+              locale={locale}
+              sort={sort}
+              query={q}
+              translations={{
+                loading: t.loading,
+                loadMore: t.loadMore,
+                allLoaded: t.allLoaded,
+              }}
+            />
+          ) : (
+            /* 2ページ目以降: 従来のページネーション（SEO対策） */
+            <>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
+                {performers.map((performer) => (
+                  <Link
+                    key={performer.id}
+                    href={localizedHref(`/actress/${performer.id}`, locale)}
+                    className="group"
+                  >
+                    <div className="aspect-[3/4] relative rounded-lg overflow-hidden bg-gray-800 mb-2">
+                      {performer.imageUrl ? (
+                        <Image
+                          src={performer.imageUrl}
+                          alt={performer.name}
+                          fill
+                          sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 12vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Users className="w-8 h-8 text-gray-600" />
+                        </div>
+                      )}
                     </div>
-                  )}
+                    <h2 className="text-sm font-medium theme-text truncate group-hover:text-pink-400 transition-colors">
+                      {performer.name}
+                    </h2>
+                    <div className="flex items-center gap-2 text-xs theme-text-muted">
+                      <span className="flex items-center gap-1">
+                        <Film className="w-3 h-3" />
+                        {performer.productCount}
+                      </span>
+                      {performer.debutYear && (
+                        <span>{performer.debutYear}</span>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <div className="mt-8">
+                  <Pagination
+                    total={total}
+                    page={page}
+                    perPage={ITEMS_PER_PAGE}
+                    basePath={localizedHref('/actresses', locale)}
+                    queryParams={{
+                      ...(sort !== 'popular' && { sort }),
+                      ...(q && { q }),
+                    }}
+                  />
                 </div>
-                <h2 className="text-sm font-medium theme-text truncate group-hover:text-pink-400 transition-colors">
-                  {performer.name}
-                </h2>
-                <div className="flex items-center gap-2 text-xs theme-text-muted">
-                  <span className="flex items-center gap-1">
-                    <Film className="w-3 h-3" />
-                    {performer.productCount}
-                  </span>
-                  {performer.debutYear && (
-                    <span>{performer.debutYear}</span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
+              )}
+            </>
+          )
         ) : (
           <div className="text-center py-12">
             <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <p className="theme-text-muted">{t.noResults}</p>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-8">
-            <Pagination
-              total={total}
-              page={page}
-              perPage={ITEMS_PER_PAGE}
-              basePath={localizedHref('/actresses', locale)}
-              queryParams={{
-                ...(sort !== 'popular' && { sort }),
-                ...(q && { q }),
-              }}
-            />
           </div>
         )}
       </div>

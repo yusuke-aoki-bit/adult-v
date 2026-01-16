@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import Pagination from '@/components/Pagination';
 import ProductGridWithComparison from '@/components/ProductGridWithComparison';
+import LoadMoreProducts from '@/components/LoadMoreProducts';
 import ProductListFilter from '@/components/ProductListFilter';
 import ProductSortDropdown from '@/components/ProductSortDropdown';
 import PerPageDropdown from '@/components/PerPageDropdown';
@@ -299,9 +300,19 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
             <div className="text-center py-16">
               <p className="text-gray-400 text-lg">{t('noProducts')}</p>
             </div>
+          ) : page === 1 ? (
+            /* 1ページ目: 無限スクロール（エンゲージメント向上） */
+            <LoadMoreProducts
+              initialProducts={products}
+              totalCount={totalCount}
+              perPage={perPage}
+              locale={locale}
+              filterParams={queryParams}
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+            />
           ) : (
+            /* 2ページ目以降: 従来のページネーション（SEO対策） */
             <>
-              {/* ページネーション（上部） */}
               <Pagination
                 total={totalCount}
                 page={page}
@@ -317,7 +328,6 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
                 className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
               />
 
-              {/* ページネーション（下部） */}
               <Pagination
                 total={totalCount}
                 page={page}
