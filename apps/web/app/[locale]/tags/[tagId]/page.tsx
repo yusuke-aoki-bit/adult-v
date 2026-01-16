@@ -5,7 +5,8 @@ import { getTranslations } from 'next-intl/server';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import ProductCard from '@/components/ProductCard';
-import { Pagination, SocialShareButtons } from '@adult-v/shared/components';
+import { SocialShareButtons } from '@adult-v/shared/components';
+import Pagination from '@/components/Pagination';
 import { getTagById, getProducts, getProductsCount, getPopularTags } from '@/lib/db/queries';
 import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateItemListSchema, generateFAQSchema } from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
@@ -17,8 +18,9 @@ interface PageProps {
   searchParams: Promise<{ page?: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { tagId, locale } = await params;
+  const resolvedSearchParams = await searchParams;
   const tagIdNum = parseInt(tagId, 10);
 
   if (isNaN(tagIdNum)) {
@@ -31,13 +33,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const tagName = locale === 'en' && tag.nameEn ? tag.nameEn :
-                  locale === 'zh' && tag.nameZh ? tag.nameZh :
-                  locale === 'ko' && tag.nameKo ? tag.nameKo :
-                  tag.name;
+    locale === 'zh' && tag.nameZh ? tag.nameZh :
+      locale === 'ko' && tag.nameKo ? tag.nameKo :
+        tag.name;
 
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
   const title = `${tagName}の動画一覧 | Adult Viewer Lab`;
   const description = `${tagName}ジャンルの人気作品を厳選。高評価・セール中の作品も多数掲載。${tagName}好きにおすすめの動画を探すならAdult Viewer Lab。`;
+
+  // ページネーションがある場合はnoindex（重複ページ対策）
+  const hasPageParam = resolvedSearchParams.page && resolvedSearchParams.page !== '1';
+  if (hasPageParam) {
+    return {
+      title,
+      description,
+      robots: { index: false, follow: true },
+      alternates: {
+        canonical: `${baseUrl}/tags/${tagId}`,
+      },
+    };
+  }
 
   const metadata = generateBaseMetadata(
     title,
@@ -83,9 +98,9 @@ export default async function TagPage({ params, searchParams }: PageProps) {
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
   const tagName = locale === 'en' && tag.nameEn ? tag.nameEn :
-                  locale === 'zh' && tag.nameZh ? tag.nameZh :
-                  locale === 'ko' && tag.nameKo ? tag.nameKo :
-                  tag.name;
+    locale === 'zh' && tag.nameZh ? tag.nameZh :
+      locale === 'ko' && tag.nameKo ? tag.nameKo :
+        tag.name;
 
   const page = parseInt(resolvedSearchParams.page || '1', 10);
   const perPage = 24;
@@ -94,14 +109,13 @@ export default async function TagPage({ params, searchParams }: PageProps) {
   // 商品を取得
   const [products, totalCount] = await Promise.all([
     getProducts({
-      tags: [tagIdNum],
+      tags: [String(tagIdNum)],
       limit: perPage,
       offset,
-      sortBy: 'releaseDate',
-      sortOrder: 'desc',
+      sortBy: 'releaseDateDesc',
       locale,
     }),
-    getProductsCount({ tags: [tagIdNum] }),
+    getProductsCount({ tags: [String(tagIdNum)] }),
   ]);
 
   const totalPages = Math.ceil(totalCount / perPage);
@@ -136,7 +150,7 @@ export default async function TagPage({ params, searchParams }: PageProps) {
   const itemListData = products.slice(0, 10).map((product) => ({
     name: product.title,
     url: localizedHref(`/products/${product.normalizedProductId || product.id}`, locale),
-    image: product.thumbnailUrl,
+    image: product.imageUrl,
   }));
 
   return (
@@ -226,7 +240,6 @@ export default async function TagPage({ params, searchParams }: PageProps) {
                   <ProductCard
                     key={product.id}
                     product={product}
-                    locale={locale}
                     priority={index < 6}
                   />
                 ))}
@@ -235,8 +248,9 @@ export default async function TagPage({ params, searchParams }: PageProps) {
               {totalPages > 1 && (
                 <div className="mt-8">
                   <Pagination
-                    currentPage={page}
-                    totalPages={totalPages}
+                    total={totalCount}
+                    page={page}
+                    perPage={perPage}
                     basePath={localizedHref(`/tags/${tagId}`, locale)}
                   />
                 </div>

@@ -15,10 +15,23 @@ interface PageProps {
   searchParams: Promise<{ category?: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { locale } = await params;
+  const resolvedSearchParams = await searchParams;
   const t = await getTranslations('categories');
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+
+  // カテゴリフィルターがある場合はnoindex（重複ページ対策）
+  if (resolvedSearchParams.category) {
+    return {
+      title: t('metaTitle'),
+      description: t('metaDescription'),
+      robots: { index: false, follow: true },
+      alternates: {
+        canonical: `${baseUrl}/categories`,
+      },
+    };
+  }
 
   const metadata = generateBaseMetadata(
     t('metaTitle'),

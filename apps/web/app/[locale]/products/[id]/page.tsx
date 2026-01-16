@@ -594,13 +594,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         href={product.affiliateUrl}
                         target="_blank"
                         rel="noopener noreferrer sponsored"
-                        className="flex items-center justify-center gap-2 w-full mt-4 py-3 bg-linear-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-bold text-lg rounded-lg shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 transition-all transform hover:scale-[1.02]"
+                        className={`flex items-center justify-center gap-2 w-full mt-4 py-4 text-white font-bold text-lg rounded-xl shadow-lg transition-all transform hover:scale-[1.02] ${
+                          product.salePrice
+                            ? 'bg-linear-to-r from-red-600 via-orange-500 to-red-600 hover:from-red-500 hover:via-orange-400 hover:to-red-500 shadow-red-500/30 hover:shadow-red-500/50 animate-pulse'
+                            : 'bg-linear-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 shadow-rose-500/25 hover:shadow-rose-500/40'
+                        }`}
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                        {product.providerLabel}で購入
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {product.salePrice ? `🔥 今すぐ${product.providerLabel}で購入` : `${product.providerLabel}で購入`}
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                       </a>
@@ -746,6 +750,35 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <PriceComparisonServer sources={sourcesWithSales} locale={locale} />
               </div>
             </SectionVisibility>
+          )}
+
+          {/* セール中の大型CTA（ページ中間） */}
+          {product.salePrice && product.affiliateUrl && (
+            <div className="mt-8 p-6 bg-gradient-to-r from-red-900/50 via-orange-900/30 to-red-900/50 rounded-xl border border-red-500/30">
+              <div className="text-center mb-4">
+                <span className="text-3xl">🔥</span>
+                <h3 className="text-xl font-bold text-white mt-2">
+                  今なら{product.discount}%OFF！
+                </h3>
+                <p className="text-red-300 text-sm mt-1">
+                  セール価格: ¥{product.salePrice.toLocaleString()}（通常¥{product.price?.toLocaleString()}）
+                </p>
+              </div>
+              <a
+                href={product.affiliateUrl}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                className="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 hover:from-red-500 hover:via-orange-400 hover:to-red-500 text-white font-bold text-xl rounded-xl shadow-lg shadow-red-600/30 transition-all transform hover:scale-[1.02] animate-pulse"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                今すぐ{product.providerLabel}でお得に購入
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
           )}
 
           {/* コスパ分析セクション */}
