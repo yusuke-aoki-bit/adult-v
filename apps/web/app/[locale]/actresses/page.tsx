@@ -6,6 +6,7 @@ import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { generateActressAltText } from '@adult-v/shared/lib/seo-utils';
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { Users, TrendingUp, Star, Film, Search } from 'lucide-react';
@@ -251,7 +252,7 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
                       {performer.imageUrl ? (
                         <Image
                           src={performer.imageUrl}
-                          alt={performer.name}
+                          alt={generateActressAltText({ name: performer.name, productCount: performer.productCount })}
                           fill
                           sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 12vw"
                           className="object-cover group-hover:scale-105 transition-transform duration-300"

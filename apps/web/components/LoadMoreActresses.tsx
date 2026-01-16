@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Users, Film } from 'lucide-react';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { generateActressAltText } from '@adult-v/shared/lib/seo-utils';
 
 interface PerformerItem {
   id: number;
@@ -117,7 +118,7 @@ export default function LoadMoreActresses({
               {performer.imageUrl ? (
                 <Image
                   src={performer.imageUrl}
-                  alt={performer.name}
+                  alt={generateActressAltText({ name: performer.name, productCount: performer.productCount })}
                   fill
                   sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 12vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-300"

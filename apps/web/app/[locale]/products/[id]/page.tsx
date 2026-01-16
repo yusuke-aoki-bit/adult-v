@@ -805,6 +805,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   rating={product.rating}
                   ratingCount={product.reviewCount}
                   locale={locale}
+                  updatedAt={product.aiReviewUpdatedAt}
                 />
               </div>
             </SectionVisibility>

@@ -228,6 +228,9 @@ function ProductCardBase({
     return images;
   }, [product.imageUrl, product.sampleImages, hasValidImageUrl]);
 
+  // SEO最適化されたalt属性を生成
+  const altText = useMemo(() => generateAltText(product), [product]);
+
   const isActressPage = pathname.includes('/actress/');
 
   const getTagFilterUrl = useCallback((tag: string) => {
@@ -330,7 +333,7 @@ function ProductCardBase({
             {hasValidImageUrl ? (
               <Image
                 src={imgSrc}
-                alt={product['title']}
+                alt={altText}
                 fill
                 sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 10vw"
                 className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isUncensored ? 'blur-[1px]' : ''}`}
@@ -422,7 +425,7 @@ function ProductCardBase({
             <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
               <Image
                 src={imgSrc}
-                alt={product['title']}
+                alt={altText}
                 fill
                 className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
                 sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 12.5vw"
@@ -622,7 +625,7 @@ function ProductCardBase({
           />
           <Image
             src={imgSrc}
-            alt={generateAltText(product)}
+            alt={altText}
             fill
             className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -1009,7 +1012,7 @@ function ProductCardBase({
           initialIndex={modalImageIndex}
           isOpen={showModal}
           onClose={handleCloseModal}
-          alt={generateAltText(product)}
+          alt={altText}
           detailsUrl={`/${locale}/products/${product['id']}`}
         />
       )}
