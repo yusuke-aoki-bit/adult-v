@@ -295,7 +295,20 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
   );
 }
 
-// セール商品カードコンポーネント
+// 緊急度を計算
+function getUrgencyLevel(endAt: Date | null): 'critical' | 'urgent' | 'normal' | null {
+  if (!endAt) return null;
+  const now = new Date();
+  const end = new Date(endAt);
+  const diffMs = end.getTime() - now.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (diffHours <= 1) return 'critical'; // 1時間以内
+  if (diffHours <= 6) return 'urgent';   // 6時間以内
+  return 'normal';
+}
+
+// セール商品カードコンポーネント（CTA大型化版）
 function SaleProductCard({
   product,
   locale,
@@ -305,21 +318,29 @@ function SaleProductCard({
 }) {
   const productUrl = localizedHref(`/products/${product.normalizedProductId || product.productId}`, locale);
   const endTimeText = formatEndTime(product.endAt, locale);
+  const urgency = getUrgencyLevel(product.endAt);
 
   return (
     <div className="group relative bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-500 transition-all">
-      {/* 割引バッジ */}
-      <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-linear-to-r from-orange-500 to-red-500 rounded text-white text-xs font-bold">
+      {/* 緊急セールバッジ（1時間以内） */}
+      {urgency === 'critical' && (
+        <div className="absolute top-0 left-0 right-0 z-20 bg-red-600 text-white text-center py-1 text-xs font-bold animate-pulse">
+          {locale === 'ja' ? '間もなく終了!' : 'Ending Soon!'}
+        </div>
+      )}
+
+      {/* 割引バッジ - 大型化 */}
+      <div className={`absolute ${urgency === 'critical' ? 'top-8' : 'top-2'} left-2 z-10 px-2.5 py-1.5 bg-linear-to-r from-red-600 to-orange-500 rounded-lg text-white text-sm font-bold shadow-lg`}>
         -{product.discountPercent}%
       </div>
 
       {/* ASPバッジ */}
-      <div className="absolute top-2 right-2 z-10 px-2 py-0.5 bg-black/70 rounded text-white text-[10px]">
+      <div className={`absolute ${urgency === 'critical' ? 'top-8' : 'top-2'} right-2 z-10 px-2 py-0.5 bg-black/70 rounded text-white text-[10px]`}>
         {product.aspName}
       </div>
 
       {/* 画像 */}
-      <Link href={productUrl} className="block aspect-[3/4] relative">
+      <Link href={productUrl} className={`block aspect-[3/4] relative ${urgency === 'critical' ? 'mt-6' : ''}`}>
         {product.thumbnailUrl ? (
           <Image
             src={product.thumbnailUrl}
@@ -336,46 +357,53 @@ function SaleProductCard({
       </Link>
 
       {/* 情報 */}
-      <div className="p-2">
+      <div className="p-3">
         <Link href={productUrl}>
-          <h3 className="text-xs text-white line-clamp-2 mb-1 group-hover:text-rose-400 transition-colors">
+          <h3 className="text-xs text-white line-clamp-2 mb-1.5 group-hover:text-rose-400 transition-colors">
             {product.title}
           </h3>
         </Link>
 
         {/* 出演者 */}
         {product.performers.length > 0 && (
-          <p className="text-[10px] text-gray-400 truncate mb-1">
+          <p className="text-[10px] text-gray-400 truncate mb-1.5">
             {product.performers.map(p => p.name).join(', ')}
           </p>
         )}
 
-        {/* 価格 */}
-        <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-sm font-bold text-rose-400">
+        {/* 価格 - 強調 */}
+        <div className="flex items-baseline gap-2 mb-2">
+          <span className="text-base font-bold text-rose-400">
             ¥{product.salePrice.toLocaleString()}
           </span>
-          <span className="text-[10px] text-gray-500 line-through">
+          <span className="text-xs text-gray-500 line-through">
             ¥{product.regularPrice.toLocaleString()}
           </span>
         </div>
 
-        {/* 終了時間 */}
+        {/* 終了時間 - 緊急度で色分け */}
         {endTimeText && (
-          <p className="text-[10px] text-orange-400">
-            {endTimeText}
+          <p className={`text-xs font-medium mb-2 ${
+            urgency === 'critical' ? 'text-red-400 animate-pulse' :
+            urgency === 'urgent' ? 'text-orange-400' : 'text-yellow-400'
+          }`}>
+            {urgency === 'critical' && '⚠️ '}{endTimeText}
           </p>
         )}
 
-        {/* 購入CTA */}
+        {/* 購入CTA - 大型化・常時表示 */}
         {product.affiliateUrl && (
           <a
             href={product.affiliateUrl}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            className="mt-2 block w-full py-1.5 text-center text-xs font-bold text-white bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400 rounded transition-all"
+            className={`block w-full py-2.5 text-center text-sm font-bold text-white rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] ${
+              urgency === 'critical'
+                ? 'bg-linear-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400'
+                : 'bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400'
+            }`}
           >
-            {locale === 'ja' ? `${product.aspName}で購入` : `Buy on ${product.aspName}`}
+            {locale === 'ja' ? `今すぐ${product.aspName}で購入` : `Buy Now on ${product.aspName}`}
           </a>
         )}
       </div>

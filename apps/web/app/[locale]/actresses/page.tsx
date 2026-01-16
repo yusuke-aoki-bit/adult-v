@@ -10,6 +10,7 @@ import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { Users, TrendingUp, Star, Film, Search } from 'lucide-react';
 import Pagination from '@/components/Pagination';
+import { unstable_cache } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,51 +29,56 @@ interface PageProps {
 
 const ITEMS_PER_PAGE = 48;
 
-async function getPerformers(page: number, sort: string, query?: string) {
-  const db = getDb();
-  const offset = (page - 1) * ITEMS_PER_PAGE;
+// キャッシュ付きのパフォーマー取得（5xxエラー削減）
+const getCachedPerformers = unstable_cache(
+  async (page: number, sort: string, query?: string) => {
+    const db = getDb();
+    const offset = (page - 1) * ITEMS_PER_PAGE;
 
-  let orderBy = sql`COUNT(DISTINCT pp.product_id) DESC`;
-  if (sort === 'debut') {
-    orderBy = sql`pf.debut_year DESC NULLS LAST, pf.id DESC`;
-  } else if (sort === 'name') {
-    orderBy = sql`pf.name ASC`;
-  }
+    let orderBy = sql`COUNT(DISTINCT pp.product_id) DESC`;
+    if (sort === 'debut') {
+      orderBy = sql`pf.debut_year DESC NULLS LAST, pf.id DESC`;
+    } else if (sort === 'name') {
+      orderBy = sql`pf.name ASC`;
+    }
 
-  const whereClause = query
-    ? sql`WHERE pf.name ILIKE ${'%' + query + '%'}`
-    : sql``;
+    const whereClause = query
+      ? sql`WHERE pf.name ILIKE ${'%' + query + '%'}`
+      : sql``;
 
-  const [performers, countResult] = await Promise.all([
-    db.execute(sql`
-      SELECT
-        pf.id,
-        pf.name,
-        pf.profile_image_url as "imageUrl",
-        COUNT(DISTINCT pp.product_id)::int as "productCount",
-        pf.debut_year as "debutYear"
-      FROM performers pf
-      LEFT JOIN product_performers pp ON pf.id = pp.performer_id
-      ${whereClause}
-      GROUP BY pf.id, pf.name, pf.profile_image_url, pf.debut_year
-      HAVING COUNT(DISTINCT pp.product_id) > 0
-      ORDER BY ${orderBy}
-      LIMIT ${ITEMS_PER_PAGE}
-      OFFSET ${offset}
-    `),
-    db.execute(sql`
-      SELECT COUNT(DISTINCT pf.id)::int as total
-      FROM performers pf
-      INNER JOIN product_performers pp ON pf.id = pp.performer_id
-      ${whereClause}
-    `),
-  ]);
+    const [performers, countResult] = await Promise.all([
+      db.execute(sql`
+        SELECT
+          pf.id,
+          pf.name,
+          pf.profile_image_url as "imageUrl",
+          COUNT(DISTINCT pp.product_id)::int as "productCount",
+          pf.debut_year as "debutYear"
+        FROM performers pf
+        LEFT JOIN product_performers pp ON pf.id = pp.performer_id
+        ${whereClause}
+        GROUP BY pf.id, pf.name, pf.profile_image_url, pf.debut_year
+        HAVING COUNT(DISTINCT pp.product_id) > 0
+        ORDER BY ${orderBy}
+        LIMIT ${ITEMS_PER_PAGE}
+        OFFSET ${offset}
+      `),
+      db.execute(sql`
+        SELECT COUNT(DISTINCT pf.id)::int as total
+        FROM performers pf
+        INNER JOIN product_performers pp ON pf.id = pp.performer_id
+        ${whereClause}
+      `),
+    ]);
 
-  return {
-    performers: performers.rows as PerformerItem[],
-    total: (countResult.rows[0] as { total: number }).total,
-  };
-}
+    return {
+      performers: performers.rows as unknown as PerformerItem[],
+      total: (countResult.rows[0] as { total: number }).total,
+    };
+  },
+  ['actresses-list'],
+  { revalidate: 300, tags: ['actresses'] }
+);
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
@@ -131,7 +137,7 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const tNav = await getTranslations('nav');
 
-  const { performers, total } = await getPerformers(page, sort, q);
+  const { performers, total } = await getCachedPerformers(page, sort, q);
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   const breadcrumbItems = [
@@ -196,11 +202,10 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
               <Link
                 key={s}
                 href={localizedHref(`/actresses?sort=${s}${q ? `&q=${q}` : ''}`, locale)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  sort === s
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sort === s
                     ? 'bg-pink-600 text-white'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
+                  }`}
               >
                 {t[`sort${s.charAt(0).toUpperCase() + s.slice(1)}` as keyof typeof t]}
               </Link>
@@ -258,9 +263,14 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
         {totalPages > 1 && (
           <div className="mt-8">
             <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              basePath={localizedHref(`/actresses?sort=${sort}${q ? `&q=${q}` : ''}`, locale)}
+              total={total}
+              page={page}
+              perPage={ITEMS_PER_PAGE}
+              basePath={localizedHref('/actresses', locale)}
+              queryParams={{
+                ...(sort !== 'popular' && { sort }),
+                ...(q && { q }),
+              }}
             />
           </div>
         )}

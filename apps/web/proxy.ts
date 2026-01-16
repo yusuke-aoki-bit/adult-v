@@ -17,6 +17,40 @@ const intlMiddleware = createMiddleware(routing);
 
 export default function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const url = request.nextUrl.clone();
+  const searchParams = url.searchParams;
+
+  // URL正規化: 不要なパラメータを削除して301リダイレクト（重複ページ対策）
+  // API、静的ファイル以外のパスに適用
+  if (!pathname.startsWith('/api') && !pathname.startsWith('/_next')) {
+    let shouldRedirect = false;
+
+    // ?page=1 を削除（ページ1はデフォルトなので不要）
+    if (searchParams.get('page') === '1') {
+      searchParams.delete('page');
+      shouldRedirect = true;
+    }
+
+    // ?perPage=48 を削除（デフォルト値）
+    if (searchParams.get('perPage') === '48') {
+      searchParams.delete('perPage');
+      shouldRedirect = true;
+    }
+
+    // 空のパラメータを削除
+    for (const [key, value] of Array.from(searchParams.entries())) {
+      if (value === '' || value === 'undefined' || value === 'null') {
+        searchParams.delete(key);
+        shouldRedirect = true;
+      }
+    }
+
+    // リダイレクトが必要な場合は301リダイレクト
+    if (shouldRedirect) {
+      url.search = searchParams.toString();
+      return NextResponse.redirect(url, { status: 301 });
+    }
+  }
 
   // Fast path: API routes - minimal processing
   if (pathname.startsWith('/api')) {
