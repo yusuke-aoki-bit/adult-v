@@ -72,6 +72,8 @@ export default function ActressListFilter({
   const heightMin = searchParams.get('heightMin');
   const heightMax = searchParams.get('heightMax');
   const bloodTypes = searchParams.get('bloodType')?.split(',').filter(Boolean) || [];
+  const debutYear = searchParams.get('debutYear') || '';
+  const minWorks = searchParams.get('minWorks') || '';
 
   // 現在のフィルター値をFilterValues形式で取得
   const currentFilters: FilterValues = {
@@ -230,6 +232,8 @@ export default function ActressListFilter({
     params.delete('heightMin');
     params.delete('heightMax');
     params.delete('bloodType');
+    params.delete('debutYear');
+    params.delete('minWorks');
     params.delete('page');
 
     const queryString = params.toString();
@@ -238,8 +242,8 @@ export default function ActressListFilter({
     });
   };
 
-  const hasActiveFilters = hasVideo || hasImage || onSale || hasReview || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0 || !!initialFilter || cupSizes.length > 0 || !!heightMin || !!heightMax || bloodTypes.length > 0;
-  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0) + (onSale ? 1 : 0) + (hasReview ? 1 : 0) + (initialFilter ? 1 : 0) + cupSizes.length + (heightMin || heightMax ? 1 : 0) + bloodTypes.length;
+  const hasActiveFilters = hasVideo || hasImage || onSale || hasReview || includeTags.length > 0 || excludeTags.length > 0 || includeAsps.length > 0 || excludeAsps.length > 0 || !!initialFilter || cupSizes.length > 0 || !!heightMin || !!heightMax || bloodTypes.length > 0 || !!debutYear || !!minWorks;
+  const activeFilterCount = includeTags.length + excludeTags.length + includeAsps.length + excludeAsps.length + (hasVideo ? 1 : 0) + (hasImage ? 1 : 0) + (onSale ? 1 : 0) + (hasReview ? 1 : 0) + (initialFilter ? 1 : 0) + cupSizes.length + (heightMin || heightMax ? 1 : 0) + bloodTypes.length + (debutYear ? 1 : 0) + (minWorks ? 1 : 0);
 
   return (
     <details
@@ -524,6 +528,77 @@ export default function ActressListFilter({
                   {type}型
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* デビュー年 */}
+          <div>
+            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">デビュー年</p>
+            <div className="flex flex-wrap gap-1.5 sm:gap-1">
+              {[
+                { label: '2024年〜', value: '2024-' },
+                { label: '2020-2023年', value: '2020-2023' },
+                { label: '2015-2019年', value: '2015-2019' },
+                { label: '2010-2014年', value: '2010-2014' },
+                { label: '〜2009年', value: '-2009' },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => updateFilter('debutYear', debutYear === option.value ? null : option.value)}
+                  className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded text-sm font-medium transition-colors ${
+                    debutYear === option.value
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+              {debutYear && (
+                <button
+                  type="button"
+                  onClick={() => updateFilter('debutYear', null)}
+                  className="px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium bg-gray-600 text-gray-200 hover:bg-gray-500 transition-colors"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 作品数 */}
+          <div>
+            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">作品数</p>
+            <div className="flex flex-wrap gap-1.5 sm:gap-1">
+              {[
+                { label: '100作品以上', value: '100' },
+                { label: '50作品以上', value: '50' },
+                { label: '30作品以上', value: '30' },
+                { label: '10作品以上', value: '10' },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => updateFilter('minWorks', minWorks === option.value ? null : option.value)}
+                  className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded text-sm font-medium transition-colors ${
+                    minWorks === option.value
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+              {minWorks && (
+                <button
+                  type="button"
+                  onClick={() => updateFilter('minWorks', null)}
+                  className="px-2.5 py-1.5 sm:px-2 sm:py-1 rounded text-sm font-medium bg-gray-600 text-gray-200 hover:bg-gray-500 transition-colors"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
         </div>

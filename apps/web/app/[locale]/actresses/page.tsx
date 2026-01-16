@@ -9,9 +9,10 @@ import { localizedHref } from '@adult-v/shared/i18n';
 import { generateActressAltText } from '@adult-v/shared/lib/seo-utils';
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
-import { Users, TrendingUp, Star, Film, Search } from 'lucide-react';
+import { Users, Film, Search } from 'lucide-react';
 import Pagination from '@/components/Pagination';
 import LoadMoreActresses from '@/components/LoadMoreActresses';
+import ActressFilterBar from '@/components/ActressFilterBar';
 import { unstable_cache } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
@@ -26,14 +27,70 @@ interface PerformerItem {
 
 interface PageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ page?: string; sort?: string; q?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    sort?: string;
+    q?: string;
+    debutYear?: string;
+    minWorks?: string;
+    initial?: string;
+  }>;
 }
 
 const ITEMS_PER_PAGE = 48;
 
+interface FilterOptions {
+  query?: string;
+  debutYear?: string;
+  minWorks?: string;
+  initial?: string;
+}
+
+// デビュー年フィルターをSQLに変換
+function buildDebutYearFilter(debutYear: string) {
+  if (debutYear === '2024-') {
+    return sql`AND pf.debut_year >= 2024`;
+  } else if (debutYear === '2020-2023') {
+    return sql`AND pf.debut_year >= 2020 AND pf.debut_year <= 2023`;
+  } else if (debutYear === '2015-2019') {
+    return sql`AND pf.debut_year >= 2015 AND pf.debut_year <= 2019`;
+  } else if (debutYear === '2010-2014') {
+    return sql`AND pf.debut_year >= 2010 AND pf.debut_year <= 2014`;
+  } else if (debutYear === '-2009') {
+    return sql`AND pf.debut_year <= 2009`;
+  }
+  return sql``;
+}
+
+// 頭文字フィルターをSQLに変換
+function buildInitialFilter(initial: string) {
+  // 五十音の行（あかさたなはまやらわ）に対応
+  const hiraganaMap: Record<string, string[]> = {
+    'あ': ['あ', 'い', 'う', 'え', 'お'],
+    'か': ['か', 'き', 'く', 'け', 'こ', 'が', 'ぎ', 'ぐ', 'げ', 'ご'],
+    'さ': ['さ', 'し', 'す', 'せ', 'そ', 'ざ', 'じ', 'ず', 'ぜ', 'ぞ'],
+    'た': ['た', 'ち', 'つ', 'て', 'と', 'だ', 'ぢ', 'づ', 'で', 'ど'],
+    'な': ['な', 'に', 'ぬ', 'ね', 'の'],
+    'は': ['は', 'ひ', 'ふ', 'へ', 'ほ', 'ば', 'び', 'ぶ', 'べ', 'ぼ', 'ぱ', 'ぴ', 'ぷ', 'ぺ', 'ぽ'],
+    'ま': ['ま', 'み', 'む', 'め', 'も'],
+    'や': ['や', 'ゆ', 'よ'],
+    'ら': ['ら', 'り', 'る', 'れ', 'ろ'],
+    'わ': ['わ', 'を', 'ん'],
+  };
+
+  const chars = hiraganaMap[initial];
+  if (chars) {
+    // 複数文字のいずれかで始まる
+    const patterns = chars.map(c => `'${c}%'`).join(',');
+    return sql.raw(`AND (pf.name_kana SIMILAR TO '(${chars.join('|')})%')`);
+  }
+  // 単一文字
+  return sql`AND pf.name_kana LIKE ${initial + '%'}`;
+}
+
 // キャッシュ付きのパフォーマー取得（5xxエラー削減）
 const getCachedPerformers = unstable_cache(
-  async (page: number, sort: string, query?: string) => {
+  async (page: number, sort: string, filters: FilterOptions) => {
     const db = getDb();
     const offset = (page - 1) * ITEMS_PER_PAGE;
 
@@ -44,9 +101,25 @@ const getCachedPerformers = unstable_cache(
       orderBy = sql`pf.name ASC`;
     }
 
-    const whereClause = query
-      ? sql`WHERE pf.name ILIKE ${'%' + query + '%'}`
+    // WHERE条件を構築
+    const conditions: ReturnType<typeof sql>[] = [];
+    if (filters.query) {
+      conditions.push(sql`pf.name ILIKE ${'%' + filters.query + '%'}`);
+    }
+
+    const whereClause = conditions.length > 0
+      ? sql`WHERE ${sql.join(conditions, sql` AND `)}`
       : sql``;
+
+    // HAVING条件を構築（作品数フィルター）
+    const minWorksValue = filters.minWorks ? parseInt(filters.minWorks, 10) : 1;
+    const havingClause = sql`HAVING COUNT(DISTINCT pp.product_id) >= ${minWorksValue}`;
+
+    // デビュー年フィルター
+    const debutYearFilter = filters.debutYear ? buildDebutYearFilter(filters.debutYear) : sql``;
+
+    // 頭文字フィルター
+    const initialFilter = filters.initial ? buildInitialFilter(filters.initial) : sql``;
 
     const [performers, countResult] = await Promise.all([
       db.execute(sql`
@@ -59,17 +132,25 @@ const getCachedPerformers = unstable_cache(
         FROM performers pf
         LEFT JOIN product_performers pp ON pf.id = pp.performer_id
         ${whereClause}
+        ${debutYearFilter}
+        ${initialFilter}
         GROUP BY pf.id, pf.name, pf.profile_image_url, pf.debut_year
-        HAVING COUNT(DISTINCT pp.product_id) > 0
+        ${havingClause}
         ORDER BY ${orderBy}
         LIMIT ${ITEMS_PER_PAGE}
         OFFSET ${offset}
       `),
       db.execute(sql`
-        SELECT COUNT(DISTINCT pf.id)::int as total
-        FROM performers pf
-        INNER JOIN product_performers pp ON pf.id = pp.performer_id
-        ${whereClause}
+        SELECT COUNT(*) as total FROM (
+          SELECT pf.id
+          FROM performers pf
+          INNER JOIN product_performers pp ON pf.id = pp.performer_id
+          ${whereClause}
+          ${debutYearFilter}
+          ${initialFilter}
+          GROUP BY pf.id
+          ${havingClause}
+        ) subquery
       `),
     ]);
 
@@ -140,12 +221,19 @@ const translations = {
 
 export default async function ActressesPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
-  const { page: pageStr, sort = 'popular', q } = await searchParams;
+  const { page: pageStr, sort = 'popular', q, debutYear, minWorks, initial } = await searchParams;
   const page = Math.max(1, parseInt(pageStr || '1', 10));
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const tNav = await getTranslations('nav');
 
-  const { performers, total } = await getCachedPerformers(page, sort, q);
+  const filters: FilterOptions = {
+    query: q,
+    debutYear,
+    minWorks,
+    initial,
+  };
+
+  const { performers, total } = await getCachedPerformers(page, sort, filters);
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   const breadcrumbItems = [
@@ -190,7 +278,7 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
         </div>
 
         {/* Search and Sort */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <form className="flex-1" method="get">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -202,6 +290,8 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
                 className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
               />
               {sort !== 'popular' && <input type="hidden" name="sort" value={sort} />}
+              {debutYear && <input type="hidden" name="debutYear" value={debutYear} />}
+              {minWorks && <input type="hidden" name="minWorks" value={minWorks} />}
             </div>
           </form>
 
@@ -209,7 +299,7 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
             {(['popular', 'debut', 'name'] as const).map((s) => (
               <Link
                 key={s}
-                href={localizedHref(`/actresses?sort=${s}${q ? `&q=${q}` : ''}`, locale)}
+                href={localizedHref(`/actresses?sort=${s}${q ? `&q=${q}` : ''}${debutYear ? `&debutYear=${debutYear}` : ''}${minWorks ? `&minWorks=${minWorks}` : ''}`, locale)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sort === s
                     ? 'bg-pink-600 text-white'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
@@ -220,6 +310,9 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
             ))}
           </div>
         </div>
+
+        {/* Filter Bar */}
+        <ActressFilterBar />
 
         {/* Performers Grid */}
         {performers.length > 0 ? (
