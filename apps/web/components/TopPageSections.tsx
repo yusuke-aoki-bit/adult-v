@@ -514,26 +514,30 @@ export function TopPageUpperSections({
 
   return (
     <div className="space-y-3">
-      {/* セール情報 */}
+      {/* セール情報 - デフォルトOPENで訴求強化 */}
       {saleProducts.length > 0 && isSectionVisible('sale') && (
         <div id="sale" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<Tag className="w-5 h-5" />}
-            title="セール中"
-            subtitle="お得な割引商品をチェック"
+            icon={<Tag className="w-5 h-5 text-red-400" />}
+            title={`🔥 セール中 ${saleProducts.length}件`}
+            subtitle="今だけお得！見逃し厳禁"
             theme="dark"
-            defaultOpen={false}
+            defaultOpen={true}
           >
             <SaleProductsContent products={saleProducts} />
-            {/* セール一覧ページへのリンク */}
+            {/* セール一覧ページへの大型CTA */}
             <a
               href={localizedHref('/sales', locale)}
-              className="mt-4 flex items-center justify-center gap-2 w-full py-3 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-bold rounded-lg transition-all"
+              className="mt-4 flex flex-col items-center justify-center gap-1 w-full py-4 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 hover:from-red-500 hover:via-orange-400 hover:to-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-600/30 transition-all transform hover:scale-[1.02] animate-pulse"
             >
-              <span className="text-lg">🔥</span>
-              セール中の全商品を見る ({saleProducts.length}件+)
-              <ExternalLink className="w-4 h-4" />
+              <span className="text-xl flex items-center gap-2">
+                🔥 セール中の全商品を見る
+                <ExternalLink className="w-5 h-5" />
+              </span>
+              <span className="text-sm opacity-90">
+                {saleProducts.length}件以上のお得な作品をチェック →
+              </span>
             </a>
           </TopPageMenuSection>
         </div>

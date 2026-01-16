@@ -109,20 +109,21 @@ export function StickyCtaBase({
   const [isMobileVisible, setIsMobileVisible] = useState(false);
   const [urgencyText, setUrgencyText] = useState<string | null>(null);
   const [isUrgent, setIsUrgent] = useState(false);
+  const [isCritical, setIsCritical] = useState(false); // 1時間以内の超緊急
   const lastScrollY = useRef(0);
   const scrollDirection = useRef<'up' | 'down'>('down');
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      // クリック率向上のため早期表示（100px）
-      const scrollThreshold = 100;
+      // クリック率向上のため早期表示（50px - より積極的に表示）
+      const scrollThreshold = 50;
 
-      // デスクトップ用：100px以上スクロールしたら表示
+      // デスクトップ用：50px以上スクロールしたら表示
       const shouldShowDesktop = currentScrollY > scrollThreshold;
       setIsVisible(shouldShowDesktop);
 
-      // モバイル用：スクロール方向に応じて表示制御
+      // モバイル用：スクロール方向に応じて表示制御（閾値も下げる）
       if (currentScrollY > scrollThreshold) {
         const scrollDelta = currentScrollY - lastScrollY.current;
         if (Math.abs(scrollDelta) > 10) {
@@ -159,18 +160,26 @@ export function StickyCtaBase({
       const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
       const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-      if (diffHours <= thresholds.criticalHours) {
+      if (diffHours <= 1) {
+        // 1時間以内は超緊急表示
+        setUrgencyText('⚠️ まもなく終了！残り1時間以内');
+        setIsUrgent(true);
+        setIsCritical(true);
+      } else if (diffHours <= thresholds.criticalHours) {
         setUrgencyText(labels.urgentHours?.replace('{hours}', String(diffHours)) || `残り${diffHours}時間`);
         setIsUrgent(true);
+        setIsCritical(false);
       } else if (diffHours <= thresholds.urgentHours) {
         setUrgencyText(labels.endsToday || '本日終了');
         setIsUrgent(true);
       } else if (diffDays <= thresholds.soonDays) {
         setUrgencyText(labels.endsSoon?.replace('{days}', String(diffDays)) || `残り${diffDays}日`);
         setIsUrgent(false);
+        setIsCritical(false);
       } else {
         setUrgencyText(null);
         setIsUrgent(false);
+        setIsCritical(false);
       }
     };
 
@@ -207,14 +216,18 @@ export function StickyCtaBase({
             : `transition-transform duration-300 ${isMobileVisible ? 'translate-y-0' : 'translate-y-full'}`
         }`}
       >
-        {/* 緊急バッジ */}
+        {/* 緊急バッジ - 1時間以内は超大型表示 */}
         {urgencyText && isMobileVisible && (
           <div
             role="status"
             aria-live="polite"
             aria-atomic="true"
-            className={`text-center py-1.5 text-sm font-bold ${
-              isUrgent ? `bg-red-500 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}` : styles.urgentBadge
+            className={`text-center font-bold ${
+              isCritical
+                ? `py-3 text-lg bg-linear-to-r from-red-600 via-orange-500 to-red-600 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
+                : isUrgent
+                  ? `py-1.5 text-sm bg-red-500 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
+                  : `py-1.5 text-sm ${styles.urgentBadge}`
             }`}
           >
             {urgencyText}
@@ -275,14 +288,18 @@ export function StickyCtaBase({
         }`}
       >
         <div className={`rounded-2xl shadow-2xl overflow-hidden ${styles.desktopRing}`}>
-          {/* 緊急バッジ */}
+          {/* 緊急バッジ - 1時間以内は超大型表示 */}
           {urgencyText && (
             <div
               role="status"
               aria-live="polite"
               aria-atomic="true"
-              className={`text-center py-1.5 px-4 text-sm font-bold ${
-                isUrgent ? `bg-red-500 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}` : styles.urgentBadge
+              className={`text-center px-4 font-bold ${
+                isCritical
+                  ? `py-3 text-base bg-linear-to-r from-red-600 via-orange-500 to-red-600 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
+                  : isUrgent
+                    ? `py-1.5 text-sm bg-red-500 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
+                    : `py-1.5 text-sm ${styles.urgentBadge}`
               }`}
             >
               {urgencyText}

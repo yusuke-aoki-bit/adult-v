@@ -12,6 +12,7 @@ import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { unstable_cache } from 'next/cache';
 
 // LCP最適化用のシンプルな画像URL正規化
 function normalizeImageUrlForPreload(url: string | null | undefined): string | null {
@@ -98,6 +99,31 @@ export async function generateMetadata({
 // ISR: 60秒ごとに再検証（searchParamsがあるため完全な静的生成は不可）
 // 注: searchParamsを使用しているため、実際のキャッシュはNext.jsの判断による
 export const revalidate = 60;
+
+// キャッシュ付きクエリ（5xxエラー削減のためDB負荷を軽減）
+const getCachedTags = unstable_cache(
+  async () => getTags(),
+  ['homepage-tags'],
+  { revalidate: 300, tags: ['tags'] }
+);
+
+const getCachedAspStats = unstable_cache(
+  async () => getAspStats(),
+  ['homepage-asp-stats'],
+  { revalidate: 300, tags: ['asp-stats'] }
+);
+
+const getCachedSaleProducts = unstable_cache(
+  async (limit: number) => getSaleProducts({ limit }),
+  ['homepage-sale-products'],
+  { revalidate: 60, tags: ['sale-products'] }
+);
+
+const getCachedUncategorizedCount = unstable_cache(
+  async () => getUncategorizedProductsCount(),
+  ['homepage-uncategorized-count'],
+  { revalidate: 300, tags: ['uncategorized'] }
+);
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -213,9 +239,10 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   // 並列クエリ実行（パフォーマンス最適化）
   // タグ、ASP統計、女優リスト、女優数、セール商品、未整理作品数を同時に取得
+  // キャッシュ付きクエリを使用して5xxエラーを削減
   const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount] = await Promise.all([
-    getTags(),
-    !isFanzaSite ? getAspStats().catch((error) => {
+    getCachedTags(),
+    !isFanzaSite ? getCachedAspStats().catch((error) => {
       console.error('Failed to fetch ASP stats:', error);
       return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
     }) : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
@@ -226,8 +253,8 @@ export default async function Home({ params, searchParams }: PageProps) {
       locale,
     }),
     getActressesCount(actressQueryOptions),
-    isTopPage ? getSaleProducts({ limit: 8 }) : Promise.resolve([] as SaleProduct[]),
-    isTopPage ? getUncategorizedProductsCount() : Promise.resolve(0),
+    isTopPage ? getCachedSaleProducts(8) : Promise.resolve([] as SaleProduct[]),
+    isTopPage ? getCachedUncategorizedCount() : Promise.resolve(0),
   ]);
 
   const genreTags = allTags.filter(tag => tag.category !== 'site');
