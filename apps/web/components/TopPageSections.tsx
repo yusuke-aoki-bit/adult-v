@@ -19,7 +19,7 @@ interface SaleProduct {
   saleName: string | null;
   saleType: string | null;
   endAt: string | null;
-  performers: Array<{ id: number; name: string }>;
+  performers: Array<{ id: number; name: string; profileImageUrl?: string | null }>;
 }
 
 interface TopPageSectionsProps {
@@ -151,8 +151,8 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
 function SaleProductsContent({ products }: { products: SaleProduct[] }) {
   if (products.length === 0) return null;
 
-  // 女優を抽出（重複排除）
-  const actressMap = new Map<number, { id: number; name: string }>();
+  // 女優を抽出（重複排除、画像URLも含む）
+  const actressMap = new Map<number, { id: number; name: string; profileImageUrl?: string | null }>();
   products.forEach(product => {
     product.performers.forEach(performer => {
       if (!actressMap.has(performer.id)) {
@@ -160,7 +160,12 @@ function SaleProductsContent({ products }: { products: SaleProduct[] }) {
       }
     });
   });
-  const actresses = Array.from(actressMap.values()).slice(0, 6);
+  // 画像がある女優を優先的に表示
+  const allActresses = Array.from(actressMap.values());
+  const actresses = [
+    ...allActresses.filter(a => a.profileImageUrl),
+    ...allActresses.filter(a => !a.profileImageUrl),
+  ].slice(0, 6);
 
   return (
     <div className="space-y-4">
@@ -175,6 +180,7 @@ function SaleProductsContent({ products }: { products: SaleProduct[] }) {
                 actress={{
                   id: String(actress.id),
                   name: actress.name,
+                  heroImage: actress.profileImageUrl ?? undefined,
                 }}
                 size="mini"
                 theme="dark"

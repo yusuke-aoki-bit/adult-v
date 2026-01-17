@@ -31,7 +31,7 @@ export interface SaleProduct {
   saleName: string | null;
   saleType: string | null;
   endAt: Date | null;
-  performers: Array<{ id: number; name: string }>;
+  performers: Array<{ id: number; name: string; profileImageUrl?: string | null }>;
 }
 
 /**
@@ -330,7 +330,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
         .orderBy(aspPriorityOrder, desc(productSales.discountPercent), desc(productSales.fetchedAt))
         .limit(limit);
 
-      // 出演者情報を取得
+      // 出演者情報を取得（画像URLも含む）
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const typedResults = results as any[];
       const productIds = typedResults.map((r) => r.productId as number);
@@ -340,6 +340,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
               productId: productPerformers.productId,
               performerId: performers['id'],
               performerName: performers['name'],
+              profileImageUrl: performers.profileImageUrl,
             })
             .from(productPerformers)
             .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
@@ -349,11 +350,15 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
       // 商品IDごとに出演者をグループ化
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const typedPerformerData = rawPerformerData as any[];
-      const performersByProduct = new Map<number, Array<{ id: number; name: string }>>();
+      const performersByProduct = new Map<number, Array<{ id: number; name: string; profileImageUrl?: string | null }>>();
       for (const p of typedPerformerData) {
         const productId = p.productId as number;
         const arr = performersByProduct.get(productId) || [];
-        arr.push({ id: p.performerId as number, name: p.performerName as string });
+        arr.push({
+          id: p.performerId as number,
+          name: p.performerName as string,
+          profileImageUrl: p.profileImageUrl as string | null,
+        });
         performersByProduct.set(productId, arr);
       }
 

@@ -50,6 +50,8 @@ const translations = {
     twoDaysAgo: '2日前',
     threeDaysAgo: '3日前',
     refreshTime: '毎日0時に更新',
+    noPickAvailable: '本日のおすすめ作品を準備中です',
+    noPickDescription: 'しばらくお待ちください。',
   },
   en: {
     title: 'Daily Pick',
@@ -68,6 +70,8 @@ const translations = {
     twoDaysAgo: '2 days ago',
     threeDaysAgo: '3 days ago',
     refreshTime: 'Updates daily at midnight',
+    noPickAvailable: 'Preparing today\'s recommendation',
+    noPickDescription: 'Please wait a moment.',
   },
 };
 
@@ -109,7 +113,8 @@ export default async function DailyPickPage({ params }: Props) {
                         month >= 3 && month <= 5 ? '新生活,入学,制服' : '';
 
   // product_viewsテーブルが存在しない場合も動作するようにする
-  let todayPickResult;
+  // エラー時はフォールバッククエリを実行、それでも失敗したら空の結果
+  let todayPickResult: { rows: unknown[] } = { rows: [] };
   try {
     todayPickResult = await db.execute(sql`
       WITH product_view_counts AS (
@@ -163,7 +168,8 @@ export default async function DailyPickPage({ params }: Props) {
           AND p.release_date IS NOT NULL
           AND p.release_date <= CURRENT_DATE
         GROUP BY p.id, pvc.view_count
-        HAVING COUNT(DISTINCT pr.id) >= 3 OR COALESCE(pvc.view_count, 0) >= 100
+        -- レビュー3件以上、閲覧数100以上、または発売日が過去1年以内の作品を対象
+        HAVING COUNT(DISTINCT pr.id) >= 3 OR COALESCE(pvc.view_count, 0) >= 100 OR p.release_date > CURRENT_DATE - INTERVAL '365 days'
         ORDER BY score DESC
         LIMIT 100
       )
@@ -172,7 +178,9 @@ export default async function DailyPickPage({ params }: Props) {
       OFFSET ${Math.floor(seededRandom(todaySeed) * 50)}
       LIMIT 1
     `);
-  } catch {
+  } catch (primaryError) {
+    console.error('[daily-pick] Primary query failed:', primaryError);
+    try {
     // product_viewsテーブルが存在しない場合はview_countなしでクエリ
     todayPickResult = await db.execute(sql`
       WITH ranked_products AS (
@@ -218,7 +226,7 @@ export default async function DailyPickPage({ params }: Props) {
           AND p.release_date IS NOT NULL
           AND p.release_date <= CURRENT_DATE
         GROUP BY p.id
-        HAVING COUNT(DISTINCT pr.id) >= 1
+        -- レビューなしでもサムネイルがあれば対象に（条件緩和）
         ORDER BY score DESC
         LIMIT 100
       )
@@ -227,10 +235,14 @@ export default async function DailyPickPage({ params }: Props) {
       OFFSET ${Math.floor(seededRandom(todaySeed) * 50)}
       LIMIT 1
     `);
+    } catch (fallbackError) {
+      console.error('[daily-pick] Fallback query also failed:', fallbackError);
+      // 空の結果のまま続行
+    }
   }
 
   // 過去3日間のピック
-  let previousPicksResult;
+  let previousPicksResult: { rows: unknown[] } = { rows: [] };
   try {
     previousPicksResult = await db.execute(sql`
       WITH product_view_counts AS (
@@ -253,8 +265,8 @@ export default async function DailyPickPage({ params }: Props) {
         LEFT JOIN product_reviews pr ON p.id = pr.product_id
         LEFT JOIN product_view_counts pvc ON p.id = pvc.product_id
         WHERE p.default_thumbnail_url IS NOT NULL
+          AND p.release_date IS NOT NULL
         GROUP BY p.id, pvc.view_count
-        HAVING COUNT(DISTINCT pr.id) >= 3 OR COALESCE(pvc.view_count, 0) >= 100
         ORDER BY score DESC
         LIMIT 100
       )
@@ -270,39 +282,44 @@ export default async function DailyPickPage({ params }: Props) {
         SELECT *, 3 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 3) * 50)} LIMIT 1
       ) d3
     `);
-  } catch {
-    // product_viewsテーブルが存在しない場合はview_countなしでクエリ
-    previousPicksResult = await db.execute(sql`
-      WITH ranked_products AS (
-        SELECT
-          p.id,
-          p.normalized_product_id,
-          p.title,
-          p.default_thumbnail_url,
-          (
-            COALESCE(AVG(pr.rating), 3) * 20 +
-            LEAST(COUNT(DISTINCT pr.id), 50) * 2
-          ) as score
-        FROM products p
-        LEFT JOIN product_reviews pr ON p.id = pr.product_id
-        WHERE p.default_thumbnail_url IS NOT NULL
-        GROUP BY p.id
-        HAVING COUNT(DISTINCT pr.id) >= 1
-        ORDER BY score DESC
-        LIMIT 100
-      )
-      SELECT * FROM (
-        SELECT *, 1 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 1) * 50)} LIMIT 1
-      ) d1
-      UNION ALL
-      SELECT * FROM (
-        SELECT *, 2 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 2) * 50)} LIMIT 1
-      ) d2
-      UNION ALL
-      SELECT * FROM (
-        SELECT *, 3 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 3) * 50)} LIMIT 1
-      ) d3
-    `);
+  } catch (primaryError) {
+    console.error('[daily-pick] Previous picks primary query failed:', primaryError);
+    try {
+      // product_viewsテーブルが存在しない場合はview_countなしでクエリ
+      previousPicksResult = await db.execute(sql`
+        WITH ranked_products AS (
+          SELECT
+            p.id,
+            p.normalized_product_id,
+            p.title,
+            p.default_thumbnail_url,
+            (
+              COALESCE(AVG(pr.rating), 3) * 20 +
+              LEAST(COUNT(DISTINCT pr.id), 50) * 2
+            ) as score
+          FROM products p
+          LEFT JOIN product_reviews pr ON p.id = pr.product_id
+          WHERE p.default_thumbnail_url IS NOT NULL
+          GROUP BY p.id
+          ORDER BY score DESC
+          LIMIT 100
+        )
+        SELECT * FROM (
+          SELECT *, 1 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 1) * 50)} LIMIT 1
+        ) d1
+        UNION ALL
+        SELECT * FROM (
+          SELECT *, 2 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 2) * 50)} LIMIT 1
+        ) d2
+        UNION ALL
+        SELECT * FROM (
+          SELECT *, 3 as day_offset FROM ranked_products OFFSET ${Math.floor(seededRandom(todaySeed - 3) * 50)} LIMIT 1
+        ) d3
+      `);
+    } catch (fallbackError) {
+      console.error('[daily-pick] Previous picks fallback query also failed:', fallbackError);
+      // 空の結果のまま続行
+    }
   }
 
   const todayPick = todayPickResult.rows[0] as unknown as DailyProduct | undefined;
@@ -363,7 +380,7 @@ export default async function DailyPickPage({ params }: Props) {
         </div>
 
         {/* 今日のピック */}
-        {todayPick && (
+        {todayPick ? (
           <section className="mb-10">
             <h2 className="text-xl font-bold theme-text mb-4 flex items-center gap-2">
               <Star className="w-6 h-6 text-yellow-400" />
@@ -472,16 +489,25 @@ export default async function DailyPickPage({ params }: Props) {
               </div>
             </div>
           </section>
+        ) : (
+          <section className="mb-10">
+            <div className="rounded-xl overflow-hidden theme-card p-8 text-center">
+              <Sparkles className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+              <h2 className="text-xl font-bold theme-text mb-2">{t.noPickAvailable}</h2>
+              <p className="theme-text-muted">{t.noPickDescription}</p>
+            </div>
+          </section>
         )}
 
         {/* 過去のピック */}
-        <section>
-          <h2 className="text-xl font-bold theme-text mb-4 flex items-center gap-2">
-            <TrendingUp className="w-6 h-6 text-blue-400" />
-            {t.previousPicks}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {previousPicks.map((pick, idx) => (
+        {previousPicks.length > 0 && (
+          <section>
+            <h2 className="text-xl font-bold theme-text mb-4 flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-blue-400" />
+              {t.previousPicks}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {previousPicks.map((pick, idx) => (
               <Link
                 key={pick.id}
                 href={localizedHref(`/products/${pick.normalized_product_id}`, locale)}
@@ -508,9 +534,10 @@ export default async function DailyPickPage({ params }: Props) {
                   <h3 className="text-sm font-medium theme-text line-clamp-2">{pick.title}</h3>
                 </div>
               </Link>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

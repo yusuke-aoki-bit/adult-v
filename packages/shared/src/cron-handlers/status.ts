@@ -97,6 +97,72 @@ export function createStatusHandler(deps: StatusHandlerDeps) {
         WHERE fetched_at > NOW() - INTERVAL '24 hours'
       `);
 
+      // ========== データ品質指標 ==========
+
+      // 演者データの補充率
+      const performerQuality = await db.execute(sql`
+        SELECT
+          COUNT(*) as total,
+          COUNT(profile_image_url) as with_image,
+          COUNT(height) as with_height,
+          COUNT(birthday) as with_birthday,
+          COUNT(debut_year) as with_debut_year,
+          COUNT(ai_review) as with_ai_review,
+          COUNT(name_kana) as with_name_kana,
+          ROUND(100.0 * COUNT(profile_image_url) / NULLIF(COUNT(*), 0), 1) as image_rate,
+          ROUND(100.0 * COUNT(height) / NULLIF(COUNT(*), 0), 1) as height_rate,
+          ROUND(100.0 * COUNT(birthday) / NULLIF(COUNT(*), 0), 1) as birthday_rate,
+          ROUND(100.0 * COUNT(debut_year) / NULLIF(COUNT(*), 0), 1) as debut_year_rate,
+          ROUND(100.0 * COUNT(ai_review) / NULLIF(COUNT(*), 0), 1) as ai_review_rate,
+          ROUND(100.0 * COUNT(name_kana) / NULLIF(COUNT(*), 0), 1) as name_kana_rate
+        FROM performers
+      `);
+
+      // 商品データの補充率
+      const productQuality = await db.execute(sql`
+        SELECT
+          COUNT(*) as total,
+          COUNT(default_thumbnail_url) as with_thumbnail,
+          COUNT(description) as with_description,
+          COUNT(ai_review) as with_ai_review,
+          COUNT(title_en) as with_title_en,
+          COUNT(release_date) as with_release_date,
+          COUNT(duration) as with_duration,
+          ROUND(100.0 * COUNT(default_thumbnail_url) / NULLIF(COUNT(*), 0), 1) as thumbnail_rate,
+          ROUND(100.0 * COUNT(description) / NULLIF(COUNT(*), 0), 1) as description_rate,
+          ROUND(100.0 * COUNT(ai_review) / NULLIF(COUNT(*), 0), 1) as ai_review_rate,
+          ROUND(100.0 * COUNT(title_en) / NULLIF(COUNT(*), 0), 1) as translation_rate,
+          ROUND(100.0 * COUNT(release_date) / NULLIF(COUNT(*), 0), 1) as release_date_rate,
+          ROUND(100.0 * COUNT(duration) / NULLIF(COUNT(*), 0), 1) as duration_rate
+        FROM products
+      `);
+
+      // 商品-演者紐づけ率
+      const linkingQuality = await db.execute(sql`
+        SELECT
+          (SELECT COUNT(*) FROM products) as total_products,
+          (SELECT COUNT(DISTINCT product_id) FROM product_performers) as linked_products,
+          ROUND(100.0 * (SELECT COUNT(DISTINCT product_id) FROM product_performers) / NULLIF((SELECT COUNT(*) FROM products), 0), 1) as linking_rate
+      `);
+
+      // デビュー年データが欠損している作品数が多い演者TOP10（補完候補）
+      const debutYearMissingCandidates = await db.execute(sql`
+        SELECT
+          pf.id,
+          pf.name,
+          COUNT(DISTINCT pp.product_id) as product_count,
+          MIN(EXTRACT(YEAR FROM p.release_date))::int as earliest_year
+        FROM performers pf
+        INNER JOIN product_performers pp ON pf.id = pp.performer_id
+        INNER JOIN products p ON pp.product_id = p.id
+        WHERE pf.debut_year IS NULL
+          AND p.release_date IS NOT NULL
+        GROUP BY pf.id, pf.name
+        HAVING COUNT(DISTINCT pp.product_id) >= 5
+        ORDER BY COUNT(DISTINCT pp.product_id) DESC
+        LIMIT 10
+      `);
+
       return NextResponse.json({
         success: true,
         timestamp: new Date().toISOString(),
@@ -117,6 +183,12 @@ export function createStatusHandler(deps: StatusHandlerDeps) {
             b10f: recentB10fCrawls.rows,
             duga: recentDugaCrawls.rows[0],
             sokmil: recentSokmilCrawls.rows[0],
+          },
+          dataQuality: {
+            performers: performerQuality.rows[0],
+            products: productQuality.rows[0],
+            linking: linkingQuality.rows[0],
+            debutYearMissingCandidates: debutYearMissingCandidates.rows,
           },
         },
       });

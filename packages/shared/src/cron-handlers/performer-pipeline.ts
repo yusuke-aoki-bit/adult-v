@@ -41,6 +41,13 @@ interface PipelineStats {
     productsMoved: number;
     aliasesAdded: number;
   };
+  debutYearPhase: {
+    performersChecked: number;
+    debutYearsUpdated: number;
+  };
+  statsPhase: {
+    performersUpdated: number;
+  };
   totalDuration: number;
 }
 
@@ -77,6 +84,13 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
         productsMoved: 0,
         aliasesAdded: 0,
       },
+      debutYearPhase: {
+        performersChecked: 0,
+        debutYearsUpdated: 0,
+      },
+      statsPhase: {
+        performersUpdated: 0,
+      },
       totalDuration: 0,
     };
 
@@ -111,6 +125,22 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
       } else {
         console.log('\n[Phase 3] Skipping fake performer merge (skipMerge=true)');
       }
+
+      // Phase 4: デビュー年データ補完
+      // 作品のリリース日から女優のデビュー年を計算・更新
+      console.log('\n[Phase 4] Backfilling debut year data...');
+
+      const debutYearResult = await backfillDebutYears(db, limit);
+      stats.debutYearPhase = debutYearResult;
+      console.log(`  Checked: ${debutYearResult.performersChecked}, Updated: ${debutYearResult.debutYearsUpdated}`);
+
+      // Phase 5: 演者統計更新（latestReleaseDate, releaseCount）
+      // 新商品がクロールされた後、女優のソート順を更新するために必要
+      console.log('\n[Phase 5] Updating performer stats (latestReleaseDate, releaseCount)...');
+
+      const statsResult = await updatePerformerStats(db);
+      stats.statsPhase = statsResult;
+      console.log(`  Updated: ${statsResult.performersUpdated} performers`);
 
       stats['totalDuration'] = Date.now() - startTime;
 
@@ -559,4 +589,103 @@ async function mergeFakePerformers(
   }
 
   return { fakePerformersFound, performersMerged, productsMoved, aliasesAdded };
+}
+
+/**
+ * 演者統計を更新（latestReleaseDate, releaseCount）
+ * トップページのソート順を正しく反映するために必要
+ */
+async function updatePerformerStats(
+  db: any
+): Promise<{ performersUpdated: number }> {
+  // 全演者のlatestReleaseDateとreleaseCountを一括更新
+  const result = await db.execute(sql`
+    UPDATE performers p
+    SET
+      latest_release_date = sub.latest_date,
+      release_count = sub.cnt,
+      updated_at = NOW()
+    FROM (
+      SELECT
+        pp.performer_id,
+        MAX(pr.release_date) as latest_date,
+        COUNT(DISTINCT pp.product_id) as cnt
+      FROM product_performers pp
+      INNER JOIN products pr ON pp.product_id = pr.id
+      WHERE pr.release_date IS NOT NULL
+      GROUP BY pp.performer_id
+    ) sub
+    WHERE p.id = sub.performer_id
+      AND (
+        p.latest_release_date IS DISTINCT FROM sub.latest_date
+        OR p.release_count IS DISTINCT FROM sub.cnt
+      )
+  `);
+
+  // 更新された行数を取得（PostgreSQLのrowCount）
+  const rowCount = result.rowCount || 0;
+
+  return { performersUpdated: rowCount };
+}
+
+/**
+ * デビュー年データを補完
+ * debut_yearがnullの演者に対し、最も古い出演作品のリリース年をデビュー年として設定
+ */
+async function backfillDebutYears(
+  db: any,
+  limit: number
+): Promise<{ performersChecked: number; debutYearsUpdated: number }> {
+  let performersChecked = 0;
+  let debutYearsUpdated = 0;
+
+  // デビュー年が未設定で、作品がある演者を取得
+  const performersToUpdate = await db.execute(sql`
+    SELECT
+      pf.id,
+      pf.name,
+      MIN(EXTRACT(YEAR FROM p.release_date))::int as earliest_year,
+      COUNT(DISTINCT pp.product_id) as product_count
+    FROM performers pf
+    INNER JOIN product_performers pp ON pf.id = pp.performer_id
+    INNER JOIN products p ON pp.product_id = p.id
+    WHERE pf.debut_year IS NULL
+      AND p.release_date IS NOT NULL
+      AND EXTRACT(YEAR FROM p.release_date) >= 1980
+      AND EXTRACT(YEAR FROM p.release_date) <= EXTRACT(YEAR FROM NOW())
+    GROUP BY pf.id, pf.name
+    HAVING COUNT(DISTINCT pp.product_id) >= 1
+    ORDER BY COUNT(DISTINCT pp.product_id) DESC
+    LIMIT ${limit}
+  `);
+
+  performersChecked = performersToUpdate.rows.length;
+
+  for (const row of performersToUpdate.rows as Array<{
+    id: number;
+    name: string;
+    earliest_year: number;
+    product_count: string;
+  }>) {
+    try {
+      // デビュー年を更新
+      await db.execute(sql`
+        UPDATE performers
+        SET debut_year = ${row.earliest_year}
+        WHERE id = ${row['id']}
+          AND debut_year IS NULL
+      `);
+
+      debutYearsUpdated++;
+
+      // ログ（100件ごと）
+      if (debutYearsUpdated % 100 === 0) {
+        console.log(`    Updated ${debutYearsUpdated} performers...`);
+      }
+    } catch (error) {
+      console.error(`    Error updating debut year for ${row['name']}: ${error}`);
+    }
+  }
+
+  return { performersChecked, debutYearsUpdated };
 }

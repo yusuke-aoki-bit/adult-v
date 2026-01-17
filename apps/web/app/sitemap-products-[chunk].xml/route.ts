@@ -46,15 +46,18 @@ export async function GET(
 ${productList
   .map((product) => {
     const lastMod = (product.updatedAt || new Date()).toISOString();
+    const productPath = `/products/${product.id}`;
     return `  <url>
-    <loc>${BASE_URL}/ja/products/${product.id}</loc>
+    <loc>${BASE_URL}${productPath}</loc>
     <lastmod>${lastMod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ja" href="${BASE_URL}/ja/products/${product.id}" />
-    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}/en/products/${product.id}" />
-    <xhtml:link rel="alternate" hreflang="zh" href="${BASE_URL}/zh/products/${product.id}" />
-    <xhtml:link rel="alternate" hreflang="ko" href="${BASE_URL}/ko/products/${product.id}" />
+    <xhtml:link rel="alternate" hreflang="ja" href="${BASE_URL}${productPath}" />
+    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${productPath}?hl=en" />
+    <xhtml:link rel="alternate" hreflang="zh" href="${BASE_URL}${productPath}?hl=zh" />
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="${BASE_URL}${productPath}?hl=zh-TW" />
+    <xhtml:link rel="alternate" hreflang="ko" href="${BASE_URL}${productPath}?hl=ko" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}${productPath}" />
   </url>`;
   })
   .join('\n')}

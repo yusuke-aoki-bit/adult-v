@@ -33,6 +33,14 @@ export { createSeoEnhanceHandler } from './seo-enhance';
 // Backfill handlers
 export { createBackfillVideosHandler } from './backfill-videos';
 export { createBackfillImagesHandler } from './backfill-images';
+export type { BackfillPerformerProfilesDeps } from './backfill-performer-profiles';
+export { createBackfillPerformerProfilesHandler } from './backfill-performer-profiles';
+export type { BackfillReviewsHandlerDeps } from './backfill-reviews';
+export { createBackfillReviewsHandler } from './backfill-reviews';
+
+// Data quality report handler
+export type { DataQualityReportDeps } from './data-quality-report';
+export { createDataQualityReportHandler } from './data-quality-report';
 
 // Performer normalization handler
 export { createNormalizePerformersHandler } from './normalize-performers';

@@ -92,8 +92,71 @@ async function fetchImageFromFanza(productId: string): Promise<string | null> {
   }
 }
 
+async function fetchImageFromFc2(productId: string): Promise<string | null> {
+  try {
+    const url = `https://adult.contents.fc2.com/article/${productId}/`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+    });
+    if (!response.ok) return null;
+    const html = await response['text']();
+    const $ = cheerio.load(html);
+    return $('meta[property="og:image"]').attr('content') || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchImageFromDti(productId: string, provider: string): Promise<string | null> {
+  try {
+    // DTI系サイトのURL形式
+    const baseUrls: Record<string, string> = {
+      'CARIBBEAN': 'https://www.caribbeancom.com/moviepages/',
+      'CARIBBEANCOMPR': 'https://www.caribbeancompr.com/moviepages/',
+      '1PONDO': 'https://www.1pondo.tv/movies/',
+      'HEYZO': 'https://www.heyzo.com/moviepages/',
+      '10MUSUME': 'https://www.10musume.com/moviepages/',
+      'PACOPACOMAMA': 'https://www.pacopacomama.com/moviepages/',
+    };
+
+    const baseUrl = baseUrls[provider.toUpperCase()];
+    if (!baseUrl) return null;
+
+    const url = `${baseUrl}${productId}/`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+    });
+    if (!response.ok) return null;
+    const html = await response['text']();
+    const $ = cheerio.load(html);
+    return $('meta[property="og:image"]').attr('content') || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchImageFromB10f(productId: string): Promise<string | null> {
+  try {
+    // B10Fは商品IDからサムネイルURLを推測
+    // 例: aff_movie_12345.jpg
+    const idMatch = productId.match(/(\d+)/);
+    if (idMatch && idMatch[1]) {
+      return `https://image.b10f.jp/aff_movie_${idMatch[1]}.jpg`;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchImageForProduct(asp: string, productId: string): Promise<string | null> {
-  switch (asp.toUpperCase()) {
+  const aspUpper = asp.toUpperCase();
+
+  switch (aspUpper) {
     case 'MGS':
       return fetchImageFromMgs(productId);
     case 'DUGA':
@@ -103,9 +166,53 @@ async function fetchImageForProduct(asp: string, productId: string): Promise<str
     case 'FANZA':
     case 'DMM':
       return fetchImageFromFanza(productId);
+    case 'FC2':
+      return fetchImageFromFc2(productId);
+    case 'B10F':
+      return fetchImageFromB10f(productId);
+    case 'CARIBBEAN':
+    case 'CARIBBEANCOMPR':
+    case '1PONDO':
+    case 'HEYZO':
+    case '10MUSUME':
+    case 'PACOPACOMAMA':
+      return fetchImageFromDti(productId, aspUpper);
     default:
       return null;
   }
+}
+
+/**
+ * 複数ASPを試してフォールバック取得
+ */
+async function fetchImageWithFallback(
+  primaryAsp: string,
+  productId: string,
+  normalizedProductId: string
+): Promise<string | null> {
+  // まずプライマリASPで試行
+  const primaryResult = await fetchImageForProduct(primaryAsp, productId);
+  if (primaryResult) return primaryResult;
+
+  // 商品コードからASPを推測してフォールバック
+  const normalizedUpper = normalizedProductId.toUpperCase();
+
+  // FANZA系商品コードパターン
+  if (/^[A-Z]{2,5}-?\d{3,5}$/.test(normalizedUpper.replace(/^FANZA-/, '').replace(/^MGS-/, ''))) {
+    const possibleId = normalizedUpper.replace(/^(FANZA|MGS)-/, '').replace(/-/g, '').toLowerCase();
+
+    if (primaryAsp !== 'FANZA') {
+      const fanzaResult = await fetchImageFromFanza(possibleId);
+      if (fanzaResult) return fanzaResult;
+    }
+
+    if (primaryAsp !== 'MGS') {
+      const mgsResult = await fetchImageFromMgs(possibleId);
+      if (mgsResult) return mgsResult;
+    }
+  }
+
+  return null;
 }
 
 interface BackfillImagesHandlerDeps {
@@ -169,9 +276,11 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
         stats.checked++;
 
         try {
-          const imageUrl = await fetchImageForProduct(
+          // フォールバック機能付きで画像取得
+          const imageUrl = await fetchImageWithFallback(
             product.asp_name,
-            product.original_product_id
+            product.original_product_id,
+            product.normalized_product_id
           );
 
           if (imageUrl) {

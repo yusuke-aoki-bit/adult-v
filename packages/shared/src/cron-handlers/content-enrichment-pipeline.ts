@@ -117,8 +117,15 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
   };
 }
 
+// 対応言語とDeepL言語コードのマッピング
+const TRANSLATION_LANGUAGES = [
+  { code: 'en', deeplCode: 'EN', name: 'English' },
+  { code: 'zh', deeplCode: 'ZH', name: 'Chinese (Simplified)' },
+  { code: 'ko', deeplCode: 'KO', name: 'Korean' },
+] as const;
+
 /**
- * 翻訳バックフィルフェーズ
+ * 翻訳バックフィルフェーズ（多言語対応）
  */
 async function runTranslationPhase(
   db: any,
@@ -140,54 +147,83 @@ async function runTranslationPhase(
     return result;
   }
 
-  // 未翻訳の商品を取得
-  const products = await db.execute(sql`
-    SELECT p.id, p.title, p.description
-    FROM products p
-    LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = 'en'
-    WHERE pt.id IS NULL
-      AND p.title IS NOT NULL
-      AND p.title != ''
-    ORDER BY p.created_at DESC
-    LIMIT ${limit}
-  `);
+  // 各言語について未翻訳の商品を処理
+  for (const lang of TRANSLATION_LANGUAGES) {
+    console.log(`  Processing ${lang.name} translations...`);
 
-  for (const product of products.rows as Array<{
-    id: number;
-    title: string;
-    description: string | null;
-  }>) {
-    result.processed++;
+    // 未翻訳の商品を取得
+    const products = await db.execute(sql`
+      SELECT p.id, p.title, p.description
+      FROM products p
+      LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ${lang.code}
+      WHERE pt.id IS NULL
+        AND p.title IS NOT NULL
+        AND p.title != ''
+      ORDER BY p.created_at DESC
+      LIMIT ${Math.floor(limit / TRANSLATION_LANGUAGES.length)}
+    `);
 
-    try {
-      // 英語に翻訳
-      const translatedTitle = await deps.translateText(product['title'], 'EN');
-      if (!translatedTitle) {
-        result.skipped++;
-        continue;
+    for (const product of products.rows as Array<{
+      id: number;
+      title: string;
+      description: string | null;
+    }>) {
+      result.processed++;
+
+      try {
+        // 翻訳実行
+        const translatedTitle = await deps.translateText(product['title'], lang.deeplCode);
+        if (!translatedTitle) {
+          result.skipped++;
+          continue;
+        }
+
+        const translatedDescription = product['description']
+          ? await deps.translateText(product['description'], lang.deeplCode)
+          : null;
+
+        // 翻訳を保存
+        await db.execute(sql`
+          INSERT INTO product_translations (product_id, language, title, description)
+          VALUES (${product['id']}, ${lang.code}, ${translatedTitle}, ${translatedDescription})
+          ON CONFLICT (product_id, language) DO UPDATE SET
+            title = EXCLUDED.title,
+            description = EXCLUDED.description,
+            updated_at = NOW()
+        `);
+
+        // productsテーブルの多言語カラムも更新
+        if (lang.code === 'en') {
+          await db.execute(sql`
+            UPDATE products
+            SET title_en = ${translatedTitle},
+                description_en = ${translatedDescription}
+            WHERE id = ${product['id']}
+          `);
+        } else if (lang.code === 'zh') {
+          await db.execute(sql`
+            UPDATE products
+            SET title_zh = ${translatedTitle},
+                description_zh = ${translatedDescription}
+            WHERE id = ${product['id']}
+          `);
+        } else if (lang.code === 'ko') {
+          await db.execute(sql`
+            UPDATE products
+            SET title_ko = ${translatedTitle},
+                description_ko = ${translatedDescription}
+            WHERE id = ${product['id']}
+          `);
+        }
+
+        result.success++;
+
+        // レート制限対策
+        await new Promise(r => setTimeout(r, 50));
+      } catch (error) {
+        console.error(`  Translation error for product ${product['id']} (${lang.code}):`, error);
+        result.errors++;
       }
-
-      const translatedDescription = product['description']
-        ? await deps.translateText(product['description'], 'EN')
-        : null;
-
-      // 翻訳を保存
-      await db.execute(sql`
-        INSERT INTO product_translations (product_id, language, title, description)
-        VALUES (${product['id']}, 'en', ${translatedTitle}, ${translatedDescription})
-        ON CONFLICT (product_id, language) DO UPDATE SET
-          title = EXCLUDED.title,
-          description = EXCLUDED.description,
-          updated_at = NOW()
-      `);
-
-      result.success++;
-
-      // レート制限対策
-      await new Promise(r => setTimeout(r, 50));
-    } catch (error) {
-      console.error(`  Translation error for product ${product['id']}:`, error);
-      result.errors++;
     }
   }
 

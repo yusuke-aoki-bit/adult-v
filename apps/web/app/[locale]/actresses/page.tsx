@@ -15,7 +15,8 @@ import LoadMoreActresses from '@/components/LoadMoreActresses';
 import ActressFilterBar from '@/components/ActressFilterBar';
 import { unstable_cache } from 'next/cache';
 
-export const dynamic = 'force-dynamic';
+// ISR: 1時間ごとに再検証（5xxエラー削減のためforce-dynamicから変更）
+export const revalidate = 3600;
 
 interface PerformerItem {
   id: number;
@@ -233,7 +234,17 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
     initial,
   };
 
-  const { performers, total } = await getCachedPerformers(page, sort, filters);
+  // try-catchで5xxエラーを防止
+  let performers: PerformerItem[] = [];
+  let total = 0;
+  try {
+    const result = await getCachedPerformers(page, sort, filters);
+    performers = result.performers;
+    total = result.total;
+  } catch (error) {
+    console.error('Failed to fetch performers:', error);
+    // 空の結果を返してページは表示する
+  }
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   const breadcrumbItems = [

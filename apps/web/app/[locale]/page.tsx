@@ -240,8 +240,12 @@ export default async function Home({ params, searchParams }: PageProps) {
   // 並列クエリ実行（パフォーマンス最適化）
   // タグ、ASP統計、女優リスト、女優数、セール商品、未整理作品数を同時に取得
   // キャッシュ付きクエリを使用して5xxエラーを削減
+  // 全クエリにtry-catchを追加して、1つの失敗でページ全体が崩壊しないようにする
   const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount] = await Promise.all([
-    getCachedTags(),
+    getCachedTags().catch((error) => {
+      console.error('Failed to fetch tags:', error);
+      return [] as Awaited<ReturnType<typeof getTags>>;
+    }),
     !isFanzaSite ? getCachedAspStats().catch((error) => {
       console.error('Failed to fetch ASP stats:', error);
       return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
@@ -251,10 +255,22 @@ export default async function Home({ params, searchParams }: PageProps) {
       limit: perPage,
       offset,
       locale,
+    }).catch((error) => {
+      console.error('Failed to fetch actresses:', error);
+      return [] as Awaited<ReturnType<typeof getActresses>>;
     }),
-    getActressesCount(actressQueryOptions),
-    isTopPage ? getCachedSaleProducts(8) : Promise.resolve([] as SaleProduct[]),
-    isTopPage ? getCachedUncategorizedCount() : Promise.resolve(0),
+    getActressesCount(actressQueryOptions).catch((error) => {
+      console.error('Failed to fetch actresses count:', error);
+      return 0;
+    }),
+    isTopPage ? getCachedSaleProducts(8).catch((error) => {
+      console.error('Failed to fetch sale products:', error);
+      return [] as SaleProduct[];
+    }) : Promise.resolve([] as SaleProduct[]),
+    isTopPage ? getCachedUncategorizedCount().catch((error) => {
+      console.error('Failed to fetch uncategorized count:', error);
+      return 0;
+    }) : Promise.resolve(0),
   ]);
 
   const genreTags = allTags.filter(tag => tag.category !== 'site');

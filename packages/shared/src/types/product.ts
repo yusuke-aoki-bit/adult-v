@@ -209,5 +209,5 @@ export interface SaleProduct {
   saleName: string | null;
   saleType: string | null;
   endAt: Date | null;
-  performers: Array<{ id: number; name: string }>;
+  performers: Array<{ id: number; name: string; profileImageUrl?: string | null }>;
 }
