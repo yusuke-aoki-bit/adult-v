@@ -603,8 +603,7 @@ async function updatePerformerStats(
     UPDATE performers p
     SET
       latest_release_date = sub.latest_date,
-      release_count = sub.cnt,
-      updated_at = NOW()
+      release_count = sub.cnt
     FROM (
       SELECT
         pp.performer_id,

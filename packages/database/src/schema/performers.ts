@@ -51,6 +51,9 @@ export const performers = pgTable(
     debutYear: integer('debut_year'), // デビュー年
     isRetired: boolean('is_retired').default(false), // 引退フラグ
     isFanzaOnly: boolean('is_fanza_only').default(false), // FANZA専用フラグ（FANZA以外のASPに出演作品がない）
+    // 統計情報（performer-pipelineで更新）
+    latestReleaseDate: date('latest_release_date'), // 最新作品のリリース日（ソート用）
+    releaseCount: integer('release_count').default(0), // 出演作品数（ソート用）
     // AIレビュー
     aiReview: text('ai_review'), // Gemini AIによる演者レビュー
     aiReviewEn: text('ai_review_en'), // AIレビュー（英語）
@@ -70,6 +73,8 @@ export const performers = pgTable(
     cupIdx: index('idx_performers_cup').on(table.cup),
     birthdayIdx: index('idx_performers_birthday').on(table.birthday),
     fanzaOnlyIdx: index('idx_performers_fanza_only').on(table.isFanzaOnly),
+    latestReleaseDateIdx: index('idx_performers_latest_release_date').on(table.latestReleaseDate),
+    releaseCountIdx: index('idx_performers_release_count').on(table.releaseCount),
   }),
 );
 

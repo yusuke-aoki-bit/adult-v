@@ -60,6 +60,8 @@ export interface SaleQueryDeps {
   productPerformers: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   performers: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  performerImages?: any;
   /** サイトモード（キャッシュキー接頭辞に使用） */
   siteMode: 'all' | 'fanza-only';
   /** メモリキャッシュ取得関数 */
@@ -330,21 +332,29 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
         .orderBy(aspPriorityOrder, desc(productSales.discountPercent), desc(productSales.fetchedAt))
         .limit(limit);
 
-      // 出演者情報を取得（画像URLも含む）
+      // 出演者情報を取得（画像URLも含む - performer_imagesからフォールバック）
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const typedResults = results as any[];
       const productIds = typedResults.map((r) => r.productId as number);
+
+      // performer_imagesテーブルからのサブクエリでフォールバック画像を取得
       const rawPerformerData = productIds.length > 0
-        ? await db
-            .select({
-              productId: productPerformers.productId,
-              performerId: performers['id'],
-              performerName: performers['name'],
-              profileImageUrl: performers.profileImageUrl,
-            })
-            .from(productPerformers)
-            .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
-            .where(inArray(productPerformers.productId, productIds))
+        ? await db.execute(drizzleSql`
+            SELECT
+              pp.product_id as "productId",
+              p.id as "performerId",
+              p.name as "performerName",
+              COALESCE(
+                p.profile_image_url,
+                (SELECT pi.image_url FROM performer_images pi
+                 WHERE pi.performer_id = p.id
+                 ORDER BY pi.is_primary DESC NULLS LAST, pi.id ASC
+                 LIMIT 1)
+              ) as "profileImageUrl"
+            FROM product_performers pp
+            INNER JOIN performers p ON pp.performer_id = p.id
+            WHERE pp.product_id = ANY(${productIds})
+          `).then((r: { rows: unknown[] }) => r.rows)
         : [];
 
       // 商品IDごとに出演者をグループ化
