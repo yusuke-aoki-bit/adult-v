@@ -2,11 +2,22 @@
  * データ品質レポート API ハンドラー
  *
  * 欠損データの詳細分析と改善候補を返す
+ * 品質閾値を下回る場合はSlack通知を送信
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyCronRequest, unauthorizedResponse } from '../lib/cron-auth';
+import { notifyDataQualityAlert } from '../utils/slack-notify';
 import type { SQL } from 'drizzle-orm';
+
+// 品質アラートの閾値設定
+const QUALITY_THRESHOLDS = {
+  performerImageRate: 40, // 演者画像率
+  performerDebutYearRate: 25, // デビュー年率
+  productThumbnailRate: 70, // サムネイル率
+  productLinkingRate: 50, // 紐づけ率
+  reviewCoverageRate: 5, // レビューカバー率
+};
 
 export interface DataQualityReportDeps {
   getDb: () => {
@@ -394,9 +405,76 @@ export function createDataQualityReportHandler(deps: DataQualityReportDeps) {
         recommendations,
       };
 
+      // 品質アラートのチェックとSlack通知
+      const alertPromises: Promise<boolean>[] = [];
+
+      if (imageRate < QUALITY_THRESHOLDS.performerImageRate) {
+        alertPromises.push(
+          notifyDataQualityAlert(
+            'Performer Image Rate',
+            imageRate,
+            QUALITY_THRESHOLDS.performerImageRate,
+            '演者画像の補充率が低下しています。SOKMIL Actor APIからの取得を推奨します。'
+          )
+        );
+      }
+
+      if (debutYearRate < QUALITY_THRESHOLDS.performerDebutYearRate) {
+        alertPromises.push(
+          notifyDataQualityAlert(
+            'Performer Debut Year Rate',
+            debutYearRate,
+            QUALITY_THRESHOLDS.performerDebutYearRate,
+            'デビュー年データの補充率が低下しています。performer-pipelineの実行を推奨します。'
+          )
+        );
+      }
+
+      if (thumbnailRate < QUALITY_THRESHOLDS.productThumbnailRate) {
+        alertPromises.push(
+          notifyDataQualityAlert(
+            'Product Thumbnail Rate',
+            thumbnailRate,
+            QUALITY_THRESHOLDS.productThumbnailRate,
+            '商品サムネイルの補充率が低下しています。backfill-imagesの実行を推奨します。'
+          )
+        );
+      }
+
+      if (linkingRate < QUALITY_THRESHOLDS.productLinkingRate) {
+        alertPromises.push(
+          notifyDataQualityAlert(
+            'Product Linking Rate',
+            linkingRate,
+            QUALITY_THRESHOLDS.productLinkingRate,
+            '商品-演者紐づけ率が低下しています。normalize-performersの実行を推奨します。'
+          )
+        );
+      }
+
+      if (reviewCoverageRate < QUALITY_THRESHOLDS.reviewCoverageRate) {
+        alertPromises.push(
+          notifyDataQualityAlert(
+            'Review Coverage Rate',
+            reviewCoverageRate,
+            QUALITY_THRESHOLDS.reviewCoverageRate,
+            'レビューカバー率が低下しています。backfill-reviewsの実行を推奨します。'
+          )
+        );
+      }
+
+      // Slack通知を非同期で送信（レスポンスを待たない）
+      if (alertPromises.length > 0) {
+        Promise.allSettled(alertPromises).then(results => {
+          const successCount = results.filter(r => r.status === 'fulfilled' && r.value).length;
+          console.log(`[data-quality-report] Sent ${successCount}/${alertPromises.length} Slack alerts`);
+        });
+      }
+
       return NextResponse.json({
         success: true,
         report,
+        alertsSent: alertPromises.length,
       });
     } catch (error) {
       console.error('Data quality report error:', error);

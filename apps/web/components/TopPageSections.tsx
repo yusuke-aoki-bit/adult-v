@@ -320,6 +320,8 @@ function RecommendationsContent({ locale }: { locale: string }) {
           </div>
         </div>
       )}
+      {/* もっと見る */}
+      <MoreLink href="/discover" label="もっとおすすめを見る" locale={locale} />
     </div>
   );
 }
@@ -414,14 +416,30 @@ function WeeklyHighlightsContent({ locale }: { locale: string }) {
           </div>
         </div>
       )}
+      {/* もっと見る */}
+      <MoreLink href="/products" label="新作をもっと見る" locale={locale} />
     </div>
+  );
+}
+
+// 「もっと見る」リンクコンポーネント
+function MoreLink({ href, label, locale }: { href: string; label: string; locale?: string }) {
+  const localizedUrl = locale ? localizedHref(href, locale) : href;
+  return (
+    <a
+      href={localizedUrl}
+      className="mt-3 flex items-center justify-center gap-1 w-full py-2 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-700/50 rounded-lg transition-colors"
+    >
+      {label}
+      <ExternalLink className="w-4 h-4" />
+    </a>
   );
 }
 
 // トレンド分析コンテンツ
 function TrendingContent({ locale }: { locale: string }) {
-  const [tags, setTags] = useState<Array<{ name: string; count: number }>>([]);
-  const [performers, setPerformers] = useState<Array<{ name: string; count: number }>>([]);
+  const [tags, setTags] = useState<Array<{ name: string; count: number; id?: number }>>([]);
+  const [performers, setPerformers] = useState<Array<{ name: string; count: number; id?: number }>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -453,51 +471,60 @@ function TrendingContent({ locale }: { locale: string }) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* ジャンル */}
-      {tags.length > 0 && (
-        <div>
-          <h4 className="text-xs font-semibold text-blue-400 mb-2">人気ジャンル</h4>
-          <div className="space-y-1">
-            {tags.map((tag, index) => (
-              <div
-                key={tag.name}
-                className="flex items-center gap-2 p-2 rounded bg-gray-700/50 hover:bg-gray-700 transition-colors cursor-pointer"
-              >
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                  index < 3 ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'
-                }`}>
-                  {index + 1}
-                </span>
-                <span className="text-sm text-white flex-1">{tag.name}</span>
-                <span className="text-xs text-gray-400">{tag.count}作品</span>
-              </div>
-            ))}
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* ジャンル */}
+        {tags.length > 0 && (
+          <div>
+            <h4 className="text-xs font-semibold text-blue-400 mb-2">人気ジャンル</h4>
+            <div className="space-y-1">
+              {tags.map((tag, index) => (
+                <a
+                  key={tag.name}
+                  href={tag.id ? localizedHref(`/tags/${tag.id}`, locale) : '#'}
+                  className="flex items-center gap-2 p-2 rounded bg-gray-700/50 hover:bg-gray-700 transition-colors"
+                >
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                    index < 3 ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'
+                  }`}>
+                    {index + 1}
+                  </span>
+                  <span className="text-sm text-white flex-1">{tag.name}</span>
+                  <span className="text-xs text-gray-400">{tag.count}作品</span>
+                </a>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-      {/* 女優 */}
-      {performers.length > 0 && (
-        <div>
-          <h4 className="text-xs font-semibold text-pink-400 mb-2">人気女優</h4>
-          <div className="space-y-1">
-            {performers.map((performer, index) => (
-              <div
-                key={performer.name}
-                className="flex items-center gap-2 p-2 rounded bg-gray-700/50 hover:bg-gray-700 transition-colors cursor-pointer"
-              >
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                  index < 3 ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'
-                }`}>
-                  {index + 1}
-                </span>
-                <span className="text-sm text-white flex-1">{performer.name}</span>
-                <span className="text-xs text-gray-400">{performer.count}作品</span>
-              </div>
-            ))}
+        )}
+        {/* 女優 */}
+        {performers.length > 0 && (
+          <div>
+            <h4 className="text-xs font-semibold text-pink-400 mb-2">人気女優</h4>
+            <div className="space-y-1">
+              {performers.map((performer, index) => (
+                <a
+                  key={performer.name}
+                  href={performer.id ? localizedHref(`/actress/${performer.id}`, locale) : '#'}
+                  className="flex items-center gap-2 p-2 rounded bg-gray-700/50 hover:bg-gray-700 transition-colors"
+                >
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                    index < 3 ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'
+                  }`}>
+                    {index + 1}
+                  </span>
+                  <span className="text-sm text-white flex-1">{performer.name}</span>
+                  <span className="text-xs text-gray-400">{performer.count}作品</span>
+                </a>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      {/* もっと見るリンク */}
+      <div className="grid grid-cols-2 gap-2">
+        <MoreLink href="/tags" label="全ジャンルを見る" locale={locale} />
+        <MoreLink href="/actresses" label="女優一覧を見る" locale={locale} />
+      </div>
     </div>
   );
 }

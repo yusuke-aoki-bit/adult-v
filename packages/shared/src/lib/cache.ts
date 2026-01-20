@@ -12,8 +12,20 @@ interface RedisClientType {
   scan(cursor: string | number, options?: { match?: string; count?: number }): Promise<[string, string[]]>;
 }
 
-// キャッシュTTL設定
-const CACHE_TTL = 60 * 5; // 5分
+// キャッシュTTL設定（秒）
+const CACHE_TTL = {
+  /** 短期: 頻繁に更新されるデータ（検索結果、レコメンド） */
+  SHORT: 60 * 5, // 5分
+  /** 中期: 日次で更新されるデータ（一覧、API応答） */
+  MEDIUM: 60 * 30, // 30分
+  /** 長期: ほぼ静的なデータ（詳細ページ、タグ） */
+  LONG: 60 * 60, // 1時間
+  /** 超長期: 滅多に変わらないデータ */
+  VERY_LONG: 60 * 60 * 6, // 6時間
+} as const;
+
+// デフォルトTTL
+const DEFAULT_TTL = CACHE_TTL.SHORT;
 
 // キャッシュキーのプレフィックス
 const CACHE_KEYS = {
@@ -43,10 +55,16 @@ async function getRedisClient(): Promise<RedisClientType | null> {
       // 動的インポートでビルド時の問題を回避
       const { Redis } = await import('@upstash/redis');
       redisClient = new Redis({ url, token }) as unknown as RedisClientType;
-      console.log('✅ Upstash Redis client initialized');
+      // 開発環境でのみログ出力
+      if (process.env['NODE_ENV'] === 'development') {
+        console.log('[cache] Upstash Redis client initialized');
+      }
       return redisClient;
     } catch (error) {
-      console.warn('⚠️ Failed to initialize Upstash Redis:', error);
+      // 初期化エラーは警告として出力（本番でも把握が必要）
+      if (process.env['NODE_ENV'] === 'development') {
+        console.warn('[cache] Failed to initialize Upstash Redis:', error);
+      }
       return null;
     }
   }
@@ -98,7 +116,7 @@ class InMemoryCache {
     return item.data as T;
   }
 
-  set<T>(key: string, data: T, ttl: number = CACHE_TTL): void {
+  set<T>(key: string, data: T, ttl: number = DEFAULT_TTL): void {
     this.cache.set(key, {
       data,
       expires: Date.now() + ttl * 1000,
@@ -148,8 +166,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
 
     // インメモリキャッシュから取得
     return memoryCache.get<T>(key);
-  } catch (error) {
-    console.error('Cache get error:', error);
+  } catch {
     // Redisエラー時はインメモリにフォールバック
     return memoryCache.get<T>(key);
   }
@@ -162,7 +179,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
 export async function setCache<T>(
   key: string,
   data: T,
-  ttl: number = CACHE_TTL
+  ttl: number = DEFAULT_TTL
 ): Promise<void> {
   try {
     const redis = await getRedisClient();
@@ -175,8 +192,7 @@ export async function setCache<T>(
 
     // インメモリキャッシュに保存
     memoryCache.set(key, data, ttl);
-  } catch (error) {
-    console.error('Cache set error:', error);
+  } catch {
     // Redisエラー時はインメモリにフォールバック
     memoryCache.set(key, data, ttl);
   }
@@ -195,8 +211,7 @@ export async function deleteCache(key: string): Promise<void> {
     }
 
     memoryCache.delete(key);
-  } catch (error) {
-    console.error('Cache delete error:', error);
+  } catch {
     memoryCache.delete(key);
   }
 }
@@ -225,8 +240,7 @@ export async function deleteCachePattern(pattern: string): Promise<void> {
 
     // インメモリキャッシュの場合は全削除
     memoryCache.clear();
-  } catch (error) {
-    console.error('Cache delete pattern error:', error);
+  } catch {
     memoryCache.clear();
   }
 }
@@ -237,9 +251,9 @@ export async function deleteCachePattern(pattern: string): Promise<void> {
 export async function clearCache(): Promise<void> {
   try {
     memoryCache.clear();
-  } catch (error) {
-    console.error('Cache clear error:', error);
+  } catch {
+    // キャッシュクリアエラーは無視
   }
 }
 
-export { CACHE_KEYS };
+export { CACHE_KEYS, CACHE_TTL };

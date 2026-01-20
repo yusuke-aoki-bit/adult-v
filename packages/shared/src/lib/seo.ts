@@ -314,6 +314,7 @@ function generateKoreanProductDescription(
 
 /**
  * 女優ページ用CTR最適化ディスクリプション
+ * SEO最適化: デビュー年、ジャンル、作品数を含む詳細なdescription生成
  */
 export function generateActressDescription(
   name: string,
@@ -322,6 +323,7 @@ export function generateActressDescription(
     topGenres?: string[];
     latestWork?: string;
     isRetired?: boolean;
+    debutYear?: number;
     locale?: string;
   },
 ): string {
@@ -330,21 +332,31 @@ export function generateActressDescription(
   if (locale === 'ja') {
     const parts: string[] = [];
 
-    parts.push(`${name}の作品一覧`);
+    // デビュー年を含めることでSEO効果向上
+    if (options?.['debutYear']) {
+      parts.push(`${name}（${options['debutYear']}年デビュー）`);
+    } else {
+      parts.push(`${name}の作品一覧`);
+    }
 
     if (options?.['workCount'] && options['workCount'] > 0) {
-      parts.push(`全${options['workCount']}本`);
+      parts.push(`全${options['workCount']}作品`);
     }
 
     if (options?.['topGenres'] && options['topGenres'].length > 0) {
-      parts.push(`人気ジャンル: ${options['topGenres'].slice(0, 3).join('・')}`);
+      parts.push(`得意ジャンル: ${options['topGenres'].slice(0, 3).join('・')}`);
     }
 
     if (options?.['latestWork']) {
-      parts.push(`最新作「${options['latestWork'].substring(0, 20)}」`);
+      parts.push(`最新作「${options['latestWork'].substring(0, 15)}」`);
     }
 
-    parts.push('高評価作品からセール中作品まで一覧でチェック');
+    // CTAを含めてクリック率向上
+    if (options?.['isRetired']) {
+      parts.push('全出演作品を今すぐチェック');
+    } else {
+      parts.push('高評価作品・セール中作品を一覧でチェック');
+    }
 
     const description = parts.join(' | ');
     return description.length > 160
@@ -354,7 +366,12 @@ export function generateActressDescription(
 
   // 英語
   if (locale === 'en') {
-    const parts = [`${name}'s videos`];
+    const parts: string[] = [];
+    if (options?.['debutYear']) {
+      parts.push(`${name} (Debut: ${options['debutYear']})`);
+    } else {
+      parts.push(`${name}'s videos`);
+    }
     if (options?.['workCount']) parts.push(`${options['workCount']} titles`);
     if (options?.['topGenres']?.length) parts.push(`Genres: ${options['topGenres'].slice(0, 3).join(', ')}`);
     parts.push('Browse top-rated and sale items');
@@ -363,7 +380,12 @@ export function generateActressDescription(
 
   // 中国語
   if (locale === 'zh') {
-    const parts = [`${name}的作品列表`];
+    const parts: string[] = [];
+    if (options?.['debutYear']) {
+      parts.push(`${name}（${options['debutYear']}年出道）`);
+    } else {
+      parts.push(`${name}的作品列表`);
+    }
     if (options?.['workCount']) parts.push(`共${options['workCount']}部`);
     if (options?.['topGenres']?.length) parts.push(`热门类型: ${options['topGenres'].slice(0, 3).join('・')}`);
     parts.push('浏览高评分和特价作品');
@@ -372,7 +394,12 @@ export function generateActressDescription(
 
   // 韓国語
   if (locale === 'ko') {
-    const parts = [`${name}의 작품 목록`];
+    const parts: string[] = [];
+    if (options?.['debutYear']) {
+      parts.push(`${name}（${options['debutYear']}년 데뷔）`);
+    } else {
+      parts.push(`${name}의 작품 목록`);
+    }
     if (options?.['workCount']) parts.push(`총 ${options['workCount']}편`);
     if (options?.['topGenres']?.length) parts.push(`인기 장르: ${options['topGenres'].slice(0, 3).join('・')}`);
     parts.push('인기작과 할인작 확인하기');

@@ -55,9 +55,9 @@ function getDb() {
         // SSL設定: 無効化条件に該当しない本番環境のみSSL有効
         ssl: shouldDisableSsl ? false : (process.env['NODE_ENV'] === 'production' ? { rejectUnauthorized: false } : false),
         // 環境に応じた接続プール設定
-        max: isDev ? 5 : (isCloudRunJob ? 10 : 50), // 開発: 5, ジョブ: 10, Webサーバー: 50
-        min: isDev ? 0 : (isCloudRunJob ? 1 : 10), // 開発: 0, ジョブ: 1, Webサーバー: 10
-        idleTimeoutMillis: isDev ? 10000 : (isCloudRunJob ? 30000 : 60000), // 開発: 10秒, ジョブ: 30秒, Web: 60秒
+        max: isDev ? 5 : (isCloudRunJob ? 10 : 30), // 開発: 5, ジョブ: 10, Webサーバー: 30（コスト最適化）
+        min: isDev ? 0 : (isCloudRunJob ? 1 : 5), // 開発: 0, ジョブ: 1, Webサーバー: 5（コスト最適化）
+        idleTimeoutMillis: isDev ? 10000 : 30000, // 開発: 10秒, 本番: 30秒（統一してコスト削減）
         connectionTimeoutMillis: isDev ? 10000 : 30000, // 接続タイムアウト: 開発10秒, 本番30秒
         allowExitOnIdle: isDev || isCloudRunJob, // 開発・ジョブ環境では終了を許可
         // クエリタイムアウト

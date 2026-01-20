@@ -46,15 +46,18 @@ ${performerList
     // Priority based on product count (more products = higher priority)
     const priority = Math.min(0.9, 0.5 + (Number(performer.productCount) / 1000) * 0.1).toFixed(1);
 
+    const actressPath = `/actress/${performer.id}`;
     return `  <url>
-    <loc>${BASE_URL}/ja/actress/${performer.id}</loc>
+    <loc>${BASE_URL}${actressPath}</loc>
     <lastmod>${lastMod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${priority}</priority>
-    <xhtml:link rel="alternate" hreflang="ja" href="${BASE_URL}/ja/actress/${performer.id}" />
-    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}/en/actress/${performer.id}" />
-    <xhtml:link rel="alternate" hreflang="zh" href="${BASE_URL}/zh/actress/${performer.id}" />
-    <xhtml:link rel="alternate" hreflang="ko" href="${BASE_URL}/ko/actress/${performer.id}" />
+    <xhtml:link rel="alternate" hreflang="ja" href="${BASE_URL}${actressPath}" />
+    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${actressPath}?hl=en" />
+    <xhtml:link rel="alternate" hreflang="zh" href="${BASE_URL}${actressPath}?hl=zh" />
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="${BASE_URL}${actressPath}?hl=zh-TW" />
+    <xhtml:link rel="alternate" hreflang="ko" href="${BASE_URL}${actressPath}?hl=ko" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}${actressPath}" />
   </url>`;
   })
   .join('\n')}

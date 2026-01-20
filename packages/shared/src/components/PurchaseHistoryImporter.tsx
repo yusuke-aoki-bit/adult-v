@@ -103,6 +103,41 @@ interface ParsedPurchase {
   selected: boolean;
 }
 
+// 入力バリデーション定数
+const MAX_INPUT_LENGTH = 500000; // 500KB制限
+const MAX_TITLE_LENGTH = 200;
+const MIN_TITLE_LENGTH = 5;
+const MAX_PRICE = 99999;
+const MIN_PRICE = 1;
+
+/**
+ * テキスト入力のサニタイズ
+ * - 制御文字を除去
+ * - 過度なスペースを正規化
+ */
+function sanitizeInput(text: string): string {
+  // 制御文字（改行・タブ以外）を除去
+  let sanitized = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  // 連続する空白を単一スペースに正規化
+  sanitized = sanitized.replace(/[ \t]+/g, ' ');
+  // 連続する改行を2つまでに制限
+  sanitized = sanitized.replace(/\n{3,}/g, '\n\n');
+  return sanitized;
+}
+
+/**
+ * 日付文字列のバリデーション
+ */
+function isValidDate(dateStr: string): boolean {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return false;
+  // 未来の日付は不正
+  if (date > new Date()) return false;
+  // 2000年より前の日付は不正（DMM/FANZAの開始日考慮）
+  if (date < new Date('2000-01-01')) return false;
+  return true;
+}
+
 interface PurchaseHistoryImporterProps {
   locale: string;
   theme?: 'light' | 'dark';
@@ -112,32 +147,36 @@ interface PurchaseHistoryImporterProps {
 
 /**
  * 購入履歴テキストを解析してParsedPurchase配列を返す
+ * 入力バリデーション付き
  */
 function parsePurchaseHistory(text: string): ParsedPurchase[] {
+  // 入力長チェック
+  if (text.length > MAX_INPUT_LENGTH) {
+    console.warn('[PurchaseHistoryImporter] Input too long, truncating');
+    text = text.substring(0, MAX_INPUT_LENGTH);
+  }
+
+  // サニタイズ
+  const sanitizedText = sanitizeInput(text);
   const purchases: ParsedPurchase[] = [];
 
-  // 正規表現パターン
-  // パターン1: DMM/FANZA形式 (品番 + タイトル + 価格)
-  // 例: "ssis00865 タイトル... ¥1,980"
-  const patterns = [
-    // DMM形式: 日付, タイトル, 価格
-    /(\d{4}\/\d{1,2}\/\d{1,2})[\s\S]*?(.{10,100}?)[\s\n]*?(?:¥|￥|円)\s*([\d,]+)/g,
-    // 品番 + タイトル + 価格
-    /([a-zA-Z]+-?\d+)\s+(.{5,100}?)\s+(?:¥|￥|円)?\s*([\d,]+)(?:円)?/g,
-    // シンプルなタイトル + 価格
-    /(.{10,100}?)\s+(?:¥|￥)\s*([\d,]+)/g,
-  ];
-
-  const lines = text.split('\n');
+  const lines = sanitizedText.split('\n');
   let lastDate = new Date().toISOString().split('T')[0];
 
   for (const line of lines) {
+    // 空行スキップ
+    if (!line.trim()) continue;
+
     // 日付を検出
     const dateMatch = line.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
     if (dateMatch) {
       const [, year, month, day] = dateMatch;
       if (year && month && day) {
-        lastDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const candidateDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        // 日付バリデーション
+        if (isValidDate(candidateDate)) {
+          lastDate = candidateDate;
+        }
       }
     }
 
@@ -148,23 +187,30 @@ function parsePurchaseHistory(text: string): ParsedPurchase[] {
       if (!priceStr) continue;
       const price = parseInt(priceStr.replace(/,/g, ''), 10);
 
-      if (price > 0 && price < 100000) {
+      // 価格バリデーション
+      if (price >= MIN_PRICE && price <= MAX_PRICE) {
         // タイトルを抽出（価格の前の部分）
         const beforePrice = line.substring(0, line.indexOf(priceMatch[0]));
         let title = beforePrice.trim();
 
-        // 品番を抽出
-        const codeMatch = title.match(/^([a-zA-Z]+-?\d+)\s*/);
+        // 品番を抽出（英字2-5文字 + ハイフン(任意) + 数字3-6桁のパターン）
+        const codeMatch = title.match(/^([a-zA-Z]{2,5}-?\d{3,6})\s*/);
         let productCode: string | undefined;
         if (codeMatch && codeMatch[0] && codeMatch[1]) {
-          productCode = codeMatch[1].toUpperCase();
+          productCode = codeMatch[1].toUpperCase().replace(/-/g, '');
           title = title.substring(codeMatch[0].length).trim();
         }
 
         // タイトルのクリーンアップ
         title = title.replace(/^[\s\-・]+/, '').replace(/[\s\-・]+$/, '').trim();
+        // HTMLタグを除去（XSS対策）
+        title = title.replace(/<[^>]*>/g, '');
+        // 長すぎるタイトルを切り詰め
+        if (title.length > MAX_TITLE_LENGTH) {
+          title = title.substring(0, MAX_TITLE_LENGTH);
+        }
 
-        if (title.length >= 5 && title.length <= 200 && lastDate) {
+        if (title.length >= MIN_TITLE_LENGTH && lastDate && isValidDate(lastDate)) {
           purchases.push({
             id: `import-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             title,
@@ -178,14 +224,16 @@ function parsePurchaseHistory(text: string): ParsedPurchase[] {
     }
   }
 
-  // 重複除去
+  // 重複除去（最大1000件まで）
   const seen = new Set<string>();
-  return purchases.filter((p) => {
+  const uniquePurchases = purchases.filter((p) => {
     const key = `${p.title}-${p.price}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
+
+  return uniquePurchases.slice(0, 1000);
 }
 
 export default function PurchaseHistoryImporter({

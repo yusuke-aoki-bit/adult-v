@@ -96,9 +96,9 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 60秒ごとに再検証（searchParamsがあるため完全な静的生成は不可）
+// ISR: 5分ごとに再検証（GCPコスト削減のため延長）
 // 注: searchParamsを使用しているため、実際のキャッシュはNext.jsの判断による
-export const revalidate = 60;
+export const revalidate = 300;
 
 // キャッシュ付きクエリ（5xxエラー削減のためDB負荷を軽減）
 const getCachedTags = unstable_cache(

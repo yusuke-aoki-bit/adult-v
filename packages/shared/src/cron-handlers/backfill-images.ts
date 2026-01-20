@@ -2,12 +2,17 @@
  * 画像バックフィル ハンドラー
  *
  * サムネイル画像がない商品に対して、各ASPサイトから画像を取得
+ * 並列処理（5並列）で高速化
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
+import pLimit from 'p-limit';
 import type { DbExecutor } from '../db-queries/types';
+
+// 並列処理の同時実行数
+const CONCURRENCY = 5;
 
 interface BackfillStats {
   checked: number;
@@ -239,10 +244,10 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
 
     try {
       const url = new URL(request['url']);
-      const limit = parseInt(url.searchParams.get('limit') || '50');
+      const queryLimit = parseInt(url.searchParams.get('limit') || '50');
       const aspFilter = url.searchParams.get('asp')?.toUpperCase();
 
-      console.log(`[backfill-images] Starting: limit=${limit}, asp=${aspFilter || 'all'}`);
+      console.log(`[backfill-images] Starting: limit=${queryLimit}, asp=${aspFilter || 'all'}`);
 
       // サムネイルがない商品を取得
       let query;
@@ -254,7 +259,7 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
           WHERE p.default_thumbnail_url IS NULL
             AND ps.asp_name = ${aspFilter}
           ORDER BY p.created_at DESC
-          LIMIT ${limit}
+          LIMIT ${queryLimit}
         `;
       } else {
         query = sql`
@@ -263,7 +268,7 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
           JOIN product_sources ps ON p.id = ps.product_id
           WHERE p.default_thumbnail_url IS NULL
           ORDER BY p.created_at DESC
-          LIMIT ${limit}
+          LIMIT ${queryLimit}
         `;
       }
 
@@ -272,7 +277,10 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
 
       console.log(`[backfill-images] Found ${products.length} products without thumbnails`);
 
-      for (const product of products) {
+      // 並列処理で高速化（レート制限付き）
+      const concurrencyLimit = pLimit(CONCURRENCY);
+
+      const processProduct = async (product: ProductToBackfill) => {
         stats.checked++;
 
         try {
@@ -295,21 +303,24 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
             stats.skipped++;
           }
 
-          // レート制限
-          await new Promise(r => setTimeout(r, 1000));
+          // レート制限（各リクエスト後に200ms待機）
+          await new Promise(r => setTimeout(r, 200));
 
         } catch (error) {
           stats.failed++;
           console.error(`[backfill-images] Error for ${product.normalized_product_id}:`, error);
         }
-      }
+      };
+
+      // 並列実行
+      await Promise.all(products.map(product => concurrencyLimit(() => processProduct(product))));
 
       const duration = Math.round((Date.now() - startTime) / 1000);
 
       return NextResponse.json({
         success: true,
         message: 'Image backfill completed',
-        params: { limit, asp: aspFilter || 'all' },
+        params: { limit: queryLimit, asp: aspFilter || 'all' },
         stats,
         duration: `${duration}s`,
       });

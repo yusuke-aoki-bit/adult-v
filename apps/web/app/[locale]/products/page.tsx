@@ -84,8 +84,8 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 1分キャッシュ（searchParamsで自動的に動的になるが、キャッシュを有効化）
-export const revalidate = 60;
+// ISR: 5分キャッシュ（GCPコスト削減のため延長）
+export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ locale: string }>;
