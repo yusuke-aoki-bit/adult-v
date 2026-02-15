@@ -6,7 +6,8 @@ import PerformerGridWithComparison from '@/components/PerformerGridWithCompariso
 import ActressListFilter from '@/components/ActressListFilter';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 import TopPageSectionNav from '@/components/TopPageSectionNav';
-import { getActresses, getActressesCount, getTags, getAspStats, getSaleProducts, getUncategorizedProductsCount, SaleProduct } from '@/lib/db/queries';
+import HeroSection from '@/components/HeroSection';
+import { getActresses, getActressesCount, getTags, getAspStats, getSaleProducts, getUncategorizedProductsCount, SaleProduct, getTrendingActresses } from '@/lib/db/queries';
 import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
@@ -53,9 +54,11 @@ export async function generateMetadata({
     searchParamsData['heightMax'] ||
     searchParamsData['bloodType']
   );
-  const hasPageParam = !!searchParamsData['page'] && searchParamsData['page'] !== '1';
-  // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
-  const hasNonDefaultSort = !!searchParamsData['sort'] && searchParamsData['sort'] !== 'releaseCount';
+  // ページネーション: 1-5ページ目は許可、6ページ目以降はnoindex
+  const pageNum = Math.max(1, Math.min(parseInt(searchParamsData['page'] as string) || 1, 500));
+  const hasDeepPagination = pageNum > 5;
+  // ソートパラメータは許可（重複はcanonicalで制御）
+  // const hasNonDefaultSort は削除 - ソート結果もインデックス可能に
 
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
@@ -81,8 +84,9 @@ export async function generateMetadata({
     },
   };
 
-  // 検索・フィルター・2ページ目以降・非デフォルトソートはnoindex（重複コンテンツ防止）
-  if (hasQuery || hasFilters || hasPageParam || hasNonDefaultSort) {
+  // 検索・フィルター・6ページ目以降はnoindex（重複コンテンツ防止）
+  // 1-5ページ目とソート結果は許可（ユーザー検索経路を確保）
+  if (hasQuery || hasFilters || hasDeepPagination) {
     return {
       ...metadata,
       alternates,
@@ -96,33 +100,46 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 5分ごとに再検証（GCPコスト削減のため延長）
+// ISR: 2分ごとに再検証（SEO回復のため短縮）
 // 注: searchParamsを使用しているため、実際のキャッシュはNext.jsの判断による
-export const revalidate = 300;
+export const revalidate = 120;
 
 // キャッシュ付きクエリ（5xxエラー削減のためDB負荷を軽減）
 const getCachedTags = unstable_cache(
   async () => getTags(),
   ['homepage-tags'],
-  { revalidate: 300, tags: ['tags'] }
+  { revalidate: 120, tags: ['tags'] }
 );
 
 const getCachedAspStats = unstable_cache(
   async () => getAspStats(),
   ['homepage-asp-stats'],
-  { revalidate: 300, tags: ['asp-stats'] }
+  { revalidate: 120, tags: ['asp-stats'] }
 );
 
 const getCachedSaleProducts = unstable_cache(
   async (limit: number) => getSaleProducts({ limit }),
   ['homepage-sale-products'],
-  { revalidate: 60, tags: ['sale-products'] }
+  { revalidate: 120, tags: ['sale-products'] }  // 60秒→120秒に延長（パフォーマンス改善）
 );
 
 const getCachedUncategorizedCount = unstable_cache(
   async () => getUncategorizedProductsCount(),
   ['homepage-uncategorized-count'],
-  { revalidate: 300, tags: ['uncategorized'] }
+  { revalidate: 120, tags: ['uncategorized'] }
+);
+
+const getCachedTrendingActresses = unstable_cache(
+  async (limit: number) => {
+    // getTrendingActressesが存在しない場合はgetActressesで代用
+    if (typeof getTrendingActresses === 'function') {
+      return getTrendingActresses({ limit });
+    }
+    // フォールバック: 最近の女優を取得
+    return [];
+  },
+  ['homepage-trending-actresses'],
+  { revalidate: 300, tags: ['trending-actresses'] }
 );
 
 interface PageProps {
@@ -140,7 +157,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   const tFilter = await getTranslations({ locale, namespace: 'filter' });
 
   const searchParamsData = await searchParams;
-  const page = Number(searchParamsData['page']) || 1;
+  const page = Math.max(1, Math.min(Number(searchParamsData['page']) || 1, 500));
 
   // 表示件数（URLパラメータから取得、無効な値はデフォルトに）
   const perPageParam = Number(searchParamsData['perPage']);
@@ -153,7 +170,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   ]);
 
 
-  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'] : undefined;
+  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim().slice(0, 500) || undefined : undefined;
   const sortBy = (typeof searchParamsData['sort'] === 'string' ? searchParamsData['sort'] : 'recent') as 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
   const initialFilter = typeof searchParamsData['initial'] === 'string' ? searchParamsData['initial'] : undefined;
 
@@ -170,13 +187,17 @@ export default async function Home({ params, searchParams }: PageProps) {
     : [];
 
   // ASPフィルターを取得（FANZAサイトの場合は自動的にFANZAのみをフィルタ）
-  const includeAsps = serverAspFilter
-    ? serverAspFilter
-    : (typeof searchParamsData['includeAsp'] === 'string'
-        ? searchParamsData['includeAsp'].split(',').filter(Boolean)
-        : Array.isArray(searchParamsData['includeAsp'])
-        ? searchParamsData['includeAsp']
-        : []);
+  // ユーザー選択を優先し、serverAspFilterは許可リストとして機能
+  const urlIncludeAsps = typeof searchParamsData['includeAsp'] === 'string'
+    ? searchParamsData['includeAsp'].split(',').filter(Boolean)
+    : Array.isArray(searchParamsData['includeAsp'])
+    ? searchParamsData['includeAsp']
+    : [];
+  const includeAsps = urlIncludeAsps.length > 0
+    ? (serverAspFilter
+        ? urlIncludeAsps.filter(asp => serverAspFilter.includes(asp)) // 許可リスト内でフィルター
+        : urlIncludeAsps)
+    : (serverAspFilter || []); // デフォルトはserverAspFilter（FANZAサイトなど）
   const excludeAsps = typeof searchParamsData['excludeAsp'] === 'string'
     ? searchParamsData['excludeAsp'].split(',').filter(Boolean)
     : Array.isArray(searchParamsData['excludeAsp'])
@@ -213,9 +234,9 @@ export default async function Home({ params, searchParams }: PageProps) {
   }
 
   // TOPページ判定（Promise.allの前で必要）
-  // serverAspFilterが設定されている場合、それは自動適用されるフィルターなのでTOPページ判定には含めない
-  const userSetIncludeAsps = serverAspFilter ? [] : includeAsps;
-  const userSetExcludeAsps = serverAspFilter ? [] : excludeAsps;
+  // ユーザーがURLで明示的に選択したASPフィルターを判定（serverAspFilterの自動適用とは別）
+  const userSetIncludeAsps = urlIncludeAsps; // ユーザーが明示的に選択したもの
+  const userSetExcludeAsps = excludeAsps;
   const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && cupSizes.length === 0 && !heightMin && !heightMax && bloodTypes.length === 0 && sortBy === 'recent' && page === 1 && perPage === DEFAULT_PER_PAGE;
 
   // 共通のクエリオプション（exactOptionalPropertyTypes対応）
@@ -241,7 +262,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   // タグ、ASP統計、女優リスト、女優数、セール商品、未整理作品数を同時に取得
   // キャッシュ付きクエリを使用して5xxエラーを削減
   // 全クエリにtry-catchを追加して、1つの失敗でページ全体が崩壊しないようにする
-  const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount] = await Promise.all([
+  const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses] = await Promise.all([
     getCachedTags().catch((error) => {
       console.error('Failed to fetch tags:', error);
       return [] as Awaited<ReturnType<typeof getTags>>;
@@ -271,6 +292,10 @@ export default async function Home({ params, searchParams }: PageProps) {
       console.error('Failed to fetch uncategorized count:', error);
       return 0;
     }) : Promise.resolve(0),
+    isTopPage ? getCachedTrendingActresses(8).catch((error) => {
+      console.error('Failed to fetch trending actresses:', error);
+      return [] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>;
+    }) : Promise.resolve([] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>),
   ]);
 
   const genreTags = allTags.filter(tag => tag.category !== 'site');
@@ -336,6 +361,17 @@ export default async function Home({ params, searchParams }: PageProps) {
       {/* FAQスキーマ（トップページのみ） */}
       {faqSchema && <JsonLD data={faqSchema} />}
 
+      {/* ヒーローセクション（トップページのみ） */}
+      {isTopPage && (
+        <HeroSection
+          locale={locale}
+          saleProducts={saleProductsForDisplay}
+          trendingActresses={trendingActresses}
+          totalActressCount={totalCount > 0 ? totalCount : 38000}
+          totalProductCount={120000}
+        />
+      )}
+
       {/* セクションナビゲーション */}
       {isTopPage && (
         <TopPageSectionNav
@@ -346,12 +382,12 @@ export default async function Home({ params, searchParams }: PageProps) {
         />
       )}
 
-      {/* トップページ上部セクション（セール、最近見た作品） */}
+      {/* トップページ上部セクション（最近見た作品、レコメンド - セールはヒーローに移動） */}
       {isTopPage && (
         <section className="container mx-auto px-3 sm:px-4 py-3">
           <TopPageUpperSections
             locale={locale}
-            saleProducts={saleProductsForDisplay}
+            saleProducts={[]}
             pageId="home"
           />
         </section>

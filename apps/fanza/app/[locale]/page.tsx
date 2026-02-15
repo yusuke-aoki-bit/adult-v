@@ -108,7 +108,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   const tUncategorized = await getTranslations({ locale, namespace: 'uncategorized' });
 
   const searchParamsData = await searchParams;
-  const page = Number(searchParamsData['page']) || 1;
+  const page = Math.max(1, Math.min(Number(searchParamsData['page']) || 1, 500));
 
   // FANZAサイトかどうかを判定
   const [serverAspFilter, isFanzaSite] = await Promise.all([
@@ -117,7 +117,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   ]);
 
 
-  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'] : undefined;
+  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim().slice(0, 500) || undefined : undefined;
   const sortBy = (typeof searchParamsData['sort'] === 'string' ? searchParamsData['sort'] : 'recent') as 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
   const initialFilter = typeof searchParamsData['initial'] === 'string' ? searchParamsData['initial'] : undefined;
 

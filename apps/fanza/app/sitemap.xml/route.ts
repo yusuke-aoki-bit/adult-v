@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.f.adult-v.com';
+const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://f.adult-v.com';
 
 export const revalidate = 3600; // 1時間キャッシュ
+
+// 女優チャンク数: 38,000人 ÷ 5,000 = 8チャンク
+const ACTRESS_CHUNK_COUNT = 8;
 
 /**
  * サイトマップインデックス - 大規模サイト対応
@@ -14,7 +17,10 @@ export async function GET() {
     `${BASE_URL}/sitemap-static.xml`,
     `${BASE_URL}/sitemap-products-1.xml`,
     `${BASE_URL}/sitemap-products-2.xml`,
-    `${BASE_URL}/sitemap-actresses.xml`,
+    // 女優チャンク（sitemap-actresses-0.xml ~ sitemap-actresses-7.xml）
+    ...Array.from({ length: ACTRESS_CHUNK_COUNT }, (_, i) =>
+      `${BASE_URL}/sitemap-actresses-${i}.xml`
+    ),
     `${BASE_URL}/sitemap-tags.xml`,
   ];
 

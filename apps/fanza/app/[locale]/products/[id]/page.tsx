@@ -17,8 +17,6 @@ import {
   productDetailTranslations,
   CopyButton,
 } from '@adult-v/shared/components';
-// AffiliateButton is available but currently unused - keeping import for future use
-// import AffiliateButton from '@/components/AffiliateButton';
 import FavoriteButton from '@/components/FavoriteButton';
 import StickyCta from '@/components/StickyCta';
 import AiProductDescriptionWrapper from '@/components/AiProductDescriptionWrapper';

@@ -192,7 +192,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   if (!actress) actress = await getActressById(performerId, locale);
   if (!actress) notFound();
 
-  const page = parseInt(resolvedSearchParams.page || '1', 10);
+  const page = Math.max(1, Math.min(parseInt(resolvedSearchParams.page || '1', 10), 500));
   const sortBy = (resolvedSearchParams.sort || 'releaseDateDesc') as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'titleAsc';
 
 

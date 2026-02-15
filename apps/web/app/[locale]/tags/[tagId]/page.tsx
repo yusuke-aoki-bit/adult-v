@@ -102,7 +102,7 @@ export default async function TagPage({ params, searchParams }: PageProps) {
       locale === 'ko' && tag.nameKo ? tag.nameKo :
         tag.name;
 
-  const page = parseInt(resolvedSearchParams.page || '1', 10);
+  const page = Math.max(1, Math.min(parseInt(resolvedSearchParams.page || '1', 10), 500));
   const perPage = 24;
   const offset = (page - 1) * perPage;
 

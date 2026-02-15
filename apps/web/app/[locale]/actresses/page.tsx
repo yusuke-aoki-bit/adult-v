@@ -223,7 +223,7 @@ const translations = {
 export default async function ActressesPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const { page: pageStr, sort = 'popular', q, debutYear, minWorks, initial } = await searchParams;
-  const page = Math.max(1, parseInt(pageStr || '1', 10));
+  const page = Math.max(1, Math.min(parseInt(pageStr || '1', 10), 500));
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const tNav = await getTranslations('nav');
 

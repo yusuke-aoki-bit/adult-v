@@ -3,7 +3,7 @@ import { getDb } from '@/lib/db';
 import { performers } from '@/lib/db/schema';
 import { desc, sql } from 'drizzle-orm';
 
-const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://f.adult-v.com';
 const CHUNK_SIZE = 5000;
 
 export const dynamic = 'force-dynamic'; // ビルド時プリレンダリング回避（DB依存）

@@ -174,7 +174,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
     : sort === 'newest' ? 'releaseDateDesc'
     : 'releaseDateAsc';
 
-  const products = await getSeriesProducts(parseInt(seriesId), { sortBy, locale });
+  const products: SeriesProduct[] = await getSeriesProducts(parseInt(seriesId), { sortBy, locale });
 
   const name = locale === 'en' && seriesInfo.nameEn ? seriesInfo.nameEn
     : locale === 'zh' && seriesInfo.nameZh ? seriesInfo.nameZh

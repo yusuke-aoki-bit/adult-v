@@ -40,9 +40,10 @@ import ActressSectionNav from '@/components/ActressSectionNav';
 import PerPageDropdown from '@/components/PerPageDropdown';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// getTranslationsを使用するServer ComponentsはISRとの互換性がないため、
-// force-dynamicを設定して動的レンダリングを強制
-export const dynamic = 'force-dynamic';
+// ISR有効化: Next.js 16 + next-intl v4.6ではgetTranslationsとISRの互換性問題が解決済み
+// 5分ごとに再検証（人気ページのため短め）
+export const revalidate = 300;
+export const dynamicParams = true;
 
 interface PageProps {
   params: Promise<{ performerId: string; locale: string }>;
@@ -61,16 +62,20 @@ interface PageProps {
 
 /**
  * ビルド時に人気女優をプリレンダリング
- * 作品数上位1000名（日本語版のみ）
+ * 作品数上位5000名 × 5言語 = 最大25,000ページ
  */
 export async function generateStaticParams(): Promise<Array<{ performerId: string; locale: string }>> {
   try {
     const { getActresses } = await import('@/lib/db/queries');
-    const topActresses = await getActresses({ limit: 1000, sortBy: 'productCountDesc' });
-    return topActresses.map((actress) => ({
-      performerId: actress.id.toString(),
-      locale: 'ja',
-    }));
+    const topActresses = await getActresses({ limit: 5000, sortBy: 'productCountDesc' });
+    const locales = ['ja', 'en', 'zh', 'zh-TW', 'ko'];
+
+    return topActresses.flatMap((actress) =>
+      locales.map((locale) => ({
+        performerId: actress.id.toString(),
+        locale,
+      }))
+    );
   } catch {
     return [];
   }
@@ -197,7 +202,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   if (!actress) actress = await getActressById(performerId, locale);
   if (!actress) notFound();
 
-  const page = parseInt(resolvedSearchParams.page || '1', 10);
+  const page = Math.max(1, Math.min(parseInt(resolvedSearchParams.page || '1', 10), 500));
   const sortBy = (resolvedSearchParams.sort || 'releaseDateDesc') as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'titleAsc';
 
   // 表示件数（URLパラメータから取得、無効な値はデフォルトに）

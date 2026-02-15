@@ -23,18 +23,31 @@ function getHreflangLinks(path: string): string {
 }
 
 /**
- * 女優ページのサイトマップ
- * 作品数の多い順に上位3000名を掲載
+ * 女優ページのサイトマップ（レガシー）
+ * sitemap-actresses-[chunk].xml に移行済み
+ * このエンドポイントはチャンク版サイトマップインデックスへリダイレクト
  */
 export async function GET() {
+  const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
+
+  // チャンク版サイトマップを使用するよう、サイトマップインデックスにリダイレクト
+  // 旧URLにアクセスがあった場合の後方互換性を維持
+  return NextResponse.redirect(`${BASE_URL}/sitemap.xml`, 301);
+}
+
+/**
+ * @deprecated このエンドポイントは廃止予定です。
+ * sitemap-actresses-[chunk].xml を使用してください。
+ */
+async function _legacyGetAllActresses() {
   if (!process.env['DATABASE_URL']) {
-    return new NextResponse('Database not configured', { status: 500 });
+    return null;
   }
 
   try {
     const db = getDb();
 
-    // 作品数の多い女優を取得
+    // 作品数の多い女優を取得（レガシー参照用）
     const topPerformers = await db
       .select({
         id: performers.id,
@@ -44,7 +57,7 @@ export async function GET() {
       .leftJoin(productPerformers, eq(performers.id, productPerformers.performerId))
       .groupBy(performers.id, performers.createdAt)
       .orderBy(desc(sql`COUNT(DISTINCT ${productPerformers.productId})`))
-      .limit(3000);
+      .limit(50000); // 制限を大幅に緩和（全女優対応）
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"

@@ -36,18 +36,25 @@ export default function LoadMoreProducts({
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialProducts.length < totalCount);
+  const [hasError, setHasError] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
+
+  // 競合状態防止用のref（最新の値を追跡）
+  const productsLengthRef = useRef(products.length);
+  productsLengthRef.current = products.length;
 
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;
 
     setIsLoading(true);
+    setHasError(false);
     try {
       const nextPage = page + 1;
+      const offset = nextPage * perPage; // page=1なら offset=perPage (初期表示分の次から)
       const params = new URLSearchParams({
         ...filterParams,
-        page: String(nextPage),
-        perPage: String(perPage),
+        offset: String(offset),
+        limit: String(perPage),
       });
 
       const response = await fetch(`/api/products?${params.toString()}`);
@@ -62,18 +69,19 @@ export default function LoadMoreProducts({
         setProducts(prev => [...prev, ...newProducts]);
         setPage(nextPage);
 
-        // 全データを取得したかチェック
-        const totalLoaded = products.length + newProducts.length;
+        // refを使用して最新の値を取得（競合状態防止）
+        const totalLoaded = productsLengthRef.current + newProducts.length;
         if (totalLoaded >= totalCount) {
           setHasMore(false);
         }
       }
     } catch (error) {
       console.error('Error loading more products:', error);
+      setHasError(true);
     } finally {
       setIsLoading(false);
     }
-  }, [page, isLoading, hasMore, filterParams, perPage, products.length, totalCount]);
+  }, [page, isLoading, hasMore, filterParams, perPage, totalCount]);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -126,7 +134,19 @@ export default function LoadMoreProducts({
           </div>
         )}
 
-        {hasMore && !isLoading && (
+        {hasError && (
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-red-400 text-sm">{t('loadError') || '読み込みに失敗しました'}</p>
+            <button
+              onClick={loadMore}
+              className="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
+            >
+              {t('retry') || '再試行'}
+            </button>
+          </div>
+        )}
+
+        {hasMore && !isLoading && !hasError && (
           <button
             onClick={loadMore}
             className="px-8 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors border border-gray-700 hover:border-rose-500"

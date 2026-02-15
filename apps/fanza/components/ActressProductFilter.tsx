@@ -33,8 +33,6 @@ interface ActressProductFilterProps {
   };
 }
 
-// FANZA専用サイトのためASPフィルターは使用しない
-// const allAvailableAsps = ['DUGA', 'DTI', 'Sokmil', 'MGS', 'b10f', 'FC2', 'Japanska'];
 
 export default function ActressProductFilter({
   genreTags,

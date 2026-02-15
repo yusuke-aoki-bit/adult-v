@@ -41,9 +41,11 @@ export async function generateMetadata({
     searchParamsData['uncategorized'] ||
     searchParamsData['releaseDate']
   );
-  const hasPageParam = !!searchParamsData['page'] && searchParamsData['page'] !== '1';
-  // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
-  const hasNonDefaultSort = !!searchParamsData['sort'] && searchParamsData['sort'] !== 'releaseDate';
+  // ページネーション: 1-5ページ目は許可、6ページ目以降はnoindex
+  const pageNum = Math.max(1, Math.min(parseInt(searchParamsData['page'] as string) || 1, 500));
+  const hasDeepPagination = pageNum > 5;
+  // ソートパラメータは許可（重複はcanonicalで制御）
+  // const hasNonDefaultSort は削除 - ソート結果もインデックス可能に
 
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
@@ -69,8 +71,9 @@ export async function generateMetadata({
     },
   };
 
-  // 検索/フィルター結果・2ページ目以降・非デフォルトソートはnoindex（重複コンテンツ防止）
-  if (hasQuery || hasFilters || hasPageParam || hasNonDefaultSort) {
+  // 検索・フィルター・6ページ目以降はnoindex（重複コンテンツ防止）
+  // 1-5ページ目とソート結果は許可（ユーザー検索経路を確保）
+  if (hasQuery || hasFilters || hasDeepPagination) {
     return {
       ...metadata,
       alternates,
@@ -84,8 +87,8 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 5分キャッシュ（GCPコスト削減のため延長）
-export const revalidate = 300;
+// ISR: 1分キャッシュ（SEO回復のため短縮）
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -98,7 +101,7 @@ const VALID_PER_PAGE = [12, 24, 48, 96];
 export default async function ProductsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const searchParamsData = await searchParams;
-  const page = Number(searchParamsData['page']) || 1;
+  const page = Math.max(1, Math.min(Number(searchParamsData['page']) || 1, 500));
 
   // 表示件数（URLパラメータから取得、無効な値はデフォルトに）
   const perPageParam = Number(searchParamsData['perPage']);
@@ -113,7 +116,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   ]);
 
 
-  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim() : undefined;
+  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim().slice(0, 500) || undefined : undefined;
 
   // ASPフィルターの決定ロジック:
   // 1. URLパラメータが指定されている場合は、それを優先（サイト許可ASP内でフィルター）

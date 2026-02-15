@@ -233,13 +233,26 @@ function RecommendationsContent({ locale }: { locale: string }) {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/recommendations/from-history?limit=8&locale=${locale}`);
+      // POSTリクエストでhistoryをbodyに含める
+      const response = await fetch(`/api/recommendations/from-history`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          history: recentlyViewed.slice(0, 10).map(item => ({
+            id: item.id,
+            title: item.title,
+          })),
+          limit: 8,
+        }),
+      });
       if (response.ok) {
         const data = await response.json();
         setProducts(data.recommendations || []);
         // 女優データも取得
-        if (data.topPerformers) {
-          setActresses(data.topPerformers.slice(0, 6));
+        if (data.userProfile?.topPerformers) {
+          setActresses(data.userProfile.topPerformers.slice(0, 6));
         }
       }
     } catch (error) {
@@ -248,7 +261,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
       setLoading(false);
       setHasFetched(true);
     }
-  }, [hasFetched, recentlyViewed.length, locale]);
+  }, [hasFetched, recentlyViewed, locale]);
 
   useEffect(() => {
     if (!historyLoading && recentlyViewed.length >= 1) {

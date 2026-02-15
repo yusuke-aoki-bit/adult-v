@@ -42,21 +42,29 @@ export default function LoadMoreActresses({
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialPerformers.length < totalCount);
+  const [hasError, setHasError] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
+
+  // 競合状態防止用のref（最新の値を追跡）
+  const performersLengthRef = useRef(performers.length);
+  performersLengthRef.current = performers.length;
 
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;
 
     setIsLoading(true);
+    setHasError(false);
     try {
       const nextPage = page + 1;
+      const offset = nextPage * perPage; // page=1なら offset=48 (初期表示分の次から)
       const params = new URLSearchParams({
-        page: String(nextPage),
-        sort,
-        ...(query && { q: query }),
+        offset: String(offset),
+        limit: String(perPage),
+        ...(query && { query }),
+        ...(sort && { sort }),
       });
 
-      const response = await fetch(`/api/ranking/actresses?${params.toString()}&limit=${perPage}`);
+      const response = await fetch(`/api/actresses?${params.toString()}`);
       if (!response.ok) throw new Error('Failed to fetch');
 
       const data = await response.json();
@@ -68,17 +76,19 @@ export default function LoadMoreActresses({
         setPerformers(prev => [...prev, ...newPerformers]);
         setPage(nextPage);
 
-        const totalLoaded = performers.length + newPerformers.length;
+        // refを使用して最新の値を取得（競合状態防止）
+        const totalLoaded = performersLengthRef.current + newPerformers.length;
         if (totalLoaded >= totalCount) {
           setHasMore(false);
         }
       }
     } catch (error) {
       console.error('Error loading more actresses:', error);
+      setHasError(true);
     } finally {
       setIsLoading(false);
     }
-  }, [page, isLoading, hasMore, sort, query, perPage, performers.length, totalCount]);
+  }, [page, isLoading, hasMore, sort, query, perPage, totalCount]);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -154,7 +164,19 @@ export default function LoadMoreActresses({
           </div>
         )}
 
-        {hasMore && !isLoading && (
+        {hasError && (
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-red-400 text-sm">読み込みに失敗しました</p>
+            <button
+              onClick={loadMore}
+              className="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
+            >
+              再試行
+            </button>
+          </div>
+        )}
+
+        {hasMore && !isLoading && !hasError && (
           <button
             onClick={loadMore}
             className="px-8 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors border border-gray-700 hover:border-pink-500"

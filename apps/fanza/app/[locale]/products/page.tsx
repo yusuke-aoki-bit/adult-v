@@ -97,7 +97,7 @@ const VALID_PER_PAGE = [24, 36, 48];
 export default async function ProductsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const searchParamsData = await searchParams;
-  const page = Number(searchParamsData['page']) || 1;
+  const page = Math.max(1, Math.min(Number(searchParamsData['page']) || 1, 500));
 
   // 表示件数（URLパラメータから取得、無効な値はデフォルトに）
   const perPageParam = Number(searchParamsData['perPage']);
@@ -112,7 +112,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   ]);
 
 
-  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim() : undefined;
+  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim().slice(0, 500) || undefined : undefined;
 
   // ASPフィルターの決定ロジック:
   // 1. URLパラメータが指定されている場合は、それを優先（サイト許可ASP内でフィルター）

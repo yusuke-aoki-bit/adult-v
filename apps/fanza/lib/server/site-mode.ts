@@ -1,5 +1,6 @@
 import { headers } from 'next/headers';
 import { getSiteMode, getSiteConfig, type SiteMode, type SiteConfig } from '@/lib/site-config';
+import { ADULT_V_ASPS } from '@adult-v/shared/asp-registry';
 
 /**
  * サーバーコンポーネントからサイトモードを取得
@@ -31,9 +32,6 @@ export async function getServerSiteConfig(): Promise<SiteConfig> {
   const mode = await getServerSiteMode();
   return getSiteConfig(mode);
 }
-
-// Adult Viewerで表示するASP一覧（FANZA以外）
-const ADULT_V_ASPS = ['MGS', 'DUGA', 'SOKMIL', 'b10f', 'FC2', 'caribbeancom', 'caribbeancompr', '1pondo', 'heyzo', '10musume', 'pacopacomama', 'muramura', 'tokyohot', 'Japanska'];
 
 /**
  * サーバーコンポーネントからASPフィルターを取得

@@ -78,10 +78,10 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
-  const page = parseInt(resolvedSearchParams.page || '1', 10);
+  const page = Math.max(1, Math.min(parseInt(resolvedSearchParams.page || '1', 10), 500));
   const perPage = 48;
   const aspFilter = resolvedSearchParams.asp;
-  const minDiscount = parseInt(resolvedSearchParams.minDiscount || '0', 10);
+  const minDiscount = Math.max(0, Math.min(parseInt(resolvedSearchParams.minDiscount || '0', 10), 100));
 
   // セール商品を取得（最大500件）
   const allSaleProducts = await getSaleProducts({ limit: 500 });

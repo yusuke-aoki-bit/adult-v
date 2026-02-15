@@ -14,25 +14,14 @@ export default function robots(): MetadataRoute.Robots {
           '/_next/',
           '/private/',
           '/age-verification',
-          // 言語プレフィックス付きURLを除外（?hl=パラメータ方式に統一、重複コンテンツ防止）
-          '/ja/',
-          '/en/',
-          '/zh/',
-          '/zh-TW/',
-          '/ko/',
+          // 言語プレフィックスは許可（hreflangで適切に設定）
+          // 重複コンテンツはcanonicalタグで制御
           // レガシーフィルターURL（/products?include=にリダイレクト済み）
           '/categories/*',
-          // フィルターパラメータ付きURLを除外（重複コンテンツ防止）
-          '/*?*include=',
-          '/*?*exclude=',
-          '/*?*hasVideo=',
-          '/*?*hasImage=',
-          '/*?*performerType=',
-          '/*?*asp=',
-          // ページネーションパラメータ付きURLを除外（sitemap以外からの発見を防ぐ）
-          '/*?*page=',
-          // ソートパラメータ付きURLを除外
-          '/*?*sort=',
+          // 複合フィルターパラメータのみ除外（探索的クロールを許可しつつ重複を防止）
+          '/*?*include=*&*exclude=',
+          // ページネーション・ソートは許可（noindex/canonicalで制御）
+          // シンプルなフィルターは許可（ユーザーの検索経路を確保）
         ],
       },
       // Specific rules for well-behaved bots (Google)
@@ -51,17 +40,10 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/private/',
           '/age-verification',
-          // 言語プレフィックス付きURLを除外（?hl=パラメータ方式に統一）
-          '/ja/',
-          '/en/',
-          '/zh/',
-          '/zh-TW/',
-          '/ko/',
+          // 言語プレフィックスは許可（hreflangで適切に設定）
           '/categories/*',
-          '/*?*include=',
-          '/*?*exclude=',
-          '/*?*page=',
-          '/*?*sort=',
+          // 複合フィルターのみ除外
+          '/*?*include=*&*exclude=',
         ],
       },
       // Bing, Yahoo, DuckDuckGo
@@ -74,9 +56,7 @@ export default function robots(): MetadataRoute.Robots {
           '/private/',
           '/age-verification',
           '/categories/*',
-          '/*?*include=',
-          '/*?*exclude=',
-          '/*?*page=',
+          '/*?*include=*&*exclude=',
         ],
         crawlDelay: 1,
       },
@@ -90,9 +70,7 @@ export default function robots(): MetadataRoute.Robots {
           '/private/',
           '/age-verification',
           '/categories/*',
-          '/*?*include=',
-          '/*?*exclude=',
-          '/*?*page=',
+          '/*?*include=*&*exclude=',
         ],
         crawlDelay: 0.5,
       },
@@ -106,9 +84,7 @@ export default function robots(): MetadataRoute.Robots {
           '/private/',
           '/age-verification',
           '/categories/*',
-          '/*?*include=',
-          '/*?*exclude=',
-          '/*?*page=',
+          '/*?*include=*&*exclude=',
         ],
         crawlDelay: 1,
       },
@@ -122,9 +98,7 @@ export default function robots(): MetadataRoute.Robots {
           '/private/',
           '/age-verification',
           '/categories/*',
-          '/*?*include=',
-          '/*?*exclude=',
-          '/*?*page=',
+          '/*?*include=*&*exclude=',
         ],
         crawlDelay: 1,
       },

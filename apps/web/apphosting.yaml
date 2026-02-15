@@ -1,10 +1,10 @@
 runConfig:
   runtime: nodejs20
   concurrency: 100
-  minInstances: 0
-  maxInstances: 2
+  minInstances: 1
+  maxInstances: 3
   cpu: 1
-  memoryMiB: 1536
+  memoryMiB: 1792
   vpcAccess:
     connector: projects/adult-v/locations/asia-east1/connectors/adult-v-connector
     egress: PRIVATE_RANGES_ONLY
