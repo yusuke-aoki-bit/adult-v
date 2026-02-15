@@ -38,6 +38,7 @@ import PerformerRelationMap from '@/components/PerformerRelationMap';
 import SimilarPerformerMap from '@/components/SimilarPerformerMap';
 import ActressSectionNav from '@/components/ActressSectionNav';
 import PerPageDropdown from '@/components/PerPageDropdown';
+import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 
 // ISR有効化: Next.js 16 + next-intl v4.6ではgetTranslationsとISRの互換性問題が解決済み
@@ -272,12 +273,21 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // aiReviewがオブジェクト型の場合は空文字列を使用
   const aiReviewText = typeof actress.aiReview === 'string' ? actress.aiReview : '';
   // exactOptionalPropertyTypes対応: undefinedを含むプロパティは条件付きで追加
-  const personSchemaOptions: { workCount: number; aliases: string[]; debutYear?: number } = {
+  // sameAs: FANZA専門サイトのURLを生成（クロスプラットフォーム連携）
+  const sameAsUrls: string[] = [];
+  if (productCountByAsp.some(asp => asp.aspName.toUpperCase() === 'FANZA')) {
+    sameAsUrls.push(`https://www.f.adult-v.com/actress/${actress.id}`);
+  }
+
+  const personSchemaOptions: { workCount: number; aliases: string[]; debutYear?: number; sameAs?: string[] } = {
     workCount: total,
     aliases: nonPrimaryAliases.map(a => a.aliasName),
   };
   if (careerAnalysis?.debutYear != null) {
     personSchemaOptions.debutYear = careerAnalysis.debutYear;
+  }
+  if (sameAsUrls.length > 0) {
+    personSchemaOptions.sameAs = sameAsUrls;
   }
 
   const personSchema = generatePersonSchema(
@@ -426,6 +436,23 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                     compact
                   />
                 )}
+              </div>
+            )}
+            {/* 人気ジャンルリンク（回遊促進） */}
+            {genreTags.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {genreTags.slice(0, 8).map((tag) => (
+                  <Link
+                    key={tag.id}
+                    href={localizedHref(`/tags/${tag.id}`, locale)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-700/80 hover:bg-rose-600/30 text-gray-300 hover:text-rose-300 rounded-full text-[10px] sm:text-xs transition-colors border border-gray-600/50 hover:border-rose-500/50"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    {tag.name}
+                  </Link>
+                ))}
               </div>
             )}
             {/* ソートドロップダウン・表示件数 */}

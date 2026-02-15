@@ -4,7 +4,7 @@ import '@/lib/db/schema';
 import { sql } from 'drizzle-orm';
 import { getCache, setCache, generateCacheKey } from '@adult-v/shared/lib/cache';
 
-export const revalidate = 60; // 1分キャッシュ
+export const revalidate = 300; // 5分キャッシュ
 export const runtime = 'nodejs';
 
 const CACHE_TTL = 60 * 5; // 5分

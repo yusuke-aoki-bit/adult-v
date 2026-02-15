@@ -122,11 +122,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         ...(product.discount != null && { discount: product.discount }),
         ...(product.rating != null && { rating: product.rating }),
         ...(product.reviewCount != null && { reviewCount: product.reviewCount }),
+        ...(product.duration != null && { duration: product.duration }),
+        ...(product.provider != null && { provider: product.providerLabel || product.provider }),
+        ...(product.sampleVideos && product.sampleVideos.length > 0 && { sampleVideoCount: product.sampleVideos.length }),
+        locale,
       },
     );
 
     // SEO: Titleに品番を含める（Google検索で品番検索時にヒットさせる）
-    const seoTitle = productId ? `${productId} ${product.title}` : product.title;
+    // セール時は割引率を含めてCTR向上
+    const salePrefix = product.discount && product.discount > 0 ? `【${product.discount}%OFF】` : '';
+    const seoTitle = salePrefix + (productId ? `${productId} ${product.title}` : product.title);
 
     // canonical URLは全言語で統一（パラメータなし）
     const productPath = `/products/${product.id}`;
@@ -343,13 +349,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const aggregateOfferSchema = sourcesWithSales.length > 1
     ? generateAggregateOfferSchema(
         sourcesWithSales.map(source => {
-          const offer: { providerName: string; price: number; salePrice?: number; url: string; availability?: 'InStock' | 'OutOfStock' } = {
+          const offer: { providerName: string; price: number; salePrice?: number; url: string; availability?: 'InStock' | 'OutOfStock'; saleEndAt?: string } = {
             providerName: source.aspName,
             price: source.regularPrice ?? 0,
             url: source.affiliateUrl || '',
             availability: 'InStock',
           };
           if (source.salePrice != null) offer.salePrice = source.salePrice;
+          if (source.saleEndAt) offer.saleEndAt = new Date(source.saleEndAt).toISOString();
           return offer;
         }),
         'JPY',
@@ -673,9 +680,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         <Link
                           key={tag.id}
                           href={localizedHref(`/tags/${tag.id}`, locale)}
-                          className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-full text-sm transition-colors"
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-gray-700 hover:bg-rose-600/30 text-gray-200 hover:text-rose-300 rounded-full text-sm transition-colors border border-transparent hover:border-rose-500/40"
                         >
                           {tag.name}
+                          <svg className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 -mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
                         </Link>
                       ))}
                     </div>

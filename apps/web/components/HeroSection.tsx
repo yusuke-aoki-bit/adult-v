@@ -282,14 +282,14 @@ export default function HeroSection({
                 <>
                   <button
                     onClick={goToPrev}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 p-3 sm:p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
                     aria-label="前の商品"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
                   <button
                     onClick={goToNext}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-3 sm:p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
                     aria-label="次の商品"
                   >
                     <ChevronRight className="w-6 h-6" />

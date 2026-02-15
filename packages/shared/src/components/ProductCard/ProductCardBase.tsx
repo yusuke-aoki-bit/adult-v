@@ -335,8 +335,10 @@ function ProductCardBase({
                 src={imgSrc}
                 alt={altText}
                 fill
-                sizes="(max-width: 640px) 25vw, (max-width: 1024px) 16vw, 8vw"
+                sizes="(max-width: 640px) 15vw, (max-width: 1024px) 10vw, 6vw"
                 className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isUncensored ? 'blur-[1px]' : ''}`}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
                 loading={priority ? "eager" : "lazy"}
                 priority={priority}
                 fetchPriority={priority ? "high" : "low"}

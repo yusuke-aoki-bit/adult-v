@@ -87,8 +87,8 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 1分キャッシュ（SEO回復のため短縮）
-export const revalidate = 60;
+// ISR: 5分キャッシュ（DB負荷軽減）
+export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ locale: string }>;

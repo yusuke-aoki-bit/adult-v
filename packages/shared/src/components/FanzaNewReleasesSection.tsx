@@ -1,7 +1,3 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 
 const FANZA_SITE_URL = 'https://www.f.adult-v.com';
@@ -19,6 +15,7 @@ interface FanzaProduct {
 interface FanzaNewReleasesSectionProps {
   locale?: string;
   className?: string;
+  products: FanzaProduct[];
 }
 
 const translations = {
@@ -66,31 +63,12 @@ const translations = {
 export function FanzaNewReleasesSection({
   locale = 'ja',
   className = '',
+  products,
 }: FanzaNewReleasesSectionProps) {
   const t = translations[locale as keyof typeof translations] || translations.ja;
-  const [products, setProducts] = useState<FanzaProduct[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        // FANZA商品を取得（新作順、8件）
-        const res = await fetch('/api/products?limit=8&sort=releaseDateDesc&includeAsp=FANZA');
-        if (res.ok) {
-          const data = await res.json();
-          setProducts(data.products || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch FANZA products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
-
-  // ローディング中または商品がない場合は表示しない
-  if (loading || products.length === 0) {
+  // 商品がない場合は表示しない
+  if (products.length === 0) {
     return null;
   }
 

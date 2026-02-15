@@ -7,7 +7,7 @@ import ActressListFilter from '@/components/ActressListFilter';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 import TopPageSectionNav from '@/components/TopPageSectionNav';
 import HeroSection from '@/components/HeroSection';
-import { getActresses, getActressesCount, getTags, getAspStats, getSaleProducts, getUncategorizedProductsCount, SaleProduct, getTrendingActresses } from '@/lib/db/queries';
+import { getActresses, getActressesCount, getTags, getAspStats, getSaleProducts, getUncategorizedProductsCount, SaleProduct, getTrendingActresses, getProducts } from '@/lib/db/queries';
 import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
@@ -100,9 +100,9 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 2分ごとに再検証（SEO回復のため短縮）
+// ISR: 5分キャッシュ（DB負荷軽減）
 // 注: searchParamsを使用しているため、実際のキャッシュはNext.jsの判断による
-export const revalidate = 120;
+export const revalidate = 300;
 
 // キャッシュ付きクエリ（5xxエラー削減のためDB負荷を軽減）
 const getCachedTags = unstable_cache(
@@ -262,7 +262,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   // タグ、ASP統計、女優リスト、女優数、セール商品、未整理作品数を同時に取得
   // キャッシュ付きクエリを使用して5xxエラーを削減
   // 全クエリにtry-catchを追加して、1つの失敗でページ全体が崩壊しないようにする
-  const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses] = await Promise.all([
+  const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses, fanzaProducts] = await Promise.all([
     getCachedTags().catch((error) => {
       console.error('Failed to fetch tags:', error);
       return [] as Awaited<ReturnType<typeof getTags>>;
@@ -296,6 +296,10 @@ export default async function Home({ params, searchParams }: PageProps) {
       console.error('Failed to fetch trending actresses:', error);
       return [] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>;
     }) : Promise.resolve([] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>),
+    (isTopPage && !isFanzaSite) ? getProducts({ limit: 8, sortBy: 'releaseDateDesc', providers: ['FANZA'] }).catch((error) => {
+      console.error('Failed to fetch FANZA products:', error);
+      return [] as Awaited<ReturnType<typeof getProducts>>;
+    }) : Promise.resolve([] as Awaited<ReturnType<typeof getProducts>>),
   ]);
 
   const genreTags = allTags.filter(tag => tag.category !== 'site');
@@ -507,7 +511,17 @@ export default async function Home({ params, searchParams }: PageProps) {
 
       {/* FANZA新作ピックアップ（FANZA専門サイトへの導線強化） */}
       {!isFanzaSite && isTopPage && (
-        <FanzaNewReleasesSection locale={locale} />
+        <FanzaNewReleasesSection
+          locale={locale}
+          products={fanzaProducts.map(p => ({
+            id: p.id,
+            title: p.title,
+            imageUrl: p.imageUrl ?? null,
+            salePrice: p.salePrice,
+            price: p.price,
+            discount: p.discount,
+          }))}
+        />
       )}
     </div>
   );

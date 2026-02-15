@@ -654,7 +654,7 @@ export function TopPageLowerSections({
             title="今週の注目"
             subtitle="話題の女優と作品"
             theme="dark"
-            defaultOpen={false}
+            defaultOpen={true}
           >
             <WeeklyHighlightsContent locale={locale} />
           </TopPageMenuSection>
@@ -689,7 +689,7 @@ export function TopPageLowerSections({
             title={locale === 'ja' ? 'オリジナルコンテンツ' : 'Original Content'}
             subtitle={locale === 'ja' ? '独自の分析・特集ページ' : 'Exclusive analysis and features'}
             theme="dark"
-            defaultOpen={false}
+            defaultOpen={true}
           >
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
               <a

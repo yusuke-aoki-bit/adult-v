@@ -41,6 +41,7 @@ export function generateOptimizedDescription(
     reviewCount?: number;
     duration?: number;
     provider?: string;
+    sampleVideoCount?: number;
     locale?: string;
   },
 ): string {
@@ -78,13 +79,14 @@ function generateJapaneseProductDescription(
     reviewCount?: number;
     duration?: number;
     provider?: string;
+    sampleVideoCount?: number;
   },
 ): string {
   const parts: string[] = [];
 
-  // セール時は割引を最優先
+  // セール時は割引を最優先（緊急性CTR向上）
   if (options?.['discount'] && options['discount'] > 0) {
-    parts.push(`【${options['discount']}%OFF】`);
+    parts.push(`【${options['discount']}%OFF セール中】`);
   }
 
   // 品番（検索ヒット用）
@@ -94,7 +96,7 @@ function generateJapaneseProductDescription(
 
   // タイトル（短縮）
   if (title) {
-    const maxLen = options?.['discount'] ? 30 : 40;
+    const maxLen = options?.['discount'] ? 25 : 35;
     parts.push(title.length > maxLen ? title.substring(0, maxLen) + '…' : title);
   }
 
@@ -103,19 +105,24 @@ function generateJapaneseProductDescription(
     parts.push(`${actressName}出演`);
   }
 
+  // ジャンルタグ（最初の3つ、CTR向上）
+  if (tags && tags.length > 0) {
+    parts.push(tags.slice(0, 3).join('・'));
+  }
+
   // 時間
   if (options?.['duration'] && options['duration'] > 0) {
     parts.push(`${options['duration']}分`);
   }
 
-  // プロバイダー + アクション誘導
-  if (options?.['provider']) {
-    parts.push(`${options['provider']}で今すぐ視聴`);
+  // 評価 + レビュー数（社会的証明でCTR向上）
+  if (options?.['rating'] && options['rating'] >= 3.5 && options?.['reviewCount'] && options['reviewCount'] >= 3) {
+    parts.push(`★${options['rating'].toFixed(1)}(${options['reviewCount']}件)`);
   }
 
-  // 評価（高評価のみ）
-  if (options?.['rating'] && options['rating'] >= 4.0 && options?.['reviewCount'] && options['reviewCount'] >= 3) {
-    parts.push(`★${options['rating'].toFixed(1)}評価`);
+  // サンプル動画（無料プレビューを訴求）
+  if (options?.['sampleVideoCount'] && options['sampleVideoCount'] > 0) {
+    parts.push(`サンプル動画${options['sampleVideoCount']}本`);
   }
 
   const description = parts.join(' - ');
@@ -140,13 +147,14 @@ function generateEnglishProductDescription(
     reviewCount?: number;
     duration?: number;
     provider?: string;
+    sampleVideoCount?: number;
   },
 ): string {
   const parts: string[] = [];
 
   // Sale first for CTR
   if (options?.['discount'] && options['discount'] > 0) {
-    parts.push(`[${options['discount']}% OFF]`);
+    parts.push(`[${options['discount']}% OFF Sale]`);
   }
 
   // Product code for search
@@ -156,7 +164,7 @@ function generateEnglishProductDescription(
 
   // Title (shortened)
   if (title) {
-    const maxLen = options?.['discount'] ? 30 : 40;
+    const maxLen = options?.['discount'] ? 25 : 35;
     parts.push(title.length > maxLen ? title.substring(0, maxLen) + '…' : title);
   }
 
@@ -165,19 +173,24 @@ function generateEnglishProductDescription(
     parts.push(`feat. ${actressName}`);
   }
 
+  // Genre tags
+  if (tags && tags.length > 0) {
+    parts.push(tags.slice(0, 3).join(', '));
+  }
+
   // Duration
   if (options?.['duration'] && options['duration'] > 0) {
     parts.push(`${options['duration']}min`);
   }
 
-  // Provider + CTA
-  if (options?.['provider']) {
-    parts.push(`Watch now on ${options['provider']}`);
+  // Rating + review count (social proof)
+  if (options?.['rating'] && options['rating'] >= 3.5 && options?.['reviewCount'] && options['reviewCount'] >= 3) {
+    parts.push(`★${options['rating'].toFixed(1)} (${options['reviewCount']} reviews)`);
   }
 
-  // Rating (only high)
-  if (options?.['rating'] && options['rating'] >= 4.0 && options?.['reviewCount'] && options['reviewCount'] >= 3) {
-    parts.push(`★${options['rating'].toFixed(1)}`);
+  // Sample video (free preview appeal)
+  if (options?.['sampleVideoCount'] && options['sampleVideoCount'] > 0) {
+    parts.push(`${options['sampleVideoCount']} free previews`);
   }
 
   const description = parts.join(' - ');
@@ -202,6 +215,7 @@ function generateChineseProductDescription(
     reviewCount?: number;
     duration?: number;
     provider?: string;
+    sampleVideoCount?: number;
   },
   locale: string = 'zh',
 ): string {
@@ -226,7 +240,12 @@ function generateChineseProductDescription(
 
   // Actress
   if (actressName) {
-    parts.push(isTraditional ? `${actressName}出演` : `${actressName}出演`);
+    parts.push(`${actressName}出演`);
+  }
+
+  // Genre tags
+  if (tags && tags.length > 0) {
+    parts.push(tags.slice(0, 3).join('・'));
   }
 
   // Duration
@@ -234,14 +253,14 @@ function generateChineseProductDescription(
     parts.push(`${options['duration']}${isTraditional ? '分鐘' : '分钟'}`);
   }
 
-  // Provider + CTA
-  if (options?.['provider']) {
-    parts.push(isTraditional ? `立即在${options['provider']}觀看` : `立即在${options['provider']}观看`);
+  // Rating + review count
+  if (options?.['rating'] && options['rating'] >= 3.5 && options?.['reviewCount'] && options['reviewCount'] >= 3) {
+    parts.push(`★${options['rating'].toFixed(1)}(${options['reviewCount']}${isTraditional ? '則評論' : '条评论'})`);
   }
 
-  // Rating
-  if (options?.['rating'] && options['rating'] >= 4.0 && options?.['reviewCount'] && options['reviewCount'] >= 3) {
-    parts.push(`★${options['rating'].toFixed(1)}`);
+  // Sample video
+  if (options?.['sampleVideoCount'] && options['sampleVideoCount'] > 0) {
+    parts.push(isTraditional ? `${options['sampleVideoCount']}個預覽` : `${options['sampleVideoCount']}个预览`);
   }
 
   const description = parts.join(' - ');
@@ -266,13 +285,14 @@ function generateKoreanProductDescription(
     reviewCount?: number;
     duration?: number;
     provider?: string;
+    sampleVideoCount?: number;
   },
 ): string {
   const parts: string[] = [];
 
   // Sale first
   if (options?.['discount'] && options['discount'] > 0) {
-    parts.push(`[${options['discount']}% 할인]`);
+    parts.push(`[${options['discount']}% 할인 중]`);
   }
 
   // Product code
@@ -291,19 +311,24 @@ function generateKoreanProductDescription(
     parts.push(`${actressName} 출연`);
   }
 
+  // Genre tags
+  if (tags && tags.length > 0) {
+    parts.push(tags.slice(0, 3).join('・'));
+  }
+
   // Duration
   if (options?.['duration'] && options['duration'] > 0) {
     parts.push(`${options['duration']}분`);
   }
 
-  // Provider + CTA
-  if (options?.['provider']) {
-    parts.push(`${options['provider']}에서 바로 시청`);
+  // Rating + review count
+  if (options?.['rating'] && options['rating'] >= 3.5 && options?.['reviewCount'] && options['reviewCount'] >= 3) {
+    parts.push(`★${options['rating'].toFixed(1)}(${options['reviewCount']}개 리뷰)`);
   }
 
-  // Rating
-  if (options?.['rating'] && options['rating'] >= 4.0 && options?.['reviewCount'] && options['reviewCount'] >= 3) {
-    parts.push(`★${options['rating'].toFixed(1)}`);
+  // Sample video
+  if (options?.['sampleVideoCount'] && options['sampleVideoCount'] > 0) {
+    parts.push(`미리보기 ${options['sampleVideoCount']}편`);
   }
 
   const description = parts.join(' - ');
@@ -655,6 +680,7 @@ export function generatePersonSchema(
     workCount?: number;
     debutYear?: number;
     aliases?: string[];
+    sameAs?: string[];
   },
 ) {
   const schema: Record<string, unknown> = {
@@ -680,6 +706,11 @@ export function generatePersonSchema(
   // デビュー年がある場合
   if (options?.['debutYear']) {
     schema['birthDate'] = `${options['debutYear']}`;
+  }
+
+  // sameAs（他プラットフォームのプロフィールURL）
+  if (options?.['sameAs'] && options['sameAs'].length > 0) {
+    schema['sameAs'] = options['sameAs'];
   }
 
   return schema;
@@ -876,6 +907,7 @@ export function generateAggregateOfferSchema(
     salePrice?: number;
     url: string;
     availability?: 'InStock' | 'OutOfStock';
+    saleEndAt?: string;
   }>,
   currency: string = 'JPY',
 ) {
@@ -885,25 +917,42 @@ export function generateAggregateOfferSchema(
   const lowPrice = Math.min(...prices);
   const highPrice = Math.max(...prices);
 
+  // セール終了日（最も近いもの）をpriceValidUntilとして使用
+  const saleEndDates = offers
+    .filter(o => o['saleEndAt'])
+    .map(o => new Date(o['saleEndAt']!).getTime())
+    .filter(t => !isNaN(t));
+  const earliestSaleEnd = saleEndDates.length > 0
+    ? new Date(Math.min(...saleEndDates)).toISOString().split('T')[0]
+    : undefined;
+
   return {
     '@type': 'AggregateOffer',
     lowPrice,
     highPrice,
     priceCurrency: currency,
     offerCount: offers.length,
-    offers: offers.map(offer => ({
-      '@type': 'Offer',
-      price: offer['salePrice'] ?? offer['price'],
-      priceCurrency: currency,
-      url: offer['url'],
-      availability: offer['availability'] === 'OutOfStock'
-        ? 'https://schema.org/OutOfStock'
-        : 'https://schema.org/InStock',
-      seller: {
-        '@type': 'Organization',
-        name: offer['providerName'],
-      },
-    })),
+    ...(earliestSaleEnd && { priceValidUntil: earliestSaleEnd }),
+    offers: offers.map(offer => {
+      const offerSchema: Record<string, unknown> = {
+        '@type': 'Offer',
+        price: offer['salePrice'] ?? offer['price'],
+        priceCurrency: currency,
+        url: offer['url'],
+        availability: offer['availability'] === 'OutOfStock'
+          ? 'https://schema.org/OutOfStock'
+          : 'https://schema.org/InStock',
+        seller: {
+          '@type': 'Organization',
+          name: offer['providerName'],
+        },
+      };
+      // 個別オファーにもpriceValidUntilを追加
+      if (offer['saleEndAt']) {
+        offerSchema['priceValidUntil'] = new Date(offer['saleEndAt']).toISOString().split('T')[0];
+      }
+      return offerSchema;
+    }),
   };
 }
 
