@@ -1,148 +1,295 @@
 #!/bin/bash
 
-# すべてのクローラーをCloud Schedulerで定期実行するセットアップスクリプト
-# グループ化版 - 関連サイトをまとめて実行
+# =============================================================================
+# Cloud Scheduler セットアップスクリプト（Web App APIエンドポイント版）
+#
+# Cloud Run Jobs方式 → Web App APIエンドポイント方式に移行
+# コスト削減: 別コンテナ起動不要、既存Web Appインスタンスで処理
+# =============================================================================
 
 set -e
 
 PROJECT_ID="adult-v"
-REGION="asia-northeast1"
 LOCATION="asia-northeast1"
 SERVICE_ACCOUNT="646431984228-compute@developer.gserviceaccount.com"
+# Firebase App Hosting の直接URL（OIDC audience にも使用）
+WEB_APP_URL="https://adult-v--adult-v.asia-east1.hosted.app"
 
-echo "=== 全クローラーのCloud Scheduler設定（グループ化版） ==="
+echo "=== Cloud Scheduler セットアップ（Web App API版） ==="
+echo "ターゲット: ${WEB_APP_URL}/api/cron/*"
 echo ""
 
-# ヘルパー関数: スケジューラーを作成/更新
-setup_scheduler() {
+# ヘルパー関数: GETエンドポイント用スケジューラーを作成/更新
+setup_get_scheduler() {
   local name=$1
   local schedule=$2
-  local job_name=$3
+  local endpoint=$3
   local description=$4
+  local deadline=${5:-540}  # デフォルト540秒（5分+バッファ）
 
-  echo "【$description】"
-  echo "スケジュール: $schedule (JST)"
+  local uri="${WEB_APP_URL}/api/cron/${endpoint}"
 
-  if gcloud run jobs describe $job_name --region=$REGION &>/dev/null; then
-    if gcloud scheduler jobs describe $name --location=$LOCATION &>/dev/null; then
-      echo "  既存のスケジューラーを更新..."
-      gcloud scheduler jobs update http $name \
-        --location=$LOCATION \
-        --schedule="$schedule" \
-        --time-zone="Asia/Tokyo" \
-        --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/${job_name}:run" \
-        --http-method=POST \
-        --oauth-service-account-email=$SERVICE_ACCOUNT
-    else
-      echo "  新規スケジューラー作成..."
-      gcloud scheduler jobs create http $name \
-        --location=$LOCATION \
-        --schedule="$schedule" \
-        --time-zone="Asia/Tokyo" \
-        --uri="https://${REGION}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${PROJECT_ID}/jobs/${job_name}:run" \
-        --http-method=POST \
-        --oauth-service-account-email=$SERVICE_ACCOUNT
-    fi
-    echo "✅ $description 設定完了"
+  echo "【${description}】"
+  echo "  スケジュール: ${schedule} (JST)"
+  echo "  URI: ${uri}"
+
+  if gcloud scheduler jobs describe "$name" --location="$LOCATION" &>/dev/null; then
+    echo "  既存のスケジューラーを更新..."
+    gcloud scheduler jobs update http "$name" \
+      --location="$LOCATION" \
+      --schedule="$schedule" \
+      --time-zone="Asia/Tokyo" \
+      --uri="$uri" \
+      --http-method=GET \
+      --oidc-service-account-email="$SERVICE_ACCOUNT" \
+      --oidc-token-audience="$WEB_APP_URL" \
+      --attempt-deadline="${deadline}s" \
+      --quiet
   else
-    echo "⚠️ Cloud Run Job '$job_name' が見つかりません。先にデプロイしてください"
+    echo "  新規スケジューラー作成..."
+    gcloud scheduler jobs create http "$name" \
+      --location="$LOCATION" \
+      --schedule="$schedule" \
+      --time-zone="Asia/Tokyo" \
+      --uri="$uri" \
+      --http-method=GET \
+      --oidc-service-account-email="$SERVICE_ACCOUNT" \
+      --oidc-token-audience="$WEB_APP_URL" \
+      --attempt-deadline="${deadline}s" \
+      --quiet
   fi
+  echo "  -> Done"
+  echo ""
+}
+
+# ヘルパー関数: POSTエンドポイント用スケジューラーを作成/更新
+setup_post_scheduler() {
+  local name=$1
+  local schedule=$2
+  local endpoint=$3
+  local description=$4
+  local deadline=${5:-540}
+
+  local uri="${WEB_APP_URL}/api/cron/${endpoint}"
+
+  echo "【${description}】"
+  echo "  スケジュール: ${schedule} (JST)"
+  echo "  URI: ${uri}"
+
+  if gcloud scheduler jobs describe "$name" --location="$LOCATION" &>/dev/null; then
+    echo "  既存のスケジューラーを更新..."
+    gcloud scheduler jobs update http "$name" \
+      --location="$LOCATION" \
+      --schedule="$schedule" \
+      --time-zone="Asia/Tokyo" \
+      --uri="$uri" \
+      --http-method=POST \
+      --oidc-service-account-email="$SERVICE_ACCOUNT" \
+      --oidc-token-audience="$WEB_APP_URL" \
+      --attempt-deadline="${deadline}s" \
+      --quiet
+  else
+    echo "  新規スケジューラー作成..."
+    gcloud scheduler jobs create http "$name" \
+      --location="$LOCATION" \
+      --schedule="$schedule" \
+      --time-zone="Asia/Tokyo" \
+      --uri="$uri" \
+      --http-method=POST \
+      --oidc-service-account-email="$SERVICE_ACCOUNT" \
+      --oidc-token-audience="$WEB_APP_URL" \
+      --attempt-deadline="${deadline}s" \
+      --quiet
+  fi
+  echo "  -> Done"
   echo ""
 }
 
 # ========================================
-# グループ化クローラー（複数サイトをまとめて実行）
+# 1. クローラー（毎日・時間帯別に分散）
 # ========================================
+echo "========== クローラー =========="
 
-# 1. DTI系（人妻）- h4610, h0930, c0930
-setup_scheduler "crawl-dti-hitozuma-scheduler" "0 0 * * *" "crawl-dti-hitozuma" "DTI系（人妻）クローラー"
+# DTI系（6サイト、10分間隔）
+setup_get_scheduler "crawl-dti-caribbeancom" \
+  "0 1 * * *" \
+  "crawl-dti?site=caribbeancom&limit=50" \
+  "DTI カリビアンコム"
 
-# 2. DTI系（カリビアン）- caribbean, caribbeancompr, 1pondo, heyzo, 10musume, pacopacomama
-setup_scheduler "crawl-dti-caribbean-scheduler" "0 2 * * *" "crawl-dti-caribbean" "DTI系（カリビアン）クローラー"
+setup_get_scheduler "crawl-dti-caribbeancompr" \
+  "10 1 * * *" \
+  "crawl-dti?site=caribbeancompr&limit=50" \
+  "DTI カリビアンコムプレミアム"
 
-# 3. FANZA
-setup_scheduler "fanza-daily-scheduler" "0 4 * * *" "fanza-daily" "FANZAクローラー"
+setup_get_scheduler "crawl-dti-1pondo" \
+  "20 1 * * *" \
+  "crawl-dti?site=1pondo&limit=50" \
+  "DTI 一本道"
 
-# 4. MGS
-setup_scheduler "mgs-daily-scheduler" "0 5 * * *" "mgs-daily" "MGSクローラー"
+setup_get_scheduler "crawl-dti-heyzo" \
+  "30 1 * * *" \
+  "crawl-dti?site=heyzo&limit=50" \
+  "DTI HEYZO"
 
-# 5. TMP系 - heydouga, x1x, enkou55, urekko, xxxurabi
-setup_scheduler "crawl-tmp-scheduler" "0 6 * * *" "crawl-tmp" "TMP系クローラー"
+setup_get_scheduler "crawl-dti-10musume" \
+  "40 1 * * *" \
+  "crawl-dti?site=10musume&limit=50" \
+  "DTI 天然むすめ"
 
-# 6. Tokyo-Hot系 - tokyohot, tvdeav
-setup_scheduler "crawl-tokyohot-scheduler" "0 8 * * *" "crawl-tokyohot" "Tokyo-Hot系クローラー"
+setup_get_scheduler "crawl-dti-pacopacomama" \
+  "50 1 * * *" \
+  "crawl-dti?site=pacopacomama&limit=50" \
+  "DTI パコパコママ"
 
-# 7. 新DTI系 - kin8tengoku, nyoshin, h0230
-setup_scheduler "crawl-dti-new-scheduler" "0 10 * * *" "crawl-dti-new" "新DTI系クローラー"
+# 単独クローラー（2時間間隔）
+setup_get_scheduler "crawl-mgs-scheduler" \
+  "0 3 * * *" \
+  "crawl-mgs?limit=100" \
+  "MGS クローラー"
+
+setup_get_scheduler "crawl-duga-scheduler" \
+  "0 5 * * *" \
+  "crawl-duga?limit=100" \
+  "DUGA クローラー"
+
+setup_get_scheduler "crawl-sokmil-scheduler" \
+  "0 7 * * *" \
+  "crawl-sokmil?limit=100" \
+  "SOKMIL APIクローラー"
+
+setup_get_scheduler "crawl-japanska-scheduler" \
+  "0 9 * * *" \
+  "crawl-japanska" \
+  "Japanska クローラー"
+
+setup_get_scheduler "crawl-b10f-scheduler" \
+  "0 11 * * *" \
+  "crawl-b10f" \
+  "b10f クローラー"
+
+setup_get_scheduler "crawl-fc2-scheduler" \
+  "0 13 * * *" \
+  "crawl-fc2" \
+  "FC2 クローラー"
 
 # ========================================
-# 単独クローラー（1サイトのみ）
+# 2. エンリッチメント（クローラー後に実行）
 # ========================================
+echo "========== エンリッチメント =========="
 
-# 8. DUGA
-setup_scheduler "crawl-duga-scheduler" "0 12 * * *" "crawl-duga" "DUGAクローラー"
+# Raw Data処理（6時間ごと）
+setup_get_scheduler "process-raw-data-scheduler" \
+  "0 2,8,14,20 * * *" \
+  "process-raw-data?limit=500" \
+  "Raw Data 処理（6時間ごと）"
 
-# 9. SOKMIL
-setup_scheduler "crawl-sokmil-scheduler" "0 14 * * *" "crawl-sokmil" "SOKMILクローラー"
+# 演者パイプライン（毎日15:00 - 30分タイムアウト）
+setup_get_scheduler "performer-pipeline-scheduler" \
+  "0 15 * * *" \
+  "performer-pipeline?limit=500" \
+  "演者紐づけパイプライン" \
+  1800  # Cloud Scheduler上限の30分
 
-# 10. Japanska
-setup_scheduler "crawl-japanska-scheduler" "0 16 * * *" "crawl-japanska" "Japanskaクローラー"
+# コンテンツエンリッチメント（毎日16:00）
+setup_get_scheduler "content-enrichment-scheduler" \
+  "0 16 * * *" \
+  "content-enrichment-pipeline?limit=100&phases=translation,seo,performer" \
+  "コンテンツエンリッチメント"
 
-# 11. b10f
-setup_scheduler "crawl-b10f-scheduler" "0 18 * * *" "crawl-b10f" "b10fクローラー"
+# 演者名寄せ（毎日17:00）
+setup_get_scheduler "normalize-performers-scheduler" \
+  "0 17 * * *" \
+  "normalize-performers?limit=100" \
+  "演者名寄せ"
 
-# 12. FC2
-setup_scheduler "crawl-fc2-scheduler" "0 20 * * *" "crawl-fc2" "FC2クローラー"
+# コンテンツ強化（毎日18:00）
+setup_get_scheduler "enhance-content-scheduler" \
+  "0 18 * * *" \
+  "enhance-content?limit=50" \
+  "コンテンツ強化"
 
-# 13. Sales（1日3回）
-setup_scheduler "crawl-sales-scheduler" "0 8,14,20 * * *" "crawl-sales" "セールクローラー"
+# SEO強化（毎日19:00）
+setup_get_scheduler "seo-enhance-scheduler" \
+  "0 19 * * *" \
+  "seo-enhance?type=indexing&limit=100" \
+  "SEO強化・インデックス申請"
 
 # ========================================
-# エンリッチメントジョブ
+# 3. バックフィル（日次/週次）
 # ========================================
+echo "========== バックフィル =========="
 
-# 14. 品番抽出（毎日23:00 - 全クローラー終了後）
-setup_scheduler "extract-product-codes-daily" "0 23 * * *" "extract-product-codes" "品番抽出ジョブ"
+# 動画バックフィル（毎日20:00）
+setup_get_scheduler "backfill-videos-scheduler" \
+  "0 20 * * *" \
+  "backfill-videos?limit=50" \
+  "動画バックフィル"
 
-# 15. 演者紐づけ（毎日23:30 - 品番抽出後）
-setup_scheduler "performer-pipeline-daily" "30 23 * * *" "performer-pipeline" "演者紐づけパイプライン"
+# 画像バックフィル（毎日21:00）
+setup_get_scheduler "backfill-images-scheduler" \
+  "0 21 * * *" \
+  "backfill-images?limit=50" \
+  "画像バックフィル"
 
-# 16. コンテンツエンリッチメント（毎日0:00 - 演者紐づけ後）
-setup_scheduler "content-enrichment-daily" "0 0 * * *" "content-enrichment" "コンテンツエンリッチメント"
+# 演者プロフィールバックフィル（週1回 日曜3:00）
+setup_get_scheduler "backfill-performer-profiles-weekly" \
+  "0 3 * * 0" \
+  "backfill-performer-profiles?limit=100&minProducts=5" \
+  "演者プロフィールバックフィル（週次）"
 
-# 17. MGS description バックフィル（週1回）
-setup_scheduler "mgs-description-backfill-weekly" "0 22 * * 0" "mgs-description-backfill" "MGS descriptionバックフィル"
+# レビューバックフィル（週1回 日曜5:00）
+setup_get_scheduler "backfill-reviews-weekly" \
+  "0 5 * * 0" \
+  "backfill-reviews?limit=50" \
+  "レビューバックフィル（週次）"
+
+# 演者ルックアップ（週1回 日曜7:00）
+setup_get_scheduler "crawl-performer-lookup-weekly" \
+  "0 7 * * 0" \
+  "crawl-performer-lookup?limit=200" \
+  "演者ルックアップ（週次）"
 
 # ========================================
-# その他のジョブ
+# 4. メンテナンス・通知
 # ========================================
+echo "========== メンテナンス・通知 =========="
 
-# 16. Wiki出演者クローラー（週1回）
-setup_scheduler "wiki-weekly" "0 1 * * 0" "wiki-crawler" "Wiki出演者クローラー"
+# データクリーンアップ（毎日23:00）
+setup_get_scheduler "cleanup-scheduler" \
+  "0 23 * * *" \
+  "cleanup" \
+  "データクリーンアップ"
 
-# 17. GSC Fetcher
-setup_scheduler "gsc-fetcher-daily" "0 7 * * *" "gsc-fetcher" "GSC Fetcherジョブ"
+# IndexNow通知（3時間ごと、POSTメソッド）
+setup_post_scheduler "indexnow-notify-scheduler" \
+  "0 0,3,6,9,12,15,18,21 * * *" \
+  "indexnow-notify" \
+  "IndexNow 自動通知（3時間ごと）" \
+  120  # 60秒タイムアウト + バッファ
 
-# 18. PageSpeed Checker
-setup_scheduler "pagespeed-checker-daily" "0 9 * * *" "pagespeed-checker" "PageSpeed Checkerジョブ"
+# データ品質レポート（週1回 月曜4:00）
+setup_get_scheduler "data-quality-report-weekly" \
+  "0 4 * * 1" \
+  "data-quality-report" \
+  "データ品質レポート（週次）"
 
-# 19. Sitemap Submit（週1回）
-setup_scheduler "sitemap-submit-weekly" "0 6 * * 0" "sitemap-submit" "サイトマップ送信ジョブ"
-
-# 現在のスケジューラー一覧を表示
+# ========================================
+# 結果表示
+# ========================================
 echo ""
 echo "=== 全スケジューラー一覧 ==="
-gcloud scheduler jobs list --location=$LOCATION --format="table(name,schedule,state)" | grep -E "(crawl|fanza|mgs|wiki|gsc|pagespeed|sales|sitemap)" || echo "スケジューラーが見つかりません"
+gcloud scheduler jobs list --location="$LOCATION" \
+  --format="table(name,schedule,state,httpTarget.uri)" \
+  2>/dev/null || echo "一覧の取得に失敗しました"
 
 echo ""
-echo "✅ すべてのクローラーのスケジューラー設定が完了しました！"
+echo "=== セットアップ完了 ==="
 echo ""
-echo "=== デプロイコマンド一覧 ==="
-echo "DTI-Caribbean: gcloud builds submit --config=cloudbuild-dti-caribbean.yaml"
-echo "DTI-Hitozuma:  gcloud builds submit --config=cloudbuild-dti-hitozuma.yaml"
-echo "DTI-New:       gcloud builds submit --config=cloudbuild-dti-new.yaml"
-echo "TMP:           gcloud builds submit --config=cloudbuild-tmp.yaml"
-echo "Tokyo-Hot:     gcloud builds submit --config=cloudbuild-tokyohot.yaml"
-echo "Japanska:      gcloud builds submit --config=cloudbuild-japanska.yaml"
-echo "FC2:           gcloud builds submit --config=cloudbuild-fc2.yaml"
-echo "Wiki:          gcloud builds submit --config=cloudbuild-wiki.yaml"
+echo "手動実行テスト:"
+echo "  gcloud scheduler jobs run crawl-mgs-scheduler --location=${LOCATION}"
+echo ""
+echo "ジョブの一時停止:"
+echo "  gcloud scheduler jobs pause <JOB_NAME> --location=${LOCATION}"
+echo ""
+echo "ジョブの再開:"
+echo "  gcloud scheduler jobs resume <JOB_NAME> --location=${LOCATION}"

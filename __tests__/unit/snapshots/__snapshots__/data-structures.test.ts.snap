@@ -146,6 +146,7 @@ exports[`Data Structure Snapshots > Utility Output Snapshots > ASP normalization
     "x1x.com": "x1x",
   },
   "JA_TO_EN_MAP": {
+    "MGS動画": "mgs",
     "Tokyo Hot": "tokyohot",
     "カリビアンコム": "caribbeancom",
     "カリビアンコムPR": "caribbeancompr",
@@ -160,8 +161,12 @@ exports[`Data Structure Snapshots > Utility Output Snapshots > ASP normalization
   "UPPER_TO_LOWER_MAP": {
     "10MUSUME": "10musume",
     "1PONDO": "1pondo",
+    "APEX": "duga",
+    "AV9898": "av9898",
+    "B10F": "b10f",
     "CARIBBEANCOM": "caribbeancom",
     "CARIBBEANCOMPR": "caribbeancompr",
+    "DMM": "fanza",
     "DTI": "dti",
     "DUGA": "duga",
     "ENKOU55": "enkou55",
@@ -169,6 +174,7 @@ exports[`Data Structure Snapshots > Utility Output Snapshots > ASP normalization
     "FC2": "fc2",
     "HEYDOUGA": "heydouga",
     "HEYZO": "heyzo",
+    "HONNAMATV": "honnamatv",
     "JAPANSKA": "japanska",
     "Japanska": "japanska",
     "MGS": "mgs",
@@ -179,6 +185,8 @@ exports[`Data Structure Snapshots > Utility Output Snapshots > ASP normalization
     "TVDEAV": "tvdeav",
     "UREKKO": "urekko",
     "X1X": "x1x",
+    "b10f.jp": "b10f",
+    "ソクミル": "sokmil",
   },
 }
 `;

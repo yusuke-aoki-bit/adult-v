@@ -2,200 +2,145 @@
 
 ## 概要
 
-このドキュメントでは、adult-vプロジェクトのクローラーをGoogle Cloud Schedulerで定期実行するための設定手順を説明します。
+Cloud Schedulerから **Web App APIエンドポイント**（`/api/cron/*`）を直接呼び出す方式。
+Cloud Run Jobsは使用せず、既存のWeb Appインスタンス上で処理することでコストを削減。
 
-## 作成されたAPIエンドポイント
+## アーキテクチャ
 
-### クローラーエンドポイント
-
-| エンドポイント | 説明 | 推奨スケジュール |
-|---|---|---|
-| `/api/cron/crawl-b10f` | b10f.jp CSVクローラー | 毎日 6:00 JST |
-| `/api/cron/crawl-duga` | DUGA APIクローラー | 毎日 7:00 JST |
-| `/api/cron/crawl-sokmil` | Sokmil APIクローラー | 毎日 8:00 JST |
-| `/api/cron/process-raw-data` | 未処理HTMLデータ処理 | 毎時 */30分 |
-| `/api/cron/status` | ステータス確認 | 必要に応じて |
-
-### クエリパラメータ
-
-各クローラーは以下のクエリパラメータをサポートします：
-
-- `limit`: 処理件数の上限（デフォルト: 100-500）
-- `offset`: 開始位置（該当するエンドポイントのみ）
-- `page`: ページ番号（Sokmilのみ）
-- `source`: 処理するソース（process-raw-dataのみ）
-
-例: `/api/cron/crawl-b10f?limit=1000`
-
-## 認証
-
-### 認証方法
-
-エンドポイントは以下の認証方法をサポートします：
-
-1. **Cloud Scheduler OIDC（推奨）**
-   - Cloud Schedulerが自動でOIDCトークンを付与
-   - `Authorization: Bearer <token>` ヘッダー
-
-2. **シークレットキー（開発/テスト用）**
-   - `X-Cron-Secret: <secret>` ヘッダー
-   - またはクエリパラメータ `?secret=<secret>`
-
-### 環境変数
-
-```bash
-# .env.local
-CRON_SECRET=your-secure-secret-key
+```
+Cloud Scheduler → HTTPS GET/POST → Web App (Firebase App Hosting)
+                  OIDC認証           /api/cron/{endpoint}
 ```
 
-## Cloud Scheduler 設定手順
+## セットアップ
 
-### 1. GCPプロジェクトでCloud Schedulerを有効化
+### 1. 前提条件
 
 ```bash
+# Cloud Scheduler API有効化
 gcloud services enable cloudscheduler.googleapis.com
-```
 
-### 2. サービスアカウント作成（OIDC認証用）
-
-```bash
-# サービスアカウント作成
-gcloud iam service-accounts create crawler-scheduler \
-  --display-name="Crawler Scheduler"
-
-# Cloud Runへのアクセス権限付与
+# サービスアカウントにCloud Run Invoker権限
 gcloud run services add-iam-policy-binding adult-v \
-  --member="serviceAccount:crawler-scheduler@PROJECT_ID.iam.gserviceaccount.com" \
+  --member="serviceAccount:646431984228-compute@developer.gserviceaccount.com" \
   --role="roles/run.invoker" \
   --region=asia-northeast1
 ```
 
-### 3. Cloud Scheduler ジョブ作成
-
-#### b10f クローラー（毎日6:00 JST）
+### 2. 全スケジューラー一括セットアップ
 
 ```bash
-gcloud scheduler jobs create http crawl-b10f \
-  --location=asia-northeast1 \
-  --schedule="0 6 * * *" \
-  --time-zone="Asia/Tokyo" \
-  --uri="https://your-domain.com/api/cron/crawl-b10f?limit=500" \
-  --http-method=GET \
-  --oidc-service-account-email="crawler-scheduler@PROJECT_ID.iam.gserviceaccount.com" \
-  --attempt-deadline=600s
+bash scripts/deploy/setup-all-schedulers.sh
 ```
 
-#### DUGA クローラー（毎日7:00 JST）
+### 3. 古いCloud Run Jobsスケジューラーの削除
 
 ```bash
-gcloud scheduler jobs create http crawl-duga \
-  --location=asia-northeast1 \
-  --schedule="0 7 * * *" \
-  --time-zone="Asia/Tokyo" \
-  --uri="https://your-domain.com/api/cron/crawl-duga?limit=100" \
-  --http-method=GET \
-  --oidc-service-account-email="crawler-scheduler@PROJECT_ID.iam.gserviceaccount.com" \
-  --attempt-deadline=600s
+bash scripts/deploy/cleanup-old-schedulers.sh
 ```
 
-#### Sokmil クローラー（毎日8:00 JST）
+## スケジュール一覧
+
+### クローラー（毎日）
+
+| 時刻(JST) | ジョブ名 | エンドポイント | 説明 |
+|---|---|---|---|
+| 01:00 | crawl-dti-caribbeancom | `/api/cron/crawl-dti?site=caribbeancom` | カリビアンコム |
+| 01:10 | crawl-dti-caribbeancompr | `/api/cron/crawl-dti?site=caribbeancompr` | カリビアンコムPR |
+| 01:20 | crawl-dti-1pondo | `/api/cron/crawl-dti?site=1pondo` | 一本道 |
+| 01:30 | crawl-dti-heyzo | `/api/cron/crawl-dti?site=heyzo` | HEYZO |
+| 01:40 | crawl-dti-10musume | `/api/cron/crawl-dti?site=10musume` | 天然むすめ |
+| 01:50 | crawl-dti-pacopacomama | `/api/cron/crawl-dti?site=pacopacomama` | パコパコママ |
+| 03:00 | crawl-mgs-scheduler | `/api/cron/crawl-mgs` | MGS |
+| 05:00 | crawl-duga-scheduler | `/api/cron/crawl-duga` | DUGA |
+| 07:00 | crawl-sokmil-scheduler | `/api/cron/crawl-sokmil` | SOKMIL |
+| 09:00 | crawl-japanska-scheduler | `/api/cron/crawl-japanska` | Japanska |
+| 11:00 | crawl-b10f-scheduler | `/api/cron/crawl-b10f` | b10f |
+| 13:00 | crawl-fc2-scheduler | `/api/cron/crawl-fc2` | FC2 |
+
+### エンリッチメント（毎日）
+
+| 時刻(JST) | ジョブ名 | エンドポイント | タイムアウト |
+|---|---|---|---|
+| 02,08,14,20:00 | process-raw-data-scheduler | `/api/cron/process-raw-data` | 5分 |
+| 15:00 | performer-pipeline-scheduler | `/api/cron/performer-pipeline` | 30分 |
+| 16:00 | content-enrichment-scheduler | `/api/cron/content-enrichment-pipeline` | 5分 |
+| 17:00 | normalize-performers-scheduler | `/api/cron/normalize-performers` | 5分 |
+| 18:00 | enhance-content-scheduler | `/api/cron/enhance-content` | 5分 |
+| 19:00 | seo-enhance-scheduler | `/api/cron/seo-enhance` | 5分 |
+
+### バックフィル
+
+| スケジュール | ジョブ名 | エンドポイント |
+|---|---|---|
+| 毎日 20:00 | backfill-videos-scheduler | `/api/cron/backfill-videos` |
+| 毎日 21:00 | backfill-images-scheduler | `/api/cron/backfill-images` |
+| 週1回 日曜 03:00 | backfill-performer-profiles-weekly | `/api/cron/backfill-performer-profiles` |
+| 週1回 日曜 05:00 | backfill-reviews-weekly | `/api/cron/backfill-reviews` |
+| 週1回 日曜 07:00 | crawl-performer-lookup-weekly | `/api/cron/crawl-performer-lookup` |
+
+### メンテナンス・通知
+
+| スケジュール | ジョブ名 | エンドポイント | メソッド |
+|---|---|---|---|
+| 毎日 23:00 | cleanup-scheduler | `/api/cron/cleanup` | GET |
+| 3時間ごと | indexnow-notify-scheduler | `/api/cron/indexnow-notify` | POST |
+| 週1回 月曜 04:00 | data-quality-report-weekly | `/api/cron/data-quality-report` | GET |
+
+## 認証
+
+### OIDC認証（本番環境）
+
+Cloud Schedulerが自動でOIDCトークンを生成し、`Authorization: Bearer <token>` ヘッダーを付与。
+Web Appの `verifyCronRequest()` がBearerトークンの存在を確認。
+
+### ヘッダー認証（開発環境）
 
 ```bash
-gcloud scheduler jobs create http crawl-sokmil \
-  --location=asia-northeast1 \
-  --schedule="0 8 * * *" \
-  --time-zone="Asia/Tokyo" \
-  --uri="https://your-domain.com/api/cron/crawl-sokmil?limit=100" \
-  --http-method=GET \
-  --oidc-service-account-email="crawler-scheduler@PROJECT_ID.iam.gserviceaccount.com" \
-  --attempt-deadline=600s
+curl -H "X-Cron-Secret: $CRON_SECRET" \
+  "http://localhost:3000/api/cron/crawl-mgs?limit=10"
 ```
 
-#### Raw Data 処理（30分ごと）
+## 運用コマンド
 
 ```bash
-gcloud scheduler jobs create http process-raw-data \
-  --location=asia-northeast1 \
-  --schedule="*/30 * * * *" \
-  --time-zone="Asia/Tokyo" \
-  --uri="https://your-domain.com/api/cron/process-raw-data?limit=500" \
-  --http-method=GET \
-  --oidc-service-account-email="crawler-scheduler@PROJECT_ID.iam.gserviceaccount.com" \
-  --attempt-deadline=600s
-```
-
-### 4. ジョブの手動実行（テスト）
-
-```bash
-gcloud scheduler jobs run crawl-b10f --location=asia-northeast1
-```
-
-### 5. ジョブの一覧確認
-
-```bash
+# ジョブ一覧
 gcloud scheduler jobs list --location=asia-northeast1
-```
 
-## ローカルテスト
+# 手動実行
+gcloud scheduler jobs run crawl-mgs-scheduler --location=asia-northeast1
 
-```bash
-# シークレットキーを使用してテスト
-curl -H "X-Cron-Secret: dev-cron-secret-key" \
-  "http://localhost:3000/api/cron/crawl-b10f?limit=10"
+# 一時停止
+gcloud scheduler jobs pause crawl-mgs-scheduler --location=asia-northeast1
 
-# ステータス確認
-curl -H "X-Cron-Secret: dev-cron-secret-key" \
-  "http://localhost:3000/api/cron/status"
+# 再開
+gcloud scheduler jobs resume crawl-mgs-scheduler --location=asia-northeast1
+
+# ログ確認
+gcloud logging read 'resource.type="cloud_scheduler_job"' --limit=20
 ```
 
 ## レスポンス形式
 
-成功時:
 ```json
 {
   "success": true,
-  "message": "b10f crawl completed",
+  "message": "crawl completed",
   "stats": {
-    "totalFetched": 500,
-    "newProducts": 120,
-    "updatedProducts": 380,
-    "errors": 0,
-    "rawDataSaved": 1,
-    "videosAdded": 450
+    "totalFetched": 100,
+    "newProducts": 20,
+    "updatedProducts": 80,
+    "errors": 0
   },
   "duration": "45s"
 }
 ```
 
-エラー時:
-```json
-{
-  "success": false,
-  "error": "Error message",
-  "stats": { ... }
-}
-```
-
-## 注意事項
-
-1. **タイムアウト**: 各エンドポイントは最大5分（300秒）のタイムアウト設定
-2. **同時実行**: 同じエンドポイントの同時実行は避ける
-3. **エラーハンドリング**: 個別の商品処理エラーは全体を中断せず、statsに記録される
-4. **レート制限**: 外部APIのレート制限に注意
-
 ## トラブルシューティング
 
-### 認証エラー (401)
-
-- OIDC設定を確認
-- シークレットキーが正しいか確認
-- Cloud Runのアクセス権限を確認
-
-### タイムアウト
-
-- `limit`パラメータを減らす
-- Cloud Schedulerの`attempt-deadline`を延長
-
-### メモリエラー
-
-- `limit`を減らして処理件数を制限
+| 症状 | 原因 | 対処 |
+|---|---|---|
+| 401 Unauthorized | OIDC設定ミス | サービスアカウント権限確認 |
+| 504 Timeout | 処理時間超過 | `limit`パラメータを減らす |
+| 500 Error | DB接続エラー | VPCコネクタ設定確認 |
+| ジョブがFAILED | Web Appがダウン | `gcloud run services describe` で確認 |
