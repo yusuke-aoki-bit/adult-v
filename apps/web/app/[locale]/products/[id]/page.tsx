@@ -21,8 +21,6 @@ import {
   CopyButton,
   SectionVisibility,
 } from '@adult-v/shared/components';
-// AffiliateButton is available but currently unused - keeping import for future use
-// import AffiliateButton from '@/components/AffiliateButton';
 import StickyCta from '@/components/StickyCta';
 import AiProductDescriptionWrapper from '@/components/AiProductDescriptionWrapper';
 import AlsoViewedWrapper from '@/components/AlsoViewedWrapper';
@@ -39,9 +37,10 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// Force dynamic rendering to avoid DYNAMIC_SERVER_USAGE errors with getTranslations
-// ISR with revalidate is not compatible with dynamic server functions
-export const dynamic = 'force-dynamic';
+// ISR有効化: Next.js 16 + next-intl v4.6ではgetTranslationsとISRの互換性問題が解決済み
+// 5分ごとに再検証（商品情報更新頻度に合わせる）
+export const revalidate = 300;
+export const dynamicParams = true;
 
 /**
  * 配列をシャッフル（Fisher-Yates algorithm）
@@ -78,16 +77,20 @@ interface PageProps {
 
 /**
  * ビルド時に人気商品をプリレンダリング
- * 最新の1000件の商品IDを生成（日本語版のみ）
+ * 最新5000件 × 5言語 = 最大25,000ページ
  */
 export async function generateStaticParams(): Promise<Array<{ id: string; locale: string }>> {
   try {
     const { getRecentProducts } = await import('@/lib/db/queries');
-    const recentProducts = await getRecentProducts({ limit: 1000 });
-    return recentProducts.map((product) => ({
-      id: product.id.toString(),
-      locale: 'ja',
-    }));
+    const recentProducts = await getRecentProducts({ limit: 5000 });
+    const locales = ['ja', 'en', 'zh', 'zh-TW', 'ko'];
+
+    return recentProducts.flatMap((product) =>
+      locales.map((locale) => ({
+        id: product.id.toString(),
+        locale,
+      }))
+    );
   } catch {
     return [];
   }
@@ -588,6 +591,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         </p>
                       )}
                     </div>
+                    {product.salePrice && product.price && product.price > product.salePrice && (
+                      <p className="text-sm text-green-400 mt-1 flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        ¥{(product.price - product.salePrice).toLocaleString()} お得
+                      </p>
+                    )}
                     {/* ファーストビューCTA - 目立つ購入ボタン（全ASP対応） */}
                     {product.affiliateUrl && (
                       <a
@@ -756,19 +765,25 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {product.salePrice && product.affiliateUrl && (
             <div className="mt-8 p-6 bg-gradient-to-r from-red-900/50 via-orange-900/30 to-red-900/50 rounded-xl border border-red-500/30">
               <div className="text-center mb-4">
-                <span className="text-3xl">🔥</span>
+                <span className="text-3xl animate-pulse">🔥</span>
                 <h3 className="text-xl font-bold text-white mt-2">
                   今なら{product.discount}%OFF！
                 </h3>
                 <p className="text-red-300 text-sm mt-1">
                   セール価格: ¥{product.salePrice.toLocaleString()}（通常¥{product.price?.toLocaleString()}）
                 </p>
+                {product.price && product.price > product.salePrice && (
+                  <p className="text-green-400 text-sm font-bold mt-1 flex items-center justify-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    ¥{(product.price - product.salePrice).toLocaleString()}もお得に！
+                  </p>
+                )}
               </div>
               <a
                 href={product.affiliateUrl}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
-                className="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 hover:from-red-500 hover:via-orange-400 hover:to-red-500 text-white font-bold text-xl rounded-xl shadow-lg shadow-red-600/30 transition-all transform hover:scale-[1.02] animate-pulse"
+                className="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 hover:from-red-500 hover:via-orange-400 hover:to-red-500 text-white font-bold text-xl rounded-xl shadow-lg shadow-red-600/30 transition-all transform hover:scale-[1.02]"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -848,7 +863,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <Link
                     key={p.id}
                     href={localizedHref(`/products/${p.id}`, locale)}
-                    className="group bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-500/50 transition-all shrink-0 w-[120px] sm:w-[140px] snap-start"
+                    className="group bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
                   >
                     <div className="relative bg-gray-700" style={{ aspectRatio: '2/3' }}>
                       {p.imageUrl ? (
@@ -874,7 +889,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {/* もっと見るカード */}
                 <Link
                   href={localizedHref(`/actress/${primaryPerformerId}`, locale)}
-                  className="group bg-linear-to-br from-rose-600/20 to-rose-800/20 rounded-lg overflow-hidden hover:from-rose-600/30 hover:to-rose-800/30 transition-all flex flex-col items-center justify-center border border-rose-500/30 hover:border-rose-500/50 shrink-0 w-[120px] sm:w-[140px] snap-start"
+                  className="group bg-linear-to-br from-rose-600/20 to-rose-800/20 rounded-lg overflow-hidden hover:from-rose-600/30 hover:to-rose-800/30 transition-all flex flex-col items-center justify-center border border-rose-500/30 hover:border-rose-500/50 shrink-0 w-[140px] sm:w-[160px] snap-start"
                   style={{ aspectRatio: '2/3' }}
                 >
                   <svg className="w-8 h-8 text-rose-400 mb-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -913,7 +928,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <Link
                     key={p.id}
                     href={localizedHref(`/products/${p.id}`, locale)}
-                    className="group bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-purple-500/50 transition-all shrink-0 w-[120px] sm:w-[140px] snap-start"
+                    className="group bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-purple-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
                   >
                     <div className="relative bg-gray-700" style={{ aspectRatio: '2/3' }}>
                       {p.imageUrl ? (
@@ -939,7 +954,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {/* もっと見るカード */}
                 <Link
                   href={localizedHref(`/series/${series.id}`, locale)}
-                  className="group bg-linear-to-br from-purple-600/20 to-purple-800/20 rounded-lg overflow-hidden hover:from-purple-600/30 hover:to-purple-800/30 transition-all flex flex-col items-center justify-center border border-purple-500/30 hover:border-purple-500/50 shrink-0 w-[120px] sm:w-[140px] snap-start"
+                  className="group bg-linear-to-br from-purple-600/20 to-purple-800/20 rounded-lg overflow-hidden hover:from-purple-600/30 hover:to-purple-800/30 transition-all flex flex-col items-center justify-center border border-purple-500/30 hover:border-purple-500/50 shrink-0 w-[140px] sm:w-[160px] snap-start"
                   style={{ aspectRatio: '2/3' }}
                 >
                   <svg className="w-8 h-8 text-purple-400 mb-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -978,7 +993,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <Link
                     key={p.id}
                     href={localizedHref(`/products/${p.id}`, locale)}
-                    className="group bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-amber-500/50 transition-all shrink-0 w-[120px] sm:w-[140px] snap-start"
+                    className="group bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-amber-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
                   >
                     <div className="relative bg-gray-700" style={{ aspectRatio: '2/3' }}>
                       {p.imageUrl ? (
@@ -1004,7 +1019,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {/* もっと見るカード */}
                 <Link
                   href={localizedHref(`/makers/${maker.id}`, locale)}
-                  className="group bg-linear-to-br from-amber-600/20 to-amber-800/20 rounded-lg overflow-hidden hover:from-amber-600/30 hover:to-amber-800/30 transition-all flex flex-col items-center justify-center border border-amber-500/30 hover:border-amber-500/50 shrink-0 w-[120px] sm:w-[140px] snap-start"
+                  className="group bg-linear-to-br from-amber-600/20 to-amber-800/20 rounded-lg overflow-hidden hover:from-amber-600/30 hover:to-amber-800/30 transition-all flex flex-col items-center justify-center border border-amber-500/30 hover:border-amber-500/50 shrink-0 w-[140px] sm:w-[160px] snap-start"
                   style={{ aspectRatio: '2/3' }}
                 >
                   <svg className="w-8 h-8 text-amber-400 mb-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

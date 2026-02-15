@@ -4,6 +4,9 @@ const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com
 
 export const revalidate = 3600; // 1時間キャッシュ
 
+// 女優チャンク数: 38,000人 ÷ 5,000 = 8チャンク
+const ACTRESS_CHUNK_COUNT = 8;
+
 /**
  * サイトマップインデックス - 大規模サイト対応
  * Googleの推奨: 1ファイル50,000URL以下、50MB以下
@@ -14,8 +17,14 @@ export async function GET() {
     `${BASE_URL}/sitemap-static.xml`,
     `${BASE_URL}/sitemap-products-1.xml`,
     `${BASE_URL}/sitemap-products-2.xml`,
-    `${BASE_URL}/sitemap-actresses.xml`,
+    // 女優チャンク（sitemap-actresses-0.xml ~ sitemap-actresses-7.xml）
+    ...Array.from({ length: ACTRESS_CHUNK_COUNT }, (_, i) =>
+      `${BASE_URL}/sitemap-actresses-${i}.xml`
+    ),
     `${BASE_URL}/sitemap-tags.xml`,
+    `${BASE_URL}/sitemap-series.xml`,
+    `${BASE_URL}/sitemap-makers.xml`,
+    `${BASE_URL}/sitemap-videos.xml`,
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

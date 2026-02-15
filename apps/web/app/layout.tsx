@@ -83,6 +83,8 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://img.sokmil.com" />
         <link rel="dns-prefetch" href="https://www.caribbeancom.com" />
         <link rel="dns-prefetch" href="https://www.1pondo.tv" />
+        {/* RSS autodiscovery */}
+        <link rel="alternate" type="application/rss+xml" title="Adult Viewer Lab - 新着動画" href="/feed.xml" />
         <JsonLD data={websiteSchema} />
       </head>
       <body

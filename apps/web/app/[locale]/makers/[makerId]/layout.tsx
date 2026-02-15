@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 import { getMakerById } from '@/lib/db/queries';
+import { JsonLD } from '@/components/JsonLD';
+import { generateBreadcrumbSchema } from '@/lib/seo';
 
 interface MakerLayoutProps {
   children: React.ReactNode;
@@ -71,8 +73,28 @@ export async function generateMetadata({
   };
 }
 
-export default function MakerDetailLayout({
+export default async function MakerDetailLayout({
   children,
+  params,
 }: MakerLayoutProps) {
-  return children;
+  const { locale, makerId } = await params;
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+
+  const makerIdNum = parseInt(makerId, 10);
+  const maker = !isNaN(makerIdNum) ? await getMakerById(makerIdNum, locale) : null;
+
+  const breadcrumbItems = [
+    { name: 'Home', url: `${baseUrl}/` },
+    { name: locale === 'ja' ? 'メーカー一覧' : 'Makers', url: `${baseUrl}/${locale}/makers` },
+    ...(maker ? [{ name: maker.name, url: `${baseUrl}/${locale}/makers/${makerId}` }] : []),
+  ];
+
+  const breadcrumbSchema = generateBreadcrumbSchema(breadcrumbItems);
+
+  return (
+    <>
+      <JsonLD data={breadcrumbSchema} />
+      {children}
+    </>
+  );
 }

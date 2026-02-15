@@ -20,6 +20,7 @@ export default function StickyCta(props: StickyCtaProps) {
     <StickyCtaBase
       {...props}
       theme="dark"
+      showTrustBadge={true}
       labels={{
         buyAt: t('buyAt', { provider: props.providerLabel }),
         buyAtSale: t('buyAtSale', { provider: props.providerLabel, discount: '{discount}' }),

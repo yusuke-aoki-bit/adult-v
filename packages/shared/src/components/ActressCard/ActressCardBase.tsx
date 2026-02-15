@@ -10,6 +10,7 @@ import { normalizeImageUrl, isUncensoredThumbnail } from '../../lib/image-utils'
 import ImageLightbox from '../ImageLightbox';
 import { CopyButton } from '../CopyButton';
 import { getActressCardThemeConfig, filterServicesForSite, type ActressCardTheme } from './themes';
+import { generateActressAltText } from '../../lib/seo-utils';
 
 // Client-side translations
 const translations = {
@@ -90,6 +91,17 @@ function ActressCardBaseComponent({
     [actress.services, isFanzaSite]
   );
 
+  // SEO optimized alt text
+  const altText = useMemo(
+    () => generateActressAltText({
+      name: actress['name'],
+      productCount: actress['releaseCount'] || actress.metrics?.releaseCount,
+      services: actress.services,
+      aliases: actress.aliases,
+    }),
+    [actress['name'], actress['releaseCount'], actress.metrics?.releaseCount, actress.services, actress.aliases]
+  );
+
   // Image handling
   const rawImageUrl = compact
     ? (actress['thumbnail'] || actress['heroImage'])
@@ -152,19 +164,20 @@ function ActressCardBaseComponent({
     return (
       <Link
         href={`/${locale}/actress/${actress['id']}`}
-        className={`group ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-amber-500/50 transition-all`}
+        className={`group ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-pink-500/60 hover:shadow-xl hover:shadow-pink-500/20 transition-all duration-300`}
       >
         <div className={`aspect-square relative ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
           {actress['heroImage'] || actress['thumbnail'] ? (
             <Image
               src={imgSrc}
-              alt={actress['name']}
+              alt={altText}
               fill
-              sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 10vw"
+              sizes="(max-width: 640px) 25vw, (max-width: 1024px) 15vw, 8vw"
               className={`object-cover group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
               loading={priority ? "eager" : "lazy"}
               priority={priority}
               fetchPriority={priority ? "high" : "low"}
+              quality={75}
               onError={handleImageError}
             />
           ) : (
@@ -174,18 +187,27 @@ function ActressCardBaseComponent({
               </svg>
             </div>
           )}
+          {/* トレンドバッジ */}
           {actress.metrics?.trendingScore && actress.metrics.trendingScore > 0 && (
-            <div className="absolute top-1 right-1 bg-green-600 text-white text-[10px] font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
+            <div className="absolute top-1 right-1 bg-linear-to-r from-green-500 to-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-lg">
               <svg className="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
               {actress.metrics.trendingScore}%
             </div>
           )}
+          {/* 出演作品数オーバーレイ（ホバー時） */}
+          {actress['releaseCount'] && actress['releaseCount'] > 0 && (
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+              <span className="text-white text-sm font-bold">
+                {actress['releaseCount']}本
+              </span>
+            </div>
+          )}
         </div>
-        <div className="p-1.5">
+        <div className="p-2">
           <div className="flex items-center gap-1">
-            <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-amber-300' : 'text-gray-800 group-hover:text-amber-600'} text-xs font-medium truncate transition-colors flex-1`}>
+            <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-pink-300' : 'text-gray-800 group-hover:text-pink-600'} text-xs font-medium truncate transition-colors flex-1`}>
               {actress['name']}
             </p>
             <CopyButton
@@ -195,6 +217,12 @@ function ActressCardBaseComponent({
               className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
             />
           </div>
+          {/* メトリクス表示（作品数がある場合） */}
+          {actress['releaseCount'] && actress['releaseCount'] > 0 && (
+            <p className={`text-[10px] ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-0.5`}>
+              {t.releaseCount}: {actress['releaseCount']}{t.videos}
+            </p>
+          )}
         </div>
       </Link>
     );
@@ -203,7 +231,7 @@ function ActressCardBaseComponent({
   if (resolvedSize === 'compact') {
     return (
       <>
-        <div className="theme-card theme-text rounded-lg overflow-hidden hover:shadow-xl transition-all duration-200">
+        <div className="theme-card theme-text rounded-lg overflow-hidden hover:shadow-xl hover:shadow-pink-500/20 hover:ring-2 hover:ring-pink-500/40 transition-all duration-300">
           {/* Image section - click for modal */}
           <div
             role="button"
@@ -219,16 +247,17 @@ function ActressCardBaseComponent({
           >
             <Image
               src={imgSrc}
-              alt={actress['name']}
+              alt={altText}
               fill
-              sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1024px) 22vw, 16vw"
-              className={`object-cover opacity-90 group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
+              sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 18vw, 12vw"
+              className={`object-cover group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}
               loading={priority ? "eager" : "lazy"}
               priority={priority}
               fetchPriority={priority ? "high" : "low"}
               placeholder="blur"
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
               onError={handleImageError}
+              quality={75}
             />
             {/* Favorite button */}
             {FavoriteButton && (
@@ -325,7 +354,7 @@ function ActressCardBaseComponent({
         >
           <Image
             src={imgSrc}
-            alt={actress['name']}
+            alt={altText}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className={`object-cover opacity-90 group-hover:scale-105 transition-transform duration-300 ${shouldBlur ? 'blur-[1px]' : ''}`}

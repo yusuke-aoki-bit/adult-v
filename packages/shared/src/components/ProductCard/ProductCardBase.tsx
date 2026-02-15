@@ -327,7 +327,7 @@ function ProductCardBase({
     const showMiniCta = miniAffiliateUrl && !(hideFanzaPurchaseLinks && product.provider === 'fanza');
 
     return (
-      <div className={`group relative ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-orange-500/50 transition-all`}>
+      <div className={`group relative ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-pink-500/60 hover:shadow-xl hover:shadow-pink-500/20 transition-all duration-300`}>
         <Link href={`/${locale}/products/${product['id']}`}>
           <div className={`relative ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`} style={{ aspectRatio: '2/3' }}>
             {hasValidImageUrl ? (
@@ -335,7 +335,7 @@ function ProductCardBase({
                 src={imgSrc}
                 alt={altText}
                 fill
-                sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 10vw"
+                sizes="(max-width: 640px) 25vw, (max-width: 1024px) 16vw, 8vw"
                 className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isUncensored ? 'blur-[1px]' : ''}`}
                 loading={priority ? "eager" : "lazy"}
                 priority={priority}
@@ -368,12 +368,12 @@ function ProductCardBase({
               </div>
             )}
           </div>
-          <div className="p-1.5">
-            <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-orange-300' : 'text-gray-800 group-hover:text-orange-600'} text-xs font-medium line-clamp-2 transition-colors`}>
+          <div className="p-2">
+            <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-pink-300' : 'text-gray-800 group-hover:text-pink-600'} text-xs font-medium line-clamp-2 transition-colors leading-snug`}>
               {product['title']}
             </p>
             {/* 品番 + コピーボタン */}
-            <div className="flex items-center gap-1 mt-0.5">
+            <div className="flex items-center gap-1 mt-1">
               <span className={`text-[9px] ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} truncate`}>
                 {product.normalizedProductId || product['id']}
               </span>
@@ -420,7 +420,7 @@ function ProductCardBase({
 
     return (
       <>
-        <div className={`relative block ${themeConfig.cardBg} rounded-lg overflow-hidden hover:ring-2 ${themeConfig.cardHoverRing} transition-all group`}>
+        <div className={`relative block ${themeConfig.cardBg} rounded-lg overflow-hidden hover:ring-2 ${themeConfig.cardHoverRing} hover:shadow-xl hover:shadow-pink-500/20 transition-all duration-300 group`}>
           <Link href={`/${locale}/products/${product['id']}`}>
             <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
               <Image
@@ -428,26 +428,26 @@ function ProductCardBase({
                 alt={altText}
                 fill
                 className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
-                sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 12.5vw"
+                sizes="(max-width: 640px) 25vw, (max-width: 1024px) 16vw, 10vw"
                 loading={priority ? "eager" : "lazy"}
                 priority={priority}
                 fetchPriority={priority ? "high" : "low"}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
                 onError={handleImageError}
-                quality={70}
+                quality={75}
               />
               {product.salePrice && (
                 <div className="absolute top-1 left-1 flex gap-1 z-10">
-                  <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                  <span className="bg-linear-to-r from-red-600 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-0.5 shadow-lg animate-pulse">
                     <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                       <path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
                     </svg>
                     SALE
                   </span>
                   {product['discount'] && product['discount'] >= 30 && (
-                    <span className="bg-linear-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded">
-                      お得
+                    <span className="bg-linear-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-2 py-1 rounded-md shadow-lg">
+                      {product['discount']}%OFF
                     </span>
                   )}
                 </div>
@@ -462,10 +462,10 @@ function ProductCardBase({
                 </div>
               )}
             </div>
-            <div className="p-1.5">
-              <h3 className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-tight`}>{product['title']}</h3>
+            <div className="p-2">
+              <h3 className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-snug group-hover:text-pink-300 transition-colors`}>{product['title']}</h3>
               {/* 品番 + コピーボタン */}
-              <div className="flex items-center gap-1 mt-0.5">
+              <div className="flex items-center gap-1 mt-1">
                 <span className={`text-[10px] ${themeConfig.textMuted} truncate`}>
                   {product.normalizedProductId || product['id']}
                 </span>
@@ -476,12 +476,33 @@ function ProductCardBase({
                   className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
                 />
               </div>
+              {/* 価格表示（compactモード） */}
+              {(product.salePrice || product['price'] > 0) && (
+                <div className="mt-1 flex items-center gap-1">
+                  {product.salePrice ? (
+                    <>
+                      <span className={`text-[10px] font-bold ${themeConfig.salePriceColor}`}>
+                        {resolvedFormatPrice(product.salePrice, product.currency)}
+                      </span>
+                      {product['price'] > 0 && (
+                        <span className={`text-[9px] ${themeConfig.textMuted} line-through`}>
+                          {resolvedFormatPrice(product['price'], product.currency)}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className={`text-[10px] font-medium ${themeConfig.textSecondary}`}>
+                      {resolvedFormatPrice(product['price'], product.currency)}
+                    </span>
+                  )}
+                </div>
+              )}
               {/* 女優名リンク（導線強化） */}
               {product.performers && product.performers.length > 0 && product.performers[0] && (
-                <div className="mt-0.5 truncate">
+                <div className="mt-1 truncate">
                   <Link
                     href={`/${locale}/actress/${product.performers[0]['id']}`}
-                    className={`text-[10px] ${themeConfig.accentColor} hover:underline`}
+                    className={`text-[10px] ${themeConfig.accentColor} hover:underline font-medium`}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {product.performers[0]['name']}
@@ -775,6 +796,12 @@ function ProductCardBase({
                       </>
                     )}
                   </div>
+                  {/* 節約額（画像オーバーレイ） */}
+                  {product.regularPrice && product.salePrice && product.regularPrice > product.salePrice && (
+                    <span className={`text-[10px] font-bold ${themeConfig.salePriceColor}`}>
+                      ¥{(product.regularPrice - product.salePrice).toLocaleString()}お得
+                    </span>
+                  )}
                   {saleUrgencyInfo.showCountdown && (
                     <span className={`text-[10px] font-bold ${themeConfig.countdownColor} ${isAnimated ? 'animate-pulse' : ''}`}>
                       {saleUrgencyInfo.diffDays === 1 ? '⏰ ' + t('saleTomorrow') : `⏰ ${t('saleEndsIn', { days: saleUrgencyInfo.diffDays })}`}
@@ -910,6 +937,13 @@ function ProductCardBase({
                   </>
                 )}
               </div>
+              {/* 節約額の表示 */}
+              {product.regularPrice && product.salePrice && product.regularPrice > product.salePrice && (
+                <p className={`text-[10px] font-bold ${themeConfig.salePriceColor} flex items-center gap-0.5`}>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  ¥{(product.regularPrice - product.salePrice).toLocaleString()}お得
+                </p>
+              )}
             </div>
           ) : product['price'] > 0 ? (
             <p className={`text-base sm:text-lg font-semibold ${themeConfig.regularPriceColor}`}>
@@ -969,38 +1003,54 @@ function ProductCardBase({
             );
           })()}
 
-          {/* 他のASPで購入オプション - ポップオーバー形式で画面ずれを防止 */}
+          {/* 他のASPで購入オプション - 最大2社をインライン表示 */}
           {product.alternativeSources && product.alternativeSources.length > 0 && (
-            <div className="mt-1.5 relative">
-              <details className="group">
-                <summary className={`flex items-center justify-center gap-1 text-[10px] ${themeConfig.textMuted} cursor-pointer hover:text-gray-400 transition-colors list-none [&::-webkit-details-marker]:hidden`}>
-                  <span>他{product.alternativeSources.length}社でも購入可</span>
-                  <svg className="w-3 h-3 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </summary>
-                {/* 絶対位置でポップオーバー表示 - カード高さに影響しない、画面外はみ出し防止 */}
-                <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1 w-max max-w-[90vw] p-2 rounded-lg shadow-lg z-50 ${theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-                  <div className="flex flex-wrap gap-1">
-                    {product.alternativeSources.map((source, idx) => {
-                      // FANZAの場合はf.adult-v.comへの外部リンク、その他は内部リンク
-                      const isFanza = source.aspName.toUpperCase() === 'FANZA';
-                      const href = isFanza ? source.affiliateUrl : `/${locale}/products/${source.productId}`;
-                      return (
-                        <a
-                          key={idx}
-                          href={href}
-                          {...(isFanza ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                          className={`text-[10px] px-2 py-1 rounded ${themeConfig.tagBg} ${themeConfig.tagText} hover:opacity-80 transition-opacity flex items-center gap-1`}
-                        >
-                          <span className="font-medium">{source.aspName}</span>
-                          <span>{resolvedFormatPrice(source.salePrice || source.price)}</span>
-                        </a>
-                      );
-                    })}
+            <div className="mt-1.5">
+              <div className="flex flex-wrap gap-1 items-center">
+                {product.alternativeSources.slice(0, 2).map((source, idx) => {
+                  const isFanza = source.aspName.toUpperCase() === 'FANZA';
+                  const href = isFanza ? source.affiliateUrl : `/${locale}/products/${source.productId}`;
+                  return (
+                    <a
+                      key={idx}
+                      href={href}
+                      {...(isFanza ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      className={`text-[10px] px-2 py-0.5 rounded ${themeConfig.tagBg} ${themeConfig.tagText} hover:opacity-80 transition-opacity flex items-center gap-1`}
+                    >
+                      <span className="font-medium">{source.aspName}</span>
+                      <span>{resolvedFormatPrice(source.salePrice || source.price)}</span>
+                    </a>
+                  );
+                })}
+                {product.alternativeSources.length > 2 && (
+                  <div className="relative">
+                    <details className="group">
+                      <summary className={`text-[10px] ${themeConfig.textMuted} cursor-pointer hover:text-gray-400 transition-colors list-none [&::-webkit-details-marker]:hidden px-1.5 py-0.5 rounded ${themeConfig.tagBg}`}>
+                        +{product.alternativeSources.length - 2}社
+                      </summary>
+                      <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1 w-max max-w-[90vw] p-2 rounded-lg shadow-lg z-50 ${theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                        <div className="flex flex-wrap gap-1">
+                          {product.alternativeSources.slice(2).map((source, idx) => {
+                            const isFanza = source.aspName.toUpperCase() === 'FANZA';
+                            const href = isFanza ? source.affiliateUrl : `/${locale}/products/${source.productId}`;
+                            return (
+                              <a
+                                key={idx}
+                                href={href}
+                                {...(isFanza ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                className={`text-[10px] px-2 py-1 rounded ${themeConfig.tagBg} ${themeConfig.tagText} hover:opacity-80 transition-opacity flex items-center gap-1`}
+                              >
+                                <span className="font-medium">{source.aspName}</span>
+                                <span>{resolvedFormatPrice(source.salePrice || source.price)}</span>
+                              </a>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </details>
                   </div>
-                </div>
-              </details>
+                )}
+              </div>
             </div>
           )}
         </div>
