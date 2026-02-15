@@ -1,9 +1,8 @@
-import type { ProviderId } from './types/product';
+import type { ProviderId } from './asp-registry';
+import { VALID_PROVIDER_IDS, LEGACY_PROVIDER_MAP } from './asp-registry';
 
-/**
- * Valid provider IDs
- */
-export const VALID_PROVIDER_IDS: readonly ProviderId[] = ['duga', 'sokmil', 'dti', 'mgs', 'b10f', 'japanska', 'fc2', 'fanza'] as const;
+// Re-export for backward compatibility
+export { VALID_PROVIDER_IDS };
 
 /**
  * Check if a string is a valid ProviderId
@@ -17,41 +16,9 @@ export function isValidProviderId(value: string): value is ProviderId {
  * Used for database migration compatibility
  */
 export function mapLegacyProvider(provider: string): ProviderId {
-  // Normalize to lowercase for case-insensitive matching
   const normalizedProvider = provider.toLowerCase();
 
-  // Map 'apex' to 'duga' for backwards compatibility
-  if (normalizedProvider === 'apex') {
-    return 'duga';
-  }
-
-  // Map specific ASP names to provider IDs
-  const aspMapping: Record<string, ProviderId> = {
-    'duga': 'duga',
-    'apex': 'duga',
-    'dti': 'dti',
-    'mgs': 'mgs',
-    'b10f': 'b10f',
-    'sokmil': 'sokmil',
-    'ソクミル': 'sokmil',
-    'japanska': 'japanska',
-    'fc2': 'fc2',
-    'fanza': 'fanza',
-    'dmm': 'fanza',
-    // DTI系サイト（月額制）
-    'heyzo': 'dti',
-    'caribbeancom': 'dti',  // カリビアンコム（月額制）
-    '1pondo': 'dti',
-    '10musume': 'dti',
-    'pacopacomama': 'dti',
-    'muramura': 'dti',
-    'tokyohot': 'dti',
-    // カリビアンコムプレミアムは単品購入サイト（月額制ではない）
-    'カリビアンコムプレミアム': 'dti',
-    'caribbeancompr': 'dti',
-  };
-
-  const mapped = aspMapping[normalizedProvider];
+  const mapped = LEGACY_PROVIDER_MAP[normalizedProvider] || LEGACY_PROVIDER_MAP[provider];
   if (mapped) {
     return mapped;
   }

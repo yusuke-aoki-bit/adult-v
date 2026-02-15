@@ -172,6 +172,21 @@ export {
   type PriceStats,
 } from './price-history';
 
+export {
+  createAppQueries,
+  type CreateAppQueriesDeps,
+  type AppQueries,
+  type CacheData as AppCacheData,
+  type RandomProduct,
+  type ProductSourceWithSales,
+  type SeriesInfo as AppSeriesInfo,
+  type SortOption,
+  type GetProductsOptions as AppGetProductsOptions,
+  type GetActressesOptions as AppGetActressesOptions,
+  type GetActressesCountOptions as AppGetActressesCountOptions,
+  type MakerInfo as AppMakerInfo,
+} from './create-app-queries';
+
 // 型定義
 export type {
   Column,

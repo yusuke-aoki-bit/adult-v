@@ -3,16 +3,16 @@ import { createApiErrorResponse } from '../lib/api-logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface RookiePerformersHandlerDeps {
-  getDb: () => unknown;
+  getDb: () => any;
   performers: unknown;
   productPerformers: unknown;
   products: unknown;
-  eq: (column: any, value: any) => unknown;
-  desc: (column: any) => unknown;
-  gte: (column: any, value: any) => unknown;
-  and: (...conditions: any[]) => unknown;
-  sql: unknown;
-  count?: unknown;
+  eq: (column: any, value: any) => any;
+  desc: (column: any) => any;
+  gte: (column: any, value: any) => any;
+  and: (...conditions: any[]) => any;
+  sql: any;
+  count?: any;
 }
 
 export interface RookiePerformer {

@@ -176,6 +176,22 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
     description: 'TV出演AV女優の動画配信',
     siteUrl: 'https://tvdeav.com/',
   },
+  av9898: {
+    id: 'av9898',
+    label: 'AV9898',
+    accentClass: 'from-gray-500 to-slate-500',
+    textClass: 'text-gray-300',
+    description: '無修正動画配信サイト',
+    siteUrl: 'https://www.av9898.com/',
+  },
+  honnamatv: {
+    id: 'honnamatv',
+    label: 'ホンナマTV',
+    accentClass: 'from-gray-500 to-zinc-500',
+    textClass: 'text-gray-300',
+    description: '生ハメ無修正動画',
+    siteUrl: 'https://www.honnamatv.com/',
+  },
 };
 
 /**

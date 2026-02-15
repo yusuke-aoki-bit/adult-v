@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { logDbErrorAndReturn } from '../lib/db-logger';
+import { ASP_STATS_NAME_MAP } from '../asp-registry';
 
 export interface ASPTotal {
   asp: string;
@@ -24,24 +25,8 @@ export interface StatsAspHandlerOptions {
   excludeFanza?: boolean;
 }
 
-// ASP名のマッピング（DB名 -> ASPTotal名）
-const ASP_NAME_MAP: Record<string, string> = {
-  'b10f.jp': 'b10f',
-  'MGS': 'MGS',
-  'DUGA': 'DUGA',
-  'SOKMIL': 'SOKMIL',
-  'Japanska': 'Japanska',
-  'FC2': 'FC2',
-  // DTI系
-  'caribbeancom': 'カリビアンコム',
-  'caribbeancompr': 'カリビアンコムプレミアム',
-  '1pondo': '一本道',
-  'heyzo': 'HEYZO',
-  '10musume': '天然むすめ',
-  'pacopacomama': 'パコパコママ',
-  'muramura': 'ムラムラってくる素人',
-  'tokyohot': 'Tokyo-Hot',
-};
+// ASP名のマッピング（レジストリから導出）
+const ASP_NAME_MAP: Record<string, string> = ASP_STATS_NAME_MAP;
 
 export function createStatsAspHandler(
   deps: StatsAspHandlerDeps,

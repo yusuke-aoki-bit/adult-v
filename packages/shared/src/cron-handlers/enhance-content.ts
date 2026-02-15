@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
+import pLimit from 'p-limit';
 import type { DbExecutor } from '../db-queries/types';
 
 interface Stats {
@@ -86,7 +87,9 @@ async function enhanceWithVisionAPI(
     normalized_product_id: string;
   }>;
 
-  for (const product of products) {
+  const concurrencyLimit = pLimit(3);
+
+  await Promise.all(products.map(product => concurrencyLimit(async () => {
     stats.totalProcessed++;
 
     try {
@@ -133,7 +136,7 @@ async function enhanceWithVisionAPI(
       console.error(`[enhance-content] Vision error for ${product['id']}:`, error);
       stats.errors++;
     }
-  }
+  })));
 
   return { stats, results };
 }
@@ -168,7 +171,9 @@ async function enhanceWithTranslation(
 
   const targetLanguages = ['en', 'zh', 'ko'];
 
-  for (const product of products) {
+  const concurrencyLimit = pLimit(5);
+
+  await Promise.all(products.map(product => concurrencyLimit(async () => {
     stats.totalProcessed++;
 
     try {
@@ -219,7 +224,7 @@ async function enhanceWithTranslation(
       console.error(`[enhance-content] Translation error for ${product['id']}:`, error);
       stats.errors++;
     }
-  }
+  })));
 
   return { stats, results };
 }
@@ -250,7 +255,9 @@ async function enhanceWithYouTube(
     normalized_product_id: string;
   }>;
 
-  for (const product of products) {
+  const concurrencyLimit = pLimit(3);
+
+  await Promise.all(products.map(product => concurrencyLimit(async () => {
     stats.totalProcessed++;
 
     try {
@@ -313,7 +320,7 @@ async function enhanceWithYouTube(
       console.error(`[enhance-content] YouTube error for ${product['id']}:`, error);
       stats.errors++;
     }
-  }
+  })));
 
   return { stats, results };
 }

@@ -25,17 +25,17 @@ export interface UserReviewWithVote extends UserReview {
   userVote?: 'helpful' | 'not_helpful' | null;
 }
 
-// 依存性の型定義
+// 依存性の型定義（DI境界のため関数パラメータはany - TypeScript共変/反変制約）
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface UserReviewsHandlerDeps {
-  getDb: () => unknown;
+  getDb: () => any;
   userReviews: unknown;
   userReviewVotes: unknown;
   products: unknown;
-  eq: (a: any, b: any) => unknown;
-  and: (...args: any[]) => unknown;
-  desc: (col: any) => unknown;
-  sql: unknown;
+  eq: (a: any, b: any) => any;
+  and: (...args: any[]) => any;
+  desc: (col: any) => any;
+  sql: any;
 }
 
 // レビュー取得ハンドラー

@@ -9,6 +9,10 @@ import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
 import { normalizePerformerName, parsePerformerNames } from '../lib/performer-validation';
 import type { DbExecutor } from '../db-queries/types';
+import {
+  batchUpsertPerformers,
+  batchInsertProductPerformers,
+} from '../utils/batch-db';
 
 interface Stats {
   totalProcessed: number;
@@ -425,6 +429,10 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
 
       console.log(`[normalize-performers] Found ${products.length} products to process`);
 
+      // バッチ用: 全演者名と紐付け情報を収集
+      const allPerformerNames = new Set<string>();
+      const pendingLinks: { productId: number; performerName: string }[] = [];
+
       for (const product of products) {
         stats.totalProcessed++;
 
@@ -452,25 +460,38 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
         console.log(`[normalize-performers] Hit (${result['source']}): ${product.normalized_product_id} -> ${result.performers.join(', ')}`);
         stats.wikiHits++;
 
+        // 演者名を収集（バッチ処理用）
         for (const rawPerformerName of result.performers) {
           const splitNames = parsePerformerNames(rawPerformerName, /[、,\/・\n\t\s　]+/);
+          const namesToProcess = splitNames.length === 0 ? [rawPerformerName] : splitNames;
 
-          if (splitNames.length === 0) {
-            const success = await linkPerformerToProduct(db, product['id'], rawPerformerName);
-            if (success) {
-              stats.performersAdded++;
-            }
-          } else {
-            for (const performerName of splitNames) {
-              const success = await linkPerformerToProduct(db, product['id'], performerName);
-              if (success) {
-                stats.performersAdded++;
-              }
+          for (const name of namesToProcess) {
+            const normalized = normalizePerformerName(name);
+            if (normalized) {
+              allPerformerNames.add(normalized);
+              pendingLinks.push({ productId: product['id'], performerName: normalized });
             }
           }
         }
 
         await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+      }
+
+      // バッチ: 演者UPSERT + 紐付けINSERT
+      if (allPerformerNames.size > 0) {
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerName } of pendingLinks) {
+          const performerId = nameToId.get(performerName);
+          if (performerId) {
+            links.push({ productId, performerId });
+          }
+        }
+
+        stats.performersAdded = await batchInsertProductPerformers(db, links);
       }
 
       const duration = Math.round((Date.now() - startTime) / 1000);

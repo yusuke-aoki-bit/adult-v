@@ -69,17 +69,21 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
           issues.push(`重複商品: ${stats.duplicateProducts}件`);
 
           if (action === 'fix') {
-            // 重複を解消（最新のレコードを残す）
-            for (const row of duplicateProductsResult.rows as { normalized_product_id: string }[]) {
-              await db.execute(sql`
-                DELETE FROM products
-                WHERE normalized_product_id = ${row.normalized_product_id}
-                  AND id NOT IN (
-                    SELECT MAX(id) FROM products WHERE normalized_product_id = ${row.normalized_product_id}
-                  )
-              `);
-              stats.fixed++;
-            }
+            // 重複を一括解消（各normalized_product_idの最大IDだけ残す）
+            const deleteResult = await db.execute(sql`
+              DELETE FROM products p
+              WHERE EXISTS (
+                SELECT 1 FROM (
+                  SELECT normalized_product_id, MAX(id) as keep_id
+                  FROM products
+                  GROUP BY normalized_product_id
+                  HAVING COUNT(*) > 1
+                ) dup
+                WHERE p.normalized_product_id = dup.normalized_product_id
+                  AND p.id != dup.keep_id
+              )
+            `);
+            stats.fixed += (deleteResult as { rowCount?: number }).rowCount ?? stats.duplicateProducts;
           }
         }
 
@@ -96,30 +100,47 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
           issues.push(`重複出演者: ${stats.duplicatePerformers}件`);
 
           if (action === 'fix') {
-            for (const row of duplicatePerformersResult.rows as { name: string }[]) {
-              // 最小IDを取得
-              const minIdResult = await db.execute(sql`
-                SELECT MIN(id) as min_id FROM performers WHERE name = ${row['name']}
-              `);
-              const minId = (minIdResult.rows[0] as { min_id: number }).min_id;
+            // 一括処理: 重複演者のリンクを最小IDに移行し、重複レコードを削除
 
-              // 他のIDの関連を最小IDに移行
-              await db.execute(sql`
-                UPDATE product_performers
-                SET performer_id = ${minId}
-                WHERE performer_id IN (
-                  SELECT id FROM performers WHERE name = ${row['name']} AND id != ${minId}
-                )
-                ON CONFLICT DO NOTHING
-              `);
+            // 1. 既に正しいリンクが存在する場合、重複側のリンクを削除
+            await db.execute(sql`
+              DELETE FROM product_performers pp
+              WHERE EXISTS (
+                SELECT 1 FROM performers p
+                JOIN (
+                  SELECT name, MIN(id) as min_id FROM performers GROUP BY name HAVING COUNT(*) > 1
+                ) dup ON p.name = dup.name AND p.id != dup.min_id
+                WHERE pp.performer_id = p.id
+                  AND EXISTS (
+                    SELECT 1 FROM product_performers pp2
+                    WHERE pp2.product_id = pp.product_id AND pp2.performer_id = dup.min_id
+                  )
+              )
+            `);
 
-              // 重複レコードを削除
-              await db.execute(sql`
-                DELETE FROM performers
-                WHERE name = ${row['name']} AND id != ${minId}
-              `);
-              stats.fixed++;
-            }
+            // 2. 残りのリンクを最小IDに移行
+            await db.execute(sql`
+              UPDATE product_performers pp
+              SET performer_id = dup.min_id
+              FROM performers p
+              JOIN (
+                SELECT name, MIN(id) as min_id FROM performers GROUP BY name HAVING COUNT(*) > 1
+              ) dup ON p.name = dup.name AND p.id != dup.min_id
+              WHERE pp.performer_id = p.id
+            `);
+
+            // 3. 重複演者レコードを削除
+            await db.execute(sql`
+              DELETE FROM performers p
+              WHERE EXISTS (
+                SELECT 1 FROM (
+                  SELECT name, MIN(id) as min_id FROM performers GROUP BY name HAVING COUNT(*) > 1
+                ) dup
+                WHERE p.name = dup.name AND p.id != dup.min_id
+              )
+            `);
+
+            stats.fixed += stats.duplicatePerformers;
           }
         }
       }

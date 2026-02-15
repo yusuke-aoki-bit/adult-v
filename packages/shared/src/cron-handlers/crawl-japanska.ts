@@ -8,6 +8,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
+import {
+  batchUpsertPerformers,
+  batchInsertProductPerformers,
+} from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -155,6 +159,10 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
       let consecutiveNotFound = 0;
       const MAX_CONSECUTIVE_NOT_FOUND = 20;
 
+      // バッチ用: 演者データ収集
+      const allPerformerNames = new Set<string>();
+      const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
+
       for (let movieId = startId; movieId <= startId + 1000 && stats.totalFetched < limit; movieId++) {
         if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) break;
 
@@ -209,17 +217,12 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
               affiliate_url = EXCLUDED.affiliate_url, last_updated = NOW()
           `);
 
-          for (const performerName of product.performers) {
-            const performerResult = await db.execute(sql`
-              INSERT INTO performers (name) VALUES (${performerName})
-              ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id
-            `);
-            const performerId = (performerResult.rows[0] as { id: number }).id;
-
-            await db.execute(sql`
-              INSERT INTO product_performers (product_id, performer_id) VALUES (${productId}, ${performerId})
-              ON CONFLICT DO NOTHING
-            `);
+          // 出演者をバッチ用に収集
+          if (product.performers.length > 0) {
+            for (const name of product.performers) {
+              allPerformerNames.add(name);
+            }
+            pendingPerformerLinks.push({ productId, performerNames: product.performers });
           }
 
           if (product['sampleVideoUrl']) {
@@ -240,6 +243,25 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
           stats.errors++;
           console.error(`Error processing Japanska product ${product.movieId}:`, error);
         }
+      }
+
+      // バッチ: 演者UPSERT + 紐付けINSERT
+      if (allPerformerNames.size > 0) {
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) {
+              links.push({ productId, performerId });
+            }
+          }
+        }
+
+        await batchInsertProductPerformers(db, links);
       }
 
       const duration = Math.round((Date.now() - startTime) / 1000);

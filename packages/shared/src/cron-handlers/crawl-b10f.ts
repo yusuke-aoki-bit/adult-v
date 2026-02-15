@@ -7,6 +7,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import type { DbExecutor } from '../db-queries/types';
+import {
+  batchUpsertPerformers,
+  batchInsertProductPerformers,
+} from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -118,6 +122,10 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
       const productsToProcess = products.slice(0, limit);
       stats.totalFetched = productsToProcess.length;
 
+      // バッチ用: 演者データ収集
+      const allPerformerNames = new Set<string>();
+      const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
+
       for (const item of productsToProcess) {
         try {
           const normalizedProductId = `b10f-${item['productId']}`;
@@ -178,27 +186,38 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
             `);
           }
 
+          // 出演者をバッチ用に収集
           if (item.performers && item.performers.trim()) {
             const performerNames = item.performers.split(',').map(n => n.trim()).filter(n => n);
-
-            for (const performerName of performerNames) {
-              const performerResult = await db.execute(sql`
-                INSERT INTO performers (name) VALUES (${performerName})
-                ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id
-              `);
-              const performerId = (performerResult.rows[0] as { id: number }).id;
-
-              await db.execute(sql`
-                INSERT INTO product_performers (product_id, performer_id)
-                VALUES (${productId}, ${performerId}) ON CONFLICT DO NOTHING
-              `);
+            for (const name of performerNames) {
+              allPerformerNames.add(name);
             }
+            pendingPerformerLinks.push({ productId, performerNames });
           }
 
         } catch (error) {
           stats.errors++;
           console.error(`Error processing product ${item['productId']}:`, error);
         }
+      }
+
+      // バッチ: 演者UPSERT + 紐付けINSERT
+      if (allPerformerNames.size > 0) {
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) {
+              links.push({ productId, performerId });
+            }
+          }
+        }
+
+        await batchInsertProductPerformers(db, links);
       }
 
       const duration = Math.round((Date.now() - startTime) / 1000);

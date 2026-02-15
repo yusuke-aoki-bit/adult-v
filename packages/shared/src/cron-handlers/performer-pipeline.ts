@@ -17,6 +17,11 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { sql } from '@adult-v/database';
+import {
+  batchUpsertPerformers,
+  batchInsertProductPerformers,
+  batchUpdateColumn,
+} from '../utils/batch-db';
 
 interface PipelineDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
@@ -213,55 +218,74 @@ async function linkPerformersFromLookup(
     LIMIT ${limit}
   `);
 
-  for (const product of products.rows as Array<{
+  const productRows = products.rows as Array<{
     id: number;
     normalized_product_id: string;
     original_product_id: string;
-  }>) {
-    productsProcessed++;
+  }>;
+  productsProcessed = productRows.length;
 
-    // 品番を正規化
+  if (productRows.length === 0) {
+    return { productsProcessed, newLinks };
+  }
+
+  // 1. 全商品の正規化品番を一括計算
+  const codeToProducts = new Map<string, number[]>();
+  for (const product of productRows) {
     const normalizedCode = normalizeProductCode(product.original_product_id || product.normalized_product_id);
+    const existing = codeToProducts.get(normalizedCode) || [];
+    existing.push(product['id']);
+    codeToProducts.set(normalizedCode, existing);
+  }
 
-    // lookupテーブルから検索
-    const lookupResult = await db.execute(sql`
-      SELECT performer_names
-      FROM product_performer_lookup
-      WHERE product_code_normalized = ${normalizedCode}
-      LIMIT 1
-    `);
+  // 2. lookupテーブルを一括検索
+  const codes = [...codeToProducts.keys()];
+  const codeValues = sql.join(codes.map(c => sql`${c}`), sql`, `);
 
-    if (lookupResult.rows.length === 0) continue;
+  const lookupResult = await db.execute(sql`
+    SELECT product_code_normalized, performer_names
+    FROM product_performer_lookup
+    WHERE product_code_normalized IN (${codeValues})
+  `);
 
-    const performerNames = (lookupResult.rows[0] as { performer_names: string[] }).performer_names;
+  // 3. 有効な演者名を収集
+  const allPerformerNames = new Set<string>();
+  const codeToPerformerNames = new Map<string, string[]>();
 
-    for (const performerName of performerNames) {
-      if (!isValidPerformerName(performerName)) continue;
-
-      try {
-        // 演者を取得または作成
-        const performerResult = await db.execute(sql`
-          INSERT INTO performers (name)
-          VALUES (${performerName})
-          ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-          RETURNING id
-        `);
-
-        const performerId = (performerResult.rows[0] as { id: number }).id;
-
-        // 紐付け
-        await db.execute(sql`
-          INSERT INTO product_performers (product_id, performer_id)
-          VALUES (${product['id']}, ${performerId})
-          ON CONFLICT DO NOTHING
-        `);
-
-        newLinks++;
-      } catch {
-        // 競合エラーは無視
+  for (const row of lookupResult.rows as Array<{ product_code_normalized: string; performer_names: string[] }>) {
+    const validNames = row.performer_names.filter(isValidPerformerName);
+    if (validNames.length > 0) {
+      codeToPerformerNames.set(row.product_code_normalized, validNames);
+      for (const name of validNames) {
+        allPerformerNames.add(name);
       }
     }
   }
+
+  if (allPerformerNames.size === 0) {
+    return { productsProcessed, newLinks };
+  }
+
+  // 4. 演者を一括UPSERT
+  const performerData = [...allPerformerNames].map(name => ({ name }));
+  const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+  const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+
+  // 5. product_performersリンクを一括INSERT
+  const links: { productId: number; performerId: number }[] = [];
+  for (const [code, performerNames] of codeToPerformerNames) {
+    const productIds = codeToProducts.get(code) || [];
+    for (const productId of productIds) {
+      for (const name of performerNames) {
+        const performerId = nameToId.get(name);
+        if (performerId) {
+          links.push({ productId, performerId });
+        }
+      }
+    }
+  }
+
+  newLinks = await batchInsertProductPerformers(db, links);
 
   return { productsProcessed, newLinks };
 }
@@ -517,21 +541,46 @@ async function mergeFakePerformers(
     LIMIT ${limit}
   `);
 
-  fakePerformersFound = fakePerformers.rows.length;
+  const fakePerformerRows = fakePerformers.rows as { id: number; name: string }[];
+  fakePerformersFound = fakePerformerRows.length;
 
-  for (const fakePerformer of fakePerformers.rows as { id: number; name: string }[]) {
-    // 仮名演者にリンクされている商品の品番を取得
-    const productsResult = await db.execute(sql`
-      SELECT p.id, p.normalized_product_id
-      FROM products p
-      JOIN product_performers pp ON p.id = pp.product_id
-      WHERE pp.performer_id = ${fakePerformer.id}
-      LIMIT 1
-    `);
+  if (fakePerformerRows.length === 0) {
+    return { fakePerformersFound, performersMerged, productsMoved, aliasesAdded };
+  }
 
-    if (productsResult.rows.length === 0) continue;
+  // バッチプリフェッチ: 全仮名演者の商品リンクを一括取得
+  const fakeIds = fakePerformerRows.map(f => f.id);
+  const fakeIdValues = sql.join(fakeIds.map(id => sql`${id}`), sql`, `);
 
-    const product = productsResult.rows[0] as { id: number; normalized_product_id: string };
+  const allProductLinks = await db.execute(sql`
+    SELECT DISTINCT ON (pp.performer_id)
+      pp.performer_id,
+      p.id as product_id,
+      p.normalized_product_id
+    FROM product_performers pp
+    JOIN products p ON pp.product_id = p.id
+    WHERE pp.performer_id IN (${fakeIdValues})
+    ORDER BY pp.performer_id, p.id
+  `);
+
+  // performer_id → product情報のマップ
+  const performerToProduct = new Map<number, { product_id: number; normalized_product_id: string }>();
+  for (const row of allProductLinks.rows as Array<{
+    performer_id: number;
+    product_id: number;
+    normalized_product_id: string;
+  }>) {
+    performerToProduct.set(row.performer_id, {
+      product_id: row.product_id,
+      normalized_product_id: row.normalized_product_id,
+    });
+  }
+
+  // 各仮名演者を処理（wiki/FANZA検索は個別に実行が必要）
+  for (const fakePerformer of fakePerformerRows) {
+    const product = performerToProduct.get(fakePerformer.id);
+    if (!product) continue;
+
     const productCode = product.normalized_product_id.replace(/^[A-Z]+-/, '').toUpperCase();
 
     // wiki_crawl_dataから正しい演者を検索
@@ -658,32 +707,19 @@ async function backfillDebutYears(
     LIMIT ${limit}
   `);
 
-  performersChecked = performersToUpdate.rows.length;
-
-  for (const row of performersToUpdate.rows as Array<{
+  const rows = performersToUpdate.rows as Array<{
     id: number;
     name: string;
     earliest_year: number;
     product_count: string;
-  }>) {
-    try {
-      // デビュー年を更新
-      await db.execute(sql`
-        UPDATE performers
-        SET debut_year = ${row.earliest_year}
-        WHERE id = ${row['id']}
-          AND debut_year IS NULL
-      `);
+  }>;
+  performersChecked = rows.length;
 
-      debutYearsUpdated++;
-
-      // ログ（100件ごと）
-      if (debutYearsUpdated % 100 === 0) {
-        console.log(`    Updated ${debutYearsUpdated} performers...`);
-      }
-    } catch (error) {
-      console.error(`    Error updating debut year for ${row['name']}: ${error}`);
-    }
+  // バッチUPDATE: 全件を1クエリで更新
+  if (rows.length > 0) {
+    const updates = rows.map(row => ({ id: row['id'], value: row.earliest_year }));
+    debutYearsUpdated = await batchUpdateColumn(db, 'performers', 'id', 'debut_year', updates);
+    console.log(`    Batch updated ${debutYearsUpdated} performers' debut years`);
   }
 
   return { performersChecked, debutYearsUpdated };

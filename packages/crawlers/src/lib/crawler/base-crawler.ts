@@ -696,24 +696,14 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       AND image_type = 'sample'
     `);
 
-    // 新しい画像を挿入
-    for (let index = 0; index < imageUrls.length; index++) {
-      const imageUrl = imageUrls[index];
+    // 新しい画像をバッチ挿入
+    if (imageUrls.length > 0) {
+      const valuesClauses = imageUrls.map((imageUrl, index) =>
+        sql`(${productId}, ${this.options['aspName']}, ${imageUrl}, 'sample', ${index})`
+      );
       await dbCtx.execute(sql`
-        INSERT INTO product_images (
-          product_id,
-          asp_name,
-          image_url,
-          image_type,
-          display_order
-        )
-        VALUES (
-          ${productId},
-          ${this.options['aspName']},
-          ${imageUrl},
-          'sample',
-          ${index}
-        )
+        INSERT INTO product_images (product_id, asp_name, image_url, image_type, display_order)
+        VALUES ${sql.join(valuesClauses, sql`, `)}
       `);
     }
 
@@ -762,24 +752,14 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       AND asp_name = ${this.options['aspName']}
     `);
 
-    // 新しい動画を挿入
-    for (let index = 0; index < videoUrls.length; index++) {
-      const videoUrl = videoUrls[index];
+    // 新しい動画をバッチ挿入
+    if (videoUrls.length > 0) {
+      const valuesClauses = videoUrls.map((videoUrl, index) =>
+        sql`(${productId}, ${this.options['aspName']}, ${videoUrl}, 'sample', ${index})`
+      );
       await dbCtx.execute(sql`
-        INSERT INTO product_videos (
-          product_id,
-          asp_name,
-          video_url,
-          video_type,
-          display_order
-        )
-        VALUES (
-          ${productId},
-          ${this.options['aspName']},
-          ${videoUrl},
-          'sample',
-          ${index}
-        )
+        INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
+        VALUES ${sql.join(valuesClauses, sql`, `)}
       `);
     }
 
@@ -794,40 +774,44 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     const dbCtx = tx || this.db;
     console.log(`  🏷️ カテゴリ/タグ保存中 (${categories.length}件)...`);
 
-    for (const categoryName of categories) {
-      // categoriesテーブルにupsert
-      const categoryResult = await dbCtx.execute(sql`
-        INSERT INTO categories (name)
-        VALUES (${categoryName})
-        ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-        RETURNING id
-      `);
+    if (categories.length === 0) {
+      return;
+    }
 
-      const categoryRow = getFirstRow<IdRow>(categoryResult);
-      const categoryId = categoryRow!.id;
+    // 1. categories一括UPSERT
+    const catValuesClauses = categories.map(name => sql`(${name})`);
+    const catResult = await dbCtx.execute(sql`
+      INSERT INTO categories (name)
+      VALUES ${sql.join(catValuesClauses, sql`, `)}
+      ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+      RETURNING id, name
+    `);
 
-      // product_categoriesにリレーション作成
+    // 2. product_categories一括INSERT
+    const catLinks = catResult.rows.map(row => sql`(${productId}, ${row['id'] as number})`);
+    if (catLinks.length > 0) {
       await dbCtx.execute(sql`
         INSERT INTO product_categories (product_id, category_id)
-        VALUES (${productId}, ${categoryId})
+        VALUES ${sql.join(catLinks, sql`, `)}
         ON CONFLICT DO NOTHING
       `);
+    }
 
-      // tagsテーブルにも保存
-      const tagResult = await dbCtx.execute(sql`
-        INSERT INTO tags (name, category)
-        VALUES (${categoryName}, 'genre')
-        ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-        RETURNING id
-      `);
+    // 3. tags一括UPSERT
+    const tagValuesClauses = categories.map(name => sql`(${name}, 'genre')`);
+    const tagResult = await dbCtx.execute(sql`
+      INSERT INTO tags (name, category)
+      VALUES ${sql.join(tagValuesClauses, sql`, `)}
+      ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+      RETURNING id, name
+    `);
 
-      const tagRow = getFirstRow<IdRow>(tagResult);
-      const tagId = tagRow!.id;
-
-      // product_tagsにリレーション作成
+    // 4. product_tags一括INSERT
+    const tagLinks = tagResult.rows.map(row => sql`(${productId}, ${row['id'] as number})`);
+    if (tagLinks.length > 0) {
       await dbCtx.execute(sql`
         INSERT INTO product_tags (product_id, tag_id)
-        VALUES (${productId}, ${tagId})
+        VALUES ${sql.join(tagLinks, sql`, `)}
         ON CONFLICT DO NOTHING
       `);
     }
@@ -847,36 +831,17 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     const dbCtx = tx || this.db;
     console.log(`  📝 レビュー保存中 (${reviews.length}件)...`);
 
-    for (const review of reviews) {
+    if (reviews.length > 0) {
+      const valuesClauses = reviews.map(review =>
+        sql`(${productId}, ${this.options['aspName']}, ${review.reviewerName || null}, ${review['rating']}, 5, ${review['title'] || null}, ${review.content || null}, ${review.date ? new Date(review.date) : null}, ${review.helpfulYes || null}, ${review.reviewId || null}, NOW(), NOW())`
+      );
       await dbCtx.execute(sql`
         INSERT INTO product_reviews (
-          product_id,
-          asp_name,
-          reviewer_name,
-          rating,
-          max_rating,
-          title,
-          content,
-          review_date,
-          helpful,
-          source_review_id,
-          created_at,
-          updated_at
+          product_id, asp_name, reviewer_name, rating, max_rating,
+          title, content, review_date, helpful, source_review_id,
+          created_at, updated_at
         )
-        VALUES (
-          ${productId},
-          ${this.options['aspName']},
-          ${review.reviewerName || null},
-          ${review['rating']},
-          5,
-          ${review['title'] || null},
-          ${review.content || null},
-          ${review.date ? new Date(review.date) : null},
-          ${review.helpfulYes || null},
-          ${review.reviewId || null},
-          NOW(),
-          NOW()
-        )
+        VALUES ${sql.join(valuesClauses, sql`, `)}
         ON CONFLICT (product_id, asp_name, source_review_id)
         DO UPDATE SET
           reviewer_name = EXCLUDED.reviewer_name,
@@ -886,7 +851,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
           helpful = EXCLUDED.helpful,
           updated_at = NOW()
       `);
-      this.stats.reviewsSaved++;
+      this.stats.reviewsSaved += reviews.length;
     }
 
     this.stats.reviewsFetched = (this.stats.reviewsFetched || 0) + reviews.length;

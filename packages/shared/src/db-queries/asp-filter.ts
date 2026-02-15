@@ -50,19 +50,10 @@ export function createAspFilterCondition(
 }
 
 /**
- * プロバイダー名をASP名にマッピング
+ * プロバイダー名をASP名にマッピング（レジストリから導出）
  */
-export const PROVIDER_TO_ASP_MAPPING: Record<string, string[]> = {
-  duga: ['DUGA', 'APEX'],
-  dti: ['DTI'],
-  dmm: ['DMM'],
-  sokmil: ['SOKMIL'],
-  mgs: ['MGS'],
-  fanza: ['FANZA'],
-  fc2: ['FC2'],
-  b10f: ['B10F'],
-  tokyohot: ['TOKYOHOT'],
-};
+export { PROVIDER_TO_ASP_MAPPING } from '../asp-registry';
+import { PROVIDER_TO_ASP_MAPPING } from '../asp-registry';
 
 /**
  * プロバイダーフィルタ条件を生成

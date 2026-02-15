@@ -3,8 +3,13 @@ import { validatePagination, validateSearchQuery } from '../lib/api-utils';
 import { CACHE } from './constants/cache';
 import { createApiErrorResponse } from '../lib/api-logger';
 
+export type ActressSortOption = 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
+
+const VALID_SORT_OPTIONS: ActressSortOption[] = ['nameAsc', 'nameDesc', 'productCountDesc', 'productCountAsc', 'recent'];
+
 export interface ActressesHandlerDeps {
-  getActresses: (params: { limit: number; offset: number; query?: string; ids?: number[] }) => Promise<unknown[]>;
+  getActresses: (params: { limit: number; offset: number; query?: string; ids?: number[]; sortBy?: ActressSortOption }) => Promise<unknown[]>;
+  getActressesCount?: (params?: { query?: string }) => Promise<number>;
   getFeaturedActresses: (limit: number) => Promise<unknown[]>;
 }
 
@@ -52,17 +57,29 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
 
       const query = validateSearchQuery(searchParams.get('query'));
 
+      // sortByパラメータを解析
+      const sortByParam = searchParams.get('sort');
+      const sortBy: ActressSortOption | undefined = sortByParam && VALID_SORT_OPTIONS.includes(sortByParam as ActressSortOption)
+        ? (sortByParam as ActressSortOption)
+        : undefined;
+
       const actresses = await deps.getActresses({
         limit,
         offset,
         ...(query && { query }),
+        ...(sortBy && { sortBy }),
       });
+
+      // 総件数を取得（getActressesCountが提供されている場合）
+      const total = deps.getActressesCount
+        ? await deps.getActressesCount(query ? { query } : undefined)
+        : actresses.length;
 
       // Search results cache shorter, static lists cache longer
       const cacheControl = query ? CACHE.FIVE_MIN : CACHE.ONE_HOUR;
 
       return NextResponse.json(
-        { actresses, total: actresses.length, limit, offset },
+        { actresses, total, limit, offset },
         { headers: { 'Cache-Control': cacheControl } }
       );
     } catch (error) {

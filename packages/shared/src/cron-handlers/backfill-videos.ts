@@ -7,7 +7,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
+import pLimit from 'p-limit';
 import type { DbExecutor } from '../db-queries/types';
+
+const CONCURRENCY = 5;
+const RATE_LIMIT_MS = 300;
 
 interface BackfillStats {
   checked: number;
@@ -174,7 +178,11 @@ export function createBackfillVideosHandler(deps: BackfillVideosHandlerDeps) {
 
       console.log(`[backfill-videos] Found ${products.length} products without videos`);
 
-      for (const product of products) {
+      // p-limit で並列処理（外部サイトへの負荷を制限）
+      const concurrencyLimit = pLimit(CONCURRENCY);
+      const videoInserts: { productId: number; aspName: string; videoUrl: string; normalizedId: string }[] = [];
+
+      await Promise.all(products.map(product => concurrencyLimit(async () => {
         stats.checked++;
 
         try {
@@ -184,23 +192,41 @@ export function createBackfillVideosHandler(deps: BackfillVideosHandlerDeps) {
           );
 
           if (videoUrl) {
-            await db.execute(sql`
-              INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
-              VALUES (${product['id']}, ${product.asp_name}, ${videoUrl}, 'sample', 0)
-              ON CONFLICT DO NOTHING
-            `);
+            videoInserts.push({
+              productId: product['id'] as number,
+              aspName: product.asp_name,
+              videoUrl,
+              normalizedId: product.normalized_product_id,
+            });
             stats.updated++;
-            console.log(`[backfill-videos] Added video: ${product.normalized_product_id}`);
           } else {
             stats.skipped++;
           }
 
-          // レート制限
-          await new Promise(r => setTimeout(r, 1500));
+          // レート制限（並列スロット内で待機）
+          await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
 
         } catch (error) {
           stats.failed++;
           console.error(`[backfill-videos] Error for ${product.normalized_product_id}:`, error);
+        }
+      })));
+
+      // バッチINSERT（収集した動画URLを一括挿入）
+      if (videoInserts.length > 0) {
+        const valuesClauses = videoInserts.map(
+          (v) => sql`(${v.productId}, ${v.aspName}, ${v.videoUrl}, 'sample', 0)`
+        );
+        const valuesJoined = sql.join(valuesClauses, sql`, `);
+
+        await db.execute(sql`
+          INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
+          VALUES ${valuesJoined}
+          ON CONFLICT DO NOTHING
+        `);
+
+        for (const v of videoInserts) {
+          console.log(`[backfill-videos] Added video: ${v.normalizedId}`);
         }
       }
 

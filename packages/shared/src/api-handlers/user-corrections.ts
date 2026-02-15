@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createApiErrorResponse } from '../lib/api-logger';
 
-// Types for dependency injection
+// Types for dependency injection（DI境界のため関数パラメータはany - TypeScript共変/反変制約）
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface UserCorrectionsHandlerDeps {
-  getDb: () => unknown;
+  getDb: () => any;
   userCorrections: unknown;
   userContributionStats: unknown;
   eq: (column: any, value: any) => any;

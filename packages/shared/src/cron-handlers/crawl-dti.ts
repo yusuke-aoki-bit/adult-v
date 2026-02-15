@@ -8,6 +8,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
+import {
+  batchUpsertPerformers,
+  batchInsertProductPerformers,
+} from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -312,6 +316,10 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
 
       console.log(`[crawl-dti] Starting: site=${config.siteName}, start=${currentId}, limit=${limit}`);
 
+      // バッチ用: 演者データ収集
+      const allPerformerNames = new Set<string>();
+      const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
+
       while (stats.totalFetched < limit) {
         if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) {
           console.log(`[crawl-dti] Stopping: ${MAX_CONSECUTIVE_NOT_FOUND} consecutive not found`);
@@ -388,18 +396,12 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
               affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, last_updated = NOW()
           `);
 
+          // 出演者をバッチ用に収集
           if (productData.performers && productData.performers.length > 0) {
-            for (const performerName of productData.performers) {
-              const performerResult = await db.execute(sql`
-                INSERT INTO performers (name) VALUES (${performerName})
-                ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id
-              `);
-              const performerId = (performerResult.rows[0] as { id: number }).id;
-              await db.execute(sql`
-                INSERT INTO product_performers (product_id, performer_id) VALUES (${productId}, ${performerId})
-                ON CONFLICT DO NOTHING
-              `);
+            for (const name of productData.performers) {
+              allPerformerNames.add(name);
             }
+            pendingPerformerLinks.push({ productId, performerNames: productData.performers });
           }
 
           if (productData.sampleVideoUrl) {
@@ -423,6 +425,25 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
         currentId = nextId;
 
         await new Promise(r => setTimeout(r, 1000));
+      }
+
+      // バッチ: 演者UPSERT + 紐付けINSERT
+      if (allPerformerNames.size > 0) {
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) {
+              links.push({ productId, performerId });
+            }
+          }
+        }
+
+        await batchInsertProductPerformers(db, links);
       }
 
       const duration = Math.round((Date.now() - startTime) / 1000);

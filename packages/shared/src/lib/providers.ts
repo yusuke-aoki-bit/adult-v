@@ -216,6 +216,24 @@ export const providerMeta: Record<ProviderId, ProviderMeta> = {
     description: '素人系無修正動画',
     siteUrl: 'https://muramura.tv/',
   },
+  av9898: {
+    id: 'av9898',
+    label: 'AV9898',
+    accentClass: 'from-gray-500 to-slate-500',
+    textClass: 'text-gray-300',
+    gradientColors: { from: '#6b7280', to: '#64748b' },
+    description: '無修正動画配信サイト',
+    siteUrl: 'https://www.av9898.com/',
+  },
+  honnamatv: {
+    id: 'honnamatv',
+    label: 'ホンナマTV',
+    accentClass: 'from-gray-500 to-zinc-500',
+    textClass: 'text-gray-300',
+    gradientColors: { from: '#6b7280', to: '#71717a' },
+    description: '生ハメ無修正動画',
+    siteUrl: 'https://www.honnamatv.com/',
+  },
 };
 
 /**

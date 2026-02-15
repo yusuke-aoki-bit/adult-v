@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createApiErrorResponse } from '../lib/api-logger';
 
-// Types for dependency injection
+// Types for dependency injection（DI境界のため関数パラメータはany - TypeScript共変/反変制約）
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface PublicFavoriteListsHandlerDeps {
-  getDb: () => unknown;
+  getDb: () => any;
   publicFavoriteLists: unknown;
   publicFavoriteListItems: unknown;
   publicListLikes: unknown;
   products: unknown;
-  eq: (column: any, value: any) => unknown;
-  and: (...conditions: any[]) => unknown;
-  desc: (column: any) => unknown;
-  asc: (column: any) => unknown;
-  sql: unknown;
-  count?: unknown;
+  eq: (column: any, value: any) => any;
+  and: (...conditions: any[]) => any;
+  desc: (column: any) => any;
+  asc: (column: any) => any;
+  sql: any;
+  count?: any;
 }
 
 export interface PublicFavoriteList {

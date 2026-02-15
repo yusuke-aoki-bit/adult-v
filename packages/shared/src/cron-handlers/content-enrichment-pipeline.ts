@@ -15,6 +15,11 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { sql } from '@adult-v/database';
+import pLimit from 'p-limit';
+import {
+  batchUpsertPerformers,
+  batchInsertProductPerformers,
+} from '../utils/batch-db';
 
 interface PipelineDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
@@ -163,23 +168,27 @@ async function runTranslationPhase(
       LIMIT ${Math.floor(limit / TRANSLATION_LANGUAGES.length)}
     `);
 
-    for (const product of products.rows as Array<{
+    const productRows = products.rows as Array<{
       id: number;
       title: string;
       description: string | null;
-    }>) {
+    }>;
+
+    const concurrencyLimit = pLimit(3);
+
+    await Promise.all(productRows.map(product => concurrencyLimit(async () => {
       result.processed++;
 
       try {
         // 翻訳実行
-        const translatedTitle = await deps.translateText(product['title'], lang.deeplCode);
+        const translatedTitle = await deps.translateText!(product['title'], lang.deeplCode);
         if (!translatedTitle) {
           result.skipped++;
-          continue;
+          return;
         }
 
         const translatedDescription = product['description']
-          ? await deps.translateText(product['description'], lang.deeplCode)
+          ? await deps.translateText!(product['description'], lang.deeplCode)
           : null;
 
         // 翻訳を保存
@@ -224,7 +233,7 @@ async function runTranslationPhase(
         console.error(`  Translation error for product ${product['id']} (${lang.code}):`, error);
         result.errors++;
       }
-    }
+    })));
   }
 
   return result;
@@ -266,16 +275,20 @@ async function runSeoPhase(
     LIMIT ${limit}
   `);
 
-  for (const product of products.rows as Array<{
+  const productRows = products.rows as Array<{
     id: number;
     normalized_product_id: string;
-  }>) {
+  }>;
+
+  const concurrencyLimit = pLimit(3);
+
+  await Promise.all(productRows.map(product => concurrencyLimit(async () => {
     result.processed++;
 
     const productUrl = `${siteBaseUrl}/products/${product.normalized_product_id}`;
 
     try {
-      const indexResult = await deps.requestIndexing(productUrl, 'URL_UPDATED');
+      const indexResult = await deps.requestIndexing!(productUrl, 'URL_UPDATED');
 
       if (indexResult.success) {
         await db.execute(sql`
@@ -296,7 +309,7 @@ async function runSeoPhase(
       console.error(`  Indexing error for product ${product['id']}:`, error);
       result.errors++;
     }
-  }
+  })));
 
   return result;
 }
@@ -331,60 +344,78 @@ async function runPerformerPhase(
     LIMIT ${limit}
   `);
 
-  for (const product of products.rows as Array<{
+  const productRows = products.rows as Array<{
     id: number;
     normalized_product_id: string;
     original_product_id: string;
-  }>) {
-    result.processed++;
+  }>;
+  result.processed = productRows.length;
 
-    // 品番を正規化
+  if (productRows.length === 0) {
+    return result;
+  }
+
+  // 1. 全商品の正規化品番を一括計算
+  const codeToProducts = new Map<string, number[]>();
+  for (const product of productRows) {
     const normalizedCode = (product.original_product_id || product.normalized_product_id)
       .toUpperCase()
       .replace(/[-_\s]/g, '');
+    const existing = codeToProducts.get(normalizedCode) || [];
+    existing.push(product['id']);
+    codeToProducts.set(normalizedCode, existing);
+  }
 
-    // lookupテーブルから検索
-    const lookupResult = await db.execute(sql`
-      SELECT performer_names
-      FROM product_performer_lookup
-      WHERE product_code_normalized = ${normalizedCode}
-      LIMIT 1
-    `);
+  // 2. lookupテーブルを一括検索
+  const codes = [...codeToProducts.keys()];
+  const codeValues = sql.join(codes.map(c => sql`${c}`), sql`, `);
 
-    if (lookupResult.rows.length === 0) {
-      result.skipped++;
-      continue;
-    }
+  const lookupResult = await db.execute(sql`
+    SELECT product_code_normalized, performer_names
+    FROM product_performer_lookup
+    WHERE product_code_normalized IN (${codeValues})
+  `);
 
-    const performerNames = (lookupResult.rows[0] as { performer_names: string[] }).performer_names;
+  // 3. 有効な演者名を収集
+  const allPerformerNames = new Set<string>();
+  const codeToPerformerNames = new Map<string, string[]>();
 
-    for (const performerName of performerNames) {
-      if (!isValidPerformerName(performerName)) continue;
-
-      try {
-        // 演者を取得または作成
-        const performerResult = await db.execute(sql`
-          INSERT INTO performers (name)
-          VALUES (${performerName})
-          ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-          RETURNING id
-        `);
-
-        const performerId = (performerResult.rows[0] as { id: number }).id;
-
-        // 紐付け
-        await db.execute(sql`
-          INSERT INTO product_performers (product_id, performer_id)
-          VALUES (${product['id']}, ${performerId})
-          ON CONFLICT DO NOTHING
-        `);
-
-        result.success++;
-      } catch {
-        // 競合エラーは無視
+  for (const row of lookupResult.rows as Array<{ product_code_normalized: string; performer_names: string[] }>) {
+    const validNames = row.performer_names.filter(isValidPerformerName);
+    if (validNames.length > 0) {
+      codeToPerformerNames.set(row.product_code_normalized, validNames);
+      for (const name of validNames) {
+        allPerformerNames.add(name);
       }
     }
   }
+
+  if (allPerformerNames.size === 0) {
+    result.skipped = productRows.length;
+    return result;
+  }
+
+  // 4. 演者を一括UPSERT
+  const performerData = [...allPerformerNames].map(name => ({ name }));
+  const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+  const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+
+  // 5. product_performersリンクを一括INSERT
+  const links: { productId: number; performerId: number }[] = [];
+  for (const [code, performerNames] of codeToPerformerNames) {
+    const productIds = codeToProducts.get(code) || [];
+    for (const productId of productIds) {
+      for (const name of performerNames) {
+        const performerId = nameToId.get(name);
+        if (performerId) {
+          links.push({ productId, performerId });
+        }
+      }
+    }
+  }
+
+  result.success = await batchInsertProductPerformers(db, links);
+  result.skipped = productRows.length - result.success;
 
   return result;
 }

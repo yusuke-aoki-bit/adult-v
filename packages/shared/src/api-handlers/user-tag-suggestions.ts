@@ -24,18 +24,18 @@ export interface UserTagSuggestionWithVote extends UserTagSuggestion {
   userVote?: 'up' | 'down' | null;
 }
 
-// 依存性の型定義
+// 依存性の型定義（DI境界のため関数パラメータはany - TypeScript共変/反変制約）
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface UserTagSuggestionsHandlerDeps {
-  getDb: () => unknown;
+  getDb: () => any;
   userTagSuggestions: unknown;
   userTagVotes: unknown;
   products: unknown;
   tags: unknown;
-  eq: (a: any, b: any) => unknown;
-  and: (...args: any[]) => unknown;
-  desc: (col: any) => unknown;
-  sql: unknown;
+  eq: (a: any, b: any) => any;
+  and: (...args: any[]) => any;
+  desc: (col: any) => any;
+  sql: any;
 }
 
 // タグ提案取得ハンドラー

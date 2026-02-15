@@ -23,20 +23,20 @@ export interface UserPerformerSuggestionWithVote extends UserPerformerSuggestion
   userVote?: 'up' | 'down' | null;
 }
 
-// 依存性の型定義
+// 依存性の型定義（DI境界のため関数パラメータはany - TypeScript共変/反変制約）
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface UserPerformerSuggestionsHandlerDeps {
-  getDb: () => unknown;
+  getDb: () => any;
   userPerformerSuggestions: unknown;
   userPerformerVotes: unknown;
   products: unknown;
   performers: unknown;
-  eq: (a: any, b: any) => unknown;
-  and: (...args: any[]) => unknown;
-  or: (...args: any[]) => unknown;
-  desc: (col: any) => unknown;
-  ilike: (col: any, pattern: string) => unknown;
-  sql: unknown;
+  eq: (a: any, b: any) => any;
+  and: (...args: any[]) => any;
+  or: (...args: any[]) => any;
+  desc: (col: any) => any;
+  ilike: (col: any, pattern: string) => any;
+  sql: any;
 }
 
 // 演者提案取得ハンドラー

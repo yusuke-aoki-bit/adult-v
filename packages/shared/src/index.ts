@@ -178,6 +178,17 @@ export {
   type CachedFunctionOptions,
 } from './lib/cache-utils';
 
+// DB Query utilities (App Queries Factory)
+export {
+  createAppQueries,
+  type CreateAppQueriesDeps,
+  type AppQueries,
+  type CacheData as AppCacheData,
+  type RandomProduct,
+  type ProductSourceWithSales,
+  type SeriesInfo as AppSeriesInfo,
+} from './db-queries/create-app-queries';
+
 // DB Query types
 export type {
   RawProductRow,

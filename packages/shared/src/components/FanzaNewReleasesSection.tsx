@@ -75,7 +75,7 @@ export function FanzaNewReleasesSection({
     const fetchProducts = async () => {
       try {
         // FANZA商品を取得（新作順、8件）
-        const res = await fetch('/api/products?limit=8&sort=releaseDate&includeAsp=FANZA');
+        const res = await fetch('/api/products?limit=8&sort=releaseDateDesc&includeAsp=FANZA');
         if (res.ok) {
           const data = await res.json();
           setProducts(data.products || []);

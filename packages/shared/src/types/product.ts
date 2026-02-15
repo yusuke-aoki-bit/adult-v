@@ -1,28 +1,6 @@
-// 取り扱いプロバイダ
-// DTI系サービスは個別に分離: caribbeancom, caribbeancompr, 1pondo, heyzo, 10musume, pacopacomama, etc.
-export type ProviderId =
-  | 'duga'
-  | 'sokmil'
-  | 'dti'  // レガシー用（後方互換性）
-  | 'mgs'
-  | 'b10f'
-  | 'japanska'
-  | 'fc2'
-  | 'fanza'             // FANZA (DMM)
-  // DTI個別サービス
-  | 'caribbeancom'      // カリビアンコム
-  | 'caribbeancompr'    // カリビアンコムプレミアム
-  | '1pondo'            // 一本道
-  | 'heyzo'             // HEYZO
-  | '10musume'          // 天然むすめ
-  | 'pacopacomama'      // パコパコママ
-  | 'muramura'          // ムラムラってくる素人
-  | 'tokyohot'          // Tokyo-Hot
-  | 'heydouga'          // HEYDOUGA
-  | 'x1x'               // X1X
-  | 'enkou55'           // ENKOU55
-  | 'urekko'            // UREKKO
-  | 'tvdeav';           // TVDEAV
+// 取り扱いプロバイダ（asp-registry.ts から自動導出）
+export type { ProviderId } from '../asp-registry';
+import type { ProviderId } from '../asp-registry';
 
 // 商品カテゴリ（ジャンル）の定義
 export type ProductCategory =

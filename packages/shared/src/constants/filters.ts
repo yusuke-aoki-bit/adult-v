@@ -4,10 +4,15 @@
  * UIコンポーネント間で共有される定数を一元管理
  */
 
-import type { ProviderId, SortOption, PerformerType } from '../types/product.js';
+import type { SortOption, PerformerType } from '../types/product.js';
+import type { ProviderId } from '../asp-registry';
 
 // Re-export types for convenience
 export type { SortOption, PerformerType };
+
+// ASP関連の定数をレジストリから re-export
+export { ASP_DISPLAY_ORDER, ASP_TO_PROVIDER_ID } from '../asp-registry';
+import { ASP_TO_PROVIDER_ID } from '../asp-registry';
 
 // ============================================================
 // ひらがな・アルファベット定数
@@ -46,96 +51,6 @@ export const ALPHABET = [
 // ============================================================
 // ASP/Provider マッピング
 // ============================================================
-
-/**
- * ASP表示順序（ヘッダーとフィルターで統一）
- * この順番でUIに表示される（作品数順）
- * すべての配信サイトを個別に表示
- *
- * 重要: これらの名前はDBのasp_nameカラムに保存されている値と一致させる必要がある
- * クエリパラメータ includeAsp=XXX で使用され、DBのasp_nameと比較される
- */
-export const ASP_DISPLAY_ORDER = [
-  // 作品数順（小文字に統一、表示ラベルはproviderMetaで管理）
-  'sokmil',
-  'duga',
-  'fanza',
-  'b10f',
-  'mgs',
-  'caribbeancompr', // カリビアンコムPR (DTIサブサービス)
-  'heyzo',          // HEYZO (DTIサブサービス)
-  'fc2',
-  '1pondo',         // 一本道 (DTIサブサービス)
-  'caribbeancom',   // CARIBBEANCOM (DTIサブサービス)
-  'heydouga',       // HEYDOUGA (DTIサブサービス)
-  'x1x',            // X1X (DTIサブサービス)
-  'japanska',
-  'enkou55',        // ENKOU55 (DTIサブサービス)
-  'urekko',         // UREKKO (DTIサブサービス)
-  'tvdeav',         // TVDEAV
-  'tokyohot',       // TOKYOHOT (DTIサブサービス)
-] as const;
-
-/**
- * ASP名をProviderId型に変換するマッピング
- * 大文字小文字両方に対応
- */
-export const ASP_TO_PROVIDER_ID: Record<string, ProviderId | undefined> = {
-  // 主要ASP
-  'DUGA': 'duga',
-  'duga': 'duga',
-  'Sokmil': 'sokmil',
-  'sokmil': 'sokmil',
-  'SOKMIL': 'sokmil',
-  'ソクミル': 'sokmil',
-  'DTI': 'dti',
-  'dti': 'dti',
-  'MGS': 'mgs',
-  'mgs': 'mgs',
-  'MGS動画': 'mgs',
-  'b10f': 'b10f',
-  'B10F': 'b10f',
-  'b10f.jp': 'b10f',
-  'FC2': 'fc2',
-  'fc2': 'fc2',
-  'Japanska': 'japanska',
-  'japanska': 'japanska',
-  'FANZA': 'fanza',
-  'fanza': 'fanza',
-  'DMM': 'fanza',
-  // DTI個別サービス（英語キー）
-  'caribbeancom': 'caribbeancom',
-  'caribbeancompr': 'caribbeancompr',
-  'CARIBBEANCOM': 'caribbeancom',
-  '1pondo': '1pondo',
-  'heyzo': 'heyzo',
-  '10musume': '10musume',
-  'pacopacomama': 'pacopacomama',
-  'muramura': 'muramura',
-  'tokyohot': 'tokyohot',
-  'TOKYOHOT': 'tokyohot',
-  'HEYDOUGA': 'heydouga',
-  'heydouga': 'heydouga',
-  'X1X': 'x1x',
-  'x1x': 'x1x',
-  'ENKOU55': 'enkou55',
-  'enkou55': 'enkou55',
-  'UREKKO': 'urekko',
-  'urekko': 'urekko',
-  'TVDEAV': 'tvdeav',
-  'tvdeav': 'tvdeav',
-  // DTI個別サービス（日本語キー - DB保存名）
-  'カリビアンコム': 'caribbeancom',
-  'カリビアンコムプレミアム': 'caribbeancompr',
-  'カリビアンコムPR': 'caribbeancompr',
-  '一本道': '1pondo',
-  'HEYZO': 'heyzo',
-  '天然むすめ': '10musume',
-  'パコパコママ': 'pacopacomama',
-  'ムラムラ': 'muramura',
-  '人妻斬り': 'muramura', // hitozumagiriはmuramuraにマップ
-  '金髪天國': 'tokyohot', // kin8tengokuはtokyohotにマップ
-};
 
 /**
  * ASP名からProviderIdを取得

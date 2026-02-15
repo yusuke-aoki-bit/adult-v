@@ -9,6 +9,10 @@ import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import * as cheerio from 'cheerio';
 import type { DbExecutor } from '../db-queries/types';
+import {
+  batchUpsertPerformers,
+  batchInsertProductPerformers,
+} from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -205,6 +209,10 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
 
       console.log(`[crawl-mgs] Found ${productUrls.length} product URLs`);
 
+      // バッチ用の演者データ収集
+      const allPerformerNames = new Set<string>();
+      const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
+
       for (const productUrl of productUrls.slice(0, limit)) {
         try {
           // 詳細ページをパース
@@ -280,19 +288,15 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
               last_updated = NOW()
           `);
 
-          // 出演者
-          for (const performerName of product.performers) {
-            const performerResult = await db.execute(sql`
-              INSERT INTO performers (name) VALUES (${performerName})
-              ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-              RETURNING id
-            `);
-            const performerId = (performerResult.rows[0] as { id: number }).id;
-            await db.execute(sql`
-              INSERT INTO product_performers (product_id, performer_id)
-              VALUES (${productId}, ${performerId})
-              ON CONFLICT DO NOTHING
-            `);
+          // 出演者をバッチ用に収集
+          if (product.performers.length > 0) {
+            for (const name of product.performers) {
+              allPerformerNames.add(name);
+            }
+            pendingPerformerLinks.push({
+              productId,
+              performerNames: product.performers,
+            });
           }
 
           // サンプル動画
@@ -310,13 +314,32 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
 
           console.log(`[crawl-mgs] Processed: ${product['productId']} - ${product['title'].substring(0, 30)}...`);
 
-          // レート制限
+          // レート制限（外部サイトアクセス用、維持必須）
           await new Promise(r => setTimeout(r, 1000));
 
         } catch (error) {
           stats.errors++;
           console.error(`[crawl-mgs] Error processing URL:`, error);
         }
+      }
+
+      // バッチ: 演者UPSERT + 紐付けINSERT
+      if (allPerformerNames.size > 0) {
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) {
+              links.push({ productId, performerId });
+            }
+          }
+        }
+
+        await batchInsertProductPerformers(db, links);
       }
 
       const duration = Math.round((Date.now() - startTime) / 1000);

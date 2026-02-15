@@ -11,10 +11,8 @@ export interface ASPTotal {
 }
 
 export interface AdminStatsHandlerDeps {
-  getDb: () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    execute: (query: any) => Promise<{ rows: any[] }>;
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getDb: () => { execute: (query: any) => Promise<{ rows: Record<string, unknown>[] }> };
   getAllASPTotals: () => Promise<ASPTotal[]>;
   mapDBNameToASPName: (dbName: string) => string;
 }
@@ -27,8 +25,7 @@ export interface AdminStatsHandlerOptions {
 // クエリを安全に実行するヘルパー関数
 async function safeQuery<T>(
   db: ReturnType<AdminStatsHandlerDeps['getDb']>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  queryFn: () => Promise<{ rows: any[] }>,
+  queryFn: () => Promise<{ rows: Record<string, unknown>[] }>,
   defaultValue: T[] = []
 ): Promise<T[]> {
   try {

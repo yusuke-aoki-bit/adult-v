@@ -2,22 +2,23 @@ import { NextResponse } from 'next/server';
 import { desc, sql, eq } from 'drizzle-orm';
 import { logDbErrorAndReturn } from '../lib/db-logger';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-type DbType = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DrizzleDb = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DrizzleColumn = any;
 
 export interface FooterLinksHandlerDeps {
-  getDb: () => DbType;
+  getDb: () => DrizzleDb;
   tags: {
-    id: any;
-    name: any;
-    category: any;
+    id: DrizzleColumn;
+    name: DrizzleColumn;
+    category: DrizzleColumn;
   };
   productTags: {
-    tagId: any;
-    productId: any;
+    tagId: DrizzleColumn;
+    productId: DrizzleColumn;
   };
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export function createFooterLinksHandler(deps: FooterLinksHandlerDeps) {
   return async function GET() {

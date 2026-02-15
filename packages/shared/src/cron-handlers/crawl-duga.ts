@@ -8,6 +8,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import type { DugaClient } from '../providers/duga-client';
 import type { DbExecutor } from '../db-queries/types';
+import {
+  batchUpsertPerformers,
+  batchInsertProductPerformers,
+} from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -55,6 +59,10 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
       // 新着作品を取得
       const response = await dugaClient.getNewReleases(limit, offset);
       stats.totalFetched = response.items.length;
+
+      // バッチ用: 演者データ収集
+      const allPerformerNames = new Set<string>();
+      const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
 
       for (const item of response.items) {
         try {
@@ -160,56 +168,49 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
 
           // サンプル動画URL（DUGAはAPIレスポンスに含まれる場合）
           if (item.sampleVideos && item.sampleVideos.length > 0) {
-            for (let i = 0; i < item.sampleVideos.length; i++) {
-              const videoUrl = item.sampleVideos[i];
-              const videoResult = await db.execute(sql`
-                INSERT INTO product_videos (
-                  product_id,
-                  asp_name,
-                  video_url,
-                  video_type,
-                  display_order
-                )
-                VALUES (
-                  ${productId},
-                  'DUGA',
-                  ${videoUrl},
-                  'sample',
-                  ${i}
-                )
-                ON CONFLICT DO NOTHING
-                RETURNING id
-              `);
-
-              if (videoResult.rowCount && videoResult.rowCount > 0) {
-                stats.videosAdded++;
-              }
-            }
+            const videoValuesClauses = item.sampleVideos.map((videoUrl: string, i: number) =>
+              sql`(${productId}, 'DUGA', ${videoUrl}, 'sample', ${i})`
+            );
+            const videoResult = await db.execute(sql`
+              INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
+              VALUES ${sql.join(videoValuesClauses, sql`, `)}
+              ON CONFLICT DO NOTHING
+            `);
+            stats.videosAdded += videoResult.rowCount ?? 0;
           }
 
-          // 出演者情報
+          // 出演者をバッチ用に収集
           if (item.performers && item.performers.length > 0) {
-            for (const performer of item.performers) {
-              const performerResult = await db.execute(sql`
-                INSERT INTO performers (name)
-                VALUES (${performer['name']})
-                ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-                RETURNING id
-              `);
-              const performerId = (performerResult.rows[0] as { id: number }).id;
-
-              await db.execute(sql`
-                INSERT INTO product_performers (product_id, performer_id)
-                VALUES (${productId}, ${performerId})
-                ON CONFLICT DO NOTHING
-              `);
+            const names = item.performers.map((p: { name: string }) => p['name']);
+            for (const name of names) {
+              allPerformerNames.add(name);
             }
+            pendingPerformerLinks.push({ productId, performerNames: names });
           }
 
         } catch (error) {
           stats.errors++;
           console.error(`Error processing DUGA product ${item['productId']}:`, error);
         }
+      }
+
+      // バッチ: 演者UPSERT + 紐付けINSERT
+      if (allPerformerNames.size > 0) {
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) {
+              links.push({ productId, performerId });
+            }
+          }
+        }
+
+        await batchInsertProductPerformers(db, links);
       }
 
       const duration = Math.round((Date.now() - startTime) / 1000);

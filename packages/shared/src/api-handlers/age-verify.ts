@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export interface AgeVerifyHandlerDeps {
-  checkRateLimit: (key: string, limits: { maxRequests: number; windowMs: number }) => {
+  checkRateLimit: (key: string, limits: { maxRequests: number; windowMs: number }) => Promise<{
+    allowed: boolean;
+    remaining: number;
+    resetTime: number;
+  }> | {
     allowed: boolean;
     remaining: number;
     resetTime: number;
@@ -31,7 +35,7 @@ export function createAgeVerifyPostHandler(deps: AgeVerifyHandlerDeps) {
 
     // 2. Rate limiting
     const clientIP = deps.getClientIP(request);
-    const rateLimitResult = deps.checkRateLimit(
+    const rateLimitResult = await deps.checkRateLimit(
       `age-verify:${clientIP}`,
       deps.RATE_LIMITS.strict
     );
@@ -80,7 +84,7 @@ export function createAgeVerifyDeleteHandler(deps: AgeVerifyHandlerDeps) {
   return async function DELETE(request: NextRequest) {
     // Rate limiting for delete as well
     const clientIP = deps.getClientIP(request);
-    const rateLimitResult = deps.checkRateLimit(
+    const rateLimitResult = await deps.checkRateLimit(
       `age-verify:${clientIP}`,
       deps.RATE_LIMITS.strict
     );

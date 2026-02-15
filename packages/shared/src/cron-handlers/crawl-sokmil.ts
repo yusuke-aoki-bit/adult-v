@@ -8,6 +8,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import type { SokmilClient } from '../providers/sokmil-client';
 import type { DbExecutor } from '../db-queries/types';
+import {
+  batchUpsertPerformers,
+  batchInsertProductPerformers,
+} from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -55,6 +59,10 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
       // 新着作品を取得
       const response = await sokmilClient.getNewReleases(page, perPage);
       stats.totalFetched = response.data.length;
+
+      // バッチ用: 演者データ収集
+      const allPerformerNames = new Set<string>();
+      const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
 
       for (const item of response.data) {
         try {
@@ -184,29 +192,38 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
             }
           }
 
-          // 出演者情報
+          // 出演者をバッチ用に収集
           if (item.actors && item.actors.length > 0) {
-            for (const actor of item.actors) {
-              const performerResult = await db.execute(sql`
-                INSERT INTO performers (name)
-                VALUES (${actor.name})
-                ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-                RETURNING id
-              `);
-              const performerId = (performerResult.rows[0] as { id: number }).id;
-
-              await db.execute(sql`
-                INSERT INTO product_performers (product_id, performer_id)
-                VALUES (${productId}, ${performerId})
-                ON CONFLICT DO NOTHING
-              `);
+            const names = item.actors.map((a: { name: string }) => a.name);
+            for (const name of names) {
+              allPerformerNames.add(name);
             }
+            pendingPerformerLinks.push({ productId, performerNames: names });
           }
 
         } catch (error) {
           stats.errors++;
           console.error(`Error processing Sokmil item ${item.itemId}:`, error);
         }
+      }
+
+      // バッチ: 演者UPSERT + 紐付けINSERT
+      if (allPerformerNames.size > 0) {
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) {
+              links.push({ productId, performerId });
+            }
+          }
+        }
+
+        await batchInsertProductPerformers(db, links);
       }
 
       const duration = Math.round((Date.now() - startTime) / 1000);
