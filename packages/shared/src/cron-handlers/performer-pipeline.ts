@@ -53,6 +53,9 @@ interface PipelineStats {
   statsPhase: {
     performersUpdated: number;
   };
+  productStatsPhase: {
+    productsUpdated: number;
+  };
   totalDuration: number;
 }
 
@@ -95,6 +98,9 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
       },
       statsPhase: {
         performersUpdated: 0,
+      },
+      productStatsPhase: {
+        productsUpdated: 0,
       },
       totalDuration: 0,
     };
@@ -146,6 +152,14 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
       const statsResult = await updatePerformerStats(db);
       stats.statsPhase = statsResult;
       console.log(`  Updated: ${statsResult.performersUpdated} performers`);
+
+      // Phase 6: 商品統計更新（非正規化カラム同期）
+      // performer_count, has_video, has_active_sale, min_price, best_rating, total_reviews
+      console.log('\n[Phase 6] Updating product denormalized stats...');
+
+      const productStatsResult = await updateProductStats(db);
+      stats.productStatsPhase = productStatsResult;
+      console.log(`  Updated: ${productStatsResult.productsUpdated} products`);
 
       stats['totalDuration'] = Date.now() - startTime;
 
@@ -674,6 +688,76 @@ async function updatePerformerStats(
   const rowCount = result.rowCount || 0;
 
   return { performersUpdated: rowCount };
+}
+
+/**
+ * 商品統計を更新（非正規化カラム同期）
+ * performer_count, has_video, has_active_sale, min_price, best_rating, total_reviews
+ * updatePerformerStatsと同じパターンで、変更があった行のみ更新
+ */
+async function updateProductStats(
+  db: any
+): Promise<{ productsUpdated: number }> {
+  // 一括UPDATEで6カラムを同期（IS DISTINCT FROMで変更行のみ更新）
+  const result = await db.execute(sql`
+    UPDATE products p
+    SET
+      performer_count = sub.pc,
+      has_video = sub.hv,
+      has_active_sale = sub.hs,
+      min_price = sub.mp,
+      best_rating = sub.br,
+      total_reviews = sub.tr
+    FROM (
+      SELECT
+        p2.id,
+        COALESCE(pp_cnt.cnt, 0) as pc,
+        COALESCE(vid.has, false) as hv,
+        COALESCE(sale.has, false) as hs,
+        price.mp as mp,
+        rating.br as br,
+        COALESCE(rating.tr, 0) as tr
+      FROM products p2
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int as cnt
+        FROM product_performers pp WHERE pp.product_id = p2.id
+      ) pp_cnt ON true
+      LEFT JOIN LATERAL (
+        SELECT true as has
+        FROM product_videos pv WHERE pv.product_id = p2.id LIMIT 1
+      ) vid ON true
+      LEFT JOIN LATERAL (
+        SELECT true as has
+        FROM product_sources ps
+        JOIN product_sales psl ON psl.product_source_id = ps.id
+        WHERE ps.product_id = p2.id AND psl.is_active = true
+          AND (psl.end_at IS NULL OR psl.end_at > NOW())
+        LIMIT 1
+      ) sale ON true
+      LEFT JOIN LATERAL (
+        SELECT MIN(ps.price) as mp
+        FROM product_sources ps
+        WHERE ps.product_id = p2.id AND ps.price > 0
+      ) price ON true
+      LEFT JOIN LATERAL (
+        SELECT MAX(prs.average_rating) as br, COALESCE(SUM(prs.total_reviews)::int, 0) as tr
+        FROM product_rating_summary prs
+        WHERE prs.product_id = p2.id
+      ) rating ON true
+    ) sub
+    WHERE p.id = sub.id
+      AND (
+        COALESCE(p.performer_count, -1) IS DISTINCT FROM sub.pc
+        OR COALESCE(p.has_video, false) IS DISTINCT FROM sub.hv
+        OR COALESCE(p.has_active_sale, false) IS DISTINCT FROM sub.hs
+        OR p.min_price IS DISTINCT FROM sub.mp
+        OR p.best_rating IS DISTINCT FROM sub.br
+        OR COALESCE(p.total_reviews, -1) IS DISTINCT FROM sub.tr
+      )
+  `);
+
+  const rowCount = result.rowCount || 0;
+  return { productsUpdated: rowCount };
 }
 
 /**
