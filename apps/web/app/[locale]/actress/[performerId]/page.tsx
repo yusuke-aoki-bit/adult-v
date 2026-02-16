@@ -14,7 +14,7 @@ import {
 } from '@adult-v/shared/components';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import { getActressById, getProducts, getProductsCount, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis, getActressBudgetSummary } from '@/lib/db/queries';
+import { getCachedActressById, getProducts, getProductsCount, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis, getActressBudgetSummary } from '@/lib/db/queries';
 import ActressCareerTimeline from '@/components/ActressCareerTimeline';
 import RetirementAlert from '@/components/RetirementAlert';
 import { getPerformerTopProducts, getPerformerOnSaleProducts } from '@/lib/db/recommendations';
@@ -89,7 +89,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   try {
     const { performerId, locale } = await params;
     const resolvedSearchParams = await searchParams;
-    const actress = await getActressById(performerId, locale);
+    const actress = await getCachedActressById(performerId, locale);
     if (!actress) return {};
 
     const t = await getTranslations('actress');
@@ -198,9 +198,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const tTopProducts = await getTranslations('performerTopProducts');
   const tOnSale = await getTranslations('performerOnSale');
 
-  const decodedId = decodeURIComponent(performerId);
-  let actress = await getActressById(decodedId, locale);
-  if (!actress) actress = await getActressById(performerId, locale);
+  const actress = await getCachedActressById(performerId, locale);
   if (!actress) notFound();
 
   const page = Math.max(1, Math.min(parseInt(resolvedSearchParams.page || '1', 10), 500));

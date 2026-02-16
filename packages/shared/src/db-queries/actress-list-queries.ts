@@ -2,10 +2,10 @@
  * 女優リストクエリ
  * getActresses/getActressesCount共通化
  */
-import { and, or, desc, asc, sql, inArray, notInArray, eq, type SQL } from 'drizzle-orm';
+import { and, or, desc, asc, sql, inArray, type SQL } from 'drizzle-orm';
 import type { SiteMode } from './asp-filter';
 import { createActressAspFilterCondition } from './asp-filter';
-import { extractPerformerIds, extractIds } from '../lib/type-guards';
+import { extractIds } from '../lib/type-guards';
 import { logDbErrorAndThrow } from '../lib/db-logger';
 
 // ============================================================
@@ -144,19 +144,17 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
 
   /**
    * 共通フィルター条件を構築
+   * EXISTS サブクエリを使用し、フィルター毎の個別クエリを排除
    */
-  async function buildConditions(db: ReturnType<typeof getDb>, options?: GetActressesOptions | GetActressesCountOptions): Promise<{ conditions: SQL[]; earlyReturn: boolean }> {
+  function buildConditions(options?: GetActressesOptions | GetActressesCountOptions): { conditions: SQL[] } {
     const conditions: SQL[] = [];
 
     // サイトモード別ASPフィルタ
     if (siteMode === 'all' && 'ids' in (options || {}) && (options as GetActressesOptions)?.ids && (options as GetActressesOptions).ids!.length > 0) {
-      // IDsが指定されている場合は、そのIDのみで絞り込み
       conditions.push(inArray(performers['id'], (options as GetActressesOptions).ids!));
     } else {
-      // サイトモードに応じたASPフィルタを追加
       conditions.push(createActressAspFilterCondition(performers, siteMode));
 
-      // webサイトのみ: 作品と紐付いている女優のみ表示（出演数0の女優を除外）
       if (siteMode === 'all') {
         conditions.push(
           sql`EXISTS (
@@ -176,100 +174,80 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
       );
     }
 
-    // 対象タグでフィルタ（いずれかを含む）
+    // 対象タグでフィルタ（EXISTS サブクエリ）
     if (options?.includeTags && options.includeTags.length > 0) {
       const tagIds = options.includeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
       if (tagIds.length > 0) {
-        const performerIds = await db
-          .selectDistinct({ performerId: productPerformers.performerId })
-          .from(productTags)
-          .innerJoin(productPerformers, eq(productTags.productId, productPerformers.productId))
-          .where(inArray(productTags.tagId, tagIds));
-
-        if (performerIds.length > 0) {
-          const performerIdValues = extractPerformerIds(performerIds);
-          conditions.push(inArray(performers['id'], performerIdValues));
-        } else {
-          return { conditions, earlyReturn: true };
-        }
+        conditions.push(
+          sql`EXISTS (
+            SELECT 1 FROM ${productPerformers} pp
+            JOIN ${productTags} pt ON pp.product_id = pt.product_id
+            WHERE pp.performer_id = ${performers['id']}
+            AND pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
+          )`
+        );
       }
     }
 
-    // 除外タグでフィルタ（いずれも含まない）
+    // 除外タグでフィルタ（NOT EXISTS サブクエリ）
     if (options?.excludeTags && options.excludeTags.length > 0) {
       const tagIds = options.excludeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
       if (tagIds.length > 0) {
-        const excludedPerformerIds = await db
-          .selectDistinct({ performerId: productPerformers.performerId })
-          .from(productTags)
-          .innerJoin(productPerformers, eq(productTags.productId, productPerformers.productId))
-          .where(inArray(productTags.tagId, tagIds));
-
-        if (excludedPerformerIds.length > 0) {
-          const excludedPerformerIdValues = extractPerformerIds(excludedPerformerIds);
-          conditions.push(notInArray(performers['id'], excludedPerformerIdValues));
-        }
+        conditions.push(
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${productPerformers} pp
+            JOIN ${productTags} pt ON pp.product_id = pt.product_id
+            WHERE pp.performer_id = ${performers['id']}
+            AND pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
+          )`
+        );
       }
     }
 
-    // ASPフィルタ（いずれかを含む）
+    // ASPフィルタ（EXISTS サブクエリ）
     if (options?.includeAsps && options.includeAsps.length > 0) {
-      const performerIds = await db
-        .selectDistinct({ performerId: productPerformers.performerId })
-        .from(productSources)
-        .innerJoin(productPerformers, eq(productSources.productId, productPerformers.productId))
-        .where(inArray(productSources.aspName, options.includeAsps));
-
-      if (performerIds.length > 0) {
-        const performerIdValues = extractPerformerIds(performerIds);
-        conditions.push(inArray(performers['id'], performerIdValues));
-      } else {
-        return { conditions, earlyReturn: true };
-      }
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productPerformers} pp
+          JOIN ${productSources} ps ON pp.product_id = ps.product_id
+          WHERE pp.performer_id = ${performers['id']}
+          AND ps.asp_name IN (${sql.join(options.includeAsps.map(a => sql`${a}`), sql`, `)})
+        )`
+      );
     }
 
-    // ASP除外フィルタ（いずれも含まない）
+    // ASP除外フィルタ（NOT EXISTS サブクエリ）
     if (options?.excludeAsps && options.excludeAsps.length > 0) {
-      const excludedPerformerIds = await db
-        .selectDistinct({ performerId: productPerformers.performerId })
-        .from(productSources)
-        .innerJoin(productPerformers, eq(productSources.productId, productPerformers.productId))
-        .where(inArray(productSources.aspName, options.excludeAsps));
-
-      if (excludedPerformerIds.length > 0) {
-        const excludedPerformerIdValues = extractPerformerIds(excludedPerformerIds);
-        conditions.push(notInArray(performers['id'], excludedPerformerIdValues));
-      }
+      conditions.push(
+        sql`NOT EXISTS (
+          SELECT 1 FROM ${productPerformers} pp
+          JOIN ${productSources} ps ON pp.product_id = ps.product_id
+          WHERE pp.performer_id = ${performers['id']}
+          AND ps.asp_name IN (${sql.join(options.excludeAsps.map(a => sql`${a}`), sql`, `)})
+        )`
+      );
     }
 
-    // hasVideoフィルタ
+    // hasVideoフィルタ（EXISTS サブクエリ）
     if (options?.hasVideo) {
-      const performerIds = await db
-        .selectDistinct({ performerId: productPerformers.performerId })
-        .from(productVideos)
-        .innerJoin(productPerformers, eq(productVideos.productId, productPerformers.productId));
-
-      if (performerIds.length > 0) {
-        const performerIdValues = extractPerformerIds(performerIds);
-        conditions.push(inArray(performers['id'], performerIdValues));
-      } else {
-        return { conditions, earlyReturn: true };
-      }
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productPerformers} pp
+          JOIN ${productVideos} pv ON pp.product_id = pv.product_id
+          WHERE pp.performer_id = ${performers['id']}
+        )`
+      );
     }
 
-    // hasImageフィルタ
+    // hasImageフィルタ（EXISTS サブクエリ）
     if (options?.hasImage) {
-      const performerIds = await db
-        .selectDistinct({ performerId: productPerformers.performerId })
-        .from(productImages)
-        .innerJoin(productPerformers, eq(productImages.productId, productPerformers.productId));
-
-      if (performerIds.length > 0) {
-        const performerIdValues = extractPerformerIds(performerIds);
-        conditions.push(inArray(performers['id'], performerIdValues));
-      } else {
-        return { conditions, earlyReturn: true };
-      }
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM ${productPerformers} pp
+          JOIN ${productImages} pi ON pp.product_id = pi.product_id
+          WHERE pp.performer_id = ${performers['id']}
+        )`
+      );
     }
 
     // hasReviewフィルタ
@@ -279,24 +257,17 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
 
     // 女優特徴フィルター（enableActressFeatureFilterがtrueの場合のみ）
     if (enableActressFeatureFilter) {
-      // カップサイズフィルタ
       if (options?.cupSizes && options.cupSizes.length > 0) {
         conditions.push(
           sql`${performers['cup']} IN (${sql.join(options.cupSizes.map(c => sql`${c}`), sql`, `)})`
         );
       }
-
-      // 身長フィルタ（最小）
       if (options?.heightMin !== undefined) {
         conditions.push(sql`${performers['height']} >= ${options.heightMin}`);
       }
-
-      // 身長フィルタ（最大）
       if (options?.heightMax !== undefined) {
         conditions.push(sql`${performers['height']} <= ${options.heightMax}`);
       }
-
-      // 血液型フィルタ
       if (options?.bloodTypes && options.bloodTypes.length > 0) {
         conditions.push(
           sql`${performers['bloodType']} IN (${sql.join(options.bloodTypes.map(b => sql`${b}`), sql`, `)})`
@@ -304,23 +275,11 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
       }
     }
 
-    // 検索クエリ
+    // 検索クエリ（別名マッチングもEXISTS サブクエリに変換）
     if (options?.query) {
       const isInitialSearch = options.query.length === 1;
       const searchPattern = isInitialSearch ? options.query + '%' : '%' + options.query + '%';
 
-      const matchingPerformerIds = await db
-        .selectDistinct({ performerId: performerAliases.performerId })
-        .from(performerAliases)
-        .where(
-          or(
-            sql`similarity(${performerAliases.aliasName}, ${options.query}) > 0.2`,
-            sql`${performerAliases.aliasName} ILIKE ${searchPattern}`
-          )!
-        );
-
-      // 検索条件を構築
-      // getActressesの場合はAIレビュー検索も含める、getActressesCountの場合は含めない
       const isGetActresses = 'limit' in (options || {});
       const nameConditions = isInitialSearch
         ? sql`${performers['nameKana']} IS NOT NULL AND ${performers['nameKana']} ILIKE ${searchPattern}`
@@ -339,19 +298,20 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
               sql`${performers['nameKana']} ILIKE ${searchPattern}`
             )!;
 
-      if (matchingPerformerIds.length > 0) {
-        conditions.push(
-          or(
-            nameConditions,
-            inArray(performers['id'], extractPerformerIds(matchingPerformerIds))
-          )!
-        );
-      } else {
-        conditions.push(nameConditions);
-      }
+      // 別名マッチングをEXISTSサブクエリに変換
+      const aliasExistsCondition = sql`EXISTS (
+        SELECT 1 FROM ${performerAliases} pa
+        WHERE pa.performer_id = ${performers['id']}
+        AND (
+          similarity(pa.alias_name, ${options.query}) > 0.2
+          OR pa.alias_name ILIKE ${searchPattern}
+        )
+      )`;
+
+      conditions.push(or(nameConditions, aliasExistsCondition)!);
     }
 
-    return { conditions, earlyReturn: false };
+    return { conditions };
   }
 
   /**
@@ -360,11 +320,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
   async function getActresses<T>(options?: GetActressesOptions): Promise<T[]> {
     try {
       const db = getDb();
-      const { conditions, earlyReturn } = await buildConditions(db, options);
-
-      if (earlyReturn) {
-        return [];
-      }
+      const { conditions } = buildConditions(options);
 
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
       const sortBy = options?.sortBy || 'nameAsc';
@@ -472,11 +428,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
 
     try {
       const db = getDb();
-      const { conditions, earlyReturn } = await buildConditions(db, options);
-
-      if (earlyReturn) {
-        return 0;
-      }
+      const { conditions } = buildConditions(options);
 
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 

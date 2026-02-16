@@ -1878,7 +1878,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       const locale = options?.locale || 'ja';
       const sortBy = options?.sortBy || 'releaseDateAsc';
 
-      // 基本クエリ
+      // 非正規化カラムを活用し相関サブクエリを削減
       const result = await db.execute(sql`
         SELECT
           p.id,
@@ -1892,6 +1892,10 @@ export function createCoreQueries(deps: CoreQueryDeps) {
           p.duration,
           p.default_thumbnail_url,
           p.ai_catchphrase,
+          p.min_price,
+          p.best_rating as avg_rating,
+          p.total_reviews,
+          COALESCE(p.has_video, false) as has_video,
           (
             SELECT json_agg(json_build_object('id', pf.id, 'name', pf.name))
             FROM ${productPerformers} pp
@@ -1899,37 +1903,17 @@ export function createCoreQueries(deps: CoreQueryDeps) {
             WHERE pp.product_id = p.id
           ) as performers,
           (
-            SELECT MIN(ps.price)
-            FROM ${productSources} ps
-            WHERE ps.product_id = p.id
-          ) as min_price,
-          (
-            SELECT AVG(rs.average_rating)::numeric(3,2)
-            FROM product_rating_summary rs
-            WHERE rs.product_id = p.id
-          ) as avg_rating,
-          (
-            SELECT SUM(rs.total_reviews)::int
-            FROM product_rating_summary rs
-            WHERE rs.product_id = p.id
-          ) as total_reviews,
-          (
             SELECT pi.image_url
             FROM ${productImages} pi
             WHERE pi.product_id = p.id AND pi.image_type = 'thumbnail'
             ORDER BY pi.display_order
             LIMIT 1
-          ) as thumbnail_url,
-          (
-            SELECT EXISTS(
-              SELECT 1 FROM ${productVideos} pv WHERE pv.product_id = p.id
-            )
-          ) as has_video
+          ) as thumbnail_url
         FROM ${products} p
         JOIN ${productTags} pt ON p.id = pt.product_id
         WHERE pt.tag_id = ${seriesTagId}
         ORDER BY ${sortBy === 'ratingDesc'
-          ? sql`avg_rating DESC NULLS LAST`
+          ? sql`p.best_rating DESC NULLS LAST`
           : sortBy === 'releaseDateDesc'
           ? sql`p.release_date DESC NULLS LAST`
           : sql`p.release_date ASC NULLS LAST`}

@@ -14,6 +14,7 @@ import {
   date,
   jsonb,
   bigint,
+  numeric,
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
@@ -52,6 +53,13 @@ export const products = pgTable(
     aiReviewZh: text('ai_review_zh'), // AIレビュー（中国語簡体字）
     aiReviewKo: text('ai_review_ko'), // AIレビュー（韓国語）
     aiReviewUpdatedAt: timestamp('ai_review_updated_at'), // AIレビュー更新日時
+    // 非正規化カラム（パイプラインで更新）
+    performerCount: integer('performer_count').default(0), // 出演者数
+    hasVideo: boolean('has_video').default(false), // 動画の有無
+    hasActiveSale: boolean('has_active_sale').default(false), // セール中かどうか
+    minPrice: integer('min_price'), // 最低価格（全ASP横断）
+    bestRating: numeric('best_rating', { precision: 3, scale: 2 }), // 最高評価
+    totalReviews: integer('total_reviews').default(0), // レビュー総数
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

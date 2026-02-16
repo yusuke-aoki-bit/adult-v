@@ -27,7 +27,7 @@ import AlsoViewedWrapper from '@/components/AlsoViewedWrapper';
 import UserContributionsWrapper from '@/components/UserContributionsWrapper';
 import SimilarProductMapWrapper from '@/components/SimilarProductMapWrapper';
 import ProductSectionNav from '@/components/ProductSectionNav';
-import { getProductById, searchProductByProductId, getProductSources, getActressAvgPricePerMin, getSampleImagesByMakerCode, getProductMakerCode, getAllProductSources } from '@/lib/db/queries';
+import { getCachedProductByIdOrCode, getProductSources, getActressAvgPricePerMin, getSampleImagesByMakerCode, getProductMakerCode, getAllProductSources } from '@/lib/db/queries';
 import { formatProductCodeForDisplay } from '@adult-v/shared';
 import { isSubscriptionSite } from '@/lib/image-utils';
 import { getPerformerOtherProducts, getProductMaker, getSameMakerProducts, getProductGenreTags, getProductSeries, getSameSeriesProducts } from '@/lib/db/recommendations';
@@ -99,11 +99,7 @@ export async function generateStaticParams(): Promise<Array<{ id: string; locale
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   try {
     const { id, locale } = await params;
-    // Try to get product by normalized ID first, then by database ID
-    let product = await searchProductByProductId(id, locale);
-    if (!product && !isNaN(parseInt(id))) {
-      product = await getProductById(id, locale);
-    }
+    const product = await getCachedProductByIdOrCode(id, locale);
     if (!product) return {};
 
     const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
@@ -172,13 +168,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     getTranslations('nav'),
     getTranslations('common'),
     getTranslations('relatedProducts'),
-    searchProductByProductId(id, locale).then(async (p) => {
-      if (p) return p;
-      if (!isNaN(parseInt(id))) {
-        return getProductById(id, locale);
-      }
-      return null;
-    }),
+    getCachedProductByIdOrCode(id, locale),
   ]);
   const t = productDetailTranslations[locale as keyof typeof productDetailTranslations] || productDetailTranslations.ja;
   if (!product) notFound();

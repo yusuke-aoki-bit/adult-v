@@ -9,6 +9,7 @@ import type { Product as ProductType, Actress as ActressType } from '@/types/pro
 import { mapLegacyProvider } from '@/lib/provider-utils';
 import { getDtiServiceFromUrl } from '@/lib/image-utils';
 import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@/lib/localization';
+import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import {
   generateProductIdVariations,
@@ -142,6 +143,42 @@ export const {
   getPopularMakers,
   analyzeMakerPreference,
 } = appQueries;
+
+// ============================================================
+// リクエスト単位の重複排除（React cache）
+// generateMetadata + page で同じデータを二重取得するのを防止
+// ============================================================
+
+export const getCachedProductByIdOrCode = cache(
+  (id: string, locale: string): Promise<ProductType | null> => {
+    return unstable_cache(
+      async () => {
+        let product = await appQueries.searchProductByProductId(id, locale);
+        if (!product && !isNaN(parseInt(id))) {
+          product = await appQueries.getProductById(id, locale);
+        }
+        return product;
+      },
+      [`product-detail-${id}-${locale}`],
+      { revalidate: 300, tags: [`products-detail-${id}`] }
+    )();
+  }
+);
+
+export const getCachedActressById = cache(
+  (id: string, locale: string): Promise<ActressType | null> => {
+    return unstable_cache(
+      async () => {
+        const decoded = decodeURIComponent(id);
+        let actress = await appQueries.getActressById(decoded, locale);
+        if (!actress) actress = await appQueries.getActressById(id, locale);
+        return actress;
+      },
+      [`actress-detail-${id}-${locale}`],
+      { revalidate: 300, tags: [`actresses-detail-${id}`] }
+    )();
+  }
+);
 
 // ============================================================
 // Web固有: キャッシュラッパー付きオーバーライド
