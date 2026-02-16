@@ -7,7 +7,7 @@ import { generateBaseMetadata, generateBreadcrumbSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { Library, Clock, Film, Star, User, Trophy } from 'lucide-react';
+import { Library, Clock, Film, Star, User, Trophy, Wallet, TrendingDown, ShoppingCart } from 'lucide-react';
 import SeriesProgressTracker from '@/components/SeriesProgressTracker';
 import { Product } from '@/types/product';
 import { localizedHref } from '@adult-v/shared/i18n';
@@ -63,6 +63,13 @@ const translations = {
     recommended: 'おすすめ',
     backToList: 'シリーズ一覧に戻る',
     noProducts: '作品が見つかりませんでした',
+    totalCost: '全作品合計',
+    avgCost: '平均単価',
+    yen: '円',
+    costPerMin: '円/分',
+    seriesBundleInfo: 'シリーズ購入ガイド',
+    itemsWithPrice: '価格判明',
+    itemsCount: '{count}作品',
   },
   en: {
     completionGuide: 'Completion Guide',
@@ -83,6 +90,13 @@ const translations = {
     recommended: 'Recommended',
     backToList: 'Back to Series List',
     noProducts: 'No products found',
+    totalCost: 'Total Cost',
+    avgCost: 'Avg. Price',
+    yen: 'JPY',
+    costPerMin: 'JPY/min',
+    seriesBundleInfo: 'Series Purchase Guide',
+    itemsWithPrice: 'Priced',
+    itemsCount: '{count} items',
   },
   zh: {
     completionGuide: '完成指南',
@@ -103,6 +117,13 @@ const translations = {
     recommended: '推荐',
     backToList: '返回系列列表',
     noProducts: '未找到作品',
+    totalCost: '全部总价',
+    avgCost: '平均单价',
+    yen: '日元',
+    costPerMin: '日元/分钟',
+    seriesBundleInfo: '系列购买指南',
+    itemsWithPrice: '已知价格',
+    itemsCount: '共{count}部',
   },
   ko: {
     completionGuide: '정복 가이드',
@@ -123,6 +144,13 @@ const translations = {
     recommended: '추천',
     backToList: '시리즈 목록으로',
     noProducts: '작품을 찾을 수 없습니다',
+    totalCost: '전 작품 합계',
+    avgCost: '평균 단가',
+    yen: '엔',
+    costPerMin: '엔/분',
+    seriesBundleInfo: '시리즈 구매 가이드',
+    itemsWithPrice: '가격 확인',
+    itemsCount: '{count}작품',
   },
 } as const;
 
@@ -184,6 +212,12 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
   const totalHours = Math.floor(seriesInfo.totalDuration / 60);
   const totalMinutes = seriesInfo.totalDuration % 60;
 
+  // シリーズコストサマリー計算
+  const pricedProducts = products.filter(p => p.price && p.price > 0);
+  const totalCost = pricedProducts.reduce((sum, p) => sum + (p.price || 0), 0);
+  const avgCost = pricedProducts.length > 0 ? Math.round(totalCost / pricedProducts.length) : 0;
+  const costPerMin = seriesInfo.totalDuration > 0 ? Math.round(totalCost / seriesInfo.totalDuration) : 0;
+
   const basePath = localizedHref(`/series/${seriesId}`, locale);
 
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -227,7 +261,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
             </div>
 
             {/* 統計情報 */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
               <div className="bg-gray-800/50 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-gray-400 mb-1">
                   <Film className="w-4 h-4" />
@@ -255,6 +289,36 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
                     {seriesInfo.averageRating.toFixed(1)}
                     <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   </p>
+                </div>
+              )}
+              {totalCost > 0 && (
+                <div className="bg-gray-800/50 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-gray-400 mb-1">
+                    <Wallet className="w-4 h-4" />
+                    <span className="text-sm">{t.totalCost}</span>
+                  </div>
+                  <p className="text-2xl font-bold theme-text">
+                    ¥{totalCost.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {t.itemsWithPrice}: {pricedProducts.length}/{seriesInfo.totalProducts}
+                  </p>
+                </div>
+              )}
+              {avgCost > 0 && (
+                <div className="bg-gray-800/50 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-gray-400 mb-1">
+                    <ShoppingCart className="w-4 h-4" />
+                    <span className="text-sm">{t.avgCost}</span>
+                  </div>
+                  <p className="text-2xl font-bold theme-text">
+                    ¥{avgCost.toLocaleString()}
+                  </p>
+                  {costPerMin > 0 && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {costPerMin}{t.costPerMin}
+                    </p>
+                  )}
                 </div>
               )}
               <div className="bg-gray-800/50 rounded-lg p-4">

@@ -207,6 +207,16 @@ export interface AppQueries<TProduct, TActress> {
   getActressProductCountByAsp: (actressId: string) => Promise<Array<{ aspName: string; count: number }>>;
   getActressAvgPricePerMin: (actressId: string) => Promise<any>;
   getActressCareerAnalysis: (actressId: string) => Promise<CareerAnalysis | null>;
+  getActressBudgetSummary: (actressId: string) => Promise<{
+    totalProducts: number;
+    pricedProducts: number;
+    totalCost: number;
+    avgPrice: number;
+    minPrice: number;
+    maxPrice: number;
+    onSaleCount: number;
+    totalSavings: number;
+  } | null>;
 
   // Featured / new
   getNewProducts: (limit?: number) => Promise<TProduct[]>;
@@ -566,6 +576,9 @@ export function createAppQueries<TProduct, TActress>(
   }
   function getActressAvgPricePerMinShared(actressId: string) {
     return getActressQueries().getActressAvgPricePerMin(actressId);
+  }
+  function getActressBudgetSummaryShared(actressId: string) {
+    return getActressQueries().getActressBudgetSummary(actressId);
   }
   function getMultiAspActressesShared(options?: { limit?: number; minAspCount?: number }) {
     return getActressQueries().getMultiAspActresses(options);
@@ -1611,6 +1624,7 @@ export function createAppQueries<TProduct, TActress>(
     getActressProductCountByAsp,
     getActressAvgPricePerMin: getActressAvgPricePerMinShared,
     getActressCareerAnalysis: getActressCareerAnalysisShared,
+    getActressBudgetSummary: getActressBudgetSummaryShared,
 
     // Featured / new
     getNewProducts,

@@ -14,7 +14,7 @@ import {
 } from '@adult-v/shared/components';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import { getActressById, getProducts, getProductsCount, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis } from '@/lib/db/queries';
+import { getActressById, getProducts, getProductsCount, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis, getActressBudgetSummary } from '@/lib/db/queries';
 import ActressCareerTimeline from '@/components/ActressCareerTimeline';
 import RetirementAlert from '@/components/RetirementAlert';
 import { getPerformerTopProducts, getPerformerOnSaleProducts } from '@/lib/db/recommendations';
@@ -248,7 +248,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
   // Parallel fetch for all actress data (performance optimization)
   // Uses DB-level pagination instead of fetching all 1000 products
-  const [genreTags, aliases, productCountByAsp, careerAnalysis, topProducts, onSaleProducts, works, total] =
+  const [genreTags, aliases, productCountByAsp, careerAnalysis, topProducts, onSaleProducts, works, total, budgetSummary] =
     await Promise.all([
       getTagsForActress(actress.id, 'genre'),
       getPerformerAliases(parseInt(actress.id)),
@@ -264,6 +264,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
         locale,
       }),
       getProductsCount(productFilterOptions),
+      getActressBudgetSummary(actress.id),
     ]);
   const nonPrimaryAliases = aliases.filter(alias => !alias.isPrimary);
 
@@ -473,6 +474,66 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 actressName={actress.name}
                 locale={locale}
               />
+            </div>
+          )}
+
+          {/* 予算サマリー */}
+          {budgetSummary && budgetSummary.totalCost > 0 && (
+            <div className="mb-8 theme-card rounded-lg p-4 sm:p-6">
+              <h2 className="text-sm font-semibold theme-text-secondary mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {locale === 'en' ? 'Purchase Summary' : locale === 'zh' ? '购买概览' : locale === 'ko' ? '구매 요약' : '全作品購入サマリー'}
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-gray-400 mb-1">
+                    {locale === 'en' ? 'Total Cost' : locale === 'zh' ? '总价' : locale === 'ko' ? '총비용' : '合計費用'}
+                  </p>
+                  <p className="text-lg sm:text-xl font-bold text-emerald-400">
+                    ¥{budgetSummary.totalCost.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    {budgetSummary.pricedProducts}/{budgetSummary.totalProducts}
+                    {locale === 'en' ? ' priced' : locale === 'zh' ? ' 已知价格' : locale === 'ko' ? ' 가격확인' : '作品'}
+                  </p>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-gray-400 mb-1">
+                    {locale === 'en' ? 'Avg Price' : locale === 'zh' ? '平均单价' : locale === 'ko' ? '평균가격' : '平均単価'}
+                  </p>
+                  <p className="text-lg sm:text-xl font-bold theme-text">
+                    ¥{budgetSummary.avgPrice.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    ¥{budgetSummary.minPrice.toLocaleString()} ~ ¥{budgetSummary.maxPrice.toLocaleString()}
+                  </p>
+                </div>
+                {budgetSummary.onSaleCount > 0 && (
+                  <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-400 mb-1">
+                      {locale === 'en' ? 'On Sale' : locale === 'zh' ? '促销中' : locale === 'ko' ? '세일 중' : 'セール中'}
+                    </p>
+                    <p className="text-lg sm:text-xl font-bold text-rose-400">
+                      {budgetSummary.onSaleCount}
+                      <span className="text-sm ml-0.5">
+                        {locale === 'en' ? 'items' : locale === 'zh' ? '件' : locale === 'ko' ? '건' : '作品'}
+                      </span>
+                    </p>
+                  </div>
+                )}
+                {budgetSummary.totalSavings > 0 && (
+                  <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-400 mb-1">
+                      {locale === 'en' ? 'Savings' : locale === 'zh' ? '可省' : locale === 'ko' ? '절약' : 'セール割引額'}
+                    </p>
+                    <p className="text-lg sm:text-xl font-bold text-yellow-400">
+                      -¥{budgetSummary.totalSavings.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

@@ -72,7 +72,7 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [32, 48, 64, 96, 128, 256, 384],
     qualities: [75, 80, 85],
-    minimumCacheTTL: 14400, // 4 hours (Next.js 16 recommended)
+    minimumCacheTTL: 604800, // 1週間キャッシュ（画像再変換コスト削減）
   },
   compress: true,
   // Next.js 16 experimental features

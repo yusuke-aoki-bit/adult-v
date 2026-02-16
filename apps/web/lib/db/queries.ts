@@ -107,6 +107,7 @@ export const {
   getActressProductCountByAsp,
   getActressAvgPricePerMin,
   getActressCareerAnalysis,
+  getActressBudgetSummary,
   getNewProducts,
   getFeaturedProducts,
   getFeaturedActresses,

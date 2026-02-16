@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
     const offset = Math.max(parseInt(offsetParam || '0', 10) || 0, 0);
     const useHybrid = hybridParam === 'true';
 
-    // OpenAI APIキーがない場合はエラー
-    if (!process.env.OPENAI_API_KEY) {
+    // Gemini APIキーがない場合はエラー
+    if (!process.env['GEMINI_API_KEY'] && !process.env['GOOGLE_API_KEY']) {
       return NextResponse.json(
         { error: 'Semantic search is not configured' },
         { status: 503 }

@@ -1,14 +1,18 @@
 /**
- * OpenAI Embedding Service
+ * Gemini Embedding Service
  * セマンティック検索用のベクトル生成サービス
+ * Gemini text-embedding-004 を使用（768次元）
+ * OpenAI APIキー不要 - 既存のGEMINI_API_KEYで動作
  */
 
 import { createHash } from 'crypto';
 
-// OpenAI API設定
-const OPENAI_API_URL = 'https://api.openai.com/v1/embeddings';
-const EMBEDDING_MODEL = 'text-embedding-3-small'; // 1536次元
-const MAX_TOKENS = 8191; // text-embedding-3-smallの最大トークン数
+// Gemini Embedding API設定
+const GEMINI_API_KEY = process.env['GEMINI_API_KEY'] || process.env['GOOGLE_API_KEY'] || '';
+const EMBEDDING_MODEL = 'gemini-embedding-001';
+const EMBEDDING_DIMENSIONS = 768;
+const GEMINI_EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent`;
+const GEMINI_BATCH_EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:batchEmbedContents`;
 
 export interface EmbeddingResult {
   embedding: number[];
@@ -139,61 +143,61 @@ export function buildPerformerEmbeddingText(performer: {
 }
 
 /**
- * 単一テキストのembeddingを生成
+ * Gemini Embedding APIを呼び出し（単一テキスト）
  */
 export async function generateEmbedding(
   text: string,
-  apiKey?: string
+  _apiKey?: string
 ): Promise<EmbeddingResult> {
-  const key = apiKey || process.env.OPENAI_API_KEY;
-  if (!key) {
-    throw new Error('OPENAI_API_KEY is not set');
+  if (!GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not set');
   }
 
-  // テキストを適切な長さにトリミング
-  const truncatedText = text.slice(0, MAX_TOKENS * 4); // 概算で4文字/トークン
+  // テキストを適切な長さにトリミング（Geminiは最大10,000トークン）
+  const truncatedText = text.slice(0, 10000);
 
-  const response = await fetch(OPENAI_API_URL, {
+  const response = await fetch(`${GEMINI_EMBED_URL}?key=${GEMINI_API_KEY}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: EMBEDDING_MODEL,
-      input: truncatedText,
+      model: `models/${EMBEDDING_MODEL}`,
+      content: {
+        parts: [{ text: truncatedText }],
+      },
+      outputDimensionality: EMBEDDING_DIMENSIONS,
     }),
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`OpenAI API error: ${JSON.stringify(error)}`);
+    const error = await response.text();
+    throw new Error(`Gemini Embedding API error (${response.status}): ${error}`);
   }
 
-  const data = await response.json();
+  const data = await response.json() as {
+    embedding: { values: number[] };
+  };
 
   return {
-    embedding: data.data[0].embedding,
+    embedding: data.embedding.values,
     textHash: generateTextHash(truncatedText),
-    model: data.model,
+    model: EMBEDDING_MODEL,
     usage: {
-      promptTokens: data.usage.prompt_tokens,
-      totalTokens: data.usage.total_tokens,
+      promptTokens: Math.ceil(truncatedText.length / 4),
+      totalTokens: Math.ceil(truncatedText.length / 4),
     },
   };
 }
 
 /**
  * 複数テキストのembeddingをバッチ生成
- * OpenAI APIは1リクエストで複数テキストをサポート
+ * Gemini batchEmbedContents APIを使用
  */
 export async function generateEmbeddingBatch(
   texts: string[],
-  apiKey?: string
+  _apiKey?: string
 ): Promise<BatchEmbeddingResult> {
-  const key = apiKey || process.env.OPENAI_API_KEY;
-  if (!key) {
-    throw new Error('OPENAI_API_KEY is not set');
+  if (!GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not set');
   }
 
   if (texts.length === 0) {
@@ -205,37 +209,44 @@ export async function generateEmbeddingBatch(
   }
 
   // 各テキストをトリミング
-  const truncatedTexts = texts.map((t) => t.slice(0, MAX_TOKENS * 4));
+  const truncatedTexts = texts.map((t) => t.slice(0, 10000));
 
-  const response = await fetch(OPENAI_API_URL, {
+  const response = await fetch(`${GEMINI_BATCH_EMBED_URL}?key=${GEMINI_API_KEY}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: EMBEDDING_MODEL,
-      input: truncatedTexts,
+      requests: truncatedTexts.map((text) => ({
+        model: `models/${EMBEDDING_MODEL}`,
+        content: {
+          parts: [{ text }],
+        },
+        outputDimensionality: EMBEDDING_DIMENSIONS,
+      })),
     }),
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`OpenAI API error: ${JSON.stringify(error)}`);
+    const error = await response.text();
+    throw new Error(`Gemini Batch Embedding API error (${response.status}): ${error}`);
   }
 
-  const data = await response.json();
+  const data = await response.json() as {
+    embeddings: Array<{ values: number[] }>;
+  };
+
+  let totalChars = 0;
+  for (const t of truncatedTexts) totalChars += t.length;
 
   return {
-    embeddings: data.data.map((item: { index: number; embedding: number[] }) => ({
-      index: item.index,
-      embedding: item.embedding,
-      textHash: generateTextHash(truncatedTexts[item.index]),
+    embeddings: data.embeddings.map((item, index) => ({
+      index,
+      embedding: item.values,
+      textHash: generateTextHash(truncatedTexts[index]),
     })),
-    model: data.model,
+    model: EMBEDDING_MODEL,
     usage: {
-      promptTokens: data.usage.prompt_tokens,
-      totalTokens: data.usage.total_tokens,
+      promptTokens: Math.ceil(totalChars / 4),
+      totalTokens: Math.ceil(totalChars / 4),
     },
   };
 }
@@ -271,3 +282,6 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
+
+/** エクスポート: embedding次元数 */
+export const EMBEDDING_DIMS = EMBEDDING_DIMENSIONS;

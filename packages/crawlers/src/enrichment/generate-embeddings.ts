@@ -26,10 +26,10 @@ const type = typeArg?.split('=')[1] || 'products';
 const limit = parseInt(limitArg?.split('=')[1] || '100', 10);
 const force = forceArg; // 既存のembeddingを上書き
 
-// バッチサイズ（OpenAI APIの制限に合わせて調整）
+// バッチサイズ（Gemini batchEmbedContents APIに合わせて調整）
 const BATCH_SIZE = 20;
 // リクエスト間の遅延（レート制限対策）
-const DELAY_MS = 1000;
+const DELAY_MS = 500;
 
 interface ProductRow {
   id: number;
@@ -62,80 +62,45 @@ async function generateProductEmbeddings() {
   console.log(`[embedding] Fetching products without embeddings (limit: ${limit})...`);
 
   // embedding未生成またはテキスト変更のある商品を取得
+  // makers/seriesはtagsテーブルにcategory='maker'/'series'として格納
+  const baseSelect = sql`
+    SELECT
+      p.id,
+      p.title,
+      p.description,
+      p.embedding_text_hash,
+      (
+        SELECT string_agg(pe.name, ', ')
+        FROM product_performers ppr
+        JOIN performers pe ON ppr.performer_id = pe.id
+        WHERE ppr.product_id = p.id
+      ) as performers,
+      (
+        SELECT string_agg(t.name, ', ')
+        FROM product_tags pt
+        JOIN tags t ON pt.tag_id = t.id
+        WHERE pt.product_id = p.id AND t.category NOT IN ('maker', 'label', 'series')
+      ) as tags,
+      (
+        SELECT t.name
+        FROM product_tags pt
+        JOIN tags t ON pt.tag_id = t.id
+        WHERE pt.product_id = p.id AND t.category IN ('maker', 'label')
+        LIMIT 1
+      ) as maker,
+      (
+        SELECT t.name
+        FROM product_tags pt
+        JOIN tags t ON pt.tag_id = t.id
+        WHERE pt.product_id = p.id AND t.category = 'series'
+        LIMIT 1
+      ) as series
+    FROM products p
+  `;
+
   const query = force
-    ? sql`
-        SELECT
-          p.id,
-          p.title,
-          p.description,
-          p.embedding_text_hash,
-          (
-            SELECT string_agg(pe.name, ', ')
-            FROM product_performers ppr
-            JOIN performers pe ON ppr.performer_id = pe.id
-            WHERE ppr.product_id = p.id
-          ) as performers,
-          (
-            SELECT string_agg(t.name, ', ')
-            FROM product_tags pt
-            JOIN tags t ON pt.tag_id = t.id
-            WHERE pt.product_id = p.id
-          ) as tags,
-          (
-            SELECT m.name
-            FROM product_sources ps
-            JOIN makers m ON ps.maker_id = m.id
-            WHERE ps.product_id = p.id
-            LIMIT 1
-          ) as maker,
-          (
-            SELECT s.name
-            FROM product_sources ps
-            JOIN series s ON ps.series_id = s.id
-            WHERE ps.product_id = p.id
-            LIMIT 1
-          ) as series
-        FROM products p
-        ORDER BY p.id DESC
-        LIMIT ${limit}
-      `
-    : sql`
-        SELECT
-          p.id,
-          p.title,
-          p.description,
-          p.embedding_text_hash,
-          (
-            SELECT string_agg(pe.name, ', ')
-            FROM product_performers ppr
-            JOIN performers pe ON ppr.performer_id = pe.id
-            WHERE ppr.product_id = p.id
-          ) as performers,
-          (
-            SELECT string_agg(t.name, ', ')
-            FROM product_tags pt
-            JOIN tags t ON pt.tag_id = t.id
-            WHERE pt.product_id = p.id
-          ) as tags,
-          (
-            SELECT m.name
-            FROM product_sources ps
-            JOIN makers m ON ps.maker_id = m.id
-            WHERE ps.product_id = p.id
-            LIMIT 1
-          ) as maker,
-          (
-            SELECT s.name
-            FROM product_sources ps
-            JOIN series s ON ps.series_id = s.id
-            WHERE ps.product_id = p.id
-            LIMIT 1
-          ) as series
-        FROM products p
-        WHERE p.embedding IS NULL
-        ORDER BY p.id DESC
-        LIMIT ${limit}
-      `;
+    ? sql`${baseSelect} ORDER BY p.id DESC LIMIT ${limit}`
+    : sql`${baseSelect} WHERE p.embedding IS NULL ORDER BY p.id DESC LIMIT ${limit}`;
 
   const result = await db.execute(query);
   const products = result.rows as ProductRow[];
@@ -372,8 +337,8 @@ async function main() {
   console.log(`[embedding] Starting embedding generation...`);
   console.log(`[embedding] Type: ${type}, Limit: ${limit}, Force: ${force}`);
 
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('[embedding] Error: OPENAI_API_KEY is not set');
+  if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
+    console.error('[embedding] Error: GEMINI_API_KEY or GOOGLE_API_KEY is not set');
     process.exit(1);
   }
 

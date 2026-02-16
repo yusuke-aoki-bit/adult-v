@@ -118,6 +118,36 @@ export async function POST(request: NextRequest) {
       searchParams['onSale'] = 'true';
     }
 
+    // 評価フィルター
+    if (analysis.suggestedFilters?.minRating) {
+      searchParams['minRating'] = String(analysis.suggestedFilters.minRating);
+    }
+
+    // 価格帯フィルター
+    if (analysis.suggestedFilters?.priceRange) {
+      if (analysis.suggestedFilters.priceRange.min != null) {
+        searchParams['minPrice'] = String(analysis.suggestedFilters.priceRange.min);
+      }
+      if (analysis.suggestedFilters.priceRange.max != null) {
+        searchParams['maxPrice'] = String(analysis.suggestedFilters.priceRange.max);
+      }
+    }
+
+    // 発売日フィルター
+    if (analysis.suggestedFilters?.releaseDateRange) {
+      if (analysis.suggestedFilters.releaseDateRange.from) {
+        searchParams['dateFrom'] = analysis.suggestedFilters.releaseDateRange.from;
+      }
+      if (analysis.suggestedFilters.releaseDateRange.to) {
+        searchParams['dateTo'] = analysis.suggestedFilters.releaseDateRange.to;
+      }
+    }
+
+    // ソート
+    if (analysis.suggestedFilters?.sortBy) {
+      searchParams['sort'] = analysis.suggestedFilters.sortBy;
+    }
+
     return NextResponse.json({
       success: true,
       searchParams,

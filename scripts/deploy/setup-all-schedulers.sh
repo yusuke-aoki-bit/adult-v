@@ -177,11 +177,11 @@ setup_get_scheduler "crawl-fc2-scheduler" \
 # ========================================
 echo "========== エンリッチメント =========="
 
-# Raw Data処理（6時間ごと）
+# Raw Data処理（8時間ごと - コスト最適化）
 setup_get_scheduler "process-raw-data-scheduler" \
-  "0 2,8,14,20 * * *" \
+  "0 2,10,18 * * *" \
   "process-raw-data?limit=500" \
-  "Raw Data 処理（6時間ごと）"
+  "Raw Data 処理（8時間ごと）"
 
 # 演者パイプライン（毎日15:00 - 30分タイムアウト）
 setup_get_scheduler "performer-pipeline-scheduler" \
@@ -202,10 +202,10 @@ setup_get_scheduler "normalize-performers-scheduler" \
   "normalize-performers?limit=100" \
   "演者名寄せ"
 
-# コンテンツ強化（毎日18:00）
+# コンテンツ強化（毎日18:00 - limit削減でAPI/実行コスト最適化）
 setup_get_scheduler "enhance-content-scheduler" \
   "0 18 * * *" \
-  "enhance-content?limit=50" \
+  "enhance-content?limit=30" \
   "コンテンツ強化"
 
 # SEO強化（毎日19:00）
@@ -260,11 +260,11 @@ setup_get_scheduler "cleanup-scheduler" \
   "cleanup" \
   "データクリーンアップ"
 
-# IndexNow通知（3時間ごと、POSTメソッド）
+# IndexNow通知（6時間ごと - コスト最適化、新コンテンツ量的に十分）
 setup_post_scheduler "indexnow-notify-scheduler" \
-  "0 0,3,6,9,12,15,18,21 * * *" \
+  "0 0,6,12,18 * * *" \
   "indexnow-notify" \
-  "IndexNow 自動通知（3時間ごと）" \
+  "IndexNow 自動通知（6時間ごと）" \
   120  # 60秒タイムアウト + バッファ
 
 # データ品質レポート（週1回 月曜4:00）

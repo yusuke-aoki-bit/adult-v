@@ -734,6 +734,78 @@ export function createActressQueries(deps: ActressQueryDeps) {
     }
   }
 
+  /**
+   * 女優の全作品予算サマリーを取得
+   * アフィリエイト価値向上: 全作品購入コストを可視化
+   */
+  async function getActressBudgetSummary(actressId: string): Promise<{
+    totalProducts: number;
+    pricedProducts: number;
+    totalCost: number;
+    avgPrice: number;
+    minPrice: number;
+    maxPrice: number;
+    onSaleCount: number;
+    totalSavings: number;
+  } | null> {
+    try {
+      const db = getDb();
+
+      const result = await db.execute(sql`
+        SELECT
+          COUNT(DISTINCT p.id)::int as total_products,
+          COUNT(DISTINCT CASE WHEN ps.price > 0 THEN p.id END)::int as priced_products,
+          COALESCE(SUM(DISTINCT_ON_MIN.min_price), 0)::int as total_cost,
+          COALESCE(AVG(DISTINCT_ON_MIN.min_price), 0)::int as avg_price,
+          COALESCE(MIN(DISTINCT_ON_MIN.min_price), 0)::int as min_price,
+          COALESCE(MAX(DISTINCT_ON_MIN.min_price), 0)::int as max_price
+        FROM product_performers pp
+        INNER JOIN products p ON pp.product_id = p.id
+        LEFT JOIN LATERAL (
+          SELECT MIN(ps2.price) as min_price
+          FROM product_sources ps2
+          WHERE ps2.product_id = p.id AND ps2.price > 0
+        ) DISTINCT_ON_MIN ON true
+        LEFT JOIN product_sources ps ON ps.product_id = p.id
+        WHERE pp.performer_id = ${parseInt(actressId)}
+      `);
+
+      if (!result.rows || result.rows.length === 0) return null;
+
+      const row = result.rows[0] as Record<string, unknown>;
+      const totalProducts = Number(row['total_products']) || 0;
+      if (totalProducts === 0) return null;
+
+      // セール情報
+      const saleResult = await db.execute(sql`
+        SELECT
+          COUNT(DISTINCT sal.product_source_id)::int as on_sale_count,
+          COALESCE(SUM(sal.regular_price - sal.sale_price), 0)::int as total_savings
+        FROM product_performers pp
+        INNER JOIN product_sources ps ON pp.product_id = ps.product_id
+        INNER JOIN product_sales sal ON ps.id = sal.product_source_id
+        WHERE pp.performer_id = ${parseInt(actressId)}
+          AND sal.is_active = true
+          AND (sal.end_at IS NULL OR sal.end_at > NOW())
+      `);
+
+      const saleRow = (saleResult.rows?.[0] || {}) as Record<string, unknown>;
+
+      return {
+        totalProducts,
+        pricedProducts: Number(row['priced_products']) || 0,
+        totalCost: Number(row['total_cost']) || 0,
+        avgPrice: Number(row['avg_price']) || 0,
+        minPrice: Number(row['min_price']) || 0,
+        maxPrice: Number(row['max_price']) || 0,
+        onSaleCount: Number(saleRow['on_sale_count']) || 0,
+        totalSavings: Number(saleRow['total_savings']) || 0,
+      };
+    } catch (error) {
+      return logDbErrorAndReturn(error, null, 'getActressBudgetSummary');
+    }
+  }
+
   return {
     getActressById,
     getPerformerAliases,
@@ -744,6 +816,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
     getActressCareerAnalysis,
     getMultiAspActresses,
     getActressesByAsp,
+    getActressBudgetSummary,
   };
 }
 

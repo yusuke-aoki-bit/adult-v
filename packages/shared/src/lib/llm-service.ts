@@ -131,6 +131,10 @@ export interface SearchQueryAnalysis {
     excludeGenres?: string[];
     hasReview?: boolean;
     onSale?: boolean;
+    minRating?: number;       // 最低評価（例: 4.0）
+    priceRange?: { min?: number; max?: number }; // 価格帯
+    releaseDateRange?: { from?: string; to?: string }; // 発売日範囲（YYYY-MM-DD）
+    sortBy?: 'releaseDateDesc' | 'ratingDesc' | 'priceAsc' | 'reviewCountDesc'; // ソート
   };
 }
 
@@ -145,7 +149,8 @@ export async function analyzeSearchQuery(
   }
 ): Promise<SearchQueryAnalysis | null> {
   const systemInstruction = `あなたはアダルトビデオ検索サイトの検索アシスタントです。
-ユーザーの検索クエリを分析し、意図を理解して適切な検索条件に変換します。
+ユーザーの自然言語クエリを分析し、意図を理解して適切な検索条件に変換します。
+複雑な条件指定（価格帯、評価、発売時期、ソート順など）も正確に解釈してください。
 
 【利用可能なジャンル例】
 ${context?.availableGenres?.slice(0, 30).join('、') || '巨乳、人妻、熟女、OL、女子大生、コスプレ、SM、NTR、痴漢、素人、企画'}
@@ -169,15 +174,24 @@ ${context?.popularPerformers?.slice(0, 20).join('、') || ''}`;
     "includeGenres": ["推奨ジャンルフィルター"],
     "excludeGenres": ["除外推奨ジャンル"],
     "hasReview": true/false,
-    "onSale": true/false
+    "onSale": true/false,
+    "minRating": null or 数値（例: 4.0）,
+    "priceRange": null or {"min": 数値, "max": 数値},
+    "releaseDateRange": null or {"from": "YYYY-MM-DD", "to": "YYYY-MM-DD"},
+    "sortBy": null or "releaseDateDesc|ratingDesc|priceAsc|reviewCountDesc"
   }
 }
 
 【分析のポイント】
 - 曖昧な表現（「〇〇みたいな」「〇〇系」）を具体的なジャンルに変換
-- 俗語・略語を正式名称に変換
+- 俗語・略語を正式名称に変換（例:「おっぱい」→「巨乳」、「NTR」→「寝取り・寝取られ」）
 - 検索意図を正確に判定
-- 関連する検索ワードを提案`;
+- 価格表現を解析（「安い」→priceRange, 「セール」→onSale, 「1000円以下」→max:1000）
+- 評価表現を解析（「高評価」→minRating:4.0, 「人気」→sortBy:reviewCountDesc）
+- 時期表現を解析（「最新」→sortBy:releaseDateDesc, 「今月」→releaseDateRange, 「2024年」→releaseDateRange）
+- ソート表現を解析（「おすすめ順」→ratingDesc, 「新着順」→releaseDateDesc）
+- 関連する検索ワードを提案
+- 不要なフィルターはnullにする（過剰なフィルターは結果を狭めすぎる）`;
 
   const response = await callGemini(prompt, {
     temperature: 0.3,
