@@ -680,7 +680,7 @@ function ProductCardBase({
             </div>
           )}
           {/* サンプルコンテンツ数バッジ */}
-          {(product.sampleImages?.length || product.sampleVideos?.length) && (
+          {((product.sampleImages?.length ?? 0) > 0 || (product.sampleVideos?.length ?? 0) > 0) && (
             <div className="absolute bottom-2 left-2 flex gap-1">
               {product.sampleImages && product.sampleImages.length > 0 && (
                 <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/60 text-white flex items-center gap-0.5">

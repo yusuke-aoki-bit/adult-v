@@ -117,7 +117,7 @@ function ImageLightbox({
     }
 
     const diff = touchEndX.current - touchStartX.current;
-    const threshold = 50;
+    const threshold = 80;
 
     setIsTransitioning(true);
     setSwipeOffset(0);
@@ -220,7 +220,12 @@ function ImageLightbox({
       }
     };
 
+    // スクロールバー幅分のpaddingを補填してレイアウトシフトを防止
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
     window.addEventListener('keydown', handleKeyDown);
 
     // ダイアログを開いた時、最初のフォーカス可能な要素にフォーカス
@@ -236,6 +241,7 @@ function ImageLightbox({
 
     return () => {
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
       window.removeEventListener('keydown', handleKeyDown);
       // 閉じた時、元のフォーカスを復元
       previousActiveElement.current?.focus();
@@ -367,7 +373,7 @@ function ImageLightbox({
         {/* サムネイル一覧 */}
         {hasMultipleImages && (
           <div
-            className="flex gap-2 p-2 rounded-lg max-w-[90vw] overflow-x-auto pointer-events-auto"
+            className="flex gap-2 p-2 rounded-lg max-w-[90vw] overflow-x-auto pointer-events-auto touch-pan-x"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
             onClick={stopPropagation}
           >

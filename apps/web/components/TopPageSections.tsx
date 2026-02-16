@@ -56,26 +56,31 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
   useEffect(() => {
     if (historyLoading || recentlyViewed.length === 0 || hasFetched) return;
 
+    let cancelled = false;
     const fetchProducts = async () => {
       setLoading(true);
       try {
         const ids = recentlyViewed.slice(0, 8).map(item => item.id);
         const response = await fetch(`/api/products?ids=${ids.join(',')}`);
-        if (response.ok) {
+        if (response.ok && !cancelled) {
           const data = await response.json();
+          const productList = Array.isArray(data.products) ? data.products : [];
           // 閲覧順を維持
-          const productMap = new Map(data.products.map((p: { id: number }) => [String(p.id), p]));
+          const productMap = new Map(productList.map((p: { id: number }) => [String(p.id), p]));
           const ordered = ids.map(id => productMap.get(id)).filter(Boolean);
           setProducts(ordered as typeof products);
         }
       } catch (error) {
         console.error('Failed to fetch recently viewed products:', error);
       } finally {
-        setLoading(false);
-        setHasFetched(true);
+        if (!cancelled) {
+          setLoading(false);
+          setHasFetched(true);
+        }
       }
     };
     fetchProducts();
+    return () => { cancelled = true; };
   }, [historyLoading, recentlyViewed, hasFetched]);
 
   if (historyLoading || recentlyViewed.length === 0) {
@@ -154,7 +159,7 @@ function SaleProductsContent({ products }: { products: SaleProduct[] }) {
   // 女優を抽出（重複排除、画像URLも含む）
   const actressMap = new Map<number, { id: number; name: string; profileImageUrl?: string | null }>();
   products.forEach(product => {
-    product.performers.forEach(performer => {
+    product.performers?.forEach(performer => {
       if (!actressMap.has(performer.id)) {
         actressMap.set(performer.id, performer);
       }
@@ -267,7 +272,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
       setLoading(false);
       setHasFetched(true);
     }
-  }, [hasFetched, recentlyViewed, locale]);
+  }, [hasFetched, recentlyViewed]);
 
   useEffect(() => {
     if (!historyLoading && recentlyViewed.length >= 1) {

@@ -68,7 +68,7 @@ export default function LoadMoreActresses({
       if (!response.ok) throw new Error('Failed to fetch');
 
       const data = await response.json();
-      const newPerformers = data.actresses || [];
+      const newPerformers = Array.isArray(data.actresses) ? data.actresses : [];
 
       if (newPerformers.length === 0) {
         setHasMore(false);

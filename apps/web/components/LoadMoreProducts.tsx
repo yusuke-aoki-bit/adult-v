@@ -61,7 +61,7 @@ export default function LoadMoreProducts({
       if (!response.ok) throw new Error('Failed to fetch');
 
       const data = await response.json();
-      const newProducts = data.products || [];
+      const newProducts = Array.isArray(data.products) ? data.products : [];
 
       if (newProducts.length === 0) {
         setHasMore(false);

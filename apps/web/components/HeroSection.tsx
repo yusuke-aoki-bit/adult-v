@@ -38,7 +38,7 @@ interface HeroSectionProps {
 }
 
 // カウントダウンタイマーコンポーネント
-function CountdownTimer({ endAt }: { endAt: string }) {
+function CountdownTimer({ endAt }: { endAt: string | Date }) {
   const [timeLeft, setTimeLeft] = useState<{
     hours: number;
     minutes: number;
@@ -192,7 +192,7 @@ export default function HeroSection({
             </div>
 
             {/* タイトル */}
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2 wrap-break-word">
               {currentProduct?.title}
             </h2>
 
