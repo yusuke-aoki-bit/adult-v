@@ -38,6 +38,7 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     const stats: CrawlStats = {
       totalFetched: 0,
@@ -51,160 +52,191 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
     try {
       const sokmilClient = deps.getSokmilClient();
 
-      // クエリパラメータ
       const url = new URL(request['url']);
-      const perPage = parseInt(url.searchParams.get('limit') || '100');
-      const page = parseInt(url.searchParams.get('page') || '1');
+      const perPage = 100; // APIの最大値
 
-      // 新着作品を取得 (getNewReleases(hits, offset) — 第1引数=件数, 第2引数=開始位置)
-      const response = await sokmilClient.getNewReleases(perPage, page);
-      stats.totalFetched = response.data.length;
+      // auto-resume: pageパラメータ省略時、DB件数から自動計算
+      let currentOffset: number;
+      if (url.searchParams.has('page')) {
+        currentOffset = parseInt(url.searchParams.get('page')!);
+      } else {
+        const countResult = await db.execute(sql`
+          SELECT COUNT(*) as cnt FROM sokmil_raw_responses
+        `);
+        currentOffset = parseInt(String((countResult.rows[0] as { cnt: string }).cnt)) || 1;
+        console.log(`[crawl-sokmil] Auto-resume from offset=${currentOffset}`);
+      }
+
+      const initialOffset = currentOffset;
 
       // バッチ用: 演者データ収集
       const allPerformerNames = new Set<string>();
       const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
 
-      for (const item of response.data) {
-        try {
-          // 1. 生JSONレスポンスを保存
-          const rawResponseResult = await db.execute(sql`
-            INSERT INTO sokmil_raw_responses (item_id, api_type, raw_json, fetched_at)
-            VALUES (${item.itemId}, 'item', ${JSON.stringify(item)}::jsonb, NOW())
-            ON CONFLICT (item_id, api_type)
-            DO UPDATE SET
-              raw_json = EXCLUDED.raw_json,
-              fetched_at = EXCLUDED.fetched_at,
-              updated_at = NOW()
-            RETURNING id
-          `);
+      // ページネーションループ: 時間制限内で複数ページを取得
+      while (Date.now() - startTime < TIME_LIMIT) {
+        // SOKMIL APIのoffset上限は50000
+        if (currentOffset > 49900) {
+          console.log(`[crawl-sokmil] Reached offset limit (50000), stopping`);
+          break;
+        }
 
-          const rawDataId = (rawResponseResult.rows[0] as { id: number }).id;
-          stats.rawDataSaved++;
+        const response = await sokmilClient.getNewReleases(perPage, currentOffset);
 
-          // 2. 正規化されたデータを保存
-          const normalizedProductId = `sokmil-${item.itemId}`;
+        if (response.data.length === 0) {
+          console.log(`[crawl-sokmil] No more items at offset=${currentOffset}`);
+          break;
+        }
 
-          const productResult = await db.execute(sql`
-            INSERT INTO products (
-              normalized_product_id,
-              title,
-              description,
-              release_date,
-              duration,
-              default_thumbnail_url,
-              updated_at
-            )
-            VALUES (
-              ${normalizedProductId},
-              ${item.itemName || ''},
-              ${item['description'] || null},
-              ${item['releaseDate'] || null},
-              ${item['duration'] || null},
-              ${item['thumbnailUrl'] || null},
-              NOW()
-            )
-            ON CONFLICT (normalized_product_id)
-            DO UPDATE SET
-              title = EXCLUDED.title,
-              description = EXCLUDED.description,
-              release_date = EXCLUDED.release_date,
-              duration = EXCLUDED.duration,
-              default_thumbnail_url = EXCLUDED.default_thumbnail_url,
-              updated_at = NOW()
-            RETURNING id
-          `);
+        for (const item of response.data) {
+          try {
+            // 1. 生JSONレスポンスを保存
+            const rawResponseResult = await db.execute(sql`
+              INSERT INTO sokmil_raw_responses (item_id, api_type, raw_json, fetched_at)
+              VALUES (${item.itemId}, 'item', ${JSON.stringify(item)}::jsonb, NOW())
+              ON CONFLICT (item_id, api_type)
+              DO UPDATE SET
+                raw_json = EXCLUDED.raw_json,
+                fetched_at = EXCLUDED.fetched_at,
+                updated_at = NOW()
+              RETURNING id
+            `);
 
-          const productId = (productResult.rows[0] as { id: number }).id;
-          const isNew = productResult.rowCount === 1;
+            const rawDataId = (rawResponseResult.rows[0] as { id: number }).id;
+            stats.rawDataSaved++;
 
-          if (isNew) {
-            stats.newProducts++;
-          } else {
-            stats.updatedProducts++;
-          }
+            // 2. 正規化されたデータを保存
+            const normalizedProductId = `sokmil-${item.itemId}`;
 
-          // product_sourcesにupsert
-          await db.execute(sql`
-            INSERT INTO product_sources (
-              product_id,
-              asp_name,
-              original_product_id,
-              affiliate_url,
-              price,
-              data_source,
-              last_updated
-            )
-            VALUES (
-              ${productId},
-              'Sokmil',
-              ${item.itemId},
-              ${item['affiliateUrl'] || ''},
-              ${item['price'] || null},
-              'API',
-              NOW()
-            )
-            ON CONFLICT (product_id, asp_name)
-            DO UPDATE SET
-              affiliate_url = EXCLUDED.affiliate_url,
-              price = EXCLUDED.price,
-              last_updated = NOW()
-          `);
+            const productResult = await db.execute(sql`
+              INSERT INTO products (
+                normalized_product_id,
+                title,
+                description,
+                release_date,
+                duration,
+                default_thumbnail_url,
+                updated_at
+              )
+              VALUES (
+                ${normalizedProductId},
+                ${item.itemName || ''},
+                ${item['description'] || null},
+                ${item['releaseDate'] || null},
+                ${item['duration'] || null},
+                ${item['thumbnailUrl'] || null},
+                NOW()
+              )
+              ON CONFLICT (normalized_product_id)
+              DO UPDATE SET
+                title = EXCLUDED.title,
+                description = EXCLUDED.description,
+                release_date = EXCLUDED.release_date,
+                duration = EXCLUDED.duration,
+                default_thumbnail_url = EXCLUDED.default_thumbnail_url,
+                updated_at = NOW()
+              RETURNING id
+            `);
 
-          // product_raw_data_links
-          await db.execute(sql`
-            INSERT INTO product_raw_data_links (
-              product_id,
-              source_type,
-              raw_data_id
-            )
-            VALUES (
-              ${productId},
-              'sokmil_api',
-              ${rawDataId}
-            )
-            ON CONFLICT (product_id, source_type, raw_data_id)
-            DO NOTHING
-          `);
+            const productId = (productResult.rows[0] as { id: number }).id;
+            const isNew = productResult.rowCount === 1;
 
-          // サンプル動画URL
-          if (item['sampleVideoUrl']) {
-            const videoResult = await db.execute(sql`
-              INSERT INTO product_videos (
+            if (isNew) {
+              stats.newProducts++;
+            } else {
+              stats.updatedProducts++;
+            }
+
+            // product_sourcesにupsert
+            await db.execute(sql`
+              INSERT INTO product_sources (
                 product_id,
                 asp_name,
-                video_url,
-                video_type,
-                display_order
+                original_product_id,
+                affiliate_url,
+                price,
+                data_source,
+                last_updated
               )
               VALUES (
                 ${productId},
                 'Sokmil',
-                ${item['sampleVideoUrl']},
-                'sample',
-                0
+                ${item.itemId},
+                ${item['affiliateUrl'] || ''},
+                ${item['price'] || null},
+                'API',
+                NOW()
               )
-              ON CONFLICT DO NOTHING
-              RETURNING id
+              ON CONFLICT (product_id, asp_name)
+              DO UPDATE SET
+                affiliate_url = EXCLUDED.affiliate_url,
+                price = EXCLUDED.price,
+                last_updated = NOW()
             `);
 
-            if (videoResult.rowCount && videoResult.rowCount > 0) {
-              stats.videosAdded++;
-            }
-          }
+            // product_raw_data_links
+            await db.execute(sql`
+              INSERT INTO product_raw_data_links (
+                product_id,
+                source_type,
+                raw_data_id
+              )
+              VALUES (
+                ${productId},
+                'sokmil_api',
+                ${rawDataId}
+              )
+              ON CONFLICT (product_id, source_type, raw_data_id)
+              DO NOTHING
+            `);
 
-          // 出演者をバッチ用に収集
-          if (item.actors && item.actors.length > 0) {
-            const names = item.actors.map((a: { name: string }) => a.name);
-            for (const name of names) {
-              allPerformerNames.add(name);
-            }
-            pendingPerformerLinks.push({ productId, performerNames: names });
-          }
+            // サンプル動画URL
+            if (item['sampleVideoUrl']) {
+              const videoResult = await db.execute(sql`
+                INSERT INTO product_videos (
+                  product_id,
+                  asp_name,
+                  video_url,
+                  video_type,
+                  display_order
+                )
+                VALUES (
+                  ${productId},
+                  'Sokmil',
+                  ${item['sampleVideoUrl']},
+                  'sample',
+                  0
+                )
+                ON CONFLICT DO NOTHING
+                RETURNING id
+              `);
 
-        } catch (error) {
-          stats.errors++;
-          console.error(`Error processing Sokmil item ${item.itemId}:`, error);
+              if (videoResult.rowCount && videoResult.rowCount > 0) {
+                stats.videosAdded++;
+              }
+            }
+
+            // 出演者をバッチ用に収集
+            if (item.actors && item.actors.length > 0) {
+              const names = item.actors.map((a: { name: string }) => a.name);
+              for (const name of names) {
+                allPerformerNames.add(name);
+              }
+              pendingPerformerLinks.push({ productId, performerNames: names });
+            }
+
+            stats.totalFetched++;
+
+          } catch (error) {
+            stats.errors++;
+            console.error(`Error processing Sokmil item ${item.itemId}:`, error);
+          }
         }
+
+        currentOffset += response.data.length;
+
+        // 時間チェック
+        if (Date.now() - startTime > TIME_LIMIT) break;
       }
 
       // バッチ: 演者UPSERT + 紐付けINSERT
@@ -232,6 +264,11 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
         success: true,
         message: 'Sokmil crawl completed',
         stats,
+        resumeInfo: {
+          initialOffset,
+          nextOffset: currentOffset,
+          pagesProcessed: Math.ceil((currentOffset - initialOffset) / perPage),
+        },
         duration: `${duration}s`,
       });
 

@@ -157,30 +157,37 @@ setup_get_scheduler "crawl-dti-urekko" \
   "DTI UREKKO"
 
 setup_get_scheduler "crawl-heydouga" \
-  "30 2 * * *" \
-  "crawl-heydouga?limit=30" \
-  "HEYDOUGA クローラー"
+  "30 2,14 * * *" \
+  "crawl-heydouga?limit=50" \
+  "HEYDOUGA クローラー（スキャンモード・12h間隔）"
 
-# 単独クローラー（2時間間隔）
+setup_get_scheduler "crawl-heydouga-homepage" \
+  "0 4 * * *" \
+  "crawl-heydouga?mode=homepage&limit=50" \
+  "HEYDOUGA 新着（ホームページ）"
+
+# 単独クローラー
 setup_get_scheduler "crawl-mgs-scheduler" \
   "0 3 * * *" \
   "crawl-mgs?limit=100" \
   "MGS クローラー"
 
+# DUGA: auto-resume + ページネーションループ（6時間間隔）
 setup_get_scheduler "crawl-duga-scheduler" \
-  "0 5 * * *" \
-  "crawl-duga?limit=100" \
-  "DUGA クローラー"
+  "0 1,7,13,19 * * *" \
+  "crawl-duga" \
+  "DUGA クローラー（auto-resume・6h間隔）"
 
+# SOKMIL: auto-resume + ページネーションループ（6時間間隔）
 setup_get_scheduler "crawl-sokmil-scheduler" \
-  "0 7 * * *" \
-  "crawl-sokmil?limit=100" \
-  "SOKMIL APIクローラー"
+  "0 2,8,14,20 * * *" \
+  "crawl-sokmil" \
+  "SOKMIL APIクローラー（auto-resume・6h間隔）"
 
 setup_get_scheduler "crawl-japanska-scheduler" \
   "0 9 * * *" \
-  "crawl-japanska" \
-  "Japanska クローラー"
+  "crawl-japanska?limit=100" \
+  "Japanska クローラー（auto-resume）"
 
 setup_get_scheduler "crawl-b10f-scheduler" \
   "0 11 * * *" \

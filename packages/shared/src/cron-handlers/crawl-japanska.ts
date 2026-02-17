@@ -182,8 +182,21 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
 
     try {
       const url = new URL(request['url']);
-      const startId = parseInt(url.searchParams.get('start') || '35650');
       const limit = parseInt(url.searchParams.get('limit') || '50');
+
+      // auto-resume: startパラメータ省略時、DBの最大IDから再開
+      let startId: number;
+      if (url.searchParams.has('start')) {
+        startId = parseInt(url.searchParams.get('start')!);
+      } else {
+        const maxResult = await db.execute(sql`
+          SELECT MAX(CAST(original_product_id AS INTEGER)) as max_id
+          FROM product_sources WHERE asp_name = 'Japanska'
+        `);
+        const maxId = (maxResult.rows[0] as { max_id: number | null }).max_id;
+        startId = maxId ? maxId + 1 : 35650;
+        console.log(`[crawl-japanska] Auto-resume from id=${startId}`);
+      }
 
       // セッションcookieを取得（termid必須）
       const cookie = await acquireSessionCookie();

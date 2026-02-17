@@ -366,7 +366,30 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
         }, { status: 400 });
       }
 
-      let currentId = startId || config.defaultStart;
+      // auto-resume: startパラメータ省略時、DBから最後のIDを取得
+      let currentId: string;
+      if (startId) {
+        currentId = startId;
+      } else if (config.idFormat === 'NNNN' && !config.reverseMode) {
+        // 連番・前方スキャンサイト (HEYZO, X1X, ENKOU55, UREKKO): MAX+1
+        const maxResult = await db.execute(sql`
+          SELECT MAX(CAST(original_product_id AS INTEGER)) as max_id
+          FROM product_sources WHERE asp_name = ${config.aspName}
+        `);
+        const maxId = (maxResult.rows[0] as { max_id: number | null }).max_id;
+        currentId = maxId ? String(maxId + 1) : config.defaultStart;
+        console.log(`[crawl-dti] Auto-resume ${config.aspName}: start=${currentId} (MAX+1)`);
+      } else if (config.reverseMode) {
+        // reverseMode (CARIBBEANCOM, 1PONDO等): 今日の日付から過去へ
+        const now = new Date();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const yy = String(now.getFullYear() - 2000).padStart(2, '0');
+        currentId = `${mm}${dd}${yy}_001`;
+        console.log(`[crawl-dti] Auto-resume ${config.aspName}: start=${currentId} (today)`);
+      } else {
+        currentId = config.defaultStart;
+      }
       let consecutiveNotFound = 0;
       const MAX_CONSECUTIVE_NOT_FOUND = 20;
 
