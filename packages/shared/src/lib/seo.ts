@@ -331,6 +331,11 @@ function generateKoreanProductDescription(
     parts.push(`미리보기 ${options['sampleVideoCount']}편`);
   }
 
+  // Provider + CTA
+  if (options?.['provider']) {
+    parts.push(`${options['provider']}에서 바로 시청`);
+  }
+
   const description = parts.join(' - ');
   return description.length > 160
     ? description.substring(0, 157) + '...'

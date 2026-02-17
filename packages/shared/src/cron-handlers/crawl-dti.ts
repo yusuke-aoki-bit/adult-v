@@ -24,6 +24,7 @@ interface CrawlStats {
 
 interface SiteConfig {
   siteName: string;
+  aspName: string; // DB上のASP名 (product_sources.asp_name)
   siteId: string;
   baseUrl: string;
   urlPattern: string;
@@ -36,6 +37,7 @@ interface SiteConfig {
 const SITE_CONFIGS: Record<string, SiteConfig> = {
   'caribbeancom': {
     siteName: 'カリビアンコム',
+    aspName: 'CARIBBEANCOM',
     siteId: '2478',
     baseUrl: 'https://www.caribbeancom.com',
     urlPattern: 'https://www.caribbeancom.com/moviepages/{id}/index.html',
@@ -45,6 +47,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
   },
   'caribbeancompr': {
     siteName: 'カリビアンコムプレミアム',
+    aspName: 'CARIBBEANCOMPR',
     siteId: '2477',
     baseUrl: 'https://www.caribbeancompr.com',
     urlPattern: 'https://www.caribbeancompr.com/moviepages/{id}/index.html',
@@ -54,6 +57,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
   },
   '1pondo': {
     siteName: '一本道',
+    aspName: '1PONDO',
     siteId: '2470',
     baseUrl: 'https://www.1pondo.tv',
     urlPattern: 'https://www.1pondo.tv/movies/{id}/',
@@ -64,6 +68,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
   },
   'heyzo': {
     siteName: 'HEYZO',
+    aspName: 'HEYZO',
     siteId: '2665',
     baseUrl: 'https://www.heyzo.com',
     urlPattern: 'https://www.heyzo.com/moviepages/{id}/index.html',
@@ -73,6 +78,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
   },
   '10musume': {
     siteName: '天然むすめ',
+    aspName: '10MUSUME',
     siteId: '2471',
     baseUrl: 'https://www.10musume.com',
     urlPattern: 'https://www.10musume.com/moviepages/{id}/index.html',
@@ -82,6 +88,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
   },
   'pacopacomama': {
     siteName: 'パコパコママ',
+    aspName: 'PACOPACOMAMA',
     siteId: '2472',
     baseUrl: 'https://www.pacopacomama.com',
     urlPattern: 'https://www.pacopacomama.com/moviepages/{id}/index.html',
@@ -391,7 +398,7 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
 
           await db.execute(sql`
             INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, data_source, last_updated)
-            VALUES (${productId}, 'DTI', ${currentId}, ${affiliateUrl}, ${productData.price || null}, 'CRAWL', NOW())
+            VALUES (${productId}, ${config.aspName}, ${currentId}, ${affiliateUrl}, ${productData.price || null}, 'CRAWL', NOW())
             ON CONFLICT (product_id, asp_name) DO UPDATE SET
               affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, last_updated = NOW()
           `);
@@ -407,7 +414,7 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
           if (productData.sampleVideoUrl) {
             const videoResult = await db.execute(sql`
               INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
-              VALUES (${productId}, 'DTI', ${productData.sampleVideoUrl}, 'sample', 0)
+              VALUES (${productId}, ${config.aspName}, ${productData.sampleVideoUrl}, 'sample', 0)
               ON CONFLICT DO NOTHING RETURNING id
             `);
             if (videoResult.rowCount && videoResult.rowCount > 0) {

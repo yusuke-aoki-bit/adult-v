@@ -63,12 +63,10 @@ export default async function RootLayout({
   const themeClass = siteMode === 'fanza' ? 'theme-fanza' : 'theme-adult-v';
 
   return (
-    <html lang={defaultLocale}>
+    <html lang={defaultLocale} className="overflow-x-hidden">
       <head>
-        {/* SEO: PageSpeedがStreaming SSR遅延出力を検出できない問題の対策 - charsetの直後に配置 */}
+        {/* charset先頭配置 — title/descriptionはMetadata APIで管理（重複防止） */}
         <meta charSet="utf-8" />
-        <title>ADULT VIEWER LAB - heavy user guide</title>
-        <meta name="description" content="Cross-platform adult streaming database covering DUGA, MGS, DTI, Caribbeancom with 38,000+ actresses. Browse by popularity, genres, and new releases." />
         {/* LCP改善: 画像配信ドメインへのpreconnect (crossorigin for CORS images) */}
         <link rel="preconnect" href="https://pics.dmm.co.jp" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://awsimgsrc.dmm.co.jp" crossOrigin="anonymous" />
@@ -88,7 +86,7 @@ export default async function RootLayout({
         <JsonLD data={websiteSchema} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${themeClass} antialiased flex flex-col min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} ${themeClass} antialiased flex flex-col min-h-screen overflow-x-hidden`}
       >
         {gaId && <CookieConsent gaId={gaId} />}
         <ClientProviders>

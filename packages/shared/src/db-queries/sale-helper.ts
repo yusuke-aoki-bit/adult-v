@@ -198,6 +198,18 @@ export function createSaleHelperQueries(deps: SaleHelperDeps): SaleHelperQueries
         )
       `);
 
+      // 価格履歴を記録（1日1回、重複はON CONFLICTで制御）
+      try {
+        await db.execute(drizzleSql`
+          INSERT INTO price_history (product_source_id, price, sale_price, discount_percent, recorded_at)
+          VALUES (${productSourceId}, ${saleInfo.regularPrice}, ${saleInfo.salePrice}, ${discountPercent}, NOW())
+          ON CONFLICT (product_source_id, (DATE(recorded_at)))
+          DO UPDATE SET price = EXCLUDED.price, sale_price = EXCLUDED.sale_price, discount_percent = EXCLUDED.discount_percent
+        `);
+      } catch {
+        // price_history記録失敗はセール保存自体には影響させない
+      }
+
       return true;
     } catch (error) {
       return logDbErrorAndReturn(error, false, 'saveSaleInfo', { aspName, originalProductId });

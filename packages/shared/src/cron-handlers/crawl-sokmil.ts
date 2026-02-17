@@ -56,8 +56,8 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
       const perPage = parseInt(url.searchParams.get('limit') || '100');
       const page = parseInt(url.searchParams.get('page') || '1');
 
-      // 新着作品を取得
-      const response = await sokmilClient.getNewReleases(page, perPage);
+      // 新着作品を取得 (getNewReleases(hits, offset) — 第1引数=件数, 第2引数=開始位置)
+      const response = await sokmilClient.getNewReleases(perPage, page);
       stats.totalFetched = response.data.length;
 
       // バッチ用: 演者データ収集

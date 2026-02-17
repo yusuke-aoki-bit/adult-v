@@ -74,6 +74,8 @@ export async function saveSaleInfo(
           SET fetched_at = NOW()
           WHERE id = ${existing.id}
         `);
+        // 同一価格でも日次の価格履歴は記録（価格追跡の継続性のため）
+        await recordPriceHistory(productSourceId, saleInfo.regularPrice, saleInfo.salePrice, existing.discount_percent);
         return true;
       }
 
