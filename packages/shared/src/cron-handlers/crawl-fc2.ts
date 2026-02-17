@@ -12,6 +12,7 @@ import {
   batchUpsertPerformers,
   batchInsertProductPerformers,
 } from '../utils/batch-db';
+import { createSaleHelperQueries } from '../db-queries/sale-helper';
 
 interface CrawlStats {
   totalFetched: number;
@@ -20,6 +21,13 @@ interface CrawlStats {
   errors: number;
   rawDataSaved: number;
   videosAdded: number;
+}
+
+interface SaleInfo {
+  regularPrice: number;
+  salePrice: number;
+  discountPercent: number;
+  saleType: string;
 }
 
 interface FC2Product {
@@ -31,6 +39,7 @@ interface FC2Product {
   sampleVideoUrl?: string;
   duration?: number;
   price?: number;
+  saleInfo?: SaleInfo;
 }
 
 const FC2_AFFUID = process.env['FC2_AFFUID'] || 'TVRFNU5USTJOVEE9';
@@ -118,6 +127,38 @@ async function parseDetailPage(articleId: string): Promise<FC2Product | null> {
     const priceMatch = html.match(/(\d{1,3}(?:,\d{3})*)\s*(?:円|pt|ポイント)/);
     const price = priceMatch?.[1] ? parseInt(priceMatch[1].replace(/,/g, '')) : undefined;
 
+    // セール検出: 取り消し線価格 or 定価ラベルから元値を抽出
+    let saleInfo: SaleInfo | undefined;
+    if (price) {
+      const delPriceMatch = html.match(/<(?:del|s|strike)[^>]*>\s*(\d{1,3}(?:,\d{3})*)\s*(?:円|pt)/i);
+      if (delPriceMatch?.[1]) {
+        const regularPrice = parseInt(delPriceMatch[1].replace(/,/g, ''));
+        if (regularPrice > price) {
+          const discountMatch = html.match(/(\d+)\s*%\s*(?:OFF|オフ|off)/);
+          saleInfo = {
+            regularPrice,
+            salePrice: price,
+            discountPercent: discountMatch?.[1] ? parseInt(discountMatch[1]) : Math.round((1 - price / regularPrice) * 100),
+            saleType: 'sale',
+          };
+        }
+      }
+      if (!saleInfo) {
+        const originalMatch = html.match(/(?:定価|通常|元)[価値:]?\s*(\d{1,3}(?:,\d{3})*)\s*(?:円|pt)/i);
+        if (originalMatch?.[1]) {
+          const regularPrice = parseInt(originalMatch[1].replace(/,/g, ''));
+          if (regularPrice > price) {
+            saleInfo = {
+              regularPrice,
+              salePrice: price,
+              discountPercent: Math.round((1 - price / regularPrice) * 100),
+              saleType: 'sale',
+            };
+          }
+        }
+      }
+    }
+
     let sampleVideoUrl: string | undefined;
     const videoSrcMatch = html.match(/<source[^>]*src="([^"]+\.mp4)"/i);
     if (videoSrcMatch?.[1]) {
@@ -134,6 +175,7 @@ async function parseDetailPage(articleId: string): Promise<FC2Product | null> {
     if (sampleVideoUrl !== undefined) result.sampleVideoUrl = sampleVideoUrl;
     if (duration !== undefined) result.duration = duration;
     if (price !== undefined) result.price = price;
+    if (saleInfo !== undefined) result.saleInfo = saleInfo;
 
     return result;
   } catch {
@@ -156,14 +198,17 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
     const db = deps.getDb();
     const startTime = Date.now();
 
-    const stats: CrawlStats = {
+    const stats: CrawlStats & { salesDetected: number } = {
       totalFetched: 0,
       newProducts: 0,
       updatedProducts: 0,
       errors: 0,
       rawDataSaved: 0,
       videosAdded: 0,
+      salesDetected: 0,
     };
+
+    const saleHelper = createSaleHelperQueries({ getDb: deps.getDb });
 
     try {
       const url = new URL(request['url']);
@@ -223,6 +268,16 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
               ON CONFLICT (product_id, asp_name) DO UPDATE SET
                 affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, last_updated = NOW()
             `);
+
+            // セール情報を保存
+            if (product.saleInfo) {
+              try {
+                const saved = await saleHelper.saveSaleInfo('FC2', product.articleId, product.saleInfo);
+                if (saved) stats.salesDetected++;
+              } catch {
+                // セール保存失敗は商品保存に影響させない
+              }
+            }
 
             // 出演者をバッチ用に収集
             if (product.performers.length > 0) {

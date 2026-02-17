@@ -35,6 +35,12 @@ interface JapanskaProduct {
 const AFFILIATE_ID = '9512-1-001';
 const LIST_PAGE_URL = 'https://www.japanska-xxx.com/category/list_0.html';
 
+const COMMON_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+};
+
 function generateAffiliateUrl(movieId: string): string {
   const hexId = parseInt(movieId).toString(16);
   return `https://wlink.golden-gateway.com/id/${AFFILIATE_ID}-${hexId}/`;
@@ -45,19 +51,42 @@ function isHomePage(html: string): boolean {
          (html.includes('幅広いジャンル') && html.includes('30日'));
 }
 
-async function parseDetailPage(movieId: string): Promise<JapanskaProduct | null> {
+/** リストページにアクセスしてtermid cookieを取得 */
+async function acquireSessionCookie(): Promise<string | null> {
+  try {
+    const response = await fetch(LIST_PAGE_URL, {
+      headers: COMMON_HEADERS,
+      redirect: 'manual',
+    });
+    const setCookie = response.headers.get('set-cookie') || '';
+    const match = setCookie.match(/termid=([^;]+)/);
+    if (match?.[1]) return `termid=${match[1]}`;
+    // フォローリダイレクト後のcookieも試行
+    const body = await response.text();
+    void body; // consume
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function parseDetailPage(movieId: string, cookie?: string): Promise<JapanskaProduct | null> {
   const url = `https://www.japanska-xxx.com/movie/detail_${movieId}.html`;
 
   try {
+    const headers: Record<string, string> = {
+      ...COMMON_HEADERS,
+      'Referer': LIST_PAGE_URL,
+    };
+    if (cookie) headers['Cookie'] = cookie;
+
     const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-        'Referer': LIST_PAGE_URL,
-      },
+      headers,
+      redirect: 'manual',
     });
 
+    // 302 → home.htmlリダイレクトはcookie切れ
+    if (response.status === 302) return null;
     if (!response.ok) return null;
 
     const html = await response['text']();
@@ -153,8 +182,19 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
 
     try {
       const url = new URL(request['url']);
-      const startId = parseInt(url.searchParams.get('start') || '34000');
+      const startId = parseInt(url.searchParams.get('start') || '35650');
       const limit = parseInt(url.searchParams.get('limit') || '50');
+
+      // セッションcookieを取得（termid必須）
+      const cookie = await acquireSessionCookie();
+      if (!cookie) {
+        return NextResponse.json({
+          success: false,
+          error: 'Failed to acquire Japanska session cookie',
+          stats,
+        }, { status: 502 });
+      }
+      console.log(`[crawl-japanska] Session cookie acquired`);
 
       let consecutiveNotFound = 0;
       const MAX_CONSECUTIVE_NOT_FOUND = 20;
@@ -166,7 +206,7 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
       for (let movieId = startId; movieId <= startId + 1000 && stats.totalFetched < limit; movieId++) {
         if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) break;
 
-        const product = await parseDetailPage(String(movieId));
+        const product = await parseDetailPage(String(movieId), cookie);
 
         if (!product) {
           consecutiveNotFound++;
@@ -182,8 +222,9 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
           const detailUrl = `https://www.japanska-xxx.com/movie/detail_${product.movieId}.html`;
           const htmlResponse = await fetch(detailUrl, {
             headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              ...COMMON_HEADERS,
               'Referer': LIST_PAGE_URL,
+              'Cookie': cookie,
             },
           });
           const html = await htmlResponse.text();

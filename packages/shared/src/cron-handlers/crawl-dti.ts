@@ -96,6 +96,36 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
     defaultStart: '112924_001',
     reverseMode: true,
   },
+  'x1x': {
+    siteName: 'X1X',
+    aspName: 'X1X',
+    siteId: '',
+    baseUrl: 'http://www.x1x.com',
+    urlPattern: 'http://www.x1x.com/title/{id}',
+    idFormat: 'NNNN',
+    defaultStart: '117275',
+    reverseMode: false,
+  },
+  'enkou55': {
+    siteName: 'ENKOU55',
+    aspName: 'ENKOU55',
+    siteId: '',
+    baseUrl: 'http://enkou55.com',
+    urlPattern: 'http://enkou55.com/title/{id}',
+    idFormat: 'NNNN',
+    defaultStart: '118198',
+    reverseMode: false,
+  },
+  'urekko': {
+    siteName: 'UREKKO',
+    aspName: 'UREKKO',
+    siteId: '',
+    baseUrl: 'http://urekko.com',
+    urlPattern: 'http://urekko.com/title/{id}',
+    idFormat: 'NNNN',
+    defaultStart: '116276',
+    reverseMode: false,
+  },
 };
 
 const AFFILIATE_ID = '39614';
@@ -214,6 +244,9 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
     /\s*\|\s*一本道$/,
     /\s*-\s*カリビアンコム$/,
     /\s*-\s*HEYZO$/,
+    /\s*-\s*X1X$/i,
+    /\s*-\s*エンコウ55$/,
+    /\s*-\s*熟っ子倶楽部$/,
   ];
   if (title) {
     for (const suffix of siteSuffixes) {
@@ -234,6 +267,16 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
   if (brandMatch?.[1]) {
     performers.push(brandMatch[1]);
   }
+  // フォールバック: actress/performerリンクから抽出（X1X/ENKOU55/UREKKO等）
+  if (performers.length === 0) {
+    const actressMatches = html.matchAll(/<a[^>]*href="[^"]*(?:\/actress\/|\/search\/actress\/)[^"]*"[^>]*>([^<]+)<\/a>/gi);
+    for (const m of actressMatches) {
+      const name = m[1]?.trim();
+      if (name && !performers.includes(name) && name.length > 1 && name.length < 30) {
+        performers.push(name);
+      }
+    }
+  }
 
   const dateMatch = html.match(/配信日[:：]?\s*(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/);
   const releaseDate = dateMatch?.[1] && dateMatch[2] && dateMatch[3]
@@ -241,7 +284,13 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
     : undefined;
 
   const imgMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["'](.*?)["']/i);
-  const thumbnailUrl = imgMatch?.[1];
+  let thumbnailUrl = imgMatch?.[1];
+  // CDNサムネイルフォールバック（X1X/ENKOU55/UREKKO）
+  if (!thumbnailUrl && ['X1X', 'ENKOU55', 'UREKKO'].includes(config.aspName)) {
+    const padded = productId.padStart(6, '0');
+    const host = config.baseUrl.replace(/^https?:\/\/(?:www\.)?/, 'http://static.');
+    thumbnailUrl = `${host}/images/title/${padded.slice(0,2)}/${padded.slice(2,4)}/${padded.slice(4,6)}/player.jpg`;
+  }
 
   let price: number | undefined;
   const priceMatch = html.match(/var\s+ec_price\s*=\s*parseFloat\s*\(\s*['"](\d+(?:\.\d+)?)['"]\s*\)/);
