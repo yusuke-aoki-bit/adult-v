@@ -567,7 +567,9 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
            !options.actressId &&
            !options.isNew &&
            !options.isFeatured &&
-           !options['releaseDate'];
+           !options['releaseDate'] &&
+           options['minPrice'] === undefined &&
+           options['maxPrice'] === undefined;
   }
 
   /**

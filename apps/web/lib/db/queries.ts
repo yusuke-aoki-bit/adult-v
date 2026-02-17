@@ -211,7 +211,9 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     options.actressId ||
     options.isNew ||
     options.isFeatured ||
-    options.releaseDate
+    options.releaseDate ||
+    options.minPrice !== undefined ||
+    options.maxPrice !== undefined
   );
 
   if (!hasFilters && options?.offset !== undefined && options?.limit !== undefined) {
@@ -249,7 +251,10 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
     options.performerType ||
     options.actressId ||
     options.isNew ||
-    options.isFeatured
+    options.isFeatured ||
+    options.releaseDate ||
+    options.minPrice !== undefined ||
+    options.maxPrice !== undefined
   );
 
   if (!hasFilters) {
