@@ -24,6 +24,7 @@ export { createCrawlFc2Handler } from './crawl-fc2';
 export { createCrawlB10fHandler } from './crawl-b10f';
 export { createCrawlDtiHandler } from './crawl-dti';
 export { createCrawlJapanskaHandler } from './crawl-japanska';
+export { createCrawlHeydougaHandler } from './crawl-heydouga';
 export { createCrawlPerformerLookupHandler } from './crawl-performer-lookup';
 
 // Content enhancement handlers

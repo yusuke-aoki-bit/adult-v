@@ -141,6 +141,26 @@ setup_get_scheduler "crawl-dti-pacopacomama" \
   "crawl-dti?site=pacopacomama&limit=50" \
   "DTI パコパコママ"
 
+setup_get_scheduler "crawl-dti-x1x" \
+  "0 2 * * *" \
+  "crawl-dti?site=x1x&limit=50" \
+  "DTI X1X"
+
+setup_get_scheduler "crawl-dti-enkou55" \
+  "10 2 * * *" \
+  "crawl-dti?site=enkou55&limit=50" \
+  "DTI ENKOU55"
+
+setup_get_scheduler "crawl-dti-urekko" \
+  "20 2 * * *" \
+  "crawl-dti?site=urekko&limit=50" \
+  "DTI UREKKO"
+
+setup_get_scheduler "crawl-heydouga" \
+  "30 2 * * *" \
+  "crawl-heydouga?limit=30" \
+  "HEYDOUGA クローラー"
+
 # 単独クローラー（2時間間隔）
 setup_get_scheduler "crawl-mgs-scheduler" \
   "0 3 * * *" \

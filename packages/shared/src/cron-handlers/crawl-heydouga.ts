@@ -1,0 +1,293 @@
+/**
+ * HEYDOUGA クローラー ハンドラー
+ *
+ * Hey動画から新着作品を取得（複合ID: providerId-movieId）
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from 'drizzle-orm';
+import { createHash } from 'crypto';
+import type { DbExecutor } from '../db-queries/types';
+import {
+  batchUpsertPerformers,
+  batchInsertProductPerformers,
+} from '../utils/batch-db';
+
+interface CrawlStats {
+  totalFetched: number;
+  newProducts: number;
+  updatedProducts: number;
+  errors: number;
+  rawDataSaved: number;
+  videosAdded: number;
+}
+
+interface HeydougaProduct {
+  productId: string; // "providerId-movieId"
+  title: string;
+  description?: string;
+  performers: string[];
+  thumbnailUrl?: string;
+  releaseDate?: string;
+  duration?: number;
+}
+
+const AFFILIATE_ID = '39614';
+
+function generateAffiliateUrl(providerId: string, movieId: string): string {
+  const originalUrl = `https://www.heydouga.com/moviepages/${providerId}/${movieId}/index.html`;
+  return `https://click.dtiserv2.com/Direct/${AFFILIATE_ID}/${encodeURIComponent(originalUrl)}`;
+}
+
+/** トップページから商品IDリストを抽出 */
+async function fetchProductIds(): Promise<string[]> {
+  try {
+    const response = await fetch('https://www.heydouga.com/', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+      },
+    });
+    if (!response.ok) return [];
+
+    const html = await response.text();
+    const ids: string[] = [];
+    const matches = html.matchAll(/\/moviepages\/(\d+)\/(\d+)\/?/g);
+    for (const match of matches) {
+      const id = `${match[1]}-${match[2]}`;
+      if (!ids.includes(id)) {
+        ids.push(id);
+      }
+    }
+    return ids;
+  } catch {
+    return [];
+  }
+}
+
+/** 詳細ページをパース */
+async function parseDetailPage(providerId: string, movieId: string): Promise<HeydougaProduct | null> {
+  const url = `https://www.heydouga.com/moviepages/${providerId}/${movieId}/index.html`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+      },
+    });
+    if (!response.ok) return null;
+
+    const html = await response.text();
+
+    // タイトル
+    const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
+    let title = titleMatch?.[1]?.trim();
+    if (title) {
+      title = title.replace(/\s*-\s*Hey動画.*$/, '').trim();
+    }
+    if (!title || title.length < 3) return null;
+
+    // 説明
+    const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']/i);
+    const description = descMatch?.[1]?.trim();
+
+    // 出演者: img.nomovie の alt → actressリンクのフォールバック
+    const performers: string[] = [];
+    const imgAltMatches = html.matchAll(/<img[^>]*class="[^"]*nomovie[^"]*"[^>]*alt="([^"]+)"/gi);
+    for (const m of imgAltMatches) {
+      const name = m[1]?.trim();
+      if (name && !performers.includes(name) && name.length > 1 && name.length < 30) {
+        performers.push(name);
+      }
+    }
+    if (performers.length === 0) {
+      const actressMatches = html.matchAll(/<a[^>]*href="[^"]*\/actress\/[^"]*"[^>]*>([^<]+)<\/a>/gi);
+      for (const m of actressMatches) {
+        const name = m[1]?.trim();
+        if (name && !performers.includes(name) && name.length > 1 && name.length < 30) {
+          performers.push(name);
+        }
+      }
+    }
+
+    // リリース日
+    const dateMatch = html.match(/配信日[:：]?\s*(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/);
+    const releaseDate = dateMatch?.[1] && dateMatch[2] && dateMatch[3]
+      ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
+      : undefined;
+
+    // 再生時間
+    const durationMatch = html.match(/(?:再生時間|収録時間)[:：]?\s*(\d+)\s*(?:分|min)/);
+    const duration = durationMatch?.[1] ? parseInt(durationMatch[1]) : undefined;
+
+    // サムネイル（固定パターン）
+    const thumbnailUrl = `https://www.heydouga.com/contents/${providerId}/${movieId}/player_thumb.webp`;
+
+    const result: HeydougaProduct = {
+      productId: `${providerId}-${movieId}`,
+      title,
+      performers,
+    };
+    if (description) result.description = description;
+    if (thumbnailUrl) result.thumbnailUrl = thumbnailUrl;
+    if (releaseDate) result.releaseDate = releaseDate;
+    if (duration) result.duration = duration;
+
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+interface CrawlHeydougaHandlerDeps {
+  verifyCronRequest: (request: NextRequest) => boolean;
+  unauthorizedResponse: () => NextResponse;
+  getDb: () => DbExecutor;
+}
+
+export function createCrawlHeydougaHandler(deps: CrawlHeydougaHandlerDeps) {
+  return async function GET(request: NextRequest) {
+    if (!deps.verifyCronRequest(request)) {
+      return deps.unauthorizedResponse();
+    }
+
+    const db = deps.getDb();
+    const startTime = Date.now();
+
+    const stats: CrawlStats = {
+      totalFetched: 0,
+      newProducts: 0,
+      updatedProducts: 0,
+      errors: 0,
+      rawDataSaved: 0,
+      videosAdded: 0,
+    };
+
+    try {
+      const url = new URL(request['url']);
+      const limit = parseInt(url.searchParams.get('limit') || '30');
+
+      // トップページから商品IDリストを取得
+      const productIds = await fetchProductIds();
+      if (productIds.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'No product IDs found on HEYDOUGA homepage',
+          stats,
+        }, { status: 502 });
+      }
+
+      console.log(`[crawl-heydouga] Found ${productIds.length} products on homepage`);
+
+      // バッチ用: 演者データ収集
+      const allPerformerNames = new Set<string>();
+      const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
+
+      for (const compositeId of productIds.slice(0, limit)) {
+        const [providerId, movieId] = compositeId.split('-');
+        if (!providerId || !movieId) continue;
+
+        const product = await parseDetailPage(providerId, movieId);
+        if (!product) {
+          stats.errors++;
+          await new Promise(r => setTimeout(r, 500));
+          continue;
+        }
+
+        stats.totalFetched++;
+
+        try {
+          const normalizedProductId = `HEYDOUGA-${compositeId}`;
+          const detailUrl = `https://www.heydouga.com/moviepages/${providerId}/${movieId}/index.html`;
+
+          // Raw HTML保存
+          const htmlResponse = await fetch(detailUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          });
+          const html = await htmlResponse.text();
+          const hash = createHash('sha256').update(html).digest('hex');
+
+          await db.execute(sql`
+            INSERT INTO raw_html_data (source, product_id, url, html_content, hash)
+            VALUES ('HEYDOUGA', ${compositeId}, ${detailUrl}, ${html}, ${hash})
+            ON CONFLICT (source, product_id) DO UPDATE SET
+              html_content = EXCLUDED.html_content, hash = EXCLUDED.hash, crawled_at = NOW()
+          `);
+          stats.rawDataSaved++;
+
+          // 商品保存
+          const affiliateUrl = generateAffiliateUrl(providerId, movieId);
+          const productResult = await db.execute(sql`
+            INSERT INTO products (normalized_product_id, title, description, release_date, default_thumbnail_url, updated_at)
+            VALUES (${normalizedProductId}, ${product.title}, ${product.description || null},
+              ${product.releaseDate ? new Date(product.releaseDate) : null}, ${product.thumbnailUrl || null}, NOW())
+            ON CONFLICT (normalized_product_id) DO UPDATE SET
+              title = EXCLUDED.title, description = EXCLUDED.description,
+              release_date = EXCLUDED.release_date, default_thumbnail_url = EXCLUDED.default_thumbnail_url, updated_at = NOW()
+            RETURNING id
+          `);
+
+          const dbProductId = (productResult.rows[0] as { id: number }).id;
+          if (productResult.rowCount === 1) stats.newProducts++; else stats.updatedProducts++;
+
+          await db.execute(sql`
+            INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, data_source, last_updated)
+            VALUES (${dbProductId}, 'HEYDOUGA', ${compositeId}, ${affiliateUrl}, 'CRAWL', NOW())
+            ON CONFLICT (product_id, asp_name) DO UPDATE SET
+              affiliate_url = EXCLUDED.affiliate_url, last_updated = NOW()
+          `);
+
+          // 出演者をバッチ用に収集
+          if (product.performers.length > 0) {
+            for (const name of product.performers) {
+              allPerformerNames.add(name);
+            }
+            pendingPerformerLinks.push({ productId: dbProductId, performerNames: product.performers });
+          }
+
+        } catch (error) {
+          stats.errors++;
+          console.error(`[crawl-heydouga] Error processing ${compositeId}:`, error);
+        }
+
+        await new Promise(r => setTimeout(r, 1500));
+      }
+
+      // バッチ: 演者UPSERT + 紐付けINSERT
+      if (allPerformerNames.size > 0) {
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) {
+              links.push({ productId, performerId });
+            }
+          }
+        }
+
+        await batchInsertProductPerformers(db, links);
+      }
+
+      const duration = Math.round((Date.now() - startTime) / 1000);
+
+      return NextResponse.json({
+        success: true,
+        message: 'HEYDOUGA crawl completed',
+        stats,
+        duration: `${duration}s`,
+      });
+
+    } catch (error) {
+      console.error('[crawl-heydouga] Error:', error);
+      return NextResponse.json(
+        { success: false, error: error instanceof Error ? error.message : 'Unknown error', stats },
+        { status: 500 }
+      );
+    }
+  };
+}
