@@ -197,8 +197,9 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒
 
-    const stats: CrawlStats & { salesDetected: number } = {
+    const stats: CrawlStats & { salesDetected: number; skipped: number } = {
       totalFetched: 0,
       newProducts: 0,
       updatedProducts: 0,
@@ -206,30 +207,76 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
       rawDataSaved: 0,
       videosAdded: 0,
       salesDetected: 0,
+      skipped: 0,
     };
 
     const saleHelper = createSaleHelperQueries({ getDb: deps.getDb });
 
     try {
       const url = new URL(request['url']);
-      const startPage = parseInt(url.searchParams.get('page') || '1');
-      const endPage = parseInt(url.searchParams.get('endPage') || '5');
-      const limit = parseInt(url.searchParams.get('limit') || '50');
+      const limit = parseInt(url.searchParams.get('limit') || '100');
+
+      // auto-resume: pageパラメータ省略時、DB件数からページ番号を自動計算
+      let currentPage: number;
+      if (url.searchParams.has('page')) {
+        currentPage = parseInt(url.searchParams.get('page')!);
+      } else {
+        // FC2の1ページ≈30件、DB件数から推定
+        const countResult = await db.execute(sql`
+          SELECT COUNT(*) as cnt FROM product_sources WHERE asp_name = 'FC2'
+        `);
+        const totalProducts = parseInt(String((countResult.rows[0] as { cnt: string }).cnt)) || 0;
+        currentPage = Math.max(1, Math.floor(totalProducts / 30) + 1);
+        console.log(`[crawl-fc2] Auto-resume from page=${currentPage} (${totalProducts} products in DB)`);
+      }
+
+      const initialPage = currentPage;
+      const MAX_CONSECUTIVE_EMPTY = 3;
+      let consecutiveEmpty = 0;
 
       // バッチ用: 演者データ収集
       const allPerformerNames = new Set<string>();
       const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
 
-      for (let page = startPage; page <= endPage && stats.totalFetched < limit; page++) {
-        const articleIds = await fetchArticleIds(page);
-        if (articleIds.length === 0) break;
+      // ページネーションループ: 時間制限内で複数ページを自動取得
+      while (
+        Date.now() - startTime < TIME_LIMIT &&
+        stats.totalFetched < limit &&
+        consecutiveEmpty < MAX_CONSECUTIVE_EMPTY
+      ) {
+        const articleIds = await fetchArticleIds(currentPage);
+        if (articleIds.length === 0) {
+          consecutiveEmpty++;
+          console.log(`[crawl-fc2] No articles on page ${currentPage} (empty: ${consecutiveEmpty}/${MAX_CONSECUTIVE_EMPTY})`);
+          currentPage++;
+          continue;
+        }
+        consecutiveEmpty = 0;
+
+        let pageHadNewProducts = false;
 
         for (const articleId of articleIds) {
+          if (Date.now() - startTime > TIME_LIMIT) break;
           if (stats.totalFetched >= limit) break;
 
-          const product = await parseDetailPage(articleId);
-          if (!product) continue;
+          // 既存チェック
+          const existing = await db.execute(sql`
+            SELECT 1 FROM product_sources
+            WHERE asp_name = 'FC2' AND original_product_id = ${articleId}
+            LIMIT 1
+          `);
+          if (existing.rows.length > 0) {
+            stats.skipped++;
+            continue;
+          }
 
+          const product = await parseDetailPage(articleId);
+          if (!product) {
+            stats.errors++;
+            continue;
+          }
+
+          pageHadNewProducts = true;
           stats.totalFetched++;
 
           try {
@@ -303,6 +350,12 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
           }
         }
 
+        // ページ全体がスキップ（既存のみ）の場合もカウント
+        if (!pageHadNewProducts && stats.skipped > 0) {
+          consecutiveEmpty++;
+        }
+
+        currentPage++;
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
@@ -331,6 +384,11 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
         success: true,
         message: 'FC2 crawl completed',
         stats,
+        resumeInfo: {
+          initialPage,
+          nextPage: currentPage,
+          pagesScanned: currentPage - initialPage,
+        },
         duration: `${duration}s`,
       });
 

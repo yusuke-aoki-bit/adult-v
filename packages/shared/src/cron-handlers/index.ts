@@ -21,6 +21,7 @@ export { createCrawlDugaHandler } from './crawl-duga';
 export { createCrawlSokmilHandler } from './crawl-sokmil';
 export { createCrawlSokmilScrapeHandler } from './crawl-sokmil-scrape';
 export { createCrawlFc2Handler } from './crawl-fc2';
+export { createCrawlFanzaHandler } from './crawl-fanza';
 export { createCrawlB10fHandler } from './crawl-b10f';
 export { createCrawlDtiHandler } from './crawl-dti';
 export { createCrawlJapanskaHandler } from './crawl-japanska';

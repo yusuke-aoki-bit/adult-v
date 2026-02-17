@@ -194,10 +194,17 @@ setup_get_scheduler "crawl-b10f-scheduler" \
   "crawl-b10f" \
   "b10f クローラー"
 
+# FANZA: auto-resume + リストページ走査（6時間間隔）
+setup_get_scheduler "crawl-fanza-scheduler" \
+  "0 3,9,15,21 * * *" \
+  "crawl-fanza?limit=30" \
+  "FANZA クローラー（auto-resume・6h間隔）"
+
+# FC2: auto-resume + ページネーションループ（6時間間隔）
 setup_get_scheduler "crawl-fc2-scheduler" \
-  "0 13 * * *" \
-  "crawl-fc2" \
-  "FC2 クローラー"
+  "0 4,10,16,22 * * *" \
+  "crawl-fc2?limit=100" \
+  "FC2 クローラー（auto-resume・6h間隔）"
 
 # ========================================
 # 2. エンリッチメント（クローラー後に実行）
