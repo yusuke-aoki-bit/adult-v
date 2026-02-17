@@ -39,6 +39,7 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     const stats: ProcessStats = {
       totalProcessed: 0,
@@ -76,6 +77,10 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
       const rawDataRows = rawDataResult.rows as unknown as RawHtmlRow[];
 
       for (const row of rawDataRows) {
+        if (Date.now() - startTime > TIME_LIMIT) {
+          console.log(`[process-raw-data] Time limit reached, processed ${stats.totalProcessed}/${rawDataRows.length}`);
+          break;
+        }
         try {
           stats.totalProcessed++;
 

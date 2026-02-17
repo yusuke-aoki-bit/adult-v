@@ -92,3 +92,11 @@ env:
   # Gemini API Key for LLM features
   - variable: GEMINI_API_KEY
     secret: gemini-api-key
+  # DUGA API credentials
+  - variable: DUGA_APP_ID
+    secret: duga-app-id
+  - variable: DUGA_AGENT_ID
+    secret: duga-agent-id
+  # SOKMIL API Key
+  - variable: SOKMIL_API_KEY
+    secret: sokmil-api-key

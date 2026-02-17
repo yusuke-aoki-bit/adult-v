@@ -365,7 +365,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
               ) as "profileImageUrl"
             FROM product_performers pp
             INNER JOIN performers p ON pp.performer_id = p.id
-            WHERE pp.product_id = ANY(${productIds})
+            WHERE pp.product_id IN (${drizzleSql.join(productIds.map(id => drizzleSql`${id}`), drizzleSql`, `)})
           `).then((r: { rows: unknown[] }) => r.rows)
         : [];
 

@@ -66,6 +66,7 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
     }
 
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
     const db = deps.getDb();
 
     const { searchParams } = new URL(request['url']);
@@ -118,48 +119,81 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
 
       // Phase 2: 紐付け処理
       // lookupテーブルから未紐付け商品に演者を紐付け
-      console.log('\n[Phase 2] Linking performers to products...');
-
-      const linkResult = await linkPerformersFromLookup(db, asp, limit);
-      stats.linkPhase = linkResult;
-      console.log(`  Processed: ${linkResult.productsProcessed}, New links: ${linkResult.newLinks}`);
+      if (Date.now() - startTime < TIME_LIMIT) {
+        console.log('\n[Phase 2] Linking performers to products...');
+        try {
+          const linkResult = await linkPerformersFromLookup(db, asp, limit);
+          stats.linkPhase = linkResult;
+          console.log(`  Processed: ${linkResult.productsProcessed}, New links: ${linkResult.newLinks}`);
+        } catch (e) {
+          console.error('[Phase 2] Error:', e);
+        }
+      } else {
+        console.log('\n[Phase 2] Skipped (time limit)');
+      }
 
       // Phase 3: 仮名演者マージ処理
       // 「○○ N歳 職業」形式の仮名演者を正しい演者にマージ
-      if (!skipMerge) {
+      if (Date.now() - startTime < TIME_LIMIT && !skipMerge) {
         console.log('\n[Phase 3] Merging fake performers...');
-
-        const mergeResult = await mergeFakePerformers(db, limit);
-        stats.mergePhase = mergeResult;
-        console.log(`  Found: ${mergeResult.fakePerformersFound}, Merged: ${mergeResult.performersMerged}`);
-        console.log(`  Products moved: ${mergeResult.productsMoved}, Aliases added: ${mergeResult.aliasesAdded}`);
-      } else {
+        try {
+          const mergeResult = await mergeFakePerformers(db, limit);
+          stats.mergePhase = mergeResult;
+          console.log(`  Found: ${mergeResult.fakePerformersFound}, Merged: ${mergeResult.performersMerged}`);
+          console.log(`  Products moved: ${mergeResult.productsMoved}, Aliases added: ${mergeResult.aliasesAdded}`);
+        } catch (e) {
+          console.error('[Phase 3] Error:', e);
+        }
+      } else if (skipMerge) {
         console.log('\n[Phase 3] Skipping fake performer merge (skipMerge=true)');
+      } else {
+        console.log('\n[Phase 3] Skipped (time limit)');
       }
 
       // Phase 4: デビュー年データ補完
       // 作品のリリース日から女優のデビュー年を計算・更新
-      console.log('\n[Phase 4] Backfilling debut year data...');
-
-      const debutYearResult = await backfillDebutYears(db, limit);
-      stats.debutYearPhase = debutYearResult;
-      console.log(`  Checked: ${debutYearResult.performersChecked}, Updated: ${debutYearResult.debutYearsUpdated}`);
+      if (Date.now() - startTime < TIME_LIMIT) {
+        console.log('\n[Phase 4] Backfilling debut year data...');
+        try {
+          const debutYearResult = await backfillDebutYears(db, limit);
+          stats.debutYearPhase = debutYearResult;
+          console.log(`  Checked: ${debutYearResult.performersChecked}, Updated: ${debutYearResult.debutYearsUpdated}`);
+        } catch (e) {
+          console.error('[Phase 4] Error:', e);
+        }
+      } else {
+        console.log('\n[Phase 4] Skipped (time limit)');
+      }
 
       // Phase 5: 演者統計更新（latestReleaseDate, releaseCount）
       // 新商品がクロールされた後、女優のソート順を更新するために必要
-      console.log('\n[Phase 5] Updating performer stats (latestReleaseDate, releaseCount)...');
-
-      const statsResult = await updatePerformerStats(db);
-      stats.statsPhase = statsResult;
-      console.log(`  Updated: ${statsResult.performersUpdated} performers`);
+      if (Date.now() - startTime < TIME_LIMIT) {
+        console.log('\n[Phase 5] Updating performer stats (latestReleaseDate, releaseCount)...');
+        try {
+          const statsResult = await updatePerformerStats(db);
+          stats.statsPhase = statsResult;
+          console.log(`  Updated: ${statsResult.performersUpdated} performers`);
+        } catch (e) {
+          console.error('[Phase 5] Error:', e);
+        }
+      } else {
+        console.log('\n[Phase 5] Skipped (time limit)');
+      }
 
       // Phase 6: 商品統計更新（非正規化カラム同期）
       // performer_count, has_video, has_active_sale, min_price, best_rating, total_reviews
-      console.log('\n[Phase 6] Updating product denormalized stats...');
-
-      const productStatsResult = await updateProductStats(db);
-      stats.productStatsPhase = productStatsResult;
-      console.log(`  Updated: ${productStatsResult.productsUpdated} products`);
+      if (Date.now() - startTime < TIME_LIMIT) {
+        console.log('\n[Phase 6] Updating product denormalized stats...');
+        try {
+          const productStatsResult = await updateProductStats(db);
+          stats.productStatsPhase = productStatsResult;
+          console.log(`  Updated: ${productStatsResult.productsUpdated} products`);
+        } catch (e) {
+          console.error('[Phase 6] Error:', e);
+        }
+      } else {
+        console.log('\n[Phase 6] Skipped (time limit)');
+      }
 
       stats['totalDuration'] = Date.now() - startTime;
 
@@ -591,7 +625,13 @@ async function mergeFakePerformers(
   }
 
   // 各仮名演者を処理（wiki/FANZA検索は個別に実行が必要）
+  const mergeStartTime = Date.now();
+  const MERGE_TIME_LIMIT = 120_000; // マージフェーズは120秒まで
   for (const fakePerformer of fakePerformerRows) {
+    if (Date.now() - mergeStartTime > MERGE_TIME_LIMIT) {
+      console.log(`    [mergeFakePerformers] Time limit reached, processed ${performersMerged}/${fakePerformerRows.length}`);
+      break;
+    }
     const product = performerToProduct.get(fakePerformer.id);
     if (!product) continue;
 

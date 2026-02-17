@@ -94,6 +94,7 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     const stats: CrawlStats = {
       totalFetched: 0,
@@ -127,6 +128,10 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
       const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
 
       for (const item of productsToProcess) {
+        if (Date.now() - startTime > TIME_LIMIT) {
+          console.log(`[crawl-b10f] Time limit reached, processed ${stats.newProducts + stats.updatedProducts}/${productsToProcess.length}`);
+          break;
+        }
         try {
           const normalizedProductId = `b10f-${item['productId']}`;
           const releaseDateParsed = item['releaseDate'] ? new Date(item['releaseDate']) : null;

@@ -375,6 +375,7 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     const stats: Stats = {
       totalProcessed: 0,
@@ -434,6 +435,10 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
       const pendingLinks: { productId: number; performerName: string }[] = [];
 
       for (const product of products) {
+        if (Date.now() - startTime > TIME_LIMIT) {
+          console.log(`[normalize-performers] Time limit reached, processed ${stats.totalProcessed}/${products.length}`);
+          break;
+        }
         stats.totalProcessed++;
 
         const variants = generateSearchVariants(product.normalized_product_id, product.original_product_id);
