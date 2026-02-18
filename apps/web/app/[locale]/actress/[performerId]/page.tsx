@@ -41,10 +41,9 @@ import PerPageDropdown from '@/components/PerPageDropdown';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISR有効化: Next.js 16 + next-intl v4.6ではgetTranslationsとISRの互換性問題が解決済み
-// 5分ごとに再検証（人気ページのため短め）
-export const revalidate = 300;
-export const dynamicParams = true;
+// force-dynamic: layout.tsxでcookies()を使用しているため、ISR(revalidate)との併用不可
+// cookies()はdynamic APIのため、未プリレンダリングのページで DYNAMIC_SERVER_USAGE エラーが発生する
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ performerId: string; locale: string }>;

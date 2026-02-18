@@ -37,10 +37,9 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISR有効化: Next.js 16 + next-intl v4.6ではgetTranslationsとISRの互換性問題が解決済み
-// 5分ごとに再検証（商品情報更新頻度に合わせる）
-export const revalidate = 300;
-export const dynamicParams = true;
+// force-dynamic: layout.tsxでcookies()を使用しているため、ISR(revalidate)との併用不可
+// cookies()はdynamic APIのため、未プリレンダリングのページで DYNAMIC_SERVER_USAGE エラーが発生する
+export const dynamic = 'force-dynamic';
 
 /**
  * 配列をシャッフル（Fisher-Yates algorithm）
