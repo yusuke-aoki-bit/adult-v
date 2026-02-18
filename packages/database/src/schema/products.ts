@@ -90,6 +90,7 @@ export const productSources = pgTable(
     price: integer('price'), // 代表価格（後方互換性のため残す）
     currency: varchar('currency', { length: 3 }).default('JPY'), // 'JPY' or 'USD'
     isSubscription: boolean('is_subscription').default(false), // 月額制かどうか
+    productType: varchar('product_type', { length: 20 }), // 'haishin'(配信), 'dvd', 'monthly'(月額) など
     dataSource: varchar('data_source', { length: 10 }).notNull(), // 'API' or 'CSV'
     lastUpdated: timestamp('last_updated').defaultNow(),
   },
