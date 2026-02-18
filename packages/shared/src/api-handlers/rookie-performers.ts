@@ -89,7 +89,7 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
             eq((productPerformers as Record<string, unknown>)['productId'], (products as Record<string, unknown>)['id'])
           )
           .where(
-            (sql as CallableFunction)`${(productPerformers as Record<string, unknown>)['performerId']} = ANY(${rookieIds})`
+            (sql as CallableFunction)`${(productPerformers as Record<string, unknown>)['performerId']} = ANY(ARRAY[${(sql as any).join(rookieIds.map((id: number) => (sql as CallableFunction)`${id}`), (sql as CallableFunction)`, `)}]::integer[])`
           )
           .orderBy(desc((products as Record<string, unknown>)['releaseDate']));
 

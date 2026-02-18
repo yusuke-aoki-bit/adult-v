@@ -67,7 +67,7 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
           SELECT ps.product_id, ps.original_product_id
           FROM product_sources ps
           WHERE ps.asp_name = 'DUGA'
-          ORDER BY ps.created_at DESC
+          ORDER BY ps.last_updated DESC NULLS LAST
           LIMIT ${limit}
         `;
       } else {
@@ -80,7 +80,7 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
             AND prs.asp_name = 'DUGA'
           WHERE ps.asp_name = 'DUGA'
             AND prs.id IS NULL
-          ORDER BY ps.created_at DESC
+          ORDER BY ps.last_updated DESC NULLS LAST
           LIMIT ${limit}
         `;
       }

@@ -81,8 +81,7 @@ export interface ProductSourceResult {
   price: number | null;
   currency: string | null;
   productType: string | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
+  lastUpdated: Date | null;
 }
 
 export interface ProductSourceWithSaleResult extends ProductSourceResult {
@@ -330,8 +329,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         ps.price,
         ps.currency,
         ps.product_type as "productType",
-        ps.created_at as "createdAt",
-        ps.updated_at as "updatedAt",
+        ps.last_updated as "lastUpdated",
         psl.sale_price as "salePrice",
         psl.regular_price as "regularPrice",
         psl.discount_percent as "discountPercent",
@@ -370,8 +368,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         ps.price,
         ps.currency,
         ps.product_type as "productType",
-        ps.created_at as "createdAt",
-        ps.updated_at as "updatedAt",
+        ps.last_updated as "lastUpdated",
         psl.sale_price as "salePrice",
         psl.regular_price as "regularPrice",
         psl.discount_percent as "discountPercent",
