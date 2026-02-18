@@ -601,5 +601,25 @@
       "cancel": "Cancel",
       "loginRequired": "Please log in"
     }
+  },
+  "news": {
+    "title": "News",
+    "metaDescription": "Latest news, sale information, and trend analysis",
+    "allCategories": "All",
+    "newReleases": "New Releases",
+    "sales": "Sales",
+    "aiAnalysis": "Trend Analysis",
+    "siteUpdate": "Updates",
+    "industry": "Industry News",
+    "noArticles": "No news articles yet",
+    "readMore": "Read more",
+    "backToList": "Back to news list",
+    "publishedAt": "Published",
+    "featured": "Featured",
+    "relatedProducts": "Related Products",
+    "relatedActresses": "Related Actresses",
+    "share": "Share",
+    "viewCount": "{count} views",
+    "moreNews": "View all news"
   }
 }

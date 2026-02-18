@@ -588,5 +588,25 @@
       "cancel": "取消",
       "loginRequired": "需要登入"
     }
+  },
+  "news": {
+    "title": "新聞",
+    "metaDescription": "最新新聞、促銷資訊和趨勢分析",
+    "allCategories": "全部",
+    "newReleases": "新作",
+    "sales": "促銷",
+    "aiAnalysis": "趨勢分析",
+    "siteUpdate": "公告",
+    "industry": "產業新聞",
+    "noArticles": "暫無新聞",
+    "readMore": "閱讀更多",
+    "backToList": "返回新聞列表",
+    "publishedAt": "發佈日期",
+    "featured": "推薦",
+    "relatedProducts": "相關作品",
+    "relatedActresses": "相關女優",
+    "share": "分享",
+    "viewCount": "{count}次瀏覽",
+    "moreNews": "查看全部新聞"
   }
 }

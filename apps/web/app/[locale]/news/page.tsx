@@ -1,23 +1,10 @@
 import { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { getNewsByCategory } from '@/lib/db/news-queries';
+import { generateBaseMetadata } from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
+import Breadcrumb from '@/components/Breadcrumb';
 import { Newspaper, Star, ChevronLeft, ChevronRight } from 'lucide-react';
-
-const CATEGORY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  new_releases: { bg: 'bg-blue-600', text: 'text-blue-100', label: '新着' },
-  sales: { bg: 'bg-red-600', text: 'text-red-100', label: 'セール' },
-  ai_analysis: { bg: 'bg-purple-600', text: 'text-purple-100', label: '分析' },
-  industry: { bg: 'bg-green-600', text: 'text-green-100', label: '業界' },
-  site_update: { bg: 'bg-gray-600', text: 'text-gray-100', label: 'お知らせ' },
-};
-
-const CATEGORIES = [
-  { key: null, label: 'すべて' },
-  { key: 'new_releases', label: '新着' },
-  { key: 'sales', label: 'セール' },
-  { key: 'ai_analysis', label: 'AI分析' },
-  { key: 'site_update', label: 'お知らせ' },
-];
 
 export async function generateMetadata({
   params,
@@ -25,16 +12,30 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const title = locale === 'ja' ? 'ニュース - eroxv' : 'News - eroxv';
-  const description = locale === 'ja'
-    ? '新着情報、セール速報、トレンド分析などの最新ニュース'
-    : 'Latest news, sale alerts, and trend analysis';
+  const t = await getTranslations({ locale, namespace: 'news' });
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
+
+  const metadata = generateBaseMetadata(
+    t('title'),
+    t('metaDescription'),
+    undefined,
+    localizedHref('/news', locale),
+    undefined,
+    locale,
+  );
 
   return {
-    title,
-    description,
+    ...metadata,
     alternates: {
-      canonical: `/${locale}/news`,
+      canonical: `${baseUrl}/news`,
+      languages: {
+        'ja': `${baseUrl}/news`,
+        'en': `${baseUrl}/news?hl=en`,
+        'zh': `${baseUrl}/news?hl=zh`,
+        'zh-TW': `${baseUrl}/news?hl=zh-TW`,
+        'ko': `${baseUrl}/news?hl=ko`,
+        'x-default': `${baseUrl}/news`,
+      },
     },
   };
 }
@@ -50,6 +51,8 @@ export default async function NewsPage({
 }) {
   const { locale } = await params;
   const sp = await searchParams;
+  const t = await getTranslations({ locale, namespace: 'news' });
+  const tNav = await getTranslations({ locale, namespace: 'nav' });
   const category = sp.category || null;
   const page = parseInt(sp.page || '1');
   const limit = 20;
@@ -57,15 +60,39 @@ export default async function NewsPage({
   const { articles, total } = await getNewsByCategory(category, page, limit);
   const totalPages = Math.ceil(total / limit);
 
+  const CATEGORY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+    new_releases: { bg: 'bg-blue-600', text: 'text-blue-100', label: t('newReleases') },
+    sales: { bg: 'bg-red-600', text: 'text-red-100', label: t('sales') },
+    ai_analysis: { bg: 'bg-purple-600', text: 'text-purple-100', label: t('aiAnalysis') },
+    industry: { bg: 'bg-green-600', text: 'text-green-100', label: t('industry') },
+    site_update: { bg: 'bg-gray-600', text: 'text-gray-100', label: t('siteUpdate') },
+  };
+
+  const CATEGORIES = [
+    { key: null, label: t('allCategories') },
+    { key: 'new_releases', label: t('newReleases') },
+    { key: 'sales', label: t('sales') },
+    { key: 'ai_analysis', label: t('aiAnalysis') },
+    { key: 'site_update', label: t('siteUpdate') },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen theme-body">
       <div className="max-w-4xl mx-auto px-4 py-8">
+        <Breadcrumb
+          items={[
+            { label: tNav('home'), href: localizedHref('/', locale) },
+            { label: t('title') },
+          ]}
+          className="mb-4"
+        />
+
         {/* ヘッダー */}
         <div className="flex items-center gap-3 mb-6">
           <Newspaper className="w-7 h-7 text-blue-400" />
           <div>
-            <h1 className="text-2xl font-bold text-white">ニュース</h1>
-            <p className="text-sm text-gray-400">最新情報・セール・トレンド</p>
+            <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
+            <p className="text-sm text-gray-400">{t('metaDescription')}</p>
           </div>
         </div>
 
@@ -96,17 +123,16 @@ export default async function NewsPage({
         {/* 記事一覧 */}
         {articles.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-gray-400">ニュースはまだありません</p>
+            <p className="text-gray-400">{t('noArticles')}</p>
           </div>
         ) : (
           <div className="space-y-4">
             {articles.map((article) => {
               const style = CATEGORY_STYLES[article.category] || CATEGORY_STYLES['site_update'];
-              const publishedDate = new Date(article.published_at).toLocaleDateString('ja-JP', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              });
+              const publishedDate = new Date(article.published_at).toLocaleDateString(
+                locale === 'ko' ? 'ko-KR' : locale === 'zh-TW' ? 'zh-TW' : locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-US' : 'ja-JP',
+                { year: 'numeric', month: 'long', day: 'numeric' },
+              );
 
               return (
                 <a
@@ -154,7 +180,6 @@ export default async function NewsPage({
                 className="flex items-center gap-1 px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
-                前へ
               </a>
             )}
             <span className="px-4 py-2 text-sm text-gray-400">
@@ -165,7 +190,6 @@ export default async function NewsPage({
                 href={localizedHref(`/news?${category ? `category=${category}&` : ''}page=${page + 1}`, locale)}
                 className="flex items-center gap-1 px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
               >
-                次へ
                 <ChevronRight className="w-4 h-4" />
               </a>
             )}

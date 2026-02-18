@@ -588,5 +588,25 @@
       "cancel": "취소",
       "loginRequired": "로그인이 필요합니다"
     }
+  },
+  "news": {
+    "title": "뉴스",
+    "metaDescription": "최신 뉴스, 세일 정보, 트렌드 분석을 전달합니다",
+    "allCategories": "전체",
+    "newReleases": "신작",
+    "sales": "세일",
+    "aiAnalysis": "트렌드 분석",
+    "siteUpdate": "공지",
+    "industry": "업계 뉴스",
+    "noArticles": "아직 뉴스가 없습니다",
+    "readMore": "더 읽기",
+    "backToList": "뉴스 목록으로 돌아가기",
+    "publishedAt": "게시일",
+    "featured": "주목",
+    "relatedProducts": "관련 작품",
+    "relatedActresses": "관련 배우",
+    "share": "공유",
+    "viewCount": "{count}회 조회",
+    "moreNews": "뉴스 전체보기"
   }
 }

@@ -588,5 +588,25 @@
       "cancel": "キャンセル",
       "loginRequired": "ログインが必要です"
     }
+  },
+  "news": {
+    "title": "ニュース",
+    "metaDescription": "最新ニュース・セール情報・トレンド分析をお届けします",
+    "allCategories": "すべて",
+    "newReleases": "新着",
+    "sales": "セール",
+    "aiAnalysis": "トレンド分析",
+    "siteUpdate": "お知らせ",
+    "industry": "業界ニュース",
+    "noArticles": "ニュースはまだありません",
+    "readMore": "続きを読む",
+    "backToList": "ニュース一覧に戻る",
+    "publishedAt": "公開日",
+    "featured": "注目",
+    "relatedProducts": "関連作品",
+    "relatedActresses": "関連女優",
+    "share": "シェア",
+    "viewCount": "{count}回閲覧",
+    "moreNews": "ニュース一覧を見る"
   }
 }
