@@ -19,7 +19,6 @@ export async function GET(
   try {
     const db = getDb();
 
-    // DTI以外の商品を取得（優先度順: 新しい商品を優先）
     const productList = await db
       .select({
         id: products.id,
@@ -38,7 +37,6 @@ export async function GET(
       .limit(CHUNK_SIZE)
       .offset(offset);
 
-    // Generate XML sitemap
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">

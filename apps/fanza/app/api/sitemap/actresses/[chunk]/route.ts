@@ -19,7 +19,6 @@ export async function GET(
   try {
     const db = getDb();
 
-    // 女優を商品数順に取得
     const performerList = await db
       .select({
         id: performers.id,
@@ -35,16 +34,13 @@ export async function GET(
       .limit(CHUNK_SIZE)
       .offset(offset);
 
-    // Generate XML sitemap
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${performerList
   .map((performer) => {
     const lastMod = new Date().toISOString();
-    // Priority based on product count (more products = higher priority)
     const priority = Math.min(0.9, 0.5 + (Number(performer.productCount) / 1000) * 0.1).toFixed(1);
-
     const actressPath = `/actress/${performer.id}`;
     return `  <url>
     <loc>${BASE_URL}${actressPath}</loc>

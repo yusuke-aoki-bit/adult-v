@@ -93,6 +93,16 @@ const nextConfig = {
       { source: '/fonts/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
     ];
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/sitemap-actresses-:chunk(\\d+).xml',
+          destination: '/api/sitemap/actresses/:chunk',
+        },
+      ],
+    };
+  },
   async redirects() {
     return [
       { source: '/product/:id', destination: '/products/:id', permanent: true },

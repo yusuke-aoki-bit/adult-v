@@ -122,6 +122,22 @@ const nextConfig = {
       { source: '/:locale(ja|en|zh|ko)', headers: [{ key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' }] },
     ];
   },
+  async rewrites() {
+    return {
+      // beforeFiles: ファイルシステムルートより先にチェック
+      // 動的ルート[chunk].xmlがNext.jsで404になる問題を回避
+      beforeFiles: [
+        {
+          source: '/sitemap-actresses-:chunk(\\d+).xml',
+          destination: '/api/sitemap/actresses/:chunk',
+        },
+        {
+          source: '/sitemap-products-:chunk(\\d+).xml',
+          destination: '/api/sitemap/products/:chunk',
+        },
+      ],
+    };
+  },
   async redirects() {
     return [
       { source: '/ja', destination: '/', permanent: true },
