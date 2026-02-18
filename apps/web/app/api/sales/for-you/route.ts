@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, eq, and, inArray, desc, gt } from '@adult-v/database';
 import * as schema from '@adult-v/database/schema';
 
+export const revalidate = 300;
+
 interface ForYouProduct {
   id: number;
   normalizedProductId: string;

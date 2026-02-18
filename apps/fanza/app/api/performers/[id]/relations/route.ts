@@ -198,7 +198,7 @@ export async function GET(
     const thumbnailMap = new Map<number, string | null>();
 
     if (performerIds.length > 0) {
-      const idsArray = `{${performerIds.join(',')}}`;
+      const idsArraySql = sql`ARRAY[${sql.join(performerIds.map(id => sql`${id}`), sql`, `)}]::int[]`;
       const thumbQuery = await db.execute(sql`
         SELECT DISTINCT ON (pp.performer_id)
           pp.performer_id,
@@ -206,7 +206,7 @@ export async function GET(
         FROM product_performers pp
         INNER JOIN products p ON pp.product_id = p.id
         INNER JOIN product_sources ps ON p.id = ps.product_id
-        WHERE pp.performer_id = ANY(${idsArray}::int[])
+        WHERE pp.performer_id = ANY(${idsArraySql})
           AND p.default_thumbnail_url IS NOT NULL
           AND LOWER(ps.asp_name) = 'fanza'
         ORDER BY pp.performer_id, p.release_date DESC NULLS LAST
@@ -219,7 +219,7 @@ export async function GET(
 
     // エッジ（関係線）を取得（FANZAソースのみ）
     const allNodeIds = [performerId, ...performerIds];
-    const idsForEdges = `{${allNodeIds.join(',')}}`;
+    const edgeIdsSql = sql`ARRAY[${sql.join(allNodeIds.map(id => sql`${id}`), sql`, `)}]::int[]`;
 
     const edgesQuery = await db.execute(sql`
       WITH node_pairs AS (
@@ -230,8 +230,8 @@ export async function GET(
         FROM product_performers pp1
         INNER JOIN product_performers pp2 ON pp1.product_id = pp2.product_id
         INNER JOIN product_sources ps ON pp1.product_id = ps.product_id
-        WHERE pp1.performer_id = ANY(${idsForEdges}::int[])
-          AND pp2.performer_id = ANY(${idsForEdges}::int[])
+        WHERE pp1.performer_id = ANY(${edgeIdsSql})
+          AND pp2.performer_id = ANY(${edgeIdsSql})
           AND pp1.performer_id < pp2.performer_id
           AND LOWER(ps.asp_name) = 'fanza'
         GROUP BY pp1.performer_id, pp2.performer_id

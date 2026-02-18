@@ -13,6 +13,8 @@ import {
   createUserCorrectionsDeleteHandler,
 } from '@adult-v/shared/api-handlers';
 
+export const dynamic = 'force-dynamic';
+
 const reviewHandler = createUserCorrectionsReviewHandler({
   getDb,
   userCorrections,

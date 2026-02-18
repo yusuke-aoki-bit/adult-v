@@ -1,6 +1,6 @@
 runConfig:
   runtime: nodejs20
-  concurrency: 100
+  concurrency: 40
   minInstances: 1
   maxInstances: 3
   cpu: 1

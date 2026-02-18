@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMakerById } from '@/lib/db/queries';
 
+export const revalidate = 300;
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ makerId: string }> }

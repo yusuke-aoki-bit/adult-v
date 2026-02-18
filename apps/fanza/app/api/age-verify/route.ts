@@ -5,6 +5,8 @@ import {
   createAgeVerifyDeleteHandler,
 } from '@adult-v/shared/api-handlers';
 
+export const dynamic = 'force-dynamic';
+
 export const POST = createAgeVerifyPostHandler({
   checkRateLimit,
   getClientIP,

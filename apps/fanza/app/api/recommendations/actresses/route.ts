@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRecommendedActressesFromFavorites } from '@/lib/db/recommendations';
 
+export const revalidate = 300;
+
 /**
  * POST /api/recommendations/actresses
  * B1機能: 「この女優が好きなら」レコメンド

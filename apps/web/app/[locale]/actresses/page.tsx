@@ -81,9 +81,9 @@ function buildInitialFilter(initial: string) {
 
   const chars = hiraganaMap[initial];
   if (chars) {
-    // 複数文字のいずれかで始まる
-    const patterns = chars.map(c => `'${c}%'`).join(',');
-    return sql.raw(`AND (pf.name_kana SIMILAR TO '(${chars.join('|')})%')`);
+    // 複数文字のいずれかで始まるかをOR条件で構築（パラメータバインド）
+    const likeConditions = chars.map(c => sql`pf.name_kana LIKE ${c + '%'}`);
+    return sql`AND (${sql.join(likeConditions, sql` OR `)})`;
   }
   // 単一文字
   return sql`AND pf.name_kana LIKE ${initial + '%'}`;

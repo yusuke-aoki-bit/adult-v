@@ -9,6 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 const INDEXNOW_KEY = process.env['INDEXNOW_KEY'] || 'adult-v-indexnow-key';
 const SITE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 

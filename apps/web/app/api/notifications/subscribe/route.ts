@@ -7,6 +7,8 @@
 import { saveSubscription, removeSubscription } from '@/lib/db/notification-queries';
 import { createNotificationsSubscribeHandler } from '@adult-v/shared/api-handlers';
 
+export const dynamic = 'force-dynamic';
+
 export const POST = createNotificationsSubscribeHandler({
   saveSubscription,
   removeSubscription,

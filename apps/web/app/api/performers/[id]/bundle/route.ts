@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, eq, desc } from '@adult-v/database';
 import * as schema from '@adult-v/database/schema';
 
+export const revalidate = 300;
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
