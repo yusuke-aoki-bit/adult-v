@@ -229,17 +229,21 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         const variants = generateProductIdVariations(query);
         const variantPatterns = variants.map(v => `%${v}%`);
 
+        // PostgreSQL ANY()にはARRAY[]構文が必要（Drizzleのデフォルト展開はタプル形式のため）
+        const variantArray = sql`ARRAY[${sql.join(variants.map(v => sql`${v}`), sql`, `)}]::text[]`;
+        const patternArray = sql`ARRAY[${sql.join(variantPatterns.map(v => sql`${v}`), sql`, `)}]::text[]`;
+
         conditions.push(
           sql`(
-            ${products['normalizedProductId']} = ANY(${variants})
-            OR ${products['normalizedProductId']} ILIKE ANY(${variantPatterns})
-            OR ${products['makerProductCode']} ILIKE ANY(${variantPatterns})
+            ${products['normalizedProductId']} = ANY(${variantArray})
+            OR ${products['normalizedProductId']} ILIKE ANY(${patternArray})
+            OR ${products['makerProductCode']} ILIKE ANY(${patternArray})
             OR EXISTS (
               SELECT 1 FROM ${productSources} ps
               WHERE ps.product_id = ${products['id']}
-              AND (ps.original_product_id = ANY(${variants}) OR ps.original_product_id ILIKE ANY(${variantPatterns}))
+              AND (ps.original_product_id = ANY(${variantArray}) OR ps.original_product_id ILIKE ANY(${patternArray}))
             )
-            OR ${products['search_vector']} @@ plainto_tsquery('simple', ${query})
+            OR ${products}.search_vector @@ plainto_tsquery('simple', ${query})
             OR ${products['title']} ILIKE ${searchPattern}
           )`
         );
@@ -247,7 +251,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         // 通常の全文検索（タイトル、説明文、AI説明文）
         conditions.push(
           sql`(
-            ${products['search_vector']} @@ plainto_tsquery('simple', ${query})
+            ${products}.search_vector @@ plainto_tsquery('simple', ${query})
             OR ${products['title']} ILIKE ${searchPattern}
             OR ${products['aiDescription']}::text ILIKE ${searchPattern}
           )`
