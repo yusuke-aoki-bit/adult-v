@@ -175,9 +175,10 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
       let containingListIds: number[] = [];
       if (checkProductId && myLists && lists.length > 0) {
         const listIds = lists.map((l: { id: number }) => l.id);
-        const containResult = await (db['execute'] as CallableFunction)(sql`
+        const listIdArray = (sql as any)`ARRAY[${(sql as any).join(listIds.map((id: number) => (sql as CallableFunction)`${id}`), (sql as CallableFunction)`, `)}]::int[]`;
+        const containResult = await (db['execute'] as CallableFunction)((sql as CallableFunction)`
           SELECT DISTINCT list_id FROM ${publicFavoriteListItems}
-          WHERE list_id = ANY(${listIds}::int[])
+          WHERE list_id = ANY(${listIdArray})
             AND product_id = ${parseInt(checkProductId, 10)}
         `) as { rows: Array<{ list_id: number }> };
         containingListIds = containResult.rows.map(r => r.list_id);

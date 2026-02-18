@@ -5,8 +5,16 @@ import { desc, sql } from 'drizzle-orm';
 
 const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://f.adult-v.com';
 const CHUNK_SIZE = 5000;
+const ACTRESS_CHUNK_COUNT = 8; // 38,000人 ÷ 5,000 = 8チャンク
 
-export const dynamic = 'force-dynamic'; // ビルド時プリレンダリング回避（DB依存）
+export const revalidate = 3600; // 1時間キャッシュ（ISR）
+
+// ビルド時に全チャンクを事前生成（動的ルートをNext.jsに認識させる）
+export function generateStaticParams() {
+  return Array.from({ length: ACTRESS_CHUNK_COUNT }, (_, i) => ({
+    chunk: String(i),
+  }));
+}
 
 export async function GET(
   request: NextRequest,

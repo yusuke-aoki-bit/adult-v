@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       const genreIdsResult = await db
         .select({ id: tags.id })
         .from(tags)
-        .where(sql`${tags.category} = 'genre' AND ${tags.name} = ANY(${genreNames})`);
+        .where(sql`${tags.category} = 'genre' AND ${tags.name} = ANY(ARRAY[${sql.join(genreNames.map((n: string) => sql`${n}`), sql`, `)}]::text[])`);
       if (genreIdsResult.length > 0) {
         searchParams.include = genreIdsResult.map(r => String(r.id));
       }
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       const excludeIdsResult = await db
         .select({ id: tags.id })
         .from(tags)
-        .where(sql`${tags.category} = 'genre' AND ${tags.name} = ANY(${excludeNames})`);
+        .where(sql`${tags.category} = 'genre' AND ${tags.name} = ANY(ARRAY[${sql.join(excludeNames.map((n: string) => sql`${n}`), sql`, `)}]::text[])`);
       if (excludeIdsResult.length > 0) {
         searchParams.exclude = excludeIdsResult.map(r => String(r.id));
       }

@@ -19,9 +19,9 @@ const SITE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com
 const CRON_SECRET = process.env['CRON_SECRET'];
 
 export async function POST(request: NextRequest) {
-  // 認証チェック
+  // 認証チェック（CRON_SECRET未設定時も拒否: safe-by-default）
   const authHeader = request.headers.get('authorization');
-  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+  if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -117,8 +117,9 @@ export async function POST(request: NextRequest) {
 
 // GET: ステータス確認用
 export async function GET(request: NextRequest) {
+  // 認証チェック（CRON_SECRET未設定時も拒否: safe-by-default）
   const authHeader = request.headers.get('authorization');
-  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+  if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

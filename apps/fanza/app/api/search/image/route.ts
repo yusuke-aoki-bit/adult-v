@@ -126,10 +126,10 @@ export async function POST(request: NextRequest) {
           FROM ${products} p
           INNER JOIN ${productTags} pt ON p.id = pt.product_id
           INNER JOIN ${productSources} ps ON p.id = ps.product_id
-          WHERE pt.tag_id = ANY(${tagIds})
+          WHERE pt.tag_id = ANY(ARRAY[${sql.join(tagIds.map((id: number) => sql`${id}`), sql`, `)}]::int[])
             AND p.default_thumbnail_url IS NOT NULL
             AND ps.asp_name = 'FANZA'
-            AND p.id != ALL(${excludeIds})
+            AND p.id != ALL(ARRAY[${sql.join(excludeIds.map((id: number) => sql`${id}`), sql`, `)}]::int[])
           GROUP BY p.id
           ORDER BY tag_match_count DESC
           LIMIT ${20 - candidates.length}
