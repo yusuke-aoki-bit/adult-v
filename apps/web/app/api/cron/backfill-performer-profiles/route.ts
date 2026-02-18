@@ -11,6 +11,7 @@ import { sql } from 'drizzle-orm';
 import { createBackfillPerformerProfilesHandler } from '@adult-v/shared/cron-handlers';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
 
 export const GET = createBackfillPerformerProfilesHandler({
   getDb,

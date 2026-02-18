@@ -129,6 +129,9 @@ export function createBackfillPerformerProfilesHandler(deps: BackfillPerformerPr
     const minProducts = parseInt(searchParams.get('minProducts') || '5', 10);
 
     const db = getDb();
+    const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
+
     const stats: BackfillStats = {
       performersChecked: 0,
       profilesUpdated: 0,
@@ -169,7 +172,7 @@ export function createBackfillPerformerProfilesHandler(deps: BackfillPerformerPr
 
       console.log(`  Found ${performers.rows.length} performers to process`);
 
-      for (const row of performers.rows as Array<{
+      for (const row of performers.rows as unknown as Array<{
         id: number;
         name: string;
         profile_image_url: string | null;
@@ -181,6 +184,10 @@ export function createBackfillPerformerProfilesHandler(deps: BackfillPerformerPr
         cup: string | null;
         product_count: number;
       }>) {
+        if (Date.now() - startTime > TIME_LIMIT) {
+          console.log(`[backfill-performer-profiles] Time limit reached, processed ${stats.performersChecked}/${performers.rows.length}`);
+          break;
+        }
         stats.performersChecked++;
 
         try {
@@ -260,14 +267,6 @@ export function createBackfillPerformerProfilesHandler(deps: BackfillPerformerPr
 
           // 更新実行
           if (Object.keys(updateValues).length > 0) {
-            // 動的なUPDATEクエリを構築
-            const setClauses = Object.entries(updateValues)
-              .map(([key]) => {
-                const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-                return `${snakeKey} = $${snakeKey}`;
-              })
-              .join(', ');
-
             // 個別にUPDATEを実行
             if (updateValues['profile_image_url']) {
               await db.execute(sql`

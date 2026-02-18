@@ -51,10 +51,16 @@ function isHomePage(html: string): boolean {
          (html.includes('幅広いジャンル') && html.includes('30日'));
 }
 
+function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 15000): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+}
+
 /** リストページにアクセスしてtermid cookieを取得 */
 async function acquireSessionCookie(): Promise<string | null> {
   try {
-    const response = await fetch(LIST_PAGE_URL, {
+    const response = await fetchWithTimeout(LIST_PAGE_URL, {
       headers: COMMON_HEADERS,
       redirect: 'manual',
     });
@@ -80,7 +86,7 @@ async function parseDetailPage(movieId: string, cookie?: string): Promise<Japans
     };
     if (cookie) headers['Cookie'] = cookie;
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers,
       redirect: 'manual',
     });
@@ -170,6 +176,7 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     const stats: CrawlStats = {
       totalFetched: 0,
@@ -218,6 +225,10 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
 
       for (let movieId = startId; movieId <= startId + 1000 && stats.totalFetched < limit; movieId++) {
         if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) break;
+        if (Date.now() - startTime > TIME_LIMIT) {
+          console.log(`[crawl-japanska] Time limit reached, processed ${stats.totalFetched}/${limit}`);
+          break;
+        }
 
         const product = await parseDetailPage(String(movieId), cookie);
 
@@ -233,7 +244,7 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
           const normalizedProductId = `Japanska-${product.movieId}`;
 
           const detailUrl = `https://www.japanska-xxx.com/movie/detail_${product.movieId}.html`;
-          const htmlResponse = await fetch(detailUrl, {
+          const htmlResponse = await fetchWithTimeout(detailUrl, {
             headers: {
               ...COMMON_HEADERS,
               'Referer': LIST_PAGE_URL,
@@ -301,21 +312,27 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
 
       // バッチ: 演者UPSERT + 紐付けINSERT
       if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
-        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        try {
+          const performerData = [...allPerformerNames].map(name => ({ name }));
+          const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+          const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
 
-        const links: { productId: number; performerId: number }[] = [];
-        for (const { productId, performerNames } of pendingPerformerLinks) {
-          for (const name of performerNames) {
-            const performerId = nameToId.get(name);
-            if (performerId) {
-              links.push({ productId, performerId });
+          const links: { productId: number; performerId: number }[] = [];
+          for (const { productId, performerNames } of pendingPerformerLinks) {
+            for (const name of performerNames) {
+              const performerId = nameToId.get(name);
+              if (performerId) {
+                links.push({ productId, performerId });
+              }
             }
           }
-        }
 
-        await batchInsertProductPerformers(db, links);
+          await batchInsertProductPerformers(db, links);
+          console.log(`[crawl-japanska] Batch: ${allPerformerNames.size} performers, ${links.length} links`);
+        } catch (error) {
+          console.error('[crawl-japanska] Batch performer operation failed:', error);
+          stats.errors++;
+        }
       }
 
       const duration = Math.round((Date.now() - startTime) / 1000);

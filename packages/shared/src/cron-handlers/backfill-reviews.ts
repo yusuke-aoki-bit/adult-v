@@ -39,6 +39,7 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     const stats: BackfillReviewsStats = {
       checked: 0,
@@ -90,6 +91,10 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
       console.log(`[backfill-reviews] Found ${products.length} DUGA products to process`);
 
       for (const product of products) {
+        if (Date.now() - startTime > TIME_LIMIT) {
+          console.log(`[backfill-reviews] Time limit reached, processed ${stats.checked}/${products.length}`);
+          break;
+        }
         stats.checked++;
 
         try {

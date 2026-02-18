@@ -447,6 +447,8 @@ export function createCrawlPerformerLookupHandler(deps: CrawlPerformerLookupHand
     }
 
     const db = deps.getDb();
+    const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
     const url = new URL(request['url']);
     const source = url.searchParams.get('source') || 'nakiny';
     const page = parseInt(url.searchParams.get('page') || '1');
@@ -482,6 +484,10 @@ export function createCrawlPerformerLookupHandler(deps: CrawlPerformerLookupHand
       }
 
       for (let p = page; p < page + pages; p++) {
+        if (Date.now() - startTime > TIME_LIMIT) {
+          console.log(`[crawl-performer-lookup] Time limit reached at page ${p}`);
+          break;
+        }
         console.log(`[crawl-performer-lookup] Crawling ${source} page ${p}...`);
 
         const entries = await crawlFn(p);
