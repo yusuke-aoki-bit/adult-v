@@ -38,6 +38,8 @@
   "homepage": {
     "title": "【免费样片・特惠】38,000+名AV女优作品跨平台搜索 | Adult Viewer Lab",
     "description": "跨DUGA・MGS・加勒比搜索{count}+名AV女优作品。免费样片・特惠信息・价格比较。按类型・女优・场景轻松找到最优惠价格。",
+    "heroTitle": "跨平台搜索多个网站的作品",
+    "heroDescription": "在DUGA・MGS・Sokmil等多个网站中搜索您喜爱的女优作品",
     "actressCount": "收录 {count} 位女优",
     "initialSearch": "按首字母搜索",
     "filterSettings": "筛选设置",
@@ -58,7 +60,10 @@
     "viewMakersDesc": "按厂商和厂牌浏览",
     "uncategorizedBadge": "未分类",
     "uncategorizedDescription": "查看未分类作品",
-    "uncategorizedCount": "{count}个作品"
+    "uncategorizedCount": "{count}个作品",
+    "multiAspActresses": "多平台活跃中",
+    "multiAspDescription": "在多个网站上架作品的女优。可比较各网站价格，找到最优惠的选择。",
+    "recommended": "推荐"
   },
   "header": {
     "title": "ADULT VIEWER LAB",
@@ -86,7 +91,10 @@
     "terms": "服务条款",
     "contact": "联系我们",
     "copyright": "© {year} Adult Viewer Lab. 版权所有。",
-    "affiliateNotice": "本站包含成人内容的联盟链接。"
+    "affiliateNotice": "本站包含成人内容的联盟链接。",
+    "siteName": "ADULT VIEWER LAB",
+    "contactDescription": "如有问题或建议，请通过电子邮件联系我们。",
+    "admin": "管理页面"
   },
   "uncategorized": {
     "title": "未分类作品",
@@ -103,7 +111,10 @@
     "metaDescription": "搜索DUGA、MGS、DTI等所有流媒体网站的作品。",
     "description": "共有{count}件作品",
     "noProducts": "未找到作品",
-    "viewActressListDesc": "按女优浏览作品"
+    "viewActressListDesc": "按女优浏览作品",
+    "loading": "加载中...",
+    "loadMore": "加载更多 {count} 件",
+    "allLoaded": "全部加载完成（{count}件）"
   },
   "relatedProducts": {
     "title": "相关作品",
@@ -326,7 +337,8 @@
     "saleEndsIn": "还剩{days}天",
     "urgentLastHour": "现在！",
     "urgentEndsIn": "剩余{hours}小时",
-    "urgentEndsSoon": "还剩{hours}小时"
+    "urgentEndsSoon": "还剩{hours}小时",
+    "viewSale": "查看促销"
   },
   "imageLightbox": {
     "close": "关闭",
@@ -360,7 +372,8 @@
     "buyAt": "在{provider}观看",
     "urgentHours": "剩余{hours}小时！",
     "endsToday": "今天截止！",
-    "endsSoon": "剩余{days}天"
+    "endsSoon": "剩余{days}天",
+    "buyAtSale": "在{provider}优惠购买 -{discount}%"
   },
   "personalized": {
     "recentlyViewed": "最近浏览",
@@ -384,5 +397,196 @@
     "addedToDiary": "已添加到观看日记",
     "removedFromDiary": "已从观看日记移除",
     "viewCount": "已看{count}次"
+  },
+  "productImageGallery": {
+    "previousImage": "上一张图片",
+    "nextImage": "下一张图片",
+    "sampleImageAlt": "样片图片",
+    "thumbnailAlt": "缩略图",
+    "sampleImageCount": "样片图片：{count}张",
+    "tapToZoom": "点击放大",
+    "close": "关闭",
+    "clickToCloseEsc": "点击关闭 / ESC 键"
+  },
+  "productVideoPlayer": {
+    "playSampleVideo": "播放样片视频",
+    "browserNotSupported": "您的浏览器不支持视频标签。",
+    "videoLoadError": "视频加载失败",
+    "securityRestriction": "由于来源网站的安全限制，可能无法直接播放",
+    "playAtSource": "在来源网站播放",
+    "playInNewTab": "在新标签页播放",
+    "externalVideoTitle": "外部网站视频",
+    "externalVideoDescription": "此视频因安全限制无法嵌入播放。您可以在新标签页中直接播放。",
+    "close": "关闭",
+    "preview": "预览",
+    "trailer": "预告",
+    "streaming": "流媒体",
+    "download": "下载",
+    "sampleVideoCount": "样片视频：{count}部"
+  },
+  "priceComparison": {
+    "title": "价格比较",
+    "subscriptionOnly": "仅限月费会员",
+    "lowestPrice": "最低价",
+    "outOfStock": "缺货",
+    "buy": "购买",
+    "priceDisclaimer": "※ 价格可能会变动。最新价格请至各网站确认。"
+  },
+  "pwaInstaller": {
+    "title": "安装应用",
+    "description": "添加到主屏幕，享受更便捷的使用体验。",
+    "install": "安装",
+    "later": "稍后",
+    "close": "关闭"
+  },
+  "rankingWidget": {
+    "popularProducts": "热门作品排行",
+    "popularActresses": "人气女优排行",
+    "daily": "24小时",
+    "weekly": "周",
+    "monthly": "月",
+    "loading": "加载中...",
+    "noData": "暂无数据",
+    "views": "浏览"
+  },
+  "actressCard": {
+    "releaseCount": "出演数",
+    "trend": "趋势",
+    "fanScore": "粉丝评分",
+    "videos": "部"
+  },
+  "favoriteButton": {
+    "addToFavorites": "添加到收藏",
+    "removeFromFavorites": "从收藏中移除"
+  },
+  "userContributions": {
+    "sectionTitle": "用户贡献",
+    "reviewForm": {
+      "title": "撰写评论",
+      "loginRequired": "撰写评论需要登录",
+      "ratingLabel": "评分",
+      "reviewTitleLabel": "标题",
+      "reviewTitlePlaceholder": "评论标题（选填）",
+      "contentLabel": "评论内容",
+      "contentPlaceholder": "分享您对这部作品的看法...",
+      "submit": "发布",
+      "submitting": "发布中...",
+      "success": "评论已发布",
+      "error": "发布评论失败",
+      "alreadyReviewed": "您已经评论过这部作品",
+      "minLength": "评论至少需要10个字"
+    },
+    "reviewList": {
+      "title": "用户评论",
+      "noReviews": "暂无评论",
+      "helpful": "有帮助",
+      "notHelpful": "没有帮助",
+      "helpfulCount": "{count}人觉得有帮助",
+      "loading": "加载中...",
+      "error": "加载评论失败"
+    },
+    "tagForm": {
+      "title": "建议标签",
+      "loginRequired": "建议标签需要登录",
+      "placeholder": "输入新标签名称...",
+      "submit": "建议",
+      "submitting": "提交中...",
+      "success": "标签建议已提交",
+      "error": "提交标签建议失败",
+      "alreadySuggested": "此标签已被建议过",
+      "tooShort": "标签至少需要2个字"
+    },
+    "tagList": {
+      "title": "建议的标签",
+      "noSuggestions": "暂无标签建议",
+      "approved": "已批准",
+      "pending": "审核中",
+      "loginToVote": "投票需要登录"
+    },
+    "performerForm": {
+      "title": "建议演员",
+      "loginRequired": "建议演员需要登录",
+      "placeholder": "输入演员名称...",
+      "submit": "建议",
+      "submitting": "提交中...",
+      "success": "演员建议已提交",
+      "error": "提交演员建议失败",
+      "alreadySuggested": "此演员已被登录或建议",
+      "tooShort": "名称至少需要2个字",
+      "selectExisting": "选择现有演员",
+      "orEnterNew": "或输入新演员名称"
+    },
+    "performerList": {
+      "title": "建议的演员",
+      "noSuggestions": "暂无演员建议",
+      "approved": "已批准",
+      "pending": "审核中",
+      "linkedToExisting": "已关联至现有数据",
+      "loginToVote": "投票需要登录"
+    }
+  },
+  "favoriteLists": {
+    "pageTitle": "公开列表",
+    "myLists": "我的列表",
+    "publicLists": "大家的列表",
+    "createList": "创建新列表",
+    "noLists": "没有列表",
+    "loginRequired": "创建列表需要登录",
+    "card": {
+      "items": "{count}件",
+      "views": "{count}",
+      "likes": "{count}",
+      "private": "私密",
+      "public": "公开",
+      "edit": "编辑",
+      "delete": "删除",
+      "deleteConfirm": "确定要删除此列表吗？"
+    },
+    "modal": {
+      "createTitle": "创建新列表",
+      "editTitle": "编辑列表",
+      "titleLabel": "标题",
+      "titlePlaceholder": "输入列表名称...",
+      "descriptionLabel": "描述（选填）",
+      "descriptionPlaceholder": "输入列表描述...",
+      "visibilityLabel": "公开设置",
+      "public": "公开",
+      "publicDescription": "任何人都可以浏览和点赞",
+      "private": "私密",
+      "privateDescription": "只有自己能看到",
+      "cancel": "取消",
+      "create": "创建",
+      "save": "保存",
+      "creating": "创建中...",
+      "saving": "保存中..."
+    },
+    "detail": {
+      "loading": "加载中...",
+      "error": "加载列表失败",
+      "notFound": "找不到列表",
+      "back": "返回",
+      "views": "{count}次浏览",
+      "likes": "{count}个赞",
+      "items": "{count}件作品",
+      "private": "私密",
+      "public": "公开",
+      "share": "分享",
+      "copied": "已复制！",
+      "emptyList": "列表中没有作品",
+      "removeItem": "移除"
+    },
+    "addToList": {
+      "addToList": "加入列表",
+      "selectList": "选择要加入的列表",
+      "createNew": "创建新列表",
+      "noLists": "没有列表",
+      "added": "已加入",
+      "removed": "已移除",
+      "loading": "加载中...",
+      "newListTitle": "列表名称",
+      "create": "创建",
+      "cancel": "取消",
+      "loginRequired": "需要登录"
+    }
   }
 }

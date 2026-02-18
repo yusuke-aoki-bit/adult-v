@@ -44,6 +44,11 @@
     "newReleases": "新作發布女優",
     "popularActresses": "人氣女優",
     "popularTags": "熱門標籤",
+    "heroTitle": "跨平台搜尋多個網站的作品",
+    "heroDescription": "在DUGA・MGS・Sokmil等多個網站中搜尋您喜愛的女優作品",
+    "multiAspActresses": "多平台活躍中",
+    "multiAspDescription": "在多個網站上架作品的女優。可比較各網站價格，找到最優惠的選擇。",
+    "recommended": "推薦",
     "saleProducts": "特價促銷中",
     "viewAllSales": "查看所有促銷商品",
     "saleUntil": "截止至{date}",
@@ -79,14 +84,17 @@
     "search": "搜尋"
   },
   "footer": {
+    "siteName": "ADULT VIEWER LAB",
     "description": "跨平台成人串流媒體中心，涵蓋 DUGA / SOKMIL / DTI，為重度用戶提供基於女優的評論、排行榜和活動更新。",
     "links": "連結",
     "legal": "法律資訊",
     "privacy": "隱私政策",
     "terms": "服務條款",
     "contact": "聯絡我們",
+    "contactDescription": "如有問題或建議，請透過電子郵件聯繫我們。",
     "copyright": "© {year} Adult Viewer Lab. 版權所有。",
-    "affiliateNotice": "本站包含成人內容的聯盟連結。"
+    "affiliateNotice": "本站包含成人內容的聯盟連結。",
+    "admin": "管理頁面"
   },
   "uncategorized": {
     "title": "未分類作品",
@@ -97,6 +105,58 @@
     "notice": "這些作品尚未關聯演員資訊。",
     "noProducts": "沒有未分類的作品",
     "itemCount": "{count}件"
+  },
+  "products": {
+    "title": "全部作品",
+    "metaDescription": "搜尋DUGA、MGS、DTI等所有串流媒體網站的作品。",
+    "description": "共有{count}件作品",
+    "noProducts": "未找到作品",
+    "viewActressListDesc": "依女優瀏覽作品",
+    "loading": "載入中...",
+    "loadMore": "載入更多 {count} 件",
+    "allLoaded": "全部載入完成（{count}件）"
+  },
+  "relatedProducts": {
+    "title": "相關作品",
+    "samePerformer": "同一演員",
+    "sameGenre": "同一類型",
+    "recent": "最新",
+    "performerOtherWorks": "{name}的其他作品",
+    "seriesWorks": "{name}系列",
+    "makerOtherWorks": "{name}的其他作品",
+    "viewAll": "查看全部",
+    "viewMore": "查看更多"
+  },
+  "relatedActresses": {
+    "title": "{name}的合作演員",
+    "description": "與此演員合作過的女優",
+    "costarCount": "次合作",
+    "productCount": "作品",
+    "genreMatch": "匹配"
+  },
+  "similarActresses": {
+    "title": "與{name}相似的女優",
+    "description": "出演相似類型作品的女優（非合作演員）",
+    "genreMatch": "匹配",
+    "productCount": "作品",
+    "matchingGenres": "共同類型"
+  },
+  "performerTopProducts": {
+    "title": "{name}的人氣作品TOP5",
+    "description": "根據評分、評論和瀏覽量推薦的作品",
+    "rating": "評分",
+    "reviews": "則評價",
+    "views": "次瀏覽",
+    "onSale": "促銷"
+  },
+  "performerOnSale": {
+    "title": "{name}的促銷作品",
+    "description": "限時特價！不容錯過",
+    "off": "折",
+    "endsIn": "剩餘{days}天",
+    "endsTomorrow": "明天截止",
+    "endsToday": "今天截止！",
+    "yen": "¥"
   },
   "filter": {
     "genre": "類型",
@@ -115,7 +175,11 @@
     "other": "其他",
     "performerType": "出演形式",
     "solo": "單人出演",
-    "multi": "多人出演"
+    "multi": "多人出演",
+    "saleFilter": "促銷",
+    "onSaleOnly": "僅限促銷商品",
+    "reviewFilter": "評價",
+    "hasReviewOnly": "僅有評價"
   },
   "sort": {
     "nameAsc": "名稱（升序）",
@@ -135,6 +199,8 @@
     "totalProducts": "共 {count} 部作品",
     "metaTitle": "{name} - {count}部作品 | 免費樣片・多平台搜尋",
     "metaDescription": "{name}的{count}部作品跨平台搜尋。支援DUGA・MGS・DTI・加勒比・一本道・HEYZO等多站點作品資訊、價格比較、分類篩選。提供免費預覽影片。",
+    "metaTitleWithGenre": "{name}的{genre}作品列表 | 免費樣片・多平台搜尋",
+    "metaDescriptionWithGenre": "{name}的{genre}類型出演作品跨平台搜尋。支援DUGA・MGS・DTI・加勒比・一本道・HEYZO等多站點作品資訊。",
     "aliases": "別名",
     "height": "身高",
     "measurements": "三圍",
@@ -263,11 +329,16 @@
     "close": "關閉",
     "clickToCloseEsc": "← 上一張 | 中央關閉 | 下一張 →",
     "comingSoon": "即將上市",
+    "monthly": "月費",
     "previousImage": "上一張圖片",
     "nextImage": "下一張圖片",
     "thumbnailAlt": "縮圖",
     "saleTomorrow": "明天截止",
-    "saleEndsIn": "還剩{days}天"
+    "saleEndsIn": "還剩{days}天",
+    "urgentLastHour": "立即！",
+    "urgentEndsIn": "剩餘{hours}小時",
+    "urgentEndsSoon": "還剩{hours}小時",
+    "viewSale": "查看促銷"
   },
   "imageLightbox": {
     "close": "關閉",
@@ -281,14 +352,104 @@
     "thumbnailAlt": "縮圖",
     "viewDetails": "查看詳情"
   },
+  "productImageGallery": {
+    "previousImage": "上一張圖片",
+    "nextImage": "下一張圖片",
+    "sampleImageAlt": "樣片圖片",
+    "thumbnailAlt": "縮圖",
+    "sampleImageCount": "樣片圖片：{count}張",
+    "tapToZoom": "點擊放大",
+    "close": "關閉",
+    "clickToCloseEsc": "點擊關閉 / ESC 鍵"
+  },
+  "productVideoPlayer": {
+    "playSampleVideo": "播放樣片影片",
+    "browserNotSupported": "您的瀏覽器不支援影片標籤。",
+    "videoLoadError": "影片載入失敗",
+    "securityRestriction": "由於來源網站的安全限制，可能無法直接播放",
+    "playAtSource": "在來源網站播放",
+    "playInNewTab": "在新分頁播放",
+    "externalVideoTitle": "外部網站影片",
+    "externalVideoDescription": "此影片因安全限制無法嵌入播放。您可以在新分頁中直接播放。",
+    "close": "關閉",
+    "preview": "預覽",
+    "trailer": "預告",
+    "streaming": "串流",
+    "download": "下載",
+    "sampleVideoCount": "樣片影片：{count}部"
+  },
+  "priceComparison": {
+    "title": "價格比較",
+    "subscriptionOnly": "僅限月費會員",
+    "lowestPrice": "最低價",
+    "outOfStock": "缺貨",
+    "buy": "購買",
+    "priceDisclaimer": "※ 價格可能會變動。最新價格請至各網站確認。"
+  },
+  "pwaInstaller": {
+    "title": "安裝應用程式",
+    "description": "加入主畫面，享受更便捷的使用體驗。",
+    "install": "安裝",
+    "later": "稍後",
+    "close": "關閉"
+  },
+  "rankingWidget": {
+    "popularProducts": "熱門作品排行",
+    "popularActresses": "人氣女優排行",
+    "daily": "24小時",
+    "weekly": "週",
+    "monthly": "月",
+    "loading": "載入中...",
+    "noData": "尚無資料",
+    "views": "瀏覽"
+  },
+  "actressCard": {
+    "releaseCount": "出演數",
+    "trend": "趨勢",
+    "fanScore": "粉絲評分",
+    "videos": "部"
+  },
+  "favoriteButton": {
+    "addToFavorites": "加入收藏",
+    "removeFromFavorites": "從收藏中移除"
+  },
+  "categories": {
+    "title": "類型與分類",
+    "metaTitle": "JAV類型與分類 - 免費樣片 | 38,000+作品 | Adult Viewer Lab",
+    "metaDescription": "從DUGA、MGS、加勒比等平台瀏覽38,000+部JAV作品。免費樣片影片及促銷資訊。按類型、場景、玩法等分類搜尋您的最愛。",
+    "description": "按類型和分類瀏覽並搜尋作品。",
+    "allCategories": "所有分類",
+    "popularGenres": "熱門類型",
+    "situationGenres": "情境",
+    "playGenres": "玩法",
+    "bodyTypeGenres": "體型",
+    "costumeGenres": "服裝",
+    "otherGenres": "其他",
+    "productCount": "{count}部作品",
+    "viewProducts": "查看作品",
+    "noCategories": "未找到分類"
+  },
   "stickyCta": {
-    "buyAt": "在{provider}購買"
+    "buyAt": "在{provider}購買",
+    "buyAtSale": "在{provider}優惠購買 -{discount}%",
+    "urgentHours": "剩餘{hours}小時！",
+    "endsToday": "今天截止！",
+    "endsSoon": "剩餘{days}天"
   },
   "personalized": {
     "recentlyViewed": "最近瀏覽",
     "count": "{count}條記錄",
     "basedOnHistory": "根據您的瀏覽歷史推薦",
     "clearHistory": "清除歷史"
+  },
+  "series": {
+    "series": "系列",
+    "seriesGuide": "系列完走指南",
+    "seriesGuideDescription": "瀏覽人氣系列並追蹤觀看進度",
+    "pageTitle": "系列列表 - 完走指南",
+    "pageDescription": "人氣AV系列列表與觀看進度管理",
+    "productCount": "{count}部作品",
+    "noSeries": "未找到系列"
   },
   "viewingDiary": {
     "markAsViewed": "標記已看",
@@ -297,5 +458,135 @@
     "addedToDiary": "已添加到觀看日記",
     "removedFromDiary": "已從觀看日記移除",
     "viewCount": "已看{count}次"
+  },
+  "userContributions": {
+    "sectionTitle": "使用者貢獻",
+    "reviewForm": {
+      "title": "撰寫評論",
+      "loginRequired": "撰寫評論需要登入",
+      "ratingLabel": "評分",
+      "reviewTitleLabel": "標題",
+      "reviewTitlePlaceholder": "評論標題（選填）",
+      "contentLabel": "評論內容",
+      "contentPlaceholder": "分享您對這部作品的看法...",
+      "submit": "發布",
+      "submitting": "發布中...",
+      "success": "評論已發布",
+      "error": "發布評論失敗",
+      "alreadyReviewed": "您已經評論過這部作品",
+      "minLength": "評論至少需要10個字"
+    },
+    "reviewList": {
+      "title": "使用者評論",
+      "noReviews": "尚無評論",
+      "helpful": "有幫助",
+      "notHelpful": "沒有幫助",
+      "helpfulCount": "{count}人覺得有幫助",
+      "loading": "載入中...",
+      "error": "載入評論失敗"
+    },
+    "tagForm": {
+      "title": "建議標籤",
+      "loginRequired": "建議標籤需要登入",
+      "placeholder": "輸入新標籤名稱...",
+      "submit": "建議",
+      "submitting": "提交中...",
+      "success": "標籤建議已提交",
+      "error": "提交標籤建議失敗",
+      "alreadySuggested": "此標籤已被建議過",
+      "tooShort": "標籤至少需要2個字"
+    },
+    "tagList": {
+      "title": "建議的標籤",
+      "noSuggestions": "尚無標籤建議",
+      "approved": "已核准",
+      "pending": "審核中",
+      "loginToVote": "投票需要登入"
+    },
+    "performerForm": {
+      "title": "建議演員",
+      "loginRequired": "建議演員需要登入",
+      "placeholder": "輸入演員名稱...",
+      "submit": "建議",
+      "submitting": "提交中...",
+      "success": "演員建議已提交",
+      "error": "提交演員建議失敗",
+      "alreadySuggested": "此演員已被登錄或建議",
+      "tooShort": "名稱至少需要2個字",
+      "selectExisting": "選擇現有演員",
+      "orEnterNew": "或輸入新演員名稱"
+    },
+    "performerList": {
+      "title": "建議的演員",
+      "noSuggestions": "尚無演員建議",
+      "approved": "已核准",
+      "pending": "審核中",
+      "linkedToExisting": "已連結至現有資料",
+      "loginToVote": "投票需要登入"
+    }
+  },
+  "favoriteLists": {
+    "pageTitle": "公開列表",
+    "myLists": "我的列表",
+    "publicLists": "大家的列表",
+    "createList": "建立新列表",
+    "noLists": "沒有列表",
+    "loginRequired": "建立列表需要登入",
+    "card": {
+      "items": "{count}件",
+      "views": "{count}",
+      "likes": "{count}",
+      "private": "私人",
+      "public": "公開",
+      "edit": "編輯",
+      "delete": "刪除",
+      "deleteConfirm": "確定要刪除此列表嗎？"
+    },
+    "modal": {
+      "createTitle": "建立新列表",
+      "editTitle": "編輯列表",
+      "titleLabel": "標題",
+      "titlePlaceholder": "輸入列表名稱...",
+      "descriptionLabel": "描述（選填）",
+      "descriptionPlaceholder": "輸入列表描述...",
+      "visibilityLabel": "公開設定",
+      "public": "公開",
+      "publicDescription": "任何人都可以瀏覽和按讚",
+      "private": "私人",
+      "privateDescription": "只有自己能看到",
+      "cancel": "取消",
+      "create": "建立",
+      "save": "儲存",
+      "creating": "建立中...",
+      "saving": "儲存中..."
+    },
+    "detail": {
+      "loading": "載入中...",
+      "error": "載入列表失敗",
+      "notFound": "找不到列表",
+      "back": "返回",
+      "views": "{count}次瀏覽",
+      "likes": "{count}個讚",
+      "items": "{count}件作品",
+      "private": "私人",
+      "public": "公開",
+      "share": "分享",
+      "copied": "已複製！",
+      "emptyList": "列表中沒有作品",
+      "removeItem": "移除"
+    },
+    "addToList": {
+      "addToList": "加入列表",
+      "selectList": "選擇要加入的列表",
+      "createNew": "建立新列表",
+      "noLists": "沒有列表",
+      "added": "已加入",
+      "removed": "已移除",
+      "loading": "載入中...",
+      "newListTitle": "列表名稱",
+      "create": "建立",
+      "cancel": "取消",
+      "loginRequired": "需要登入"
+    }
   }
 }

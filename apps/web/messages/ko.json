@@ -44,6 +44,11 @@
     "newReleases": "신작 출시 배우",
     "popularActresses": "인기 배우",
     "popularTags": "인기 태그",
+    "heroTitle": "여러 사이트의 작품을 한번에 검색",
+    "heroDescription": "좋아하는 배우의 작품을 DUGA・MGS・Sokmil 등 여러 사이트에서 통합 검색",
+    "multiAspActresses": "여러 사이트에서 활동 중",
+    "multiAspDescription": "여러 사이트에서 작품이 배포되고 있는 배우입니다. 사이트를 비교하여 더 저렴하게 구매할 수 있습니다.",
+    "recommended": "추천",
     "saleProducts": "세일 중인 작품",
     "viewAllSales": "모든 세일 상품 보기",
     "saleUntil": "~{date}까지",
@@ -79,14 +84,17 @@
     "search": "검색"
   },
   "footer": {
+    "siteName": "ADULT VIEWER LAB",
     "description": "DUGA / SOKMIL / DTI를 통합하여, 헤비 시청자를 위한 배우・장르별 리뷰, 랭킹, 캠페인 속보를 제공하는 제휴 사이트.",
     "links": "링크",
     "legal": "법적 정보",
     "privacy": "개인정보 보호정책",
     "terms": "이용약관",
     "contact": "문의하기",
+    "contactDescription": "문의사항이나 요청사항은 이메일로 연락해 주세요.",
     "copyright": "© {year} Adult Viewer Lab. All rights reserved.",
-    "affiliateNotice": "이 사이트는 성인 콘텐츠의 제휴 링크를 포함합니다."
+    "affiliateNotice": "이 사이트는 성인 콘텐츠의 제휴 링크를 포함합니다.",
+    "admin": "관리 페이지"
   },
   "uncategorized": {
     "title": "미분류 작품",
@@ -103,7 +111,10 @@
     "metaDescription": "DUGA, MGS, DTI 등 모든 스트리밍 사이트의 작품을 검색합니다.",
     "description": "{count}개의 작품",
     "noProducts": "작품을 찾을 수 없습니다",
-    "viewActressListDesc": "배우별로 작품 찾기"
+    "viewActressListDesc": "배우별로 작품 찾기",
+    "loading": "로딩 중...",
+    "loadMore": "{count}개 더 보기",
+    "allLoaded": "전체 표시 ({count}개)"
   },
   "relatedProducts": {
     "title": "관련 작품",
@@ -326,7 +337,8 @@
     "saleEndsIn": "{days}일 남음",
     "urgentLastHour": "지금!",
     "urgentEndsIn": "{hours}시간 남음",
-    "urgentEndsSoon": "{hours}시간 남음"
+    "urgentEndsSoon": "{hours}시간 남음",
+    "viewSale": "세일 보기"
   },
   "imageLightbox": {
     "close": "닫기",
@@ -339,6 +351,67 @@
     "nextImage": "다음 이미지",
     "thumbnailAlt": "썸네일",
     "viewDetails": "상세보기"
+  },
+  "productImageGallery": {
+    "previousImage": "이전 이미지",
+    "nextImage": "다음 이미지",
+    "sampleImageAlt": "샘플 이미지",
+    "thumbnailAlt": "썸네일",
+    "sampleImageCount": "샘플 이미지: {count}장",
+    "tapToZoom": "탭하여 확대",
+    "close": "닫기",
+    "clickToCloseEsc": "클릭하여 닫기 / ESC 키"
+  },
+  "productVideoPlayer": {
+    "playSampleVideo": "샘플 동영상 재생",
+    "browserNotSupported": "브라우저에서 비디오 태그를 지원하지 않습니다.",
+    "videoLoadError": "동영상을 불러올 수 없습니다",
+    "securityRestriction": "원본 사이트의 보안 제한으로 인해 직접 재생이 불가능할 수 있습니다",
+    "playAtSource": "원본에서 재생",
+    "playInNewTab": "새 탭에서 재생",
+    "externalVideoTitle": "외부 사이트 동영상",
+    "externalVideoDescription": "이 동영상은 보안 제한으로 인해 임베드 재생이 불가능합니다. 새 탭에서 직접 재생할 수 있습니다.",
+    "close": "닫기",
+    "preview": "프리뷰",
+    "trailer": "예고편",
+    "streaming": "스트리밍",
+    "download": "다운로드",
+    "sampleVideoCount": "샘플 동영상: {count}개"
+  },
+  "priceComparison": {
+    "title": "가격 비교",
+    "subscriptionOnly": "월정액 회원 전용",
+    "lowestPrice": "최저가",
+    "outOfStock": "품절",
+    "buy": "구매하기",
+    "priceDisclaimer": "※ 가격은 변동될 수 있습니다. 최신 가격은 각 사이트에서 확인해 주세요."
+  },
+  "pwaInstaller": {
+    "title": "앱 설치",
+    "description": "홈 화면에 추가하면 더 편리하게 이용할 수 있습니다.",
+    "install": "설치",
+    "later": "나중에",
+    "close": "닫기"
+  },
+  "rankingWidget": {
+    "popularProducts": "인기 작품 랭킹",
+    "popularActresses": "인기 배우 랭킹",
+    "daily": "24시간",
+    "weekly": "주간",
+    "monthly": "월간",
+    "loading": "로딩 중...",
+    "noData": "아직 데이터가 없습니다",
+    "views": "조회"
+  },
+  "actressCard": {
+    "releaseCount": "출연 수",
+    "trend": "트렌드",
+    "fanScore": "팬 점수",
+    "videos": "편"
+  },
+  "favoriteButton": {
+    "addToFavorites": "즐겨찾기에 추가",
+    "removeFromFavorites": "즐겨찾기에서 제거"
   },
   "categories": {
     "title": "장르・카테고리 목록",
@@ -358,6 +431,7 @@
   },
   "stickyCta": {
     "buyAt": "{provider}에서 보기",
+    "buyAtSale": "{provider}에서 할인 구매 -{discount}%",
     "urgentHours": "{hours}시간 남음!",
     "endsToday": "오늘 마감!",
     "endsSoon": "{days}일 남음"
@@ -384,5 +458,135 @@
     "addedToDiary": "시청 일기에 추가됨",
     "removedFromDiary": "시청 일기에서 삭제됨",
     "viewCount": "{count}회 시청"
+  },
+  "userContributions": {
+    "sectionTitle": "사용자 기여",
+    "reviewForm": {
+      "title": "리뷰 작성",
+      "loginRequired": "리뷰를 작성하려면 로그인이 필요합니다",
+      "ratingLabel": "평점",
+      "reviewTitleLabel": "제목",
+      "reviewTitlePlaceholder": "리뷰 제목 (선택사항)",
+      "contentLabel": "리뷰 내용",
+      "contentPlaceholder": "이 작품에 대한 감상을 작성해 주세요...",
+      "submit": "게시",
+      "submitting": "게시 중...",
+      "success": "리뷰가 게시되었습니다",
+      "error": "리뷰 게시에 실패했습니다",
+      "alreadyReviewed": "이 작품에 이미 리뷰를 작성했습니다",
+      "minLength": "리뷰는 10자 이상 입력해 주세요"
+    },
+    "reviewList": {
+      "title": "사용자 리뷰",
+      "noReviews": "아직 리뷰가 없습니다",
+      "helpful": "도움이 됨",
+      "notHelpful": "도움이 안 됨",
+      "helpfulCount": "{count}명이 도움이 됐다고 함",
+      "loading": "로딩 중...",
+      "error": "리뷰를 불러오는 데 실패했습니다"
+    },
+    "tagForm": {
+      "title": "태그 제안",
+      "loginRequired": "태그를 제안하려면 로그인이 필요합니다",
+      "placeholder": "새로운 태그명 입력...",
+      "submit": "제안",
+      "submitting": "제출 중...",
+      "success": "태그가 제안되었습니다",
+      "error": "태그 제안에 실패했습니다",
+      "alreadySuggested": "이 태그는 이미 제안되었습니다",
+      "tooShort": "태그는 2자 이상 입력해 주세요"
+    },
+    "tagList": {
+      "title": "제안된 태그",
+      "noSuggestions": "아직 제안된 태그가 없습니다",
+      "approved": "승인됨",
+      "pending": "검토 중",
+      "loginToVote": "투표하려면 로그인이 필요합니다"
+    },
+    "performerForm": {
+      "title": "출연자 제안",
+      "loginRequired": "출연자를 제안하려면 로그인이 필요합니다",
+      "placeholder": "출연자명 입력...",
+      "submit": "제안",
+      "submitting": "제출 중...",
+      "success": "출연자가 제안되었습니다",
+      "error": "출연자 제안에 실패했습니다",
+      "alreadySuggested": "이 출연자는 이미 등록되었거나 제안되었습니다",
+      "tooShort": "이름은 2자 이상 입력해 주세요",
+      "selectExisting": "기존 출연자 선택",
+      "orEnterNew": "또는 새로운 출연자명 입력"
+    },
+    "performerList": {
+      "title": "제안된 출연자",
+      "noSuggestions": "아직 제안된 출연자가 없습니다",
+      "approved": "승인됨",
+      "pending": "검토 중",
+      "linkedToExisting": "기존 데이터와 연결됨",
+      "loginToVote": "투표하려면 로그인이 필요합니다"
+    }
+  },
+  "favoriteLists": {
+    "pageTitle": "공개 리스트",
+    "myLists": "내 리스트",
+    "publicLists": "모든 리스트",
+    "createList": "새 리스트 만들기",
+    "noLists": "리스트가 없습니다",
+    "loginRequired": "리스트를 만들려면 로그인이 필요합니다",
+    "card": {
+      "items": "{count}개",
+      "views": "{count}",
+      "likes": "{count}",
+      "private": "비공개",
+      "public": "공개",
+      "edit": "편집",
+      "delete": "삭제",
+      "deleteConfirm": "이 리스트를 삭제하시겠습니까?"
+    },
+    "modal": {
+      "createTitle": "새 리스트 만들기",
+      "editTitle": "리스트 편집",
+      "titleLabel": "제목",
+      "titlePlaceholder": "리스트명 입력...",
+      "descriptionLabel": "설명 (선택사항)",
+      "descriptionPlaceholder": "리스트 설명 입력...",
+      "visibilityLabel": "공개 설정",
+      "public": "공개",
+      "publicDescription": "누구나 볼 수 있고 좋아요를 할 수 있습니다",
+      "private": "비공개",
+      "privateDescription": "본인만 볼 수 있습니다",
+      "cancel": "취소",
+      "create": "만들기",
+      "save": "저장",
+      "creating": "만드는 중...",
+      "saving": "저장 중..."
+    },
+    "detail": {
+      "loading": "로딩 중...",
+      "error": "리스트를 불러오는 데 실패했습니다",
+      "notFound": "리스트를 찾을 수 없습니다",
+      "back": "뒤로",
+      "views": "{count}회 조회",
+      "likes": "{count}개 좋아요",
+      "items": "{count}개 작품",
+      "private": "비공개",
+      "public": "공개",
+      "share": "공유",
+      "copied": "복사됨!",
+      "emptyList": "리스트에 작품이 없습니다",
+      "removeItem": "삭제"
+    },
+    "addToList": {
+      "addToList": "리스트에 추가",
+      "selectList": "추가할 리스트 선택",
+      "createNew": "새 리스트 만들기",
+      "noLists": "리스트가 없습니다",
+      "added": "추가됨",
+      "removed": "삭제됨",
+      "loading": "로딩 중...",
+      "newListTitle": "리스트명",
+      "create": "만들기",
+      "cancel": "취소",
+      "loginRequired": "로그인이 필요합니다"
+    }
   }
 }
