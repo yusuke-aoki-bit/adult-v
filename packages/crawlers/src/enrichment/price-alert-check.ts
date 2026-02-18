@@ -118,7 +118,7 @@ async function main() {
       INNER JOIN product_sources ps ON ps.product_id = p.id
       LEFT JOIN product_prices pp ON pp.product_source_id = ps.id
         AND pp.price_type = 'download'
-      WHERE p.id = ANY(${productIds})
+      WHERE p.id = ANY(ARRAY[${sql.join(productIds.map(id => sql`${id}`), sql`, `)}]::int[])
     `);
 
     // 商品ごとに最安値を取得
@@ -142,7 +142,7 @@ async function main() {
         endpoint,
         keys
       FROM push_subscriptions
-      WHERE id = ANY(${subscriptionIds})
+      WHERE id = ANY(ARRAY[${sql.join(subscriptionIds.map(id => sql`${id}`), sql`, `)}]::int[])
     `);
 
     const subscriptionById = new Map<number, Subscription>();

@@ -97,7 +97,7 @@ export function createUserPerformerSuggestionsGetHandler(deps: UserPerformerSugg
             deps.and(
               deps.eq(votesTable.voterId, userId),
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (deps.sql as any)`${votesTable.suggestionId} IN (${suggestionIds.join(',')})`
+              (deps.sql as any)`${votesTable.suggestionId} IN (${(deps.sql as any).join(suggestionIds.map((id: number) => (deps.sql as any)`${id}`), (deps.sql as any)`, `)})`
             )
           )
           .orderBy(deps.desc(votesTable.createdAt)) as { suggestionId: number; voteType: string }[];

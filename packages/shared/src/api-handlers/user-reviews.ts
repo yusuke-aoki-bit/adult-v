@@ -100,7 +100,7 @@ export function createUserReviewsGetHandler(deps: UserReviewsHandlerDeps) {
             deps.and(
               deps.eq(votesTable.voterId, userId),
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (deps.sql as any)`${votesTable.reviewId} IN (${reviewIds.join(',')})`
+              (deps.sql as any)`${votesTable.reviewId} IN (${(deps.sql as any).join(reviewIds.map((id: number) => (deps.sql as any)`${id}`), (deps.sql as any)`, `)})`
             )
           )
           .orderBy(deps.desc(votesTable.createdAt)) as { reviewId: number; voteType: string }[];

@@ -1,7 +1,7 @@
 runConfig:
   runtime: nodejs20
   concurrency: 100
-  minInstances: 0
+  minInstances: 1
   maxInstances: 2
   cpu: 1
   memoryMiB: 1536

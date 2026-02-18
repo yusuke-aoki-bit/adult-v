@@ -6,12 +6,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyCronRequest, unauthorizedResponse } from '@/lib/cron-auth';
 import { getDb } from '@/lib/db';
 import { createRunMigrationHandler } from '@adult-v/shared/cron-handlers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  if (!await verifyCronRequest(request)) {
+    return unauthorizedResponse();
+  }
+
   const migrationName = request.nextUrl.searchParams.get('migration');
 
   if (!migrationName) {

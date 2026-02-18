@@ -3,7 +3,8 @@
  * 主要なクローラージョブの実行状況を取得
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyCronRequest, unauthorizedResponse } from '@/lib/cron-auth';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -71,7 +72,11 @@ export interface SchedulerStatus {
 const PROJECT_ID = 'adult-v';
 const REGION = 'asia-northeast1';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!await verifyCronRequest(request)) {
+    return unauthorizedResponse();
+  }
+
   try {
     // gcloud コマンドで Cloud Run Jobs の詳細情報を取得
     // JSONフォーマットではcompletionTimestamp, creationTimestampが使われる
