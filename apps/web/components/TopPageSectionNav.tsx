@@ -19,6 +19,7 @@ const translations = {
     // 下部セクション
     recommendations: 'おすすめ',
     weeklyHighlights: '今週の注目',
+    news: 'ニュース',
     trending: 'トレンド分析',
     allProducts: '全作品一覧',
     uncategorized: '未整理作品',
@@ -29,6 +30,7 @@ const translations = {
     actresses: 'Actresses',
     recommendations: 'For You',
     weeklyHighlights: 'This Week',
+    news: 'News',
     trending: 'Trending',
     allProducts: 'All Products',
     uncategorized: 'Uncategorized',
@@ -39,6 +41,7 @@ const translations = {
     actresses: '女优',
     recommendations: '推荐',
     weeklyHighlights: '本周热门',
+    news: '新闻',
     trending: '趋势',
     allProducts: '全部作品',
     uncategorized: '未分类',
@@ -49,6 +52,7 @@ const translations = {
     actresses: '배우',
     recommendations: '추천',
     weeklyHighlights: '이번 주',
+    news: '뉴스',
     trending: '트렌드',
     allProducts: '전체 작품',
     uncategorized: '미분류',
@@ -83,6 +87,7 @@ export default function TopPageSectionNav({
   }
 
   sections.push({ id: 'weekly-highlights', label: t.weeklyHighlights });
+  sections.push({ id: 'news', label: t.news });
   sections.push({ id: 'trending', label: t.trending });
   sections.push({ id: 'all-products', label: t.allProducts });
 

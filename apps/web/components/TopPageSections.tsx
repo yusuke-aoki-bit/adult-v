@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, ExternalLink, Star, Users, Gem, Vote, List, Search, Cake, Trophy, Play } from 'lucide-react';
+import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, ExternalLink, Star, Users, Gem, Vote, List, Search, Cake, Trophy, Play, Newspaper } from 'lucide-react';
 import { TopPageMenuSection, ProductCardBase, ActressCardBase, HomeSectionManager } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { useRecentlyViewed, useHomeSections } from '@adult-v/shared/hooks';
@@ -547,6 +547,107 @@ function TrendingContent({ locale }: { locale: string }) {
   );
 }
 
+// カテゴリバッジのスタイル
+const CATEGORY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  new_releases: { bg: 'bg-blue-600', text: 'text-blue-100', label: '新着' },
+  sales: { bg: 'bg-red-600', text: 'text-red-100', label: 'セール' },
+  ai_analysis: { bg: 'bg-purple-600', text: 'text-purple-100', label: '分析' },
+  industry: { bg: 'bg-green-600', text: 'text-green-100', label: '業界' },
+  site_update: { bg: 'bg-gray-600', text: 'text-gray-100', label: 'お知らせ' },
+};
+
+// ニュースコンテンツ
+function NewsContent({ locale }: { locale: string }) {
+  const [articles, setArticles] = useState<Array<{
+    id: number;
+    slug: string;
+    category: string;
+    title: string;
+    excerpt: string | null;
+    featured: boolean;
+    published_at: string;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await fetch('/api/news?mode=latest&limit=5');
+        if (response.ok) {
+          const data = await response.json();
+          setArticles(data.articles || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch news:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNews();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-16 bg-gray-700 rounded-lg animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (articles.length === 0) {
+    return <p className="text-gray-400 text-sm">ニュースはまだありません</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {articles.map((article) => {
+        const style = CATEGORY_STYLES[article.category] || CATEGORY_STYLES['site_update'];
+        const publishedDate = new Date(article.published_at).toLocaleDateString('ja-JP', {
+          month: 'short',
+          day: 'numeric',
+        });
+
+        return (
+          <a
+            key={article.id}
+            href={localizedHref(`/news/${article.slug}`, locale)}
+            className={`block p-3 rounded-lg transition-colors ${
+              article.featured
+                ? 'bg-gradient-to-r from-gray-700/80 to-gray-700/40 border border-yellow-600/30 hover:border-yellow-500/50'
+                : 'bg-gray-700/50 hover:bg-gray-700'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${style.bg} ${style.text}`}>
+                    {style.label}
+                  </span>
+                  <span className="text-xs text-gray-400">{publishedDate}</span>
+                  {article.featured && (
+                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                  )}
+                </div>
+                <h4 className="text-sm font-medium text-white line-clamp-1">
+                  {article.title}
+                </h4>
+                {article.excerpt && (
+                  <p className="text-xs text-gray-400 line-clamp-2 mt-1">
+                    {article.excerpt}
+                  </p>
+                )}
+              </div>
+            </div>
+          </a>
+        );
+      })}
+      <MoreLink href="/news" label="ニュース一覧を見る" locale={locale} />
+    </div>
+  );
+}
+
 /**
  * トップページ上部のセクション群（女優一覧の前）
  * - セール中
@@ -662,6 +763,22 @@ export function TopPageLowerSections({
             defaultOpen={true}
           >
             <WeeklyHighlightsContent locale={locale} />
+          </TopPageMenuSection>
+        </div>
+      )}
+
+      {/* ニュース */}
+      {isSectionVisible('news') && (
+        <div id="news" className="scroll-mt-20">
+          <TopPageMenuSection
+            type="accordion"
+            icon={<Newspaper className="w-5 h-5" />}
+            title="ニュース"
+            subtitle="最新情報・セール・トレンド"
+            theme="dark"
+            defaultOpen={true}
+          >
+            <NewsContent locale={locale} />
           </TopPageMenuSection>
         </div>
       )}

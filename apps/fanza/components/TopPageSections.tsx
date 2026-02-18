@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock } from 'lucide-react';
+import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, Newspaper, Star, ExternalLink } from 'lucide-react';
 import { TopPageMenuSection, ProductCardBase, ActressCardBase, HomeSectionManager } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { useRecentlyViewed, useHomeSections } from '@adult-v/shared/hooks';
@@ -567,6 +567,105 @@ export function TopPageUpperSections({
   );
 }
 
+// カテゴリバッジのスタイル
+const NEWS_CATEGORY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  new_releases: { bg: 'bg-blue-100 text-blue-800', text: '', label: '新着' },
+  sales: { bg: 'bg-red-100 text-red-800', text: '', label: 'セール' },
+  ai_analysis: { bg: 'bg-purple-100 text-purple-800', text: '', label: '分析' },
+  industry: { bg: 'bg-green-100 text-green-800', text: '', label: '業界' },
+  site_update: { bg: 'bg-gray-100 text-gray-800', text: '', label: 'お知らせ' },
+};
+
+// ニュースコンテンツ
+function NewsContent({ locale }: { locale: string }) {
+  const [articles, setArticles] = useState<Array<{
+    id: number;
+    slug: string;
+    category: string;
+    title: string;
+    excerpt: string | null;
+    featured: boolean;
+    published_at: string;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await fetch('/api/news?mode=latest&limit=5');
+        if (response.ok) {
+          const data = await response.json();
+          setArticles(data.articles || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch news:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNews();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (articles.length === 0) {
+    return <p className="text-gray-500 text-sm">ニュースはまだありません</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {articles.map((article) => {
+        const style = NEWS_CATEGORY_STYLES[article.category] || NEWS_CATEGORY_STYLES['site_update'];
+        const publishedDate = new Date(article.published_at).toLocaleDateString('ja-JP', {
+          month: 'short',
+          day: 'numeric',
+        });
+
+        return (
+          <div
+            key={article.id}
+            className={`block p-3 rounded-lg ${
+              article.featured
+                ? 'bg-yellow-50 border border-yellow-200'
+                : 'bg-gray-50'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${style.bg}`}>
+                    {style.label}
+                  </span>
+                  <span className="text-xs text-gray-400">{publishedDate}</span>
+                  {article.featured && (
+                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                  )}
+                </div>
+                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
+                  {article.title}
+                </h4>
+                {article.excerpt && (
+                  <p className="text-xs text-gray-500 line-clamp-2 mt-1">
+                    {article.excerpt}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /**
  * トップページ下部のセクション群（女優一覧の後）
  * - あなたへのおすすめ
@@ -617,6 +716,22 @@ export function TopPageLowerSections({
             defaultOpen={false}
           >
             <WeeklyHighlightsContent locale={locale} />
+          </TopPageMenuSection>
+        </div>
+      )}
+
+      {/* ニュース */}
+      {isSectionVisible('news') && (
+        <div id="news" className="scroll-mt-20">
+          <TopPageMenuSection
+            type="accordion"
+            icon={<Newspaper className="w-5 h-5" />}
+            title="ニュース"
+            subtitle="最新情報・セール・トレンド"
+            theme="light"
+            defaultOpen={false}
+          >
+            <NewsContent locale={locale} />
           </TopPageMenuSection>
         </div>
       )}

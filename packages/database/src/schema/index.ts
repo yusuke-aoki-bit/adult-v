@@ -148,3 +148,7 @@ export type {
   VideoTimestamp,
   NewVideoTimestamp,
 } from './analytics';
+
+// News
+export { newsArticles } from './news';
+export type { NewsArticle, NewNewsArticle } from './news';

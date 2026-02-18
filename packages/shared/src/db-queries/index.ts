@@ -187,6 +187,12 @@ export {
   type MakerInfo as AppMakerInfo,
 } from './create-app-queries';
 
+export {
+  createNewsQueries,
+  type NewsQueryDeps,
+  type NewsArticleRow,
+} from './news-queries';
+
 // 型定義
 export type {
   Column,

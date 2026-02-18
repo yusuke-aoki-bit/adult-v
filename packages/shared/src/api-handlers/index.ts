@@ -145,3 +145,7 @@ export {
   createUserCorrectionsReviewHandler,
   createUserCorrectionsDeleteHandler,
 } from './user-corrections';
+
+// News handlers
+export type { NewsHandlerDeps } from './news';
+export { createNewsHandler, newsRevalidate } from './news';

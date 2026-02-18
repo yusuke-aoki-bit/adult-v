@@ -58,3 +58,6 @@ export { createProcessRawDataHandler } from './process-raw-data';
 
 // Migration handler
 export { createRunMigrationHandler } from './run-migration';
+
+// News generation handler
+export { createGenerateNewsHandler } from './generate-news';

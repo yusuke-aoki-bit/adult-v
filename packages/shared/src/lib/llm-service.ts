@@ -1406,6 +1406,89 @@ export async function moderatePublicList(params: {
 }
 
 // =============================================================================
+// 14. ニュース記事生成
+// =============================================================================
+
+export interface GeneratedNewsContent {
+  title: string;
+  excerpt: string;
+  content: string;
+}
+
+/**
+ * ニュース記事を自動生成
+ */
+export async function generateNewsContent(params: {
+  type: 'new_releases' | 'sales' | 'ai_analysis';
+  data: Record<string, unknown>;
+}): Promise<GeneratedNewsContent | null> {
+  const { type, data } = params;
+
+  const systemInstruction = `あなたはアダルトビデオ情報サイトのニュースライターです。
+与えられたデータを元に、ユーザーが興味を持つニュース記事を日本語で作成してください。
+客観的かつ情報量の多い記事を心がけてください。`;
+
+  let prompt: string;
+
+  if (type === 'new_releases') {
+    prompt = `【本日の新着データ】
+- 新着作品数: ${data['totalCount']}件
+  - FANZA: ${data['fanzaCount']}件
+  - MGS: ${data['mgsCount']}件
+  - DUGA: ${data['dugaCount']}件
+  - SOKMIL: ${data['sokmilCount']}件
+  - DTI（一本道・カリビアンコム等）: ${data['dtiCount']}件
+  - FC2: ${data['fc2Count']}件
+- 注目の新着: ${JSON.stringify(data['topProducts'])}
+
+上記データを元に「今日の新着まとめ」ニュース記事を作成してください。
+
+【出力形式】JSON:
+{
+  "title": "記事タイトル（40文字以内、日付を含む）",
+  "excerpt": "要約（150文字程度）",
+  "content": "本文（Markdown形式、300-500文字。ASP別の内訳、注目作品の紹介を含む）"
+}`;
+  } else if (type === 'sales') {
+    prompt = `【本日のセールデータ】
+- 新規開始セール数: ${data['saleCount']}件
+- 最大割引率: ${data['maxDiscount']}%
+- 最も近いセール終了日: ${data['earliestEnd']}
+
+上記データを元に「セール速報」ニュース記事を作成してください。
+
+【出力形式】JSON:
+{
+  "title": "記事タイトル（40文字以内）",
+  "excerpt": "要約（150文字程度、割引率やセール数を含む）",
+  "content": "本文（Markdown形式、200-400文字。セールの概要、お得度を伝える）"
+}`;
+  } else {
+    // ai_analysis
+    prompt = `【週間トレンドデータ】
+- 急上昇女優ランキング: ${JSON.stringify(data['trendingPerformers'])}
+- 週間統計: ${JSON.stringify(data['weeklyStats'])}
+
+上記データを元に「週間トレンド分析」ニュース記事を作成してください。
+
+【出力形式】JSON:
+{
+  "title": "記事タイトル（40文字以内、「週間」を含む）",
+  "excerpt": "要約（150文字程度）",
+  "content": "本文（Markdown形式、500-800文字。急上昇女優の分析、ジャンル動向、今後の予測を含む）"
+}`;
+  }
+
+  const response = await callGemini(prompt, {
+    temperature: 0.7,
+    maxOutputTokens: 2048,
+    systemInstruction,
+  });
+
+  return parseJsonResponse<GeneratedNewsContent>(response);
+}
+
+// =============================================================================
 // エクスポート
 // =============================================================================
 
@@ -1430,6 +1513,8 @@ export const LLMService = {
   moderateTagSuggestion,
   moderateCorrection,
   moderatePublicList,
+  // ニュース生成
+  generateNewsContent,
 };
 
 export default LLMService;
