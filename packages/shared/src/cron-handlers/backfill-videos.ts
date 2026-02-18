@@ -133,6 +133,7 @@ export function createBackfillVideosHandler(deps: BackfillVideosHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     const stats: BackfillStats = {
       checked: 0,
@@ -183,6 +184,7 @@ export function createBackfillVideosHandler(deps: BackfillVideosHandlerDeps) {
       const videoInserts: { productId: number; aspName: string; videoUrl: string; normalizedId: string }[] = [];
 
       await Promise.all(products.map(product => concurrencyLimit(async () => {
+        if (Date.now() - startTime > TIME_LIMIT) return;
         stats.checked++;
 
         try {

@@ -58,7 +58,9 @@ interface SeoEnhanceHandlerDeps {
 async function requestIndexingForProducts(
   db: ReturnType<SeoEnhanceHandlerDeps['getDb']>,
   limit: number,
-  deps: SeoEnhanceHandlerDeps
+  deps: SeoEnhanceHandlerDeps,
+  startTime?: number,
+  timeLimit?: number
 ): Promise<{ stats: IndexingStats; results: any[]; warning?: string }> {
   const stats: IndexingStats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
   const results: any[] = [];
@@ -83,6 +85,10 @@ async function requestIndexingForProducts(
   }>;
 
   for (const product of products) {
+    if (startTime && timeLimit && Date.now() - startTime > timeLimit) {
+      console.log(`[seo-enhance] Time limit reached, processed ${stats.totalProcessed}/${products.length}`);
+      break;
+    }
     stats.totalProcessed++;
 
     // 数値IDベースのURL（サイトマップと同じ形式）
@@ -382,6 +388,7 @@ export function createSeoEnhanceHandler(deps: SeoEnhanceHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
     const siteBaseUrl = deps.siteBaseUrl || process.env['NEXT_PUBLIC_SITE_URL'] || 'https://adult-v.com';
 
     try {
@@ -396,7 +403,7 @@ export function createSeoEnhanceHandler(deps: SeoEnhanceHandlerDeps) {
 
       switch (type) {
         case 'indexing':
-          result = await requestIndexingForProducts(db, limit, deps);
+          result = await requestIndexingForProducts(db, limit, deps, startTime, TIME_LIMIT);
           break;
 
         case 'analytics':

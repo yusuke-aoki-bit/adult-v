@@ -234,6 +234,7 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     const stats: BackfillStats = {
       checked: 0,
@@ -281,6 +282,7 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
       const concurrencyLimit = pLimit(CONCURRENCY);
 
       const processProduct = async (product: ProductToBackfill) => {
+        if (Date.now() - startTime > TIME_LIMIT) return;
         stats.checked++;
 
         try {

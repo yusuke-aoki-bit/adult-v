@@ -149,6 +149,7 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
     const stats: CrawlStats = { totalFetched: 0, newProducts: 0, updatedProducts: 0, errors: 0, rawDataSaved: 0, videosAdded: 0 };
 
     try {
@@ -166,6 +167,10 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
       const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
 
       for (const itemId of productIds.slice(0, limit)) {
+        if (Date.now() - startTime > TIME_LIMIT) {
+          console.log(`[crawl-sokmil-scrape] Time limit reached, processed ${stats.totalFetched}/${limit}`);
+          break;
+        }
         const product = await parseDetailPage(itemId);
         if (!product) { stats.errors++; continue; }
 

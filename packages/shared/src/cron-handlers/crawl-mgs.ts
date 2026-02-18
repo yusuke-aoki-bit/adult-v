@@ -179,6 +179,7 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     const stats: CrawlStats = {
       totalFetched: 0,
@@ -214,6 +215,10 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
       const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
 
       for (const productUrl of productUrls.slice(0, limit)) {
+        if (Date.now() - startTime > TIME_LIMIT) {
+          console.log(`[crawl-mgs] Time limit reached, processed ${stats.totalFetched}/${limit}`);
+          break;
+        }
         try {
           // 詳細ページをパース
           const product = await parseMgsDetailPage(productUrl);

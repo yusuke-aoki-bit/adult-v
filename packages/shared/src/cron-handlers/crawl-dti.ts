@@ -341,6 +341,7 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     const stats: CrawlStats = {
       totalFetched: 0,
@@ -399,7 +400,7 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
       const allPerformerNames = new Set<string>();
       const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
 
-      while (stats.totalFetched < limit) {
+      while (stats.totalFetched < limit && Date.now() - startTime < TIME_LIMIT) {
         if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) {
           console.log(`[crawl-dti] Stopping: ${MAX_CONSECUTIVE_NOT_FOUND} consecutive not found`);
           break;

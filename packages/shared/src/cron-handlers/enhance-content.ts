@@ -64,7 +64,9 @@ interface EnhanceContentHandlerDeps {
 async function enhanceWithVisionAPI(
   db: ReturnType<EnhanceContentHandlerDeps['getDb']>,
   limit: number,
-  deps: EnhanceContentHandlerDeps
+  deps: EnhanceContentHandlerDeps,
+  startTime?: number,
+  timeLimit?: number
 ): Promise<{ stats: Stats; results: any[] }> {
   const stats: Stats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
   const results: any[] = [];
@@ -90,6 +92,7 @@ async function enhanceWithVisionAPI(
   const concurrencyLimit = pLimit(3);
 
   await Promise.all(products.map(product => concurrencyLimit(async () => {
+    if (startTime && timeLimit && Date.now() - startTime > timeLimit) return;
     stats.totalProcessed++;
 
     try {
@@ -147,7 +150,9 @@ async function enhanceWithVisionAPI(
 async function enhanceWithTranslation(
   db: ReturnType<EnhanceContentHandlerDeps['getDb']>,
   limit: number,
-  deps: EnhanceContentHandlerDeps
+  deps: EnhanceContentHandlerDeps,
+  startTime?: number,
+  timeLimit?: number
 ): Promise<{ stats: Stats; results: any[] }> {
   const stats: Stats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
   const results: any[] = [];
@@ -174,6 +179,7 @@ async function enhanceWithTranslation(
   const concurrencyLimit = pLimit(5);
 
   await Promise.all(products.map(product => concurrencyLimit(async () => {
+    if (startTime && timeLimit && Date.now() - startTime > timeLimit) return;
     stats.totalProcessed++;
 
     try {
@@ -235,7 +241,9 @@ async function enhanceWithTranslation(
 async function enhanceWithYouTube(
   db: ReturnType<EnhanceContentHandlerDeps['getDb']>,
   limit: number,
-  deps: EnhanceContentHandlerDeps
+  deps: EnhanceContentHandlerDeps,
+  startTime?: number,
+  timeLimit?: number
 ): Promise<{ stats: Stats; results: any[] }> {
   const stats: Stats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
   const results: any[] = [];
@@ -258,6 +266,7 @@ async function enhanceWithYouTube(
   const concurrencyLimit = pLimit(3);
 
   await Promise.all(products.map(product => concurrencyLimit(async () => {
+    if (startTime && timeLimit && Date.now() - startTime > timeLimit) return;
     stats.totalProcessed++;
 
     try {
@@ -333,6 +342,7 @@ export function createEnhanceContentHandler(deps: EnhanceContentHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
 
     try {
       const url = new URL(request.url);
@@ -352,7 +362,7 @@ export function createEnhanceContentHandler(deps: EnhanceContentHandlerDeps) {
               config: apiConfig,
             }, { status: 400 });
           }
-          result = await enhanceWithVisionAPI(db, limit, deps);
+          result = await enhanceWithVisionAPI(db, limit, deps, startTime, TIME_LIMIT);
           break;
 
         case 'translate':
@@ -363,7 +373,7 @@ export function createEnhanceContentHandler(deps: EnhanceContentHandlerDeps) {
               config: apiConfig,
             }, { status: 400 });
           }
-          result = await enhanceWithTranslation(db, limit, deps);
+          result = await enhanceWithTranslation(db, limit, deps, startTime, TIME_LIMIT);
           break;
 
         case 'youtube':
@@ -374,7 +384,7 @@ export function createEnhanceContentHandler(deps: EnhanceContentHandlerDeps) {
               config: apiConfig,
             }, { status: 400 });
           }
-          result = await enhanceWithYouTube(db, limit, deps);
+          result = await enhanceWithYouTube(db, limit, deps, startTime, TIME_LIMIT);
           break;
 
         default:
