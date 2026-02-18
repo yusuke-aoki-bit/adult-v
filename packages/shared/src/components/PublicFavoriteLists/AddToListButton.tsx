@@ -53,11 +53,13 @@ export function AddToListButton({
   const fetchLists = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/favorite-lists?myLists=true&userId=${userId}`);
+      const response = await fetch(`/api/favorite-lists?myLists=true&userId=${userId}&productId=${productId}`);
       if (response.ok) {
         const data = await response.json();
         setLists(data.lists || []);
-        // TODO: Check which lists contain this product
+        if (data.containingListIds) {
+          setProductInLists(new Set(data.containingListIds));
+        }
       }
     } catch {
       console.error('Failed to fetch lists');

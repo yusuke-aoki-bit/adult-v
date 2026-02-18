@@ -59,6 +59,7 @@ function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 15
 
 /** リストページにアクセスしてtermid cookieを取得 */
 async function acquireSessionCookie(): Promise<string | null> {
+  // 戦略1: redirect: 'manual' でSet-Cookieを直接取得
   try {
     const response = await fetchWithTimeout(LIST_PAGE_URL, {
       headers: COMMON_HEADERS,
@@ -66,14 +67,55 @@ async function acquireSessionCookie(): Promise<string | null> {
     });
     const setCookie = response.headers.get('set-cookie') || '';
     const match = setCookie.match(/termid=([^;]+)/);
-    if (match?.[1]) return `termid=${match[1]}`;
-    // フォローリダイレクト後のcookieも試行
+    if (match?.[1]) {
+      console.log('[crawl-japanska] Cookie acquired via manual redirect');
+      return `termid=${match[1]}`;
+    }
     const body = await response.text();
-    void body; // consume
-    return null;
-  } catch {
-    return null;
+    void body;
+    console.warn(`[crawl-japanska] Strategy 1 failed: status=${response.status}, set-cookie=${setCookie ? 'present' : 'empty'}`);
+  } catch (error) {
+    console.warn(`[crawl-japanska] Strategy 1 error: ${error instanceof Error ? error.message : 'unknown'}`);
   }
+
+  // 戦略2: redirect: 'follow' でリダイレクト後のcookieを取得
+  try {
+    const response = await fetchWithTimeout(LIST_PAGE_URL, {
+      headers: COMMON_HEADERS,
+      redirect: 'follow',
+    });
+    const setCookie = response.headers.get('set-cookie') || '';
+    const match = setCookie.match(/termid=([^;]+)/);
+    if (match?.[1]) {
+      console.log('[crawl-japanska] Cookie acquired via follow redirect');
+      return `termid=${match[1]}`;
+    }
+    const body = await response.text();
+    void body;
+    console.warn(`[crawl-japanska] Strategy 2 failed: status=${response.status}, url=${response.url}`);
+  } catch (error) {
+    console.warn(`[crawl-japanska] Strategy 2 error: ${error instanceof Error ? error.message : 'unknown'}`);
+  }
+
+  // 戦略3: トップページから取得を試行
+  try {
+    const response = await fetchWithTimeout('https://www.japanska-xxx.com/', {
+      headers: COMMON_HEADERS,
+      redirect: 'manual',
+    });
+    const setCookie = response.headers.get('set-cookie') || '';
+    const match = setCookie.match(/termid=([^;]+)/);
+    if (match?.[1]) {
+      console.log('[crawl-japanska] Cookie acquired via top page');
+      return `termid=${match[1]}`;
+    }
+    console.warn(`[crawl-japanska] Strategy 3 failed: status=${response.status}`);
+  } catch (error) {
+    console.warn(`[crawl-japanska] Strategy 3 error: ${error instanceof Error ? error.message : 'unknown'}`);
+  }
+
+  console.error('[crawl-japanska] All cookie acquisition strategies failed');
+  return null;
 }
 
 async function parseDetailPage(movieId: string, cookie?: string): Promise<JapanskaProduct | null> {

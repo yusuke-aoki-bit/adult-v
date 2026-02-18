@@ -236,8 +236,7 @@ export type { StickyCtaBaseProps } from './StickyCta';
 export { SkipLink } from './SkipLink';
 
 // Virtual scroll components
-// TODO: Enable after fixing build issues
-// export { VirtualProductGridBase } from './VirtualProductGrid';
+export { VirtualProductGridBase } from './VirtualProductGrid';
 
 // Mobile UX components
 export { default as SwipeableCarousel } from './SwipeableCarousel';

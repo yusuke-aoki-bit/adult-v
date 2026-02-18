@@ -81,8 +81,14 @@ adult-v-*.json
 
 # Temporary files
 tmp/
+tmpclaude-*
 test-results/
 playwright-report/
+
+# Local dev scripts with credentials
+scripts/asp-coverage.mjs
+scripts/crawl-status-report.mjs
+scripts/batch-embeddings.sh
 
 # Debug files
 *.log
