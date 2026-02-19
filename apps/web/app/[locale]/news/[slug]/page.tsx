@@ -12,38 +12,42 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
-  const { locale, slug } = await params;
-  const article = await getNewsBySlug(slug);
+  try {
+    const { locale, slug } = await params;
+    const article = await getNewsBySlug(slug);
 
-  if (!article) {
-    return { title: 'Not Found' };
-  }
+    if (!article) {
+      return { title: 'Not Found' };
+    }
 
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
+    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
-  const metadata = generateBaseMetadata(
-    article.title,
-    article.excerpt || article.title,
-    undefined,
-    localizedHref(`/news/${slug}`, locale),
-    undefined,
-    locale,
-  );
+    const metadata = generateBaseMetadata(
+      article.title,
+      article.excerpt || article.title,
+      undefined,
+      localizedHref(`/news/${slug}`, locale),
+      undefined,
+      locale,
+    );
 
-  return {
-    ...metadata,
-    alternates: {
-      canonical: `${baseUrl}/news/${slug}`,
-      languages: {
-        'ja': `${baseUrl}/news/${slug}`,
-        'en': `${baseUrl}/news/${slug}?hl=en`,
-        'zh': `${baseUrl}/news/${slug}?hl=zh`,
-        'zh-TW': `${baseUrl}/news/${slug}?hl=zh-TW`,
-        'ko': `${baseUrl}/news/${slug}?hl=ko`,
-        'x-default': `${baseUrl}/news/${slug}`,
+    return {
+      ...metadata,
+      alternates: {
+        canonical: `${baseUrl}/news/${slug}`,
+        languages: {
+          'ja': `${baseUrl}/news/${slug}`,
+          'en': `${baseUrl}/news/${slug}?hl=en`,
+          'zh': `${baseUrl}/news/${slug}?hl=zh`,
+          'zh-TW': `${baseUrl}/news/${slug}?hl=zh-TW`,
+          'ko': `${baseUrl}/news/${slug}?hl=ko`,
+          'x-default': `${baseUrl}/news/${slug}`,
+        },
       },
-    },
-  };
+    };
+  } catch {
+    return {};
+  }
 }
 
 export const revalidate = 3600;

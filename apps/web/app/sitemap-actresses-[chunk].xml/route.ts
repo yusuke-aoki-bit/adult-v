@@ -14,6 +14,11 @@ export async function GET(
 ) {
   const { chunk: chunkStr } = await params;
   const chunk = parseInt(chunkStr);
+
+  if (isNaN(chunk) || chunk < 0 || chunk > 100) {
+    return new Response('Invalid chunk parameter', { status: 400 });
+  }
+
   const offset = chunk * CHUNK_SIZE;
 
   try {

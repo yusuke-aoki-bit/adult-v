@@ -19,64 +19,68 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
-  const { tagId, locale } = await params;
-  const resolvedSearchParams = await searchParams;
-  const tagIdNum = parseInt(tagId, 10);
+  try {
+    const { tagId, locale } = await params;
+    const resolvedSearchParams = await searchParams;
+    const tagIdNum = parseInt(tagId, 10);
 
-  if (isNaN(tagIdNum)) {
-    return { title: 'タグが見つかりません' };
-  }
+    if (isNaN(tagIdNum)) {
+      return { title: 'タグが見つかりません' };
+    }
 
-  const tag = await getTagById(tagIdNum);
-  if (!tag) {
-    return { title: 'タグが見つかりません' };
-  }
+    const tag = await getTagById(tagIdNum);
+    if (!tag) {
+      return { title: 'タグが見つかりません' };
+    }
 
-  const tagName = locale === 'en' && tag.nameEn ? tag.nameEn :
-    locale === 'zh' && tag.nameZh ? tag.nameZh :
-      locale === 'ko' && tag.nameKo ? tag.nameKo :
-        tag.name;
+    const tagName = locale === 'en' && tag.nameEn ? tag.nameEn :
+      locale === 'zh' && tag.nameZh ? tag.nameZh :
+        locale === 'ko' && tag.nameKo ? tag.nameKo :
+          tag.name;
 
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
-  const title = `${tagName}の動画一覧 | Adult Viewer Lab`;
-  const description = `${tagName}ジャンルの人気作品を厳選。高評価・セール中の作品も多数掲載。${tagName}好きにおすすめの動画を探すならAdult Viewer Lab。`;
+    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+    const title = `${tagName}の動画一覧 | Adult Viewer Lab`;
+    const description = `${tagName}ジャンルの人気作品を厳選。高評価・セール中の作品も多数掲載。${tagName}好きにおすすめの動画を探すならAdult Viewer Lab。`;
 
-  // ページネーションがある場合はnoindex（重複ページ対策）
-  const hasPageParam = resolvedSearchParams.page && resolvedSearchParams.page !== '1';
-  if (hasPageParam) {
-    return {
+    // ページネーションがある場合はnoindex（重複ページ対策）
+    const hasPageParam = resolvedSearchParams.page && resolvedSearchParams.page !== '1';
+    if (hasPageParam) {
+      return {
+        title,
+        description,
+        robots: { index: false, follow: true },
+        alternates: {
+          canonical: `${baseUrl}/tags/${tagId}`,
+        },
+      };
+    }
+
+    const metadata = generateBaseMetadata(
       title,
       description,
-      robots: { index: false, follow: true },
+      undefined,
+      localizedHref(`/tags/${tagId}`, locale),
+      undefined,
+      locale,
+    );
+
+    return {
+      ...metadata,
       alternates: {
         canonical: `${baseUrl}/tags/${tagId}`,
+        languages: {
+          'ja': `${baseUrl}/tags/${tagId}`,
+          'en': `${baseUrl}/tags/${tagId}?hl=en`,
+          'zh': `${baseUrl}/tags/${tagId}?hl=zh`,
+          'zh-TW': `${baseUrl}/tags/${tagId}?hl=zh-TW`,
+          'ko': `${baseUrl}/tags/${tagId}?hl=ko`,
+          'x-default': `${baseUrl}/tags/${tagId}`,
+        },
       },
     };
+  } catch {
+    return {};
   }
-
-  const metadata = generateBaseMetadata(
-    title,
-    description,
-    undefined,
-    localizedHref(`/tags/${tagId}`, locale),
-    undefined,
-    locale,
-  );
-
-  return {
-    ...metadata,
-    alternates: {
-      canonical: `${baseUrl}/tags/${tagId}`,
-      languages: {
-        'ja': `${baseUrl}/tags/${tagId}`,
-        'en': `${baseUrl}/tags/${tagId}?hl=en`,
-        'zh': `${baseUrl}/tags/${tagId}?hl=zh`,
-        'zh-TW': `${baseUrl}/tags/${tagId}?hl=zh-TW`,
-        'ko': `${baseUrl}/tags/${tagId}?hl=ko`,
-        'x-default': `${baseUrl}/tags/${tagId}`,
-      },
-    },
-  };
 }
 
 export default async function TagPage({ params, searchParams }: PageProps) {

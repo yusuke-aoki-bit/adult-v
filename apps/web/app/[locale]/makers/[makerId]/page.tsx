@@ -86,37 +86,41 @@ const translations = {
 } as const;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { makerId, locale } = await params;
-  const makerIdNum = parseInt(makerId, 10);
-  if (isNaN(makerIdNum)) return {};
+  try {
+    const { makerId, locale } = await params;
+    const makerIdNum = parseInt(makerId, 10);
+    if (isNaN(makerIdNum)) return {};
 
-  const maker = await getMakerById(makerIdNum, locale);
-  if (!maker) return {};
+    const maker = await getMakerById(makerIdNum, locale);
+    if (!maker) return {};
 
-  const t = translations[locale as keyof typeof translations] || translations['ja'];
-  const categoryLabel = maker.category === 'maker' ? t.maker : t.label;
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+    const t = translations[locale as keyof typeof translations] || translations['ja'];
+    const categoryLabel = maker.category === 'maker' ? t.maker : t.label;
+    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
-  return {
-    ...generateBaseMetadata(
-      `${maker.name} - ${categoryLabel} (${maker.productCount}${t.products})`,
-      `${maker.name}の${t.products}一覧。${maker.productCount}${t.products}を掲載。`,
-      undefined,
-      localizedHref(`/makers/${makerId}`, locale),
-      undefined,
-      locale,
-    ),
-    alternates: {
-      canonical: `${baseUrl}/makers/${makerId}`,
-      languages: {
-        'ja': `${baseUrl}/makers/${makerId}`,
-        'en': `${baseUrl}/makers/${makerId}?hl=en`,
-        'zh': `${baseUrl}/makers/${makerId}?hl=zh`,
-        'ko': `${baseUrl}/makers/${makerId}?hl=ko`,
-        'x-default': `${baseUrl}/makers/${makerId}`,
+    return {
+      ...generateBaseMetadata(
+        `${maker.name} - ${categoryLabel} (${maker.productCount}${t.products})`,
+        `${maker.name}の${t.products}一覧。${maker.productCount}${t.products}を掲載。`,
+        undefined,
+        localizedHref(`/makers/${makerId}`, locale),
+        undefined,
+        locale,
+      ),
+      alternates: {
+        canonical: `${baseUrl}/makers/${makerId}`,
+        languages: {
+          'ja': `${baseUrl}/makers/${makerId}`,
+          'en': `${baseUrl}/makers/${makerId}?hl=en`,
+          'zh': `${baseUrl}/makers/${makerId}?hl=zh`,
+          'ko': `${baseUrl}/makers/${makerId}?hl=ko`,
+          'x-default': `${baseUrl}/makers/${makerId}`,
+        },
       },
-    },
-  };
+    };
+  } catch {
+    return {};
+  }
 }
 
 export default async function MakerDetailPage({ params }: PageProps) {
