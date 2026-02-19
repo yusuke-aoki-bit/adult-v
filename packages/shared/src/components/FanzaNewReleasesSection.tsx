@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { normalizeImageUrl } from '../lib/image-utils';
 
 const FANZA_SITE_URL = 'https://www.f.adult-v.com';
 
@@ -113,7 +114,7 @@ export function FanzaNewReleasesSection({
               <div className="relative" style={{ aspectRatio: '2/3' }}>
                 {product.imageUrl ? (
                   <Image
-                    src={product.imageUrl}
+                    src={normalizeImageUrl(product.imageUrl)}
                     alt={product['title']}
                     fill
                     sizes="(max-width: 768px) 25vw, 12.5vw"

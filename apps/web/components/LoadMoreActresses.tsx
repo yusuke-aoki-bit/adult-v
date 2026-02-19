@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Users, Film } from 'lucide-react';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { generateActressAltText } from '@adult-v/shared/lib/seo-utils';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 
 interface PerformerItem {
   id: number;
@@ -127,7 +128,7 @@ export default function LoadMoreActresses({
             <div className="aspect-[3/4] relative rounded-lg overflow-hidden bg-gray-800 mb-2">
               {performer.imageUrl ? (
                 <Image
-                  src={performer.imageUrl}
+                  src={normalizeImageUrl(performer.imageUrl)}
                   alt={generateActressAltText({ name: performer.name, productCount: performer.productCount })}
                   fill
                   sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 12vw"

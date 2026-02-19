@@ -1,7 +1,6 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 import { Suspense } from 'react';
 import { locales } from '@/i18n';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
@@ -57,9 +56,8 @@ export default async function LocaleLayout({
   // Fetch messages for the locale
   const messages = await getMessages();
 
-  // サーバーサイドで年齢確認クッキーを読み取り（CLS防止）
-  const cookieStore = await cookies();
-  const ageVerified = cookieStore.get('age-verified')?.value === 'true';
+  // cookies()を除去: AgeVerificationがクライアント側でnon-httpOnly cookieを読み取る
+  // これにより全子ページでISR/SSGが有効になり、TTFB大幅改善
 
   // サイトモードを取得（FANZAサブドメイン vs メインサイト）
   const siteMode = await getServerSiteMode();
@@ -81,7 +79,7 @@ export default async function LocaleLayout({
                 <JsonLD data={webSiteSchema} />
                 <JsonLD data={organizationSchema} />
                 <PerformanceMonitor />
-                <AgeVerification locale={locale} initialVerified={ageVerified}>
+                <AgeVerification locale={locale}>
                   {children}
                 </AgeVerification>
                 <ScrollToTop />

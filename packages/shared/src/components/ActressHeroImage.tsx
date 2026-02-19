@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { normalizeImageUrl } from '../lib/image-utils';
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/64x64/1f2937/ffffff?text=No+Image';
 
@@ -20,7 +21,7 @@ export default function ActressHeroImage({
   className = '',
   priority = false,
 }: ActressHeroImageProps) {
-  const [imgSrc, setImgSrc] = useState(src || PLACEHOLDER_IMAGE);
+  const [imgSrc, setImgSrc] = useState(src ? normalizeImageUrl(src) : PLACEHOLDER_IMAGE);
   const [hasError, setHasError] = useState(false);
 
   const handleImageError = () => {

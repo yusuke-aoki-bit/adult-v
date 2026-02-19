@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Flame, TrendingUp, Play, Clock } from 'lucide-react';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 
 interface SaleProduct {
   productId: number;
@@ -258,7 +259,7 @@ export default function HeroSection({
             >
               {currentProduct?.thumbnailUrl ? (
                 <Image
-                  src={currentProduct.thumbnailUrl}
+                  src={normalizeImageUrl(currentProduct.thumbnailUrl)}
                   alt={currentProduct.title}
                   fill
                   className="object-cover"
@@ -346,7 +347,7 @@ export default function HeroSection({
                   <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden ring-2 ring-transparent group-hover:ring-pink-500 transition-all">
                     {actress.thumbnailUrl ? (
                       <Image
-                        src={actress.thumbnailUrl}
+                        src={normalizeImageUrl(actress.thumbnailUrl)}
                         alt={actress.name}
                         fill
                         className="object-cover"

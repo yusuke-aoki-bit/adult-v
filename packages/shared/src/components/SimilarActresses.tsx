@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { normalizeImageUrl } from '../lib/image-utils';
 
 interface SimilarActress {
   id: number;
@@ -80,7 +81,7 @@ export default function SimilarActresses({
               isDark ? 'bg-gray-700 group-hover:ring-purple-500' : 'bg-gray-200 group-hover:ring-purple-400'
             }`}>
               <Image
-                src={actress.heroImageUrl || actress['thumbnailUrl'] || PLACEHOLDER_IMAGE}
+                src={normalizeImageUrl(actress.heroImageUrl || actress['thumbnailUrl'])}
                 alt={actress['name']}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform"

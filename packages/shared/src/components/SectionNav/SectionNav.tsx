@@ -69,7 +69,7 @@ export function SectionNav({
 
   return (
     <div
-      className={`fixed ${position === 'right' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 z-40 transition-all duration-300`}
+      className={`hidden md:block fixed ${position === 'right' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 z-40 transition-all duration-300`}
     >
       {/* 展開ボタン */}
       <button

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 
 interface RelatedActress {
   id: number;
@@ -58,7 +59,7 @@ export default function RelatedActresses({ actresses, currentActressName }: Rela
           >
             <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2 ring-2 ring-transparent group-hover:ring-rose-700 transition-all">
               <Image
-                src={actress.heroImageUrl || actress.thumbnailUrl || PLACEHOLDER_IMAGE}
+                src={normalizeImageUrl(actress.heroImageUrl || actress.thumbnailUrl)}
                 alt={actress.name}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform"

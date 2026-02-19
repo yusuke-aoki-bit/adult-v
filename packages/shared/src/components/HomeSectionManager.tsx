@@ -68,7 +68,7 @@ export function HomeSectionManager({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-36 right-4 z-40 p-3 rounded-full shadow-lg transition-colors ${
+        className={`hidden md:block fixed bottom-36 right-4 z-40 p-3 rounded-full shadow-lg transition-colors ${
           isDark
             ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
             : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'

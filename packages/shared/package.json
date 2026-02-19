@@ -30,6 +30,7 @@
     "./lib/google-apis": "./src/lib/google-apis.ts",
     "./lib/cron-auth": "./src/lib/cron-auth.ts",
     "./lib/asp-utils": "./src/lib/asp-utils.ts",
+    "./lib/image-utils": "./src/lib/image-utils.ts",
     "./lib/product-id-utils": "./src/lib/product-id-utils.ts",
     "./lib/type-guards": "./src/lib/type-guards.ts",
     "./providers/duga-client": "./src/providers/duga-client.ts",

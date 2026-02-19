@@ -65,6 +65,12 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  # Google Search Console verification
+  - variable: NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    value: uCpAKCjxZfjrmEJH_eOrcsnXh88s8HKcwTbz9Wo9wIc
+    availability:
+      - BUILD
+      - RUNTIME
   # Sentry Configuration
   - variable: SENTRY_DSN
     secret: sentry-dsn-fanza

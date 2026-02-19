@@ -36,7 +36,8 @@ function toProduct(sp: SeriesProduct): Product {
   };
 }
 
-export const dynamic = 'force-dynamic';
+// ISR: 5分ごとに再検証
+export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ seriesId: string; locale: string }>;

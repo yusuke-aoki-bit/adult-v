@@ -54,6 +54,14 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  # Google Search Console verification
+  # GSCの「HTMLタグ」方式で取得した認証コードを設定
+  # https://search.google.com/search-console → プロパティ追加 → HTMLタグ → content値をコピー
+  - variable: NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    value: uCpAKCjxZfjrmEJH_eOrcsnXh88s8HKcwTbz9Wo9wIc
+    availability:
+      - BUILD
+      - RUNTIME
   # DeepL API Key for translation
   - variable: DEEPL_API_KEY
     secret: deepl-api-key

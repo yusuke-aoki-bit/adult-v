@@ -14,7 +14,7 @@ type AgeVerificationTheme = 'dark' | 'light';
 interface AgeVerificationProps {
   locale: string;
   children: React.ReactNode;
-  initialVerified?: boolean; // サーバーサイドからの初期値
+  initialVerified?: boolean;
   /** テーマ: dark (web用), light (fanza用) */
   theme?: AgeVerificationTheme;
 }
@@ -55,28 +55,43 @@ export default function AgeVerification({
   const t = useTranslations('ageVerification');
   const config = themeConfig[theme];
 
-  // 初期値をサーバーサイドから受け取ることでCLS防止
   const [isVerified, setIsVerified] = useState(initialVerified);
   const [showModal, setShowModal] = useState(!initialVerified);
   const [isLoading, setIsLoading] = useState(false);
 
   const minAge = AGE_REQUIREMENTS[locale as keyof typeof AGE_REQUIREMENTS] || 18;
 
-  // クライアント側でクッキーを再確認（サーバーとクライアントの同期）
-  // 注: httpOnly Cookieはdocument.cookieからは読めないため、
-  // initialVerifiedがtrueの場合はサーバーサイドで検証済み
+  // クライアント側でCookieを確認（non-httpOnly cookieを直接読む）
   useEffect(() => {
-    // サーバーサイドで認証済みの場合は何もしない
     if (initialVerified) {
+      setIsVerified(true);
+      setShowModal(false);
+      return;
+    }
+    // non-httpOnly cookieをクライアント側で読み取り
+    const cookies = document.cookie.split(';').map(c => c.trim());
+    const ageVerified = cookies.some(c => c.startsWith('age-verified=true'));
+    if (ageVerified) {
       setIsVerified(true);
       setShowModal(false);
     }
   }, [initialVerified]);
 
+  // モーダル表示中はスクロールを防止
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showModal]);
+
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
-      // サーバーサイドAPIでhttpOnly Cookieを設定
       const response = await fetch('/api/age-verify', {
         method: 'POST',
         credentials: 'same-origin',
@@ -94,81 +109,76 @@ export default function AgeVerification({
   };
 
   const handleDeny = () => {
-    // 外部サイトへリダイレクト
     window.location.href = 'https://www.google.com';
   };
 
-  // 年齢認証済みの場合は子要素を表示
-  if (isVerified) {
-    return <>{children}</>;
-  }
-
-  // モーダルを表示しない場合（サーバーサイドで認証済みと判定された場合）
-  if (!showModal) {
-    return <>{children}</>;
-  }
-
-  // 年齢認証モーダル
+  // SEO対策: childrenは常にDOMに含める（Googlebotがコンテンツをインデックスできるように）
+  // モーダルは視覚的にオーバーレイで表示し、ユーザーの操作をブロックする
   return (
-    <div className={`fixed inset-0 ${config.overlay} z-50 flex items-center justify-center p-4`}>
-      <div className={`${config.modal} rounded-lg shadow-2xl max-w-md w-full p-8 border`}>
-        {/* 警告アイコン */}
-        <div className="flex justify-center mb-6">
-          <div className={`w-16 h-16 ${config.iconBg} rounded-full flex items-center justify-center`}>
-            <svg
-              className="w-10 h-10 text-white"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+    <>
+      {showModal && (
+        <div className={`fixed inset-0 ${config.overlay} z-50 flex items-center justify-center p-4`}>
+          <div className={`${config.modal} rounded-lg shadow-2xl max-w-md w-full p-8 border`}>
+            {/* 警告アイコン */}
+            <div className="flex justify-center mb-6">
+              <div className={`w-16 h-16 ${config.iconBg} rounded-full flex items-center justify-center`}>
+                <svg
+                  className="w-10 h-10 text-white"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* タイトル */}
+            <h1 className={`text-2xl font-bold ${config['title']} text-center mb-4`}>
+              {t('title')}
+            </h1>
+
+            {/* メッセージ */}
+            <div className="space-y-4 mb-8">
+              <p className={`${config.message} text-center`}>
+                {t('message')}
+              </p>
+              <p className={`text-lg font-semibold ${config.question} text-center`}>
+                {t('question').replace('{age}', minAge.toString())}
+              </p>
+              <p className={`text-sm ${config.warning} text-center`}>
+                {t('warning').replace('{age}', minAge.toString())}
+              </p>
+            </div>
+
+            {/* ボタン */}
+            <div className="space-y-3">
+              <button
+                onClick={handleConfirm}
+                disabled={isLoading}
+                className={`w-full ${config.confirmBtn} font-semibold py-3 px-6 rounded-lg transition-colors duration-200`}
+              >
+                {isLoading ? '...' : t('confirm').replace('{age}', minAge.toString())}
+              </button>
+              <button
+                onClick={handleDeny}
+                className={`w-full ${config.denyBtn} font-semibold py-3 px-6 rounded-lg transition-colors duration-200`}
+              >
+                {t('deny')}
+              </button>
+            </div>
+
+            {/* フッター注意書き */}
+            <p className={`text-xs ${config.footer} text-center mt-6`}>
+              {t('legalNotice', { defaultValue: 'このサイトにアクセスすることで、利用規約とプライバシーポリシーに同意したものとみなされます。' })}
+            </p>
           </div>
         </div>
-
-        {/* タイトル */}
-        <h1 className={`text-2xl font-bold ${config['title']} text-center mb-4`}>
-          {t('title')}
-        </h1>
-
-        {/* メッセージ */}
-        <div className="space-y-4 mb-8">
-          <p className={`${config.message} text-center`}>
-            {t('message')}
-          </p>
-          <p className={`text-lg font-semibold ${config.question} text-center`}>
-            {t('question').replace('{age}', minAge.toString())}
-          </p>
-          <p className={`text-sm ${config.warning} text-center`}>
-            {t('warning').replace('{age}', minAge.toString())}
-          </p>
-        </div>
-
-        {/* ボタン */}
-        <div className="space-y-3">
-          <button
-            onClick={handleConfirm}
-            disabled={isLoading}
-            className={`w-full ${config.confirmBtn} font-semibold py-3 px-6 rounded-lg transition-colors duration-200`}
-          >
-            {isLoading ? '...' : t('confirm').replace('{age}', minAge.toString())}
-          </button>
-          <button
-            onClick={handleDeny}
-            className={`w-full ${config.denyBtn} font-semibold py-3 px-6 rounded-lg transition-colors duration-200`}
-          >
-            {t('deny')}
-          </button>
-        </div>
-
-        {/* フッター注意書き */}
-        <p className={`text-xs ${config.footer} text-center mt-6`}>
-          {t('legalNotice', { defaultValue: 'このサイトにアクセスすることで、利用規約とプライバシーポリシーに同意したものとみなされます。' })}
-        </p>
-      </div>
-    </div>
+      )}
+      {children}
+    </>
   );
 }

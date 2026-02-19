@@ -64,8 +64,11 @@ export function createAgeVerifyPostHandler(deps: AgeVerifyHandlerDeps) {
     // Success - set secure cookie
     const response = NextResponse.json({ success: true });
 
+    // httpOnly: false — クライアント側でCookieを読み取り可能にする
+    // （年齢確認フラグはセキュリティ上の機密情報ではないため問題なし）
+    // これにより layout.tsx から cookies() を除去でき、全ページでISR/SSGが有効になる
     response.cookies.set('age-verified', 'true', {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env['NODE_ENV'] === 'production',
       sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 30, // 30 days
@@ -100,7 +103,7 @@ export function createAgeVerifyDeleteHandler(deps: AgeVerifyHandlerDeps) {
 
     // Clear the cookie
     response.cookies.set('age-verified', '', {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env['NODE_ENV'] === 'production',
       sameSite: 'strict',
       maxAge: 0,

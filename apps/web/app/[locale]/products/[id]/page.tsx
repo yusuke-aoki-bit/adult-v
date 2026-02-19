@@ -37,9 +37,8 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// force-dynamic: layout.tsxでcookies()を使用しているため、ISR(revalidate)との併用不可
-// cookies()はdynamic APIのため、未プリレンダリングのページで DYNAMIC_SERVER_USAGE エラーが発生する
-export const dynamic = 'force-dynamic';
+// ISR: 5分ごとに再検証（layout.tsxからcookies()を除去したためISRが使用可能に）
+export const revalidate = 300;
 
 /**
  * 配列をシャッフル（Fisher-Yates algorithm）

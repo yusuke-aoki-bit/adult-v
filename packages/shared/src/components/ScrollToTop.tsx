@@ -56,7 +56,7 @@ export default function ScrollToTop() {
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed bottom-20 right-4 z-40 p-3 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 hover:scale-105 ${
+      className={`fixed bottom-20 md:bottom-20 right-3 md:right-4 z-40 p-2 md:p-3 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 hover:scale-105 ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
       }`}
       aria-label="ページトップへ戻る"

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Sparkles, User, ChevronDown, ChevronUp } from 'lucide-react';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 
 interface RecommendedActress {
   id: number;
@@ -168,7 +169,7 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
                     <div className="aspect-square relative bg-gray-50">
                       {actress.heroImageUrl || actress.thumbnailUrl ? (
                         <Image
-                          src={actress.heroImageUrl || actress.thumbnailUrl || ''}
+                          src={normalizeImageUrl(actress.heroImageUrl || actress.thumbnailUrl)}
                           alt={actress.name}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
