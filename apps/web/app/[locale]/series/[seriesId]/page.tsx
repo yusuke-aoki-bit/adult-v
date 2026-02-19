@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { getSeriesInfo, getSeriesProducts, type SeriesProduct } from '@/lib/db/queries';
 import Breadcrumb from '@/components/Breadcrumb';
 import ProductCard from '@/components/ProductCard';
-import { generateBaseMetadata, generateBreadcrumbSchema } from '@/lib/seo';
+import { generateBaseMetadata, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
@@ -226,9 +226,18 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
     { name: name, url: basePath },
   ]);
 
+  const itemListSchema = generateItemListSchema(
+    products.slice(0, 20).map((product) => ({
+      name: product.title,
+      url: localizedHref(`/products/${product.id}`, locale),
+    })),
+    name
+  );
+
   return (
     <>
       <JsonLD data={breadcrumbSchema} />
+      <JsonLD data={itemListSchema} />
       <div className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb

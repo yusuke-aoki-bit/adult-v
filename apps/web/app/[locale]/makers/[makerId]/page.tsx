@@ -5,7 +5,7 @@ import { Building2, Tag, Users, Film, Star, TrendingUp, Calendar } from 'lucide-
 import { localizedHref } from '@adult-v/shared/i18n';
 import { HomeSectionManager } from '@adult-v/shared/components';
 import { getMakerById } from '@/lib/db/queries';
-import { generateBaseMetadata, generateBreadcrumbSchema } from '@/lib/seo';
+import { generateBaseMetadata, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import { Metadata } from 'next';
@@ -136,11 +136,20 @@ export default async function MakerDetailPage({ params }: PageProps) {
     { name: maker.name, url: localizedHref(`/makers/${makerId}`, locale) },
   ]);
 
+  const itemListSchema = generateItemListSchema(
+    maker.recentProducts.map((product) => ({
+      name: product.title,
+      url: localizedHref(`/products/${product.id}`, locale),
+    })),
+    maker.name
+  );
+
   const maxYearlyCount = Math.max(...maker.yearlyStats.map(y => y.count), 1);
 
   return (
     <>
       <JsonLD data={breadcrumbSchema} />
+      <JsonLD data={itemListSchema} />
       <div className="min-h-screen theme-body">
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumb */}
