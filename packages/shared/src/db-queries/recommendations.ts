@@ -456,10 +456,45 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
       LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
       LEFT JOIN this_week_views tw ON p.id = tw.performer_id
       LEFT JOIN last_week_views lw ON p.id = lw.performer_id
-      WHERE COALESCE(tw.view_count, 0) >= 3
+      WHERE COALESCE(tw.view_count, 0) >= 1
       ORDER BY "growthRate" DESC, "viewsThisWeek" DESC
       LIMIT 6
     `);
+
+    // 1b. フォールバック: 閲覧データ不足時は新作出演数の多い人気女優を表示
+    let finalTrendingActresses = trendingActresses;
+    if (trendingActresses.rows.length === 0) {
+      finalTrendingActresses = await db.execute(sql`
+        WITH performer_thumbnails AS (
+          SELECT DISTINCT ON (pp.performer_id)
+            pp.performer_id,
+            prod.default_thumbnail_url as thumbnail_url
+          FROM product_performers pp
+          INNER JOIN products prod ON pp.product_id = prod.id
+          WHERE prod.default_thumbnail_url IS NOT NULL
+            AND prod.default_thumbnail_url != ''
+          ORDER BY pp.performer_id, prod.created_at DESC
+        )
+        SELECT
+          p.id,
+          p.name,
+          pt.thumbnail_url as "thumbnailUrl",
+          pt.thumbnail_url as "heroImageUrl",
+          COUNT(pp2.product_id) as "productCount",
+          0 as "viewsThisWeek",
+          0 as "viewsLastWeek",
+          0 as "growthRate"
+        FROM performers p
+        INNER JOIN product_performers pp2 ON p.id = pp2.performer_id
+        INNER JOIN products prod ON pp2.product_id = prod.id
+        LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
+        WHERE prod.release_date >= NOW() - INTERVAL '90 days'
+          AND p.profile_image_url IS NOT NULL
+        GROUP BY p.id, p.name, pt.thumbnail_url
+        ORDER BY COUNT(pp2.product_id) DESC
+        LIMIT 6
+      `);
+    }
 
     // 2. 話題の新作
     const hotNewReleases = await db.execute(sql`
@@ -498,13 +533,13 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         AND pv.viewed_at >= NOW() - INTERVAL '7 days'
         AND ${filter}
       GROUP BY p.id, p.title, p.default_thumbnail_url, p.release_date
-      HAVING COUNT(pv.id) >= 2
+      HAVING COUNT(pv.id) >= 1
       ORDER BY "recentViews" DESC
       LIMIT 6
     `);
 
     return {
-      trendingActresses: (trendingActresses.rows as PerformerRow[]).map(r => ({
+      trendingActresses: (finalTrendingActresses.rows as PerformerRow[]).map(r => ({
         id: Number(r.id),
         name: r.name,
         thumbnailUrl: r.thumbnailUrl,
