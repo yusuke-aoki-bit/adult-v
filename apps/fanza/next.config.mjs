@@ -43,7 +43,7 @@ const fanzaCspDirectives = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://awsimgsrc.dmm.co.jp https://placehold.co https://www.googletagmanager.com https://www.google-analytics.com https://*.mgstage.com https://image.mgstage.com https://*.duga.jp https://pic.duga.jp https://img.duga.jp https://*.sokmil.com https://img.sokmil.com https://*.heyzo.com https://*.caribbeancom.com https://*.caribbeancompr.com https://*.1pondo.tv https://*.b10f.jp https://b10f.jp https://*.fc2.com https://*.japanska-xxx.com https://www.minnano-av.com https://*.minnano-av.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com https://firebase.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseremoteconfig.googleapis.com https://firebaselogging-pa.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
+  "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com https://firebase.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseremoteconfig.googleapis.com https://firebaselogging-pa.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.sentry.io https://*.ingest.sentry.io",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.dmm.co.jp https://*.dmm.com",
   "media-src 'self' https://*.dmm.co.jp https://*.dmm.com https://cc3001.dmm.co.jp https://litevideo.dmm.co.jp",
   "worker-src 'self' blob:",
