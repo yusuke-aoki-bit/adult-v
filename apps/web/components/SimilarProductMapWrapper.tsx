@@ -2,6 +2,7 @@
 
 import { SimilarProductMap } from '@adult-v/shared/components';
 import { useRouter } from 'next/navigation';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface SimilarProductMapWrapperProps {
   productId: number;
@@ -15,10 +16,7 @@ export default function SimilarProductMapWrapper({
   const router = useRouter();
 
   const handleProductClick = (clickedProductId: number) => {
-    const path = locale === 'ja'
-      ? `/products/${clickedProductId}`
-      : `/${locale}/products/${clickedProductId}`;
-    router.push(path);
+    router.push(localizedHref(`/products/${clickedProductId}`, locale));
   };
 
   return (

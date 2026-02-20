@@ -26,6 +26,71 @@ function getRadarDataPoints(cx: number, cy: number, values: number[]): string {
   return points.join(' ');
 }
 
+const localeMap: Record<string, string> = { ja: 'ja-JP', en: 'en-US', zh: 'zh-CN', ko: 'ko-KR', 'zh-TW': 'zh-TW' };
+
+const compareTexts = {
+  ja: {
+    compareProducts: '作品を比較しましょう',
+    selectAtLeast2: '2作品以上を選択すると比較できます',
+    loadingComparison: '比較データを読み込み中...',
+    bestPrice: '最安値',
+    onSale: 'セール中',
+    topRated: '高評価',
+    longest: '長尺',
+    video: '動画',
+    images: '画像',
+    price: '価格',
+    duration: '再生時間',
+    rating: '評価',
+    releaseDate: '発売日',
+    reviews: 'レビュー',
+    performers: '出演者',
+    genres: 'ジャンル',
+    availableOn: '配信サイト',
+    comparisonChart: '比較グラフ',
+    radarChart: 'レーダーチャート',
+    durationShort: '時間',
+    barComparison: '棒グラフ比較',
+    priceLowerBetter: '価格（安いほど高評価）',
+    commonFeatures: '共通点',
+    hours: '時間',
+    minutes: '分',
+    reviewCount: '件',
+  },
+  en: {
+    compareProducts: 'Compare Products',
+    selectAtLeast2: 'Select at least 2 products to compare',
+    loadingComparison: 'Loading comparison...',
+    bestPrice: 'Best Price',
+    onSale: 'On Sale',
+    topRated: 'Top Rated',
+    longest: 'Longest',
+    video: 'Video',
+    images: 'Images',
+    price: 'Price',
+    duration: 'Duration',
+    rating: 'Rating',
+    releaseDate: 'Release',
+    reviews: 'Reviews',
+    performers: 'Performers',
+    genres: 'Genres',
+    availableOn: 'Available on',
+    comparisonChart: 'Comparison Chart',
+    radarChart: 'Radar Chart',
+    durationShort: 'Duration',
+    barComparison: 'Bar Comparison',
+    priceLowerBetter: 'Price (lower is better)',
+    commonFeatures: 'Common Features',
+    hours: 'h ',
+    minutes: 'min',
+    reviewCount: '',
+  },
+} as const;
+
+function getCompareText(locale: string) {
+  return compareTexts[locale as keyof typeof compareTexts] || compareTexts.ja;
+}
+
 interface CompareProduct {
   id: number;
   normalizedProductId: string;
@@ -89,6 +154,7 @@ export function ProductCompare({
   productsRef.current = products;
 
   const isDark = theme === 'dark';
+  const ct = getCompareText(locale);
 
   // productIdsを文字列化して比較（配列の参照変更による再実行を防ぐ）
   const idsKey = useMemo(() => [...productIds].sort().join(','), [productIds]);
@@ -156,13 +222,13 @@ export function ProductCompare({
     if (minutes === null) return '-';
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return hours > 0 ? `${hours}時間${mins}分` : `${mins}分`;
+    return hours > 0 ? `${hours}${ct.hours}${mins}${ct.minutes}` : `${mins}${ct.minutes}`;
   };
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
-    return date.toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'en-US');
+    return date.toLocaleDateString(localeMap[locale] || localeMap.ja);
   };
 
   const getBestPrice = (product: CompareProduct) => {
@@ -203,12 +269,10 @@ export function ProductCompare({
           </svg>
         </div>
         <p className={`text-lg font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-          {locale === 'ja' ? '作品を比較しましょう' : 'Compare Products'}
+          {ct.compareProducts}
         </p>
         <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          {locale === 'ja'
-            ? '2作品以上を選択すると比較できます'
-            : 'Select at least 2 products to compare'}
+          {ct.selectAtLeast2}
         </p>
       </div>
     );
@@ -225,7 +289,7 @@ export function ProductCompare({
             }`} />
           </div>
           <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>
-            {locale === 'ja' ? '比較データを読み込み中...' : 'Loading comparison...'}
+            {ct.loadingComparison}
           </p>
         </div>
       </div>
@@ -295,22 +359,22 @@ export function ProductCompare({
               <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
                 {isLowestPrice && (
                   <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg">
-                    {locale === 'ja' ? '最安値' : 'Best Price'}
+                    {ct.bestPrice}
                   </span>
                 )}
                 {hasSale && !isLowestPrice && (
                   <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg">
-                    {locale === 'ja' ? 'セール中' : 'On Sale'}
+                    {ct.onSale}
                   </span>
                 )}
                 {isHighestRated && (
                   <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg">
-                    {locale === 'ja' ? '高評価' : 'Top Rated'}
+                    {ct.topRated}
                   </span>
                 )}
                 {isLongest && (
                   <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg">
-                    {locale === 'ja' ? '長尺' : 'Longest'}
+                    {ct.longest}
                   </span>
                 )}
               </div>
@@ -348,7 +412,7 @@ export function ProductCompare({
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z"/>
                       </svg>
-                      {locale === 'ja' ? '動画' : 'Video'}
+                      {ct.video}
                     </span>
                   )}
                   {product.hasSampleImages && (
@@ -358,7 +422,7 @@ export function ProductCompare({
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      {locale === 'ja' ? '画像' : 'Images'}
+                      {ct.images}
                     </span>
                   )}
                 </div>
@@ -381,7 +445,7 @@ export function ProductCompare({
                   isDark ? 'bg-gray-800' : 'bg-gray-50'
                 }`}>
                   <div className={`text-xs mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    {locale === 'ja' ? '価格' : 'Price'}
+                    {ct.price}
                   </div>
                   <div className={`text-2xl font-bold ${
                     isLowestPrice ? 'text-green-500' : isDark ? 'text-white' : 'text-gray-900'
@@ -396,7 +460,7 @@ export function ProductCompare({
                     isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}>
                     <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? '再生時間' : 'Duration'}
+                      {ct.duration}
                     </div>
                     <div className={`text-sm font-semibold ${
                       isLongest ? 'text-purple-500' : isDark ? 'text-white' : 'text-gray-900'
@@ -408,7 +472,7 @@ export function ProductCompare({
                     isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}>
                     <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? '評価' : 'Rating'}
+                      {ct.rating}
                     </div>
                     <div className={`text-sm font-semibold flex items-center justify-center gap-1 ${
                       isHighestRated ? 'text-yellow-500' : isDark ? 'text-white' : 'text-gray-900'
@@ -428,7 +492,7 @@ export function ProductCompare({
                   {/* 発売日 */}
                   <div className={`p-2.5 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
                     <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? '発売日' : 'Release'}
+                      {ct.releaseDate}
                     </div>
                     <div className={`text-xs font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       {formatDate(product['releaseDate'])}
@@ -437,10 +501,10 @@ export function ProductCompare({
                   {/* レビュー件数 */}
                   <div className={`p-2.5 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
                     <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? 'レビュー' : 'Reviews'}
+                      {ct.reviews}
                     </div>
                     <div className={`text-xs font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {product['rating'].count > 0 ? `${product['rating'].count}件` : '-'}
+                      {product['rating'].count > 0 ? `${product['rating'].count}${ct.reviewCount}` : '-'}
                     </div>
                   </div>
                 </div>
@@ -471,7 +535,7 @@ export function ProductCompare({
                 {product.performers.length > 0 && (
                   <div>
                     <div className={`text-xs mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? '出演者' : 'Performers'}
+                      {ct.performers}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {product.performers.slice(0, 4).map((performer, i) => (
@@ -503,7 +567,7 @@ export function ProductCompare({
                 {product.tags.length > 0 && (
                   <div>
                     <div className={`text-xs mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? 'ジャンル' : 'Genres'}
+                      {ct.genres}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {product.tags.slice(0, 5).map((tag, i) => (
@@ -535,7 +599,7 @@ export function ProductCompare({
                 {product.sources.length > 0 && (
                   <div className={`pt-3 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                     <div className={`text-xs mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? '配信サイト' : 'Available on'}
+                      {ct.availableOn}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {product.sources.map((source, i) => (
@@ -580,14 +644,14 @@ export function ProductCompare({
             <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            {locale === 'ja' ? '比較グラフ' : 'Comparison Chart'}
+            {ct.comparisonChart}
           </h3>
 
           <div className="flex flex-col lg:flex-row gap-6">
             {/* レーダーチャート */}
             <div className="flex-1">
               <p className={`text-xs mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {locale === 'ja' ? 'レーダーチャート' : 'Radar Chart'}
+                {ct.radarChart}
               </p>
               <div className="relative aspect-square max-w-[300px] mx-auto">
                 <svg viewBox="0 0 200 200" className="w-full h-full">
@@ -620,16 +684,16 @@ export function ProductCompare({
                   })}
                   {/* ラベル */}
                   <text x="100" y="10" textAnchor="middle" className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
-                    {locale === 'ja' ? '価格' : 'Price'}
+                    {ct.price}
                   </text>
                   <text x="190" y="105" textAnchor="middle" className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
-                    {locale === 'ja' ? '時間' : 'Duration'}
+                    {ct.durationShort}
                   </text>
                   <text x="100" y="195" textAnchor="middle" className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
-                    {locale === 'ja' ? '評価' : 'Rating'}
+                    {ct.rating}
                   </text>
                   <text x="10" y="105" textAnchor="middle" className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
-                    {locale === 'ja' ? 'レビュー' : 'Reviews'}
+                    {ct.reviews}
                   </text>
                   {/* 各作品のデータ */}
                   {products.map((product, idx) => {
@@ -692,13 +756,13 @@ export function ProductCompare({
             {/* バーチャート */}
             <div className="flex-1">
               <p className={`text-xs mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {locale === 'ja' ? '棒グラフ比較' : 'Bar Comparison'}
+                {ct.barComparison}
               </p>
               <div className="space-y-4">
                 {/* 価格（安いほど長いバー） */}
                 <div>
                   <p className={`text-xs mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {locale === 'ja' ? '価格（安いほど高評価）' : 'Price (lower is better)'}
+                    {ct.priceLowerBetter}
                   </p>
                   <div className="space-y-1.5">
                     {(() => {
@@ -731,7 +795,7 @@ export function ProductCompare({
                 {/* 再生時間 */}
                 <div>
                   <p className={`text-xs mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {locale === 'ja' ? '再生時間' : 'Duration'}
+                    {ct.duration}
                   </p>
                   <div className="space-y-1.5">
                     {products.map((product, idx) => {
@@ -760,7 +824,7 @@ export function ProductCompare({
                 {/* 評価 */}
                 <div>
                   <p className={`text-xs mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {locale === 'ja' ? '評価' : 'Rating'}
+                    {ct.rating}
                   </p>
                   <div className="space-y-1.5">
                     {products.map((product, idx) => {
@@ -805,7 +869,7 @@ export function ProductCompare({
             <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            {locale === 'ja' ? '共通点' : 'Common Features'}
+            {ct.commonFeatures}
           </h3>
           <div className="flex flex-wrap gap-2">
             {comparison.commonPerformers.map((performer, i) => (

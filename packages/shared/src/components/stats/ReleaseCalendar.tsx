@@ -20,8 +20,12 @@ interface Props {
   maxYear?: number;
 }
 
-const WEEKDAYS_JA = ['日', '月', '火', '水', '木', '金', '土'];
-const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS_MAP: Record<string, string[]> = {
+  ja: ['日', '月', '火', '水', '木', '金', '土'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  zh: ['日', '一', '二', '三', '四', '五', '六'],
+  ko: ['일', '월', '화', '수', '목', '금', '토'],
+};
 
 export default function ReleaseCalendar({
   data,
@@ -36,7 +40,7 @@ export default function ReleaseCalendar({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showYearPicker, setShowYearPicker] = useState(false);
 
-  const weekdays = locale === 'ja' ? WEEKDAYS_JA : WEEKDAYS_EN;
+  const weekdays = WEEKDAYS_MAP[locale] || WEEKDAYS_MAP['en'];
 
   // 年の選択肢を生成（新しい順）
   const years = Array.from(

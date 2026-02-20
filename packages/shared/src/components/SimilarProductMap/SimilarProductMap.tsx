@@ -52,12 +52,43 @@ const HOP_COLORS = {
   2: { fill: '#8B5CF6', stroke: '#A78BFA', light: { fill: '#7C3AED', stroke: '#8B5CF6' } }, // violet (ジャンル)
 };
 
+const mapTexts = {
+  ja: {
+    analyzing: '類似作品を分析中...',
+    networkTitle: '類似作品ネットワーク',
+    networkSubtitle: '出演者・ジャンルによる関連',
+    listView: 'リスト表示',
+    networkView: 'ネットワーク図',
+    sameMaker: '同じメーカー',
+    samePerformer: '同じ出演者',
+    similarGenre: 'ジャンル類似',
+    sameMakerProducts: '同じメーカーの作品',
+    samePerformerProducts: '同じ出演者の作品',
+    similarGenreProducts: 'ジャンル類似作品',
+  },
+  en: {
+    analyzing: 'Analyzing similar products...',
+    networkTitle: 'Similar Products Network',
+    networkSubtitle: 'Related by performers & genres',
+    listView: 'List view',
+    networkView: 'Network view',
+    sameMaker: 'Same maker',
+    samePerformer: 'Same performer',
+    similarGenre: 'Similar genre',
+    sameMakerProducts: 'Same Maker',
+    samePerformerProducts: 'Same Performer',
+    similarGenreProducts: 'Similar Genre',
+  },
+} as const;
+function getMapText(locale: string) { return mapTexts[locale as keyof typeof mapTexts] || mapTexts.ja; }
+
 export function SimilarProductMap({
   productId,
   locale,
   theme = 'dark',
   onProductClick,
 }: SimilarProductMapProps) {
+  const mt = getMapText(locale);
   const [data, setData] = useState<ProductSimilarityData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,7 +184,7 @@ export function SimilarProductMap({
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
           <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>
-            {locale === 'ja' ? '類似作品を分析中...' : 'Analyzing similar products...'}
+            {mt.analyzing}
           </span>
         </div>
       </div>
@@ -175,10 +206,10 @@ export function SimilarProductMap({
         <div className="flex items-center justify-between">
           <div>
             <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {locale === 'ja' ? '類似作品ネットワーク' : 'Similar Products Network'}
+              {mt.networkTitle}
             </h3>
             <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              {locale === 'ja' ? '出演者・ジャンルによる関連' : 'Related by performers & genres'}
+              {mt.networkSubtitle}
             </p>
           </div>
           {/* 表示切り替えボタン */}
@@ -190,7 +221,7 @@ export function SimilarProductMap({
                   ? isDark ? 'bg-sky-600 text-white' : 'bg-rose-600 text-white'
                   : isDark ? 'bg-gray-700 text-gray-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
-              title={locale === 'ja' ? 'リスト表示' : 'List view'}
+              title={mt.listView}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -203,7 +234,7 @@ export function SimilarProductMap({
                   ? isDark ? 'bg-sky-600 text-white' : 'bg-rose-600 text-white'
                   : isDark ? 'bg-gray-700 text-gray-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
-              title={locale === 'ja' ? 'ネットワーク図' : 'Network view'}
+              title={mt.networkView}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="3" strokeWidth={2} />
@@ -227,13 +258,13 @@ export function SimilarProductMap({
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getHopColor(1).fill }} />
               <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                {locale === 'ja' ? (isMakerBased ? '同じメーカー' : '同じ出演者') : (isMakerBased ? 'Same maker' : 'Same performer')}
+                {isMakerBased ? mt.sameMaker : mt.samePerformer}
               </span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getHopColor(2).fill }} />
               <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                {locale === 'ja' ? 'ジャンル類似' : 'Similar genre'}
+                {mt.similarGenre}
               </span>
             </div>
           </div>
@@ -252,8 +283,8 @@ export function SimilarProductMap({
                 <h4 className={`text-sm font-medium mb-2 flex items-center gap-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: getHopColor(hop).fill }} />
                   {hop === 1
-                    ? (locale === 'ja' ? (isMakerBased ? '同じメーカーの作品' : '同じ出演者の作品') : (isMakerBased ? 'Same Maker' : 'Same Performer'))
-                    : (locale === 'ja' ? 'ジャンル類似作品' : 'Similar Genre')}
+                    ? (isMakerBased ? mt.sameMakerProducts : mt.samePerformerProducts)
+                    : mt.similarGenreProducts}
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {hopSimilar.map((sim) => {

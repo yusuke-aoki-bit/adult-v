@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCart, TrendingDown, Clock, AlertTriangle, CheckCircle2, DollarSign, Film, Sparkles } from 'lucide-react';
 import type { FavoriteItem } from '../hooks/useFavorites';
+import { normalizeImageUrl } from '../lib/image-utils';
 
 interface ProductWithPrice extends FavoriteItem {
   price?: number | null;
@@ -290,7 +291,7 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
             <div className="w-12 h-16 sm:w-14 sm:h-[72px] relative shrink-0 bg-gray-700 rounded overflow-hidden">
               {product['thumbnail'] ? (
                 <Image
-                  src={product['thumbnail']}
+                  src={normalizeImageUrl(product['thumbnail'])}
                   alt={product['title'] || ''}
                   fill
                   className="object-cover"

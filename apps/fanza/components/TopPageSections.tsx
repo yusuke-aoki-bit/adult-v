@@ -41,6 +41,12 @@ interface TopPageSectionsProps {
 const GRID_CLASSES = 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2';
 const SKELETON_CLASSES = 'animate-pulse bg-gray-200 rounded-lg aspect-[2/3]';
 
+const sectionTexts = {
+  ja: { noHistory: '閲覧履歴がありません', recentActresses: '最近見た女優', recentProducts: '最近見た作品', saleActresses: 'セール中の女優', saleProducts: 'セール中の作品', recommendationHint: '閲覧履歴に基づいたおすすめを表示します' },
+  en: { noHistory: 'No viewing history', recentActresses: 'Recent actresses', recentProducts: 'Recent products', saleActresses: 'Actresses on sale', saleProducts: 'Products on sale', recommendationHint: 'Showing recommendations based on your history' },
+} as const;
+function getSectionText(locale: string) { return sectionTexts[locale as keyof typeof sectionTexts] || sectionTexts.ja; }
+
 // 最近見た作品コンテンツ
 function RecentlyViewedContent({ locale }: { locale: string }) {
   const { items: recentlyViewed, isLoading: historyLoading } = useRecentlyViewed();
@@ -84,7 +90,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
   }, [historyLoading, recentlyViewed, hasFetched]);
 
   if (historyLoading || recentlyViewed.length === 0) {
-    return <p className="text-gray-500 text-sm">閲覧履歴がありません</p>;
+    return <p className="text-gray-500 text-sm">{getSectionText(locale).noHistory}</p>;
   }
 
   if (loading) {
@@ -113,7 +119,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-pink-500 mb-2">最近見た女優</h4>
+          <h4 className="text-xs font-semibold text-pink-500 mb-2">{getSectionText(locale).recentActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -131,7 +137,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
       )}
       {/* 作品 */}
       <div>
-        <h4 className="text-xs font-semibold text-gray-500 mb-2">最近見た作品</h4>
+        <h4 className="text-xs font-semibold text-gray-500 mb-2">{getSectionText(locale).recentProducts}</h4>
         <div className={GRID_CLASSES}>
           {products.map((product) => (
             <ProductCardBase
@@ -153,7 +159,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
 }
 
 // セール商品コンテンツ
-function SaleProductsContent({ products }: { products: SaleProduct[] }) {
+function SaleProductsContent({ products, locale }: { products: SaleProduct[]; locale: string }) {
   if (products.length === 0) return null;
 
   // 女優を抽出（重複排除）
@@ -172,7 +178,7 @@ function SaleProductsContent({ products }: { products: SaleProduct[] }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-red-500 mb-2">セール中の女優</h4>
+          <h4 className="text-xs font-semibold text-red-500 mb-2">{getSectionText(locale).saleActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -190,7 +196,7 @@ function SaleProductsContent({ products }: { products: SaleProduct[] }) {
       )}
       {/* 作品 */}
       <div>
-        <h4 className="text-xs font-semibold text-gray-500 mb-2">セール中の作品</h4>
+        <h4 className="text-xs font-semibold text-gray-500 mb-2">{getSectionText(locale).saleProducts}</h4>
         <div className={GRID_CLASSES}>
           {products.slice(0, 8).map((product) => (
             <div key={product.productId} className="relative">
@@ -275,7 +281,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
   }, [historyLoading, recentlyViewed.length, fetchRecommendations]);
 
   if (historyLoading || recentlyViewed.length < 1) {
-    return <p className="text-gray-500 text-sm">閲覧履歴に基づいたおすすめを表示します</p>;
+    return <p className="text-gray-500 text-sm">{getSectionText(locale).recommendationHint}</p>;
   }
 
   if (loading) {
@@ -543,7 +549,7 @@ export function TopPageUpperSections({
             theme="light"
             defaultOpen={false}
           >
-            <SaleProductsContent products={saleProducts} />
+            <SaleProductsContent products={saleProducts} locale={locale} />
           </TopPageMenuSection>
         </div>
       )}

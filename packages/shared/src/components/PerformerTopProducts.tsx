@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { normalizeImageUrl } from '../lib/image-utils';
 
 interface TopRatedProduct {
   id: number;
@@ -111,7 +112,7 @@ export default function PerformerTopProducts({
               {/* サムネイル */}
               <div className={`relative shrink-0 w-24 h-16 rounded overflow-hidden ring-2 ${rankStyle.border}`}>
                 <Image
-                  src={product.imageUrl || PLACEHOLDER_IMAGE}
+                  src={normalizeImageUrl(product.imageUrl)}
                   alt={product['title']}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform"

@@ -11,6 +11,59 @@ import { localizedHref } from '@adult-v/shared/i18n';
 
 export const revalidate = 1800; // 30分キャッシュ
 
+const pageTexts = {
+  ja: {
+    metaTitle: 'セール中の作品一覧 | 割引・キャンペーン情報',
+    metaDescription: '今だけの限定セール・割引キャンペーン中の作品を一覧表示。最大90%OFFのお得な作品をチェック！',
+    sales: 'セール',
+    onSaleVideos: 'セール中の作品',
+    onSaleVideosTitle: 'セール中の作品一覧',
+    discountedDescription: '割引・キャンペーン中の作品',
+    itemsOnSale: (count: string) => `${count}件のセール中作品`,
+    onSale: 'セール中',
+    maxDiscount: '最大割引',
+    avgDiscount: '平均割引',
+    sites: '参加サイト',
+    all: 'すべて',
+    discount: '割引率',
+    noItems: 'セール中の作品がありません',
+    disclaimer: '※ セール情報は各サイトから取得しており、実際の価格・終了時期と異なる場合があります。購入前に必ず各サイトでご確認ください。',
+    endingSoon: '終了間近',
+    endingSoonAlt: '間もなく終了',
+    daysLeft: (days: number) => `残り${days}日`,
+    hoursLeft: (hours: number) => `残り${hours}時間`,
+    endingSoonBadge: '間もなく終了!',
+    buyNow: (aspName: string) => `今すぐ${aspName}で購入`,
+  },
+  en: {
+    metaTitle: 'On Sale Videos | Discounts & Promotions',
+    metaDescription: 'Browse all videos currently on sale. Check out great deals with discounts up to 90% off!',
+    sales: 'Sales',
+    onSaleVideos: 'On Sale Videos',
+    onSaleVideosTitle: 'On Sale Videos',
+    discountedDescription: 'Discounted videos and promotions',
+    itemsOnSale: (count: string) => `${count} items on sale`,
+    onSale: 'On Sale',
+    maxDiscount: 'Max Discount',
+    avgDiscount: 'Avg Discount',
+    sites: 'Sites',
+    all: 'All',
+    discount: 'Discount',
+    noItems: 'No items on sale',
+    disclaimer: '※ Sale information is fetched from each site and may differ from actual prices and end dates. Please verify on each site before purchasing.',
+    endingSoon: 'Ending soon',
+    endingSoonAlt: 'Ending soon',
+    daysLeft: (days: number) => `${days} days left`,
+    hoursLeft: (hours: number) => `${hours} hours left`,
+    endingSoonBadge: 'Ending Soon!',
+    buyNow: (aspName: string) => `Buy Now on ${aspName}`,
+  },
+} as const;
+
+function getPageText(locale: string) {
+  return pageTexts[locale as keyof typeof pageTexts] || pageTexts.ja;
+}
+
 interface PageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ page?: string; asp?: string; minDiscount?: string }>;
@@ -18,14 +71,11 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
+  const pt = getPageText(locale);
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
-  const title = locale === 'ja'
-    ? 'セール中の作品一覧 | 割引・キャンペーン情報'
-    : 'On Sale Videos | Discounts & Promotions';
-  const description = locale === 'ja'
-    ? '今だけの限定セール・割引キャンペーン中の作品を一覧表示。最大90%OFFのお得な作品をチェック！'
-    : 'Browse all videos currently on sale. Check out great deals with discounts up to 90% off!';
+  const title = pt.metaTitle;
+  const description = pt.metaDescription;
 
   const metadata = generateBaseMetadata(
     title,
@@ -55,26 +105,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 // 終了時間のフォーマット
 function formatEndTime(endAt: Date | null, locale: string): string | null {
   if (!endAt) return null;
+  const pt = getPageText(locale);
   const now = new Date();
   const end = new Date(endAt);
   const diffMs = end.getTime() - now.getTime();
 
-  if (diffMs <= 0) return locale === 'ja' ? '終了間近' : 'Ending soon';
+  if (diffMs <= 0) return pt.endingSoon;
 
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffHours / 24);
 
   if (diffDays > 0) {
-    return locale === 'ja' ? `残り${diffDays}日` : `${diffDays} days left`;
+    return pt.daysLeft(diffDays);
   }
   if (diffHours > 0) {
-    return locale === 'ja' ? `残り${diffHours}時間` : `${diffHours} hours left`;
+    return pt.hoursLeft(diffHours);
   }
-  return locale === 'ja' ? '間もなく終了' : 'Ending soon';
+  return pt.endingSoonAlt;
 }
 
 export default async function SalesPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
+  const pt = getPageText(locale);
   const resolvedSearchParams = await searchParams;
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
@@ -119,7 +171,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
   // パンくずリスト
   const breadcrumbItems = [
     { name: tNav('home'), url: localizedHref('/', locale) },
-    { name: locale === 'ja' ? 'セール' : 'Sales', url: localizedHref('/sales', locale) },
+    { name: pt.sales, url: localizedHref('/sales', locale) },
   ];
 
   // ItemListSchema
@@ -135,12 +187,12 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
         data={[
           generateBreadcrumbSchema(breadcrumbItems),
           generateCollectionPageSchema(
-            locale === 'ja' ? 'セール中の作品一覧' : 'On Sale Videos',
-            locale === 'ja' ? '割引・キャンペーン中の作品' : 'Discounted videos and promotions',
+            pt.onSaleVideosTitle,
+            pt.discountedDescription,
             localizedHref('/sales', locale),
             locale,
           ),
-          generateItemListSchema(itemListData, locale === 'ja' ? 'セール中の作品' : 'On Sale Videos'),
+          generateItemListSchema(itemListData, pt.onSaleVideos),
         ]}
       />
 
@@ -149,7 +201,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
           <Breadcrumb
             items={[
               { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: locale === 'ja' ? 'セール' : 'Sales' },
+              { label: pt.sales },
             ]}
             className="mb-3"
           />
@@ -159,16 +211,14 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
                 <span className="text-3xl">🔥</span>
-                {locale === 'ja' ? 'セール中の作品' : 'On Sale Videos'}
+                {pt.onSaleVideos}
               </h1>
               <p className="text-gray-400">
-                {locale === 'ja'
-                  ? `${totalCount.toLocaleString()}件のセール中作品`
-                  : `${totalCount.toLocaleString()} items on sale`}
+                {pt.itemsOnSale(totalCount.toLocaleString())}
               </p>
             </div>
             <SocialShareButtons
-              title={locale === 'ja' ? 'セール中の作品一覧' : 'On Sale Videos'}
+              title={pt.onSaleVideosTitle}
               compact
               hashtags={['セール', '割引']}
             />
@@ -178,19 +228,19 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <div className="bg-linear-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-orange-400">{saleStats.totalSales.toLocaleString()}</p>
-              <p className="text-xs text-gray-400">{locale === 'ja' ? 'セール中' : 'On Sale'}</p>
+              <p className="text-xs text-gray-400">{pt.onSale}</p>
             </div>
             <div className="bg-linear-to-br from-pink-500/20 to-rose-500/20 border border-pink-500/30 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-pink-400">{maxDiscount}%</p>
-              <p className="text-xs text-gray-400">{locale === 'ja' ? '最大割引' : 'Max Discount'}</p>
+              <p className="text-xs text-gray-400">{pt.maxDiscount}</p>
             </div>
             <div className="bg-linear-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-blue-400">{avgDiscount}%</p>
-              <p className="text-xs text-gray-400">{locale === 'ja' ? '平均割引' : 'Avg Discount'}</p>
+              <p className="text-xs text-gray-400">{pt.avgDiscount}</p>
             </div>
             <div className="bg-linear-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-green-400">{Object.keys(aspCounts).length}</p>
-              <p className="text-xs text-gray-400">{locale === 'ja' ? '参加サイト' : 'Sites'}</p>
+              <p className="text-xs text-gray-400">{pt.sites}</p>
             </div>
           </div>
 
@@ -204,7 +254,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
-              {locale === 'ja' ? 'すべて' : 'All'} ({allSaleProducts.length})
+              {pt.all} ({allSaleProducts.length})
             </Link>
             {Object.entries(aspCounts)
               .sort((a, b) => b[1] - a[1])
@@ -241,7 +291,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
                 }`}
               >
                 {discount === 0
-                  ? (locale === 'ja' ? '割引率' : 'Discount')
+                  ? pt.discount
                   : `${discount}%+`}
               </Link>
             ))}
@@ -250,7 +300,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
           {/* 商品一覧 */}
           {paginatedProducts.length === 0 ? (
             <p className="text-gray-400 text-center py-12">
-              {locale === 'ja' ? 'セール中の作品がありません' : 'No items on sale'}
+              {pt.noItems}
             </p>
           ) : (
             <>
@@ -284,9 +334,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
           {/* 注意書き */}
           <div className="mt-8 p-4 bg-gray-800/50 rounded-lg text-xs text-gray-400">
             <p>
-              {locale === 'ja'
-                ? '※ セール情報は各サイトから取得しており、実際の価格・終了時期と異なる場合があります。購入前に必ず各サイトでご確認ください。'
-                : '※ Sale information is fetched from each site and may differ from actual prices and end dates. Please verify on each site before purchasing.'}
+              {pt.disclaimer}
             </p>
           </div>
         </div>
@@ -316,6 +364,7 @@ function SaleProductCard({
   product: SaleProduct;
   locale: string;
 }) {
+  const pt = getPageText(locale);
   const productUrl = localizedHref(`/products/${product.normalizedProductId || product.productId}`, locale);
   const endTimeText = formatEndTime(product.endAt, locale);
   const urgency = getUrgencyLevel(product.endAt);
@@ -325,7 +374,7 @@ function SaleProductCard({
       {/* 緊急セールバッジ（1時間以内） */}
       {urgency === 'critical' && (
         <div className="absolute top-0 left-0 right-0 z-20 bg-red-600 text-white text-center py-1 text-xs font-bold animate-pulse">
-          {locale === 'ja' ? '間もなく終了!' : 'Ending Soon!'}
+          {pt.endingSoonBadge}
         </div>
       )}
 
@@ -403,7 +452,7 @@ function SaleProductCard({
                 : 'bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400'
             }`}
           >
-            {locale === 'ja' ? `今すぐ${product.aspName}で購入` : `Buy Now on ${product.aspName}`}
+            {pt.buyNow(product.aspName)}
           </a>
         )}
       </div>

@@ -15,13 +15,11 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const isJa = locale === 'ja';
+  const mt = translations[locale as keyof typeof translations] || translations.ja;
 
   return {
-    title: isJa ? '自然言語検索（AI検索）' : 'Natural Language Search (AI Search)',
-    description: isJa
-      ? 'AIを活用した自然言語検索。「○○な雰囲気の作品」「△△っぽい女優」など、自然な言葉で作品を探せます。'
-      : 'AI-powered natural language search. Find products using natural language like "works with a certain vibe" or "actresses similar to..."',
+    title: mt.metaTitle,
+    description: mt.metaDescription,
   };
 }
 
@@ -53,6 +51,10 @@ const translations = {
     totalProducts: '全商品',
     totalPerformers: '全女優',
     coverage: 'カバレッジ',
+    metaTitle: '自然言語検索（AI検索）',
+    metaDescription: 'AIを活用した自然言語検索。「○○な雰囲気の作品」「△△っぽい女優」など、自然な言葉で作品を探せます。',
+    prNotice: '当ページには広告・アフィリエイトリンクが含まれています',
+    keywordSearchLink: '従来のキーワード検索はこちら',
   },
   en: {
     title: 'Natural Language Search',
@@ -80,6 +82,10 @@ const translations = {
     totalProducts: 'Total Products',
     totalPerformers: 'Total Performers',
     coverage: 'Coverage',
+    metaTitle: 'Natural Language Search (AI Search)',
+    metaDescription: 'AI-powered natural language search. Find products using natural language like "works with a certain vibe" or "actresses similar to..."',
+    prNotice: 'This page contains advertisements and affiliate links',
+    keywordSearchLink: 'Use traditional keyword search',
   },
 };
 
@@ -136,7 +142,7 @@ export default async function SemanticSearchPage({ params, searchParams }: Props
         {/* PR表記（景品表示法・ステマ規制対応） */}
         <p className="text-xs text-gray-400 mb-4 text-center">
           <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
-          {locale === 'ja' ? '当ページには広告・アフィリエイトリンクが含まれています' : 'This page contains advertisements and affiliate links'}
+          {t.prNotice}
         </p>
 
         {/* ヘッダー */}
@@ -253,7 +259,7 @@ export default async function SemanticSearchPage({ params, searchParams }: Props
             className="inline-flex items-center gap-2 text-sm theme-text-muted hover:text-white transition-colors"
           >
             <Search className="w-4 h-4" />
-            {locale === 'ja' ? '従来のキーワード検索はこちら' : 'Use traditional keyword search'}
+            {t.keywordSearchLink}
           </Link>
         </div>
       </div>

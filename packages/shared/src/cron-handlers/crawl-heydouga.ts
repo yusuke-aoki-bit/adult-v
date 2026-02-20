@@ -187,17 +187,18 @@ async function saveProduct(
     ON CONFLICT (normalized_product_id) DO UPDATE SET
       title = EXCLUDED.title, description = EXCLUDED.description,
       release_date = EXCLUDED.release_date, default_thumbnail_url = EXCLUDED.default_thumbnail_url, updated_at = NOW()
-    RETURNING id
+    RETURNING id, (xmax = 0) AS is_new
   `);
 
-  const dbProductId = (productResult.rows[0] as { id: number }).id;
-  if (productResult.rowCount === 1) stats.newProducts++; else stats.updatedProducts++;
+  const row = productResult.rows[0] as { id: number; is_new: boolean };
+  const dbProductId = row.id;
+  if (row.is_new) stats.newProducts++; else stats.updatedProducts++;
 
   await db.execute(sql`
-    INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, data_source, last_updated)
-    VALUES (${dbProductId}, 'HEYDOUGA', ${compositeId}, ${affiliateUrl}, 'CRAWL', NOW())
+    INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, product_type, data_source, last_updated)
+    VALUES (${dbProductId}, 'HEYDOUGA', ${compositeId}, ${affiliateUrl}, 'haishin', 'CRAWL', NOW())
     ON CONFLICT (product_id, asp_name) DO UPDATE SET
-      affiliate_url = EXCLUDED.affiliate_url, last_updated = NOW()
+      affiliate_url = EXCLUDED.affiliate_url, product_type = EXCLUDED.product_type, last_updated = NOW()
   `);
 
   // 出演者をバッチ用に収集

@@ -37,6 +37,18 @@ interface MgsProduct {
 
 const AFFILIATE_CODE = '6CS5PGEBQDUYPZLHYEM33TBZFJ';
 
+const FETCH_TIMEOUT = 15_000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function generateAffiliateWidget(productId: string): string {
   const className = createHash('md5').update(productId).digest('hex').substring(0, 8);
   return `<div class="${className}"></div><script id="mgs_Widget_affiliate" type="text/javascript" charset="utf-8" src="https://static.mgstage.com/mgs/script/common/mgs_Widget_affiliate.js?c=${AFFILIATE_CODE}&t=text&o=t&b=t&s=MOMO&p=${productId}&from=ppv&class=${className}"></script>`;
@@ -45,7 +57,7 @@ function generateAffiliateWidget(productId: string): string {
 async function getProductUrlsFromList(page: number): Promise<string[]> {
   const listUrl = `https://www.mgstage.com/search/cSearch.php?search_word=&sort=new&list_cnt=30&page=${page}`;
 
-  const response = await fetch(listUrl, {
+  const response = await fetchWithTimeout(listUrl, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       'Cookie': 'adc=1',
@@ -56,24 +68,22 @@ async function getProductUrlsFromList(page: number): Promise<string[]> {
 
   const html = await response['text']();
   const $ = cheerio.load(html);
-  const urls: string[] = [];
+  const urlSet = new Set<string>();
 
   $('a[href*="/product/product_detail/"]').each((_, el) => {
     const href = $(el).attr('href');
     if (href) {
       const fullUrl = href.startsWith('http') ? href : `https://www.mgstage.com${href}`;
-      if (!urls.includes(fullUrl)) {
-        urls.push(fullUrl);
-      }
+      urlSet.add(fullUrl);
     }
   });
 
-  return urls;
+  return Array.from(urlSet);
 }
 
-async function parseMgsDetailPage(productUrl: string): Promise<MgsProduct | null> {
+async function parseMgsDetailPage(productUrl: string): Promise<(MgsProduct & { rawHtml: string }) | null> {
   try {
-    const response = await fetch(productUrl, {
+    const response = await fetchWithTimeout(productUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Cookie': 'adc=1',
@@ -159,6 +169,7 @@ async function parseMgsDetailPage(productUrl: string): Promise<MgsProduct | null
       ...(releaseDate !== undefined && { releaseDate }),
       ...(price !== undefined && { price }),
       affiliateWidget: generateAffiliateWidget(productId),
+      rawHtml: html,
     };
   } catch {
     return null;
@@ -229,19 +240,12 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
 
           stats.totalFetched++;
 
-          // HTMLを保存
-          const htmlResponse = await fetch(productUrl, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Cookie': 'adc=1',
-            },
-          });
-          const html = await htmlResponse.text();
-          const hash = createHash('sha256').update(html).digest('hex');
+          // HTMLを保存（parseMgsDetailPageで既に取得済み）
+          const hash = createHash('sha256').update(product.rawHtml).digest('hex');
 
           await db.execute(sql`
             INSERT INTO raw_html_data (source, product_id, url, html_content, hash)
-            VALUES ('MGS', ${product['productId']}, ${productUrl}, ${html}, ${hash})
+            VALUES ('MGS', ${product['productId']}, ${productUrl}, ${product.rawHtml}, ${hash})
             ON CONFLICT (source, product_id) DO UPDATE SET
               html_content = EXCLUDED.html_content,
               hash = EXCLUDED.hash,
@@ -250,7 +254,7 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
           stats.rawDataSaved++;
 
           // 商品データを保存
-          const normalizedProductId = product['productId'].toLowerCase();
+          const normalizedProductId = `mgs-${product['productId'].toLowerCase()}`;
 
           const productResult = await db.execute(sql`
             INSERT INTO products (
@@ -268,11 +272,12 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
               release_date = EXCLUDED.release_date,
               default_thumbnail_url = EXCLUDED.default_thumbnail_url,
               updated_at = NOW()
-            RETURNING id
+            RETURNING id, (xmax = 0) AS is_new
           `);
 
-          const productId = (productResult.rows[0] as { id: number }).id;
-          if (productResult.rowCount === 1) {
+          const row = productResult.rows[0] as { id: number; is_new: boolean };
+          const productId = row.id;
+          if (row.is_new) {
             stats.newProducts++;
           } else {
             stats.updatedProducts++;
@@ -281,15 +286,16 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
           // product_sources
           await db.execute(sql`
             INSERT INTO product_sources (
-              product_id, asp_name, original_product_id, affiliate_url, price, data_source, last_updated
+              product_id, asp_name, original_product_id, affiliate_url, price, product_type, data_source, last_updated
             )
             VALUES (
               ${productId}, 'MGS', ${product['productId']}, ${product.affiliateWidget},
-              ${product['price'] || null}, 'CRAWL', NOW()
+              ${product['price'] || null}, 'haishin', 'CRAWL', NOW()
             )
             ON CONFLICT (product_id, asp_name) DO UPDATE SET
               affiliate_url = EXCLUDED.affiliate_url,
               price = EXCLUDED.price,
+              product_type = EXCLUDED.product_type,
               last_updated = NOW()
           `);
 

@@ -55,6 +55,18 @@ const FETCH_HEADERS: Record<string, string> = {
   'Referer': 'https://www.dmm.co.jp/',
 };
 
+const FETCH_TIMEOUT = 15_000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function generateAffiliateUrl(cid: string): string {
   return `https://al.dmm.co.jp/?lurl=https%3A%2F%2Fvideo.dmm.co.jp%2Fav%2Fcontent%2F%3Fid%3D${cid}&af_id=${AFFILIATE_ID}`;
 }
@@ -64,7 +76,7 @@ async function fetchCidsFromListPage(page: number): Promise<string[]> {
   const url = `https://www.dmm.co.jp/digital/videoa/-/list/=/sort=date/page=${page}/`;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: FETCH_HEADERS,
       redirect: 'follow',
     });
@@ -73,37 +85,37 @@ async function fetchCidsFromListPage(page: number): Promise<string[]> {
     const html = await response.text();
     if (html.length < 500) return [];
 
-    const cids: string[] = [];
+    const cidSet = new Set<string>();
 
     // パターン1: /cid=xxx/ (リンク内)
     for (const match of html.matchAll(/cid=([a-z][a-z0-9]{4,})/gi)) {
       const cid = match[1];
-      if (cid && !cids.includes(cid)) {
-        cids.push(cid);
+      if (cid) {
+        cidSet.add(cid);
       }
     }
 
     // パターン2: /video/xxx/ (画像URL)
-    if (cids.length === 0) {
+    if (cidSet.size === 0) {
       for (const match of html.matchAll(/\/video\/([a-z][a-z0-9]{4,})\//gi)) {
         const cid = match[1];
-        if (cid && !cids.includes(cid)) {
-          cids.push(cid);
+        if (cid) {
+          cidSet.add(cid);
         }
       }
     }
 
     // パターン3: /av/detail/ or /av/content/ リンク
-    if (cids.length === 0) {
+    if (cidSet.size === 0) {
       for (const match of html.matchAll(/\/av\/(?:detail|content)\/[^"]*?(?:cid=|id=)([a-z][a-z0-9]{4,})/gi)) {
         const cid = match[1];
-        if (cid && !cids.includes(cid)) {
-          cids.push(cid);
+        if (cid) {
+          cidSet.add(cid);
         }
       }
     }
 
-    return cids;
+    return Array.from(cidSet);
   } catch {
     return [];
   }
@@ -119,7 +131,7 @@ async function fetchDetailHtml(cid: string): Promise<string | null> {
 
   for (const url of urls) {
     try {
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         headers: FETCH_HEADERS,
         redirect: 'follow',
       });
@@ -340,6 +352,23 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
       const allPerformerNames = new Set<string>();
       const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
 
+      async function flushPerformerBatch() {
+        if (allPerformerNames.size === 0) return;
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) links.push({ productId, performerId });
+          }
+        }
+        await batchInsertProductPerformers(db, links);
+        allPerformerNames.clear();
+        pendingPerformerLinks.length = 0;
+      }
+
       // リストページからCIDを取得して詳細ページを処理
       while (
         Date.now() - startTime < TIME_LIMIT &&
@@ -358,17 +387,22 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
         stats.cidsFound += cids.length;
         console.log(`[crawl-fanza] Found ${cids.length} CIDs on page ${currentPage}`);
 
+        // バッチ既存チェック: 全CIDを一括クエリ
+        const cidValues = sql.join(cids.map(c => sql`${c}`), sql`, `);
+        const existingResult = await db.execute(sql`
+          SELECT original_product_id FROM product_sources
+          WHERE asp_name = 'FANZA' AND original_product_id IN (${cidValues})
+        `);
+        const existingCids = new Set(
+          (existingResult.rows as { original_product_id: string }[]).map(r => r.original_product_id)
+        );
+
         for (const cid of cids) {
           if (Date.now() - startTime > TIME_LIMIT) break;
           if (stats.totalFetched >= limit) break;
 
-          // 既存チェック
-          const existing = await db.execute(sql`
-            SELECT 1 FROM product_sources
-            WHERE asp_name = 'FANZA' AND original_product_id = ${cid}
-            LIMIT 1
-          `);
-          if (existing.rows.length > 0) {
+          // 既存チェック（バッチ結果を参照）
+          if (existingCids.has(cid)) {
             stats.skipped++;
             continue;
           }
@@ -417,11 +451,12 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
                 title = EXCLUDED.title, release_date = EXCLUDED.release_date,
                 duration = EXCLUDED.duration, default_thumbnail_url = EXCLUDED.default_thumbnail_url,
                 updated_at = NOW()
-              RETURNING id
+              RETURNING id, (xmax = 0) AS is_new
             `);
 
-            const productId = (productResult.rows[0] as { id: number }).id;
-            if (productResult.rowCount === 1) stats.newProducts++;
+            const row = productResult.rows[0] as { id: number; is_new: boolean };
+            const productId = row.id;
+            if (row.is_new) stats.newProducts++;
             else stats.updatedProducts++;
 
             // product_sources
@@ -429,15 +464,15 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
             await db.execute(sql`
               INSERT INTO product_sources (
                 product_id, asp_name, original_product_id, affiliate_url,
-                price, data_source, last_updated
+                price, product_type, data_source, last_updated
               )
               VALUES (
                 ${productId}, 'FANZA', ${cid}, ${affiliateUrl},
-                ${product.price || null}, 'CRAWL', NOW()
+                ${product.price || null}, 'haishin', 'CRAWL', NOW()
               )
               ON CONFLICT (product_id, asp_name) DO UPDATE SET
                 affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price,
-                last_updated = NOW()
+                product_type = EXCLUDED.product_type, last_updated = NOW()
             `);
 
             // 出演者をバッチ用に収集
@@ -466,28 +501,17 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
           }
         }
 
+        // ページ終了時に演者バッチをフラッシュ（タイムアウトによるデータロス防止）
+        await flushPerformerBatch();
+
         currentPage++;
 
         // ページ間レート制限
         await new Promise(r => setTimeout(r, 3000));
       }
 
-      // バッチ: 演者UPSERT + 紐付けINSERT
-      if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
-        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
-
-        const links: { productId: number; performerId: number }[] = [];
-        for (const { productId, performerNames } of pendingPerformerLinks) {
-          for (const name of performerNames) {
-            const performerId = nameToId.get(name);
-            if (performerId) links.push({ productId, performerId });
-          }
-        }
-
-        await batchInsertProductPerformers(db, links);
-      }
+      // 最終フラッシュ（ループ途中で抜けた場合の残りデータ）
+      await flushPerformerBatch();
 
       const duration = Math.round((Date.now() - startTime) / 1000);
 

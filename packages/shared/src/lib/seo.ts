@@ -879,17 +879,23 @@ export function generateHowToSchema(
   };
 
   const localizedSteps = steps[locale as keyof typeof steps] || steps['ja'];
-  const title = locale === 'ja'
-    ? `「${productTitle}」を${providerName}で視聴する方法`
-    : `How to watch "${productTitle}" on ${providerName}`;
+  const howToTexts: Record<string, { title: string; description: string }> = {
+    ja: {
+      title: `「${productTitle}」を${providerName}で視聴する方法`,
+      description: `${providerName}で「${productTitle}」を購入・視聴するための手順をご紹介します。`,
+    },
+    en: {
+      title: `How to watch "${productTitle}" on ${providerName}`,
+      description: `Step-by-step guide to purchase and watch "${productTitle}" on ${providerName}.`,
+    },
+  };
+  const howTo = howToTexts[locale] || howToTexts.ja;
 
   return {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: title,
-    description: locale === 'ja'
-      ? `${providerName}で「${productTitle}」を購入・視聴するための手順をご紹介します。`
-      : `Step-by-step guide to purchase and watch "${productTitle}" on ${providerName}.`,
+    name: howTo.title,
+    description: howTo.description,
     step: localizedSteps.map((step, index) => ({
       '@type': 'HowToStep',
       position: index + 1,

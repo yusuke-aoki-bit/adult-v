@@ -53,6 +53,7 @@
     "./constants/filters": "./src/constants/filters.ts",
     "./components/stats": "./src/components/stats/index.ts",
     "./config/next-config-base": "./src/config/next-config-base.ts",
+    "./lib/utils/formatDate": "./src/lib/utils/formatDate.ts",
     "./utils": "./src/utils/index.ts",
     "./utils/slack-notify": "./src/utils/slack-notify.ts"
   },

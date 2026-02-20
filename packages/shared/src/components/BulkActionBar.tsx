@@ -35,12 +35,11 @@ export function BulkActionBar({
 
   const isDark = theme === 'dark';
 
-  const t = {
-    selected: locale === 'ja' ? '件選択中' : ' selected',
-    selectAll: locale === 'ja' ? 'すべて選択' : 'Select all',
-    clearSelection: locale === 'ja' ? '選択解除' : 'Clear selection',
-    processing: locale === 'ja' ? '処理中...' : 'Processing...',
-  };
+  const texts = {
+    ja: { selected: '件選択中', selectAll: 'すべて選択', clearSelection: '選択解除', processing: '処理中...' },
+    en: { selected: ' selected', selectAll: 'Select all', clearSelection: 'Clear selection', processing: 'Processing...' },
+  } as const;
+  const t = texts[locale as keyof typeof texts] || texts.ja;
 
   const handleAction = async (action: BulkAction) => {
     if (loadingAction) return;
@@ -74,7 +73,7 @@ export function BulkActionBar({
           {selectedCount}
         </span>
         <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-          {locale === 'ja' ? `${selectedCount}${t.selected}` : `${selectedCount}${t.selected}`}
+          {selectedCount}{t.selected}
         </span>
       </div>
 

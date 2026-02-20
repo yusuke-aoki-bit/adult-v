@@ -179,15 +179,14 @@ export function usePreferenceAnalysis(locale: string = 'ja'): PreferenceAnalysis
     const summaryParts: string[] = [];
     if (topPreferences.length > 0) {
       const topLabels = topPreferences.map((p) => p.label);
-      if (locale === 'ja') {
-        summaryParts.push(`あなたは「${topLabels.join('」「')}」系がお好みです`);
-      } else if (locale === 'en') {
-        summaryParts.push(`You prefer ${topLabels.join(', ')} content`);
-      } else if (locale === 'zh') {
-        summaryParts.push(`您喜欢${topLabels.join('、')}类内容`);
-      } else if (locale === 'ko') {
-        summaryParts.push(`${topLabels.join(', ')} 콘텐츠를 선호합니다`);
-      }
+      const summaryFormats: Record<string, (labels: string[]) => string> = {
+        ja: (l) => `あなたは「${l.join('」「')}」系がお好みです`,
+        en: (l) => `You prefer ${l.join(', ')} content`,
+        zh: (l) => `您喜欢${l.join('、')}类内容`,
+        ko: (l) => `${l.join(', ')} 콘텐츠를 선호합니다`,
+      };
+      const formatter = summaryFormats[locale] || summaryFormats.ja;
+      summaryParts.push(formatter(topLabels));
     }
 
     // おすすめキーワード

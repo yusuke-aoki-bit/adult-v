@@ -163,32 +163,33 @@ export async function GET(request: NextRequest) {
 
     // インサイト生成
     const insights: string[] = [];
+    const insightFormats: Record<string, { rising: (names: string[]) => string; performers: (names: string[]) => string; topGenre: (name: string, count: number, period: string) => string }> = {
+      ja: {
+        rising: (names) => `「${names.join('」「')}」が人気上昇中`,
+        performers: (names) => `${names.join('、')}の新作が増加`,
+        topGenre: (name, count, p) => `今${p === 'month' ? '月' : '週'}最も人気のジャンルは「${name}」(${count}作品)`,
+      },
+      en: {
+        rising: (names) => `"${names.join('", "')}" are trending up`,
+        performers: (names) => `${names.join(', ')} releasing more content`,
+        topGenre: (name, count, p) => `Most popular genre this ${p}: "${name}" (${count} releases)`,
+      },
+    };
+    const fmt = insightFormats[locale] || insightFormats.ja;
 
     const risingTags = tagTrends.filter(t => t.trend === 'up').slice(0, 3);
     if (risingTags.length > 0) {
-      if (locale === 'ja') {
-        insights.push(`「${risingTags.map(t => t.name).join('」「')}」が人気上昇中`);
-      } else {
-        insights.push(`"${risingTags.map(t => t.name).join('", "')}" are trending up`);
-      }
+      insights.push(fmt.rising(risingTags.map(t => t.name)));
     }
 
     const risingPerformers = performerTrends.filter(p => p.trend === 'up').slice(0, 3);
     if (risingPerformers.length > 0) {
-      if (locale === 'ja') {
-        insights.push(`${risingPerformers.map(p => p.name).join('、')}の新作が増加`);
-      } else {
-        insights.push(`${risingPerformers.map(p => p.name).join(', ')} releasing more content`);
-      }
+      insights.push(fmt.performers(risingPerformers.map(p => p.name)));
     }
 
     const topTag = tagTrends[0];
     if (topTag) {
-      if (locale === 'ja') {
-        insights.push(`今${period === 'month' ? '月' : '週'}最も人気のジャンルは「${topTag.name}」(${topTag.count}作品)`);
-      } else {
-        insights.push(`Most popular genre this ${period}: "${topTag.name}" (${topTag.count} releases)`);
-      }
+      insights.push(fmt.topGenre(topTag.name, topTag.count, period));
     }
 
     const response: TrendsResponse = {

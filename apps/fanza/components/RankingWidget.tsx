@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Trophy, TrendingUp } from 'lucide-react';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 
 // Client-side translations
 const translations = {
@@ -87,6 +88,7 @@ export default function RankingWidget({
       const response = await fetch(
         `/api/ranking/${type}?period=${selectedPeriod}&limit=${limit}`
       );
+      if (!response.ok) { setRanking([]); return; }
       const data = await response.json();
       setRanking(data.ranking || []);
     } catch (error: unknown) {
@@ -182,7 +184,7 @@ export default function RankingWidget({
                 {(item.thumbnail || item.image) && (
                   <div className="shrink-0 w-16 h-16 relative rounded overflow-hidden bg-gray-200">
                     <Image
-                      src={item.thumbnail || item.image || ''}
+                      src={normalizeImageUrl(item.thumbnail || item.image)}
                       alt={item.title || item.name || ''}
                       fill
                       className="object-cover"

@@ -179,7 +179,18 @@
     "saleFilter": "세일",
     "onSaleOnly": "세일 상품만",
     "reviewFilter": "리뷰",
-    "hasReviewOnly": "리뷰가 있는 것만"
+    "hasReviewOnly": "리뷰가 있는 것만",
+    "actressFeatures": "여배우 특징",
+    "cupSize": "컵 사이즈",
+    "cupLabel": "컵",
+    "height": "키",
+    "bloodType": "혈액형",
+    "bloodTypeLabel": "형",
+    "debutYear": "데뷔 연도",
+    "workCount": "작품 수",
+    "worksOrMore": "작품 이상",
+    "under": "<",
+    "over": "+"
   },
   "sort": {
     "nameAsc": "이름 (오름차순)",

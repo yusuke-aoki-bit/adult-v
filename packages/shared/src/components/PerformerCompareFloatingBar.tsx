@@ -29,14 +29,11 @@ export function PerformerCompareFloatingBar({
 
   const isDark = theme === 'dark';
 
-  const t = {
-    compare: locale === 'ja' ? '比較する' : 'Compare',
-    clearAll: locale === 'ja' ? 'クリア' : 'Clear',
-    performers: locale === 'ja' ? '名' : 'performers',
-    hint: locale === 'ja'
-      ? '「比較する」ボタンで比較ページへ'
-      : 'Click "Compare" to view comparison',
-  };
+  const texts = {
+    ja: { compare: '比較する', clearAll: 'クリア', performers: '名', hint: '「比較する」ボタンで比較ページへ' },
+    en: { compare: 'Compare', clearAll: 'Clear', performers: 'performers', hint: 'Click "Compare" to view comparison' },
+  } as const;
+  const t = texts[locale as keyof typeof texts] || texts.ja;
 
   // マウント時にセッションストレージをチェック
   useEffect(() => {

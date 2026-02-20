@@ -36,11 +36,11 @@ export function PerformerCompareButton({
     lg: 'w-6 h-6',
   };
 
-  const t = {
-    addToCompare: locale === 'ja' ? '比較に追加' : 'Add to compare',
-    removeFromCompare: locale === 'ja' ? '比較から削除' : 'Remove from compare',
-    compareFull: locale === 'ja' ? `比較リストが満杯（${maxItems}件）` : `Compare list full (${maxItems} items)`,
-  };
+  const texts = {
+    ja: { addToCompare: '比較に追加', removeFromCompare: '比較から削除', compareFull: `比較リストが満杯（${maxItems}件）` },
+    en: { addToCompare: 'Add to compare', removeFromCompare: 'Remove from compare', compareFull: `Compare list full (${maxItems} items)` },
+  } as const;
+  const t = texts[locale as keyof typeof texts] || texts.ja;
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();

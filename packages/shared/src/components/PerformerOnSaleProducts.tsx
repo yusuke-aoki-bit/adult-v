@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { normalizeImageUrl } from '../lib/image-utils';
 
 interface OnSaleProduct {
   id: number;
@@ -91,7 +92,7 @@ export default function PerformerOnSaleProducts({
               {/* サムネイル */}
               <div className="relative aspect-video">
                 <Image
-                  src={product.imageUrl || PLACEHOLDER_IMAGE}
+                  src={normalizeImageUrl(product.imageUrl)}
                   alt={product['title']}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform"

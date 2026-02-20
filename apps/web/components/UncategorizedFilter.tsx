@@ -1,8 +1,14 @@
 'use client';
 
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname, useParams } from 'next/navigation';
 import { providerMeta } from '@/lib/providers';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
+
+const filterTexts = {
+  ja: { settings: 'フィルター設定', pattern: '品番パターン', site: '配信サイト', clear: 'クリア' },
+  en: { settings: 'Filter Settings', pattern: 'Product Pattern', site: 'Distribution Sites', clear: 'Clear' },
+} as const;
+function getFilterText(locale: string) { return filterTexts[locale as keyof typeof filterTexts] || filterTexts.ja; }
 
 interface PatternStat {
   pattern: string;
@@ -66,6 +72,10 @@ export default function UncategorizedFilter({
     router.push(`${pathname}${queryString ? `?${queryString}` : ''}`);
   };
 
+  const params = useParams();
+  const locale = (params?.['locale'] as string) || 'ja';
+  const ft = getFilterText(locale);
+
   const hasActiveFilters = selectedPattern !== '' || selectedAsp !== '';
   const activeFilterCount = (selectedPattern ? 1 : 0) + (selectedAsp ? 1 : 0);
 
@@ -79,7 +89,7 @@ export default function UncategorizedFilter({
           <svg className="w-6 h-6 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
           </svg>
-          <span className="text-base sm:text-sm">フィルター設定</span>
+          <span className="text-base sm:text-sm">{ft.settings}</span>
         </div>
         {hasActiveFilters && (
           <span className="text-xs bg-yellow-600 text-white px-2.5 py-1 sm:px-2 sm:py-0.5 rounded-full font-medium">
@@ -91,7 +101,7 @@ export default function UncategorizedFilter({
         {/* 品番パターンフィルター */}
         {patternStats.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">品番パターン</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{ft.pattern}</h3>
             <div className="flex flex-wrap gap-2">
               {patternStats.map((stat) => {
                 const isSelected = selectedPattern === stat.pattern;
@@ -117,7 +127,7 @@ export default function UncategorizedFilter({
         {/* 配信サイト（ASP）フィルター */}
         {aspStats.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">配信サイト</h3>
+            <h3 className="text-base sm:text-sm font-semibold text-white mb-3">{ft.site}</h3>
             <div className="flex flex-wrap gap-2">
               {aspStats.map((asp) => {
                 const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
@@ -150,7 +160,7 @@ export default function UncategorizedFilter({
               onClick={handleClear}
               className="flex-1 sm:flex-none text-center px-6 py-3.5 sm:py-2 border border-gray-600 text-gray-200 rounded-lg sm:rounded-md font-medium hover:bg-gray-700 active:bg-gray-600 transition-colors min-h-[52px] sm:min-h-0"
             >
-              クリア
+              {ft.clear}
             </button>
           </div>
         )}

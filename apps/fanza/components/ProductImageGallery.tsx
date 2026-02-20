@@ -4,34 +4,12 @@ import Image from 'next/image';
 import { useState, useCallback, useMemo, useRef, TouchEvent } from 'react';
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { isDtiUncensoredSite, getFullSizeImageUrl } from '@/lib/image-utils';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 import { useTranslations } from 'next-intl';
 import ImageLightbox from './ImageLightbox';
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
-
-// 有効な画像URLかどうかをチェック（プロトコル相対URL対応）
-function isValidImageUrl(url: string): boolean {
-  if (!url) return false;
-  // HTMLタグが含まれている場合は無効
-  if (url.includes('<') || url.includes('>')) return false;
-  // 基本的なURL形式をチェック（プロトコル相対URLも許可）
-  try {
-    const urlToCheck = url.startsWith('//') ? `https:${url}` : url;
-    const parsed = new URL(urlToCheck);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
-// URLを正規化（プロトコル相対URL → https://）
-function normalizeUrl(url: string): string {
-  if (!url) return PLACEHOLDER_IMAGE;
-  if (url.startsWith('//')) {
-    return `https:${url}`;
-  }
-  return url;
-}
+const SHARED_PLACEHOLDER = 'https://placehold.co/400x520/052e16/ffffff?text=No+Image';
 
 interface ProductImageGalleryProps {
   mainImage: string | null;
@@ -59,8 +37,9 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
   // 注意: FANZA ASP規約に準拠し、FANZA画像のみ使用（他ASP画像は使用しない）
   const allImagesWithDuplicates = useMemo(() => {
     return [mainImage, ...(sampleImages || [])]
-      .filter((img): img is string => typeof img === 'string' && Boolean(img) && isValidImageUrl(img))
-      .map((img) => normalizeUrl(img));
+      .filter((img): img is string => typeof img === 'string' && Boolean(img))
+      .map((img) => normalizeImageUrl(img))
+      .filter(img => img !== SHARED_PLACEHOLDER);
   }, [mainImage, sampleImages]);
 
   // 重複する画像URLを除外（Set を使用）

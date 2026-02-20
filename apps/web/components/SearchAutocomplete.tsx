@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Search, X } from 'lucide-react';
 import { useDebounce } from '@adult-v/shared/hooks';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 
 // Client-side translations
 const translations = {
@@ -153,32 +154,32 @@ export default function SearchAutocomplete({
       return;
     }
 
-    let cancelled = false;
+    const controller = new AbortController();
     setIsLoading(true);
 
-    fetch(`/api/search/autocomplete?q=${encodeURIComponent(debouncedQuery)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled) {
-          setResults(data.results || []);
-          setIsOpen(true);
-          setSelectedIndex(-1);
-        }
+    fetch(`/api/search/autocomplete?q=${encodeURIComponent(debouncedQuery)}`, { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error('fetch failed');
+        return res.json();
       })
-      .catch((error) => {
-        console.error('Autocomplete error:', error);
-        if (!cancelled) {
+      .then((data) => {
+        setResults(data.results || []);
+        setIsOpen(true);
+        setSelectedIndex(-1);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
           setResults([]);
         }
       })
       .finally(() => {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setIsLoading(false);
         }
       });
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [debouncedQuery]);
 
@@ -388,7 +389,7 @@ export default function SearchAutocomplete({
                 {result.image && (
                   <div className="shrink-0">
                     <Image
-                      src={result.image}
+                      src={normalizeImageUrl(result.image)}
                       alt={result.name}
                       width={48}
                       height={48}

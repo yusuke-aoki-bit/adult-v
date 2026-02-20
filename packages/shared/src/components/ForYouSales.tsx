@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { normalizeImageUrl } from '../lib/image-utils';
 
 interface ForYouProduct {
   id: number;
@@ -221,7 +222,7 @@ export default function ForYouSales({
             <div className="relative" style={{ aspectRatio: '3/4' }}>
               {product['thumbnailUrl'] ? (
                 <Image
-                  src={product['thumbnailUrl']}
+                  src={normalizeImageUrl(product['thumbnailUrl'])}
                   alt={product['title']}
                   fill
                   className="object-cover"

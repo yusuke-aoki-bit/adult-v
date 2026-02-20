@@ -40,14 +40,11 @@ export function CompareButton({
     lg: 'w-6 h-6',
   };
 
-  const t = {
-    addToCompare: locale === 'ja' ? '比較に追加' : 'Add to compare',
-    removeFromCompare: locale === 'ja' ? '比較から削除' : 'Remove from compare',
-    compareFull: locale === 'ja' ? `比較リストが満杯（${maxItems}件）` : `Compare list full (${maxItems} items)`,
-    added: locale === 'ja' ? '比較リストに追加しました' : 'Added to compare list',
-    removed: locale === 'ja' ? '比較リストから削除しました' : 'Removed from compare list',
-    checkBottom: locale === 'ja' ? '画面下部で比較できます' : 'Compare at the bottom of screen',
-  };
+  const texts = {
+    ja: { addToCompare: '比較に追加', removeFromCompare: '比較から削除', compareFull: `比較リストが満杯（${maxItems}件）`, added: '比較リストに追加しました', removed: '比較リストから削除しました', checkBottom: '画面下部で比較できます' },
+    en: { addToCompare: 'Add to compare', removeFromCompare: 'Remove from compare', compareFull: `Compare list full (${maxItems} items)`, added: 'Added to compare list', removed: 'Removed from compare list', checkBottom: 'Compare at the bottom of screen' },
+  } as const;
+  const t = texts[locale as keyof typeof texts] || texts.ja;
 
   const showToastMessage = useCallback((message: string, type: 'success' | 'info') => {
     setToast({ message, type });

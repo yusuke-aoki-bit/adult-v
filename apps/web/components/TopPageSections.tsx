@@ -41,6 +41,62 @@ interface TopPageSectionsProps {
 const GRID_CLASSES = 'grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3';
 const SKELETON_CLASSES = 'animate-pulse bg-gray-700 rounded-lg aspect-[2/3]';
 
+const sectionTexts = {
+  ja: {
+    noHistory: '閲覧履歴がありません', recentActresses: '最近見た女優', recentProducts: '最近見た作品',
+    moreRecommendations: 'もっとおすすめを見る', moreNewReleases: '新作をもっと見る',
+    allGenres: '全ジャンルを見る', allActresses: '女優一覧を見る', allNews: 'ニュース一覧を見る',
+    saleSubtitle: '今だけお得！見逃し厳禁', recentlyViewed: '最近見た作品', recentlyViewedSub: '閲覧履歴から',
+    recommendations: 'あなたへのおすすめ', recommendationsSub: '閲覧履歴に基づくレコメンド',
+    weeklyHighlights: '今週の注目', weeklyHighlightsSub: '話題の女優と作品',
+    news: 'ニュース', newsSub: '最新情報・セール・トレンド',
+    trending: 'トレンド分析', trendingSub: '人気ジャンル・女優ランキング',
+    fanzaSite: 'FANZA専門サイト', fanzaSiteSub: 'FANZA作品に特化した姉妹サイト',
+    // sub-component labels
+    saleActresses: 'セール中の女優', saleProducts: 'セール中の作品',
+    recommendHint: '閲覧履歴に基づいたおすすめを表示します',
+    recommendedActresses: 'おすすめ女優', recommendedProducts: 'おすすめ作品',
+    featuredActresses: '注目の女優', featuredProducts: '注目の作品',
+    popularGenres: '人気ジャンル', popularActresses: '人気女優',
+    productsCount: (n: number) => `${n}作品`,
+    noNews: 'ニュースはまだありません',
+    saleTitle: (count: number) => `🔥 セール中 ${count}件`,
+    saleCta: '🔥 セール中の全商品を見る',
+    saleCtaSub: (count: number) => `${count}件以上のお得な作品をチェック →`,
+    catNew: '新着', catSales: 'セール', catAnalysis: '分析', catIndustry: '業界', catNotice: 'お知らせ',
+    originalContent: 'オリジナルコンテンツ', originalContentSub: '独自の分析・特集ページ',
+    todaysPick: '今日の1本', birthdays: '誕生日', annualBest: '年間ベスト', weeklyTrend: '週間トレンド',
+    rookies: '新人', hiddenGems: '隠れ名作', reviewers: 'レビュアー', lists: 'リスト', vote: '投票', aiSearch: 'AI検索',
+  },
+  en: {
+    noHistory: 'No viewing history', recentActresses: 'Recent actresses', recentProducts: 'Recent products',
+    moreRecommendations: 'More recommendations', moreNewReleases: 'More new releases',
+    allGenres: 'All genres', allActresses: 'All actresses', allNews: 'All news',
+    saleSubtitle: 'Limited time deals!', recentlyViewed: 'Recently Viewed', recentlyViewedSub: 'From your history',
+    recommendations: 'Recommended for You', recommendationsSub: 'Based on your viewing history',
+    weeklyHighlights: 'Weekly Highlights', weeklyHighlightsSub: 'Trending actresses & products',
+    news: 'News', newsSub: 'Latest updates, sales & trends',
+    trending: 'Trending', trendingSub: 'Popular genres & actress rankings',
+    fanzaSite: 'FANZA Site', fanzaSiteSub: 'Dedicated FANZA sister site',
+    // sub-component labels
+    saleActresses: 'Sale Actresses', saleProducts: 'Sale Products',
+    recommendHint: 'Recommendations based on your viewing history',
+    recommendedActresses: 'Recommended Actresses', recommendedProducts: 'Recommended Products',
+    featuredActresses: 'Featured Actresses', featuredProducts: 'Featured Products',
+    popularGenres: 'Popular Genres', popularActresses: 'Popular Actresses',
+    productsCount: (n: number) => `${n} titles`,
+    noNews: 'No news yet',
+    saleTitle: (count: number) => `🔥 ${count} On Sale`,
+    saleCta: '🔥 View All Sale Products',
+    saleCtaSub: (count: number) => `Check ${count}+ deals →`,
+    catNew: 'New', catSales: 'Sale', catAnalysis: 'Analysis', catIndustry: 'Industry', catNotice: 'Notice',
+    originalContent: 'Original Content', originalContentSub: 'Exclusive analysis and features',
+    todaysPick: "Today's Pick", birthdays: 'Birthdays', annualBest: 'Annual Best', weeklyTrend: 'Weekly',
+    rookies: 'Rookies', hiddenGems: 'Hidden Gems', reviewers: 'Reviewers', lists: 'Lists', vote: 'Vote', aiSearch: 'AI Search',
+  },
+} as const;
+function getSectionText(locale: string) { return sectionTexts[locale as keyof typeof sectionTexts] || sectionTexts.ja; }
+
 // 最近見た作品コンテンツ
 function RecentlyViewedContent({ locale }: { locale: string }) {
   const { items: recentlyViewed, isLoading: historyLoading } = useRecentlyViewed();
@@ -84,7 +140,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
   }, [historyLoading, recentlyViewed, hasFetched]);
 
   if (historyLoading || recentlyViewed.length === 0) {
-    return <p className="text-gray-400 text-sm">閲覧履歴がありません</p>;
+    return <p className="text-gray-400 text-sm">{getSectionText(locale).noHistory}</p>;
   }
 
   if (loading) {
@@ -113,7 +169,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-blue-400 mb-2">最近見た女優</h4>
+          <h4 className="text-xs font-semibold text-blue-400 mb-2">{getSectionText(locale).recentActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -131,7 +187,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
       )}
       {/* 作品 */}
       <div>
-        <h4 className="text-xs font-semibold text-gray-400 mb-2">最近見た作品</h4>
+        <h4 className="text-xs font-semibold text-gray-400 mb-2">{getSectionText(locale).recentProducts}</h4>
         <div className={GRID_CLASSES}>
           {products.map((product) => (
             <ProductCardBase
@@ -153,7 +209,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
 }
 
 // セール商品コンテンツ
-function SaleProductsContent({ products }: { products: SaleProduct[] }) {
+function SaleProductsContent({ products, locale }: { products: SaleProduct[]; locale: string }) {
   if (products.length === 0) return null;
 
   // 女優を抽出（重複排除、画像URLも含む）
@@ -177,7 +233,7 @@ function SaleProductsContent({ products }: { products: SaleProduct[] }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-red-400 mb-2">セール中の女優</h4>
+          <h4 className="text-xs font-semibold text-red-400 mb-2">{getSectionText(locale).saleActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -196,7 +252,7 @@ function SaleProductsContent({ products }: { products: SaleProduct[] }) {
       )}
       {/* 作品 */}
       <div>
-        <h4 className="text-xs font-semibold text-gray-400 mb-2">セール中の作品</h4>
+        <h4 className="text-xs font-semibold text-gray-400 mb-2">{getSectionText(locale).saleProducts}</h4>
         <div className={GRID_CLASSES}>
           {products.slice(0, 8).map((product) => (
             <div key={product.productId} className="relative">
@@ -281,7 +337,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
   }, [historyLoading, recentlyViewed.length, fetchRecommendations]);
 
   if (historyLoading || recentlyViewed.length < 1) {
-    return <p className="text-gray-400 text-sm">閲覧履歴に基づいたおすすめを表示します</p>;
+    return <p className="text-gray-400 text-sm">{getSectionText(locale).recommendHint}</p>;
   }
 
   if (loading) {
@@ -299,7 +355,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-purple-400 mb-2">おすすめ女優</h4>
+          <h4 className="text-xs font-semibold text-purple-400 mb-2">{getSectionText(locale).recommendedActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -319,7 +375,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
       {/* 作品 */}
       {products.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-400 mb-2">おすすめ作品</h4>
+          <h4 className="text-xs font-semibold text-gray-400 mb-2">{getSectionText(locale).recommendedProducts}</h4>
           <div className={GRID_CLASSES}>
             {products.map((product) => (
               <ProductCardBase
@@ -339,7 +395,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
         </div>
       )}
       {/* もっと見る */}
-      <MoreLink href="/discover" label="もっとおすすめを見る" locale={locale} />
+      <MoreLink href="/discover" label={getSectionText(locale).moreRecommendations} locale={locale} />
     </div>
   );
 }
@@ -395,7 +451,7 @@ function WeeklyHighlightsContent({ locale }: { locale: string }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-amber-400 mb-2">注目の女優</h4>
+          <h4 className="text-xs font-semibold text-amber-400 mb-2">{getSectionText(locale).featuredActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -415,7 +471,7 @@ function WeeklyHighlightsContent({ locale }: { locale: string }) {
       {/* 作品 */}
       {products.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-400 mb-2">注目の作品</h4>
+          <h4 className="text-xs font-semibold text-gray-400 mb-2">{getSectionText(locale).featuredProducts}</h4>
           <div className={GRID_CLASSES}>
             {products.map((product) => (
               <ProductCardBase
@@ -435,7 +491,7 @@ function WeeklyHighlightsContent({ locale }: { locale: string }) {
         </div>
       )}
       {/* もっと見る */}
-      <MoreLink href="/products" label="新作をもっと見る" locale={locale} />
+      <MoreLink href="/products" label={getSectionText(locale).moreNewReleases} locale={locale} />
     </div>
   );
 }
@@ -494,7 +550,7 @@ function TrendingContent({ locale }: { locale: string }) {
         {/* ジャンル */}
         {tags.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold text-blue-400 mb-2">人気ジャンル</h4>
+            <h4 className="text-xs font-semibold text-blue-400 mb-2">{getSectionText(locale).popularGenres}</h4>
             <div className="space-y-1">
               {tags.map((tag, index) => (
                 <a
@@ -508,7 +564,7 @@ function TrendingContent({ locale }: { locale: string }) {
                     {index + 1}
                   </span>
                   <span className="text-sm text-white flex-1">{tag.name}</span>
-                  <span className="text-xs text-gray-400">{tag.count}作品</span>
+                  <span className="text-xs text-gray-400">{getSectionText(locale).productsCount(tag.count)}</span>
                 </a>
               ))}
             </div>
@@ -517,7 +573,7 @@ function TrendingContent({ locale }: { locale: string }) {
         {/* 女優 */}
         {performers.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold text-pink-400 mb-2">人気女優</h4>
+            <h4 className="text-xs font-semibold text-pink-400 mb-2">{getSectionText(locale).popularActresses}</h4>
             <div className="space-y-1">
               {performers.map((performer, index) => (
                 <a
@@ -531,7 +587,7 @@ function TrendingContent({ locale }: { locale: string }) {
                     {index + 1}
                   </span>
                   <span className="text-sm text-white flex-1">{performer.name}</span>
-                  <span className="text-xs text-gray-400">{performer.count}作品</span>
+                  <span className="text-xs text-gray-400">{getSectionText(locale).productsCount(performer.count)}</span>
                 </a>
               ))}
             </div>
@@ -540,21 +596,24 @@ function TrendingContent({ locale }: { locale: string }) {
       </div>
       {/* もっと見るリンク */}
       <div className="grid grid-cols-2 gap-2">
-        <MoreLink href="/tags" label="全ジャンルを見る" locale={locale} />
-        <MoreLink href="/actresses" label="女優一覧を見る" locale={locale} />
+        <MoreLink href="/tags" label={getSectionText(locale).allGenres} locale={locale} />
+        <MoreLink href="/actresses" label={getSectionText(locale).allActresses} locale={locale} />
       </div>
     </div>
   );
 }
 
 // カテゴリバッジのスタイル
-const CATEGORY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  new_releases: { bg: 'bg-blue-600', text: 'text-blue-100', label: '新着' },
-  sales: { bg: 'bg-red-600', text: 'text-red-100', label: 'セール' },
-  ai_analysis: { bg: 'bg-purple-600', text: 'text-purple-100', label: '分析' },
-  industry: { bg: 'bg-green-600', text: 'text-green-100', label: '業界' },
-  site_update: { bg: 'bg-gray-600', text: 'text-gray-100', label: 'お知らせ' },
-};
+function getCategoryStyles(locale: string): Record<string, { bg: string; text: string; label: string }> {
+  const t = getSectionText(locale);
+  return {
+    new_releases: { bg: 'bg-blue-600', text: 'text-blue-100', label: t.catNew },
+    sales: { bg: 'bg-red-600', text: 'text-red-100', label: t.catSales },
+    ai_analysis: { bg: 'bg-purple-600', text: 'text-purple-100', label: t.catAnalysis },
+    industry: { bg: 'bg-green-600', text: 'text-green-100', label: t.catIndustry },
+    site_update: { bg: 'bg-gray-600', text: 'text-gray-100', label: t.catNotice },
+  };
+}
 
 // ニュースコンテンツ
 function NewsContent({ locale }: { locale: string }) {
@@ -597,14 +656,16 @@ function NewsContent({ locale }: { locale: string }) {
   }
 
   if (articles.length === 0) {
-    return <p className="text-gray-400 text-sm">ニュースはまだありません</p>;
+    return <p className="text-gray-400 text-sm">{getSectionText(locale).noNews}</p>;
   }
 
   return (
     <div className="space-y-3">
       {articles.map((article) => {
-        const style = CATEGORY_STYLES[article.category] || CATEGORY_STYLES['site_update'];
-        const publishedDate = new Date(article.published_at).toLocaleDateString('ja-JP', {
+        const catStyles = getCategoryStyles(locale);
+        const style = catStyles[article.category] || catStyles['site_update'];
+        const localeMap: Record<string, string> = { ja: 'ja-JP', en: 'en-US', zh: 'zh-CN', ko: 'ko-KR', 'zh-TW': 'zh-TW' };
+        const publishedDate = new Date(article.published_at).toLocaleDateString(localeMap[locale] || 'ja-JP', {
           month: 'short',
           day: 'numeric',
         });
@@ -643,7 +704,7 @@ function NewsContent({ locale }: { locale: string }) {
           </a>
         );
       })}
-      <MoreLink href="/news" label="ニュース一覧を見る" locale={locale} />
+      <MoreLink href="/news" label={getSectionText(locale).allNews} locale={locale} />
     </div>
   );
 }
@@ -672,23 +733,23 @@ export function TopPageUpperSections({
           <TopPageMenuSection
             type="accordion"
             icon={<Tag className="w-5 h-5 text-red-400" />}
-            title={`🔥 セール中 ${saleProducts.length}件`}
-            subtitle="今だけお得！見逃し厳禁"
+            title={getSectionText(locale).saleTitle(saleProducts.length)}
+            subtitle={getSectionText(locale).saleSubtitle}
             theme="dark"
             defaultOpen={true}
           >
-            <SaleProductsContent products={saleProducts} />
+            <SaleProductsContent products={saleProducts} locale={locale} />
             {/* セール一覧ページへの大型CTA */}
             <a
               href={localizedHref('/sales', locale)}
-              className="mt-4 flex flex-col items-center justify-center gap-1 w-full py-4 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 hover:from-red-500 hover:via-orange-400 hover:to-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-600/30 transition-all transform hover:scale-[1.02] animate-pulse"
+              className="mt-4 flex flex-col items-center justify-center gap-1 w-full py-4 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 hover:from-red-500 hover:via-orange-400 hover:to-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-600/30 transition-all transform hover:scale-105"
             >
               <span className="text-xl flex items-center gap-2">
-                🔥 セール中の全商品を見る
+                {getSectionText(locale).saleCta}
                 <ExternalLink className="w-5 h-5" />
               </span>
               <span className="text-sm opacity-90">
-                {saleProducts.length}件以上のお得な作品をチェック →
+                {getSectionText(locale).saleCtaSub(saleProducts.length)}
               </span>
             </a>
           </TopPageMenuSection>
@@ -701,8 +762,8 @@ export function TopPageUpperSections({
           <TopPageMenuSection
             type="accordion"
             icon={<Clock className="w-5 h-5" />}
-            title="最近見た作品"
-            subtitle="閲覧履歴から"
+            title={getSectionText(locale).recentlyViewed}
+            subtitle={getSectionText(locale).recentlyViewedSub}
             theme="dark"
             defaultOpen={false}
           >
@@ -741,8 +802,8 @@ export function TopPageLowerSections({
           <TopPageMenuSection
             type="accordion"
             icon={<Sparkles className="w-5 h-5" />}
-            title="あなたへのおすすめ"
-            subtitle="閲覧履歴に基づくレコメンド"
+            title={getSectionText(locale).recommendations}
+            subtitle={getSectionText(locale).recommendationsSub}
             theme="dark"
             defaultOpen={true}
           >
@@ -757,8 +818,8 @@ export function TopPageLowerSections({
           <TopPageMenuSection
             type="accordion"
             icon={<TrendingUp className="w-5 h-5" />}
-            title="今週の注目"
-            subtitle="話題の女優と作品"
+            title={getSectionText(locale).weeklyHighlights}
+            subtitle={getSectionText(locale).weeklyHighlightsSub}
             theme="dark"
             defaultOpen={true}
           >
@@ -773,8 +834,8 @@ export function TopPageLowerSections({
           <TopPageMenuSection
             type="accordion"
             icon={<Newspaper className="w-5 h-5" />}
-            title="ニュース"
-            subtitle="最新情報・セール・トレンド"
+            title={getSectionText(locale).news}
+            subtitle={getSectionText(locale).newsSub}
             theme="dark"
             defaultOpen={true}
           >
@@ -789,8 +850,8 @@ export function TopPageLowerSections({
           <TopPageMenuSection
             type="accordion"
             icon={<BarChart3 className="w-5 h-5" />}
-            title="トレンド分析"
-            subtitle="人気ジャンル・女優ランキング"
+            title={getSectionText(locale).trending}
+            subtitle={getSectionText(locale).trendingSub}
             theme="dark"
             defaultOpen={false}
           >
@@ -803,13 +864,15 @@ export function TopPageLowerSections({
       <div className="border-t border-gray-700/50 my-2" />
 
       {/* オリジナルコンテンツ */}
-      {isSectionVisible('original-content') && (
+      {isSectionVisible('original-content') && (() => {
+        const oc = getSectionText(locale);
+        return (
         <div id="original-content" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
             icon={<Sparkles className="w-5 h-5" />}
-            title={locale === 'ja' ? 'オリジナルコンテンツ' : 'Original Content'}
-            subtitle={locale === 'ja' ? '独自の分析・特集ページ' : 'Exclusive analysis and features'}
+            title={oc.originalContent}
+            subtitle={oc.originalContentSub}
             theme="dark"
             defaultOpen={true}
           >
@@ -820,7 +883,7 @@ export function TopPageLowerSections({
               >
                 <Play className="w-4 h-4 text-cyan-400 flex-shrink-0" />
                 <span className="text-xs font-medium text-white truncate">
-                  {locale === 'ja' ? '今日の1本' : "Today's Pick"}
+                  {oc.todaysPick}
                 </span>
               </a>
               <a
@@ -829,7 +892,7 @@ export function TopPageLowerSections({
               >
                 <Cake className="w-4 h-4 text-pink-400 flex-shrink-0" />
                 <span className="text-xs font-medium text-white truncate">
-                  {locale === 'ja' ? '誕生日' : 'Birthdays'}
+                  {oc.birthdays}
                 </span>
               </a>
               <a
@@ -838,7 +901,7 @@ export function TopPageLowerSections({
               >
                 <Trophy className="w-4 h-4 text-yellow-400 flex-shrink-0" />
                 <span className="text-xs font-medium text-white truncate">
-                  {locale === 'ja' ? '年間ベスト' : 'Annual Best'}
+                  {oc.annualBest}
                 </span>
               </a>
               <a
@@ -847,7 +910,7 @@ export function TopPageLowerSections({
               >
                 <TrendingUp className="w-4 h-4 text-green-400 flex-shrink-0" />
                 <span className="text-xs font-medium text-white truncate">
-                  {locale === 'ja' ? '週間トレンド' : 'Weekly'}
+                  {oc.weeklyTrend}
                 </span>
               </a>
               <a
@@ -856,7 +919,7 @@ export function TopPageLowerSections({
               >
                 <Star className="w-4 h-4 text-rose-400 flex-shrink-0" />
                 <span className="text-xs font-medium text-white truncate">
-                  {locale === 'ja' ? '新人' : 'Rookies'}
+                  {oc.rookies}
                 </span>
               </a>
               <a
@@ -865,7 +928,7 @@ export function TopPageLowerSections({
               >
                 <Gem className="w-4 h-4 text-amber-400 flex-shrink-0" />
                 <span className="text-xs font-medium text-white truncate">
-                  {locale === 'ja' ? '隠れ名作' : 'Hidden Gems'}
+                  {oc.hiddenGems}
                 </span>
               </a>
               <a
@@ -874,7 +937,7 @@ export function TopPageLowerSections({
               >
                 <Users className="w-4 h-4 text-blue-400 flex-shrink-0" />
                 <span className="text-xs font-medium text-white truncate">
-                  {locale === 'ja' ? 'レビュアー' : 'Reviewers'}
+                  {oc.reviewers}
                 </span>
               </a>
               <a
@@ -883,7 +946,7 @@ export function TopPageLowerSections({
               >
                 <List className="w-4 h-4 text-purple-400 flex-shrink-0" />
                 <span className="text-xs font-medium text-white truncate">
-                  {locale === 'ja' ? 'リスト' : 'Lists'}
+                  {oc.lists}
                 </span>
               </a>
               <a
@@ -892,7 +955,7 @@ export function TopPageLowerSections({
               >
                 <Vote className="w-4 h-4 text-orange-400 flex-shrink-0" />
                 <span className="text-xs font-medium text-white truncate">
-                  {locale === 'ja' ? '投票' : 'Vote'}
+                  {oc.vote}
                 </span>
               </a>
               <a
@@ -901,13 +964,14 @@ export function TopPageLowerSections({
               >
                 <Search className="w-4 h-4 text-purple-300 flex-shrink-0" />
                 <span className="text-xs font-medium text-white truncate">
-                  {locale === 'ja' ? 'AI検索' : 'AI Search'}
+                  {oc.aiSearch}
                 </span>
               </a>
             </div>
           </TopPageMenuSection>
         </div>
-      )}
+        );
+      })()}
 
       {/* 商品一覧へのリンク */}
       {isSectionVisible('all-products') && (
@@ -943,8 +1007,8 @@ export function TopPageLowerSections({
             type="link"
             href="https://fanza.eroxv.com"
             icon={<ExternalLink className="w-5 h-5" />}
-            title="FANZA専門サイト"
-            subtitle="FANZA作品に特化した姉妹サイト"
+            title={getSectionText(locale).fanzaSite}
+            subtitle={getSectionText(locale).fanzaSiteSub}
             theme="dark"
           />
         </>

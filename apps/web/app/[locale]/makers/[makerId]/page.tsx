@@ -125,13 +125,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function MakerDetailPage({ params }: PageProps) {
   const { makerId, locale } = await params;
-  const tNav = await getTranslations('nav');
   const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const makerIdNum = parseInt(makerId, 10);
   if (isNaN(makerIdNum)) notFound();
 
-  const maker = await getMakerById(makerIdNum, locale);
+  let tNav, maker;
+  try {
+    [tNav, maker] = await Promise.all([
+      getTranslations('nav'),
+      getMakerById(makerIdNum, locale),
+    ]);
+  } catch (error) {
+    console.error(`[maker-detail] Error loading maker ${makerId}:`, error);
+    notFound();
+  }
   if (!maker) notFound();
 
   const breadcrumbSchema = generateBreadcrumbSchema([

@@ -122,11 +122,10 @@ export default function ViewingPatterns({
     return null;
   }
 
-  // Generate pseudo-statistics based on product data
-  const generateViewerCount = (matchScore: number) => {
-    // Generate a realistic-looking viewer count
+  // Generate pseudo-statistics based on product data (deterministic to avoid hydration mismatch)
+  const generateViewerCount = (matchScore: number, index: number) => {
     const base = 50 + Math.floor(matchScore * 2);
-    return base + Math.floor(Math.random() * 30);
+    return base + ((Math.floor(matchScore * 7) + index * 13) % 30);
   };
 
   return (
@@ -144,7 +143,7 @@ export default function ViewingPatterns({
 
       <div className="space-y-3">
         {relatedProducts.slice(0, 4).map((product, index) => {
-          const viewerCount = generateViewerCount(product.matchScore);
+          const viewerCount = generateViewerCount(product.matchScore, index);
           return (
             <Link
               key={product.id}

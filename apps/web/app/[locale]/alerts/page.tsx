@@ -5,6 +5,43 @@ import { useRouter } from 'next/navigation';
 import { usePriceAlerts, type PriceAlert } from '@adult-v/shared/hooks';
 import { HomeSectionManager } from '@adult-v/shared/components';
 
+const alertPageTexts = {
+  ja: {
+    loading: '読み込み中...',
+    pageTitle: '価格アラート',
+    alertsCount: (count: number) => `${count}件のアラートが設定されています`,
+    clearAll: 'すべて削除',
+    confirmClearAll: 'すべてのアラートを削除しますか？',
+    noAlerts: 'アラートはありません',
+    noAlertsDescription: '作品ページでベルアイコンを押すと、価格アラートを設定できます',
+    targetPrice: '目標価格: ',
+    currentPrice: '現在価格: ',
+    setDate: '設定日: ',
+    view: '見る',
+    remove: '削除',
+  },
+  en: {
+    loading: 'Loading...',
+    pageTitle: 'Price Alerts',
+    alertsCount: (count: number) => `${count} alerts set`,
+    clearAll: 'Clear All',
+    confirmClearAll: 'Clear all alerts?',
+    noAlerts: 'No alerts',
+    noAlertsDescription: 'Click the bell icon on product pages to set price alerts',
+    targetPrice: 'Target: ',
+    currentPrice: 'Current: ',
+    setDate: 'Set: ',
+    view: 'View',
+    remove: 'Remove',
+  },
+} as const;
+
+function getAlertPageText(locale: string) {
+  return alertPageTexts[locale as keyof typeof alertPageTexts] || alertPageTexts.ja;
+}
+
+const localeMap: Record<string, string> = { ja: 'ja-JP', en: 'en-US', zh: 'zh-CN', ko: 'ko-KR', 'zh-TW': 'zh-TW' };
+
 interface AlertsPageClientProps {
   locale: string;
 }
@@ -13,6 +50,7 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
   const router = useRouter();
   const { alerts, removeAlert } = usePriceAlerts();
   const [isLoaded, setIsLoaded] = useState(false);
+  const pt = getAlertPageText(locale);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -24,7 +62,7 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'en-US', {
+    return date.toLocaleDateString(localeMap[locale] || 'ja-JP', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -36,7 +74,7 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
   };
 
   const handleClearAll = () => {
-    if (confirm(locale === 'ja' ? 'すべてのアラートを削除しますか？' : 'Clear all alerts?')) {
+    if (confirm(pt.confirmClearAll)) {
       alerts.forEach((alert: PriceAlert) => removeAlert(alert.productId));
     }
   };
@@ -51,7 +89,7 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
             <span className="theme-text">
-              {locale === 'ja' ? '読み込み中...' : 'Loading...'}
+              {pt.loading}
             </span>
           </div>
         </div>
@@ -69,12 +107,10 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
-              {locale === 'ja' ? '価格アラート' : 'Price Alerts'}
+              {pt.pageTitle}
             </h1>
             <p className="theme-text-secondary">
-              {locale === 'ja'
-                ? `${alerts.length}件のアラートが設定されています`
-                : `${alerts.length} alerts set`}
+              {pt.alertsCount(alerts.length)}
             </p>
           </div>
 
@@ -85,7 +121,7 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
                 onClick={handleClearAll}
                 className="px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
               >
-                {locale === 'ja' ? 'すべて削除' : 'Clear All'}
+                {pt.clearAll}
               </button>
             </div>
           )}
@@ -97,12 +133,10 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               <p className="theme-text-secondary text-lg mb-2">
-                {locale === 'ja' ? 'アラートはありません' : 'No alerts'}
+                {pt.noAlerts}
               </p>
               <p className="theme-text-muted text-sm">
-                {locale === 'ja'
-                  ? '作品ページでベルアイコンを押すと、価格アラートを設定できます'
-                  : 'Click the bell icon on product pages to set price alerts'}
+                {pt.noAlertsDescription}
               </p>
             </div>
           ) : (
@@ -145,7 +179,7 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
                       {alert.targetPrice && (
                         <p className="text-sm">
                           <span className="theme-text-muted">
-                            {locale === 'ja' ? '目標価格: ' : 'Target: '}
+                            {pt.targetPrice}
                           </span>
                           <span className="text-yellow-400 font-semibold">
                             {formatPrice(alert.targetPrice)}
@@ -155,7 +189,7 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
                       {alert.currentPrice !== undefined && (
                         <p className="text-sm">
                           <span className="theme-text-muted">
-                            {locale === 'ja' ? '現在価格: ' : 'Current: '}
+                            {pt.currentPrice}
                           </span>
                           <span className="theme-text">
                             {formatPrice(alert.currentPrice)}
@@ -163,7 +197,7 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
                         </p>
                       )}
                       <p className="text-sm theme-text-muted">
-                        {locale === 'ja' ? '設定日: ' : 'Set: '}
+                        {pt.setDate}
                         {formatDate(alert.createdAt)}
                       </p>
                     </div>
@@ -175,13 +209,13 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
                       onClick={() => handleProductClick(alert.productId)}
                       className="px-3 py-1.5 text-sm bg-(--btn-primary-bg) hover:bg-(--btn-primary-hover) text-white rounded transition-colors"
                     >
-                      {locale === 'ja' ? '見る' : 'View'}
+                      {pt.view}
                     </button>
                     <button
                       onClick={() => removeAlert(alert.productId)}
                       className="px-3 py-1.5 text-sm theme-text-muted hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
                     >
-                      {locale === 'ja' ? '削除' : 'Remove'}
+                      {pt.remove}
                     </button>
                   </div>
                 </div>

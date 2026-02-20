@@ -38,10 +38,22 @@ interface SokmilProduct {
 
 const AFFILIATE_ID = '31819';
 
+const FETCH_TIMEOUT = 15_000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function getProductIdsFromListPage(page: number): Promise<string[]> {
   const listUrl = `https://www.sokmil.com/av/list/?sort=date&page=${page}`;
 
-  const response = await fetch(listUrl, {
+  const response = await fetchWithTimeout(listUrl, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
@@ -65,11 +77,11 @@ async function getProductIdsFromListPage(page: number): Promise<string[]> {
   return productIds;
 }
 
-async function parseDetailPage(itemId: string): Promise<SokmilProduct | null> {
+async function parseDetailPage(itemId: string): Promise<(SokmilProduct & { rawHtml: string }) | null> {
   const detailUrl = `https://www.sokmil.com/av/_item/item${itemId}.html`;
 
   try {
-    const response = await fetch(detailUrl, {
+    const response = await fetchWithTimeout(detailUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
@@ -98,29 +110,66 @@ async function parseDetailPage(itemId: string): Promise<SokmilProduct | null> {
 
     const thumbnailUrl = $('meta[property="og:image"]').attr('content');
 
+    // 収録時間: 「収録時間」「再生時間」ラベルの近くから抽出（body全体の「N分」はノイズが多い）
     let duration: number | undefined;
-    const durationMatch = $('body').text().match(/(\d+)\s*分/);
-    if (durationMatch?.[1]) duration = parseInt(durationMatch[1]);
+    $('th, dt, td, span, div').each((_, el) => {
+      if (duration) return;
+      const text = $(el).text();
+      if (/(?:収録|再生)時間/.test(text)) {
+        const durationMatch = text.match(/(\d{1,3})\s*分/);
+        if (durationMatch?.[1]) {
+          const mins = parseInt(durationMatch[1]);
+          if (mins >= 1 && mins <= 600) duration = mins;
+        }
+      }
+    });
 
+    // リリース日: 「発売日」「配信日」ラベルの近くから抽出
     let releaseDate: string | undefined;
-    const dateMatch = $('body').text().match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-    if (dateMatch?.[1] && dateMatch[2] && dateMatch[3]) {
-      releaseDate = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
+    $('th, dt, td, span, div').each((_, el) => {
+      if (releaseDate) return;
+      const text = $(el).text();
+      if (/(?:発売|配信|リリース)日/.test(text)) {
+        const dateMatch = text.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+        if (dateMatch?.[1] && dateMatch[2] && dateMatch[3]) {
+          releaseDate = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
+        }
+      }
+    });
+    // フォールバック: ラベルが見つからない場合、隣接セルを探す
+    if (!releaseDate) {
+      $('th:contains("発売"), th:contains("配信")').each((_, el) => {
+        if (releaseDate) return;
+        const dateMatch = $(el).next('td').text().match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+        if (dateMatch?.[1] && dateMatch[2] && dateMatch[3]) {
+          releaseDate = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
+        }
+      });
     }
 
+    // 価格: 「価格」「定価」ラベル近くから抽出、body全体はノイズが多い
     let price: number | undefined;
-    const priceMatch = $('body').text().match(/(\d{1,3}(?:,\d{3})*)\s*円/);
-    if (priceMatch?.[1]) price = parseInt(priceMatch[1].replace(/,/g, ''));
+    $('th:contains("価格"), th:contains("定価")').each((_, el) => {
+      if (price) return;
+      const priceMatch = $(el).next('td').text().match(/(\d{1,3}(?:,\d{3})*)\s*円/);
+      if (priceMatch?.[1]) price = parseInt(priceMatch[1].replace(/,/g, ''));
+    });
+    // フォールバック: class名による検索
+    if (!price) {
+      const priceMatch = $('.price, .product-price, [class*="price"]').text().match(/(\d{1,3}(?:,\d{3})*)\s*円/);
+      if (priceMatch?.[1]) price = parseInt(priceMatch[1].replace(/,/g, ''));
+    }
 
     let sampleVideoUrl: string | undefined;
     const videoMatch = html.match(/https?:\/\/[^"'\s]+\.mp4/i);
     if (videoMatch) sampleVideoUrl = videoMatch[0];
 
-    const result: SokmilProduct = {
+    const result: SokmilProduct & { rawHtml: string } = {
       itemId,
       title,
       performers,
       affiliateUrl: `https://www.sokmil.com/av/_item/item${itemId}.html?aff_id=${AFFILIATE_ID}`,
+      rawHtml: html,
     };
     if (description !== undefined) result.description = description;
     if (thumbnailUrl !== undefined) result.thumbnailUrl = thumbnailUrl;
@@ -179,13 +228,12 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
         try {
           const normalizedProductId = `sokmil-${product.itemId}`;
           const detailUrl = `https://www.sokmil.com/av/_item/item${product.itemId}.html`;
-          const htmlResponse = await fetch(detailUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-          const html = await htmlResponse.text();
-          const hash = createHash('sha256').update(html).digest('hex');
+          // HTMLはparseDetailPageで既に取得済み
+          const hash = createHash('sha256').update(product.rawHtml).digest('hex');
 
           await db.execute(sql`
             INSERT INTO raw_html_data (source, product_id, url, html_content, hash)
-            VALUES ('Sokmil', ${product.itemId}, ${detailUrl}, ${html}, ${hash})
+            VALUES ('Sokmil', ${product.itemId}, ${detailUrl}, ${product.rawHtml}, ${hash})
             ON CONFLICT (source, product_id) DO UPDATE SET html_content = EXCLUDED.html_content, hash = EXCLUDED.hash, fetched_at = NOW()
           `);
           stats.rawDataSaved++;
@@ -194,16 +242,17 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
             INSERT INTO products (normalized_product_id, title, description, release_date, duration, default_thumbnail_url, updated_at)
             VALUES (${normalizedProductId}, ${product['title']}, ${product['description'] || null}, ${product['releaseDate'] ? new Date(product['releaseDate']) : null}, ${product['duration'] || null}, ${product['thumbnailUrl'] || null}, NOW())
             ON CONFLICT (normalized_product_id) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description, release_date = EXCLUDED.release_date, duration = EXCLUDED.duration, default_thumbnail_url = EXCLUDED.default_thumbnail_url, updated_at = NOW()
-            RETURNING id
+            RETURNING id, (xmax = 0) AS is_new
           `);
 
-          const productId = (productResult.rows[0] as { id: number }).id;
-          if (productResult.rowCount === 1) stats.newProducts++; else stats.updatedProducts++;
+          const row = productResult.rows[0] as { id: number; is_new: boolean };
+          const productId = row.id;
+          if (row.is_new) stats.newProducts++; else stats.updatedProducts++;
 
           await db.execute(sql`
-            INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, data_source, last_updated)
-            VALUES (${productId}, 'Sokmil', ${product.itemId}, ${product['affiliateUrl']}, ${product['price'] || null}, 'CRAWL', NOW())
-            ON CONFLICT (product_id, asp_name) DO UPDATE SET affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, last_updated = NOW()
+            INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, product_type, data_source, last_updated)
+            VALUES (${productId}, 'Sokmil', ${product.itemId}, ${product['affiliateUrl']}, ${product['price'] || null}, 'haishin', 'CRAWL', NOW())
+            ON CONFLICT (product_id, asp_name) DO UPDATE SET affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, product_type = EXCLUDED.product_type, last_updated = NOW()
           `);
 
           // 出演者をバッチ用に収集

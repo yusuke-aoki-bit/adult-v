@@ -222,18 +222,16 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
               } else {
                 setActresses([]);
               }
-            } catch (err) {
-              console.error('Failed to fetch actresses:', err);
+            } catch {
               setActresses([]);
             } finally {
               setIsActressLoading(false);
             }
           })();
         }
-      } catch (err) {
-        console.error('Failed to fetch recommendations:', err);
+      } catch {
         setProducts([]);
-        setError(locale === 'ja' ? 'おすすめの取得に失敗しました' : 'Failed to load recommendations');
+        setError(t.fetchError);
       } finally {
         setIsLoading(false);
         setIsRetrying(false);
@@ -287,10 +285,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
             } disabled:cursor-not-allowed`}
           >
             <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
-            {isRetrying
-              ? (locale === 'ja' ? '再読み込み中...' : 'Retrying...')
-              : (locale === 'ja' ? '再読み込み' : 'Try again')
-            }
+            {isRetrying ? t.retrying : t.retry}
           </button>
         </div>
       );
@@ -305,8 +300,8 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
           <div>
             <h4 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}>
               <Users className="w-3.5 h-3.5" />
-              おすすめ女優
-              {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">読み込み中...</span>}
+              {t.recommendedActresses}
+              {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">{t.loadingActresses}</span>}
             </h4>
             {isActressLoading ? (
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
@@ -331,7 +326,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
         <div>
           {ActressCard && actresses.length > 0 && (
             <h4 className={`text-xs font-semibold mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              おすすめ作品
+              {t.recommendedProducts}
             </h4>
           )}
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">

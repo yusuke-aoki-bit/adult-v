@@ -128,7 +128,7 @@ export function SceneTimeline({
       : 'bg-gray-200 hover:bg-gray-300 text-gray-700',
     voteUp: theme === 'dark' ? 'text-green-400' : 'text-green-600',
     voteDown: theme === 'dark' ? 'text-red-400' : 'text-red-600',
-    voteNeutral: theme === 'dark' ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600',
+    voteNeutral: theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-600',
   };
 
   const handleAddScene = () => {
@@ -355,10 +355,10 @@ function SceneItem({ scene, theme, voteStatus, onSeek, onVote, onRemove, t }: Sc
     timestamp: theme === 'dark' ? 'bg-gray-600 text-gray-200' : 'bg-gray-200 text-gray-700',
     voteUp: voteStatus === 'up'
       ? (theme === 'dark' ? 'text-green-400' : 'text-green-600')
-      : (theme === 'dark' ? 'text-gray-500 hover:text-green-400' : 'text-gray-400 hover:text-green-600'),
+      : (theme === 'dark' ? 'text-gray-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'),
     voteDown: voteStatus === 'down'
       ? (theme === 'dark' ? 'text-red-400' : 'text-red-600')
-      : (theme === 'dark' ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-600'),
+      : (theme === 'dark' ? 'text-gray-400 hover:text-red-400' : 'text-gray-500 hover:text-red-600'),
   };
 
   return (
@@ -415,7 +415,7 @@ function SceneItem({ scene, theme, voteStatus, onSeek, onVote, onRemove, t }: Sc
           {onRemove && (
             <button
               onClick={onRemove}
-              className={`p-1 ml-2 transition-colors ${theme === 'dark' ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+              className={`p-1 ml-2 transition-colors ${theme === 'dark' ? 'text-gray-400 hover:text-red-400' : 'text-gray-500 hover:text-red-500'}`}
             >
               <Trash2 className="w-4 h-4" />
             </button>

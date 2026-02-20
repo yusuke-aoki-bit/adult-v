@@ -5,17 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import ImageLightbox from '../ImageLightbox';
+import { normalizeImageUrl } from '../../lib/image-utils';
 
-// URLが有効かどうかをチェックする関数
-function isValidUrl(url: string | null | undefined): boolean {
-  if (!url) return false;
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
+const PLACEHOLDER_URL = 'https://placehold.co/400x520/052e16/ffffff?text=No+Image';
 
 interface CalendarProduct {
   id: number;
@@ -52,8 +44,12 @@ interface Props {
   maxYear?: number;
 }
 
-const WEEKDAYS_JA = ['日', '月', '火', '水', '木', '金', '土'];
-const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS_MAP: Record<string, string[]> = {
+  ja: ['日', '月', '火', '水', '木', '金', '土'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  zh: ['日', '一', '二', '三', '四', '五', '六'],
+  ko: ['일', '월', '화', '수', '목', '금', '토'],
+};
 
 export default function CalendarGrid({
   data,
@@ -71,7 +67,7 @@ export default function CalendarGrid({
   const [lightboxProduct, setLightboxProduct] = useState<CalendarProduct | null>(null);
   const searchParams = useSearchParams();
 
-  const weekdays = locale === 'ja' ? WEEKDAYS_JA : WEEKDAYS_EN;
+  const weekdays = WEEKDAYS_MAP[locale] || WEEKDAYS_MAP['en'];
 
   // 現在のフィルターパラメータを保持して商品リンクに追加
   const buildProductLink = useCallback((dateStr: string) => {
@@ -330,19 +326,13 @@ export default function CalendarGrid({
                           style={{ aspectRatio: '3/4' }}
                           title={product['title']}
                         >
-                          {isValidUrl(product['thumbnailUrl']) ? (
-                            <Image
-                              src={product['thumbnailUrl']!}
-                              alt={product['title']}
-                              fill
-                              sizes="80px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                              <span className="text-[8px] text-gray-400">No Image</span>
-                            </div>
-                          )}
+                          <Image
+                            src={normalizeImageUrl(product['thumbnailUrl'])}
+                            alt={product['title']}
+                            fill
+                            sizes="80px"
+                            className="object-cover"
+                          />
                         </button>
                       ))}
                     </div>
@@ -358,10 +348,10 @@ export default function CalendarGrid({
                           className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-full text-[10px] hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
                           title={performer['name']}
                         >
-                          {isValidUrl(performer.imageUrl) && (
+                          {performer.imageUrl && normalizeImageUrl(performer.imageUrl) !== PLACEHOLDER_URL && (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
-                              src={performer.imageUrl!}
+                              src={normalizeImageUrl(performer.imageUrl)}
                               alt={performer['name']}
                               width={16}
                               height={16}
@@ -385,7 +375,7 @@ export default function CalendarGrid({
       </div>
 
       {/* 商品プレビューモーダル */}
-      {lightboxProduct && isValidUrl(lightboxProduct.thumbnailUrl) && (
+      {lightboxProduct && lightboxProduct.thumbnailUrl && (
         <ImageLightbox
           images={[lightboxProduct.thumbnailUrl!]}
           isOpen={lightboxOpen}

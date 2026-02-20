@@ -18,6 +18,7 @@ import {
 import { useBudgetTracker } from '@/hooks';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { PurchaseHistoryImporter } from '@adult-v/shared/components';
+import { localeMap } from '@adult-v/shared/lib/utils/formatDate';
 
 const translations = {
   ja: {
@@ -153,7 +154,7 @@ export default function BudgetTracker({ locale, className = '' }: BudgetTrackerP
   }, []);
 
   const formatPrice = useCallback((price: number) => {
-    return new Intl.NumberFormat(locale === 'ja' ? 'ja-JP' : locale === 'zh' ? 'zh-CN' : locale === 'ko' ? 'ko-KR' : 'en-US', {
+    return new Intl.NumberFormat(localeMap[locale] || 'ja-JP', {
       style: 'currency',
       currency: 'JPY',
       maximumFractionDigits: 0,

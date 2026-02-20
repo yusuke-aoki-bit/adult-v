@@ -42,10 +42,15 @@ export function QuickFilterRestore({
   const [savedFilter, setSavedFilter] = useState<SavedFilter | null>(null);
   const [isDismissed, setIsDismissed] = useState(false);
 
+  const defaultTexts = {
+    ja: { restoreFilters: '前回のフィルターを復元', lastUsedFilters: '前回使用したフィルター', dismiss: '閉じる' },
+    en: { restoreFilters: 'Restore previous filters', lastUsedFilters: 'Last used filters', dismiss: 'Dismiss' },
+  } as const;
+  const dt = defaultTexts[locale as keyof typeof defaultTexts] || defaultTexts.ja;
   const t = {
-    restoreFilters: translations?.restoreFilters || (locale === 'ja' ? '前回のフィルターを復元' : 'Restore previous filters'),
-    lastUsedFilters: translations?.lastUsedFilters || (locale === 'ja' ? '前回使用したフィルター' : 'Last used filters'),
-    dismiss: translations?.dismiss || (locale === 'ja' ? '閉じる' : 'Dismiss'),
+    restoreFilters: translations?.restoreFilters || dt.restoreFilters,
+    lastUsedFilters: translations?.lastUsedFilters || dt.lastUsedFilters,
+    dismiss: translations?.dismiss || dt.dismiss,
   };
 
   const isDark = theme === 'dark';

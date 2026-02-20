@@ -354,7 +354,7 @@ function getInitialSections(locale: string, pageId: string, customSections?: Hom
   if (customSections) return customSections;
   const pageDefaults = pageSectionDefaults[pageId];
   if (pageDefaults) {
-    return locale === 'ja' ? pageDefaults.ja : pageDefaults.en;
+    return pageDefaults[locale as keyof typeof pageDefaults] || pageDefaults.ja;
   }
   return locale === 'ja' ? defaultSections : defaultSectionsEn;
 }
@@ -476,7 +476,7 @@ export default useHomeSections;
 export function getPageSectionDefaults(pageId: string, locale: string = 'ja'): HomeSection[] {
   const pageDefaults = pageSectionDefaults[pageId];
   if (pageDefaults) {
-    return locale === 'ja' ? pageDefaults.ja : pageDefaults.en;
+    return pageDefaults[locale as keyof typeof pageDefaults] || pageDefaults.ja;
   }
   return locale === 'ja' ? defaultSections : defaultSectionsEn;
 }

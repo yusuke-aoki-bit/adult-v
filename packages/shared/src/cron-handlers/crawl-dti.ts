@@ -130,6 +130,18 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
 
 const AFFILIATE_ID = '39614';
 
+const FETCH_TIMEOUT = 15_000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function generateAffiliateUrl(originalUrl: string): string {
   const encodedUrl = encodeURIComponent(originalUrl);
   return `https://click.dtiserv2.com/Direct/${AFFILIATE_ID}/${encodedUrl}`;
@@ -205,7 +217,7 @@ async function fetch1pondoJson(productId: string): Promise<{
 } | null> {
   try {
     const apiUrl = `https://www.1pondo.tv/dyn/phpauto/movie_details/movie_id/${productId}.json`;
-    const response = await fetch(apiUrl);
+    const response = await fetchWithTimeout(apiUrl);
     if (!response.ok) return null;
     const json = await response.json();
     return {
@@ -295,7 +307,8 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
   let price: number | undefined;
   const priceMatch = html.match(/var\s+ec_price\s*=\s*parseFloat\s*\(\s*['"](\d+(?:\.\d+)?)['"]\s*\)/);
   if (priceMatch?.[1]) {
-    price = Math.round(parseFloat(priceMatch[1]) * 150);
+    const usdJpyRate = parseInt(process.env['USD_JPY_RATE'] || '150', 10);
+    price = Math.round(parseFloat(priceMatch[1]) * usdJpyRate);
   }
 
   let sampleVideoUrl: string | undefined;
@@ -396,9 +409,29 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
 
       console.log(`[crawl-dti] Starting: site=${config.siteName}, start=${currentId}, limit=${limit}`);
 
-      // バッチ用: 演者データ収集
+      // バッチ用: 演者データ収集（定期フラッシュ）
       const allPerformerNames = new Set<string>();
       const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
+      let unflushedCount = 0;
+      const FLUSH_INTERVAL = 20;
+
+      async function flushPerformerBatch() {
+        if (allPerformerNames.size === 0) return;
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) links.push({ productId, performerId });
+          }
+        }
+        await batchInsertProductPerformers(db, links);
+        allPerformerNames.clear();
+        pendingPerformerLinks.length = 0;
+        unflushedCount = 0;
+      }
 
       while (stats.totalFetched < limit && Date.now() - startTime < TIME_LIMIT) {
         if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) {
@@ -409,7 +442,7 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
         const pageUrl = config.urlPattern.replace('{id}', currentId);
 
         try {
-          const response = await fetch(pageUrl, {
+          const response = await fetchWithTimeout(pageUrl, {
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
               'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
@@ -463,17 +496,18 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
             ON CONFLICT (normalized_product_id) DO UPDATE SET
               title = EXCLUDED.title, description = EXCLUDED.description, release_date = EXCLUDED.release_date,
               default_thumbnail_url = EXCLUDED.default_thumbnail_url, updated_at = NOW()
-            RETURNING id
+            RETURNING id, (xmax = 0) AS is_new
           `);
 
-          const productId = (productResult.rows[0] as { id: number }).id;
-          if (productResult.rowCount === 1) stats.newProducts++; else stats.updatedProducts++;
+          const row = productResult.rows[0] as { id: number; is_new: boolean };
+          const productId = row.id;
+          if (row.is_new) stats.newProducts++; else stats.updatedProducts++;
 
           await db.execute(sql`
-            INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, data_source, last_updated)
-            VALUES (${productId}, ${config.aspName}, ${currentId}, ${affiliateUrl}, ${productData.price || null}, 'CRAWL', NOW())
+            INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, product_type, data_source, last_updated)
+            VALUES (${productId}, ${config.aspName}, ${currentId}, ${affiliateUrl}, ${productData.price || null}, 'haishin', 'CRAWL', NOW())
             ON CONFLICT (product_id, asp_name) DO UPDATE SET
-              affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, last_updated = NOW()
+              affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, product_type = EXCLUDED.product_type, last_updated = NOW()
           `);
 
           // 出演者をバッチ用に収集
@@ -482,6 +516,12 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
               allPerformerNames.add(name);
             }
             pendingPerformerLinks.push({ productId, performerNames: productData.performers });
+            unflushedCount++;
+          }
+
+          // 定期フラッシュ（タイムアウトによるデータロス防止）
+          if (unflushedCount >= FLUSH_INTERVAL) {
+            await flushPerformerBatch();
           }
 
           if (productData.sampleVideoUrl) {
@@ -507,24 +547,8 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
         await new Promise(r => setTimeout(r, 1000));
       }
 
-      // バッチ: 演者UPSERT + 紐付けINSERT
-      if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
-        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
-
-        const links: { productId: number; performerId: number }[] = [];
-        for (const { productId, performerNames } of pendingPerformerLinks) {
-          for (const name of performerNames) {
-            const performerId = nameToId.get(name);
-            if (performerId) {
-              links.push({ productId, performerId });
-            }
-          }
-        }
-
-        await batchInsertProductPerformers(db, links);
-      }
+      // 最終フラッシュ（ループ途中で抜けた場合の残りデータ）
+      await flushPerformerBatch();
 
       const duration = Math.round((Date.now() - startTime) / 1000);
 

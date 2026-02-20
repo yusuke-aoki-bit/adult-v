@@ -75,11 +75,11 @@ export function OfflineIndicator({ locale = 'ja' }: OfflineIndicatorProps) {
   // オフライン時間をフォーマット
   const formatDuration = (seconds: number | null): string => {
     if (seconds === null || seconds < 5) return '';
-    if (seconds < 60) return `${seconds}秒`;
+    if (seconds < 60) return `${seconds}s`;
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}分`;
+    if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
-    return `${hours}時間${minutes % 60}分`;
+    return `${hours}h ${minutes % 60}m`;
   };
 
   const durationText = formatDuration(offlineDuration);

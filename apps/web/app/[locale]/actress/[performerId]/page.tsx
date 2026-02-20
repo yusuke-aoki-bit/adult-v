@@ -190,13 +190,21 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 export default async function ActressDetailPage({ params, searchParams }: PageProps) {
   const { performerId, locale } = await params;
   const resolvedSearchParams = await searchParams;
-  const t = await getTranslations('actress');
-  const tf = await getTranslations('filter');
-  const tNav = await getTranslations('nav');
-  const tTopProducts = await getTranslations('performerTopProducts');
-  const tOnSale = await getTranslations('performerOnSale');
 
-  const actress = await getCachedActressById(performerId, locale);
+  let t, tf, tNav, tTopProducts, tOnSale, actress;
+  try {
+    [t, tf, tNav, tTopProducts, tOnSale, actress] = await Promise.all([
+      getTranslations('actress'),
+      getTranslations('filter'),
+      getTranslations('nav'),
+      getTranslations('performerTopProducts'),
+      getTranslations('performerOnSale'),
+      getCachedActressById(performerId, locale),
+    ]);
+  } catch (error) {
+    console.error(`[actress-detail] Error loading performer ${performerId}:`, error);
+    notFound();
+  }
   if (!actress) notFound();
 
   const page = Math.max(1, Math.min(parseInt(resolvedSearchParams.page || '1', 10), 500));

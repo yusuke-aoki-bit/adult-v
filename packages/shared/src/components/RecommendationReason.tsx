@@ -28,16 +28,11 @@ export function RecommendationReason({
 
   const isDark = theme === 'dark';
 
-  const t = {
-    whyRecommended: locale === 'ja' ? 'おすすめの理由' : 'Why this is recommended',
-    loading: locale === 'ja' ? '読み込み中...' : 'Loading...',
-    matchScore: locale === 'ja' ? 'マッチ度' : 'Match score',
-    basedOn: locale === 'ja' ? '以下の理由でおすすめ' : 'Based on',
-    tags: locale === 'ja' ? 'ジャンル' : 'Genres',
-    performers: locale === 'ja' ? '出演者' : 'Performers',
-    showMore: locale === 'ja' ? '詳細を見る' : 'Show more',
-    showLess: locale === 'ja' ? '閉じる' : 'Show less',
-  };
+  const texts = {
+    ja: { whyRecommended: 'おすすめの理由', loading: '読み込み中...', matchScore: 'マッチ度', basedOn: '以下の理由でおすすめ', tags: 'ジャンル', performers: '出演者', showMore: '詳細を見る', showLess: '閉じる', fetchError: 'データを取得できませんでした' },
+    en: { whyRecommended: 'Why this is recommended', loading: 'Loading...', matchScore: 'Match score', basedOn: 'Based on', tags: 'Genres', performers: 'Performers', showMore: 'Show more', showLess: 'Show less', fetchError: 'Unable to fetch data' },
+  } as const;
+  const t = texts[locale as keyof typeof texts] || texts.ja;
 
   const fetchReason = async () => {
     setLoading(true);
@@ -201,7 +196,7 @@ export function RecommendationReason({
             </>
           ) : (
             <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              {locale === 'ja' ? 'データを取得できませんでした' : 'Unable to fetch data'}
+              {t.fetchError}
             </p>
           )}
         </div>

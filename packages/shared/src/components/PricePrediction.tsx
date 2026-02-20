@@ -20,6 +20,59 @@ interface PredictionData {
   salePattern: string;
 }
 
+const localeMap: Record<string, string> = { ja: 'ja-JP', en: 'en-US', zh: 'zh-CN', ko: 'ko-KR', 'zh-TW': 'zh-TW' };
+
+const predictionTexts = {
+  ja: {
+    title: '価格予測',
+    currentPrice: '現在価格',
+    predictedPrice: '予測価格',
+    confidence: '信頼度',
+    bestTime: '購入おすすめ時期',
+    historicalLow: '過去最安値',
+    historicalHigh: '過去最高値',
+    salePattern: 'セールパターン',
+    loading: '分析中...',
+    buyNow: '今が買い時！',
+    waitForSale: 'セールを待つのがおすすめ',
+    priceUp: '値上がり傾向',
+    priceDown: '値下がり傾向',
+    priceStable: '価格安定',
+    patternsRegular: '定期的にセール',
+    patternsRare: 'セール稀',
+    patternsSeasonal: '季節セール',
+    patternsUnknown: 'パターン不明',
+    bestTimeToBuy: '来週のセール期間',
+    savingsMessage: (percent: number) => `約${percent}%お得に購入できる可能性があります`,
+  },
+  en: {
+    title: 'Price Prediction',
+    currentPrice: 'Current Price',
+    predictedPrice: 'Predicted Price',
+    confidence: 'Confidence',
+    bestTime: 'Best Time to Buy',
+    historicalLow: 'Historical Low',
+    historicalHigh: 'Historical High',
+    salePattern: 'Sale Pattern',
+    loading: 'Analyzing...',
+    buyNow: 'Buy Now!',
+    waitForSale: 'Wait for Sale',
+    priceUp: 'Price Rising',
+    priceDown: 'Price Dropping',
+    priceStable: 'Price Stable',
+    patternsRegular: 'Regular Sales',
+    patternsRare: 'Rare Sales',
+    patternsSeasonal: 'Seasonal Sales',
+    patternsUnknown: 'Unknown Pattern',
+    bestTimeToBuy: 'Next week sale period',
+    savingsMessage: (percent: number) => `You could save about ${percent}%`,
+  },
+} as const;
+
+function getPredictionText(locale: string) {
+  return predictionTexts[locale as keyof typeof predictionTexts] || predictionTexts.ja;
+}
+
 export function PricePrediction({
   productId,
   currentPrice,
@@ -30,27 +83,15 @@ export function PricePrediction({
   const [loading, setLoading] = useState(true);
 
   const isDark = theme === 'dark';
+  const pt = getPredictionText(locale);
 
   const t = {
-    title: locale === 'ja' ? '価格予測' : 'Price Prediction',
-    currentPrice: locale === 'ja' ? '現在価格' : 'Current Price',
-    predictedPrice: locale === 'ja' ? '予測価格' : 'Predicted Price',
-    confidence: locale === 'ja' ? '信頼度' : 'Confidence',
-    bestTime: locale === 'ja' ? '購入おすすめ時期' : 'Best Time to Buy',
-    historicalLow: locale === 'ja' ? '過去最安値' : 'Historical Low',
-    historicalHigh: locale === 'ja' ? '過去最高値' : 'Historical High',
-    salePattern: locale === 'ja' ? 'セールパターン' : 'Sale Pattern',
-    loading: locale === 'ja' ? '分析中...' : 'Analyzing...',
-    buyNow: locale === 'ja' ? '今が買い時！' : 'Buy Now!',
-    waitForSale: locale === 'ja' ? 'セールを待つのがおすすめ' : 'Wait for Sale',
-    priceUp: locale === 'ja' ? '値上がり傾向' : 'Price Rising',
-    priceDown: locale === 'ja' ? '値下がり傾向' : 'Price Dropping',
-    priceStable: locale === 'ja' ? '価格安定' : 'Price Stable',
+    ...pt,
     patterns: {
-      regular: locale === 'ja' ? '定期的にセール' : 'Regular Sales',
-      rare: locale === 'ja' ? 'セール稀' : 'Rare Sales',
-      seasonal: locale === 'ja' ? '季節セール' : 'Seasonal Sales',
-      unknown: locale === 'ja' ? 'パターン不明' : 'Unknown Pattern',
+      regular: pt.patternsRegular,
+      rare: pt.patternsRare,
+      seasonal: pt.patternsSeasonal,
+      unknown: pt.patternsUnknown,
     },
   };
 
@@ -62,16 +103,18 @@ export function PricePrediction({
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // モック予測データ（実際にはAPIから取得）
+        // productIdから決定論的にトレンドを決定（Math.random()回避）
+        const productIdNum = typeof productId === 'number' ? productId : parseInt(String(productId), 10) || 0;
         const mockData: PredictionData = {
           predictedPrice: currentPrice * 0.7, // 30%オフを予測
           confidence: 75,
-          trend: Math.random() > 0.5 ? 'down' : 'stable',
-          bestTimeToBuy: locale === 'ja' ? '来週のセール期間' : 'Next week sale period',
+          trend: productIdNum % 2 === 0 ? 'down' : 'stable',
+          bestTimeToBuy: pt.bestTimeToBuy,
           historicalLow: currentPrice * 0.5,
           historicalHigh: currentPrice * 1.2,
           priceHistory: Array.from({ length: 30 }, (_, i) => ({
             date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? '',
-            price: currentPrice * (0.8 + Math.random() * 0.4),
+            price: currentPrice * (0.8 + ((i * 7 + 3) % 10) * 0.04),
           })),
           salePattern: 'regular',
         };
@@ -88,7 +131,7 @@ export function PricePrediction({
   }, [productId, currentPrice, locale]);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat(locale === 'ja' ? 'ja-JP' : 'en-US', {
+    return new Intl.NumberFormat(localeMap[locale] || 'ja-JP', {
       style: 'currency',
       currency: 'JPY',
       maximumFractionDigits: 0,
@@ -153,9 +196,7 @@ export function PricePrediction({
           </div>
           {!isPriceGood && savingsPercent > 0 && (
             <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {locale === 'ja'
-                ? `約${savingsPercent}%お得に購入できる可能性があります`
-                : `You could save about ${savingsPercent}%`}
+              {pt.savingsMessage(savingsPercent)}
             </p>
           )}
         </div>

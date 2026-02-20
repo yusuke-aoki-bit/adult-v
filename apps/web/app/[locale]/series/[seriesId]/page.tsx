@@ -197,17 +197,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function SeriesDetailPage({ params, searchParams }: PageProps) {
   const { seriesId, locale } = await params;
   const { sort } = await searchParams;
-  const tNav = await getTranslations('nav');
   const t = translations[locale as keyof typeof translations] || translations['ja'];
 
-  const seriesInfo = await getSeriesInfo(parseInt(seriesId));
+  let tNav, seriesInfo;
+  try {
+    [tNav, seriesInfo] = await Promise.all([
+      getTranslations('nav'),
+      getSeriesInfo(parseInt(seriesId)),
+    ]);
+  } catch (error) {
+    console.error(`[series-detail] Error loading series ${seriesId}:`, error);
+    notFound();
+  }
   if (!seriesInfo) notFound();
 
   const sortBy = sort === 'rating' ? 'ratingDesc'
     : sort === 'newest' ? 'releaseDateDesc'
     : 'releaseDateAsc';
 
-  const products: SeriesProduct[] = await getSeriesProducts(parseInt(seriesId), { sortBy, locale });
+  let products: SeriesProduct[];
+  try {
+    products = await getSeriesProducts(parseInt(seriesId), { sortBy, locale });
+  } catch (error) {
+    console.error(`[series-detail] Error loading series products ${seriesId}:`, error);
+    notFound();
+  }
 
   const name = locale === 'en' && seriesInfo.nameEn ? seriesInfo.nameEn
     : locale === 'zh' && seriesInfo.nameZh ? seriesInfo.nameZh

@@ -44,6 +44,18 @@ interface FC2Product {
 
 const FC2_AFFUID = process.env['FC2_AFFUID'] || 'TVRFNU5USTJOVEE9';
 
+const FETCH_TIMEOUT = 15_000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function generateAffiliateUrl(articleId: string): string {
   return `https://adult.contents.fc2.com/aff.php?aid=${articleId}&affuid=${FC2_AFFUID}`;
 }
@@ -52,7 +64,7 @@ async function fetchArticleIds(page: number = 1): Promise<string[]> {
   const url = `https://adult.contents.fc2.com/newrelease.php?page=${page}`;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
@@ -76,11 +88,11 @@ async function fetchArticleIds(page: number = 1): Promise<string[]> {
   }
 }
 
-async function parseDetailPage(articleId: string): Promise<FC2Product | null> {
+async function parseDetailPage(articleId: string): Promise<(FC2Product & { rawHtml: string }) | null> {
   const url = `https://adult.contents.fc2.com/article/${articleId}/`;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
@@ -165,10 +177,11 @@ async function parseDetailPage(articleId: string): Promise<FC2Product | null> {
       sampleVideoUrl = videoSrcMatch[1];
     }
 
-    const result: FC2Product = {
+    const result: FC2Product & { rawHtml: string } = {
       articleId,
       title,
       performers,
+      rawHtml: html,
     };
     if (description !== undefined) result.description = description;
     if (thumbnailUrl !== undefined) result.thumbnailUrl = thumbnailUrl;
@@ -234,9 +247,26 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
       const MAX_CONSECUTIVE_EMPTY = 3;
       let consecutiveEmpty = 0;
 
-      // バッチ用: 演者データ収集
+      // バッチ用: 演者データ収集（ページごとにフラッシュ）
       const allPerformerNames = new Set<string>();
       const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
+
+      async function flushPerformerBatch() {
+        if (allPerformerNames.size === 0) return;
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) links.push({ productId, performerId });
+          }
+        }
+        await batchInsertProductPerformers(db, links);
+        allPerformerNames.clear();
+        pendingPerformerLinks.length = 0;
+      }
 
       // ページネーションループ: 時間制限内で複数ページを自動取得
       while (
@@ -253,19 +283,24 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
         }
         consecutiveEmpty = 0;
 
+        // バッチ既存チェック: 全articleIdを一括クエリ
+        const idValues = sql.join(articleIds.map(id => sql`${id}`), sql`, `);
+        const existingResult = await db.execute(sql`
+          SELECT original_product_id FROM product_sources
+          WHERE asp_name = 'FC2' AND original_product_id IN (${idValues})
+        `);
+        const existingArticleIds = new Set(
+          (existingResult.rows as { original_product_id: string }[]).map(r => r.original_product_id)
+        );
+
         let pageHadNewProducts = false;
 
         for (const articleId of articleIds) {
           if (Date.now() - startTime > TIME_LIMIT) break;
           if (stats.totalFetched >= limit) break;
 
-          // 既存チェック
-          const existing = await db.execute(sql`
-            SELECT 1 FROM product_sources
-            WHERE asp_name = 'FC2' AND original_product_id = ${articleId}
-            LIMIT 1
-          `);
-          if (existing.rows.length > 0) {
+          // 既存チェック（バッチ結果を参照）
+          if (existingArticleIds.has(articleId)) {
             stats.skipped++;
             continue;
           }
@@ -282,15 +317,12 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
           try {
             const normalizedProductId = `FC2-${product.articleId}`;
             const detailUrl = `https://adult.contents.fc2.com/article/${product.articleId}/`;
-            const htmlResponse = await fetch(detailUrl, {
-              headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-            });
-            const html = await htmlResponse.text();
-            const hash = createHash('sha256').update(html).digest('hex');
+            // HTMLはparseDetailPageで既に取得済み
+            const hash = createHash('sha256').update(product.rawHtml).digest('hex');
 
             await db.execute(sql`
               INSERT INTO raw_html_data (source, product_id, url, html_content, hash)
-              VALUES ('FC2', ${product.articleId}, ${detailUrl}, ${html}, ${hash})
+              VALUES ('FC2', ${product.articleId}, ${detailUrl}, ${product.rawHtml}, ${hash})
               ON CONFLICT (source, product_id) DO UPDATE SET
                 html_content = EXCLUDED.html_content, hash = EXCLUDED.hash, fetched_at = NOW()
             `);
@@ -302,18 +334,19 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
               ON CONFLICT (normalized_product_id) DO UPDATE SET
                 title = EXCLUDED.title, description = EXCLUDED.description, duration = EXCLUDED.duration,
                 default_thumbnail_url = EXCLUDED.default_thumbnail_url, updated_at = NOW()
-              RETURNING id
+              RETURNING id, (xmax = 0) AS is_new
             `);
 
-            const productId = (productResult.rows[0] as { id: number }).id;
-            if (productResult.rowCount === 1) stats.newProducts++; else stats.updatedProducts++;
+            const row = productResult.rows[0] as { id: number; is_new: boolean };
+            const productId = row.id;
+            if (row.is_new) stats.newProducts++; else stats.updatedProducts++;
 
             const affiliateUrl = generateAffiliateUrl(product.articleId);
             await db.execute(sql`
-              INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, data_source, last_updated)
-              VALUES (${productId}, 'FC2', ${product.articleId}, ${affiliateUrl}, ${product['price'] || null}, 'CRAWL', NOW())
+              INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, product_type, data_source, last_updated)
+              VALUES (${productId}, 'FC2', ${product.articleId}, ${affiliateUrl}, ${product['price'] || null}, 'haishin', 'CRAWL', NOW())
               ON CONFLICT (product_id, asp_name) DO UPDATE SET
-                affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, last_updated = NOW()
+                affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price, product_type = EXCLUDED.product_type, last_updated = NOW()
             `);
 
             // セール情報を保存
@@ -350,33 +383,20 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
           }
         }
 
-        // ページ全体がスキップ（既存のみ）の場合もカウント
-        if (!pageHadNewProducts && stats.skipped > 0) {
+        // このページで新商品がなかった場合、consecutiveEmptyをカウント
+        if (!pageHadNewProducts) {
           consecutiveEmpty++;
         }
+
+        // ページ終了時に演者バッチをフラッシュ（タイムアウトによるデータロス防止）
+        await flushPerformerBatch();
 
         currentPage++;
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
-      // バッチ: 演者UPSERT + 紐付けINSERT
-      if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
-        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
-
-        const links: { productId: number; performerId: number }[] = [];
-        for (const { productId, performerNames } of pendingPerformerLinks) {
-          for (const name of performerNames) {
-            const performerId = nameToId.get(name);
-            if (performerId) {
-              links.push({ productId, performerId });
-            }
-          }
-        }
-
-        await batchInsertProductPerformers(db, links);
-      }
+      // 最終フラッシュ（ループ途中で抜けた場合の残りデータ）
+      await flushPerformerBatch();
 
       const duration = Math.round((Date.now() - startTime) / 1000);
 

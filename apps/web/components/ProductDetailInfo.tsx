@@ -6,12 +6,20 @@ import { isSubscriptionProvider } from '@/lib/providers';
 import { formatPrice } from '@/lib/utils/subscription';
 import { providerMeta } from '@adult-v/shared/lib/providers';
 import { ASP_TO_PROVIDER_ID } from '@adult-v/shared/constants/filters';
+import { localeMap } from '@adult-v/shared/lib/utils/formatDate';
 
 /**
  * 再生時間を分単位でフォーマット
  * - 600分（10時間）以上の異常値は非表示
  * - 時間と分に分けて表示
  */
+const durationFormats: Record<string, { hour: string; hourMin: (h: number, m: number) => string; hourOnly: (h: number) => string }> = {
+  ja: { hour: '時間', hourMin: (h, m) => `${h}時間${m}分`, hourOnly: (h) => `${h}時間` },
+  en: { hour: 'h', hourMin: (h, m) => `${h}h ${m}m`, hourOnly: (h) => `${h}h` },
+  zh: { hour: '小时', hourMin: (h, m) => `${h}小时${m}分钟`, hourOnly: (h) => `${h}小时` },
+  ko: { hour: '시간', hourMin: (h, m) => `${h}시간 ${m}분`, hourOnly: (h) => `${h}시간` },
+};
+
 function formatDuration(minutes: number, locale: string): string | null {
   // 600分（10時間）以上は異常データとして非表示
   if (minutes > 600) {
@@ -24,16 +32,9 @@ function formatDuration(minutes: number, locale: string): string | null {
 
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
+  const fmt = durationFormats[locale] || durationFormats['en'];
 
-  if (locale === 'ja') {
-    return mins > 0 ? `${hours}時間${mins}分` : `${hours}時間`;
-  } else if (locale === 'zh') {
-    return mins > 0 ? `${hours}小时${mins}分钟` : `${hours}小时`;
-  } else if (locale === 'ko') {
-    return mins > 0 ? `${hours}시간 ${mins}분` : `${hours}시간`;
-  } else {
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-  }
+  return mins > 0 ? fmt.hourMin(hours, mins) : fmt.hourOnly(hours);
 }
 
 // Client-side translations (outside NextIntlClientProvider)
@@ -232,7 +233,7 @@ const ProductDetailInfo = memo(function ProductDetailInfo({
       {/* 更新日時 */}
       {updatedAt && (
         <div className="text-xs text-gray-400 pt-4 border-t border-gray-700">
-          {t.lastUpdated} {new Date(updatedAt).toLocaleString(locale === 'ja' ? 'ja-JP' : 'en-US')}
+          {t.lastUpdated} {new Date(updatedAt).toLocaleString(localeMap[locale] || 'ja-JP')}
         </div>
       )}
 

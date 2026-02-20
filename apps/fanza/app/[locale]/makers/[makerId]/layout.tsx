@@ -7,17 +7,47 @@ interface MakerLayoutProps {
   params: Promise<{ locale: string; makerId: string }>;
 }
 
+const translations = {
+  ja: {
+    makerDetails: 'メーカー詳細',
+    makerNotFound: 'メーカーが見つかりません',
+    makerCategory: 'メーカー',
+    labelCategory: 'レーベル',
+    titleSuffix: '詳細',
+    productsSuffix: '作品',
+    descriptionTemplate: (name: string, count: number, ratingStr: string) =>
+      `${name}の作品一覧。${count}本の動画作品を掲載。${ratingStr}人気の女優やジャンル情報も確認できます。`,
+    avgRating: (rating: string) => `平均評価${rating}点。`,
+  },
+  en: {
+    makerDetails: 'Maker Details',
+    makerNotFound: 'Maker Not Found',
+    makerCategory: 'Maker',
+    labelCategory: 'Label',
+    titleSuffix: 'Details',
+    productsSuffix: 'Products',
+    descriptionTemplate: (name: string, count: number, ratingStr: string) =>
+      `Browse ${count} products from ${name}. ${ratingStr} View popular performers and genres.`,
+    avgRating: (rating: string) => `Average rating: ${rating}.`,
+  },
+} as const;
+
+function getT(locale: string) {
+  return translations[locale as keyof typeof translations] || translations.ja;
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string; makerId: string }>;
 }): Promise<Metadata> {
   const { locale, makerId } = await params;
+  const t = getT(locale);
 
   const makerIdNum = parseInt(makerId, 10);
   if (isNaN(makerIdNum)) {
     return {
-      title: locale === 'ja' ? 'メーカー詳細' : 'Maker Details',
+      title: t.makerDetails,
     };
   }
 
@@ -25,21 +55,16 @@ export async function generateMetadata({
 
   if (!maker) {
     return {
-      title: locale === 'ja' ? 'メーカーが見つかりません' : 'Maker Not Found',
+      title: t.makerNotFound,
     };
   }
 
-  const categoryLabel = locale === 'ja'
-    ? (maker.category === 'maker' ? 'メーカー' : 'レーベル')
-    : (maker.category === 'maker' ? 'Maker' : 'Label');
+  const categoryLabel = maker.category === 'maker' ? t.makerCategory : t.labelCategory;
 
-  const title = locale === 'ja'
-    ? `${maker.name} - ${categoryLabel}詳細 | ${maker.productCount}作品`
-    : `${maker.name} - ${categoryLabel} Details | ${maker.productCount} Products`;
+  const title = `${maker.name} - ${categoryLabel} ${t.titleSuffix} | ${maker.productCount} ${t.productsSuffix}`;
 
-  const description = locale === 'ja'
-    ? `${maker.name}の作品一覧。${maker.productCount}本の動画作品を掲載。${maker.averageRating ? `平均評価${maker.averageRating.toFixed(1)}点。` : ''}人気の女優やジャンル情報も確認できます。`
-    : `Browse ${maker.productCount} products from ${maker.name}. ${maker.averageRating ? `Average rating: ${maker.averageRating.toFixed(1)}.` : ''} View popular performers and genres.`;
+  const ratingStr = maker.averageRating ? t.avgRating(maker.averageRating.toFixed(1)) : '';
+  const description = t.descriptionTemplate(maker.name, maker.productCount, ratingStr);
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 

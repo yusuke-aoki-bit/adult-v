@@ -5,6 +5,15 @@ import { useCompareList } from '../hooks/useCompareList';
 import { SelectableCard } from './SelectableCard';
 import { CompareFloatingBar } from './CompareFloatingBar';
 
+const productListTexts = {
+  ja: { selectToCompare: '比較選択モード', exitSelection: '選択終了', selected: '選択中', maxReachedPrefix: '最大', maxReachedSuffix: '件まで選択可能' },
+  en: { selectToCompare: 'Select to Compare', exitSelection: 'Exit Selection', selected: 'Selected', maxReachedPrefix: 'Max ', maxReachedSuffix: ' items' },
+  zh: { selectToCompare: '比较选择模式', exitSelection: '结束选择', selected: '已选择', maxReachedPrefix: '最多', maxReachedSuffix: '件可选' },
+  'zh-TW': { selectToCompare: '比較選擇模式', exitSelection: '結束選擇', selected: '已選擇', maxReachedPrefix: '最多', maxReachedSuffix: '件可選' },
+  ko: { selectToCompare: '비교 선택 모드', exitSelection: '선택 종료', selected: '선택 중', maxReachedPrefix: '최대 ', maxReachedSuffix: '건까지 선택 가능' },
+} as const;
+function getProductListText(locale: string) { return productListTexts[locale as keyof typeof productListTexts] || productListTexts.ja; }
+
 interface Product {
   id: number | string;
   title: string;
@@ -83,12 +92,13 @@ export function ProductListWithSelection({
   const isDark = theme === 'dark';
 
   // 翻訳オブジェクトをメモ化
-  const t = useMemo(() => ({
-    selectToCompare: locale === 'ja' ? '比較選択モード' : 'Select to Compare',
-    exitSelection: locale === 'ja' ? '選択終了' : 'Exit Selection',
-    selected: locale === 'ja' ? '選択中' : 'Selected',
-    maxReached: locale === 'ja' ? `最大${maxItems}件まで選択可能` : `Max ${maxItems} items`,
-  }), [locale, maxItems]);
+  const t = useMemo(() => {
+    const texts = getProductListText(locale);
+    return {
+      ...texts,
+      maxReached: `${texts.maxReachedPrefix}${maxItems}${texts.maxReachedSuffix}`,
+    };
+  }, [locale, maxItems]);
 
   // コールバックをメモ化
   const handleToggleProduct = useCallback((product: Product) => {

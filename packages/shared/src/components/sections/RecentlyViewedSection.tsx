@@ -197,7 +197,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
       } catch (err) {
         console.error('Failed to fetch recently viewed products:', err);
         setProducts([]);
-        setError(locale === 'ja' ? '閲覧履歴の取得に失敗しました' : 'Failed to load viewing history');
+        setError(t.fetchError);
       } finally {
         setIsLoading(false);
         setIsRetrying(false);
@@ -259,10 +259,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
             } disabled:cursor-not-allowed`}
           >
             <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
-            {isRetrying
-              ? (locale === 'ja' ? '再読み込み中...' : 'Retrying...')
-              : (locale === 'ja' ? '再読み込み' : 'Try again')
-            }
+            {isRetrying ? t.retrying : t.retry}
           </button>
         </div>
       );
@@ -275,8 +272,8 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
           <div>
             <h4 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}>
               <Users className="w-3.5 h-3.5" />
-              共演者
-              {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">読み込み中...</span>}
+              {t.coStars}
+              {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">{t.loadingActresses}</span>}
             </h4>
             {isActressLoading ? (
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
@@ -301,7 +298,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
         <div>
           {ActressCard && actresses.length > 0 && (
             <h4 className={`text-xs font-semibold mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              作品
+              {t.products}
             </h4>
           )}
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">

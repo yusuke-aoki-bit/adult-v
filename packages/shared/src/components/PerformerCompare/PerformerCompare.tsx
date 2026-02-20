@@ -26,6 +26,57 @@ function getRadarDataPoints(cx: number, cy: number, values: number[]): string {
   return points.join(' ');
 }
 
+const compareTexts = {
+  ja: {
+    emptyTitle: '女優を比較しましょう',
+    emptyDescription: '女優を選択すると比較できます',
+    loading: '女優情報を読み込み中...',
+    mostReleases: '出演数No.1',
+    mostTrending: '注目度No.1',
+    mostPopular: '人気No.1',
+    releases: '出演数',
+    trending: '注目度',
+    fanScore: '人気度',
+    height: '身長',
+    cup: 'カップ',
+    debut: 'デビュー',
+    measurements: 'スリーサイズ',
+    services: '配信サイト',
+    tags: 'タグ',
+    viewDetails: '詳細を見る',
+    comparisonChart: '比較グラフ',
+    radarChart: 'レーダーチャート',
+    barComparison: '棒グラフ比較',
+    commonFeatures: '共通点',
+  },
+  en: {
+    emptyTitle: 'Compare Performers',
+    emptyDescription: 'Select performers to compare',
+    loading: 'Loading performers...',
+    mostReleases: 'Most Releases',
+    mostTrending: 'Most Trending',
+    mostPopular: 'Most Popular',
+    releases: 'Releases',
+    trending: 'Trending',
+    fanScore: 'Fan Score',
+    height: 'Height',
+    cup: 'Cup',
+    debut: 'Debut',
+    measurements: 'Measurements',
+    services: 'Services',
+    tags: 'Tags',
+    viewDetails: 'View Details',
+    comparisonChart: 'Comparison Chart',
+    radarChart: 'Radar Chart',
+    barComparison: 'Bar Comparison',
+    commonFeatures: 'Common Features',
+  },
+} as const;
+
+function getCompareText(locale: string) {
+  return compareTexts[locale as keyof typeof compareTexts] || compareTexts.ja;
+}
+
 interface PerformerDetail {
   id: number;
   name: string;
@@ -66,6 +117,7 @@ export function PerformerCompare({
   onPerformerClick,
   onRemovePerformer,
 }: PerformerCompareProps) {
+  const ct = getCompareText(locale);
   const [performers, setPerformers] = useState<PerformerDetail[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,12 +230,10 @@ export function PerformerCompare({
           </svg>
         </div>
         <p className={`text-lg font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-          {locale === 'ja' ? '女優を比較しましょう' : 'Compare Performers'}
+          {ct.emptyTitle}
         </p>
         <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          {locale === 'ja'
-            ? '女優を選択すると比較できます'
-            : 'Select performers to compare'}
+          {ct.emptyDescription}
         </p>
       </div>
     );
@@ -200,7 +250,7 @@ export function PerformerCompare({
             }`} />
           </div>
           <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>
-            {locale === 'ja' ? '女優情報を読み込み中...' : 'Loading performers...'}
+            {ct.loading}
           </p>
         </div>
       </div>
@@ -268,17 +318,17 @@ export function PerformerCompare({
               <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
                 {isMostReleases && (
                   <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg">
-                    {locale === 'ja' ? '出演数No.1' : 'Most Releases'}
+                    {ct.mostReleases}
                   </span>
                 )}
                 {isMostTrending && (
                   <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg">
-                    {locale === 'ja' ? '注目度No.1' : 'Most Trending'}
+                    {ct.mostTrending}
                   </span>
                 )}
                 {isMostPopular && (
                   <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg">
-                    {locale === 'ja' ? '人気No.1' : 'Most Popular'}
+                    {ct.mostPopular}
                   </span>
                 )}
               </div>
@@ -334,7 +384,7 @@ export function PerformerCompare({
                     isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}>
                     <div className={`text-xs mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? '出演数' : 'Releases'}
+                      {ct.releases}
                     </div>
                     <div className={`text-xl font-bold ${
                       isMostReleases ? 'text-blue-500' : isDark ? 'text-white' : 'text-gray-900'
@@ -346,7 +396,7 @@ export function PerformerCompare({
                     isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}>
                     <div className={`text-xs mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? '注目度' : 'Trending'}
+                      {ct.trending}
                     </div>
                     <div className={`text-xl font-bold ${
                       isMostTrending ? 'text-pink-500' : isDark ? 'text-white' : 'text-gray-900'
@@ -358,7 +408,7 @@ export function PerformerCompare({
                     isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}>
                     <div className={`text-xs mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? '人気度' : 'Fan Score'}
+                      {ct.fanScore}
                     </div>
                     <div className={`text-xl font-bold ${
                       isMostPopular ? 'text-yellow-500' : isDark ? 'text-white' : 'text-gray-900'
@@ -374,7 +424,7 @@ export function PerformerCompare({
                     isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}>
                     <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? '身長' : 'Height'}
+                      {ct.height}
                     </div>
                     <div className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       {performer['height'] ? `${performer['height']}cm` : '-'}
@@ -384,7 +434,7 @@ export function PerformerCompare({
                     isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}>
                     <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? 'カップ' : 'Cup'}
+                      {ct.cup}
                     </div>
                     <div className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       {performer['cup'] || '-'}
@@ -394,7 +444,7 @@ export function PerformerCompare({
                     isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}>
                     <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? 'デビュー' : 'Debut'}
+                      {ct.debut}
                     </div>
                     <div className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       {performer['debutYear'] || '-'}
@@ -408,7 +458,7 @@ export function PerformerCompare({
                     isDark ? 'bg-gray-800' : 'bg-gray-50'
                   }`}>
                     <div className={`text-xs mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? 'スリーサイズ' : 'Measurements'}
+                      {ct.measurements}
                     </div>
                     <div className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       B{performer['bust'] || '-'} W{performer['waist'] || '-'} H{performer['hip'] || '-'}
@@ -420,7 +470,7 @@ export function PerformerCompare({
                 {performer.services && performer.services.length > 0 && (
                   <div>
                     <div className={`text-xs mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? '配信サイト' : 'Services'}
+                      {ct.services}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {performer.services.slice(0, 4).map((service, i) => (
@@ -452,7 +502,7 @@ export function PerformerCompare({
                 {performer.tags && performer.tags.length > 0 && (
                   <div>
                     <div className={`text-xs mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {locale === 'ja' ? 'タグ' : 'Tags'}
+                      {ct.tags}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {performer.tags.slice(0, 5).map((tag, i) => (
@@ -489,7 +539,7 @@ export function PerformerCompare({
                       : 'bg-purple-500 hover:bg-purple-600 text-white'
                   }`}
                 >
-                  {locale === 'ja' ? '詳細を見る' : 'View Details'}
+                  {ct.viewDetails}
                 </button>
               </div>
             </div>
@@ -510,14 +560,14 @@ export function PerformerCompare({
             <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            {locale === 'ja' ? '比較グラフ' : 'Comparison Chart'}
+            {ct.comparisonChart}
           </h3>
 
           {/* レーダーチャート */}
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1">
               <p className={`text-xs mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {locale === 'ja' ? 'レーダーチャート' : 'Radar Chart'}
+                {ct.radarChart}
               </p>
               <div className="relative aspect-square max-w-[300px] mx-auto">
                 <svg viewBox="0 0 200 200" className="w-full h-full">
@@ -550,13 +600,13 @@ export function PerformerCompare({
                   })}
                   {/* ラベル */}
                   <text x="100" y="12" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
-                    {locale === 'ja' ? '出演数' : 'Releases'}
+                    {ct.releases}
                   </text>
                   <text x="175" y="160" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
-                    {locale === 'ja' ? '注目度' : 'Trending'}
+                    {ct.trending}
                   </text>
                   <text x="25" y="160" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
-                    {locale === 'ja' ? '人気度' : 'Fan Score'}
+                    {ct.fanScore}
                   </text>
                   {/* 各パフォーマーのデータ */}
                   {performers.map((performer, idx) => {
@@ -614,13 +664,13 @@ export function PerformerCompare({
             {/* バーチャート */}
             <div className="flex-1">
               <p className={`text-xs mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {locale === 'ja' ? '棒グラフ比較' : 'Bar Comparison'}
+                {ct.barComparison}
               </p>
               <div className="space-y-4">
                 {/* 出演数 */}
                 <div>
                   <p className={`text-xs mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {locale === 'ja' ? '出演数' : 'Releases'}
+                    {ct.releases}
                   </p>
                   <div className="space-y-1.5">
                     {performers.map((performer, idx) => {
@@ -649,7 +699,7 @@ export function PerformerCompare({
                 {/* 注目度 */}
                 <div>
                   <p className={`text-xs mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {locale === 'ja' ? '注目度' : 'Trending'}
+                    {ct.trending}
                   </p>
                   <div className="space-y-1.5">
                     {performers.map((performer, idx) => {
@@ -678,7 +728,7 @@ export function PerformerCompare({
                 {/* 人気度 */}
                 <div>
                   <p className={`text-xs mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {locale === 'ja' ? '人気度' : 'Fan Score'}
+                    {ct.fanScore}
                   </p>
                   <div className="space-y-1.5">
                     {performers.map((performer, idx) => {
@@ -723,7 +773,7 @@ export function PerformerCompare({
             <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            {locale === 'ja' ? '共通点' : 'Common Features'}
+            {ct.commonFeatures}
           </h3>
           <div className="flex flex-wrap gap-2">
             {commonServices.map((service, i) => (

@@ -135,13 +135,13 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
                 duration = EXCLUDED.duration,
                 default_thumbnail_url = EXCLUDED.default_thumbnail_url,
                 updated_at = NOW()
-              RETURNING id
+              RETURNING id, (xmax = 0) AS is_new
             `);
 
-            const productId = (productResult.rows[0] as { id: number }).id;
-            const isNew = productResult.rowCount === 1;
+            const row = productResult.rows[0] as { id: number; is_new: boolean };
+            const productId = row.id;
 
-            if (isNew) {
+            if (row.is_new) {
               stats.newProducts++;
             } else {
               stats.updatedProducts++;
@@ -155,6 +155,7 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
                 original_product_id,
                 affiliate_url,
                 price,
+                product_type,
                 data_source,
                 last_updated
               )
@@ -164,6 +165,7 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
                 ${item.itemId},
                 ${item['affiliateUrl'] || ''},
                 ${item['price'] || null},
+                'haishin',
                 'API',
                 NOW()
               )
@@ -171,6 +173,7 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
               DO UPDATE SET
                 affiliate_url = EXCLUDED.affiliate_url,
                 price = EXCLUDED.price,
+                product_type = EXCLUDED.product_type,
                 last_updated = NOW()
             `);
 

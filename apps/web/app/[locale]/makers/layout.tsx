@@ -1,16 +1,26 @@
 import { Metadata } from 'next';
 
+const metadataTexts = {
+  ja: {
+    title: 'メーカー・レーベル一覧',
+    description: '人気のメーカー・レーベルから作品を探す',
+  },
+  en: {
+    title: 'Makers & Labels',
+    description: 'Browse products by popular makers and labels',
+  },
+} as const;
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const t = metadataTexts[locale as keyof typeof metadataTexts] ?? metadataTexts.en;
 
-  const title = locale === 'ja' ? 'メーカー・レーベル一覧' : 'Makers & Labels';
-  const description = locale === 'ja'
-    ? '人気のメーカー・レーベルから作品を探す'
-    : 'Browse products by popular makers and labels';
+  const title = t.title;
+  const description = t.description;
 
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 

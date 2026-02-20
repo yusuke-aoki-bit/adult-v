@@ -21,34 +21,11 @@ export function ViewingHabitsDashboard({
 
   const isDark = theme === 'dark';
 
-  const t = {
-    title: locale === 'ja' ? '視聴習慣ダッシュボード' : 'Viewing Habits Dashboard',
-    noData: locale === 'ja' ? 'まだ視聴履歴がありません' : 'No viewing history yet',
-    loading: locale === 'ja' ? '読み込み中...' : 'Loading...',
-    totalViews: locale === 'ja' ? '視聴数' : 'Total Views',
-    totalDuration: locale === 'ja' ? '視聴時間' : 'Total Duration',
-    avgRating: locale === 'ja' ? '平均評価' : 'Avg. Rating',
-    topPerformers: locale === 'ja' ? 'よく視聴した出演者' : 'Top Performers',
-    topTags: locale === 'ja' ? 'よく視聴したジャンル' : 'Top Genres',
-    monthlyTrend: locale === 'ja' ? '月別視聴数' : 'Monthly Trend',
-    times: locale === 'ja' ? '回' : ' times',
-    hours: locale === 'ja' ? '時間' : 'h',
-    minutes: locale === 'ja' ? '分' : 'm',
-    viewStreak: locale === 'ja' ? '視聴ストリーク' : 'View Streak',
-    currentStreak: locale === 'ja' ? '現在' : 'Current',
-    longestStreak: locale === 'ja' ? '最長' : 'Longest',
-    days: locale === 'ja' ? '日' : ' days',
-    weekdayPattern: locale === 'ja' ? '曜日別パターン' : 'Weekday Pattern',
-    sunday: locale === 'ja' ? '日' : 'Sun',
-    monday: locale === 'ja' ? '月' : 'Mon',
-    tuesday: locale === 'ja' ? '火' : 'Tue',
-    wednesday: locale === 'ja' ? '水' : 'Wed',
-    thursday: locale === 'ja' ? '木' : 'Thu',
-    friday: locale === 'ja' ? '金' : 'Fri',
-    saturday: locale === 'ja' ? '土' : 'Sat',
-    viewsThisWeek: locale === 'ja' ? '今週の視聴' : 'Views This Week',
-    viewsThisMonth: locale === 'ja' ? '今月の視聴' : 'Views This Month',
-  };
+  const texts = {
+    ja: { title: '視聴習慣ダッシュボード', noData: 'まだ視聴履歴がありません', loading: '読み込み中...', totalViews: '視聴数', totalDuration: '視聴時間', avgRating: '平均評価', topPerformers: 'よく視聴した出演者', topTags: 'よく視聴したジャンル', monthlyTrend: '月別視聴数', times: '回', hours: '時間', minutes: '分', viewStreak: '視聴ストリーク', currentStreak: '現在', longestStreak: '最長', days: '日', weekdayPattern: '曜日別パターン', sunday: '日', monday: '月', tuesday: '火', wednesday: '水', thursday: '木', friday: '金', saturday: '土', viewsThisWeek: '今週の視聴', viewsThisMonth: '今月の視聴' },
+    en: { title: 'Viewing Habits Dashboard', noData: 'No viewing history yet', loading: 'Loading...', totalViews: 'Total Views', totalDuration: 'Total Duration', avgRating: 'Avg. Rating', topPerformers: 'Top Performers', topTags: 'Top Genres', monthlyTrend: 'Monthly Trend', times: ' times', hours: 'h', minutes: 'm', viewStreak: 'View Streak', currentStreak: 'Current', longestStreak: 'Longest', days: ' days', weekdayPattern: 'Weekday Pattern', sunday: 'Sun', monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri', saturday: 'Sat', viewsThisWeek: 'Views This Week', viewsThisMonth: 'Views This Month' },
+  } as const;
+  const t = texts[locale as keyof typeof texts] || texts.ja;
 
   const weekdays = [t.sunday, t.monday, t.tuesday, t.wednesday, t.thursday, t.friday, t.saturday];
 

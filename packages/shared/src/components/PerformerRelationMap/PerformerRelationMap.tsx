@@ -51,12 +51,46 @@ const HOP_COLORS = {
   3: { fill: '#10B981', stroke: '#34D399', light: { fill: '#059669', stroke: '#10B981' } }, // emerald
 };
 
+const mapTexts = {
+  ja: {
+    loading: '読み込み中...',
+    costarNetwork: '共演者ネットワーク',
+    upToHops: '2ホップまでの関係',
+    listView: 'リスト表示',
+    networkView: 'ネットワーク図',
+    firstHop: '直接共演',
+    secondHop: '2ホップ',
+    directCostars: '直接共演者',
+    secondHopLabel: '2ホップ目',
+    works: '作品',
+    costars: '作品共演',
+  },
+  en: {
+    loading: 'Loading...',
+    costarNetwork: 'Costar Network',
+    upToHops: 'Up to 2 hops',
+    listView: 'List view',
+    networkView: 'Network view',
+    firstHop: '1st hop',
+    secondHop: '2nd hop',
+    directCostars: 'Direct Costars',
+    secondHopLabel: '2nd Hop',
+    works: ' works',
+    costars: ' costars',
+  },
+} as const;
+
+function getMapText(locale: string) {
+  return mapTexts[locale as keyof typeof mapTexts] || mapTexts.ja;
+}
+
 export function PerformerRelationMap({
   performerId,
   locale,
   theme = 'dark',
   onPerformerClick,
 }: PerformerRelationMapProps) {
+  const mt = getMapText(locale);
   const [data, setData] = useState<PerformerRelationsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -156,7 +190,7 @@ export function PerformerRelationMap({
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
           <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-            {locale === 'ja' ? '読み込み中...' : 'Loading...'}
+            {mt.loading}
           </span>
         </div>
       </div>
@@ -179,10 +213,10 @@ export function PerformerRelationMap({
         <div className="flex items-center justify-between">
           <div>
             <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {locale === 'ja' ? '共演者ネットワーク' : 'Costar Network'}
+              {mt.costarNetwork}
             </h3>
             <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              {locale === 'ja' ? '2ホップまでの関係' : 'Up to 2 hops'}
+              {mt.upToHops}
             </p>
           </div>
           {/* 表示切り替えボタン */}
@@ -194,7 +228,7 @@ export function PerformerRelationMap({
                   ? isDark ? 'bg-sky-600 text-white' : 'bg-rose-600 text-white'
                   : isDark ? 'bg-gray-700 text-gray-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
-              title={locale === 'ja' ? 'リスト表示' : 'List view'}
+              title={mt.listView}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -207,7 +241,7 @@ export function PerformerRelationMap({
                   ? isDark ? 'bg-sky-600 text-white' : 'bg-rose-600 text-white'
                   : isDark ? 'bg-gray-700 text-gray-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
-              title={locale === 'ja' ? 'ネットワーク図' : 'Network view'}
+              title={mt.networkView}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="3" strokeWidth={2} />
@@ -228,13 +262,13 @@ export function PerformerRelationMap({
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getHopColor(1).fill }} />
             <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-              {locale === 'ja' ? '直接共演' : '1st hop'}
+              {mt.firstHop}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getHopColor(2).fill }} />
             <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-              {locale === 'ja' ? '2ホップ' : '2nd hop'}
+              {mt.secondHop}
             </span>
           </div>
         </div>
@@ -250,8 +284,7 @@ export function PerformerRelationMap({
               <div key={hop} className="mb-4 last:mb-0">
                 <h4 className={`text-sm font-medium mb-2 flex items-center gap-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: getHopColor(hop).fill }} />
-                  {hop === 1 ? (locale === 'ja' ? '直接共演者' : 'Direct Costars') :
-                   (locale === 'ja' ? '2ホップ目' : '2nd Hop')}
+                  {hop === 1 ? mt.directCostars : mt.secondHopLabel}
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {hopRelations.map((rel) => {
@@ -284,7 +317,7 @@ export function PerformerRelationMap({
                             className="absolute top-2 right-2 px-2 py-0.5 rounded text-xs font-medium text-white"
                             style={{ backgroundColor: getHopColor(hop).fill }}
                           >
-                            {rel.costarCount}{locale === 'ja' ? '作品' : ' works'}
+                            {rel.costarCount}{mt.works}
                           </div>
                         </div>
                         <div className="p-2">
@@ -379,7 +412,7 @@ export function PerformerRelationMap({
                 const baseRadius = node.hop === 1 ? 25 : node.hop === 2 ? 20 : 16;
                 const nodeRadius = Math.min(baseRadius + 3, baseRadius + node.costarCount);
                 const isHovered = hoveredNodeId === node.id;
-                const tooltipText = `${node.name}${node.nameEn ? ` (${node.nameEn})` : ''} - ${node.costarCount}${locale === 'ja' ? '作品共演' : ' costars'}`;
+                const tooltipText = `${node.name}${node.nameEn ? ` (${node.nameEn})` : ''} - ${node.costarCount}${mt.costars}`;
 
                 return (
                   <g

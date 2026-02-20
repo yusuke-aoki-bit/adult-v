@@ -256,6 +256,7 @@ const translations = {
     noData: 'データがありません',
     viewList: 'リストを見る',
     backToLists: 'リスト一覧に戻る',
+    listsBreadcrumb: 'リスト',
   },
   en: {
     title: 'Public List Rankings',
@@ -273,6 +274,7 @@ const translations = {
     noData: 'No data available',
     viewList: 'View List',
     backToLists: 'Back to Lists',
+    listsBreadcrumb: 'Lists',
   },
 };
 
@@ -394,7 +396,7 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
           <Breadcrumb
             items={[
               { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: locale === 'ja' ? 'リスト' : 'Lists', href: localizedHref('/lists', locale) },
+              { label: t.listsBreadcrumb, href: localizedHref('/lists', locale) },
               { label: t.title },
             ]}
             className="mb-4"

@@ -90,6 +90,7 @@ interface UserMenuTranslations {
   saleCalendar: string;
   settings: string;
   anonymous: string;
+  menu: string;
 }
 
 const defaultTranslation: UserMenuTranslations = {
@@ -104,6 +105,7 @@ const defaultTranslation: UserMenuTranslations = {
   saleCalendar: 'セールカレンダー',
   settings: '設定',
   anonymous: 'ゲストユーザー',
+  menu: 'メニュー',
 };
 
 const translations: { [key: string]: UserMenuTranslations } = {
@@ -119,6 +121,7 @@ const translations: { [key: string]: UserMenuTranslations } = {
     saleCalendar: 'セールカレンダー',
     settings: '設定',
     anonymous: 'ゲストユーザー',
+    menu: 'メニュー',
   },
   en: {
     login: 'Login',
@@ -132,6 +135,7 @@ const translations: { [key: string]: UserMenuTranslations } = {
     saleCalendar: 'Sale Calendar',
     settings: 'Settings',
     anonymous: 'Guest User',
+    menu: 'Menu',
   },
   zh: {
     login: '登录',
@@ -145,6 +149,7 @@ const translations: { [key: string]: UserMenuTranslations } = {
     saleCalendar: '特卖日历',
     settings: '设置',
     anonymous: '游客用户',
+    menu: '菜单',
   },
   ko: {
     login: '로그인',
@@ -158,6 +163,7 @@ const translations: { [key: string]: UserMenuTranslations } = {
     saleCalendar: '세일 캘린더',
     settings: '설정',
     anonymous: '게스트 사용자',
+    menu: '메뉴',
   },
 };
 
@@ -236,7 +242,7 @@ export function UserMenu({ locale }: UserMenuProps) {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-300"
-            aria-label={locale === 'ja' ? 'メニュー' : 'Menu'}
+            aria-label={t.menu}
             aria-expanded={isOpen}
             aria-haspopup="true"
           >

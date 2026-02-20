@@ -11,23 +11,38 @@ interface Props {
   params: Promise<{ locale: string }>;
 }
 
+const metaTranslations = {
+  ja: {
+    title: '今日の1本',
+    description: '毎日更新！AIが選ぶ今日のおすすめAV作品。季節・トレンド・人気度を考慮した厳選作品をお届け。',
+    keywords: ['今日のおすすめ', 'AV', '厳選', 'デイリーピック', 'おすすめ作品'],
+    ogDescription: 'AIが選ぶ今日のおすすめ作品',
+  },
+  en: {
+    title: 'Daily Pick',
+    description: "Updated daily! Today's recommended AV work selected by AI. Curated picks considering season, trends, and popularity.",
+    keywords: ['daily pick', 'AV', 'recommended', 'curated', 'best selection'],
+    ogDescription: "Today's AI-selected recommendation",
+  },
+} as const;
+
+function getMetaT(locale: string) {
+  return metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const isJa = locale === 'ja';
+  const mt = getMetaT(locale);
   const today = new Date();
   const dateStr = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
 
   return {
-    title: isJa ? `今日の1本 - ${dateStr}` : `Daily Pick - ${dateStr}`,
-    description: isJa
-      ? '毎日更新！AIが選ぶ今日のおすすめAV作品。季節・トレンド・人気度を考慮した厳選作品をお届け。'
-      : "Updated daily! Today's recommended AV work selected by AI. Curated picks considering season, trends, and popularity.",
-    keywords: isJa
-      ? ['今日のおすすめ', 'AV', '厳選', 'デイリーピック', 'おすすめ作品']
-      : ['daily pick', 'AV', 'recommended', 'curated', 'best selection'],
+    title: `${mt.title} - ${dateStr}`,
+    description: mt.description,
+    keywords: mt.keywords,
     openGraph: {
-      title: isJa ? `今日の1本 - ${dateStr}` : `Daily Pick - ${dateStr}`,
-      description: isJa ? 'AIが選ぶ今日のおすすめ作品' : "Today's AI-selected recommendation",
+      title: `${mt.title} - ${dateStr}`,
+      description: mt.ogDescription,
     },
   };
 }
@@ -52,6 +67,12 @@ const translations = {
     refreshTime: '毎日0時に更新',
     noPickAvailable: '本日のおすすめ作品を準備中です',
     noPickDescription: 'しばらくお待ちください。',
+    highlyRated: '高評価作品',
+    manyReviews: 'レビュー多数',
+    trending: '人気急上昇',
+    starStuddedCast: '豪華共演',
+    aiRecommended: 'AIおすすめ',
+    prNotice: '当ページには広告・アフィリエイトリンクが含まれています',
   },
   en: {
     title: 'Daily Pick',
@@ -72,6 +93,12 @@ const translations = {
     refreshTime: 'Updates daily at midnight',
     noPickAvailable: 'Preparing today\'s recommendation',
     noPickDescription: 'Please wait a moment.',
+    highlyRated: 'Highly rated',
+    manyReviews: 'Many reviews',
+    trending: 'Trending',
+    starStuddedCast: 'Star-studded cast',
+    aiRecommended: 'AI Recommended',
+    prNotice: 'This page contains advertisements and affiliate links',
   },
 };
 
@@ -339,19 +366,19 @@ export default async function DailyPickPage({ params }: Props) {
     const reasons: string[] = [];
 
     if (product.avg_rating && Number(product.avg_rating) >= 4) {
-      reasons.push(locale === 'ja' ? '高評価作品' : 'Highly rated');
+      reasons.push(t.highlyRated);
     }
     if (product.review_count >= 10) {
-      reasons.push(locale === 'ja' ? 'レビュー多数' : 'Many reviews');
+      reasons.push(t.manyReviews);
     }
     if (product.view_count >= 1000) {
-      reasons.push(locale === 'ja' ? '人気急上昇' : 'Trending');
+      reasons.push(t.trending);
     }
     if (product.performers && product.performers.length >= 2) {
-      reasons.push(locale === 'ja' ? '豪華共演' : 'Star-studded cast');
+      reasons.push(t.starStuddedCast);
     }
 
-    return reasons.length > 0 ? reasons.join(' / ') : (locale === 'ja' ? 'AIおすすめ' : 'AI Recommended');
+    return reasons.length > 0 ? reasons.join(' / ') : t.aiRecommended;
   };
 
   return (
@@ -360,7 +387,7 @@ export default async function DailyPickPage({ params }: Props) {
         {/* PR表記 */}
         <p className="text-xs text-gray-400 mb-4 text-center">
           <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
-          {locale === 'ja' ? '当ページには広告・アフィリエイトリンクが含まれています' : 'This page contains advertisements and affiliate links'}
+          {t.prNotice}
         </p>
 
         {/* ヘッダー */}

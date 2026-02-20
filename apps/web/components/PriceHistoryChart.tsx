@@ -42,6 +42,7 @@ const translations = {
     times: '回',
     yen: '円',
     days: '日前',
+    now: '現在',
     priceAlert: '値下げ通知を設定',
   },
   en: {
@@ -58,7 +59,8 @@ const translations = {
     saleCount: 'Sale Count',
     times: 'times',
     yen: 'JPY',
-    days: 'days ago',
+    days: ' days ago',
+    now: 'Now',
     priceAlert: 'Set Price Alert',
   },
 };
@@ -76,6 +78,7 @@ export function PriceHistoryChart({ productId, locale = 'ja', className = '' }: 
       try {
         setLoading(true);
         const response = await fetch(`/api/products/${productId}/price-history?days=180`);
+        if (!response.ok) { setError(t.error); return; }
         const data = await response.json();
 
         if (data.success) {
@@ -188,8 +191,8 @@ export function PriceHistoryChart({ productId, locale = 'ja', className = '' }: 
 
         {/* 価格ラベル */}
         <div className="flex justify-between text-xs text-gray-500 mt-1">
-          <span>180{locale === 'ja' ? '日前' : ' days ago'}</span>
-          <span>{locale === 'ja' ? '現在' : 'Now'}</span>
+          <span>180{t.days}</span>
+          <span>{t.now}</span>
         </div>
       </div>
 

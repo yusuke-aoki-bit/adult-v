@@ -61,6 +61,47 @@ const preferenceLabels = {
   },
 };
 
+const profileTexts = {
+  ja: {
+    fetchError: 'プロファイルの取得に失敗しました',
+    title: 'あなたの好みプロファイル',
+    viewMore: (remaining: number) => `あと${remaining}件閲覧するとプロファイルが生成されます`,
+    analyzing: 'プロファイルを分析中...',
+    secondaryPreferences: '副次的な好み',
+    actressTrend: '女優傾向',
+    genre: 'ジャンル',
+    era: '作品年代',
+    confidence: '信頼度',
+    suggestedActions: 'おすすめアクション',
+    statsViewed: (count: number) => `${count}件閲覧`,
+    statsPerformers: (count: number) => `${count}名の女優`,
+    statsGenres: (count: number) => `${count}ジャンル`,
+  },
+  en: {
+    fetchError: 'Failed to load profile',
+    title: 'Your Preference Profile',
+    viewMore: (remaining: number) => `View ${remaining} more to generate your profile`,
+    analyzing: 'Analyzing your profile...',
+    secondaryPreferences: 'Secondary Preferences',
+    actressTrend: 'Actress',
+    genre: 'Genre',
+    era: 'Era',
+    confidence: 'Confidence',
+    suggestedActions: 'Suggested Actions',
+    statsViewed: (count: number) => `${count} viewed`,
+    statsPerformers: (count: number) => `${count} performers`,
+    statsGenres: (count: number) => `${count} genres`,
+  },
+} as const;
+
+function getProfileText(locale: string) {
+  return profileTexts[locale as keyof typeof profileTexts] || profileTexts.ja;
+}
+
+function getLocaleKey(locale: string): 'ja' | 'en' {
+  return locale === 'ja' ? 'ja' : 'en';
+}
+
 export function UserPreferenceProfile({
   locale = 'ja',
   theme = 'dark',
@@ -68,6 +109,8 @@ export function UserPreferenceProfile({
   onTagClick,
   className = '',
 }: UserPreferenceProfileProps) {
+  const pt = getProfileText(locale);
+  const localeKey = getLocaleKey(locale);
   const { items: recentlyViewed, isLoading: historyLoading } = useRecentlyViewed();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -109,11 +152,11 @@ export function UserPreferenceProfile({
       }
     } catch (err) {
       console.error('[UserPreferenceProfile] Error:', err);
-      setError(locale === 'ja' ? 'プロファイルの取得に失敗しました' : 'Failed to load profile');
+      setError(pt.fetchError);
     } finally {
       setIsLoading(false);
     }
-  }, [recentlyViewed, apiEndpoint, locale]);
+  }, [recentlyViewed, apiEndpoint, pt]);
 
   useEffect(() => {
     if (!historyLoading && recentlyViewed.length >= 5 && !profile) {
@@ -134,13 +177,11 @@ export function UserPreferenceProfile({
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xl">📊</span>
           <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {locale === 'ja' ? 'あなたの好みプロファイル' : 'Your Preference Profile'}
+            {pt.title}
           </h3>
         </div>
         <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          {locale === 'ja'
-            ? `あと${5 - recentlyViewed.length}件閲覧するとプロファイルが生成されます`
-            : `View ${5 - recentlyViewed.length} more to generate your profile`}
+          {pt.viewMore(5 - recentlyViewed.length)}
         </p>
         <div className="mt-3 flex gap-1">
           {[...Array(5)].map((_, i) => (
@@ -165,7 +206,7 @@ export function UserPreferenceProfile({
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xl animate-pulse">📊</span>
           <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {locale === 'ja' ? 'プロファイルを分析中...' : 'Analyzing your profile...'}
+            {pt.analyzing}
           </h3>
         </div>
         <div className="space-y-2">
@@ -203,7 +244,7 @@ export function UserPreferenceProfile({
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                   isDark ? 'bg-purple-900/50 text-purple-300' : 'bg-purple-100 text-purple-700'
                 }`}>
-                  {locale === 'ja' ? typeInfo.ja : typeInfo.en}
+                  {typeInfo[localeKey]}
                 </span>
               </div>
               <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -255,7 +296,7 @@ export function UserPreferenceProfile({
           {profile.secondaryTags.length > 0 && (
             <div className="mt-4">
               <p className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {locale === 'ja' ? '副次的な好み' : 'Secondary Preferences'}
+                {pt.secondaryPreferences}
               </p>
               <div className="flex flex-wrap gap-2">
                 {profile.secondaryTags.map((tag, i) => (
@@ -279,31 +320,31 @@ export function UserPreferenceProfile({
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
               <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {locale === 'ja' ? '女優傾向' : 'Actress'}
+                {pt.actressTrend}
               </p>
               <p className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                {preferenceLabels.actressPreference[profile.preferences.actressPreference][locale === 'ja' ? 'ja' : 'en']}
+                {preferenceLabels.actressPreference[profile.preferences.actressPreference][localeKey]}
               </p>
             </div>
             <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
               <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {locale === 'ja' ? 'ジャンル' : 'Genre'}
+                {pt.genre}
               </p>
               <p className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                {preferenceLabels.genreDepth[profile.preferences.genreDepth][locale === 'ja' ? 'ja' : 'en']}
+                {preferenceLabels.genreDepth[profile.preferences.genreDepth][localeKey]}
               </p>
             </div>
             <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
               <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {locale === 'ja' ? '作品年代' : 'Era'}
+                {pt.era}
               </p>
               <p className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                {preferenceLabels.newVsClassic[profile.preferences.newVsClassic][locale === 'ja' ? 'ja' : 'en']}
+                {preferenceLabels.newVsClassic[profile.preferences.newVsClassic][localeKey]}
               </p>
             </div>
             <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
               <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {locale === 'ja' ? '信頼度' : 'Confidence'}
+                {pt.confidence}
               </p>
               <p className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 {profile.confidenceScore}%
@@ -315,7 +356,7 @@ export function UserPreferenceProfile({
           {profile.suggestedActions.length > 0 && (
             <div className="mt-4">
               <p className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                💡 {locale === 'ja' ? 'おすすめアクション' : 'Suggested Actions'}
+                💡 {pt.suggestedActions}
               </p>
               <ul className="space-y-1">
                 {profile.suggestedActions.map((action, i) => (
@@ -335,13 +376,13 @@ export function UserPreferenceProfile({
             <div className={`mt-4 pt-3 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className="flex items-center gap-4 text-xs">
                 <span className={isDark ? 'text-gray-500' : 'text-gray-500'}>
-                  📊 {stats.totalViewed}件閲覧
+                  📊 {pt.statsViewed(stats.totalViewed)}
                 </span>
                 <span className={isDark ? 'text-gray-500' : 'text-gray-500'}>
-                  👤 {stats.uniquePerformers}名の女優
+                  👤 {pt.statsPerformers(stats.uniquePerformers)}
                 </span>
                 <span className={isDark ? 'text-gray-500' : 'text-gray-500'}>
-                  🏷️ {stats.uniqueGenres}ジャンル
+                  🏷️ {pt.statsGenres(stats.uniqueGenres)}
                 </span>
               </div>
             </div>

@@ -25,12 +25,41 @@ interface TrendAnalysisProps {
   onPerformerClick?: (performer: string) => void;
 }
 
+const trendTexts = {
+  ja: {
+    fetchError: 'トレンドデータの取得に失敗しました',
+    retrying: '再読み込み中...',
+    retry: '再読み込み',
+    loading: '読み込み中...',
+    week: '週間',
+    month: '月間',
+    genres: 'ジャンル',
+    actresses: '女優',
+    releases: '作品',
+    trendAnalysis: 'トレンド分析',
+  },
+  en: {
+    fetchError: 'Failed to load trend data',
+    retrying: 'Retrying...',
+    retry: 'Try again',
+    loading: 'Loading...',
+    week: 'Week',
+    month: 'Month',
+    genres: 'Genres',
+    actresses: 'Actresses',
+    releases: 'releases',
+    trendAnalysis: 'Trend Analysis',
+  },
+} as const;
+function getTrendText(locale: string) { return trendTexts[locale as keyof typeof trendTexts] || trendTexts.ja; }
+
 export function TrendAnalysis({
   locale,
   theme = 'dark',
   onTagClick,
   onPerformerClick,
 }: TrendAnalysisProps) {
+  const tt = getTrendText(locale);
   const [data, setData] = useState<TrendsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [period, setPeriod] = useState<'week' | 'month'>('week');
@@ -69,7 +98,7 @@ export function TrendAnalysis({
         }
       } catch (err) {
         console.error('Failed to fetch trends:', err);
-        setError(locale === 'ja' ? 'トレンドデータの取得に失敗しました' : 'Failed to load trend data');
+        setError(tt.fetchError);
       } finally {
         setLoading(false);
         setIsRetrying(false);
@@ -141,10 +170,7 @@ export function TrendAnalysis({
             } disabled:cursor-not-allowed`}
           >
             <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
-            {isRetrying
-              ? (locale === 'ja' ? '再読み込み中...' : 'Retrying...')
-              : (locale === 'ja' ? '再読み込み' : 'Try again')
-            }
+            {isRetrying ? tt.retrying : tt.retry}
           </button>
         </div>
       );
@@ -159,7 +185,7 @@ export function TrendAnalysis({
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
           <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-            {locale === 'ja' ? '読み込み中...' : 'Loading...'}
+            {tt.loading}
           </span>
         </div>
       );
@@ -178,7 +204,7 @@ export function TrendAnalysis({
                   : isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
               }`}
             >
-              {locale === 'ja' ? '週間' : 'Week'}
+              {tt.week}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setPeriod('month'); }}
@@ -188,7 +214,7 @@ export function TrendAnalysis({
                   : isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
               }`}
             >
-              {locale === 'ja' ? '月間' : 'Month'}
+              {tt.month}
             </button>
           </div>
 
@@ -217,7 +243,7 @@ export function TrendAnalysis({
                 : isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            {locale === 'ja' ? 'ジャンル' : 'Genres'}
+            {tt.genres}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setActiveTab('performers'); }}
@@ -227,7 +253,7 @@ export function TrendAnalysis({
                 : isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            {locale === 'ja' ? '女優' : 'Actresses'}
+            {tt.actresses}
           </button>
         </div>
 
@@ -256,7 +282,7 @@ export function TrendAnalysis({
                   {item['name']}
                 </p>
                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {item['count']} {locale === 'ja' ? '作品' : 'releases'}
+                  {item['count']} {tt.releases}
                 </p>
               </div>
 
@@ -292,7 +318,7 @@ export function TrendAnalysis({
       >
         <h3 className={`font-semibold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
           <TrendingUp className="w-5 h-5" />
-          {locale === 'ja' ? 'トレンド分析' : 'Trend Analysis'}
+          {tt.trendAnalysis}
         </h3>
         {isExpanded ? (
           <ChevronUp className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />

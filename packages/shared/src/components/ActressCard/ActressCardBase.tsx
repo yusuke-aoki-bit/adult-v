@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useCallback, useMemo, memo, type ReactNode, type ComponentType } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect, memo, type ReactNode, type ComponentType } from 'react';
 import { useParams } from 'next/navigation';
 import type { Actress, ProviderId } from '../../types/product';
 import { providerMeta } from '../../lib/providers';
@@ -11,6 +11,7 @@ import ImageLightbox from '../ImageLightbox';
 import { CopyButton } from '../CopyButton';
 import { getActressCardThemeConfig, filterServicesForSite, type ActressCardTheme } from './themes';
 import { generateActressAltText } from '../../lib/seo-utils';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 // Client-side translations
 const translations = {
@@ -54,7 +55,8 @@ export interface ActressCardBaseProps {
   /** Card size: 'full', 'compact', or 'mini' */
   size?: ActressCardSize;
   priority?: boolean;
-  theme: ActressCardTheme;
+  /** Theme: 'dark' for adult-v, 'light' for fanza. Falls back to SiteThemeContext if omitted. */
+  theme?: ActressCardTheme;
   /** FavoriteButton component from the app */
   FavoriteButton?: ComponentType<FavoriteButtonProps>;
   /** Whether this is FANZA site (to filter services) */
@@ -80,7 +82,9 @@ function ActressCardBaseComponent({
   const params = useParams();
   const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
-  const themeConfig = getActressCardThemeConfig(theme);
+  const siteTheme = useSiteTheme();
+  const resolvedTheme: ActressCardTheme = theme ?? siteTheme.theme;
+  const themeConfig = getActressCardThemeConfig(resolvedTheme);
 
   // Resolve size from either new size prop or deprecated compact prop
   const resolvedSize: ActressCardSize = size ?? (compact ? 'compact' : 'full');
@@ -111,6 +115,14 @@ function ActressCardBaseComponent({
   const [hasError, setHasError] = useState(!initialSrc);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 2;
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup retry timer on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, []);
 
   // Lightbox state
   const [showLightbox, setShowLightbox] = useState(false);
@@ -123,7 +135,7 @@ function ActressCardBaseComponent({
     if (retryCount < MAX_RETRIES && initialSrc) {
       // タイムアウトやネットワークエラーの場合は遅延後に再試行
       const delay = (retryCount + 1) * 500; // 500ms, 1000ms
-      setTimeout(() => {
+      retryTimerRef.current = setTimeout(() => {
         setRetryCount(prev => prev + 1);
         // キャッシュ回避のためタイムスタンプを付与
         const retryUrl = initialSrc.includes('?')
@@ -164,9 +176,9 @@ function ActressCardBaseComponent({
     return (
       <Link
         href={`/${locale}/actress/${actress['id']}`}
-        className={`group ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-pink-500/60 hover:shadow-xl hover:shadow-pink-500/20 transition-all duration-300`}
+        className={`group ${resolvedTheme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-pink-500/60 hover:shadow-xl hover:shadow-pink-500/20 transition-all duration-300`}
       >
-        <div className={`aspect-square relative ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
+        <div className={`aspect-square relative ${resolvedTheme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
           {actress['heroImage'] || actress['thumbnail'] ? (
             <Image
               src={imgSrc}
@@ -182,7 +194,7 @@ function ActressCardBaseComponent({
             />
           ) : (
             <div className="flex items-center justify-center h-full">
-              <svg className={`h-8 w-8 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`h-8 w-8 ${resolvedTheme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
@@ -207,19 +219,19 @@ function ActressCardBaseComponent({
         </div>
         <div className="p-2">
           <div className="flex items-center gap-1">
-            <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-pink-300' : 'text-gray-800 group-hover:text-pink-600'} text-xs font-medium truncate transition-colors flex-1`}>
+            <p className={`${resolvedTheme === 'dark' ? 'text-gray-200 group-hover:text-pink-300' : 'text-gray-800 group-hover:text-pink-600'} text-xs font-medium truncate transition-colors flex-1`}>
               {actress['name']}
             </p>
             <CopyButton
               text={actress['name']}
               iconOnly
               size="xs"
-              className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+              className={resolvedTheme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
             />
           </div>
           {/* メトリクス表示（作品数がある場合） */}
           {actress['releaseCount'] && actress['releaseCount'] > 0 && (
-            <p className={`text-[10px] ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-0.5`}>
+            <p className={`text-[10px] ${resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-0.5`}>
               {t.releaseCount}: {actress['releaseCount']}{t.videos}
             </p>
           )}
@@ -286,7 +298,7 @@ function ActressCardBaseComponent({
                 text={actress['name']}
                 iconOnly
                 size="xs"
-                className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+                className={resolvedTheme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
               />
             </div>
             {/* Aliases (desktop only) */}
@@ -392,7 +404,7 @@ function ActressCardBaseComponent({
               text={actress['name']}
               iconOnly
               size="sm"
-              className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+              className={resolvedTheme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
             />
           </div>
 

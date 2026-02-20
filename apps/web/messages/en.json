@@ -179,7 +179,18 @@
     "saleFilter": "Sale",
     "onSaleOnly": "On Sale Only",
     "reviewFilter": "Review",
-    "hasReviewOnly": "With Review Only"
+    "hasReviewOnly": "With Review Only",
+    "actressFeatures": "Actress Features",
+    "cupSize": "Cup Size",
+    "cupLabel": " Cup",
+    "height": "Height",
+    "bloodType": "Blood Type",
+    "bloodTypeLabel": "",
+    "debutYear": "Debut Year",
+    "workCount": "Works",
+    "worksOrMore": "+ works",
+    "under": "<",
+    "over": "+"
   },
   "sort": {
     "nameAsc": "Name (A-Z)",

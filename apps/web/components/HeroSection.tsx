@@ -38,8 +38,57 @@ interface HeroSectionProps {
   totalProductCount?: number;
 }
 
+// Hero section translations
+const heroTexts = {
+  ja: {
+    database: 'アダルト動画の',
+    databaseHighlight: '総合データベース',
+    statsDesc: (actresses: string, products: string) => `${actresses}名以上の女優、${products}本以上の作品を収録`,
+    searchProducts: '作品を探す',
+    searchActresses: '女優を探す',
+    sale: 'SALE',
+    maxOff: (percent: number) => `最大 ${percent}% OFF`,
+    timeRemainingHours: (h: number, m: number) => `残り${h}時間${m}分`,
+    timeRemainingMinutes: (m: number) => `残り${m}分`,
+    cast: '出演:',
+    others: '他',
+    savings: 'お得',
+    viewDetails: '詳細を見る',
+    allSaleProducts: '全セール商品 →',
+    prevProduct: '前の商品',
+    nextProduct: '次の商品',
+    slide: (n: number) => `スライド ${n}`,
+    trendingActresses: '今週のトレンド女優',
+    seeMore: 'もっと見る →',
+    releases: '本',
+  },
+  en: {
+    database: 'Adult Video ',
+    databaseHighlight: 'Database',
+    statsDesc: (actresses: string, products: string) => `${actresses}+ actresses, ${products}+ products`,
+    searchProducts: 'Browse Products',
+    searchActresses: 'Browse Actresses',
+    sale: 'SALE',
+    maxOff: (percent: number) => `Up to ${percent}% OFF`,
+    timeRemainingHours: (h: number, m: number) => `${h}h ${m}m left`,
+    timeRemainingMinutes: (m: number) => `${m}m left`,
+    cast: 'Cast:',
+    others: 'more',
+    savings: 'off',
+    viewDetails: 'View Details',
+    allSaleProducts: 'All Sale Products →',
+    prevProduct: 'Previous',
+    nextProduct: 'Next',
+    slide: (n: number) => `Slide ${n}`,
+    trendingActresses: 'Trending Actresses This Week',
+    seeMore: 'See more →',
+    releases: 'titles',
+  },
+} as const;
+function getHeroText(locale: string) { return heroTexts[locale as keyof typeof heroTexts] || heroTexts.ja; }
+
 // カウントダウンタイマーコンポーネント
-function CountdownTimer({ endAt }: { endAt: string | Date }) {
+function CountdownTimer({ endAt, locale }: { endAt: string | Date; locale: string }) {
   const [timeLeft, setTimeLeft] = useState<{
     hours: number;
     minutes: number;
@@ -85,7 +134,9 @@ function CountdownTimer({ endAt }: { endAt: string | Date }) {
         {String(timeLeft.seconds).padStart(2, '0')}
       </span>
       <span className="text-xs opacity-80 ml-1">
-        {timeLeft.hours > 0 ? `残り${timeLeft.hours}時間${timeLeft.minutes}分` : `残り${timeLeft.minutes}分`}
+        {timeLeft.hours > 0
+          ? getHeroText(locale).timeRemainingHours(timeLeft.hours, timeLeft.minutes)
+          : getHeroText(locale).timeRemainingMinutes(timeLeft.minutes)}
       </span>
     </div>
   );
@@ -131,6 +182,7 @@ export default function HeroSection({
   };
 
   const currentProduct = heroProducts[currentSlide];
+  const ht = getHeroText(locale);
 
   // セールがない場合は統計情報のみ表示
   if (heroProducts.length === 0) {
@@ -139,23 +191,23 @@ export default function HeroSection({
         <div className="container mx-auto px-4">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-              アダルト動画の<span className="text-pink-400">総合データベース</span>
+              {ht.database}<span className="text-pink-400">{ht.databaseHighlight}</span>
             </h1>
             <p className="text-gray-300 text-lg mb-8">
-              {totalActressCount.toLocaleString()}名以上の女優、{totalProductCount.toLocaleString()}本以上の作品を収録
+              {ht.statsDesc(totalActressCount.toLocaleString(), totalProductCount.toLocaleString())}
             </p>
             <div className="flex justify-center gap-4">
               <Link
                 href={localizedHref('/products', locale)}
                 className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-lg hover:from-pink-400 hover:to-rose-400 transition-all transform hover:scale-105"
               >
-                作品を探す
+                {ht.searchProducts}
               </Link>
               <Link
                 href={localizedHref('/', locale)}
                 className="px-6 py-3 bg-gray-700 text-white font-bold rounded-lg hover:bg-gray-600 transition-all"
               >
-                女優を探す
+                {ht.searchActresses}
               </Link>
             </div>
           </div>
@@ -176,18 +228,18 @@ export default function HeroSection({
           <div className="space-y-4 order-2 lg:order-1">
             {/* セールバッジ */}
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-red-600 to-orange-500 text-white font-bold rounded-full text-sm animate-pulse">
+              <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-red-600 to-orange-500 text-white font-bold rounded-full text-sm">
                 <Flame className="w-4 h-4" />
-                SALE
+                {ht.sale}
               </span>
               {currentProduct?.discountPercent && (
                 <span className="px-3 py-1.5 bg-yellow-500 text-black font-bold rounded-full text-sm">
-                  最大 {currentProduct.discountPercent}% OFF
+                  {ht.maxOff(currentProduct.discountPercent)}
                 </span>
               )}
               {currentProduct?.endAt && (
                 <div className="px-3 py-1.5 bg-black/50 text-white rounded-full">
-                  <CountdownTimer endAt={currentProduct.endAt} />
+                  <CountdownTimer endAt={currentProduct.endAt} locale={locale} />
                 </div>
               )}
             </div>
@@ -200,7 +252,7 @@ export default function HeroSection({
             {/* 出演者 */}
             {currentProduct?.performers && currentProduct.performers.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-gray-400 text-sm">出演:</span>
+                <span className="text-gray-400 text-sm">{ht.cast}</span>
                 {currentProduct.performers.slice(0, 3).map((performer, i) => (
                   <Link
                     key={performer.id}
@@ -212,7 +264,7 @@ export default function HeroSection({
                   </Link>
                 ))}
                 {currentProduct.performers.length > 3 && (
-                  <span className="text-gray-400 text-sm">他</span>
+                  <span className="text-gray-400 text-sm">{ht.others}</span>
                 )}
               </div>
             )}
@@ -229,7 +281,7 @@ export default function HeroSection({
             {currentProduct?.regularPrice && currentProduct?.salePrice && currentProduct.regularPrice > currentProduct.salePrice && (
               <p className="text-sm text-green-400 flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                ¥{(currentProduct.regularPrice - currentProduct.salePrice).toLocaleString()} お得
+                ¥{(currentProduct.regularPrice - currentProduct.salePrice).toLocaleString()} {ht.savings}
               </p>
             )}
 
@@ -239,13 +291,13 @@ export default function HeroSection({
                 href={localizedHref(`/products/${currentProduct?.productId}`, locale)}
                 className="flex-1 sm:flex-none px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-lg hover:from-pink-400 hover:to-rose-400 transition-all transform hover:scale-105 text-center shadow-lg shadow-pink-500/30"
               >
-                詳細を見る
+                {ht.viewDetails}
               </Link>
               <Link
                 href={localizedHref('/sales', locale)}
                 className="flex-1 sm:flex-none px-6 py-3 bg-gray-700/80 text-white font-bold rounded-lg hover:bg-gray-600 transition-all text-center"
               >
-                全セール商品 →
+                {ht.allSaleProducts}
               </Link>
             </div>
           </div>
@@ -284,14 +336,14 @@ export default function HeroSection({
                   <button
                     onClick={goToPrev}
                     className="absolute left-2 top-1/2 -translate-y-1/2 p-3 sm:p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
-                    aria-label="前の商品"
+                    aria-label={ht.prevProduct}
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
                   <button
                     onClick={goToNext}
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-3 sm:p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
-                    aria-label="次の商品"
+                    aria-label={ht.nextProduct}
                   >
                     <ChevronRight className="w-6 h-6" />
                   </button>
@@ -312,7 +364,7 @@ export default function HeroSection({
                           ? 'bg-pink-500 w-8'
                           : 'bg-gray-600 hover:bg-gray-500 w-3'
                       }`}
-                      aria-label={`スライド ${index + 1}`}
+                      aria-label={ht.slide(index + 1)}
                     />
                   ))}
                 </div>
@@ -329,12 +381,12 @@ export default function HeroSection({
           <div className="mt-8 pt-6 border-t border-white/10">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="w-5 h-5 text-green-400" />
-              <h3 className="text-lg font-bold text-white">今週のトレンド女優</h3>
+              <h3 className="text-lg font-bold text-white">{ht.trendingActresses}</h3>
               <Link
                 href={localizedHref('/', locale)}
                 className="ml-auto text-sm text-pink-400 hover:text-pink-300"
               >
-                もっと見る →
+                {ht.seeMore}
               </Link>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
@@ -366,7 +418,7 @@ export default function HeroSection({
                   </p>
                   {actress.releaseCount && (
                     <p className="text-center text-xs text-gray-400">
-                      {actress.releaseCount}本
+                      {actress.releaseCount}{ht.releases}
                     </p>
                   )}
                 </Link>

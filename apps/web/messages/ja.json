@@ -179,7 +179,18 @@
     "saleFilter": "セール",
     "onSaleOnly": "セール中のみ",
     "reviewFilter": "レビュー",
-    "hasReviewOnly": "レビューありのみ"
+    "hasReviewOnly": "レビューありのみ",
+    "actressFeatures": "女優の特徴",
+    "cupSize": "カップサイズ",
+    "cupLabel": "カップ",
+    "height": "身長",
+    "bloodType": "血液型",
+    "bloodTypeLabel": "型",
+    "debutYear": "デビュー年",
+    "workCount": "作品数",
+    "worksOrMore": "作品以上",
+    "under": "",
+    "over": "以上"
   },
   "sort": {
     "nameAsc": "名前（昇順）",

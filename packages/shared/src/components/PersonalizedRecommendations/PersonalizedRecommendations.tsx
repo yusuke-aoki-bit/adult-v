@@ -7,6 +7,12 @@ import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { ProductCardBase } from '../ProductCard';
 
+const recTexts = {
+  ja: { viewMore: 'もう少し作品を閲覧するとおすすめが表示されます', fetchError: 'おすすめの取得に失敗しました', retry: '再試行', noResults: 'おすすめを取得できませんでした', preferences: 'あなたの傾向', title: 'あなたへのおすすめ' },
+  en: { viewMore: 'View more products to get personalized recommendations', fetchError: 'Failed to load recommendations', retry: 'Retry', noResults: 'No recommendations found', preferences: 'Your Preferences', title: 'Recommended for You' },
+} as const;
+function getRecText(locale: string) { return recTexts[locale as keyof typeof recTexts] || recTexts.ja; }
+
 interface RecommendedProduct {
   id: number;
   title: string;
@@ -67,12 +73,11 @@ export function PersonalizedRecommendations({
   const [hasExpanded, setHasExpanded] = useState(defaultOpen);
 
   const isDark = theme === 'dark';
+  const rt = getRecText(locale);
 
   const fetchRecommendations = useCallback(async () => {
     if (recentlyViewed.length < 3) {
-      setMessage(locale === 'ja'
-        ? 'もう少し作品を閲覧するとおすすめが表示されます'
-        : 'View more products to get personalized recommendations');
+      setMessage(rt.viewMore);
       return;
     }
 
@@ -106,9 +111,8 @@ export function PersonalizedRecommendations({
       } else {
         setError(data.error || 'Unknown error');
       }
-    } catch (err) {
-      console.error('[PersonalizedRecommendations] Error:', err);
-      setError(locale === 'ja' ? 'おすすめの取得に失敗しました' : 'Failed to load recommendations');
+    } catch {
+      setError(rt.fetchError);
     } finally {
       setIsLoading(false);
     }
@@ -152,7 +156,7 @@ export function PersonalizedRecommendations({
                 : 'bg-pink-500 hover:bg-pink-600 text-white'
             }`}
           >
-            {locale === 'ja' ? '再試行' : 'Retry'}
+            {rt.retry}
           </button>
         </div>
       );
@@ -162,7 +166,7 @@ export function PersonalizedRecommendations({
     if (recommendations.length === 0) {
       return (
         <p className={`text-sm py-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          {message || (locale === 'ja' ? 'おすすめを取得できませんでした' : 'No recommendations found')}
+          {message || rt.noResults}
         </p>
       );
     }
@@ -173,7 +177,7 @@ export function PersonalizedRecommendations({
         {showAnalysis && analysis && (
           <div className={`p-3 rounded-lg text-sm ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
             <p className={`font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              {locale === 'ja' ? 'あなたの傾向' : 'Your Preferences'}
+              {rt.preferences}
             </p>
             <div className="flex flex-wrap gap-2">
               {analysis.userPreferences.favoriteGenres.slice(0, 5).map((genre, i) => (
@@ -246,7 +250,7 @@ export function PersonalizedRecommendations({
   return (
     <AccordionSection
       icon={<Target className="w-5 h-5" />}
-      title={locale === 'ja' ? 'あなたへのおすすめ' : 'Recommended for You'}
+      title={rt.title}
       {...(hasExpanded && recommendations.length > 0 && { itemCount: recommendations.length })}
       defaultOpen={defaultOpen}
       onToggle={handleToggle}

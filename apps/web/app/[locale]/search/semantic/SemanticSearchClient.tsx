@@ -43,6 +43,7 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
 
   const t = {
     ja: {
+      resultCount: (count: number) => `${count}件の結果`,
       noResults: '検索結果が見つかりませんでした',
       tryDifferent: '別のキーワードで検索してみてください',
       score: '関連度',
@@ -57,6 +58,7 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
       errorOccurred: 'エラーが発生しました',
     },
     en: {
+      resultCount: (count: number) => `${count} results`,
       noResults: 'No results found',
       tryDifferent: 'Try searching with different keywords',
       score: 'Relevance',
@@ -201,7 +203,7 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
           ) : (
             <div className="space-y-4">
               <p className="text-sm theme-text-muted">
-                {locale === 'ja' ? `${results.length}件の結果` : `${results.length} results`}
+                {texts.resultCount(results.length)}
                 {searchMode === 'hybrid' && (
                   <span className="ml-2 px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-xs">
                     Hybrid

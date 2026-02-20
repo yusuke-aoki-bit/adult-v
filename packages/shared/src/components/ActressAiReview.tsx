@@ -6,6 +6,8 @@ import { ActressAiReview as ActressAiReviewType } from '../types/product';
 
 export type ActressAiReviewTheme = 'dark' | 'light';
 
+const localeMap: Record<string, string> = { ja: 'ja-JP', en: 'en-US', zh: 'zh-CN', ko: 'ko-KR', 'zh-TW': 'zh-TW' };
+
 // Client-side translations (outside NextIntlClientProvider)
 const translations = {
   ja: {
@@ -165,7 +167,7 @@ const ActressAiReview = memo(function ActressAiReview({ review, updatedAt, actre
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            {t.lastUpdated} {new Date(updatedAt).toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'en-US')}
+            {t.lastUpdated} {new Date(updatedAt).toLocaleDateString(localeMap[locale] || 'ja-JP')}
           </div>
         )}
       </div>

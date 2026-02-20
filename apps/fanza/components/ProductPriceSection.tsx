@@ -66,18 +66,22 @@ export default function ProductPriceSection({
     ja: {
       priceTracking: '価格追跡',
       description: 'この商品の価格変動を追跡し、セール時に通知を受け取れます。',
+      noHistory: '価格履歴の収集を開始しました。データが蓄積されると表示されます。',
     },
     en: {
       priceTracking: 'Price Tracking',
       description: 'Track price changes and get notified when this product goes on sale.',
+      noHistory: 'Price tracking started. Data will be displayed as it accumulates.',
     },
     zh: {
       priceTracking: '价格追踪',
       description: '追踪此商品的价格变动，在促销时接收通知。',
+      noHistory: '已开始收集价格历史。数据积累后将显示。',
     },
     ko: {
       priceTracking: '가격 추적',
       description: '이 상품의 가격 변동을 추적하고 세일 시 알림을 받으세요.',
+      noHistory: '가격 추적을 시작했습니다. 데이터가 쌓이면 표시됩니다.',
     },
   };
 
@@ -122,10 +126,7 @@ export default function ProductPriceSection({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
           <p className="text-gray-500 text-sm">
-            {locale === 'ja' && '価格履歴の収集を開始しました。データが蓄積されると表示されます。'}
-            {locale === 'en' && 'Price tracking started. Data will be displayed as it accumulates.'}
-            {locale === 'zh' && '已开始收集价格历史。数据积累后将显示。'}
-            {locale === 'ko' && '가격 추적을 시작했습니다. 데이터가 쌓이면 표시됩니다.'}
+            {t.noHistory}
           </p>
         </div>
       )}

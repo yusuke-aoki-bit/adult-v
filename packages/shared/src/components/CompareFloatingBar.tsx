@@ -29,16 +29,12 @@ export function CompareFloatingBar({
 
   const isDark = theme === 'dark';
 
-  const t = {
-    compare: locale === 'ja' ? '比較する' : 'Compare',
-    clearAll: locale === 'ja' ? 'クリア' : 'Clear',
-    addMore: locale === 'ja' ? `あと${maxItems - count}件追加可能` : `${maxItems - count} more can be added`,
-    items: locale === 'ja' ? '件' : 'items',
-    hint: locale === 'ja'
-      ? '「比較する」ボタンで比較ページへ'
-      : 'Click "Compare" to view comparison',
-    compareReady: locale === 'ja' ? '比較できます！' : 'Ready to compare!',
-  };
+  const remaining = maxItems - count;
+  const texts = {
+    ja: { compare: '比較する', clearAll: 'クリア', addMore: `あと${remaining}件追加可能`, items: '件', hint: '「比較する」ボタンで比較ページへ', compareReady: '比較できます！' },
+    en: { compare: 'Compare', clearAll: 'Clear', addMore: `${remaining} more can be added`, items: 'items', hint: 'Click "Compare" to view comparison', compareReady: 'Ready to compare!' },
+  } as const;
+  const t = texts[locale as keyof typeof texts] || texts.ja;
 
   // マウント時にセッションストレージをチェック
   useEffect(() => {

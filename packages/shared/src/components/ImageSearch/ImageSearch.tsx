@@ -31,7 +31,32 @@ interface ImageSearchProps {
   onProductClick?: (productId: string) => void;
 }
 
+const searchTexts = {
+  ja: {
+    title: '画像で検索', subtitle: '画像を貼り付け（Ctrl+V）またはドラッグ＆ドロップして類似作品を検索',
+    paste: 'Ctrl+V で貼り付け', uploadHint: 'またはクリック・ドラッグ＆ドロップでアップロード',
+    formats: 'JPEG, PNG, WebP, GIF (最大5MB)', analyzing: '分析中...',
+    searchSimilar: '類似作品を検索', analysisResult: '画像分析結果',
+    keywords: '検出キーワード:', genres: '推奨ジャンル:',
+    results: (n: number) => `類似作品 (${n}件)`, noResults: '類似作品が見つかりませんでした',
+    invalidFile: '画像ファイルを選択してください', fileTooLarge: 'ファイルサイズは5MB以下にしてください',
+    searchFailed: '検索に失敗しました', searchError: '検索中にエラーが発生しました',
+  },
+  en: {
+    title: 'Search by Image', subtitle: 'Paste (Ctrl+V) or drag & drop an image to find similar products',
+    paste: 'Paste with Ctrl+V', uploadHint: 'Or click / drag & drop to upload',
+    formats: 'JPEG, PNG, WebP, GIF (max 5MB)', analyzing: 'Analyzing...',
+    searchSimilar: 'Search Similar', analysisResult: 'Image Analysis',
+    keywords: 'Keywords:', genres: 'Suggested Genres:',
+    results: (n: number) => `Similar Products (${n})`, noResults: 'No similar products found',
+    invalidFile: 'Please select an image file', fileTooLarge: 'File size must be 5MB or less',
+    searchFailed: 'Search failed', searchError: 'An error occurred during search',
+  },
+} as const;
+function getSearchText(locale: string) { return searchTexts[locale as keyof typeof searchTexts] || searchTexts.ja; }
+
 export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: ImageSearchProps) {
+  const st = getSearchText(locale);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -55,12 +80,12 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
 
   const handleFileSelect = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {
-      setError('画像ファイルを選択してください');
+      setError(st.invalidFile);
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('ファイルサイズは5MB以下にしてください');
+      setError(st.fileTooLarge);
       return;
     }
 
@@ -139,15 +164,15 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '検索に失敗しました');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || st.searchFailed);
       }
 
       const data = await response.json();
       setResults(data.results || []);
       setAnalysis(data.analysis || null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '検索中にエラーが発生しました');
+      setError(err instanceof Error ? err.message : st.searchError);
     } finally {
       setIsSearching(false);
     }
@@ -178,12 +203,10 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          {locale === 'ja' ? '画像で検索' : 'Search by Image'}
+          {st.title}
         </h2>
         <p className={`text-sm ${themeClasses.textMuted} mt-1`}>
-          {locale === 'ja'
-            ? '画像を貼り付け（Ctrl+V）またはドラッグ＆ドロップして類似作品を検索'
-            : 'Paste (Ctrl+V) or drag & drop an image to find similar products'}
+          {st.subtitle}
         </p>
       </div>
 
@@ -219,13 +242,13 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
             />
           </svg>
           <p className={themeClasses.text}>
-            {locale === 'ja' ? 'Ctrl+V で貼り付け' : 'Paste with Ctrl+V'}
+            {st.paste}
           </p>
           <p className={`text-sm ${themeClasses.textMuted} mt-1`}>
-            {locale === 'ja' ? 'またはクリック・ドラッグ＆ドロップでアップロード' : 'Or click / drag & drop to upload'}
+            {st.uploadHint}
           </p>
           <p className={`text-xs ${themeClasses.textMuted} mt-2`}>
-            {locale === 'ja' ? 'JPEG, PNG, WebP, GIF (最大5MB)' : 'JPEG, PNG, WebP, GIF (max 5MB)'}
+            {st.formats}
           </p>
         </div>
       ) : (
@@ -263,10 +286,10 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                {locale === 'ja' ? '分析中...' : 'Analyzing...'}
+                {st.analyzing}
               </span>
             ) : (
-              locale === 'ja' ? '類似作品を検索' : 'Search Similar'
+              st.searchSimilar
             )}
           </button>
         </div>
@@ -283,14 +306,14 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
       {analysis && (
         <div className={`mt-6 p-4 rounded-lg ${themeClasses.card}`}>
           <h3 className={`font-semibold mb-2 ${themeClasses.text}`}>
-            {locale === 'ja' ? '画像分析結果' : 'Image Analysis'}
+            {st.analysisResult}
           </h3>
           <p className={`text-sm ${themeClasses.textMuted} mb-3`}>{analysis.description}</p>
 
           {analysis.keywords.length > 0 && (
             <div className="mb-3">
               <p className={`text-xs ${themeClasses.textMuted} mb-1`}>
-                {locale === 'ja' ? '検出キーワード:' : 'Keywords:'}
+                {st.keywords}
               </p>
               <div className="flex flex-wrap gap-1">
                 {analysis.keywords.map((keyword, i) => (
@@ -305,7 +328,7 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
           {analysis.genres.length > 0 && (
             <div>
               <p className={`text-xs ${themeClasses.textMuted} mb-1`}>
-                {locale === 'ja' ? '推奨ジャンル:' : 'Suggested Genres:'}
+                {st.genres}
               </p>
               <div className="flex flex-wrap gap-1">
                 {analysis.genres.map((genre, i) => (
@@ -323,7 +346,7 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
       {results.length > 0 && (
         <div className="mt-6">
           <h3 className={`font-semibold mb-3 ${themeClasses.text}`}>
-            {locale === 'ja' ? `類似作品 (${results.length}件)` : `Similar Products (${results.length})`}
+            {st.results(results.length)}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {results.map((result) => (
@@ -367,7 +390,7 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
           <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p>{locale === 'ja' ? '類似作品が見つかりませんでした' : 'No similar products found'}</p>
+          <p>{st.noResults}</p>
         </div>
       )}
     </div>

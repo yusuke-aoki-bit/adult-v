@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Sparkles, TrendingUp, Film, Calendar, Loader2, ChevronRight } from 'lucide-react';
+import { normalizeImageUrl } from '../../lib/image-utils';
 
 interface RookiePerformer {
   id: number;
@@ -172,7 +173,7 @@ export function RookieRanking({
             <div className="relative" style={{ aspectRatio: '3/4' }}>
               {performer.imageUrl ? (
                 <Image
-                  src={performer.imageUrl}
+                  src={normalizeImageUrl(performer.imageUrl)}
                   alt={performer['name']}
                   fill
                   className="object-cover"

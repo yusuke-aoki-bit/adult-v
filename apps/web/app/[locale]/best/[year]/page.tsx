@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import Link from 'next/link';
@@ -11,21 +12,34 @@ interface Props {
   params: Promise<{ locale: string; year: string }>;
 }
 
+const metaTranslations = {
+  ja: {
+    metaTitle: (year: string) => `${year}年ベスト100 - 年間ランキング`,
+    metaDescription: (year: string) => `${year}年に発売されたAV作品の人気ランキングTOP100。評価・レビュー・閲覧数から総合的にランク付け。`,
+    metaKeywords: (year: string) => [`${year}年`, 'ベスト', 'ランキング', 'AV', '人気作品', '年間ベスト'],
+    ogTitle: (year: string) => `${year}年ベスト100`,
+    ogDescription: (year: string) => `${year}年の人気作品ランキング`,
+  },
+  en: {
+    metaTitle: (year: string) => `Best of ${year} - Annual Ranking`,
+    metaDescription: (year: string) => `Top 100 AV works released in ${year}. Comprehensive ranking based on ratings, reviews, and views.`,
+    metaKeywords: (year: string) => [`${year}`, 'best', 'ranking', 'AV', 'popular', 'annual best'],
+    ogTitle: (year: string) => `Best of ${year}`,
+    ogDescription: (year: string) => `Popular works ranking of ${year}`,
+  },
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, year } = await params;
-  const isJa = locale === 'ja';
+  const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
 
   return {
-    title: isJa ? `${year}年ベスト100 - 年間ランキング` : `Best of ${year} - Annual Ranking`,
-    description: isJa
-      ? `${year}年に発売されたAV作品の人気ランキングTOP100。評価・レビュー・閲覧数から総合的にランク付け。`
-      : `Top 100 AV works released in ${year}. Comprehensive ranking based on ratings, reviews, and views.`,
-    keywords: isJa
-      ? [`${year}年`, 'ベスト', 'ランキング', 'AV', '人気作品', '年間ベスト']
-      : [`${year}`, 'best', 'ranking', 'AV', 'popular', 'annual best'],
+    title: mt.metaTitle(year),
+    description: mt.metaDescription(year),
+    keywords: mt.metaKeywords(year),
     openGraph: {
-      title: isJa ? `${year}年ベスト100` : `Best of ${year}`,
-      description: isJa ? `${year}年の人気作品ランキング` : `Popular works ranking of ${year}`,
+      title: mt.ogTitle(year),
+      description: mt.ogDescription(year),
     },
   };
 }
@@ -44,6 +58,7 @@ const translations = {
     otherYears: '他の年を見る',
     topActresses: 'この年の人気女優',
     topGenres: '人気ジャンル',
+    prNotice: '当ページには広告・アフィリエイトリンクが含まれています',
   },
   en: {
     title: 'Best 100',
@@ -58,6 +73,7 @@ const translations = {
     otherYears: 'Other Years',
     topActresses: 'Top Actresses of the Year',
     topGenres: 'Popular Genres',
+    prNotice: 'This page contains advertisements and affiliate links',
   },
 };
 
@@ -97,99 +113,101 @@ export default async function YearBestPage({ params }: Props) {
 
   // 有効な年かチェック
   if (isNaN(year) || year < 2000 || year > currentYear) {
-    return (
-      <main className="theme-body min-h-screen py-8">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-2xl font-bold theme-text">Invalid Year</h1>
-          <p className="theme-text-muted mt-2">Please select a valid year between 2000 and {currentYear}.</p>
-        </div>
-      </main>
-    );
+    notFound();
   }
 
-  // 年間ベスト100を取得
-  // product_viewsテーブルはview_countカラムがなく、各閲覧が1行として記録される
-  const bestProductsResult = await db.execute(sql`
-    WITH product_view_counts AS (
-      SELECT product_id, COUNT(*) as view_count
-      FROM product_views
-      GROUP BY product_id
-    ),
-    product_scores AS (
+  let bestProducts: RankedProduct[];
+  let topActresses: TopActress[];
+  let topGenres: TopGenre[];
+
+  try {
+    // 年間ベスト100を取得
+    // product_viewsテーブルはview_countカラムがなく、各閲覧が1行として記録される
+    const bestProductsResult = await db.execute(sql`
+      WITH product_view_counts AS (
+        SELECT product_id, COUNT(*) as view_count
+        FROM product_views
+        GROUP BY product_id
+      ),
+      product_scores AS (
+        SELECT
+          p.id,
+          p.normalized_product_id,
+          p.title,
+          p.release_date,
+          p.default_thumbnail_url,
+          COALESCE(AVG(pr.rating), 0) as avg_rating,
+          COUNT(DISTINCT pr.id) as review_count,
+          COALESCE(pvc.view_count, 0) as view_count,
+          (
+            SELECT json_agg(json_build_object('id', pe.id, 'name', pe.name))
+            FROM product_performers ppr
+            JOIN performers pe ON ppr.performer_id = pe.id
+            WHERE ppr.product_id = p.id
+            LIMIT 3
+          ) as performers,
+          -- スコア計算
+          (
+            COALESCE(AVG(pr.rating), 3) * 25 +
+            LEAST(COUNT(DISTINCT pr.id), 100) * 1.5 +
+            LEAST(COALESCE(pvc.view_count, 0) / 50, 100)
+          ) as score
+        FROM products p
+        LEFT JOIN product_reviews pr ON p.id = pr.product_id
+        LEFT JOIN product_view_counts pvc ON p.id = pvc.product_id
+        WHERE p.release_date IS NOT NULL
+          AND EXTRACT(YEAR FROM p.release_date) = ${year}
+          AND p.default_thumbnail_url IS NOT NULL
+        GROUP BY p.id, pvc.view_count
+        ORDER BY score DESC
+        LIMIT 100
+      )
       SELECT
-        p.id,
-        p.normalized_product_id,
-        p.title,
-        p.release_date,
-        p.default_thumbnail_url,
-        COALESCE(AVG(pr.rating), 0) as avg_rating,
-        COUNT(DISTINCT pr.id) as review_count,
-        COALESCE(pvc.view_count, 0) as view_count,
-        (
-          SELECT json_agg(json_build_object('id', pe.id, 'name', pe.name))
-          FROM product_performers ppr
-          JOIN performers pe ON ppr.performer_id = pe.id
-          WHERE ppr.product_id = p.id
-          LIMIT 3
-        ) as performers,
-        -- スコア計算
-        (
-          COALESCE(AVG(pr.rating), 3) * 25 +
-          LEAST(COUNT(DISTINCT pr.id), 100) * 1.5 +
-          LEAST(COALESCE(pvc.view_count, 0) / 50, 100)
-        ) as score
-      FROM products p
-      LEFT JOIN product_reviews pr ON p.id = pr.product_id
-      LEFT JOIN product_view_counts pvc ON p.id = pvc.product_id
+        ROW_NUMBER() OVER (ORDER BY score DESC) as rank,
+        *
+      FROM product_scores
+    `);
+
+    // この年の人気女優TOP10
+    const topActressesResult = await db.execute(sql`
+      SELECT
+        pe.id,
+        pe.name,
+        pe.profile_image_url,
+        COUNT(DISTINCT pp.product_id) as product_count
+      FROM performers pe
+      JOIN product_performers pp ON pe.id = pp.performer_id
+      JOIN products p ON pp.product_id = p.id
       WHERE p.release_date IS NOT NULL
         AND EXTRACT(YEAR FROM p.release_date) = ${year}
-        AND p.default_thumbnail_url IS NOT NULL
-      GROUP BY p.id, pvc.view_count
-      ORDER BY score DESC
-      LIMIT 100
-    )
-    SELECT
-      ROW_NUMBER() OVER (ORDER BY score DESC) as rank,
-      *
-    FROM product_scores
-  `);
+      GROUP BY pe.id, pe.name, pe.profile_image_url
+      ORDER BY product_count DESC
+      LIMIT 10
+    `);
 
-  // この年の人気女優TOP10
-  const topActressesResult = await db.execute(sql`
-    SELECT
-      pe.id,
-      pe.name,
-      pe.profile_image_url,
-      COUNT(DISTINCT pp.product_id) as product_count
-    FROM performers pe
-    JOIN product_performers pp ON pe.id = pp.performer_id
-    JOIN products p ON pp.product_id = p.id
-    WHERE p.release_date IS NOT NULL
-      AND EXTRACT(YEAR FROM p.release_date) = ${year}
-    GROUP BY pe.id, pe.name, pe.profile_image_url
-    ORDER BY product_count DESC
-    LIMIT 10
-  `);
+    // この年の人気ジャンルTOP10
+    const topGenresResult = await db.execute(sql`
+      SELECT
+        t.id,
+        t.name,
+        COUNT(DISTINCT pt.product_id) as product_count
+      FROM tags t
+      JOIN product_tags pt ON t.id = pt.tag_id
+      JOIN products p ON pt.product_id = p.id
+      WHERE p.release_date IS NOT NULL
+        AND EXTRACT(YEAR FROM p.release_date) = ${year}
+      GROUP BY t.id, t.name
+      ORDER BY product_count DESC
+      LIMIT 10
+    `);
 
-  // この年の人気ジャンルTOP10
-  const topGenresResult = await db.execute(sql`
-    SELECT
-      t.id,
-      t.name,
-      COUNT(DISTINCT pt.product_id) as product_count
-    FROM tags t
-    JOIN product_tags pt ON t.id = pt.tag_id
-    JOIN products p ON pt.product_id = p.id
-    WHERE p.release_date IS NOT NULL
-      AND EXTRACT(YEAR FROM p.release_date) = ${year}
-    GROUP BY t.id, t.name
-    ORDER BY product_count DESC
-    LIMIT 10
-  `);
-
-  const bestProducts = bestProductsResult.rows as unknown as RankedProduct[];
-  const topActresses = topActressesResult.rows as unknown as TopActress[];
-  const topGenres = topGenresResult.rows as unknown as TopGenre[];
+    bestProducts = bestProductsResult.rows as unknown as RankedProduct[];
+    topActresses = topActressesResult.rows as unknown as TopActress[];
+    topGenres = topGenresResult.rows as unknown as TopGenre[];
+  } catch (error) {
+    console.error(`[best-year] Error loading best of ${year}:`, error);
+    notFound();
+  }
 
   // 利用可能な年のリストを生成
   const availableYears = Array.from({ length: currentYear - 2009 }, (_, i) => currentYear - i);
@@ -200,7 +218,7 @@ export default async function YearBestPage({ params }: Props) {
         {/* PR表記 */}
         <p className="text-xs text-gray-400 mb-4 text-center">
           <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
-          {locale === 'ja' ? '当ページには広告・アフィリエイトリンクが含まれています' : 'This page contains advertisements and affiliate links'}
+          {t.prNotice}
         </p>
 
         {/* ヘッダー */}

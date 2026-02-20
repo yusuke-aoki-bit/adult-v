@@ -25,11 +25,11 @@ export function PullToRefresh({
 
   const isDark = theme === 'dark';
 
-  const t = {
-    pullToRefresh: locale === 'ja' ? '下に引いて更新' : 'Pull to refresh',
-    releaseToRefresh: locale === 'ja' ? '離して更新' : 'Release to refresh',
-    refreshing: locale === 'ja' ? '更新中...' : 'Refreshing...',
-  };
+  const texts = {
+    ja: { pullToRefresh: '下に引いて更新', releaseToRefresh: '離して更新', refreshing: '更新中...' },
+    en: { pullToRefresh: 'Pull to refresh', releaseToRefresh: 'Release to refresh', refreshing: 'Refreshing...' },
+  } as const;
+  const t = texts[locale as keyof typeof texts] || texts.ja;
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (containerRef.current?.scrollTop === 0) {

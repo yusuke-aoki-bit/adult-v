@@ -131,6 +131,12 @@ export interface FooterBaseProps {
   columns?: 3 | 4;
 }
 
+const footerTexts = {
+  ja: { popularGenres: '人気ジャンル', discoverContent: 'コンテンツを探す', todaysPick: '今日の1本', birthdays: '誕生日カレンダー', annualBest: '年間ベスト', weeklyTrends: '週間トレンド', rookies: '新人デビュー', hiddenGems: '隠れた名作', aiSearch: 'AI検索', discover: '発見', community: 'コミュニティ', publicLists: '公開リスト', listRankings: 'リストランキング', reviewers: 'レビュアー', voteRankings: 'ランキング投票', statistics: '統計', legalCompliance: '法的コンプライアンス', popularSeries: '人気シリーズ', popularMakers: '人気メーカー' },
+  en: { popularGenres: 'Popular Genres', discoverContent: 'Discover Content', todaysPick: "Today's Pick", birthdays: 'Birthdays', annualBest: 'Annual Best', weeklyTrends: 'Weekly Trends', rookies: 'Rookies', hiddenGems: 'Hidden Gems', aiSearch: 'AI Search', discover: 'Discover', community: 'Community', publicLists: 'Public Lists', listRankings: 'List Rankings', reviewers: 'Reviewers', voteRankings: 'Vote Rankings', statistics: 'Statistics', legalCompliance: 'Legal Compliance', popularSeries: 'Popular Series', popularMakers: 'Popular Studios' },
+} as const;
+function getFooterText(locale: string) { return footerTexts[locale as keyof typeof footerTexts] || footerTexts.ja; }
+
 /**
  * 共有Footerベースコンポーネント
  * 言語取得は?hl=パラメータから統一的に行う
@@ -149,6 +155,7 @@ export function FooterBase({
   const hlParam = searchParams.get('hl');
   const locale = (hlParam && locales.includes(hlParam as Locale) ? hlParam : defaultLocale) as string;
   const t = getTranslation(locale);
+  const ft = getFooterText(locale);
 
   const { actresses, isReady: actressesReady } = useFooterActresses();
   const { links: footerLinks, isReady: linksReady } = useFooterLinks();
@@ -192,7 +199,7 @@ export function FooterBase({
           {showInternalLinks && linksReady && footerLinks.genres.length > 0 && (
             <div>
               <h3 className="theme-footer-heading font-semibold mb-3">
-                {t.popularGenres || (locale === 'ja' ? '人気ジャンル' : 'Popular Genres')}
+                {t.popularGenres || ft.popularGenres}
               </h3>
               <ul className="space-y-1.5 text-sm">
                 {footerLinks.genres.slice(0, 8).map((genre) => (
@@ -212,47 +219,47 @@ export function FooterBase({
           {/* コンテンツ発見セクション */}
           <div>
             <h3 className="theme-footer-heading font-semibold mb-3">
-              {t.discoverContent || (locale === 'ja' ? 'コンテンツを探す' : 'Discover Content')}
+              {t.discoverContent || ft.discoverContent}
             </h3>
             <ul className="space-y-1.5 text-xs">
               <li>
                 <Link href={localizedHref('/daily-pick', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? '今日の1本' : "Today's Pick"}
+                  {ft.todaysPick}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref('/birthdays', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? '誕生日カレンダー' : 'Birthdays'}
+                  {ft.birthdays}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref(`/best/${new Date().getFullYear() - 1}`, locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? '年間ベスト' : 'Annual Best'}
+                  {ft.annualBest}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref('/weekly-report', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? '週間トレンド' : 'Weekly Trends'}
+                  {ft.weeklyTrends}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref('/rookies', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? '新人デビュー' : 'Rookies'}
+                  {ft.rookies}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref('/hidden-gems', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? '隠れた名作' : 'Hidden Gems'}
+                  {ft.hiddenGems}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref('/search/semantic', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? 'AI検索' : 'AI Search'}
+                  {ft.aiSearch}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref('/discover', locale)} className="theme-footer-link transition-colors">
-                  {t.discover || (locale === 'ja' ? '発見' : 'Discover')}
+                  {t.discover || ft.discover}
                 </Link>
               </li>
             </ul>
@@ -261,32 +268,32 @@ export function FooterBase({
           {/* コミュニティセクション */}
           <div>
             <h3 className="theme-footer-heading font-semibold mb-3">
-              {locale === 'ja' ? 'コミュニティ' : 'Community'}
+              {ft.community}
             </h3>
             <ul className="space-y-1.5 text-xs">
               <li>
                 <Link href={localizedHref('/lists', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? '公開リスト' : 'Public Lists'}
+                  {ft.publicLists}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref('/lists/ranking', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? 'リストランキング' : 'List Rankings'}
+                  {ft.listRankings}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref('/reviewers', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? 'レビュアー' : 'Reviewers'}
+                  {ft.reviewers}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref('/vote', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? 'ランキング投票' : 'Vote Rankings'}
+                  {ft.voteRankings}
                 </Link>
               </li>
               <li>
                 <Link href={localizedHref('/statistics', locale)} className="theme-footer-link transition-colors">
-                  {t.statistics || (locale === 'ja' ? '統計' : 'Statistics')}
+                  {t.statistics || ft.statistics}
                 </Link>
               </li>
             </ul>
@@ -308,7 +315,7 @@ export function FooterBase({
               </li>
               <li>
                 <Link href={localizedHref('/legal-compliance', locale)} className="theme-footer-link transition-colors">
-                  {locale === 'ja' ? '法的コンプライアンス' : 'Legal Compliance'}
+                  {ft.legalCompliance}
                 </Link>
               </li>
             </ul>
@@ -337,7 +344,7 @@ export function FooterBase({
               {footerLinks.series.length > 0 && (
                 <div>
                   <h3 className="theme-footer-heading font-semibold mb-3">
-                    {t.popularSeries || (locale === 'ja' ? '人気シリーズ' : 'Popular Series')}
+                    {t.popularSeries || ft.popularSeries}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {footerLinks.series.slice(0, 5).map((series) => (
@@ -357,7 +364,7 @@ export function FooterBase({
               {footerLinks.makers.length > 0 && (
                 <div>
                   <h3 className="theme-footer-heading font-semibold mb-3">
-                    {t.popularMakers || (locale === 'ja' ? '人気メーカー' : 'Popular Studios')}
+                    {t.popularMakers || ft.popularMakers}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {footerLinks.makers.slice(0, 5).map((maker) => (

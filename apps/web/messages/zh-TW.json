@@ -179,7 +179,18 @@
     "saleFilter": "促銷",
     "onSaleOnly": "僅限促銷商品",
     "reviewFilter": "評價",
-    "hasReviewOnly": "僅有評價"
+    "hasReviewOnly": "僅有評價",
+    "actressFeatures": "女優特徵",
+    "cupSize": "罩杯",
+    "cupLabel": "罩杯",
+    "height": "身高",
+    "bloodType": "血型",
+    "bloodTypeLabel": "型",
+    "debutYear": "出道年份",
+    "workCount": "作品數",
+    "worksOrMore": "部以上",
+    "under": "<",
+    "over": "+"
   },
   "sort": {
     "nameAsc": "名稱（升序）",

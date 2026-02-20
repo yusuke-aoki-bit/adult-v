@@ -117,6 +117,8 @@ export const headerTranslations = {
     listRanking: 'リストランキング',
     reviewers: 'レビュアー',
     voteRanking: '投票ランキング',
+    sales: 'セール',
+    onSaleProducts: 'セール中の作品',
   },
   en: {
     subtitle: 'heavy user guide',
@@ -154,6 +156,8 @@ export const headerTranslations = {
     listRanking: 'List Rankings',
     reviewers: 'Reviewers',
     voteRanking: 'Vote Rankings',
+    sales: 'Sales',
+    onSaleProducts: 'On Sale',
   },
   zh: {
     subtitle: 'heavy user guide',
@@ -191,6 +195,8 @@ export const headerTranslations = {
     listRanking: '列表排名',
     reviewers: '评论者',
     voteRanking: '投票排名',
+    sales: '特卖',
+    onSaleProducts: '特卖作品',
   },
   ko: {
     subtitle: 'heavy user guide',
@@ -228,6 +234,8 @@ export const headerTranslations = {
     listRanking: '리스트 랭킹',
     reviewers: '리뷰어',
     voteRanking: '투표 랭킹',
+    sales: '세일',
+    onSaleProducts: '세일 중인 작품',
   },
 } as const;
 

@@ -94,6 +94,7 @@ export default function AnalyticsDashboard() {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/analytics?period=${period}`);
+      if (!response.ok) return;
       const analyticsData = await response.json();
       setData(analyticsData);
     } catch (error: unknown) {

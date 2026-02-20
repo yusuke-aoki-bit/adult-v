@@ -101,7 +101,10 @@ async function enhanceWithVisionAPI(
 
       if (faces.length > 0 || labels.length > 0) {
         const labelArray = labels.map(l => l.description);
-        const labelsLiteral = `{${labelArray.map(l => `"${l.replace(/"/g, '\\"')}"`).join(',')}}`;
+        // パラメータ化されたARRAY構文で安全にPostgreSQL配列を構築（文字列結合を排除）
+        const labelsArraySql = labelArray.length > 0
+          ? sql`ARRAY[${sql.join(labelArray.map(l => sql`${l}`), sql`, `)}]::text[]`
+          : sql`'{}'::text[]`;
 
         await db.execute(sql`
           INSERT INTO product_image_metadata (
@@ -113,7 +116,7 @@ async function enhanceWithVisionAPI(
           VALUES (
             ${product['id']},
             ${faces.length},
-            ${labelsLiteral}::text[],
+            ${labelsArraySql},
             NOW()
           )
           ON CONFLICT (product_id)

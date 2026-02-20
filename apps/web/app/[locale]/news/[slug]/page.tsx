@@ -81,14 +81,22 @@ export default async function NewsDetailPage({
   params: Promise<{ locale: string; slug: string }>;
 }) {
   const { locale, slug } = await params;
-  const article = await getNewsBySlug(slug);
+
+  let article, t, tNav;
+  try {
+    [article, t, tNav] = await Promise.all([
+      getNewsBySlug(slug),
+      getTranslations({ locale, namespace: 'news' }),
+      getTranslations({ locale, namespace: 'nav' }),
+    ]);
+  } catch (error) {
+    console.error(`[news-detail] Error loading news ${slug}:`, error);
+    notFound();
+  }
 
   if (!article) {
     notFound();
   }
-
-  const t = await getTranslations({ locale, namespace: 'news' });
-  const tNav = await getTranslations({ locale, namespace: 'nav' });
 
   const CATEGORY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
     new_releases: { bg: 'bg-blue-600', text: 'text-blue-100', label: t('newReleases') },

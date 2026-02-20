@@ -483,7 +483,7 @@ export const HeaderBase = memo(function HeaderBase({
                 onClick={handleDropdownClose}
               >
                 <span className="text-lg">🔥</span>
-                {locale === 'ja' ? 'セール' : 'Sales'}
+                {t.sales}
               </Link>
             </DropdownMenu>
 
@@ -680,7 +680,7 @@ export const HeaderBase = memo(function HeaderBase({
                   role="listitem"
                 >
                   <span className="text-lg mr-2">🔥</span>
-                  {locale === 'ja' ? 'セール中の作品' : 'On Sale'}
+                  {t.onSaleProducts}
                 </Link>
               </div>
             </div>

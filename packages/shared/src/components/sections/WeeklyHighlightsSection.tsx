@@ -103,7 +103,7 @@ export function WeeklyHighlightsSection({
         setHasFetched(true);
       } catch (err) {
         console.error('Failed to fetch weekly highlights:', err);
-        setError(locale === 'ja' ? '週間ハイライトの取得に失敗しました' : 'Failed to load weekly highlights');
+        setError(t.fetchError);
       } finally {
         setIsLoading(false);
         setIsRetrying(false);
@@ -192,10 +192,7 @@ export function WeeklyHighlightsSection({
                     } disabled:cursor-not-allowed`}
                   >
                     <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
-                    {isRetrying
-                      ? (locale === 'ja' ? '再読み込み中...' : 'Retrying...')
-                      : (locale === 'ja' ? '再読み込み' : 'Try again')
-                    }
+                    {isRetrying ? t.retrying : t.retry}
                   </button>
                 </div>
               ) : (isLoading || !hasData) ? (

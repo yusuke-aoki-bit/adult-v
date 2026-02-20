@@ -75,8 +75,7 @@ export default function LoadMoreProducts({
           setHasMore(false);
         }
       }
-    } catch (error) {
-      console.error('Error loading more products:', error);
+    } catch {
       setHasError(true);
     } finally {
       setIsLoading(false);
@@ -136,12 +135,12 @@ export default function LoadMoreProducts({
 
         {hasError && (
           <div className="flex flex-col items-center gap-2">
-            <p className="text-red-400 text-sm">{t('loadError') || '読み込みに失敗しました'}</p>
+            <p className="text-red-400 text-sm">{t('loadError') || 'Failed to load'}</p>
             <button
               onClick={loadMore}
               className="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
             >
-              {t('retry') || '再試行'}
+              {t('retry') || 'Retry'}
             </button>
           </div>
         )}

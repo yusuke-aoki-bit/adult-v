@@ -1,17 +1,27 @@
 import { Metadata } from 'next';
 import { generateAlternates } from '@adult-v/shared/i18n';
 
+const metadataTexts = {
+  ja: {
+    title: '予算管理',
+    description: '月間予算を設定し、ウォッチリストの作品を賢く購入しましょう',
+  },
+  en: {
+    title: 'Budget Manager',
+    description: 'Set your monthly budget and track your watchlist purchases smartly',
+  },
+} as const;
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const t = metadataTexts[locale as keyof typeof metadataTexts] ?? metadataTexts.en;
 
-  const title = locale === 'ja' ? '予算管理' : 'Budget Manager';
-  const description = locale === 'ja'
-    ? '月間予算を設定し、ウォッチリストの作品を賢く購入しましょう'
-    : 'Set your monthly budget and track your watchlist purchases smartly';
+  const title = t.title;
+  const description = t.description;
 
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 

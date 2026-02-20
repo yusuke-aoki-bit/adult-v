@@ -5,6 +5,15 @@ import { usePerformerCompareList } from '../hooks/usePerformerCompareList';
 import { SelectableCard } from './SelectableCard';
 import { PerformerCompareFloatingBar } from './PerformerCompareFloatingBar';
 
+const performerListTexts = {
+  ja: { selectToCompare: '比較選択モード', exitSelection: '選択終了', selected: '選択中', maxReachedPrefix: '最大', maxReachedSuffix: '名まで選択可能', loading: '読み込み中...' },
+  en: { selectToCompare: 'Select to Compare', exitSelection: 'Exit Selection', selected: 'Selected', maxReachedPrefix: 'Max ', maxReachedSuffix: ' performers', loading: 'Loading...' },
+  zh: { selectToCompare: '比较选择模式', exitSelection: '结束选择', selected: '已选择', maxReachedPrefix: '最多', maxReachedSuffix: '人可选', loading: '加载中...' },
+  'zh-TW': { selectToCompare: '比較選擇模式', exitSelection: '結束選擇', selected: '已選擇', maxReachedPrefix: '最多', maxReachedSuffix: '人可選', loading: '載入中...' },
+  ko: { selectToCompare: '비교 선택 모드', exitSelection: '선택 종료', selected: '선택 중', maxReachedPrefix: '최대 ', maxReachedSuffix: '명까지 선택 가능', loading: '로딩 중...' },
+} as const;
+function getPerformerListText(locale: string) { return performerListTexts[locale as keyof typeof performerListTexts] || performerListTexts.ja; }
+
 interface Performer {
   id: number | string;
   name: string;
@@ -145,12 +154,13 @@ export function PerformerListWithSelection({
   );
 
   // 翻訳オブジェクトをメモ化
-  const t = useMemo(() => ({
-    selectToCompare: locale === 'ja' ? '比較選択モード' : 'Select to Compare',
-    exitSelection: locale === 'ja' ? '選択終了' : 'Exit Selection',
-    selected: locale === 'ja' ? '選択中' : 'Selected',
-    maxReached: locale === 'ja' ? `最大${maxItems}名まで選択可能` : `Max ${maxItems} performers`,
-  }), [locale, maxItems]);
+  const t = useMemo(() => {
+    const texts = getPerformerListText(locale);
+    return {
+      ...texts,
+      maxReached: `${texts.maxReachedPrefix}${maxItems}${texts.maxReachedSuffix}`,
+    };
+  }, [locale, maxItems]);
 
   // コールバックをメモ化
   const handleTogglePerformer = useCallback((performer: Performer) => {
@@ -227,7 +237,7 @@ export function PerformerListWithSelection({
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              <span className="text-sm">読み込み中...</span>
+              <span className="text-sm">{t.loading}</span>
             </div>
           </div>
         )}

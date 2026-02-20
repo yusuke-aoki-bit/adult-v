@@ -69,9 +69,26 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
 
       const initialOffset = currentOffset;
 
-      // バッチ用: 演者データ収集
+      // バッチ用: 演者データ収集（ページごとにフラッシュ）
       const allPerformerNames = new Set<string>();
       const pendingPerformerLinks: { productId: number; performerNames: string[] }[] = [];
+
+      async function flushPerformerBatch() {
+        if (allPerformerNames.size === 0) return;
+        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
+        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const links: { productId: number; performerId: number }[] = [];
+        for (const { productId, performerNames } of pendingPerformerLinks) {
+          for (const name of performerNames) {
+            const performerId = nameToId.get(name);
+            if (performerId) links.push({ productId, performerId });
+          }
+        }
+        await batchInsertProductPerformers(db, links);
+        allPerformerNames.clear();
+        pendingPerformerLinks.length = 0;
+      }
 
       // ページネーションループ: 時間制限内で複数ページを取得
       while (Date.now() - startTime < TIME_LIMIT) {
@@ -129,13 +146,13 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
                 duration = EXCLUDED.duration,
                 default_thumbnail_url = EXCLUDED.default_thumbnail_url,
                 updated_at = NOW()
-              RETURNING id
+              RETURNING id, (xmax = 0) AS is_new
             `);
 
-            const productId = (productResult.rows[0] as { id: number }).id;
-            const isNew = productResult.rowCount === 1;
+            const row = productResult.rows[0] as { id: number; is_new: boolean };
+            const productId = row.id;
 
-            if (isNew) {
+            if (row.is_new) {
               stats.newProducts++;
             } else {
               stats.updatedProducts++;
@@ -149,6 +166,7 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
                 original_product_id,
                 affiliate_url,
                 price,
+                product_type,
                 data_source,
                 last_updated
               )
@@ -158,6 +176,7 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
                 ${item['productId']},
                 ${item['affiliateUrl'] || ''},
                 ${item['price'] || null},
+                'haishin',
                 'API',
                 NOW()
               )
@@ -165,6 +184,7 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
               DO UPDATE SET
                 affiliate_url = EXCLUDED.affiliate_url,
                 price = EXCLUDED.price,
+                product_type = EXCLUDED.product_type,
                 last_updated = NOW()
             `);
 
@@ -216,28 +236,15 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
 
         currentOffset += response.items.length;
 
+        // ページ終了時に演者バッチをフラッシュ（タイムアウトによるデータロス防止）
+        await flushPerformerBatch();
+
         // 時間チェック（次のAPIコールに十分な時間があるか）
         if (Date.now() - startTime > TIME_LIMIT) break;
       }
 
-      // バッチ: 演者UPSERT + 紐付けINSERT
-      if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
-        const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
-
-        const links: { productId: number; performerId: number }[] = [];
-        for (const { productId, performerNames } of pendingPerformerLinks) {
-          for (const name of performerNames) {
-            const performerId = nameToId.get(name);
-            if (performerId) {
-              links.push({ productId, performerId });
-            }
-          }
-        }
-
-        await batchInsertProductPerformers(db, links);
-      }
+      // 最終フラッシュ（ループ途中で抜けた場合の残りデータ）
+      await flushPerformerBatch();
 
       const duration = Math.round((Date.now() - startTime) / 1000);
 

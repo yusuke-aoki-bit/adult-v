@@ -230,6 +230,21 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
   }));
 
   // インサイト生成
+  const insightTranslations = {
+    ja: {
+      releasesUp: (pct: number) => `今週のリリース数は先週比${pct}%増加`,
+      releasesDown: (pct: number) => `今週のリリース数は先週比${pct}%減少`,
+      tagsRising: (tags: string[]) => `「${tags.join('」「')}」が急上昇中`,
+      newDebuts: (count: number) => `今週${count}名の新人がデビュー`,
+    },
+    en: {
+      releasesUp: (pct: number) => `Releases up ${pct}% from last week`,
+      releasesDown: (pct: number) => `Releases down ${pct}% from last week`,
+      tagsRising: (tags: string[]) => `"${tags.join('", "')}" trending up`,
+      newDebuts: (count: number) => `${count} new performers debuted this week`,
+    },
+  };
+  const it = insightTranslations[locale as keyof typeof insightTranslations] || insightTranslations.ja;
   const insights: string[] = [];
 
   const releaseChange = previousWeekReleases > 0
@@ -237,26 +252,18 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
     : 0;
 
   if (releaseChange > 10) {
-    insights.push(locale === 'ja'
-      ? `今週のリリース数は先週比${releaseChange}%増加`
-      : `Releases up ${releaseChange}% from last week`);
+    insights.push(it.releasesUp(releaseChange));
   } else if (releaseChange < -10) {
-    insights.push(locale === 'ja'
-      ? `今週のリリース数は先週比${Math.abs(releaseChange)}%減少`
-      : `Releases down ${Math.abs(releaseChange)}% from last week`);
+    insights.push(it.releasesDown(Math.abs(releaseChange)));
   }
 
   const risingTags = trendingTags.filter(t => t.trend === 'up').slice(0, 2);
   if (risingTags.length > 0) {
-    insights.push(locale === 'ja'
-      ? `「${risingTags.map(t => t.name).join('」「')}」が急上昇中`
-      : `"${risingTags.map(t => t.name).join('", "')}" trending up`);
+    insights.push(it.tagsRising(risingTags.map(t => t.name)));
   }
 
   if (newDebutPerformers.length > 0) {
-    insights.push(locale === 'ja'
-      ? `今週${newDebutPerformers.length}名の新人がデビュー`
-      : `${newDebutPerformers.length} new performers debuted this week`);
+    insights.push(it.newDebuts(newDebutPerformers.length));
   }
 
   return {

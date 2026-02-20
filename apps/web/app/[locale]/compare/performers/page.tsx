@@ -5,10 +5,28 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { usePerformerCompareList } from '@adult-v/shared/hooks';
 import { PerformerCompare } from '@adult-v/shared/components';
 
+const translations = {
+  title: { ja: '女優を比較', en: 'Compare Performers' },
+  subtitle: { ja: '最大4名まで比較できます', en: 'Compare up to 4 performers' },
+  addPerformer: { ja: '女優を追加', en: 'Add Performer' },
+  searchPlaceholder: { ja: '女優名で検索...', en: 'Search by name...' },
+  search: { ja: '検索', en: 'Search' },
+  selected: { ja: '選択中:', en: 'Selected:' },
+  clearAll: { ja: 'すべてクリア', en: 'Clear All' },
+  howToUse: { ja: '使い方', en: 'How to use' },
+  step1: { ja: '1. 上の検索ボックスで比較したい女優を検索', en: '1. Search for performers you want to compare' },
+  step2: { ja: '2. 検索結果から女優をクリックして追加（最大4名）', en: '2. Click on search results to add (up to 4)' },
+  step3: { ja: '3. 出演本数、トレンド、ファン度などを比較', en: '3. Compare releases, trends, fan scores, etc.' },
+} as const;
+
+type TranslationKey = keyof typeof translations;
+
 function PerformerComparePageClient({ locale }: { locale: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { clearAll, removeItem } = usePerformerCompareList();
+
+  const t = (key: TranslationKey) => translations[key][locale === 'ja' ? 'ja' : 'en'];
 
   // URLパラメータから初期値を取得
   const [performerIds, setPerformerIds] = useState<string[]>(() => {
@@ -22,20 +40,6 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
     imageUrl: string | null;
   }>>([]);
   const [isSearching, setIsSearching] = useState(false);
-
-  const t = {
-    title: locale === 'ja' ? '女優を比較' : 'Compare Performers',
-    subtitle: locale === 'ja' ? '最大4名まで比較できます' : 'Compare up to 4 performers',
-    addPerformer: locale === 'ja' ? '女優を追加' : 'Add Performer',
-    searchPlaceholder: locale === 'ja' ? '女優名で検索...' : 'Search by name...',
-    search: locale === 'ja' ? '検索' : 'Search',
-    selected: locale === 'ja' ? '選択中:' : 'Selected:',
-    clearAll: locale === 'ja' ? 'すべてクリア' : 'Clear All',
-    howToUse: locale === 'ja' ? '使い方' : 'How to use',
-    step1: locale === 'ja' ? '1. 上の検索ボックスで比較したい女優を検索' : '1. Search for performers you want to compare',
-    step2: locale === 'ja' ? '2. 検索結果から女優をクリックして追加（最大4名）' : '2. Click on search results to add (up to 4)',
-    step3: locale === 'ja' ? '3. 出演本数、トレンド、ファン度などを比較' : '3. Compare releases, trends, fan scores, etc.',
-  };
 
   // URLを更新
   useEffect(() => {
@@ -96,10 +100,10 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
             {/* ヘッダー */}
             <div className="mb-6">
               <h1 className="text-2xl sm:text-3xl font-bold theme-text mb-2">
-                {t.title}
+                {t('title')}
               </h1>
               <p className="theme-text-secondary">
-                {t.subtitle}
+                {t('subtitle')}
               </p>
             </div>
 
@@ -110,7 +114,7 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
                   <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  {t.addPerformer}
+                  {t('addPerformer')}
                 </h2>
                 <div className="flex gap-2">
                   <input
@@ -118,7 +122,7 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder={t.searchPlaceholder}
+                    placeholder={t('searchPlaceholder')}
                     className="flex-1 px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
                   />
                   <button
@@ -128,7 +132,7 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
                   >
                     {isSearching ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : t.search}
+                    ) : t('search')}
                   </button>
                 </div>
 
@@ -170,7 +174,7 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
             {/* 選択中の女優数 */}
             <div className="mb-6 flex items-center gap-3">
               <span className="theme-text-secondary text-sm">
-                {t.selected}
+                {t('selected')}
               </span>
               <span className="px-3 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-full">
                 {performerIds.length} / 4
@@ -183,7 +187,7 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
-                  {t.clearAll}
+                  {t('clearAll')}
                 </button>
               )}
             </div>
@@ -203,20 +207,20 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
                 <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {t.howToUse}
+                {t('howToUse')}
               </h2>
               <ul className="text-sm theme-text-secondary space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-purple-600/20 text-purple-400 text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
-                  {t.step1}
+                  {t('step1')}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-purple-600/20 text-purple-400 text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
-                  {t.step2}
+                  {t('step2')}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-purple-600/20 text-purple-400 text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
-                  {t.step3}
+                  {t('step3')}
                 </li>
               </ul>
             </div>

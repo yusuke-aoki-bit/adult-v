@@ -164,17 +164,23 @@ const getCachedPerformers = unstable_cache(
   { revalidate: 300, tags: ['actresses'] }
 );
 
+const metaTranslations = {
+  ja: {
+    metaTitle: 'AV女優一覧',
+    metaDescription: '人気AV女優の一覧ページ。出演作品数順、デビュー年順で女優を検索できます。',
+  },
+  en: {
+    metaTitle: 'Actresses',
+    metaDescription: 'Browse popular actresses. Search by product count or debut year.',
+  },
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  const isJa = locale === 'ja';
-
-  const title = isJa ? 'AV女優一覧' : 'Actresses';
-  const description = isJa
-    ? '人気AV女優の一覧ページ。出演作品数順、デビュー年順で女優を検索できます。'
-    : 'Browse popular actresses. Search by product count or debut year.';
+  const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
 
   return {
-    ...generateBaseMetadata(title, description, undefined, '/actresses', undefined, locale),
+    ...generateBaseMetadata(mt.metaTitle, mt.metaDescription, undefined, '/actresses', undefined, locale),
     alternates: {
       canonical: 'https://www.adult-v.com/actresses',
       languages: {
@@ -203,6 +209,9 @@ const translations = {
     loading: '読み込み中...',
     loadMore: 'さらに{count}名を表示',
     allLoaded: 'すべて表示しました（{count}名）',
+    loadError: '読み込みに失敗しました',
+    retry: '再試行',
+    prNotice: '当ページには広告・アフィリエイトリンクが含まれています',
   },
   en: {
     title: 'Actresses',
@@ -217,6 +226,9 @@ const translations = {
     loading: 'Loading...',
     loadMore: 'Load {count} more',
     allLoaded: 'All loaded ({count} actresses)',
+    loadError: 'Failed to load',
+    retry: 'Retry',
+    prNotice: 'This page contains advertisements and affiliate links',
   },
 };
 
@@ -274,7 +286,7 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
       <div className="container mx-auto px-4">
         <p className="text-xs text-gray-400 mb-4 text-center">
           <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
-          {locale === 'ja' ? '当ページには広告・アフィリエイトリンクが含まれています' : 'This page contains advertisements and affiliate links'}
+          {t.prNotice}
         </p>
 
         <JsonLD data={collectionSchema} />
@@ -340,6 +352,8 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
                 loading: t.loading,
                 loadMore: t.loadMore,
                 allLoaded: t.allLoaded,
+                loadError: t.loadError,
+                retry: t.retry,
               }}
             />
           ) : (

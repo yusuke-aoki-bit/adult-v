@@ -98,10 +98,11 @@ export default function MakerAnalysis({ locale, className = '' }: MakerAnalysisP
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productIds, locale }),
         });
+        if (!res.ok) return;
         const data = await res.json();
         setMakers(data.makers || []);
-      } catch (error) {
-        console.error('Error fetching maker analysis:', error);
+      } catch {
+        // API failure is non-critical - silently show empty state
       } finally {
         setIsLoading(false);
       }

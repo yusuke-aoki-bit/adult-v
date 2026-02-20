@@ -88,8 +88,38 @@ test.describe('5xx Error Prevention - Invalid Parameters', () => {
     expect(response.status()).not.toBe(500);
   });
 
+  test('Non-numeric series ID returns 404, not 500', async ({ request }) => {
+    const response = await request.get('/series/abc');
+    expect(response.status()).not.toBe(500);
+  });
+
   test('Invalid news slug returns 404, not 500', async ({ request }) => {
     const response = await request.get('/news/non-existent-slug-12345');
+    expect(response.status()).not.toBe(500);
+  });
+
+  test('Invalid actress ID returns 404, not 500', async ({ request }) => {
+    const response = await request.get('/actress/999999999');
+    expect(response.status()).not.toBe(500);
+  });
+
+  test('Non-numeric actress ID returns 404, not 500', async ({ request }) => {
+    const response = await request.get('/actress/abc');
+    expect(response.status()).not.toBe(500);
+  });
+
+  test('Invalid best year returns 404, not 500', async ({ request }) => {
+    const response = await request.get('/best/9999');
+    expect(response.status()).not.toBe(500);
+  });
+
+  test('Non-numeric best year returns 404, not 500', async ({ request }) => {
+    const response = await request.get('/best/abc');
+    expect(response.status()).not.toBe(500);
+  });
+
+  test('Non-numeric product ID returns 404, not 500', async ({ request }) => {
+    const response = await request.get('/products/abc-xyz');
     expect(response.status()).not.toBe(500);
   });
 });

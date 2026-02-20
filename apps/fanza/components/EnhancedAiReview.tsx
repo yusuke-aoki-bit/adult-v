@@ -222,16 +222,16 @@ function parseAiReview(review: string): ParsedReview {
 
     const baseScore = result.overallScore;
     if (hasPerformanceKeywords) {
-      result.categoryRatings.push({ category: 'performance', score: Math.min(5, baseScore + (Math.random() * 0.5 - 0.25)) });
+      result.categoryRatings.push({ category: 'performance', score: Math.min(5, baseScore + 0.1) });
     }
     if (hasVisualsKeywords) {
-      result.categoryRatings.push({ category: 'visuals', score: Math.min(5, baseScore + (Math.random() * 0.5 - 0.25)) });
+      result.categoryRatings.push({ category: 'visuals', score: Math.min(5, baseScore - 0.1) });
     }
     if (hasAudioKeywords) {
-      result.categoryRatings.push({ category: 'audio', score: Math.min(5, baseScore + (Math.random() * 0.5 - 0.25)) });
+      result.categoryRatings.push({ category: 'audio', score: Math.min(5, baseScore + 0.15) });
     }
     if (hasStoryKeywords) {
-      result.categoryRatings.push({ category: 'story', score: Math.min(5, baseScore + (Math.random() * 0.5 - 0.25)) });
+      result.categoryRatings.push({ category: 'story', score: Math.min(5, baseScore - 0.05) });
     }
   }
 

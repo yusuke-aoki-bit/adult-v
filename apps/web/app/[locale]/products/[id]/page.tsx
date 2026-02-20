@@ -7,7 +7,7 @@ import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
 
 // LCP最適化: ProductVideoPlayerを遅延読み込み（ファーストビュー外なので初期バンドルから除外）
 const ProductVideoPlayer = nextDynamic(() => import('@/components/ProductVideoPlayer'), {
-  loading: () => <div className="h-48 bg-gray-700 rounded-lg animate-pulse flex items-center justify-center text-gray-500">動画を読み込み中...</div>,
+  loading: () => <div className="h-48 bg-gray-700 rounded-lg animate-pulse flex items-center justify-center text-gray-500">Loading video...</div>,
 });
 import ProductDetailInfo from '@/components/ProductDetailInfo';
 import ProductActions from '@/components/ProductActions';
@@ -162,12 +162,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const { id, locale } = await params;
 
   // Parallel fetch translations and product data
-  const [tNav, tCommon, tRelated, product] = await Promise.all([
-    getTranslations('nav'),
-    getTranslations('common'),
-    getTranslations('relatedProducts'),
-    getCachedProductByIdOrCode(id, locale),
-  ]);
+  let tNav, tCommon, tRelated, product;
+  try {
+    [tNav, tCommon, tRelated, product] = await Promise.all([
+      getTranslations('nav'),
+      getTranslations('common'),
+      getTranslations('relatedProducts'),
+      getCachedProductByIdOrCode(id, locale),
+    ]);
+  } catch (error) {
+    console.error(`[product-detail] Error loading product ${id}:`, error);
+    notFound();
+  }
   const t = productDetailTranslations[locale as keyof typeof productDetailTranslations] || productDetailTranslations.ja;
   if (!product) notFound();
 

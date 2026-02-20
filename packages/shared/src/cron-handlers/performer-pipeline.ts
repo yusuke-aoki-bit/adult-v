@@ -464,7 +464,9 @@ async function findPerformersFromFanza(
 }
 
 /**
- * 仮名演者を正しい演者にマージ
+ * 仮名演者を正しい演者にマージ（バッチ版）
+ *
+ * N+1問題を解消: 商品数に関わらず固定数のクエリで完了
  */
 async function mergePerformerIntoCorrect(
   db: any,
@@ -474,83 +476,51 @@ async function mergePerformerIntoCorrect(
   correctPerformerName: string,
   source: string = 'performer-pipeline'
 ): Promise<{ productsMoved: number; aliasAdded: boolean }> {
-  // 1. 仮名演者にリンクされている商品を取得
-  const linkedProducts = await db.execute(sql`
-    SELECT product_id FROM product_performers
+  // 1. 正しい演者にまだリンクされていない商品を一括で移行
+  const moveResult = await db.execute(sql`
+    UPDATE product_performers pp
+    SET performer_id = ${correctPerformerId}
+    WHERE pp.performer_id = ${wrongPerformerId}
+      AND NOT EXISTS (
+        SELECT 1 FROM product_performers pp2
+        WHERE pp2.product_id = pp.product_id AND pp2.performer_id = ${correctPerformerId}
+      )
+  `);
+  const productsMoved = moveResult.rowCount ?? 0;
+
+  // 2. 既に正しい演者にリンク済みの場合、仮名演者側のリンクを一括削除
+  await db.execute(sql`
+    DELETE FROM product_performers
     WHERE performer_id = ${wrongPerformerId}
   `);
 
-  const productIds = (linkedProducts.rows as { product_id: number }[]).map(r => r.product_id);
-
-  // 2. 商品リンクを正しい演者に移行
-  let productsMoved = 0;
-  for (const productId of productIds) {
-    // 既に正しい演者にリンクされているかチェック
-    const existingLink = await db.execute(sql`
-      SELECT 1 FROM product_performers
-      WHERE product_id = ${productId} AND performer_id = ${correctPerformerId}
-      LIMIT 1
-    `);
-
-    if (existingLink.rows.length === 0) {
-      await db.execute(sql`
-        INSERT INTO product_performers (product_id, performer_id)
-        VALUES (${productId}, ${correctPerformerId})
-        ON CONFLICT DO NOTHING
-      `);
-      productsMoved++;
-    }
-
-    // 仮名演者へのリンクを削除
-    await db.execute(sql`
-      DELETE FROM product_performers
-      WHERE product_id = ${productId} AND performer_id = ${wrongPerformerId}
-    `);
-  }
-
   // 3. 仮名をエイリアスとして登録
-  let aliasAdded = false;
-  const existingAlias = await db.execute(sql`
-    SELECT 1 FROM performer_aliases
-    WHERE performer_id = ${correctPerformerId} AND alias_name = ${wrongPerformerName}
-    LIMIT 1
+  const aliasResult = await db.execute(sql`
+    INSERT INTO performer_aliases (performer_id, alias_name, source)
+    VALUES (${correctPerformerId}, ${wrongPerformerName}, ${source})
+    ON CONFLICT DO NOTHING
   `);
+  const aliasAdded = (aliasResult.rowCount ?? 0) > 0;
 
-  if (existingAlias.rows.length === 0) {
-    await db.execute(sql`
-      INSERT INTO performer_aliases (performer_id, alias_name, source)
-      VALUES (${correctPerformerId}, ${wrongPerformerName}, ${source})
-      ON CONFLICT DO NOTHING
-    `);
-    aliasAdded = true;
-  }
-
-  // 4. 仮名演者レコードを削除（リンクがなくなった場合のみ）
-  const remainingLinks = await db.execute(sql`
-    SELECT 1 FROM product_performers WHERE performer_id = ${wrongPerformerId} LIMIT 1
-  `);
-
-  if (remainingLinks.rows.length === 0) {
-    // 仮名演者の既存エイリアスを正しい演者に移行
-    await db.execute(sql`
-      UPDATE performer_aliases
-      SET performer_id = ${correctPerformerId}
-      WHERE performer_id = ${wrongPerformerId}
+  // 4. 仮名演者のエイリアスを正しい演者に移行（重複はスキップ）
+  await db.execute(sql`
+    UPDATE performer_aliases
+    SET performer_id = ${correctPerformerId}
+    WHERE performer_id = ${wrongPerformerId}
       AND alias_name NOT IN (
         SELECT alias_name FROM performer_aliases WHERE performer_id = ${correctPerformerId}
       )
-    `);
+  `);
 
-    // 重複するエイリアスを削除
-    await db.execute(sql`
-      DELETE FROM performer_aliases WHERE performer_id = ${wrongPerformerId}
-    `);
+  // 残った重複エイリアスを削除
+  await db.execute(sql`
+    DELETE FROM performer_aliases WHERE performer_id = ${wrongPerformerId}
+  `);
 
-    // 仮名演者レコードを削除
-    await db.execute(sql`
-      DELETE FROM performers WHERE id = ${wrongPerformerId}
-    `);
-  }
+  // 5. 仮名演者レコードを削除（リンク・エイリアスは全て移行済み）
+  await db.execute(sql`
+    DELETE FROM performers WHERE id = ${wrongPerformerId}
+  `);
 
   return { productsMoved, aliasAdded };
 }
@@ -624,7 +594,86 @@ async function mergeFakePerformers(
     });
   }
 
-  // 各仮名演者を処理（wiki/FANZA検索は個別に実行が必要）
+  // バッチプリフェッチ: 全仮名演者の品番を一括でwiki/FANZAから検索
+  // N+1問題を回避: 個別クエリ(2N) → バッチクエリ(2)
+  const productCodes = new Map<number, string>(); // performerId → productCode
+  for (const fakePerformer of fakePerformerRows) {
+    const product = performerToProduct.get(fakePerformer.id);
+    if (!product) continue;
+    const productCode = product.normalized_product_id.replace(/^[A-Z]+-/, '').toUpperCase();
+    productCodes.set(fakePerformer.id, productCode);
+  }
+
+  // 1. 全品番のwiki検索バリアントを一括生成
+  const allSearchCodes = new Set<string>();
+  const codeToFakePerformerIds = new Map<string, number[]>(); // searchCode → performerIds
+  for (const [performerId, productCode] of productCodes) {
+    const searchCodes = normalizeProductCodeForSearch(productCode);
+    for (const code of searchCodes) {
+      const upper = code.toUpperCase();
+      allSearchCodes.add(upper);
+      const existing = codeToFakePerformerIds.get(upper) || [];
+      existing.push(performerId);
+      codeToFakePerformerIds.set(upper, existing);
+    }
+  }
+
+  // 2. wiki_crawl_dataを一括検索（1クエリ）
+  const wikiCodeToPerformers = new Map<string, string[]>();
+  if (allSearchCodes.size > 0) {
+    const searchCodeValues = sql.join(
+      [...allSearchCodes].map(c => sql`${c}`), sql`, `
+    );
+    const wikiResult = await db.execute(sql`
+      SELECT UPPER(product_code) as product_code, performer_name
+      FROM wiki_crawl_data
+      WHERE UPPER(product_code) IN (${searchCodeValues})
+    `);
+    for (const row of wikiResult.rows as Array<{ product_code: string; performer_name: string }>) {
+      if (row.performer_name && !isFakePerformerName(row.performer_name)) {
+        const existing = wikiCodeToPerformers.get(row.product_code) || [];
+        if (!existing.includes(row.performer_name)) {
+          existing.push(row.performer_name);
+        }
+        wikiCodeToPerformers.set(row.product_code, existing);
+      }
+    }
+  }
+
+  // 3. FANZA商品から一括検索（1クエリ）
+  const fanzaCodeToPerformers = new Map<string, { id: number; name: string }[]>();
+  if (allSearchCodes.size > 0) {
+    const likeClauses = [...allSearchCodes].map(code =>
+      sql`UPPER(p.normalized_product_id) LIKE ${'%' + code + '%'}`
+    );
+    const fanzaResult = await db.execute(sql`
+      SELECT
+        UPPER(p.normalized_product_id) as npid,
+        pf.id,
+        pf.name
+      FROM products p
+      JOIN product_performers pp ON p.id = pp.product_id
+      JOIN performers pf ON pp.performer_id = pf.id
+      WHERE p.normalized_product_id LIKE 'FANZA-%'
+      AND (${sql.join(likeClauses, sql` OR `)})
+      LIMIT 500
+    `);
+    for (const row of fanzaResult.rows as Array<{ npid: string; id: number; name: string }>) {
+      if (isFakePerformerName(row.name)) continue;
+      // どのsearchCodeにマッチするか逆引き
+      for (const code of allSearchCodes) {
+        if (row.npid.includes(code)) {
+          const existing = fanzaCodeToPerformers.get(code) || [];
+          if (!existing.some(e => e.id === row.id)) {
+            existing.push({ id: row.id, name: row.name });
+          }
+          fanzaCodeToPerformers.set(code, existing);
+        }
+      }
+    }
+  }
+
+  // 4. 各仮名演者をバッチ結果から解決してマージ
   const mergeStartTime = Date.now();
   const MERGE_TIME_LIMIT = 120_000; // マージフェーズは120秒まで
   for (const fakePerformer of fakePerformerRows) {
@@ -632,24 +681,33 @@ async function mergeFakePerformers(
       console.log(`    [mergeFakePerformers] Time limit reached, processed ${performersMerged}/${fakePerformerRows.length}`);
       break;
     }
-    const product = performerToProduct.get(fakePerformer.id);
-    if (!product) continue;
 
-    const productCode = product.normalized_product_id.replace(/^[A-Z]+-/, '').toUpperCase();
+    const productCode = productCodes.get(fakePerformer.id);
+    if (!productCode) continue;
 
-    // wiki_crawl_dataから正しい演者を検索
-    let correctPerformerName: string | null | undefined = null;
+    const searchCodes = normalizeProductCodeForSearch(productCode);
+
+    // wikiバッチ結果から検索
+    let correctPerformerName: string | null = null;
     let correctPerformerId: number | null = null;
 
-    const wikiPerformers = await getPerformersFromWiki(db, productCode);
-    if (wikiPerformers.length > 0) {
-      correctPerformerName = wikiPerformers[0];
-    } else {
-      // FANZAから検索
-      const fanzaPerformers = await findPerformersFromFanza(db, productCode);
-      if (fanzaPerformers.length > 0 && fanzaPerformers[0]) {
-        correctPerformerName = fanzaPerformers[0]['name'];
-        correctPerformerId = fanzaPerformers[0]['id'];
+    for (const code of searchCodes) {
+      const wikiPerformers = wikiCodeToPerformers.get(code.toUpperCase());
+      if (wikiPerformers && wikiPerformers.length > 0) {
+        correctPerformerName = wikiPerformers[0]!;
+        break;
+      }
+    }
+
+    // wiki未ヒットならFANZAバッチ結果から検索
+    if (!correctPerformerName) {
+      for (const code of searchCodes) {
+        const fanzaPerformers = fanzaCodeToPerformers.get(code.toUpperCase());
+        if (fanzaPerformers && fanzaPerformers.length > 0) {
+          correctPerformerName = fanzaPerformers[0]!.name;
+          correctPerformerId = fanzaPerformers[0]!.id;
+          break;
+        }
       }
     }
 

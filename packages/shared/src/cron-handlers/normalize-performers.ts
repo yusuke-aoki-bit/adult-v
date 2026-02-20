@@ -24,6 +24,18 @@ interface Stats {
 
 const RATE_LIMIT_MS = 2000;
 
+const FETCH_TIMEOUT = 15_000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 /**
  * 品番から検索用のバリエーションを生成
  */
@@ -71,7 +83,7 @@ async function searchMinnaNoAV(productCode: string): Promise<string[]> {
   try {
     const searchUrl = `https://www.minnano-av.com/search_result.php?search_word=${encodeURIComponent(productCode)}`;
 
-    const response = await fetch(searchUrl, {
+    const response = await fetchWithTimeout(searchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
@@ -102,7 +114,7 @@ async function searchMinnaNoAV(productCode: string): Promise<string[]> {
 
     await new Promise(r => setTimeout(r, 1000));
 
-    const detailResponse = await fetch(movieUrl, {
+    const detailResponse = await fetchWithTimeout(movieUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
@@ -142,7 +154,7 @@ async function searchAVWiki(productCode: string): Promise<string[]> {
   try {
     const searchUrl = `https://av-wiki.net/?s=${encodeURIComponent(productCode)}`;
 
-    const response = await fetch(searchUrl, {
+    const response = await fetchWithTimeout(searchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
@@ -330,42 +342,7 @@ async function fetchPerformersFromWiki(
   return null;
 }
 
-/**
- * 出演者をDBに登録・紐付け
- */
-async function linkPerformerToProduct(
-  db: ReturnType<NormalizePerformersHandlerDeps['getDb']>,
-  productId: number,
-  performerName: string
-): Promise<boolean> {
-  try {
-    const normalized = normalizePerformerName(performerName);
-    if (!normalized) {
-      console.log(`[normalize-performers] Skipped invalid name: "${performerName}"`);
-      return false;
-    }
 
-    const performerResult = await db.execute(sql`
-      INSERT INTO performers (name)
-      VALUES (${normalized})
-      ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-      RETURNING id
-    `);
-
-    const performerId = (performerResult.rows[0] as { id: number }).id;
-
-    await db.execute(sql`
-      INSERT INTO product_performers (product_id, performer_id)
-      VALUES (${productId}, ${performerId})
-      ON CONFLICT DO NOTHING
-    `);
-
-    return true;
-  } catch (error) {
-    console.error(`Error linking performer ${performerName}:`, error);
-    return false;
-  }
-}
 
 export function createNormalizePerformersHandler(deps: NormalizePerformersHandlerDeps) {
   return async function GET(request: NextRequest) {
@@ -388,10 +365,11 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
     try {
       const url = new URL(request['url']);
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 500);
-      const offset = parseInt(url.searchParams.get('offset') || '0');
+      // cursor-based pagination: OFFSETの代わりにafter_idを使用（O(1)アクセス）
+      const afterId = parseInt(url.searchParams.get('after_id') || '0');
       const aspFilter = url.searchParams.get('asp') || null;
 
-      console.log(`[normalize-performers] Starting: asp=${aspFilter || 'all'}, limit=${limit}, offset=${offset}`);
+      console.log(`[normalize-performers] Starting: asp=${aspFilter || 'all'}, limit=${limit}, after_id=${afterId}`);
 
       let productsResult;
 
@@ -403,9 +381,9 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
           LEFT JOIN product_performers pp ON p.id = pp.product_id
           WHERE pp.product_id IS NULL
             AND ps.asp_name = ${aspFilter}
+            AND p.id > ${afterId}
           ORDER BY p.id
           LIMIT ${limit}
-          OFFSET ${offset}
         `);
       } else {
         productsResult = await db.execute(sql`
@@ -414,9 +392,9 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
           INNER JOIN product_sources ps ON p.id = ps.product_id
           LEFT JOIN product_performers pp ON p.id = pp.product_id
           WHERE pp.product_id IS NULL
+            AND p.id > ${afterId}
           ORDER BY p.id
           LIMIT ${limit}
-          OFFSET ${offset}
         `);
       }
 
@@ -501,10 +479,14 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
 
       const duration = Math.round((Date.now() - startTime) / 1000);
 
+      // 次回呼び出し用のcursorを計算
+      const lastProductId = products.length > 0 ? products[products.length - 1]!.id : afterId;
+
       return NextResponse.json({
         success: true,
         message: 'Performer normalization completed',
-        params: { asp: aspFilter, limit, offset },
+        params: { asp: aspFilter, limit, after_id: afterId },
+        nextCursor: lastProductId,
         stats,
         duration: `${duration}s`,
       });

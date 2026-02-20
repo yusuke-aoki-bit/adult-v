@@ -12,7 +12,7 @@ type PageId = 'home' | 'products' | 'product' | 'actress' | 'statistics' | 'cate
 
 interface PageTab {
   id: PageId;
-  label: { ja: string; en: string };
+  label: Record<string, string>;
 }
 
 const pageTabs: PageTab[] = [
@@ -189,7 +189,7 @@ export function SectionSettings({ locale, theme = 'dark' }: SectionSettingsProps
                     : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              {locale === 'ja' ? tab.label.ja : tab.label.en}
+              {tab.label[locale] || tab.label.ja}
             </button>
           ))}
         </div>

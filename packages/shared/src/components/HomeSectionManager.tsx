@@ -36,15 +36,12 @@ export function HomeSectionManager({
 
   const isDark = theme === 'dark';
 
-  const defaultTitle = locale === 'ja' ? 'セクションをカスタマイズ' : 'Customize Sections';
-
-  const t = {
-    title: title || defaultTitle,
-    description: locale === 'ja' ? 'セクションの表示/非表示と順序を変更できます' : 'Show/hide and reorder sections',
-    reset: locale === 'ja' ? 'リセット' : 'Reset',
-    close: locale === 'ja' ? '閉じる' : 'Close',
-    dragHint: locale === 'ja' ? 'ドラッグして並び替え' : 'Drag to reorder',
-  };
+  const texts = {
+    ja: { defaultTitle: 'セクションをカスタマイズ', description: 'セクションの表示/非表示と順序を変更できます', reset: 'リセット', close: '閉じる', dragHint: 'ドラッグして並び替え' },
+    en: { defaultTitle: 'Customize Sections', description: 'Show/hide and reorder sections', reset: 'Reset', close: 'Close', dragHint: 'Drag to reorder' },
+  } as const;
+  const tt = texts[locale as keyof typeof texts] || texts.ja;
+  const t = { ...tt, title: title || tt.defaultTitle };
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);

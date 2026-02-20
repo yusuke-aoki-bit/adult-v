@@ -127,54 +127,72 @@ const translations = {
 } as const;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { seriesId, locale } = await params;
-  const seriesInfo = await getSeriesInfo(parseInt(seriesId));
-  if (!seriesInfo) return {};
+  try {
+    const { seriesId, locale } = await params;
+    const seriesInfo = await getSeriesInfo(parseInt(seriesId));
+    if (!seriesInfo) return {};
 
-  const t = translations[locale as keyof typeof translations] || translations.ja;
-  const name = locale === 'en' && seriesInfo.nameEn ? seriesInfo.nameEn
-    : locale === 'zh' && seriesInfo.nameZh ? seriesInfo.nameZh
-    : locale === 'ko' && seriesInfo.nameKo ? seriesInfo.nameKo
-    : seriesInfo.name;
+    const t = translations[locale as keyof typeof translations] || translations.ja;
+    const name = locale === 'en' && seriesInfo.nameEn ? seriesInfo.nameEn
+      : locale === 'zh' && seriesInfo.nameZh ? seriesInfo.nameZh
+      : locale === 'ko' && seriesInfo.nameKo ? seriesInfo.nameKo
+      : seriesInfo.name;
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
-  return {
-    ...generateBaseMetadata(
-      `${name} - ${t.completionGuide}`,
-      t.totalProducts.replace('{count}', String(seriesInfo.totalProducts)),
-      undefined,
-      localizedHref(`/series/${seriesId}`, locale),
-      undefined,
-      locale
-    ),
-    alternates: {
-      canonical: `${baseUrl}/series/${seriesId}`,
-      languages: {
-        'ja': `${baseUrl}/series/${seriesId}`,
-        'en': `${baseUrl}/series/${seriesId}?hl=en`,
-        'zh': `${baseUrl}/series/${seriesId}?hl=zh`,
-        'ko': `${baseUrl}/series/${seriesId}?hl=ko`,
-        'x-default': `${baseUrl}/series/${seriesId}`,
+    return {
+      ...generateBaseMetadata(
+        `${name} - ${t.completionGuide}`,
+        t.totalProducts.replace('{count}', String(seriesInfo.totalProducts)),
+        undefined,
+        localizedHref(`/series/${seriesId}`, locale),
+        undefined,
+        locale
+      ),
+      alternates: {
+        canonical: `${baseUrl}/series/${seriesId}`,
+        languages: {
+          'ja': `${baseUrl}/series/${seriesId}`,
+          'en': `${baseUrl}/series/${seriesId}?hl=en`,
+          'zh': `${baseUrl}/series/${seriesId}?hl=zh`,
+          'ko': `${baseUrl}/series/${seriesId}?hl=ko`,
+          'x-default': `${baseUrl}/series/${seriesId}`,
+        },
       },
-    },
-  };
+    };
+  } catch {
+    return {};
+  }
 }
 
 export default async function SeriesDetailPage({ params, searchParams }: PageProps) {
   const { seriesId, locale } = await params;
   const { sort } = await searchParams;
-  const tNav = await getTranslations('nav');
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
-  const seriesInfo = await getSeriesInfo(parseInt(seriesId));
+  let tNav, seriesInfo;
+  try {
+    [tNav, seriesInfo] = await Promise.all([
+      getTranslations('nav'),
+      getSeriesInfo(parseInt(seriesId)),
+    ]);
+  } catch (error) {
+    console.error(`[series-detail] Error loading series ${seriesId}:`, error);
+    notFound();
+  }
   if (!seriesInfo) notFound();
 
   const sortBy = sort === 'rating' ? 'ratingDesc'
     : sort === 'newest' ? 'releaseDateDesc'
     : 'releaseDateAsc';
 
-  const products: SeriesProduct[] = await getSeriesProducts(parseInt(seriesId), { sortBy, locale });
+  let products: SeriesProduct[];
+  try {
+    products = await getSeriesProducts(parseInt(seriesId), { sortBy, locale });
+  } catch (error) {
+    console.error(`[series-detail] Error loading series products ${seriesId}:`, error);
+    notFound();
+  }
 
   const name = locale === 'en' && seriesInfo.nameEn ? seriesInfo.nameEn
     : locale === 'zh' && seriesInfo.nameZh ? seriesInfo.nameZh

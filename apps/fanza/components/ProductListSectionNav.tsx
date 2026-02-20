@@ -2,6 +2,12 @@
 
 import { SectionNav, type SectionItem } from '@adult-v/shared/components';
 
+const navTexts = {
+  ja: { onSale: 'セール中', products: '商品一覧' },
+  en: { onSale: 'On Sale', products: 'Products' },
+} as const;
+function getNavText(locale: string) { return navTexts[locale as keyof typeof navTexts] || navTexts.ja; }
+
 interface ProductListSectionNavProps {
   locale: string;
   hasSaleProducts: boolean;
@@ -11,15 +17,15 @@ export default function ProductListSectionNav({
   locale,
   hasSaleProducts,
 }: ProductListSectionNavProps) {
-  const isJa = locale === 'ja';
+  const nt = getNavText(locale);
 
   const sections: SectionItem[] = [];
 
   if (hasSaleProducts) {
-    sections.push({ id: 'sale', label: isJa ? 'セール中' : 'On Sale' });
+    sections.push({ id: 'sale', label: nt.onSale });
   }
 
-  sections.push({ id: 'products', label: isJa ? '商品一覧' : 'Products' });
+  sections.push({ id: 'products', label: nt.products });
 
   // 1セクションのみの場合はナビゲーションを表示しない
   if (sections.length <= 1) {

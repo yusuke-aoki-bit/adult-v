@@ -22,6 +22,22 @@ interface SaleProduct {
   performers: Array<{ id: number; name: string }>;
 }
 
+const translations = {
+  title: { ja: '作品を比較', en: 'Compare Products' },
+  subtitle: { ja: '最大4作品まで比較できます', en: 'Compare up to 4 products' },
+  addProduct: { ja: '作品を追加', en: 'Add Product' },
+  searchPlaceholder: { ja: '作品名や品番で検索...', en: 'Search by title or ID...' },
+  search: { ja: '検索', en: 'Search' },
+  selected: { ja: '選択中:', en: 'Selected:' },
+  clearAll: { ja: 'すべてクリア', en: 'Clear All' },
+  howToUse: { ja: '使い方', en: 'How to use' },
+  step1: { ja: '1. 上の検索ボックスで比較したい作品を検索', en: '1. Search for products you want to compare' },
+  step2: { ja: '2. 検索結果から作品をクリックして追加（最大4件）', en: '2. Click on search results to add (up to 4)' },
+  step3: { ja: '3. 価格、再生時間、評価、出演者などを比較', en: '3. Compare price, duration, rating, performers, etc.' },
+} as const;
+
+type TranslationKey = keyof typeof translations;
+
 interface ComparePageClientProps {
   locale: string;
 }
@@ -30,6 +46,8 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { removeItem, clearAll } = useCompareList();
+
+  const t = (key: TranslationKey) => translations[key][locale === 'ja' ? 'ja' : 'en'];
 
   // URLパラメータから初期値を取得（searchParamsが変わっても初期値は変更しない）
   const [productIds, setProductIds] = useState<string[]>(() => {
@@ -130,12 +148,10 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
             {/* ヘッダー */}
             <div className="mb-6">
               <h1 className="text-2xl sm:text-3xl font-bold theme-text mb-2">
-              {locale === 'ja' ? '作品を比較' : 'Compare Products'}
+              {t('title')}
             </h1>
             <p className="theme-text-secondary">
-              {locale === 'ja'
-                ? '最大4作品まで比較できます'
-                : 'Compare up to 4 products'}
+              {t('subtitle')}
             </p>
           </div>
 
@@ -143,7 +159,7 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
           {productIds.length < 4 && (
             <div className="mb-6 p-4 rounded-lg bg-gray-100 border border-gray-200">
               <h2 className="font-semibold theme-text mb-3">
-                {locale === 'ja' ? '作品を追加' : 'Add Product'}
+                {t('addProduct')}
               </h2>
               <div className="flex gap-2">
                 <input
@@ -151,7 +167,7 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder={locale === 'ja' ? '作品名や品番で検索...' : 'Search by title or ID...'}
+                  placeholder={t('searchPlaceholder')}
                   className="flex-1 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-pink-500"
                 />
                 <button
@@ -159,7 +175,7 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
                   disabled={isSearching}
                   className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {isSearching ? '...' : locale === 'ja' ? '検索' : 'Search'}
+                  {isSearching ? '...' : t('search')}
                 </button>
               </div>
 
@@ -201,7 +217,7 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
           {/* 選択中の作品数 */}
           <div className="mb-4 flex items-center gap-2">
             <span className="theme-text-secondary text-sm">
-              {locale === 'ja' ? '選択中:' : 'Selected:'}
+              {t('selected')}
             </span>
             <span className="px-2 py-1 bg-pink-600 text-white text-sm rounded">
               {productIds.length} / 4
@@ -214,7 +230,7 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
                 }}
                 className="text-sm text-red-500 hover:text-red-600"
               >
-                {locale === 'ja' ? 'すべてクリア' : 'Clear All'}
+                {t('clearAll')}
               </button>
             )}
           </div>
@@ -231,23 +247,17 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
           {/* 使い方 */}
           <div className="mt-8 p-4 rounded-lg bg-gray-100 border border-gray-200">
             <h2 className="font-semibold theme-text mb-2">
-              {locale === 'ja' ? '使い方' : 'How to use'}
+              {t('howToUse')}
             </h2>
             <ul className="text-sm theme-text-secondary space-y-1">
               <li>
-                {locale === 'ja'
-                  ? '1. 上の検索ボックスで比較したい作品を検索'
-                  : '1. Search for products you want to compare'}
+                {t('step1')}
               </li>
               <li>
-                {locale === 'ja'
-                  ? '2. 検索結果から作品をクリックして追加（最大4件）'
-                  : '2. Click on search results to add (up to 4)'}
+                {t('step2')}
               </li>
               <li>
-                {locale === 'ja'
-                  ? '3. 価格、再生時間、評価、出演者などを比較'
-                  : '3. Compare price, duration, rating, performers, etc.'}
+                {t('step3')}
               </li>
             </ul>
             </div>

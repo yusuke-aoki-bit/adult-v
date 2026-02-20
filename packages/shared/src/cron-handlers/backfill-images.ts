@@ -14,6 +14,18 @@ import type { DbExecutor } from '../db-queries/types';
 // 並列処理の同時実行数
 const CONCURRENCY = 5;
 
+const FETCH_TIMEOUT = 15_000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 interface BackfillStats {
   checked: number;
   updated: number;
@@ -31,7 +43,7 @@ interface ProductToBackfill {
 async function fetchImageFromMgs(productId: string): Promise<string | null> {
   try {
     const url = `https://www.mgstage.com/product/product_detail/${productId}/`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Cookie': 'adc=1',
@@ -49,7 +61,7 @@ async function fetchImageFromMgs(productId: string): Promise<string | null> {
 async function fetchImageFromDuga(productId: string): Promise<string | null> {
   try {
     const url = `https://duga.jp/ppv/${productId}/`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
@@ -66,7 +78,7 @@ async function fetchImageFromDuga(productId: string): Promise<string | null> {
 async function fetchImageFromSokmil(productId: string): Promise<string | null> {
   try {
     const url = `https://www.sokmil.com/av/_item/item${productId}.htm`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
@@ -83,7 +95,7 @@ async function fetchImageFromSokmil(productId: string): Promise<string | null> {
 async function fetchImageFromFanza(productId: string): Promise<string | null> {
   try {
     const url = `https://www.dmm.co.jp/digital/videoa/-/detail/=/cid=${productId}/`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
@@ -100,7 +112,7 @@ async function fetchImageFromFanza(productId: string): Promise<string | null> {
 async function fetchImageFromFc2(productId: string): Promise<string | null> {
   try {
     const url = `https://adult.contents.fc2.com/article/${productId}/`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
@@ -130,7 +142,7 @@ async function fetchImageFromDti(productId: string, provider: string): Promise<s
     if (!baseUrl) return null;
 
     const url = `${baseUrl}${productId}/`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
@@ -189,6 +201,7 @@ async function fetchImageForProduct(asp: string, productId: string): Promise<str
 
 /**
  * 複数ASPを試してフォールバック取得
+ * 各リクエスト間にレート制限を挿入
  */
 async function fetchImageWithFallback(
   primaryAsp: string,
@@ -207,11 +220,13 @@ async function fetchImageWithFallback(
     const possibleId = normalizedUpper.replace(/^(FANZA|MGS)-/, '').replace(/-/g, '').toLowerCase();
 
     if (primaryAsp !== 'FANZA') {
+      await new Promise(r => setTimeout(r, 200)); // フォールバック間レート制限
       const fanzaResult = await fetchImageFromFanza(possibleId);
       if (fanzaResult) return fanzaResult;
     }
 
     if (primaryAsp !== 'MGS') {
+      await new Promise(r => setTimeout(r, 200)); // フォールバック間レート制限
       const mgsResult = await fetchImageFromMgs(possibleId);
       if (mgsResult) return mgsResult;
     }
@@ -280,6 +295,7 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
 
       // 並列処理で高速化（レート制限付き）
       const concurrencyLimit = pLimit(CONCURRENCY);
+      const pendingUpdates: { id: number; url: string }[] = [];
 
       const processProduct = async (product: ProductToBackfill) => {
         if (Date.now() - startTime > TIME_LIMIT) return;
@@ -294,11 +310,7 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
           );
 
           if (imageUrl) {
-            await db.execute(sql`
-              UPDATE products
-              SET default_thumbnail_url = ${imageUrl}, updated_at = NOW()
-              WHERE id = ${product['id']}
-            `);
+            pendingUpdates.push({ id: product['id'], url: imageUrl });
             stats.updated++;
             console.log(`[backfill-images] Updated: ${product.normalized_product_id}`);
           } else {
@@ -316,6 +328,20 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
 
       // 並列実行
       await Promise.all(products.map(product => concurrencyLimit(() => processProduct(product))));
+
+      // バッチUPDATE（N+1回のUPDATEを1回にまとめる）
+      if (pendingUpdates.length > 0) {
+        const caseClauses = pendingUpdates.map(u => sql`WHEN id = ${u.id} THEN ${u.url}`);
+        const caseJoined = sql.join(caseClauses, sql` `);
+        const ids = sql.join(pendingUpdates.map(u => sql`${u.id}`), sql`, `);
+        await db.execute(sql`
+          UPDATE products
+          SET default_thumbnail_url = CASE ${caseJoined} END,
+              updated_at = NOW()
+          WHERE id IN (${ids})
+        `);
+        console.log(`[backfill-images] Batch updated ${pendingUpdates.length} products`);
+      }
 
       const duration = Math.round((Date.now() - startTime) / 1000);
 

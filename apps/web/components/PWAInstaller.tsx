@@ -78,15 +78,16 @@ export default function PWAInstaller() {
     setIsDismissed(dismissed);
 
     // Register service worker (本番環境のみ、エラーログは抑制)
-    if ('serviceWorker' in navigator && process.env['NODE_ENV'] === 'production') {
-      window.addEventListener('load', () => {
+    const handleLoad = () => {
+      if ('serviceWorker' in navigator && process.env['NODE_ENV'] === 'production') {
         navigator.serviceWorker
           .register('/sw.js')
           .catch(() => {
             // SW登録失敗は静かに無視（コンソールエラー抑制）
           });
-      });
-    }
+      }
+    };
+    window.addEventListener('load', handleLoad);
 
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -99,6 +100,7 @@ export default function PWAInstaller() {
 
     // Cleanup
     return () => {
+      window.removeEventListener('load', handleLoad);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);

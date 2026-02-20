@@ -42,6 +42,17 @@ interface ActressListFilterProps {
     onSaleOnly?: string;
     reviewFilter?: string;
     hasReviewOnly?: string;
+    actressFeatures?: string;
+    cupSize?: string;
+    cupLabel?: string;
+    height?: string;
+    bloodType?: string;
+    bloodTypeLabel?: string;
+    debutYear?: string;
+    workCount?: string;
+    worksOrMore?: string;
+    under?: string;
+    over?: string;
   };
 }
 
@@ -443,11 +454,11 @@ export default function ActressListFilter({
 
         {/* 女優特徴フィルター */}
         <div className="space-y-4">
-          <h3 className="text-base sm:text-sm font-semibold text-white">女優の特徴</h3>
+          <h3 className="text-base sm:text-sm font-semibold text-white">{t.actressFeatures || '女優の特徴'}</h3>
 
           {/* カップサイズ */}
           <div>
-            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">カップサイズ</p>
+            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.cupSize || 'カップサイズ'}</p>
             <div className="flex flex-wrap gap-1.5 sm:gap-1">
               {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'].map((cup) => (
                 <button
@@ -460,7 +471,7 @@ export default function ActressListFilter({
                       : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                   }`}
                 >
-                  {cup}カップ
+                  {cup}{t.cupLabel || 'カップ'}
                 </button>
               ))}
             </div>
@@ -468,15 +479,15 @@ export default function ActressListFilter({
 
           {/* 身長 */}
           <div>
-            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">身長</p>
+            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.height || '身長'}</p>
             <div className="flex flex-wrap gap-1.5 sm:gap-1">
               {[
-                { label: '150cm未満', min: undefined, max: 149 },
+                { label: `${t.under || ''}150cm${t.under ? '' : '未満'}`, min: undefined, max: 149 },
                 { label: '150-154cm', min: 150, max: 154 },
                 { label: '155-159cm', min: 155, max: 159 },
                 { label: '160-164cm', min: 160, max: 164 },
                 { label: '165-169cm', min: 165, max: 169 },
-                { label: '170cm以上', min: 170, max: undefined },
+                { label: `170cm${t.over || '以上'}`, min: 170, max: undefined },
               ].map((range, index) => {
                 const isSelected = (
                   (range.min === undefined && heightMin === null && range.max !== undefined && heightMax === String(range.max)) ||
@@ -512,7 +523,7 @@ export default function ActressListFilter({
 
           {/* 血液型 */}
           <div>
-            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">血液型</p>
+            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.bloodType || '血液型'}</p>
             <div className="flex flex-wrap gap-1.5 sm:gap-1">
               {['A', 'B', 'O', 'AB'].map((type) => (
                 <button
@@ -525,7 +536,7 @@ export default function ActressListFilter({
                       : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                   }`}
                 >
-                  {type}型
+                  {type}{t.bloodTypeLabel || '型'}
                 </button>
               ))}
             </div>
@@ -533,14 +544,14 @@ export default function ActressListFilter({
 
           {/* デビュー年 */}
           <div>
-            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">デビュー年</p>
+            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.debutYear || 'デビュー年'}</p>
             <div className="flex flex-wrap gap-1.5 sm:gap-1">
               {[
-                { label: '2024年〜', value: '2024-' },
-                { label: '2020-2023年', value: '2020-2023' },
-                { label: '2015-2019年', value: '2015-2019' },
-                { label: '2010-2014年', value: '2010-2014' },
-                { label: '〜2009年', value: '-2009' },
+                { label: '2024~', value: '2024-' },
+                { label: '2020-2023', value: '2020-2023' },
+                { label: '2015-2019', value: '2015-2019' },
+                { label: '2010-2014', value: '2010-2014' },
+                { label: '~2009', value: '-2009' },
               ].map((option) => (
                 <button
                   key={option.value}
@@ -569,13 +580,13 @@ export default function ActressListFilter({
 
           {/* 作品数 */}
           <div>
-            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">作品数</p>
+            <p className="text-sm sm:text-xs text-gray-300 mb-2 font-medium">{t.workCount || '作品数'}</p>
             <div className="flex flex-wrap gap-1.5 sm:gap-1">
               {[
-                { label: '100作品以上', value: '100' },
-                { label: '50作品以上', value: '50' },
-                { label: '30作品以上', value: '30' },
-                { label: '10作品以上', value: '10' },
+                { label: `100${t.worksOrMore || '作品以上'}`, value: '100' },
+                { label: `50${t.worksOrMore || '作品以上'}`, value: '50' },
+                { label: `30${t.worksOrMore || '作品以上'}`, value: '30' },
+                { label: `10${t.worksOrMore || '作品以上'}`, value: '10' },
               ].map((option) => (
                 <button
                   key={option.value}

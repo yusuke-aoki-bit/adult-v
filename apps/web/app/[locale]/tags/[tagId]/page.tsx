@@ -92,14 +92,21 @@ export default async function TagPage({ params, searchParams }: PageProps) {
     notFound();
   }
 
-  const tag = await getTagById(tagIdNum);
+  let tag, t, tCommon, tNav;
+  try {
+    [tag, t, tCommon, tNav] = await Promise.all([
+      getTagById(tagIdNum),
+      getTranslations('categories'),
+      getTranslations('common'),
+      getTranslations({ locale, namespace: 'nav' }),
+    ]);
+  } catch (error) {
+    console.error(`[tag-detail] Error loading tag ${tagId}:`, error);
+    notFound();
+  }
   if (!tag) {
     notFound();
   }
-
-  const t = await getTranslations('categories');
-  const tCommon = await getTranslations('common');
-  const tNav = await getTranslations({ locale, namespace: 'nav' });
 
   const tagName = locale === 'en' && tag.nameEn ? tag.nameEn :
     locale === 'zh' && tag.nameZh ? tag.nameZh :
@@ -110,26 +117,30 @@ export default async function TagPage({ params, searchParams }: PageProps) {
   const perPage = 24;
   const offset = (page - 1) * perPage;
 
-  // 商品を取得
-  const [products, totalCount] = await Promise.all([
-    getProducts({
-      tags: [String(tagIdNum)],
-      limit: perPage,
-      offset,
-      sortBy: 'releaseDateDesc',
-      locale,
-    }),
-    getProductsCount({ tags: [String(tagIdNum)] }),
-  ]);
+  let products, totalCount, relatedTags;
+  try {
+    // 商品を取得
+    [products, totalCount, relatedTags] = await Promise.all([
+      getProducts({
+        tags: [String(tagIdNum)],
+        limit: perPage,
+        offset,
+        sortBy: 'releaseDateDesc',
+        locale,
+      }),
+      getProductsCount({ tags: [String(tagIdNum)] }),
+      getPopularTags({
+        category: tag.category || undefined,
+        limit: 12,
+      }),
+    ]);
+  } catch (error) {
+    console.error(`[tag-detail] Error loading products for tag ${tagId}:`, error);
+    notFound();
+  }
 
   const totalPages = Math.ceil(totalCount / perPage);
-
-  // 関連タグを取得（同じカテゴリの人気タグ）
-  const relatedTags = await getPopularTags({
-    category: tag.category || undefined,
-    limit: 12,
-  });
-  const filteredRelatedTags = relatedTags.filter(t => t.id !== tagIdNum);
+  const filteredRelatedTags = relatedTags.filter((rt: typeof relatedTags[number]) => rt.id !== tagIdNum);
 
   // パンくずリスト
   const breadcrumbItems = [

@@ -26,17 +26,16 @@ export default function ProductIdSearch() {
 
     try {
       const response = await fetch(`/api/products/search-by-id?productId=${encodeURIComponent(productId.trim())}`);
+      if (!response.ok) { setError(t('errorNotFound')); return; }
       const data = await response.json();
 
-      if (response.ok && data.product) {
-        // Redirect to product page
+      if (data.product) {
         router.push(`/${locale}/products/${data.product.id}`);
       } else {
         setError(data.error || t('errorNotFound'));
       }
-    } catch (err) {
+    } catch {
       setError(t('errorGeneric'));
-      console.error('Product ID search error:', err);
     } finally {
       setIsSearching(false);
     }

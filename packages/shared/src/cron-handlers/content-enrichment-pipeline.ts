@@ -54,6 +54,7 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
     }
 
     const startTime = Date.now();
+    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
     const db = deps.getDb();
 
     const { searchParams } = new URL(request['url']);
@@ -69,56 +70,74 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
       phases: [],
       totalDuration: 0,
     };
+    const errors: string[] = [];
 
-    try {
-      // Phase 1: Translation
-      if (phases.includes('translation')) {
-        console.log('\n[Phase 1] Translation backfill...');
-        const phaseStart = Date.now();
+    // Phase 1: Translation
+    if (phases.includes('translation') && Date.now() - startTime < TIME_LIMIT) {
+      console.log('\n[Phase 1] Translation backfill...');
+      const phaseStart = Date.now();
+      try {
         const result = await runTranslationPhase(db, limit, deps);
         result['duration'] = Date.now() - phaseStart;
         stats.phases.push(result);
         console.log(`  Processed: ${result.processed}, Success: ${result.success}, Errors: ${result.errors}`);
+      } catch (error) {
+        const msg = `Translation phase error: ${error instanceof Error ? error.message : 'Unknown'}`;
+        console.error(`[Phase 1] ${msg}`);
+        errors.push(msg);
+        stats.phases.push({ phase: 'translation', processed: 0, success: 0, errors: 1, skipped: 0, duration: Date.now() - phaseStart });
       }
+    } else if (phases.includes('translation')) {
+      console.log('\n[Phase 1] Skipped (time limit)');
+    }
 
-      // Phase 2: SEO Enhancement
-      if (phases.includes('seo')) {
-        console.log('\n[Phase 2] SEO indexing...');
-        const phaseStart = Date.now();
+    // Phase 2: SEO Enhancement
+    if (phases.includes('seo') && Date.now() - startTime < TIME_LIMIT) {
+      console.log('\n[Phase 2] SEO indexing...');
+      const phaseStart = Date.now();
+      try {
         const result = await runSeoPhase(db, limit, deps);
         result['duration'] = Date.now() - phaseStart;
         stats.phases.push(result);
         console.log(`  Processed: ${result.processed}, Success: ${result.success}, Skipped: ${result.skipped}`);
+      } catch (error) {
+        const msg = `SEO phase error: ${error instanceof Error ? error.message : 'Unknown'}`;
+        console.error(`[Phase 2] ${msg}`);
+        errors.push(msg);
+        stats.phases.push({ phase: 'seo', processed: 0, success: 0, errors: 1, skipped: 0, duration: Date.now() - phaseStart });
       }
+    } else if (phases.includes('seo')) {
+      console.log('\n[Phase 2] Skipped (time limit)');
+    }
 
-      // Phase 3: Performer Linking
-      if (phases.includes('performer')) {
-        console.log('\n[Phase 3] Performer linking...');
-        const phaseStart = Date.now();
+    // Phase 3: Performer Linking
+    if (phases.includes('performer') && Date.now() - startTime < TIME_LIMIT) {
+      console.log('\n[Phase 3] Performer linking...');
+      const phaseStart = Date.now();
+      try {
         const result = await runPerformerPhase(db, limit);
         result['duration'] = Date.now() - phaseStart;
         stats.phases.push(result);
         console.log(`  Processed: ${result.processed}, New links: ${result.success}`);
+      } catch (error) {
+        const msg = `Performer phase error: ${error instanceof Error ? error.message : 'Unknown'}`;
+        console.error(`[Phase 3] ${msg}`);
+        errors.push(msg);
+        stats.phases.push({ phase: 'performer', processed: 0, success: 0, errors: 1, skipped: 0, duration: Date.now() - phaseStart });
       }
-
-      stats['totalDuration'] = Date.now() - startTime;
-
-      console.log(`\n[content-enrichment-pipeline] Complete in ${stats['totalDuration']}ms`);
-
-      return NextResponse.json({
-        success: true,
-        stats,
-      });
-    } catch (error) {
-      console.error('[content-enrichment-pipeline] Error:', error);
-      stats['totalDuration'] = Date.now() - startTime;
-
-      return NextResponse.json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stats,
-      }, { status: 500 });
+    } else if (phases.includes('performer')) {
+      console.log('\n[Phase 3] Skipped (time limit)');
     }
+
+    stats['totalDuration'] = Date.now() - startTime;
+
+    console.log(`\n[content-enrichment-pipeline] Complete in ${stats['totalDuration']}ms`);
+
+    return NextResponse.json({
+      success: errors.length === 0,
+      ...(errors.length > 0 && { errors }),
+      stats,
+    });
   };
 }
 

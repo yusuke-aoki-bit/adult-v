@@ -7,10 +7,17 @@ export default function SettingsPage() {
   const params = useParams();
   const locale = (params['locale'] as string) || 'ja';
 
-  const t = {
-    title: locale === 'ja' ? '設定' : 'Settings',
-    description: locale === 'ja' ? 'サイトの表示設定をカスタマイズできます' : 'Customize your site display settings',
+  const translations = {
+    ja: {
+      title: '設定',
+      description: 'サイトの表示設定をカスタマイズできます',
+    },
+    en: {
+      title: 'Settings',
+      description: 'Customize your site display settings',
+    },
   };
+  const t = translations[locale as keyof typeof translations] || translations.ja;
 
   return (
     <div className="theme-body min-h-screen">

@@ -45,14 +45,11 @@ export function NotificationPreferences({
   const isDark = theme === 'dark';
   const categoryDefs = defaultCategories[locale] ?? defaultCategories['en'] ?? [];
 
-  const t = {
-    title: locale === 'ja' ? '通知設定' : 'Notification Settings',
-    subtitle: locale === 'ja' ? '受け取りたい通知を選択してください' : 'Choose which notifications you want to receive',
-    save: locale === 'ja' ? '保存' : 'Save',
-    saved: locale === 'ja' ? '保存しました' : 'Saved',
-    enableAll: locale === 'ja' ? 'すべて有効' : 'Enable All',
-    disableAll: locale === 'ja' ? 'すべて無効' : 'Disable All',
-  };
+  const texts = {
+    ja: { title: '通知設定', subtitle: '受け取りたい通知を選択してください', save: '保存', saved: '保存しました', enableAll: 'すべて有効', disableAll: 'すべて無効' },
+    en: { title: 'Notification Settings', subtitle: 'Choose which notifications you want to receive', save: 'Save', saved: 'Saved', enableAll: 'Enable All', disableAll: 'Disable All' },
+  } as const;
+  const t = texts[locale as keyof typeof texts] || texts.ja;
 
   useEffect(() => {
     try {

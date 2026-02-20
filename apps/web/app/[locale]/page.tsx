@@ -431,6 +431,17 @@ export default async function Home({ params, searchParams }: PageProps) {
               onSaleOnly: tFilter('onSaleOnly'),
               reviewFilter: tFilter('reviewFilter'),
               hasReviewOnly: tFilter('hasReviewOnly'),
+              actressFeatures: tFilter('actressFeatures'),
+              cupSize: tFilter('cupSize'),
+              cupLabel: tFilter('cupLabel'),
+              height: tFilter('height'),
+              bloodType: tFilter('bloodType'),
+              bloodTypeLabel: tFilter('bloodTypeLabel'),
+              debutYear: tFilter('debutYear'),
+              workCount: tFilter('workCount'),
+              worksOrMore: tFilter('worksOrMore'),
+              under: tFilter('under'),
+              over: tFilter('over'),
             }}
           />
 

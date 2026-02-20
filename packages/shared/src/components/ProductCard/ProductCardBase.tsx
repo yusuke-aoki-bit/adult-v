@@ -10,6 +10,7 @@ import { generateAltText } from '../../lib/seo-utils';
 import { getThemeConfig, type ProductCardTheme } from './themes';
 import { getAffiliateUrl, type GetAffiliateUrlOptions } from './helpers';
 import { CopyButton } from '../CopyButton';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 // Default translations (Japanese) for ProductCard
 const DEFAULT_TRANSLATIONS: Record<string, string> = {
@@ -72,8 +73,8 @@ export type ProductCardSize = 'full' | 'compact' | 'mini';
 
 export interface ProductCardBaseProps {
   product: Product;
-  /** Theme: 'dark' for adult-v, 'light' for fanza */
-  theme: ProductCardTheme;
+  /** Theme: 'dark' for adult-v, 'light' for fanza. Falls back to SiteThemeContext if omitted. */
+  theme?: ProductCardTheme;
   /** Ranking position (1-10 shows badge) */
   rankPosition?: number;
   /** @deprecated Use size prop instead */
@@ -155,13 +156,15 @@ function ProductCardBase({
   const t = useSafeProductCardTranslations();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const themeConfig = getThemeConfig(theme);
+  const siteTheme = useSiteTheme();
+  const resolvedTheme: ProductCardTheme = theme ?? siteTheme.theme;
+  const themeConfig = getThemeConfig(resolvedTheme);
 
   // Resolve size from either new size prop or deprecated compact prop
   const resolvedSize: ProductCardSize = size ?? (compact ? 'compact' : 'full');
 
   // Use default placeholder based on theme if not provided
-  const resolvedPlaceholder = placeholderImage ?? (theme === 'dark' ? DEFAULT_PLACEHOLDER_DARK : DEFAULT_PLACEHOLDER_LIGHT);
+  const resolvedPlaceholder = placeholderImage ?? (resolvedTheme === 'dark' ? DEFAULT_PLACEHOLDER_DARK : DEFAULT_PLACEHOLDER_LIGHT);
 
   // Default formatPrice if not provided - memoize fallback
   const resolvedFormatPrice = useMemo(() =>
@@ -201,7 +204,7 @@ function ProductCardBase({
   const [showVideoModal, setShowVideoModal] = useState(false);
 
   const hasSampleVideo = product.sampleVideos && product.sampleVideos.length > 0;
-  const primaryVideo = hasSampleVideo ? product.sampleVideos![0] : null;
+  const primaryVideo = hasSampleVideo ? product.sampleVideos?.[0] ?? null : null;
 
   const allImages = useMemo(() => {
     const imageSet = new Set<string>();
@@ -327,9 +330,9 @@ function ProductCardBase({
     const showMiniCta = miniAffiliateUrl && !(hideFanzaPurchaseLinks && product.provider === 'fanza');
 
     return (
-      <div className={`group relative ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-pink-500/60 hover:shadow-xl hover:shadow-pink-500/20 transition-all duration-300`}>
+      <div className={`group relative ${resolvedTheme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-pink-500/60 hover:shadow-xl hover:shadow-pink-500/20 transition-all duration-300`}>
         <Link href={`/${locale}/products/${product['id']}`}>
-          <div className={`relative ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`} style={{ aspectRatio: '2/3' }}>
+          <div className={`relative ${resolvedTheme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`} style={{ aspectRatio: '2/3' }}>
             {hasValidImageUrl ? (
               <Image
                 src={imgSrc}
@@ -346,7 +349,7 @@ function ProductCardBase({
               />
             ) : (
               <div className="flex items-center justify-center h-full">
-                <svg className={`h-8 w-8 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`h-8 w-8 ${resolvedTheme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
                 </svg>
               </div>
@@ -371,19 +374,19 @@ function ProductCardBase({
             )}
           </div>
           <div className="p-2">
-            <p className={`${theme === 'dark' ? 'text-gray-200 group-hover:text-pink-300' : 'text-gray-800 group-hover:text-pink-600'} text-xs font-medium line-clamp-2 transition-colors leading-snug`}>
+            <p className={`${resolvedTheme === 'dark' ? 'text-gray-200 group-hover:text-pink-300' : 'text-gray-800 group-hover:text-pink-600'} text-xs font-medium line-clamp-2 transition-colors leading-snug`}>
               {product['title']}
             </p>
             {/* 品番 + コピーボタン */}
             <div className="flex items-center gap-1 mt-1">
-              <span className={`text-[9px] ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} truncate`}>
+              <span className={`text-[9px] ${resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'} truncate`}>
                 {product.normalizedProductId || product['id']}
               </span>
               <CopyButton
                 text={product.normalizedProductId || String(product['id'])}
                 iconOnly
                 size="xs"
-                className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+                className={resolvedTheme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
               />
             </div>
           </div>
@@ -441,7 +444,7 @@ function ProductCardBase({
               />
               {product.salePrice && (
                 <div className="absolute top-1 left-1 flex gap-1 z-10">
-                  <span className="bg-linear-to-r from-red-600 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-0.5 shadow-lg animate-pulse">
+                  <span className="bg-linear-to-r from-red-600 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-0.5 shadow-lg">
                     <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                       <path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
                     </svg>
@@ -475,7 +478,7 @@ function ProductCardBase({
                   text={product.normalizedProductId || String(product['id'])}
                   iconOnly
                   size="xs"
-                  className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+                  className={resolvedTheme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
                 />
               </div>
               {/* 価格表示（compactモード） */}
@@ -565,7 +568,7 @@ function ProductCardBase({
               className={`absolute bottom-0 left-0 right-0 py-1.5 text-center text-[10px] font-bold text-white transition-all duration-200 z-30 hover:py-2 ${
                 product.salePrice
                   ? 'bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400'
-                  : theme === 'dark'
+                  : resolvedTheme === 'dark'
                     ? 'bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400'
                     : 'bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400'
               }`}
@@ -868,7 +871,7 @@ function ProductCardBase({
               text={product.normalizedProductId || String(product['id'])}
               iconOnly
               size="xs"
-              className={theme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+              className={resolvedTheme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
             />
           </div>
           <Link href={`/${locale}/products/${product['id']}`}>
@@ -1030,7 +1033,7 @@ function ProductCardBase({
                       <summary className={`text-[10px] ${themeConfig.textMuted} cursor-pointer hover:text-gray-400 transition-colors list-none [&::-webkit-details-marker]:hidden px-1.5 py-0.5 rounded ${themeConfig.tagBg}`}>
                         +{product.alternativeSources.length - 2}社
                       </summary>
-                      <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1 w-max max-w-[90vw] p-2 rounded-lg shadow-lg z-50 ${theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                      <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1 w-max max-w-[90vw] p-2 rounded-lg shadow-lg z-50 ${resolvedTheme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
                         <div className="flex flex-wrap gap-1">
                           {product.alternativeSources.slice(2).map((source, idx) => {
                             const isFanza = source.aspName.toUpperCase() === 'FANZA';

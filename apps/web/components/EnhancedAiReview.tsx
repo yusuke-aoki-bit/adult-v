@@ -2,6 +2,7 @@
 
 import { useState, memo } from 'react';
 import { Bot, Star, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Sparkles, AlertCircle, Film, Mic, Theater } from 'lucide-react';
+import { localeMap } from '@adult-v/shared/lib/utils/formatDate';
 
 const translations = {
   ja: {
@@ -244,16 +245,16 @@ function parseAiReview(review: string): ParsedReview {
 
     const baseScore = result.overallScore;
     if (hasPerformanceKeywords) {
-      result.categoryRatings.push({ category: 'performance', score: Math.min(5, baseScore + (Math.random() * 0.5 - 0.25)) });
+      result.categoryRatings.push({ category: 'performance', score: Math.min(5, baseScore + 0.1) });
     }
     if (hasVisualsKeywords) {
-      result.categoryRatings.push({ category: 'visuals', score: Math.min(5, baseScore + (Math.random() * 0.5 - 0.25)) });
+      result.categoryRatings.push({ category: 'visuals', score: Math.min(5, baseScore - 0.1) });
     }
     if (hasAudioKeywords) {
-      result.categoryRatings.push({ category: 'audio', score: Math.min(5, baseScore + (Math.random() * 0.5 - 0.25)) });
+      result.categoryRatings.push({ category: 'audio', score: Math.min(5, baseScore + 0.15) });
     }
     if (hasStoryKeywords) {
-      result.categoryRatings.push({ category: 'story', score: Math.min(5, baseScore + (Math.random() * 0.5 - 0.25)) });
+      result.categoryRatings.push({ category: 'story', score: Math.min(5, baseScore - 0.05) });
     }
   }
 
@@ -376,7 +377,7 @@ export default function EnhancedAiReview({
 
   // Format date for display
   const formattedDate = updatedAt
-    ? new Date(updatedAt).toLocaleDateString(locale === 'ja' ? 'ja-JP' : locale === 'zh' ? 'zh-CN' : locale === 'ko' ? 'ko-KR' : 'en-US', {
+    ? new Date(updatedAt).toLocaleDateString(localeMap[locale] || 'ja-JP', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',

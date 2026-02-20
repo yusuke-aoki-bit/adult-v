@@ -11,23 +11,36 @@ interface Props {
   params: Promise<{ locale: string }>;
 }
 
+const metaTranslations = {
+  ja: {
+    metaTitle: (monthDay: string) => `女優バースデーカレンダー - ${monthDay}`,
+    metaDescription: '今日・今週誕生日のAV女優一覧。お気に入り女優の誕生日をチェックして、記念作品を探そう。',
+    metaKeywords: ['AV女優', '誕生日', 'バースデー', '女優一覧', '今日の誕生日'],
+    ogTitle: '女優バースデーカレンダー',
+    ogDescription: '今日誕生日の女優をチェック',
+  },
+  en: {
+    metaTitle: (monthDay: string) => `Actress Birthday Calendar - ${monthDay}`,
+    metaDescription: 'List of AV actresses with birthdays today and this week. Check your favorite actresses birthdays and find their commemorative works.',
+    metaKeywords: ['AV actress', 'birthday', 'actress list', 'today birthday'],
+    ogTitle: 'Actress Birthday Calendar',
+    ogDescription: 'Check actresses with birthdays today',
+  },
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const isJa = locale === 'ja';
+  const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
   const today = new Date();
   const monthDay = `${today.getMonth() + 1}/${today.getDate()}`;
 
   return {
-    title: isJa ? `女優バースデーカレンダー - ${monthDay}` : `Actress Birthday Calendar - ${monthDay}`,
-    description: isJa
-      ? '今日・今週誕生日のAV女優一覧。お気に入り女優の誕生日をチェックして、記念作品を探そう。'
-      : 'List of AV actresses with birthdays today and this week. Check your favorite actresses birthdays and find their commemorative works.',
-    keywords: isJa
-      ? ['AV女優', '誕生日', 'バースデー', '女優一覧', '今日の誕生日']
-      : ['AV actress', 'birthday', 'actress list', 'today birthday'],
+    title: mt.metaTitle(monthDay),
+    description: mt.metaDescription,
+    keywords: mt.metaKeywords,
     openGraph: {
-      title: isJa ? '女優バースデーカレンダー' : 'Actress Birthday Calendar',
-      description: isJa ? '今日誕生日の女優をチェック' : 'Check actresses with birthdays today',
+      title: mt.ogTitle,
+      description: mt.ogDescription,
     },
   };
 }
@@ -45,6 +58,8 @@ const translations = {
     works: '作品',
     viewProfile: 'プロフィールを見る',
     monthlyCalendar: '月別カレンダー',
+    months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    prNotice: '当ページには広告・アフィリエイトリンクが含まれています',
   },
   en: {
     title: 'Actress Birthday Calendar',
@@ -58,6 +73,8 @@ const translations = {
     works: 'works',
     viewProfile: 'View Profile',
     monthlyCalendar: 'Monthly Calendar',
+    months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    prNotice: 'This page contains advertisements and affiliate links',
   },
 };
 
@@ -150,9 +167,7 @@ export default async function BirthdaysPage({ params }: Props) {
     return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
-  const months = locale === 'ja'
-    ? ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-    : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = t.months;
 
   return (
     <main className="theme-body min-h-screen py-8">
@@ -160,7 +175,7 @@ export default async function BirthdaysPage({ params }: Props) {
         {/* PR表記 */}
         <p className="text-xs text-gray-400 mb-4 text-center">
           <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
-          {locale === 'ja' ? '当ページには広告・アフィリエイトリンクが含まれています' : 'This page contains advertisements and affiliate links'}
+          {t.prNotice}
         </p>
 
         {/* ヘッダー */}

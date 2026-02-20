@@ -3,7 +3,7 @@
  * Intl.RelativeTimeFormat を使用したローカライズ対応
  */
 
-const localeMap: Record<string, string> = {
+export const localeMap: Record<string, string> = {
   ja: 'ja-JP',
   en: 'en-US',
   zh: 'zh-CN',
