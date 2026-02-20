@@ -36,7 +36,8 @@ function toProduct(sp: SeriesProduct): Product {
   };
 }
 
-export const dynamic = 'force-dynamic';
+// ISR: 30分キャッシュ
+export const revalidate = 1800;
 
 interface PageProps {
   params: Promise<{ seriesId: string; locale: string }>;

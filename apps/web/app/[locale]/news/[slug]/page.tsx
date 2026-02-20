@@ -50,7 +50,8 @@ export async function generateMetadata({
   }
 }
 
-export const dynamic = 'force-dynamic';
+// ISR: 1時間キャッシュ
+export const revalidate = 3600;
 
 /**
  * Markdown風のテキストをHTMLに簡易変換

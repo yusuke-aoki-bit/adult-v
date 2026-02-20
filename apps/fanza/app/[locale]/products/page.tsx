@@ -83,8 +83,8 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// Force dynamic rendering to avoid DYNAMIC_SERVER_USAGE errors with getTranslations
-export const dynamic = 'force-dynamic';
+// ISR: 5分キャッシュ
+export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ locale: string }>;

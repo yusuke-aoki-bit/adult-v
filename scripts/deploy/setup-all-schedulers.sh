@@ -110,178 +110,181 @@ setup_post_scheduler() {
 # ========================================
 echo "========== クローラー =========="
 
-# DTI系（6サイト、10分間隔）
+# DTI系（9サイト、10分間隔・limit倍増）
 setup_get_scheduler "crawl-dti-caribbeancom" \
   "0 1 * * *" \
-  "crawl-dti?site=caribbeancom&limit=50" \
+  "crawl-dti?site=caribbeancom&limit=100" \
   "DTI カリビアンコム"
 
 setup_get_scheduler "crawl-dti-caribbeancompr" \
   "10 1 * * *" \
-  "crawl-dti?site=caribbeancompr&limit=50" \
+  "crawl-dti?site=caribbeancompr&limit=100" \
   "DTI カリビアンコムプレミアム"
 
 setup_get_scheduler "crawl-dti-1pondo" \
   "20 1 * * *" \
-  "crawl-dti?site=1pondo&limit=50" \
+  "crawl-dti?site=1pondo&limit=100" \
   "DTI 一本道"
 
 setup_get_scheduler "crawl-dti-heyzo" \
   "30 1 * * *" \
-  "crawl-dti?site=heyzo&limit=50" \
+  "crawl-dti?site=heyzo&limit=100" \
   "DTI HEYZO"
 
 setup_get_scheduler "crawl-dti-10musume" \
   "40 1 * * *" \
-  "crawl-dti?site=10musume&limit=50" \
+  "crawl-dti?site=10musume&limit=100" \
   "DTI 天然むすめ"
 
 setup_get_scheduler "crawl-dti-pacopacomama" \
   "50 1 * * *" \
-  "crawl-dti?site=pacopacomama&limit=50" \
+  "crawl-dti?site=pacopacomama&limit=100" \
   "DTI パコパコママ"
 
 setup_get_scheduler "crawl-dti-x1x" \
   "0 2 * * *" \
-  "crawl-dti?site=x1x&limit=50" \
+  "crawl-dti?site=x1x&limit=100" \
   "DTI X1X"
 
 setup_get_scheduler "crawl-dti-enkou55" \
   "10 2 * * *" \
-  "crawl-dti?site=enkou55&limit=50" \
+  "crawl-dti?site=enkou55&limit=100" \
   "DTI ENKOU55"
 
 setup_get_scheduler "crawl-dti-urekko" \
   "20 2 * * *" \
-  "crawl-dti?site=urekko&limit=50" \
+  "crawl-dti?site=urekko&limit=100" \
   "DTI UREKKO"
 
+# HEYDOUGA: 8時間間隔・limit倍増
 setup_get_scheduler "crawl-heydouga" \
-  "30 2,14 * * *" \
-  "crawl-heydouga?limit=50" \
-  "HEYDOUGA クローラー（スキャンモード・12h間隔）"
+  "30 2,10,18 * * *" \
+  "crawl-heydouga?limit=100" \
+  "HEYDOUGA クローラー（スキャンモード・8h間隔）"
 
 setup_get_scheduler "crawl-heydouga-homepage" \
-  "0 4 * * *" \
-  "crawl-heydouga?mode=homepage&limit=50" \
-  "HEYDOUGA 新着（ホームページ）"
+  "0 4,16 * * *" \
+  "crawl-heydouga?mode=homepage&limit=100" \
+  "HEYDOUGA 新着（12h間隔）"
 
-# 単独クローラー
+# MGS: 8時間間隔・limit倍増
 setup_get_scheduler "crawl-mgs-scheduler" \
-  "0 3 * * *" \
-  "crawl-mgs?limit=100" \
-  "MGS クローラー"
+  "0 3,11,19 * * *" \
+  "crawl-mgs?limit=200" \
+  "MGS クローラー（8h間隔）"
 
-# DUGA: auto-resume + ページネーションループ（6時間間隔）
+# DUGA: auto-resume + ページネーションループ（4時間間隔に短縮）
 setup_get_scheduler "crawl-duga-scheduler" \
-  "0 1,7,13,19 * * *" \
+  "0 1,5,9,13,17,21 * * *" \
   "crawl-duga" \
-  "DUGA クローラー（auto-resume・6h間隔）"
+  "DUGA クローラー（auto-resume・4h間隔）"
 
-# SOKMIL: auto-resume + ページネーションループ（6時間間隔）
+# SOKMIL: auto-resume + ページネーションループ（4時間間隔に短縮）
 setup_get_scheduler "crawl-sokmil-scheduler" \
-  "0 2,8,14,20 * * *" \
+  "0 2,6,10,14,18,22 * * *" \
   "crawl-sokmil" \
-  "SOKMIL APIクローラー（auto-resume・6h間隔）"
+  "SOKMIL APIクローラー（auto-resume・4h間隔）"
 
+# Japanska: 12時間間隔・limit倍増
 setup_get_scheduler "crawl-japanska-scheduler" \
-  "0 9 * * *" \
-  "crawl-japanska?limit=100" \
-  "Japanska クローラー（auto-resume）"
+  "0 9,21 * * *" \
+  "crawl-japanska?limit=200" \
+  "Japanska クローラー（12h間隔）"
 
+# b10f: 12時間間隔
 setup_get_scheduler "crawl-b10f-scheduler" \
-  "0 11 * * *" \
+  "0 11,23 * * *" \
   "crawl-b10f" \
-  "b10f クローラー"
+  "b10f クローラー（12h間隔）"
 
-# FANZA: auto-resume + リストページ走査（6時間間隔）
+# FANZA: 4時間間隔・limit倍増
 setup_get_scheduler "crawl-fanza-scheduler" \
-  "0 3,9,15,21 * * *" \
-  "crawl-fanza?limit=30" \
-  "FANZA クローラー（auto-resume・6h間隔）"
+  "0 1,5,9,13,17,21 * * *" \
+  "crawl-fanza?limit=60" \
+  "FANZA クローラー（auto-resume・4h間隔）"
 
-# FC2: auto-resume + ページネーションループ（6時間間隔）
+# FC2: 4時間間隔・limit倍増
 setup_get_scheduler "crawl-fc2-scheduler" \
-  "0 4,10,16,22 * * *" \
-  "crawl-fc2?limit=100" \
-  "FC2 クローラー（auto-resume・6h間隔）"
+  "0 2,6,10,14,18,22 * * *" \
+  "crawl-fc2?limit=200" \
+  "FC2 クローラー（auto-resume・4h間隔）"
 
 # ========================================
 # 2. エンリッチメント（クローラー後に実行）
 # ========================================
 echo "========== エンリッチメント =========="
 
-# Raw Data処理（8時間ごと - コスト最適化）
+# Raw Data処理（6時間ごと・limit倍増 - 更新頻度UP）
 setup_get_scheduler "process-raw-data-scheduler" \
-  "0 2,10,18 * * *" \
-  "process-raw-data?limit=500" \
-  "Raw Data 処理（8時間ごと）"
+  "0 3,9,15,21 * * *" \
+  "process-raw-data?limit=1000" \
+  "Raw Data 処理（6時間ごと）"
 
-# 演者パイプライン（毎日15:00 - 30分タイムアウト）
+# 演者パイプライン（毎日15:00 - 30分タイムアウト・limit倍増）
 setup_get_scheduler "performer-pipeline-scheduler" \
   "0 15 * * *" \
-  "performer-pipeline?limit=500" \
+  "performer-pipeline?limit=1000" \
   "演者紐づけパイプライン" \
   1800  # Cloud Scheduler上限の30分
 
-# コンテンツエンリッチメント（毎日16:00）
+# コンテンツエンリッチメント（12時間間隔・limit倍増）
 setup_get_scheduler "content-enrichment-scheduler" \
-  "0 16 * * *" \
-  "content-enrichment-pipeline?limit=100&phases=translation,seo,performer" \
-  "コンテンツエンリッチメント"
+  "0 4,16 * * *" \
+  "content-enrichment-pipeline?limit=200&phases=translation,seo,performer" \
+  "コンテンツエンリッチメント（12h間隔）"
 
-# 演者名寄せ（毎日17:00）
+# 演者名寄せ（12時間間隔・limit倍増）
 setup_get_scheduler "normalize-performers-scheduler" \
-  "0 17 * * *" \
-  "normalize-performers?limit=100" \
-  "演者名寄せ"
+  "0 5,17 * * *" \
+  "normalize-performers?limit=200" \
+  "演者名寄せ（12h間隔）"
 
-# コンテンツ強化（毎日18:00 - limit削減でAPI/実行コスト最適化）
+# コンテンツ強化（12時間間隔・limit増加）
 setup_get_scheduler "enhance-content-scheduler" \
-  "0 18 * * *" \
-  "enhance-content?limit=30" \
-  "コンテンツ強化"
+  "0 6,18 * * *" \
+  "enhance-content?limit=50" \
+  "コンテンツ強化（12h間隔）"
 
-# SEO強化（毎日19:00）
+# SEO強化（12時間間隔・limit倍増）
 setup_get_scheduler "seo-enhance-scheduler" \
-  "0 19 * * *" \
-  "seo-enhance?type=indexing&limit=100" \
-  "SEO強化・インデックス申請"
+  "0 7,19 * * *" \
+  "seo-enhance?type=indexing&limit=200" \
+  "SEO強化・インデックス申請（12h間隔）"
 
 # ========================================
 # 3. バックフィル（日次/週次）
 # ========================================
 echo "========== バックフィル =========="
 
-# 動画バックフィル（毎日20:00）
+# 動画バックフィル（12時間間隔・limit倍増）
 setup_get_scheduler "backfill-videos-scheduler" \
-  "0 20 * * *" \
-  "backfill-videos?limit=50" \
-  "動画バックフィル"
+  "0 8,20 * * *" \
+  "backfill-videos?limit=100" \
+  "動画バックフィル（12h間隔）"
 
-# 画像バックフィル（毎日21:00）
+# 画像バックフィル（12時間間隔・limit倍増）
 setup_get_scheduler "backfill-images-scheduler" \
-  "0 21 * * *" \
-  "backfill-images?limit=50" \
-  "画像バックフィル"
+  "0 9,21 * * *" \
+  "backfill-images?limit=100" \
+  "画像バックフィル（12h間隔）"
 
-# 演者プロフィールバックフィル（週1回 日曜3:00）
+# 演者プロフィールバックフィル（週2回 水日3:00・limit倍増）
 setup_get_scheduler "backfill-performer-profiles-weekly" \
-  "0 3 * * 0" \
-  "backfill-performer-profiles?limit=100&minProducts=5" \
-  "演者プロフィールバックフィル（週次）"
+  "0 3 * * 0,3" \
+  "backfill-performer-profiles?limit=200&minProducts=5" \
+  "演者プロフィールバックフィル（週2回）"
 
-# レビューバックフィル（週1回 日曜5:00）
+# レビューバックフィル（週2回 水日5:00・limit倍増）
 setup_get_scheduler "backfill-reviews-weekly" \
-  "0 5 * * 0" \
-  "backfill-reviews?limit=50" \
-  "レビューバックフィル（週次）"
+  "0 5 * * 0,3" \
+  "backfill-reviews?limit=100" \
+  "レビューバックフィル（週2回）"
 
-# 演者ルックアップ（週1回 日曜7:00）
+# 演者ルックアップ（週2回 水日7:00・limit倍増）
 setup_get_scheduler "crawl-performer-lookup-weekly" \
-  "0 7 * * 0" \
-  "crawl-performer-lookup?limit=200" \
-  "演者ルックアップ（週次）"
+  "0 7 * * 0,3" \
+  "crawl-performer-lookup?limit=400" \
+  "演者ルックアップ（週2回）"
 
 # ========================================
 # 4. メンテナンス・通知
@@ -294,12 +297,19 @@ setup_get_scheduler "cleanup-scheduler" \
   "cleanup" \
   "データクリーンアップ"
 
-# IndexNow通知（6時間ごと - コスト最適化、新コンテンツ量的に十分）
+# ISRキャッシュ再検証（4時間ごと - クローラー完了後にトップ/リスト系をrevalidate）
+setup_get_scheduler "revalidate-scheduler" \
+  "30 3,7,11,15,19,23 * * *" \
+  "revalidate" \
+  "ISRキャッシュ再検証（4h間隔）" \
+  120
+
+# IndexNow通知（4時間ごと - 更新頻度UP）
 setup_post_scheduler "indexnow-notify-scheduler" \
-  "0 0,6,12,18 * * *" \
+  "0 0,4,8,12,16,20 * * *" \
   "indexnow-notify" \
-  "IndexNow 自動通知（6時間ごと）" \
-  120  # 60秒タイムアウト + バッファ
+  "IndexNow 自動通知（4時間ごと）" \
+  120
 
 # データ品質レポート（週1回 月曜4:00）
 setup_get_scheduler "data-quality-report-weekly" \

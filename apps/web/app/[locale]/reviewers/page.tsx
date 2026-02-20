@@ -9,7 +9,8 @@ import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { Star, Trophy, MessageCircle, TrendingUp, Crown, Medal, Award, ThumbsUp, Calendar } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
+// ISR: 1時間キャッシュ
+export const revalidate = 3600;
 
 interface TopReviewer {
   rank: number;

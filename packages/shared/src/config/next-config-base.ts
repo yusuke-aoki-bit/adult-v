@@ -117,14 +117,12 @@ export const remotePatterns: RemotePattern[] = [
 // 共通の画像設定
 export const imageConfig: NextConfig['images'] = {
   remotePatterns,
+  // 外部CDN画像を直接配信（/_next/image プロキシをバイパス）
+  // Firebase Cloud Run上での画像最適化はレイテンシが大きいため無効化
+  unoptimized: true,
   dangerouslyAllowSVG: true,
   contentDispositionType: 'attachment',
   contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-  formats: ['image/avif', 'image/webp'],
-  deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-  imageSizes: [16, 32, 48, 64, 96, 128, 256, 384, 512],
-  // 画像キャッシュTTL: 1週間（外部CDN画像の最適化結果をキャッシュ）
-  minimumCacheTTL: 604800,
 };
 
 // 共通のexperimental設定

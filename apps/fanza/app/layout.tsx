@@ -69,20 +69,18 @@ export default async function RootLayout({
         <meta charSet="utf-8" />
         <title>ADULT VIEWER LAB - heavy user guide</title>
         <meta name="description" content="Cross-platform adult streaming database covering DUGA, MGS, DTI, Caribbeancom with 38,000+ actresses. Browse by popularity, genres, and new releases." />
-        {/* LCP改善: 画像配信ドメインへのpreconnect (crossorigin for CORS images) */}
+        {/* LCP改善: 画像CDNへのpreconnect（unoptimized=trueで直接CDN配信のため重要） */}
         <link rel="preconnect" href="https://pics.dmm.co.jp" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://awsimgsrc.dmm.co.jp" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://pic.duga.jp" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://image.mgstage.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://img.sokmil.com" crossOrigin="anonymous" />
-        {/* DNS prefetch for additional image sources */}
-        <link rel="dns-prefetch" href="https://pics.dmm.co.jp" />
-        <link rel="dns-prefetch" href="https://awsimgsrc.dmm.co.jp" />
-        <link rel="dns-prefetch" href="https://pic.duga.jp" />
-        <link rel="dns-prefetch" href="https://image.mgstage.com" />
-        <link rel="dns-prefetch" href="https://img.sokmil.com" />
-        <link rel="dns-prefetch" href="https://www.caribbeancom.com" />
+        <link rel="preconnect" href="https://www.heyzo.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://www.caribbeancom.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://smovie.1pondo.tv" crossOrigin="anonymous" />
+        {/* DNS prefetch for less frequent image sources */}
         <link rel="dns-prefetch" href="https://www.1pondo.tv" />
+        <link rel="dns-prefetch" href="https://b10f.jp" />
         <JsonLD data={websiteSchema} />
       </head>
       <body

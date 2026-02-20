@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { Sparkles, Calendar, TrendingUp, Star, Clock, ExternalLink } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
+// ISR: 1時間キャッシュ
+export const revalidate = 3600;
 
 interface Props {
   params: Promise<{ locale: string }>;

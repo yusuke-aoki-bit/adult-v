@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { Trophy, Star, TrendingUp, Calendar, Users, ChevronRight } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
+// ISR: 1日キャッシュ（年間ベストは変更頻度低い）
+export const revalidate = 86400;
 
 interface Props {
   params: Promise<{ locale: string; year: string }>;

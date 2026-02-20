@@ -35,9 +35,8 @@ import SimilarPerformerMap from '@/components/SimilarPerformerMap';
 import ActressSectionNav from '@/components/ActressSectionNav';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// Force dynamic rendering to avoid DYNAMIC_SERVER_USAGE errors with getTranslations
-// ISR with revalidate is not compatible with dynamic server functions
-export const dynamic = 'force-dynamic';
+// ISR: 1時間キャッシュ（Googlebotクロール高速化）
+export const revalidate = 3600;
 
 interface PageProps {
   params: Promise<{ performerId: string; locale: string }>;

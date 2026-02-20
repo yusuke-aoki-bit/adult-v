@@ -7,8 +7,8 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { getPopularTags } from '@/lib/db/queries';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// Force dynamic rendering to avoid DYNAMIC_SERVER_USAGE errors with getTranslations
-export const dynamic = 'force-dynamic';
+// ISR: 1時間キャッシュ
+export const revalidate = 3600;
 
 // Tag type from getPopularTags
 interface Tag {

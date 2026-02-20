@@ -88,14 +88,12 @@ const securityHeaders = [
 const nextConfig = {
   images: {
     remotePatterns,
+    // 外部CDN画像を直接配信（/_next/image プロキシをバイパス）
+    // Firebase Cloud Run上での画像最適化はレイテンシが大きいため無効化
+    unoptimized: true,
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    formats: ['image/avif', 'image/webp'],
-    // 小さい画像サイズを追加してサムネイル最適化
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 604800, // 1週間キャッシュ
   },
   compress: true,
   // パフォーマンス最適化

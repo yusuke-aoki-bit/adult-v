@@ -61,3 +61,6 @@ export { createRunMigrationHandler } from './run-migration';
 
 // News generation handler
 export { createGenerateNewsHandler } from './generate-news';
+
+// On-demand revalidation handler
+export { createRevalidateHandler } from './revalidate';

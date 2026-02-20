@@ -8,7 +8,8 @@ import { Library, Film, Calendar } from 'lucide-react';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { JsonLD } from '@/components/JsonLD';
 
-export const dynamic = 'force-dynamic';
+// ISR: 30分キャッシュ
+export const revalidate = 1800;
 
 interface PageProps {
   params: Promise<{ locale: string }>;

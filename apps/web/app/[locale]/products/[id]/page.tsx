@@ -37,8 +37,8 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// force-dynamic: next-intl/sentryがheaders()を内部呼出しするためISR不可
-export const dynamic = 'force-dynamic';
+// ISR: 5分キャッシュ（Googlebotクロール高速化・サーバー負荷軽減）
+export const revalidate = 300;
 
 /**
  * 配列をシャッフル（Fisher-Yates algorithm）

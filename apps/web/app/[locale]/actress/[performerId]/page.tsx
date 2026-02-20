@@ -41,8 +41,8 @@ import PerPageDropdown from '@/components/PerPageDropdown';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// force-dynamic: next-intl/sentryがheaders()を内部呼出しするためISR不可
-export const dynamic = 'force-dynamic';
+// ISR: 1時間キャッシュ（Googlebotクロール高速化）
+export const revalidate = 3600;
 
 interface PageProps {
   params: Promise<{ performerId: string; locale: string }>;

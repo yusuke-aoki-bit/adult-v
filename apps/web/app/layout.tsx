@@ -67,20 +67,19 @@ export default async function RootLayout({
       <head>
         {/* charset先頭配置 — title/descriptionはMetadata APIで管理（重複防止） */}
         <meta charSet="utf-8" />
-        {/* LCP改善: 画像配信ドメインへのpreconnect (crossorigin for CORS images) */}
+        {/* LCP改善: 画像CDNへのpreconnect（unoptimized=trueで直接CDN配信のため重要） */}
         <link rel="preconnect" href="https://pics.dmm.co.jp" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://awsimgsrc.dmm.co.jp" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://pic.duga.jp" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://image.mgstage.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://img.sokmil.com" crossOrigin="anonymous" />
-        {/* DNS prefetch for additional image sources */}
-        <link rel="dns-prefetch" href="https://pics.dmm.co.jp" />
-        <link rel="dns-prefetch" href="https://awsimgsrc.dmm.co.jp" />
-        <link rel="dns-prefetch" href="https://pic.duga.jp" />
-        <link rel="dns-prefetch" href="https://image.mgstage.com" />
-        <link rel="dns-prefetch" href="https://img.sokmil.com" />
-        <link rel="dns-prefetch" href="https://www.caribbeancom.com" />
+        <link rel="preconnect" href="https://www.heyzo.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://www.caribbeancom.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://smovie.1pondo.tv" crossOrigin="anonymous" />
+        {/* DNS prefetch for less frequent image sources */}
         <link rel="dns-prefetch" href="https://www.1pondo.tv" />
+        <link rel="dns-prefetch" href="https://my.cdn.tokyo-hot.com" />
+        <link rel="dns-prefetch" href="https://b10f.jp" />
         {/* RSS autodiscovery */}
         <link rel="alternate" type="application/rss+xml" title="Adult Viewer Lab - 新着動画" href="/feed.xml" />
         <JsonLD data={websiteSchema} />

@@ -10,8 +10,8 @@ import { CalendarGridWrapper } from '@adult-v/shared/components/stats';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { getPopularTags } from '@/lib/db/queries';
 
-// Force dynamic rendering to avoid DYNAMIC_SERVER_USAGE errors with getTranslations
-export const dynamic = 'force-dynamic';
+// ISR: 5分キャッシュ
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,

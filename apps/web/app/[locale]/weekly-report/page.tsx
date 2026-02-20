@@ -9,7 +9,8 @@ import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { TrendingUp, TrendingDown, Minus, Calendar, Star, Users, Film, Award } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
+// ISR: 1時間キャッシュ
+export const revalidate = 3600;
 
 interface TrendItem {
   id: number;

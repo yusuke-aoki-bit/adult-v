@@ -11,7 +11,8 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
-export const dynamic = 'force-dynamic';
+// ISR: 1時間キャッシュ
+export const revalidate = 3600;
 
 interface PageProps {
   params: Promise<{ makerId: string; locale: string }>;
