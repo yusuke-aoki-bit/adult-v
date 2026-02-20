@@ -13,7 +13,7 @@ export default function AiActressProfileWrapper({ actressId, locale }: AiActress
       actressId={actressId}
       locale={locale}
       theme="light"
-      apiEndpoint={`/api/actress/${actressId}/generate-profile`}
+      apiEndpoint={`/api/actresses/${actressId}/generate-profile`}
       autoLoad={false}
     />
   );

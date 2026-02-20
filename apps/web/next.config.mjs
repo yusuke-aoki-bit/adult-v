@@ -173,7 +173,8 @@ const sentryBuildOptions = {
   project: process.env.SENTRY_PROJECT,
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  tunnelRoute: '/monitoring',
+  // tunnelRoute削除: 手動route.ts(app/monitoring/route.ts)と競合するため
+  // クライアント側はsentry.client.config.tsのtunnel: '/monitoring'で設定済み
   hideSourceMaps: true,
   webpack: {
     treeshake: { removeDebugLogging: true },

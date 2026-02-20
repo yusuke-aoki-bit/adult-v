@@ -121,7 +121,7 @@ export function getFirebaseAppCheck(): AppCheck | null {
   if (!appCheck) {
     const siteKey = process.env['NEXT_PUBLIC_RECAPTCHA_SITE_KEY'];
     if (!siteKey) {
-      console.warn('reCAPTCHA site key not configured. App Check disabled.');
+      // reCAPTCHA未設定時は静かにスキップ（本番で毎回ログが出るのを防止）
       return null;
     }
 
