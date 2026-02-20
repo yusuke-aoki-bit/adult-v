@@ -50,7 +50,7 @@ export async function generateMetadata({
   }
 }
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 /**
  * Markdown風のテキストをHTMLに簡易変換

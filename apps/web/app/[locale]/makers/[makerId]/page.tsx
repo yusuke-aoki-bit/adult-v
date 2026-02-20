@@ -11,8 +11,7 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
-export const revalidate = 300;
-export const dynamicParams = true;
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ makerId: string; locale: string }>;

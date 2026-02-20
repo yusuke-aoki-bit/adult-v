@@ -41,8 +41,8 @@ import PerPageDropdown from '@/components/PerPageDropdown';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISR: 5分ごとに再検証（layout.tsxからcookies()を除去したためISRが使用可能に）
-export const revalidate = 300;
+// force-dynamic: next-intl/sentryがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ performerId: string; locale: string }>;

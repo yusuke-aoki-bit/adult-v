@@ -37,8 +37,8 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISR: 5分ごとに再検証（layout.tsxからcookies()を除去したためISRが使用可能に）
-export const revalidate = 300;
+// force-dynamic: next-intl/sentryがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 /**
  * 配列をシャッフル（Fisher-Yates algorithm）
