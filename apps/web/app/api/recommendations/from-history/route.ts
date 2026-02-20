@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
           productId: productPerformers.productId,
           performerId: productPerformers.performerId,
           performerName: performers.name,
+          profileImageUrl: performers.profileImageUrl,
         })
         .from(productPerformers)
         .innerJoin(performers, eq(productPerformers.performerId, performers.id))
@@ -91,11 +92,11 @@ export async function POST(request: NextRequest) {
     ]);
 
     // 女優ID・タグIDを集計（頻度カウント）
-    const performerCounts = new Map<number, { name: string; count: number }>();
+    const performerCounts = new Map<number, { name: string; count: number; thumbnailUrl: string | null }>();
     const tagCounts = new Map<number, { name: string; count: number }>();
 
     for (const p of performerData) {
-      const current = performerCounts.get(p.performerId) || { name: p.performerName, count: 0 };
+      const current = performerCounts.get(p.performerId) || { name: p.performerName, count: 0, thumbnailUrl: p.profileImageUrl };
       performerCounts.set(p.performerId, { ...current, count: current.count + 1 });
     }
 
