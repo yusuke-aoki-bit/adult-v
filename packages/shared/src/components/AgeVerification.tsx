@@ -56,16 +56,17 @@ export default function AgeVerification({
   const config = themeConfig[theme];
 
   const [isVerified, setIsVerified] = useState(initialVerified);
-  const [showModal, setShowModal] = useState(!initialVerified);
+  const [isChecked, setIsChecked] = useState(initialVerified);
   const [isLoading, setIsLoading] = useState(false);
 
   const minAge = AGE_REQUIREMENTS[locale as keyof typeof AGE_REQUIREMENTS] || 18;
 
   // クライアント側でCookieを確認（non-httpOnly cookieを直接読む）
+  // isChecked完了までモーダルを表示しない（ちらつき防止）
   useEffect(() => {
     if (initialVerified) {
       setIsVerified(true);
-      setShowModal(false);
+      setIsChecked(true);
       return;
     }
     // non-httpOnly cookieをクライアント側で読み取り
@@ -73,9 +74,12 @@ export default function AgeVerification({
     const ageVerified = cookies.some(c => c.startsWith('age-verified=true'));
     if (ageVerified) {
       setIsVerified(true);
-      setShowModal(false);
     }
+    setIsChecked(true);
   }, [initialVerified]);
+
+  // Cookie確認完了後、未認証ならモーダル表示
+  const showModal = isChecked && !isVerified;
 
   // モーダル表示中はスクロールを防止
   useEffect(() => {
@@ -99,7 +103,6 @@ export default function AgeVerification({
 
       if (response.ok) {
         setIsVerified(true);
-        setShowModal(false);
       }
     } catch (error) {
       console.error('Age verification failed:', error);
