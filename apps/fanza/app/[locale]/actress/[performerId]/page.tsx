@@ -249,23 +249,29 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
   // Parallel fetch for all actress data (performance optimization)
   // Uses DB-level pagination instead of fetching all 1000 products
-  const [genreTags, aliases, productCountByAsp, careerAnalysis, topProducts, onSaleProducts, works, total] =
-    await Promise.all([
-      getTagsForActress(actress.id, 'genre'),
-      getPerformerAliases(parseInt(actress.id)),
-      getActressProductCountByAsp(actress.id),
-      getActressCareerAnalysis(actress.id),
-      getPerformerTopProducts(parseInt(actress.id), 5, 'fanza'),
-      getPerformerOnSaleProducts(parseInt(actress.id), 6, 'fanza'),
-      getProducts({
-        ...productFilterOptions,
-        sortBy,
-        limit: PER_PAGE,
-        offset: (page - 1) * PER_PAGE,
-        locale,
-      }),
-      getProductsCount(productFilterOptions),
-    ]);
+  let genreTags, aliases, productCountByAsp, careerAnalysis, topProducts, onSaleProducts, works, total;
+  try {
+    [genreTags, aliases, productCountByAsp, careerAnalysis, topProducts, onSaleProducts, works, total] =
+      await Promise.all([
+        getTagsForActress(actress.id, 'genre'),
+        getPerformerAliases(parseInt(actress.id)),
+        getActressProductCountByAsp(actress.id),
+        getActressCareerAnalysis(actress.id),
+        getPerformerTopProducts(parseInt(actress.id), 5, 'fanza'),
+        getPerformerOnSaleProducts(parseInt(actress.id), 6, 'fanza'),
+        getProducts({
+          ...productFilterOptions,
+          sortBy,
+          limit: PER_PAGE,
+          offset: (page - 1) * PER_PAGE,
+          locale,
+        }),
+        getProductsCount(productFilterOptions),
+      ]);
+  } catch (error) {
+    console.error(`[actress-detail] Error loading actress data for ${performerId}:`, error);
+    notFound();
+  }
   const nonPrimaryAliases = aliases.filter(alias => !alias.isPrimary);
 
   const basePath = localizedHref(`/actress/${actress.id}`, locale);

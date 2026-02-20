@@ -301,34 +301,37 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const primaryPerformerName = product.performers?.[0]?.name || product.actressName;
 
   // Phase 1: 基本データの並列取得（FANZAの商品のみ）
-  const [
-    maker,
-    series,
-    genreTags,
-    sources,
-  ] = await Promise.all([
-    getProductMaker(productId),
-    getProductSeries(productId),
-    getProductGenreTags(productId),
-    getProductSources(productId),
-  ]);
+  let maker, series, genreTags, sources;
+  try {
+    [maker, series, genreTags, sources] = await Promise.all([
+      getProductMaker(productId),
+      getProductSeries(productId),
+      getProductGenreTags(productId),
+      getProductSources(productId),
+    ]);
+  } catch (error) {
+    console.error(`[product-detail] Error loading product data phase 1 for ${id}:`, error);
+    notFound();
+  }
 
   // Phase 2: Phase 1の結果に依存するデータの並列取得
-  const [
-    performerOtherProducts,
-    sameMakerProducts,
-    sameSeriesProducts,
-  ] = await Promise.all([
-    primaryPerformerId
-      ? getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6)
-      : Promise.resolve([]),
-    maker
-      ? getSameMakerProducts(maker.id, productId, 6)
-      : Promise.resolve([]),
-    series
-      ? getSameSeriesProducts(series.id, productId, 6)
-      : Promise.resolve([]),
-  ]);
+  let performerOtherProducts, sameMakerProducts, sameSeriesProducts;
+  try {
+    [performerOtherProducts, sameMakerProducts, sameSeriesProducts] = await Promise.all([
+      primaryPerformerId
+        ? getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6)
+        : Promise.resolve([]),
+      maker
+        ? getSameMakerProducts(maker.id, productId, 6)
+        : Promise.resolve([]),
+      series
+        ? getSameSeriesProducts(series.id, productId, 6)
+        : Promise.resolve([]),
+    ]);
+  } catch (error) {
+    console.error(`[product-detail] Error loading product data phase 2 for ${id}:`, error);
+    notFound();
+  }
 
   // 注意: apps/fanzaではFANZA ASP規約に準拠し、他ASPの画像は使用しない
   // crossAspSampleImagesは使用しない（FANZA以外のASPへの遷移・情報表示禁止）

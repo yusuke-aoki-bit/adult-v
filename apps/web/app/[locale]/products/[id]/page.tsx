@@ -298,46 +298,46 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const actressId = product.actressId || product.performers?.[0]?.id;
 
   // Phase 1: 基本データの並列取得
-  const [
-    maker,
-    series,
-    genreTags,
-    sources,
-    makerProductCode,
-  ] = await Promise.all([
-    getProductMaker(productId),
-    getProductSeries(productId),
-    getProductGenreTags(productId),
-    getProductSources(productId),
-    getProductMakerCode(productId),
-  ]);
+  let maker, series, genreTags, sources, makerProductCode;
+  try {
+    [maker, series, genreTags, sources, makerProductCode] = await Promise.all([
+      getProductMaker(productId),
+      getProductSeries(productId),
+      getProductGenreTags(productId),
+      getProductSources(productId),
+      getProductMakerCode(productId),
+    ]);
+  } catch (error) {
+    console.error(`[product-detail] Error loading product data phase 1 for ${id}:`, error);
+    notFound();
+  }
 
   // Phase 2: Phase 1の結果に依存するデータの並列取得
-  const [
-    performerOtherProducts,
-    sameMakerProducts,
-    sameSeriesProducts,
-    sourcesWithSales,
-    crossAspSampleImages,
-    actressAvgPricePerMin,
-  ] = await Promise.all([
-    primaryPerformerId
-      ? getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6)
-      : Promise.resolve([]),
-    maker
-      ? getSameMakerProducts(maker.id, productId, 6)
-      : Promise.resolve([]),
-    series
-      ? getSameSeriesProducts(series.id, productId, 6)
-      : Promise.resolve([]),
-    getAllProductSources(productId, product.title, makerProductCode),
-    makerProductCode
-      ? getSampleImagesByMakerCode(makerProductCode)
-      : Promise.resolve([]),
-    actressId
-      ? getActressAvgPricePerMin(String(actressId))
-      : Promise.resolve(null),
-  ]);
+  let performerOtherProducts, sameMakerProducts, sameSeriesProducts, sourcesWithSales, crossAspSampleImages, actressAvgPricePerMin;
+  try {
+    [performerOtherProducts, sameMakerProducts, sameSeriesProducts, sourcesWithSales, crossAspSampleImages, actressAvgPricePerMin] =
+      await Promise.all([
+        primaryPerformerId
+          ? getPerformerOtherProducts(Number(primaryPerformerId), String(product.id), 6)
+          : Promise.resolve([]),
+        maker
+          ? getSameMakerProducts(maker.id, productId, 6)
+          : Promise.resolve([]),
+        series
+          ? getSameSeriesProducts(series.id, productId, 6)
+          : Promise.resolve([]),
+        getAllProductSources(productId, product.title, makerProductCode),
+        makerProductCode
+          ? getSampleImagesByMakerCode(makerProductCode)
+          : Promise.resolve([]),
+        actressId
+          ? getActressAvgPricePerMin(String(actressId))
+          : Promise.resolve(null),
+      ]);
+  } catch (error) {
+    console.error(`[product-detail] Error loading product data phase 2 for ${id}:`, error);
+    notFound();
+  }
 
   // AggregateOffer Schema（複数ASP価格比較 - リッチスニペット表示）
   const aggregateOfferSchema = sourcesWithSales.length > 1
