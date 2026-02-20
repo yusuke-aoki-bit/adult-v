@@ -3,7 +3,14 @@ import { test, expect } from '@playwright/test';
 test.setTimeout(60000);
 
 // Target URL: use env var or fallback to production
+// In CI, skip this entire file unless E2E_BASE_URL is explicitly set
 const BASE = process.env['E2E_BASE_URL'] || 'https://www.adult-v.com';
+const SKIP_IN_CI = !!process.env['CI'] && !process.env['E2E_BASE_URL'];
+
+// Skip all tests in CI without explicit E2E_BASE_URL
+test.beforeEach(async ({}, testInfo) => {
+  if (SKIP_IN_CI) testInfo.skip(true, 'Skipped in CI without E2E_BASE_URL');
+});
 
 function url(path: string): string {
   return `${BASE}${path}`;
