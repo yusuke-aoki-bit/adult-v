@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, Newspaper, Star, ExternalLink } from 'lucide-react';
+import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, Newspaper, Star } from 'lucide-react';
 import { TopPageMenuSection, ProductCardBase, ActressCardBase, HomeSectionManager } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { useRecentlyViewed, useHomeSections } from '@adult-v/shared/hooks';
@@ -343,7 +343,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
 }
 
 // 今週の注目コンテンツ
-function WeeklyHighlightsContent({ locale }: { locale: string }) {
+function WeeklyHighlightsContent({ locale: _locale }: { locale: string }) {
   const [actresses, setActresses] = useState<Array<{
     id: number;
     name: string;
@@ -583,7 +583,7 @@ const NEWS_CATEGORY_STYLES: Record<string, { bg: string; text: string; label: st
 };
 
 // ニュースコンテンツ
-function NewsContent({ locale }: { locale: string }) {
+function NewsContent({ locale: _locale }: { locale: string }) {
   const [articles, setArticles] = useState<Array<{
     id: number;
     slug: string;

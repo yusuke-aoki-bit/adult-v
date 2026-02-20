@@ -22,8 +22,6 @@ interface RelatedActressesProps {
   currentActressName: string;
 }
 
-const PLACEHOLDER_IMAGE = 'https://placehold.co/150x150/1f2937/ffffff?text=No+Image';
-
 // ジャンル一致率に応じた色を返す（ライトテーマ用）
 function getMatchColor(percent: number): string {
   if (percent >= 80) return 'text-green-600';

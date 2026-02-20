@@ -79,7 +79,7 @@ export default async function LocaleLayout({
                 <JsonLD data={webSiteSchema} />
                 <JsonLD data={organizationSchema} />
                 <PerformanceMonitor />
-                <AgeVerification locale={locale} theme="light">
+                <AgeVerification locale={locale}>
                   {children}
                 </AgeVerification>
                 <ScrollToTop />

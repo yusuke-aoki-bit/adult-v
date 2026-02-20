@@ -213,7 +213,7 @@ export default function CorrectionSuggestButton({
   const [showForm, setShowForm] = useState(false);
   const {
     corrections,
-    isLoading,
+    isLoading: _isLoading,
     fetchCorrections,
     submitCorrection,
     deleteCorrection,
