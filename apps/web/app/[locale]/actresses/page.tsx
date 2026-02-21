@@ -15,8 +15,8 @@ import LoadMoreActresses from '@/components/LoadMoreActresses';
 import ActressFilterBar from '@/components/ActressFilterBar';
 import { unstable_cache } from 'next/cache';
 
-// ISR: 1時間ごとに再検証（5xxエラー削減のためforce-dynamicから変更）
-export const revalidate = 3600;
+// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
+export const dynamic = 'force-dynamic';
 
 interface PerformerItem {
   id: number;

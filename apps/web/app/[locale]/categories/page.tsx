@@ -6,9 +6,19 @@ import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import { getPopularTags } from '@/lib/db/queries';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { unstable_cache } from 'next/cache';
 
-// カテゴリ一覧は変更頻度が低いためISRで1時間キャッシュ
-export const revalidate = 3600;
+// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
+export const dynamic = 'force-dynamic';
+
+// DB query cache (3600秒)
+const getCachedPopularTags = unstable_cache(
+  async (options: { limit: number; category?: string }) => {
+    return getPopularTags(options);
+  },
+  ['categories-popular-tags'],
+  { revalidate: 3600, tags: ['categories'] }
+);
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -68,7 +78,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
 
   // 人気タグを取得（exactOptionalPropertyTypes対応）
   const tagsOptions = { limit: 100, ...(selectedCategory && { category: selectedCategory }) };
-  const tags = await getPopularTags(tagsOptions);
+  const tags = await getCachedPopularTags(tagsOptions);
 
   // カテゴリ別にグループ化
   const tagsByCategory = tags.reduce((acc, tag) => {

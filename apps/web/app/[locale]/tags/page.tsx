@@ -7,8 +7,19 @@ import { SocialShareButtons } from '@adult-v/shared/components';
 import { getPopularTags } from '@/lib/db/queries';
 import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateFAQSchema, generateItemListSchema } from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { unstable_cache } from 'next/cache';
 
-export const revalidate = 3600; // 1時間キャッシュ
+// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
+export const dynamic = 'force-dynamic';
+
+// DB query cache (3600秒)
+const getCachedTagsByCategory = unstable_cache(
+  async (category: string, limit: number) => {
+    return getPopularTags({ category, limit });
+  },
+  ['tags-by-category'],
+  { revalidate: 3600, tags: ['tags'] }
+);
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -54,11 +65,11 @@ export default async function TagsRankingPage({ params }: PageProps) {
 
   // カテゴリ別に人気タグを取得
   const [genreTags, situationTags, playTags, bodyTags, costumeTags] = await Promise.all([
-    getPopularTags({ category: 'genre', limit: 30 }),
-    getPopularTags({ category: 'situation', limit: 20 }),
-    getPopularTags({ category: 'play', limit: 20 }),
-    getPopularTags({ category: 'body', limit: 20 }),
-    getPopularTags({ category: 'costume', limit: 20 }),
+    getCachedTagsByCategory('genre', 30),
+    getCachedTagsByCategory('situation', 20),
+    getCachedTagsByCategory('play', 20),
+    getCachedTagsByCategory('body', 20),
+    getCachedTagsByCategory('costume', 20),
   ]);
 
   // パンくずリスト

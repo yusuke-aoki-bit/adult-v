@@ -10,9 +10,25 @@ import { CalendarGridWrapper } from '@adult-v/shared/components/stats';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { getAspStats, getPopularTags } from '@/lib/db/queries';
 import { isServerFanzaSite } from '@/lib/server/site-mode';
+import { unstable_cache } from 'next/cache';
 
-// ISR: 5分キャッシュ
-export const revalidate = 300;
+// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
+export const dynamic = 'force-dynamic';
+
+// DB query cache (300秒)
+const getCachedCalendarData = unstable_cache(
+  async (year: number, month: number, isFanzaSite: boolean) => {
+    const [calendarData, dailyReleases, aspStats, popularTags] = await Promise.all([
+      getCalendarDetailData(year, month, 4, 2),
+      getDailyReleases(year, month),
+      isFanzaSite ? Promise.resolve([]) : getAspStats(),
+      getPopularTags({ limit: 50 }),
+    ]);
+    return { calendarData, dailyReleases, aspStats, popularTags };
+  },
+  ['calendar-data'],
+  { revalidate: 300, tags: ['calendar'] }
+);
 
 export async function generateMetadata({
   params,
@@ -63,13 +79,8 @@ export default async function CalendarPage({
   // FANZAサイトかどうかを判定
   const isFanzaSite = await isServerFanzaSite();
 
-  // カレンダー詳細データ、日別リリース数、フィルター用データを並列取得
-  const [calendarData, dailyReleases, aspStats, popularTags] = await Promise.all([
-    getCalendarDetailData(targetYear, targetMonth, 4, 2),
-    getDailyReleases(targetYear, targetMonth),
-    isFanzaSite ? Promise.resolve([]) : getAspStats(),
-    getPopularTags({ limit: 50 }),
-  ]);
+  // カレンダー詳細データ、日別リリース数、フィルター用データを並列取得（キャッシュ付き）
+  const { calendarData, dailyReleases, aspStats, popularTags } = await getCachedCalendarData(targetYear, targetMonth, isFanzaSite);
 
   const structuredData = {
     '@context': 'https://schema.org',

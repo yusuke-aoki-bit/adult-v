@@ -7,9 +7,19 @@ import { getTranslations } from 'next-intl/server';
 import { Library, Film, Calendar } from 'lucide-react';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { JsonLD } from '@/components/JsonLD';
+import { unstable_cache } from 'next/cache';
 
-// シリーズ一覧は変更頻度が低いためISRで30分キャッシュ
-export const revalidate = 1800;
+// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
+export const dynamic = 'force-dynamic';
+
+// DB query cache (1800秒)
+const getCachedPopularSeries = unstable_cache(
+  async (limit: number) => {
+    return getPopularSeries(limit);
+  },
+  ['popular-series'],
+  { revalidate: 1800, tags: ['series'] }
+);
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -78,7 +88,7 @@ export default async function SeriesListPage({ params }: PageProps) {
   const tNav = await getTranslations('nav');
   const t = translations[locale as keyof typeof translations] || translations['ja'];
 
-  const series = await getPopularSeries(50);
+  const series = await getCachedPopularSeries(50);
 
   const getLocalizedName = (s: typeof series[0]) => {
     if (locale === 'en' && s.nameEn) return s.nameEn;

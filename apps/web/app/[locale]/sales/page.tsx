@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
+import { unstable_cache } from 'next/cache';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import { SocialShareButtons, Pagination } from '@adult-v/shared/components';
@@ -9,7 +10,8 @@ import { getSaleProducts, getSaleStats, SaleProduct } from '@/lib/db/queries';
 import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateItemListSchema } from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-export const revalidate = 1800; // 30分キャッシュ
+// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
+export const dynamic = 'force-dynamic';
 
 const pageTexts = {
   ja: {
@@ -124,6 +126,19 @@ function formatEndTime(endAt: Date | null, locale: string): string | null {
   return pt.endingSoonAlt;
 }
 
+// unstable_cacheでDBクエリをキャッシュ（1800秒 = 30分）
+const getCachedSalePageData = unstable_cache(
+  async () => {
+    const [allSaleProducts, saleStats] = await Promise.all([
+      getSaleProducts({ limit: 500 }),
+      getSaleStats(),
+    ]);
+    return { allSaleProducts, saleStats };
+  },
+  ['sales-page-data'],
+  { revalidate: 1800, tags: ['sale-products'] }
+);
+
 export default async function SalesPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const pt = getPageText(locale);
@@ -135,9 +150,8 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
   const aspFilter = resolvedSearchParams.asp;
   const minDiscount = Math.max(0, Math.min(parseInt(resolvedSearchParams.minDiscount || '0', 10), 100));
 
-  // セール商品を取得（最大500件）
-  const allSaleProducts = await getSaleProducts({ limit: 500 });
-  const saleStats = await getSaleStats();
+  // セール商品を取得（unstable_cacheで30分キャッシュ）
+  const { allSaleProducts, saleStats } = await getCachedSalePageData();
 
   // フィルタリング
   let filteredProducts = allSaleProducts;

@@ -15,6 +15,7 @@ import { generateBaseMetadata, generateItemListSchema, generateBreadcrumbSchema 
 import { Metadata } from 'next';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { unstable_cache } from 'next/cache';
 
 export async function generateMetadata({
   params,
@@ -87,8 +88,34 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 5分キャッシュ（DB負荷軽減）
-export const revalidate = 300;
+// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
+// データキャッシュはunstable_cacheで個別管理（300秒TTL）
+export const dynamic = 'force-dynamic';
+
+// キャッシュ付きクエリ（DB負荷軽減のため300秒TTL）
+const getCachedAspStats = unstable_cache(
+  async (isFanzaSite: boolean) => isFanzaSite ? [] : getAspStats(),
+  ['products-asp-stats'],
+  { revalidate: 300, tags: ['products'] }
+);
+
+const getCachedPopularTags = unstable_cache(
+  async (limit: number) => getPopularTags({ limit }),
+  ['products-popular-tags'],
+  { revalidate: 300, tags: ['products'] }
+);
+
+const getCachedProductsCount = unstable_cache(
+  async (filterOptions: Parameters<typeof getProductsCount>[0]) => getProductsCount(filterOptions),
+  ['products-count'],
+  { revalidate: 300, tags: ['products'] }
+);
+
+const getCachedProducts = unstable_cache(
+  async (options: Parameters<typeof getProducts>[0]) => getProducts(options),
+  ['products-list'],
+  { revalidate: 300, tags: ['products'] }
+);
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -177,12 +204,12 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     ...(excludeTags.length > 0 && { excludeTags }),
   };
 
-  // ASP統計、タグ、総件数、商品を全て並列取得（パフォーマンス最適化）
+  // ASP統計、タグ、総件数、商品を全て並列取得（unstable_cacheで300秒TTL）
   const [aspStats, popularTags, totalCount, products] = await Promise.all([
-    isFanzaSite ? Promise.resolve([]) : getAspStats(),
-    getPopularTags({ limit: 50 }),
-    getProductsCount(filterOptions),
-    getProducts({
+    getCachedAspStats(isFanzaSite),
+    getCachedPopularTags(50),
+    getCachedProductsCount(filterOptions),
+    getCachedProducts({
       ...filterOptions,
       offset,
       limit: perPage,

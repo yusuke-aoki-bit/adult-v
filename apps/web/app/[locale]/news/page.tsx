@@ -5,6 +5,7 @@ import { generateBaseMetadata } from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
 import Breadcrumb from '@/components/Breadcrumb';
 import { Newspaper, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { unstable_cache } from 'next/cache';
 
 export async function generateMetadata({
   params,
@@ -44,7 +45,17 @@ export async function generateMetadata({
   }
 }
 
-export const revalidate = 600;
+// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
+export const dynamic = 'force-dynamic';
+
+// DB query cache (600秒)
+const getCachedNews = unstable_cache(
+  async (category: string | null, page: number, limit: number) => {
+    return getNewsByCategory(category, page, limit);
+  },
+  ['news-list'],
+  { revalidate: 600, tags: ['news'] }
+);
 
 export default async function NewsPage({
   params,
@@ -61,7 +72,7 @@ export default async function NewsPage({
   const page = parseInt(sp.page || '1');
   const limit = 20;
 
-  const { articles, total } = await getNewsByCategory(category, page, limit);
+  const { articles, total } = await getCachedNews(category, page, limit);
   const totalPages = Math.ceil(total / limit);
 
   const CATEGORY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
