@@ -6,7 +6,11 @@ import { desc, sql } from 'drizzle-orm';
 const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://f.adult-v.com';
 const CHUNK_SIZE = 5000;
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  return Array.from({ length: 8 }, (_, i) => ({ chunk: String(i) }));
+}
 
 export async function GET(
   request: NextRequest,
