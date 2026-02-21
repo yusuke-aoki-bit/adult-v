@@ -100,46 +100,70 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 5分キャッシュ（DB負荷軽減）
-// 注: searchParamsを使用しているため、実際のキャッシュはNext.jsの判断による
-export const revalidate = 300;
+// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
+// データキャッシュはunstable_cacheで個別管理（300秒TTL）
+export const dynamic = 'force-dynamic';
 
 // キャッシュ付きクエリ（5xxエラー削減のためDB負荷を軽減）
+// データキャッシュ: 300秒TTL（ページは毎回dynamic renderだがデータはキャッシュ）
 const getCachedTags = unstable_cache(
   async () => getTags(),
   ['homepage-tags'],
-  { revalidate: 120, tags: ['tags'] }
+  { revalidate: 300, tags: ['tags'] }
 );
 
 const getCachedAspStats = unstable_cache(
   async () => getAspStats(),
   ['homepage-asp-stats'],
-  { revalidate: 120, tags: ['asp-stats'] }
+  { revalidate: 300, tags: ['asp-stats'] }
 );
 
 const getCachedSaleProducts = unstable_cache(
   async (limit: number) => getSaleProducts({ limit }),
   ['homepage-sale-products'],
-  { revalidate: 120, tags: ['sale-products'] }  // 60秒→120秒に延長（パフォーマンス改善）
+  { revalidate: 300, tags: ['sale-products'] }
 );
 
 const getCachedUncategorizedCount = unstable_cache(
   async () => getUncategorizedProductsCount(),
   ['homepage-uncategorized-count'],
-  { revalidate: 120, tags: ['uncategorized'] }
+  { revalidate: 300, tags: ['uncategorized'] }
 );
 
 const getCachedTrendingActresses = unstable_cache(
   async (limit: number) => {
-    // getTrendingActressesが存在しない場合はgetActressesで代用
     if (typeof getTrendingActresses === 'function') {
       return getTrendingActresses({ limit });
     }
-    // フォールバック: 最近の女優を取得
     return [];
   },
   ['homepage-trending-actresses'],
   { revalidate: 300, tags: ['trending-actresses'] }
+);
+
+const getCachedFanzaProducts = unstable_cache(
+  async (limit: number) => getProducts({ limit, sortBy: 'releaseDateDesc', providers: ['FANZA'] }),
+  ['homepage-fanza-products'],
+  { revalidate: 300, tags: ['fanza-products'] }
+);
+
+// トップページ全データを一括キャッシュ（8クエリ→1キャッシュルックアップ）
+const getCachedTopPageData = unstable_cache(
+  async (locale: string, perPage: number, isFanzaSite: boolean, includeAsps: string[]) => {
+    const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses, fanzaProducts] = await Promise.all([
+      getTags().catch(() => [] as Awaited<ReturnType<typeof getTags>>),
+      !isFanzaSite ? getAspStats().catch(() => [] as Array<{ aspName: string; productCount: number; actressCount: number }>) : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
+      getActresses({ limit: perPage, offset: 0, locale, includeAsps }).catch(() => [] as Awaited<ReturnType<typeof getActresses>>),
+      getActressesCount({ includeAsps }).catch(() => 0),
+      getSaleProducts({ limit: 8 }).catch(() => [] as SaleProduct[]),
+      getUncategorizedProductsCount().catch(() => 0),
+      (typeof getTrendingActresses === 'function' ? getTrendingActresses({ limit: 8 }) : Promise.resolve([])).catch(() => [] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>),
+      (!isFanzaSite ? getProducts({ limit: 8, sortBy: 'releaseDateDesc', providers: ['FANZA'] }).catch(() => [] as Awaited<ReturnType<typeof getProducts>>) : Promise.resolve([] as Awaited<ReturnType<typeof getProducts>>)),
+    ]);
+    return { allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses, fanzaProducts };
+  },
+  ['homepage-top-data'],
+  { revalidate: 300, tags: ['homepage-top'] }
 );
 
 interface PageProps {
@@ -258,49 +282,57 @@ export default async function Home({ params, searchParams }: PageProps) {
     ...(bloodTypes.length > 0 && { bloodTypes }),
   };
 
-  // 並列クエリ実行（パフォーマンス最適化）
-  // タグ、ASP統計、女優リスト、女優数、セール商品、未整理作品数を同時に取得
-  // キャッシュ付きクエリを使用して5xxエラーを削減
-  // 全クエリにtry-catchを追加して、1つの失敗でページ全体が崩壊しないようにする
-  const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses, fanzaProducts] = await Promise.all([
-    getCachedTags().catch((error) => {
-      console.error('Failed to fetch tags:', error);
-      return [] as Awaited<ReturnType<typeof getTags>>;
-    }),
-    !isFanzaSite ? getCachedAspStats().catch((error) => {
-      console.error('Failed to fetch ASP stats:', error);
-      return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
-    }) : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
-    getActresses({
-      ...actressQueryOptions,
-      limit: perPage,
-      offset,
-      locale,
-    }).catch((error) => {
-      console.error('Failed to fetch actresses:', error);
-      return [] as Awaited<ReturnType<typeof getActresses>>;
-    }),
-    getActressesCount(actressQueryOptions).catch((error) => {
-      console.error('Failed to fetch actresses count:', error);
-      return 0;
-    }),
-    isTopPage ? getCachedSaleProducts(8).catch((error) => {
-      console.error('Failed to fetch sale products:', error);
-      return [] as SaleProduct[];
-    }) : Promise.resolve([] as SaleProduct[]),
-    isTopPage ? getCachedUncategorizedCount().catch((error) => {
-      console.error('Failed to fetch uncategorized count:', error);
-      return 0;
-    }) : Promise.resolve(0),
-    isTopPage ? getCachedTrendingActresses(8).catch((error) => {
-      console.error('Failed to fetch trending actresses:', error);
-      return [] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>;
-    }) : Promise.resolve([] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>),
-    (isTopPage && !isFanzaSite) ? getProducts({ limit: 8, sortBy: 'releaseDateDesc', providers: ['FANZA'] }).catch((error) => {
-      console.error('Failed to fetch FANZA products:', error);
-      return [] as Awaited<ReturnType<typeof getProducts>>;
-    }) : Promise.resolve([] as Awaited<ReturnType<typeof getProducts>>),
-  ]);
+  // データ取得（トップページは一括キャッシュで高速化、フィルター時は個別クエリ）
+  let allTags: Awaited<ReturnType<typeof getTags>>;
+  let aspStatsResult: Array<{ aspName: string; productCount: number; actressCount: number }>;
+  let actresses: Awaited<ReturnType<typeof getActresses>>;
+  let totalCount: number;
+  let saleProducts: SaleProduct[];
+  let uncategorizedCount: number;
+  let trendingActresses: Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>;
+  let fanzaProducts: Awaited<ReturnType<typeof getProducts>>;
+
+  if (isTopPage) {
+    // トップページ: 全データを一括キャッシュ（8クエリ→1キャッシュルックアップ、300秒TTL）
+    const cached = await getCachedTopPageData(locale, perPage, isFanzaSite, includeAsps);
+    allTags = cached.allTags;
+    aspStatsResult = cached.aspStatsResult;
+    actresses = cached.actresses;
+    totalCount = cached.totalCount;
+    saleProducts = cached.saleProducts;
+    uncategorizedCount = cached.uncategorizedCount;
+    trendingActresses = cached.trendingActresses;
+    fanzaProducts = cached.fanzaProducts;
+  } else {
+    // フィルター・ページネーション時: 個別クエリ（キャッシュ付き）
+    [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses, fanzaProducts] = await Promise.all([
+      getCachedTags().catch((error) => {
+        console.error('Failed to fetch tags:', error);
+        return [] as Awaited<ReturnType<typeof getTags>>;
+      }),
+      !isFanzaSite ? getCachedAspStats().catch((error) => {
+        console.error('Failed to fetch ASP stats:', error);
+        return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
+      }) : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
+      getActresses({
+        ...actressQueryOptions,
+        limit: perPage,
+        offset,
+        locale,
+      }).catch((error) => {
+        console.error('Failed to fetch actresses:', error);
+        return [] as Awaited<ReturnType<typeof getActresses>>;
+      }),
+      getActressesCount(actressQueryOptions).catch((error) => {
+        console.error('Failed to fetch actresses count:', error);
+        return 0;
+      }),
+      Promise.resolve([] as SaleProduct[]),
+      Promise.resolve(0),
+      Promise.resolve([] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>),
+      Promise.resolve([] as Awaited<ReturnType<typeof getProducts>>),
+    ]);
+  }
 
   const genreTags = allTags.filter(tag => tag.category !== 'site');
   const aspStats = aspStatsResult;

@@ -271,7 +271,7 @@ function getCachedTopActresses(limit: number, offset: number, locale: string) {
   const cached = unstable_cache(
     () => appQueries._getActressesShared<ActressType>({ limit, offset, sortBy: 'recent', locale }),
     [`actresses-top-${offset}-${limit}-${locale}`],
-    { revalidate: 60, tags: ['actresses-list'] }
+    { revalidate: 300, tags: ['actresses-list'] }
   );
   return cached();
 }
@@ -308,7 +308,7 @@ export async function getActresses(options?: GetActressesOptions): Promise<Actre
 const getCachedActressesCount = unstable_cache(
   () => appQueries._getActressesCountShared(),
   ['actresses-count-top'],
-  { revalidate: 60, tags: ['actresses-count'] }
+  { revalidate: 300, tags: ['actresses-count'] }
 );
 
 export async function getActressesCount(options?: GetActressesCountOptions): Promise<number> {

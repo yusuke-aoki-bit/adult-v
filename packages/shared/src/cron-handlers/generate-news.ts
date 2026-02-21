@@ -132,10 +132,10 @@ export function createGenerateNewsHandler(deps: GenerateNewsDeps) {
           SELECT
             COUNT(*) as sale_count,
             MAX(ps.discount_percent) as max_discount,
-            MIN(ps.sale_end_date) as earliest_end
+            MIN(ps.end_at) as earliest_end
           FROM product_sales ps
-          WHERE ps.sale_start_date >= CURRENT_DATE - INTERVAL '1 day'
-            AND ps.sale_start_date <= CURRENT_DATE
+          WHERE ps.start_at >= CURRENT_DATE - INTERVAL '1 day'
+            AND ps.start_at <= CURRENT_DATE
         `);
 
         const saleData = newSalesResult.rows[0] as Record<string, unknown>;

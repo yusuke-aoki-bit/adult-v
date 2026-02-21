@@ -63,16 +63,17 @@ export async function GET(request: NextRequest) {
       previousEnd.setDate(previousEnd.getDate() - 1);
     }
 
-    // FANZA専用：現在期間のタグトレンド
+    // FANZA専用：現在期間のタグトレンド（release_dateがNULLの場合はcreated_atで代用）
     const currentTagsQuery = await db.execute(sql`
       SELECT
+        t.id,
         t.name,
         COUNT(DISTINCT pt.product_id) as count
       FROM tags t
       INNER JOIN product_tags pt ON t.id = pt.tag_id
       INNER JOIN products p ON pt.product_id = p.id
       INNER JOIN product_sources ps ON p.id = ps.product_id
-      WHERE p.release_date >= ${currentStart.toISOString().split('T')[0]}
+      WHERE COALESCE(p.release_date, p.created_at::date) >= ${currentStart.toISOString().split('T')[0]}
         AND LOWER(ps.asp_name) = 'fanza'
       GROUP BY t.id, t.name
       ORDER BY count DESC
@@ -87,8 +88,8 @@ export async function GET(request: NextRequest) {
       INNER JOIN product_tags pt ON t.id = pt.tag_id
       INNER JOIN products p ON pt.product_id = p.id
       INNER JOIN product_sources ps ON p.id = ps.product_id
-      WHERE p.release_date >= ${previousStart.toISOString().split('T')[0]}
-        AND p.release_date <= ${previousEnd.toISOString().split('T')[0]}
+      WHERE COALESCE(p.release_date, p.created_at::date) >= ${previousStart.toISOString().split('T')[0]}
+        AND COALESCE(p.release_date, p.created_at::date) <= ${previousEnd.toISOString().split('T')[0]}
         AND LOWER(ps.asp_name) = 'fanza'
       GROUP BY t.id, t.name
     `);
@@ -98,13 +99,14 @@ export async function GET(request: NextRequest) {
       previousTagMap.set(row.name, Number(row.count));
     }
 
-    const tagTrends: TrendItem[] = (currentTagsQuery.rows as Array<{ name: string; count: number }>).map(row => {
+    const tagTrends: (TrendItem & { id?: number })[] = (currentTagsQuery.rows as Array<{ id: number; name: string; count: number }>).map(row => {
       const currentCount = Number(row.count);
       const previousCount = previousTagMap.get(row.name) || 0;
       const change = previousCount > 0
         ? Math.round(((currentCount - previousCount) / previousCount) * 100)
         : 100;
       return {
+        id: Number(row.id),
         name: row.name,
         count: currentCount,
         change,
@@ -115,13 +117,14 @@ export async function GET(request: NextRequest) {
     // FANZA専用：現在期間の女優トレンド
     const currentPerformersQuery = await db.execute(sql`
       SELECT
+        pf.id,
         pf.name,
         COUNT(DISTINCT pp.product_id) as count
       FROM performers pf
       INNER JOIN product_performers pp ON pf.id = pp.performer_id
       INNER JOIN products p ON pp.product_id = p.id
       INNER JOIN product_sources ps ON p.id = ps.product_id
-      WHERE p.release_date >= ${currentStart.toISOString().split('T')[0]}
+      WHERE COALESCE(p.release_date, p.created_at::date) >= ${currentStart.toISOString().split('T')[0]}
         AND LOWER(ps.asp_name) = 'fanza'
       GROUP BY pf.id, pf.name
       ORDER BY count DESC
@@ -136,8 +139,8 @@ export async function GET(request: NextRequest) {
       INNER JOIN product_performers pp ON pf.id = pp.performer_id
       INNER JOIN products p ON pp.product_id = p.id
       INNER JOIN product_sources ps ON p.id = ps.product_id
-      WHERE p.release_date >= ${previousStart.toISOString().split('T')[0]}
-        AND p.release_date <= ${previousEnd.toISOString().split('T')[0]}
+      WHERE COALESCE(p.release_date, p.created_at::date) >= ${previousStart.toISOString().split('T')[0]}
+        AND COALESCE(p.release_date, p.created_at::date) <= ${previousEnd.toISOString().split('T')[0]}
         AND LOWER(ps.asp_name) = 'fanza'
       GROUP BY pf.id, pf.name
     `);
@@ -147,13 +150,14 @@ export async function GET(request: NextRequest) {
       previousPerformerMap.set(row.name, Number(row.count));
     }
 
-    const performerTrends: TrendItem[] = (currentPerformersQuery.rows as Array<{ name: string; count: number }>).map(row => {
+    const performerTrends: (TrendItem & { id?: number })[] = (currentPerformersQuery.rows as Array<{ id: number; name: string; count: number }>).map(row => {
       const currentCount = Number(row.count);
       const previousCount = previousPerformerMap.get(row.name) || 0;
       const change = previousCount > 0
         ? Math.round(((currentCount - previousCount) / previousCount) * 100)
         : 100;
       return {
+        id: Number(row.id),
         name: row.name,
         count: currentCount,
         change,
