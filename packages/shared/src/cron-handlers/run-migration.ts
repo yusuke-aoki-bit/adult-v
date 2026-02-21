@@ -18,6 +18,12 @@ interface RunMigrationDeps {
 
 // サポートされているマイグレーション
 const MIGRATIONS: Record<string, string> = {
+  'fix-mgs-affiliate-urls': `
+    -- MGSアフィリエイトURLにHTMLウィジェットコードが入っている問題を修正
+    UPDATE product_sources
+    SET affiliate_url = 'https://www.mgstage.com/product/product_detail/' || original_product_id || '/?af_id=6CS5PGEBQDUYPZLHYEM33TBZFJ'
+    WHERE asp_name = 'MGS' AND affiliate_url LIKE '<%';
+  `,
   'ai-review-translations': `
     -- AIレビュー翻訳カラム追加
     ALTER TABLE products ADD COLUMN IF NOT EXISTS ai_review_en TEXT;
