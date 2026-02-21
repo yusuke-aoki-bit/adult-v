@@ -333,6 +333,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           ) : page === 1 ? (
             /* 1ページ目: 無限スクロール（エンゲージメント向上） */
             <LoadMoreProducts
+              key={JSON.stringify(queryParams)}
               initialProducts={products}
               totalCount={totalCount}
               perPage={perPage}

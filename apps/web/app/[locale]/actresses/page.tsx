@@ -342,6 +342,7 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
           page === 1 ? (
             /* 1ページ目: 無限スクロール（エンゲージメント向上） */
             <LoadMoreActresses
+              key={`${sort}-${q}`}
               initialPerformers={performers}
               totalCount={total}
               perPage={ITEMS_PER_PAGE}
