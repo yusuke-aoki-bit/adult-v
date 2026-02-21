@@ -95,13 +95,13 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
 
     setIsSearching(true);
     try {
-      const response = await fetch(`/api/actresses/search?q=${encodeURIComponent(searchQuery)}&limit=10`);
+      const response = await fetch(`/api/actresses?query=${encodeURIComponent(searchQuery)}&limit=10`);
       if (response.ok) {
         const data = await response.json();
-        setSearchResults(data.actresses?.map((p: { id: number; name: string; heroImage?: string | null; thumbnail?: string | null }) => ({
-          id: String(p.id),
+        setSearchResults(data.actresses?.map((p: { id: string; name: string; imageUrl?: string | null }) => ({
+          id: p.id,
           name: p.name,
-          imageUrl: p.thumbnail || p.heroImage || null,
+          imageUrl: p.imageUrl || null,
         })) || []);
       }
     } catch (error) {

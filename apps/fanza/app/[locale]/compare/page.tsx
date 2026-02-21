@@ -109,13 +109,13 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
 
     setIsSearching(true);
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&limit=10`);
+      const response = await fetch(`/api/products/search?q=${encodeURIComponent(searchQuery)}&limit=10`);
       if (response.ok) {
         const data = await response.json();
-        setSearchResults(data.products?.map((p: { normalizedProductId: string; title: string; defaultThumbnailUrl: string | null }) => ({
+        setSearchResults(data.products?.map((p: { normalizedProductId: string; title: string; imageUrl?: string | null }) => ({
           id: p.normalizedProductId,
           title: p.title,
-          imageUrl: p.defaultThumbnailUrl,
+          imageUrl: p.imageUrl || null,
         })) || []);
       }
     } catch (error) {
