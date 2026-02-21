@@ -210,7 +210,9 @@ export function mapProductToType(
     imageUrl = PRODUCT_PLACEHOLDER;
   }
 
-  const affiliateUrl = source?.affiliateUrl || cache?.affiliateUrl || '';
+  const rawAffiliateUrl = source?.affiliateUrl || cache?.affiliateUrl || '';
+  // HTMLウィジェットコードが誤ってURLとして保存されている場合を除外
+  const affiliateUrl = rawAffiliateUrl.startsWith('http') ? rawAffiliateUrl : '';
 
   // サンプル画像を取得（product_imagesテーブルまたはcache）
   const sampleImages = imagesData && imagesData.length > 0

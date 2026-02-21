@@ -13,7 +13,6 @@
  */
 
 import * as cheerio from 'cheerio';
-import crypto from 'crypto';
 import { getDb } from '../lib/db';
 import { rawHtmlData, productSources, products, performers, productPerformers, tags, productTags, productImages, productVideos, productReviews, productRatingSummary } from '../lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
@@ -754,11 +753,10 @@ async function fetchProductUrls(page: number): Promise<string[]> {
 }
 
 /**
- * HTMLをアフィリエイトウィジェット形式に変換
+ * MGSアフィリエイトリンクURLを生成
  */
-function generateAffiliateWidget(productId: string): string {
-  const className = crypto.randomBytes(4).toString('hex');
-  return `<div class="${className}"></div><script id="mgs_Widget_affiliate" type="text/javascript" charset="utf-8" src="https://static.mgstage.com/mgs/script/common/mgs_Widget_affiliate.js?c=${AFFILIATE_CODE}&t=text&o=t&b=t&s=MOMO&p=${productId}&from=ppv&class=${className}"></script>`;
+function generateAffiliateUrl(productId: string): string {
+  return `https://www.mgstage.com/product/product_detail/${productId}/?af_id=${AFFILIATE_CODE}`;
 }
 
 /**
@@ -1111,7 +1109,7 @@ async function saveProduct(
     }
 
     // product_sourcesに保存
-    const affiliateWidget = generateAffiliateWidget(mgsProduct.productId);
+    const affiliateUrl = generateAffiliateUrl(mgsProduct.productId);
     const existingSource = await db
       .select()
       .from(productSources)
@@ -1122,7 +1120,7 @@ async function saveProduct(
       await db
         .update(productSources)
         .set({
-          affiliateUrl: affiliateWidget,
+          affiliateUrl: affiliateUrl,
           originalProductId: mgsProduct.productId,
           price: mgsProduct.price,
           productType: mgsProduct.productType,
@@ -1134,7 +1132,7 @@ async function saveProduct(
         productId,
         aspName: SOURCE_NAME,
         originalProductId: mgsProduct.productId,
-        affiliateUrl: affiliateWidget,
+        affiliateUrl: affiliateUrl,
         price: mgsProduct.price,
         productType: mgsProduct.productType,
         dataSource: 'HTML',
