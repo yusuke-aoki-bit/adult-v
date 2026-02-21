@@ -288,9 +288,13 @@ export async function GET(
 
   } catch (error) {
     console.error('[Performer Relations API] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      fallback: true,
+      performer: null,
+      relations: [],
+      edges: [],
+      stats: { totalCostarCount: 0, mostFrequentCostar: null },
+    });
   }
 }

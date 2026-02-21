@@ -41,18 +41,22 @@ export async function POST(request: NextRequest) {
     });
 
     if (!explanation) {
-      return NextResponse.json(
-        { error: '説明の生成に失敗しました' },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        fallback: true,
+        explanation: '類似した内容の作品です',
+        commonPoints: [],
+        uniquePoints: [],
+      });
     }
 
     return NextResponse.json(explanation);
   } catch (error) {
     console.error('[Recommendation Explain API] Error:', error);
-    return NextResponse.json(
-      { error: 'サーバーエラーが発生しました' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      fallback: true,
+      explanation: '類似した内容の作品です',
+      commonPoints: [],
+      uniquePoints: [],
+    });
   }
 }

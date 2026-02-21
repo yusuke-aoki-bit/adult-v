@@ -241,9 +241,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to fetch for-you sales:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch sales', products: [] },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      fallback: true,
+      products: [],
+    });
   }
 }

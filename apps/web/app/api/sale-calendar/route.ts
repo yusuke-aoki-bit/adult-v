@@ -125,9 +125,21 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to fetch sale calendar:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch sale calendar' },
-      { status: 500 }
-    );
+    const { searchParams } = new URL(request.url);
+    const year = parseInt(searchParams.get('year') || new Date().getFullYear().toString(), 10);
+    return NextResponse.json({
+      success: false,
+      fallback: true,
+      year,
+      saleEvents: [],
+      monthStats: [],
+      predictedSales: [],
+      nextBigSale: null,
+      summary: {
+        totalSaleDays: 0,
+        avgMonthlyDiscount: 0,
+        peakMonth: null,
+      },
+    });
   }
 }

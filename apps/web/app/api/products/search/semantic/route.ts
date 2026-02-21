@@ -171,9 +171,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Semantic search error:', error);
-    return NextResponse.json(
-      { error: 'Failed to perform semantic search' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      query: '',
+      mode: 'semantic',
+      results: [],
+      fallback: true,
+      pagination: { limit: 20, offset: 0, hasMore: false },
+    });
   }
 }

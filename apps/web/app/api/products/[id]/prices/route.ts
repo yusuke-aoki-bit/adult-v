@@ -24,9 +24,6 @@ export async function GET(
     return NextResponse.json({ prices: [] });
   } catch (error) {
     console.error('Error fetching product prices:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch prices' },
-      { status: 500 }
-    );
+    return NextResponse.json({ prices: [], fallback: true });
   }
 }

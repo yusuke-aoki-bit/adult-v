@@ -257,9 +257,13 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[Recommendations API] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      fallback: true,
+      recommendations: [],
+      analysis: null,
+      userProfile: { topPerformers: [], topGenres: [] },
+      message: 'おすすめの取得に失敗しました',
+    });
   }
 }

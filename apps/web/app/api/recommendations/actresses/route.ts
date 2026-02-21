@@ -33,6 +33,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Failed to get actress recommendations:', error);
-    return NextResponse.json({ recommendations: [], error: 'Failed to get recommendations' }, { status: 500 });
+    return NextResponse.json({ recommendations: [], fallback: true });
   }
 }

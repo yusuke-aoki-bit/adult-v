@@ -104,9 +104,14 @@ export async function GET(
     });
   } catch (error) {
     console.error('Failed to calculate bundle:', error);
-    return NextResponse.json(
-      { error: 'Failed to calculate bundle' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      fallback: true,
+      totalProducts: 0,
+      products: [],
+      totalRegularPrice: 0,
+      totalSalePrice: 0,
+      potentialSavings: 0,
+      onSaleCount: 0,
+    });
   }
 }

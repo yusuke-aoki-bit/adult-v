@@ -32,9 +32,11 @@ export async function GET(
     });
   } catch (error) {
     console.error('Failed to fetch price history:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch price history' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      fallback: true,
+      history: [],
+      stats: null,
+    });
   }
 }

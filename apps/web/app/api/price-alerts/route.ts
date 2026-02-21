@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ alerts: alertsResult.rows });
   } catch (error) {
     console.error('Price alerts GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ alerts: [], fallback: true });
   }
 }
 

@@ -26,6 +26,6 @@ export async function GET(
     return NextResponse.json({ maker });
   } catch (error) {
     console.error('Error fetching maker:', error);
-    return NextResponse.json({ maker: null }, { status: 500 });
+    return NextResponse.json({ maker: null, fallback: true });
   }
 }

@@ -86,8 +86,17 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Embed stats API error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch statistics' },
-      { status: 500, headers: getCorsHeaders() }
+      {
+        success: false,
+        fallback: true,
+        data: null,
+        meta: {
+          type: 'error',
+          generatedAt: new Date().toISOString(),
+          source: process.env['NEXT_PUBLIC_SITE_URL'] || 'Adult Viewer Lab',
+        },
+      },
+      { headers: getCorsHeaders() }
     );
   }
 }

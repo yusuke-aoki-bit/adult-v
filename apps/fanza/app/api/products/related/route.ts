@@ -48,6 +48,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ products: productsWithScore });
   } catch (error) {
     console.error('Error fetching related products:', error);
-    return NextResponse.json({ products: [] }, { status: 500 });
+    return NextResponse.json({ products: [], fallback: true });
   }
 }

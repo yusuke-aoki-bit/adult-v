@@ -23,6 +23,7 @@ export async function GET(
   } catch (error) {
     console.error('Failed to get viewing pattern stats:', error);
     return NextResponse.json({
+      fallback: true,
       alsoViewed: [],
       popularTimes: [],
       viewerProfile: {
@@ -30,7 +31,7 @@ export async function GET(
         topGenres: [],
         repeatViewRate: 0,
       },
-    }, { status: 500 });
+    });
   }
 }
 

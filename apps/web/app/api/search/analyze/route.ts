@@ -26,18 +26,28 @@ export async function POST(request: NextRequest) {
     });
 
     if (!analysis) {
-      return NextResponse.json(
-        { error: 'クエリ分析に失敗しました' },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        fallback: true,
+        intent: 'search_product',
+        keywords: [query],
+        expandedQuery: query,
+        performers: [],
+        relatedTerms: [],
+        suggestedFilters: {},
+      });
     }
 
     return NextResponse.json(analysis);
   } catch (error) {
     console.error('[Search Analyze API] Error:', error);
-    return NextResponse.json(
-      { error: 'サーバーエラーが発生しました' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      fallback: true,
+      intent: 'search_product',
+      keywords: [],
+      expandedQuery: '',
+      performers: [],
+      relatedTerms: [],
+      suggestedFilters: {},
+    });
   }
 }

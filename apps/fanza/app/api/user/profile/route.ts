@@ -142,9 +142,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[User Profile API] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      fallback: true,
+      profile: null,
+      message: 'プロファイル生成に失敗しました',
+    });
   }
 }

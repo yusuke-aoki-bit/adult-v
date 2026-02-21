@@ -71,10 +71,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!analysis) {
-      return NextResponse.json(
-        { error: 'Failed to analyze image' },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        success: false,
+        fallback: true,
+        results: [],
+        analysis: null,
+        message: 'Failed to analyze image',
+      });
     }
 
     // Step 2: 抽出されたキーワードとジャンルで候補作品を検索
@@ -250,9 +253,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[Image Search API] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      fallback: true,
+      results: [],
+      analysis: null,
+      message: 'Image search temporarily unavailable',
+    });
   }
 }

@@ -211,9 +211,15 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('[Trends API] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    const { searchParams } = new URL(request.url);
+    const period = searchParams.get('period') || 'week';
+    return NextResponse.json({
+      success: false,
+      fallback: true,
+      period,
+      tags: [],
+      performers: [],
+      insights: [],
+    });
   }
 }

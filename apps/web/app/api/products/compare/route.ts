@@ -271,9 +271,15 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('[Compare API] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      fallback: true,
+      products: [],
+      comparison: {
+        commonTags: [],
+        commonPerformers: [],
+        priceRange: { min: 0, max: 0 },
+      },
+    });
   }
 }

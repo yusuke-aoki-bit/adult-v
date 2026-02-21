@@ -33,9 +33,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ product });
   } catch (error) {
     console.error('Error searching product by ID:', error);
-    return NextResponse.json(
-      { error: 'Failed to search product' },
-      { status: 500 }
-    );
+    return NextResponse.json({ product: null, fallback: true });
   }
 }

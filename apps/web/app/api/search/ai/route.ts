@@ -162,9 +162,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[AI Search API] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      fallback: true,
+      searchParams: {},
+      analysis: null,
+      message: 'AI search temporarily unavailable, please use keyword search',
+    });
   }
 }

@@ -119,9 +119,12 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Error searching products:', error);
-    return NextResponse.json(
-      { error: 'Failed to search products' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      products: [],
+      count: 0,
+      query: '',
+      fallback: true,
+      filters: {},
+    });
   }
 }
