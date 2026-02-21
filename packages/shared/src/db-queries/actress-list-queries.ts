@@ -45,6 +45,9 @@ export interface GetActressesOptions {
   heightMin?: number;
   heightMax?: number;
   bloodTypes?: string[];
+  debutYearRange?: string; // e.g. '2024-', '2020-2023', '-2009'
+  minWorks?: number;
+  onSale?: boolean;
 }
 
 /**
@@ -65,6 +68,9 @@ export interface GetActressesCountOptions {
   heightMin?: number;
   heightMax?: number;
   bloodTypes?: string[];
+  debutYearRange?: string;
+  minWorks?: number;
+  onSale?: boolean;
 }
 
 // Note: DI型でanyを使用するのは意図的 - Drizzle ORMの具象型はアプリ固有のため
@@ -273,6 +279,50 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           sql`${performers['bloodType']} IN (${sql.join(options.bloodTypes.map(b => sql`${b}`), sql`, `)})`
         );
       }
+
+      // デビュー年フィルター
+      if (options?.debutYearRange) {
+        const range = options.debutYearRange;
+        if (range.startsWith('-')) {
+          // '-2009' → 2009年以前
+          const endYear = parseInt(range.slice(1), 10);
+          if (!isNaN(endYear)) {
+            conditions.push(sql`${performers['debutYear']} <= ${endYear}`);
+            conditions.push(sql`${performers['debutYear']} IS NOT NULL`);
+          }
+        } else if (range.endsWith('-')) {
+          // '2024-' → 2024年以降
+          const startYear = parseInt(range.slice(0, -1), 10);
+          if (!isNaN(startYear)) {
+            conditions.push(sql`${performers['debutYear']} >= ${startYear}`);
+          }
+        } else if (range.includes('-')) {
+          // '2020-2023' → 範囲指定
+          const [startStr, endStr] = range.split('-');
+          const startYear = parseInt(startStr, 10);
+          const endYear = parseInt(endStr, 10);
+          if (!isNaN(startYear) && !isNaN(endYear)) {
+            conditions.push(sql`${performers['debutYear']} >= ${startYear}`);
+            conditions.push(sql`${performers['debutYear']} <= ${endYear}`);
+          }
+        }
+      }
+
+      // 最低作品数フィルター
+      if (options?.minWorks !== undefined && options.minWorks > 0) {
+        conditions.push(sql`${performers['releaseCount']} >= ${options.minWorks}`);
+      }
+    }
+
+    // セール中フィルター
+    if (options?.onSale) {
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM ${productPerformers} pp_sale
+        INNER JOIN product_sales ps_sale ON pp_sale.product_id = ps_sale.product_id
+        WHERE pp_sale.performer_id = ${performers['id']}
+          AND ps_sale.start_at <= NOW()
+          AND ps_sale.end_at >= NOW()
+      )`);
     }
 
     // 検索クエリ（別名マッチングもEXISTS サブクエリに変換）
@@ -413,8 +463,8 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
     // フィルターの有無をチェック
     const hasFilters = options?.query || options?.includeTags?.length || options?.excludeTags?.length ||
       options?.excludeInitials || options?.includeAsps?.length || options?.excludeAsps?.length ||
-      options?.hasVideo || options?.hasImage || options?.hasReview ||
-      (enableActressFeatureFilter && (options?.cupSizes?.length || options?.heightMin || options?.heightMax || options?.bloodTypes?.length));
+      options?.hasVideo || options?.hasImage || options?.hasReview || options?.onSale ||
+      (enableActressFeatureFilter && (options?.cupSizes?.length || options?.heightMin || options?.heightMax || options?.bloodTypes?.length || options?.debutYearRange || options?.minWorks));
 
     // キャッシュキーをサイトモードで分ける
     const cacheKey = siteMode === 'fanza-only' ? 'actressesCount:fanza:base' : 'actressesCount:base';

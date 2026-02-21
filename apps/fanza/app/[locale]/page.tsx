@@ -45,7 +45,14 @@ export async function generateMetadata({
     searchParamsData['excludeAsp'] ||
     searchParamsData['hasVideo'] ||
     searchParamsData['hasImage'] ||
-    searchParamsData['hasReview']
+    searchParamsData['hasReview'] ||
+    searchParamsData['cup'] ||
+    searchParamsData['heightMin'] ||
+    searchParamsData['heightMax'] ||
+    searchParamsData['bloodType'] ||
+    searchParamsData['debutYear'] ||
+    searchParamsData['minWorks'] ||
+    searchParamsData['onSale']
   );
   const hasPageParam = !!searchParamsData['page'] && searchParamsData['page'] !== '1';
   // sortパラメータがデフォルト以外の場合もnoindex（重複コンテンツ防止）
@@ -165,6 +172,13 @@ export default async function Home({ params, searchParams }: PageProps) {
   const bloodTypes = typeof searchParamsData['bloodType'] === 'string'
     ? searchParamsData['bloodType'].split(',').filter(Boolean)
     : [];
+  const debutYear = typeof searchParamsData['debutYear'] === 'string'
+    ? searchParamsData['debutYear']
+    : undefined;
+  const minWorks = typeof searchParamsData['minWorks'] === 'string'
+    ? parseInt(searchParamsData['minWorks'], 10)
+    : undefined;
+  const onSale = searchParamsData['onSale'] === 'true';
 
   const offset = (page - 1) * PER_PAGE;
 
@@ -192,6 +206,9 @@ export default async function Home({ params, searchParams }: PageProps) {
     ...(heightMin !== undefined ? { heightMin } : {}),
     ...(heightMax !== undefined ? { heightMax } : {}),
     ...(bloodTypes.length > 0 ? { bloodTypes } : {}),
+    ...(debutYear ? { debutYearRange: debutYear } : {}),
+    ...(minWorks !== undefined && minWorks > 0 ? { minWorks } : {}),
+    ...(onSale ? { onSale: true as const } : {}),
   };
 
   // 並列クエリ実行（パフォーマンス最適化）
@@ -228,7 +245,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   // FANZAサイトではincludeAspsが自動的に['FANZA']になるため、ASPフィルターはTOPページ判定に含めない
   const userSetIncludeAsps = isFanzaSite ? [] : includeAsps;
   const userSetExcludeAsps = isFanzaSite ? [] : excludeAsps;
-  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && cupSizes.length === 0 && heightMin === undefined && heightMax === undefined && bloodTypes.length === 0 && sortBy === 'recent' && page === 1;
+  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && !onSale && cupSizes.length === 0 && heightMin === undefined && heightMax === undefined && bloodTypes.length === 0 && !debutYear && !minWorks && sortBy === 'recent' && page === 1;
 
   if (isTopPage) {
     try {

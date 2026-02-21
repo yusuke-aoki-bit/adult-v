@@ -52,7 +52,10 @@ export async function generateMetadata({
     searchParamsData['cup'] ||
     searchParamsData['heightMin'] ||
     searchParamsData['heightMax'] ||
-    searchParamsData['bloodType']
+    searchParamsData['bloodType'] ||
+    searchParamsData['debutYear'] ||
+    searchParamsData['minWorks'] ||
+    searchParamsData['onSale']
   );
   // ページネーション: 1-5ページ目は許可、6ページ目以降はnoindex
   const pageNum = Math.max(1, Math.min(parseInt(searchParamsData['page'] as string) || 1, 500));
@@ -246,6 +249,13 @@ export default async function Home({ params, searchParams }: PageProps) {
   const bloodTypes = typeof searchParamsData['bloodType'] === 'string'
     ? searchParamsData['bloodType'].split(',').filter(Boolean)
     : [];
+  const debutYear = typeof searchParamsData['debutYear'] === 'string'
+    ? searchParamsData['debutYear']
+    : undefined;
+  const minWorks = typeof searchParamsData['minWorks'] === 'string'
+    ? parseInt(searchParamsData['minWorks'], 10)
+    : undefined;
+  const onSale = searchParamsData['onSale'] === 'true';
 
   const offset = (page - 1) * perPage;
 
@@ -261,7 +271,7 @@ export default async function Home({ params, searchParams }: PageProps) {
   // ユーザーがURLで明示的に選択したASPフィルターを判定（serverAspFilterの自動適用とは別）
   const userSetIncludeAsps = urlIncludeAsps; // ユーザーが明示的に選択したもの
   const userSetExcludeAsps = excludeAsps;
-  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && cupSizes.length === 0 && !heightMin && !heightMax && bloodTypes.length === 0 && sortBy === 'recent' && page === 1 && perPage === DEFAULT_PER_PAGE;
+  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && !onSale && cupSizes.length === 0 && !heightMin && !heightMax && bloodTypes.length === 0 && !debutYear && !minWorks && sortBy === 'recent' && page === 1 && perPage === DEFAULT_PER_PAGE;
 
   // 共通のクエリオプション（exactOptionalPropertyTypes対応）
   const actressQueryOptions = {
@@ -280,6 +290,9 @@ export default async function Home({ params, searchParams }: PageProps) {
     ...(heightMin !== undefined && { heightMin }),
     ...(heightMax !== undefined && { heightMax }),
     ...(bloodTypes.length > 0 && { bloodTypes }),
+    ...(debutYear && { debutYearRange: debutYear }),
+    ...(minWorks !== undefined && minWorks > 0 && { minWorks }),
+    ...(onSale && { onSale: true as const }),
   };
 
   // データ取得（トップページは一括キャッシュで高速化、フィルター時は個別クエリ）
