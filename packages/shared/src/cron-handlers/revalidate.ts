@@ -37,7 +37,7 @@ export function createRevalidateHandler(deps: {
         }
 
         for (const tag of tags) {
-          revalidateTag(tag);
+          revalidateTag(tag, 'max');
           revalidated.push(`tag:${tag}`);
         }
       } else {
@@ -52,7 +52,7 @@ export function createRevalidateHandler(deps: {
         }
 
         for (const tag of tags) {
-          revalidateTag(tag);
+          revalidateTag(tag, 'max');
           revalidated.push(`tag:${tag}`);
         }
       }
