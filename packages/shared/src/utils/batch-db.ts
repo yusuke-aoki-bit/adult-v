@@ -143,6 +143,89 @@ export async function batchInsertProductPerformers(
 }
 
 // ============================================================
+// performer_tags 中間テーブル用
+// ============================================================
+
+export interface PerformerTagLink {
+  performerId: number;
+  tagId: number;
+  source: string;
+}
+
+/**
+ * performer_tags テーブルへのバッチINSERT
+ * ON CONFLICT DO NOTHING で重複を安全にスキップ
+ * @returns 挿入された件数
+ */
+export async function batchInsertPerformerTags(
+  db: DbExecutor,
+  links: PerformerTagLink[],
+): Promise<number> {
+  if (links.length === 0) return 0;
+
+  // 重複除去 (performerId:tagId)
+  const unique = new Map<string, PerformerTagLink>();
+  for (const link of links) {
+    const key = `${link.performerId}:${link.tagId}`;
+    unique.set(key, link);
+  }
+  const uniqueLinks = [...unique.values()];
+
+  let insertedCount = 0;
+
+  for (const batch of chunk(uniqueLinks, CHUNK_SIZE)) {
+    const valuesClauses = batch.map(
+      (l) => sql`(${l.performerId}, ${l.tagId}, ${l.source})`
+    );
+    const valuesJoined = sql.join(valuesClauses, sql`, `);
+
+    const result = await db.execute(sql`
+      INSERT INTO performer_tags (performer_id, tag_id, source)
+      VALUES ${valuesJoined}
+      ON CONFLICT DO NOTHING
+    `);
+
+    insertedCount += result.rowCount ?? 0;
+  }
+
+  return insertedCount;
+}
+
+/**
+ * タグ名のリストからIDを取得または新規作成
+ * @returns Map<tagName, tagId>
+ */
+export async function batchGetOrCreateTags(
+  db: DbExecutor,
+  tagNames: string[],
+  category: string = 'genre',
+): Promise<Map<string, number>> {
+  if (tagNames.length === 0) return new Map();
+
+  const map = new Map<string, number>();
+
+  for (const batch of chunk(tagNames, CHUNK_SIZE)) {
+    const valuesClauses = batch.map(
+      (name) => sql`(${name}, ${category})`
+    );
+    const valuesJoined = sql.join(valuesClauses, sql`, `);
+
+    const result = await db.execute(sql`
+      INSERT INTO tags (name, category)
+      VALUES ${valuesJoined}
+      ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+      RETURNING id, name
+    `);
+
+    for (const row of result.rows) {
+      map.set(row['name'] as string, row['id'] as number);
+    }
+  }
+
+  return map;
+}
+
+// ============================================================
 // 汎用バッチUPDATE
 // ============================================================
 

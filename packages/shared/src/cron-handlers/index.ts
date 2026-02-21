@@ -64,3 +64,6 @@ export { createGenerateNewsHandler } from './generate-news';
 
 // On-demand revalidation handler
 export { createRevalidateHandler } from './revalidate';
+
+// AI performer classification handler
+export { createClassifyPerformersAiHandler } from './classify-performers-ai';

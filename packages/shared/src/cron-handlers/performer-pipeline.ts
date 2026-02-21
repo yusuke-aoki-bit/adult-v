@@ -26,6 +26,7 @@ import {
   batchUpsertPerformers,
   batchInsertProductPerformers,
   batchUpdateColumn,
+  batchInsertPerformerTags,
 } from '../utils/batch-db';
 import {
   isValidPerformerName as isValidPerformerNameComprehensive,
@@ -77,6 +78,10 @@ interface PipelineStats {
   };
   productStatsPhase: {
     productsUpdated: number;
+  };
+  performerTagsPhase: {
+    performersProcessed: number;
+    tagsAssigned: number;
   };
   totalDuration: number;
 }
@@ -139,6 +144,10 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
       },
       productStatsPhase: {
         productsUpdated: 0,
+      },
+      performerTagsPhase: {
+        performersProcessed: 0,
+        tagsAssigned: 0,
       },
       totalDuration: 0,
     };
@@ -266,6 +275,21 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
         }
       } else {
         console.log('\n[Phase 8] Skipped (time limit)');
+      }
+
+      // Phase 9: 商品タグから演者タグを導出
+      // 演者の出演作品のジャンルタグを集計し、performer_tagsに永続化
+      if (Date.now() - startTime < TIME_LIMIT) {
+        console.log('\n[Phase 9] Deriving performer tags from products...');
+        try {
+          const tagResult = await derivePerformerTagsFromProducts(db, limit);
+          stats.performerTagsPhase = tagResult;
+          console.log(`  Processed: ${tagResult.performersProcessed}, Tags assigned: ${tagResult.tagsAssigned}`);
+        } catch (e) {
+          console.error('[Phase 9] Error:', e);
+        }
+      } else {
+        console.log('\n[Phase 9] Skipped (time limit)');
       }
 
       stats['totalDuration'] = Date.now() - startTime;
@@ -1307,4 +1331,107 @@ async function backfillDebutYears(
   }
 
   return { performersChecked, debutYearsUpdated };
+}
+
+/**
+ * 商品タグから演者タグを導出
+ *
+ * 各演者の出演作品のgenreタグを集計し、
+ * 閾値（作品の20%以上、または3作品以上）を満たすタグを
+ * performer_tagsに永続化する。source='product-derivation'
+ */
+async function derivePerformerTagsFromProducts(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any,
+  limit: number
+): Promise<{ performersProcessed: number; tagsAssigned: number }> {
+  // Step 1: product-derivationタグがまだない演者を取得（作品数≥3）
+  const result = await db.execute(sql`
+    WITH eligible_performers AS (
+      SELECT
+        pp.performer_id,
+        COUNT(DISTINCT pp.product_id) as product_count
+      FROM product_performers pp
+      GROUP BY pp.performer_id
+      HAVING COUNT(DISTINCT pp.product_id) >= 3
+    ),
+    already_tagged AS (
+      SELECT DISTINCT performer_id
+      FROM performer_tags
+      WHERE source = 'product-derivation'
+    )
+    SELECT ep.performer_id, ep.product_count
+    FROM eligible_performers ep
+    LEFT JOIN already_tagged at2 ON ep.performer_id = at2.performer_id
+    WHERE at2.performer_id IS NULL
+    ORDER BY ep.product_count DESC
+    LIMIT ${limit}
+  `);
+
+  const performers = result.rows as Array<{
+    performer_id: number;
+    product_count: number;
+  }>;
+
+  if (performers.length === 0) {
+    return { performersProcessed: 0, tagsAssigned: 0 };
+  }
+
+  console.log(`    Found ${performers.length} performers without product-derivation tags`);
+
+  // Step 2: 全対象演者のタグ集計を一括で実行（N+1回避）
+  const performerIds = performers.map(p => p.performer_id);
+  const idValues = sql.join(performerIds.map(id => sql`${id}`), sql`, `);
+
+  const tagAggResult = await db.execute(sql`
+    SELECT
+      pp.performer_id,
+      t.id as tag_id,
+      t.name as tag_name,
+      COUNT(DISTINCT pp.product_id) as tag_count,
+      COUNT(DISTINCT pp.product_id)::float /
+        NULLIF((
+          SELECT COUNT(DISTINCT pp2.product_id)
+          FROM product_performers pp2
+          WHERE pp2.performer_id = pp.performer_id
+        ), 0) as tag_ratio
+    FROM product_performers pp
+    INNER JOIN product_tags pt ON pp.product_id = pt.product_id
+    INNER JOIN tags t ON pt.tag_id = t.id
+    WHERE pp.performer_id IN (${idValues})
+      AND t.category = 'genre'
+    GROUP BY pp.performer_id, t.id, t.name
+    HAVING COUNT(DISTINCT pp.product_id) >= 2
+  `);
+
+  const tagRows = tagAggResult.rows as Array<{
+    performer_id: number;
+    tag_id: number;
+    tag_name: string;
+    tag_count: string;
+    tag_ratio: string;
+  }>;
+
+  // Step 3: 閾値フィルタ（20%以上 OR 3作品以上）
+  const links: { performerId: number; tagId: number; source: string }[] = [];
+
+  for (const row of tagRows) {
+    const ratio = parseFloat(row.tag_ratio);
+    const count = parseInt(row.tag_count as string, 10);
+    if (ratio >= 0.20 || count >= 3) {
+      links.push({
+        performerId: row.performer_id,
+        tagId: row.tag_id,
+        source: 'product-derivation',
+      });
+    }
+  }
+
+  // Step 4: バッチINSERT
+  let tagsAssigned = 0;
+  if (links.length > 0) {
+    tagsAssigned = await batchInsertPerformerTags(db, links);
+  }
+
+  return { performersProcessed: performers.length, tagsAssigned };
 }

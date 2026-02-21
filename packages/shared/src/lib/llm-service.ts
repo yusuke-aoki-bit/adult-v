@@ -1489,6 +1489,70 @@ export async function generateNewsContent(params: {
 }
 
 // =============================================================================
+// 15. 演者AI分類
+// =============================================================================
+
+export interface PerformerClassificationResult {
+  traits: string[];
+  bodyType: string | null;
+  style: string[];
+  confidence: number;
+}
+
+/**
+ * 演者を出演作品情報からAI分類
+ */
+export async function classifyPerformerByProducts(params: {
+  performerName: string;
+  productTitles: string[];
+  existingGenres: string[];
+  existingTraits?: string[];
+  availableTraitTags?: string[];
+}): Promise<PerformerClassificationResult | null> {
+  const { performerName, productTitles, existingGenres, existingTraits, availableTraitTags } = params;
+
+  const systemInstruction = `あなたはAV女優の特徴分類を行うアシスタントです。
+出演作品のタイトルとジャンルから、女優の身体的特徴やスタイルを推測してください。
+タイトルに含まれる情報（巨乳、スレンダー、美脚など）を抽出し、適切なタグに変換してください。`;
+
+  const prompt = `【女優名】${performerName}
+
+【出演作品タイトル（新しい順、最大20作品）】
+${productTitles.slice(0, 20).map((t, i) => `${i + 1}. ${t}`).join('\n')}
+
+【既存ジャンルタグ】
+${existingGenres.join('、') || 'なし'}
+
+${existingTraits?.length ? `【既に判明している特徴】\n${existingTraits.join('、')}` : ''}
+
+${availableTraitTags?.length ? `【利用可能な特徴タグ（これらから選んでください）】\n${availableTraitTags.join('、')}` : ''}
+
+【タスク】
+上記の情報から、この女優の身体的特徴やスタイルを推測し、以下のJSON形式で回答してください。
+
+{
+  "traits": ["特徴タグ1", "特徴タグ2"],
+  "bodyType": "体型（スレンダー/普通/グラマー/ぽっちゃり）またはnull",
+  "style": ["スタイル特徴（清楚系、ギャル系等）"],
+  "confidence": 0-100の信頼度
+}
+
+【注意事項】
+- タイトルに明示的に含まれる特徴のみを抽出（推測は控えめに）
+- 利用可能なタグリストがある場合はそこから選択
+- 信頼度が低い場合（30未満）は空の結果を返す
+- 最大10タグまで`;
+
+  const response = await callGemini(prompt, {
+    temperature: 0.2,
+    maxOutputTokens: 512,
+    systemInstruction,
+  });
+
+  return parseJsonResponse<PerformerClassificationResult>(response);
+}
+
+// =============================================================================
 // エクスポート
 // =============================================================================
 
@@ -1515,6 +1579,8 @@ export const LLMService = {
   moderatePublicList,
   // ニュース生成
   generateNewsContent,
+  // 演者AI分類
+  classifyPerformerByProducts,
 };
 
 export default LLMService;

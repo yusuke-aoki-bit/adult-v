@@ -49,10 +49,13 @@ export {
   tags,
   productTags,
   productPerformers,
+  performerTags,
 } from './tags';
 export type {
   Tag,
   NewTag,
+  PerformerTag,
+  NewPerformerTag,
 } from './tags';
 
 // Reviews
