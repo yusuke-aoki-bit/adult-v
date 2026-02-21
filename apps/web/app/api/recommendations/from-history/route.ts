@@ -56,16 +56,18 @@ export async function POST(request: NextRequest) {
 
     // 1. 履歴の作品から女優・ジャンル情報を取得
     const [performerData, tagData, productData] = await Promise.all([
-      // 出演女優
+      // 出演女優（profileImageUrl が NULL の場合は商品サムネイルをフォールバック）
       db
         .select({
           productId: productPerformers.productId,
           performerId: productPerformers.performerId,
           performerName: performers.name,
           profileImageUrl: performers.profileImageUrl,
+          productThumbnail: products.defaultThumbnailUrl,
         })
         .from(productPerformers)
         .innerJoin(performers, eq(productPerformers.performerId, performers.id))
+        .innerJoin(products, eq(productPerformers.productId, products.id))
         .where(inArray(productPerformers.productId, productIds)),
 
       // タグ/ジャンル
@@ -96,7 +98,15 @@ export async function POST(request: NextRequest) {
     const tagCounts = new Map<number, { name: string; count: number }>();
 
     for (const p of performerData) {
-      const current = performerCounts.get(p.performerId) || { name: p.performerName, count: 0, thumbnailUrl: p.profileImageUrl };
+      const current = performerCounts.get(p.performerId) || {
+        name: p.performerName,
+        count: 0,
+        thumbnailUrl: p.profileImageUrl || p.productThumbnail,
+      };
+      // profileImageUrl が無い場合、商品サムネイルで補完
+      if (!current.thumbnailUrl && p.productThumbnail) {
+        current.thumbnailUrl = p.productThumbnail;
+      }
       performerCounts.set(p.performerId, { ...current, count: current.count + 1 });
     }
 

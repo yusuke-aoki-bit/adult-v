@@ -489,7 +489,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         INNER JOIN products prod ON pp2.product_id = prod.id
         LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
         WHERE prod.release_date >= NOW() - INTERVAL '90 days'
-          AND p.profile_image_url IS NOT NULL
+          AND pt.thumbnail_url IS NOT NULL
         GROUP BY p.id, p.name, pt.thumbnail_url
         ORDER BY COUNT(pp2.product_id) DESC
         LIMIT 6
