@@ -13,10 +13,16 @@ export async function generateStaticParams() {
 }
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ chunk: string }> }
+  _request: NextRequest,
+  props: { params: Promise<{ chunk: string }> }
 ) {
-  const { chunk: chunkStr } = await params;
+  const resolvedParams = await props.params;
+  const chunkStr = resolvedParams?.chunk;
+  if (!chunkStr) {
+    return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>', {
+      headers: { 'Content-Type': 'application/xml' },
+    });
+  }
   const chunk = parseInt(chunkStr);
 
   if (isNaN(chunk) || chunk < 0 || chunk > 100) {
