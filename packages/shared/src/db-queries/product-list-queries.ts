@@ -665,14 +665,14 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         }
       }
 
-      // ASPフィルター条件（対象/除外）
+      // ASPフィルター条件（対象/除外、大文字小文字を無視）
       let aspCondition = sql`TRUE`;
       if (includeAsp.length > 0) {
-        aspCondition = sql`ps.asp_name IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+        aspCondition = sql`LOWER(ps.asp_name) IN (${sql.join(includeAsp.map(a => sql`${a.toLowerCase()}`), sql`, `)})`;
       }
       let excludeAspCondition = sql`TRUE`;
       if (excludeAsp.length > 0) {
-        excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+        excludeAspCondition = sql`(ps.asp_name IS NULL OR LOWER(ps.asp_name) NOT IN (${sql.join(excludeAsp.map(a => sql`${a.toLowerCase()}`), sql`, `)}))`;
       }
 
       // サンプルコンテンツフィルター条件

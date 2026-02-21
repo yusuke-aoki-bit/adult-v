@@ -222,7 +222,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     : [];
   const includeAsps = urlIncludeAsps.length > 0
     ? (serverAspFilter
-        ? urlIncludeAsps.filter(asp => serverAspFilter.includes(asp)) // 許可リスト内でフィルター
+        ? urlIncludeAsps.filter(asp => serverAspFilter.some(allowed => allowed.toUpperCase() === asp.toUpperCase())) // 許可リスト内でフィルター（大文字小文字を無視）
         : urlIncludeAsps)
     : (serverAspFilter || []); // デフォルトはserverAspFilter（FANZAサイトなど）
   const excludeAsps = typeof searchParamsData['excludeAsp'] === 'string'

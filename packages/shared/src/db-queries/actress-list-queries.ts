@@ -210,26 +210,26 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
       }
     }
 
-    // ASPフィルタ（EXISTS サブクエリ）
+    // ASPフィルタ（EXISTS サブクエリ、大文字小文字を無視）
     if (options?.includeAsps && options.includeAsps.length > 0) {
       conditions.push(
         sql`EXISTS (
           SELECT 1 FROM ${productPerformers} pp
           JOIN ${productSources} ps ON pp.product_id = ps.product_id
           WHERE pp.performer_id = ${performers['id']}
-          AND ps.asp_name IN (${sql.join(options.includeAsps.map(a => sql`${a}`), sql`, `)})
+          AND LOWER(ps.asp_name) IN (${sql.join(options.includeAsps.map(a => sql`${a.toLowerCase()}`), sql`, `)})
         )`
       );
     }
 
-    // ASP除外フィルタ（NOT EXISTS サブクエリ）
+    // ASP除外フィルタ（NOT EXISTS サブクエリ、大文字小文字を無視）
     if (options?.excludeAsps && options.excludeAsps.length > 0) {
       conditions.push(
         sql`NOT EXISTS (
           SELECT 1 FROM ${productPerformers} pp
           JOIN ${productSources} ps ON pp.product_id = ps.product_id
           WHERE pp.performer_id = ${performers['id']}
-          AND ps.asp_name IN (${sql.join(options.excludeAsps.map(a => sql`${a}`), sql`, `)})
+          AND LOWER(ps.asp_name) IN (${sql.join(options.excludeAsps.map(a => sql`${a.toLowerCase()}`), sql`, `)})
         )`
       );
     }
