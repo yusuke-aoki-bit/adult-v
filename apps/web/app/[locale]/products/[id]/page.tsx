@@ -37,8 +37,8 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISR: 5分キャッシュ（Googlebotクロール高速化・サーバー負荷軽減）
-export const revalidate = 300;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 /**
  * 配列をシャッフル（Fisher-Yates algorithm）
@@ -73,26 +73,6 @@ interface PageProps {
   params: Promise<{ id: string; locale: string }>;
 }
 
-/**
- * ビルド時に人気商品をプリレンダリング
- * 最新5000件 × 5言語 = 最大25,000ページ
- */
-export async function generateStaticParams(): Promise<Array<{ id: string; locale: string }>> {
-  try {
-    const { getRecentProducts } = await import('@/lib/db/queries');
-    const recentProducts = await getRecentProducts({ limit: 5000 });
-    const locales = ['ja', 'en', 'zh', 'zh-TW', 'ko'];
-
-    return recentProducts.flatMap((product) =>
-      locales.map((locale) => ({
-        id: product.id.toString(),
-        locale,
-      }))
-    );
-  } catch {
-    return [];
-  }
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   try {

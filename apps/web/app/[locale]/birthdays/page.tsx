@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { Cake, Calendar, Gift, Star, ChevronRight } from 'lucide-react';
 
-// ISR: 1時間キャッシュ
-export const revalidate = 3600;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: Promise<{ locale: string }>;

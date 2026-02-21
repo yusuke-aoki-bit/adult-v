@@ -10,8 +10,8 @@ import { CalendarGridWrapper } from '@adult-v/shared/components/stats';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { getPopularTags } from '@/lib/db/queries';
 
-// ISR: 5分キャッシュ
-export const revalidate = 300;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,

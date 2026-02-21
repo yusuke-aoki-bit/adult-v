@@ -33,8 +33,8 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISR: 5分キャッシュ（Googlebotクロール高速化・サーバー負荷軽減）
-export const revalidate = 300;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 /**
  * 配列をシャッフル（Fisher-Yates algorithm）
@@ -65,23 +65,6 @@ const EnhancedAiReview = nextDynamic(() => import('@/components/EnhancedAiReview
 
 interface PageProps {
   params: Promise<{ id: string; locale: string }>;
-}
-
-/**
- * ビルド時に人気商品をプリレンダリング
- * 最新の1000件の商品IDを生成（日本語版のみ）
- */
-export async function generateStaticParams(): Promise<Array<{ id: string; locale: string }>> {
-  try {
-    const { getRecentProducts } = await import('@/lib/db/queries');
-    const recentProducts = await getRecentProducts({ limit: 1000 });
-    return recentProducts.map((product) => ({
-      id: product.id.toString(),
-      locale: 'ja',
-    }));
-  } catch {
-    return [];
-  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

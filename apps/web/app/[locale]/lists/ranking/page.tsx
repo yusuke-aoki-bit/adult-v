@@ -9,8 +9,8 @@ import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { Heart, List, TrendingUp, Clock, Star, Eye, Users, Film, Crown, Medal } from 'lucide-react';
 
-// ISR: 5分キャッシュ（ランキングは頻繁に更新）
-export const revalidate = 300;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 interface PublicList {
   id: number;

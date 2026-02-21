@@ -9,8 +9,8 @@ import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { Star, Eye, EyeOff, Gem, TrendingUp, MessageCircle, Sparkles, ThumbsUp } from 'lucide-react';
 
-// ISR: 1時間キャッシュ
-export const revalidate = 3600;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 interface HiddenGem {
   id: number;

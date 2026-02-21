@@ -7,8 +7,8 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { getPopularTags } from '@/lib/db/queries';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISR: 1時間キャッシュ
-export const revalidate = 3600;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 // Tag type from getPopularTags
 interface Tag {

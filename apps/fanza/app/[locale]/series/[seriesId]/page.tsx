@@ -36,8 +36,8 @@ function toProduct(sp: SeriesProduct): Product {
   };
 }
 
-// ISR: 30分キャッシュ
-export const revalidate = 1800;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ seriesId: string; locale: string }>;

@@ -35,8 +35,8 @@ import SimilarPerformerMap from '@/components/SimilarPerformerMap';
 import ActressSectionNav from '@/components/ActressSectionNav';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISR: 1時間キャッシュ（Googlebotクロール高速化）
-export const revalidate = 3600;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ performerId: string; locale: string }>;
@@ -51,23 +51,6 @@ interface PageProps {
     asp?: string | string[];
     limit?: string;
   }>;
-}
-
-/**
- * ビルド時に人気女優をプリレンダリング
- * 作品数上位1000名（日本語版のみ）
- */
-export async function generateStaticParams(): Promise<Array<{ performerId: string; locale: string }>> {
-  try {
-    const { getActresses } = await import('@/lib/db/queries');
-    const topActresses = await getActresses({ limit: 1000, sortBy: 'productCountDesc' });
-    return topActresses.map((actress) => ({
-      performerId: actress.id.toString(),
-      locale: 'ja',
-    }));
-  } catch {
-    return [];
-  }
 }
 
 const PER_PAGE = 96;

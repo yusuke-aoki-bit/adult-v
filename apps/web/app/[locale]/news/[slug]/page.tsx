@@ -50,8 +50,8 @@ export async function generateMetadata({
   }
 }
 
-// ISR: 1時間キャッシュ
-export const revalidate = 3600;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 /**
  * Markdown風のテキストをHTMLに簡易変換

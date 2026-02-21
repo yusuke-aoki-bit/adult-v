@@ -11,8 +11,8 @@ import { getTagById, getProducts, getProductsCount, getPopularTags } from '@/lib
 import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateItemListSchema, generateFAQSchema } from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISR: 1時間キャッシュ
-export const revalidate = 3600;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ tagId: string; locale: string }>;

@@ -41,8 +41,8 @@ import PerPageDropdown from '@/components/PerPageDropdown';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// ISR: 1時間キャッシュ（Googlebotクロール高速化）
-export const revalidate = 3600;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ performerId: string; locale: string }>;
@@ -59,26 +59,6 @@ interface PageProps {
   }>;
 }
 
-/**
- * ビルド時に人気女優をプリレンダリング
- * 作品数上位5000名 × 5言語 = 最大25,000ページ
- */
-export async function generateStaticParams(): Promise<Array<{ performerId: string; locale: string }>> {
-  try {
-    const { getActresses } = await import('@/lib/db/queries');
-    const topActresses = await getActresses({ limit: 5000, sortBy: 'productCountDesc' });
-    const locales = ['ja', 'en', 'zh', 'zh-TW', 'ko'];
-
-    return topActresses.flatMap((actress) =>
-      locales.map((locale) => ({
-        performerId: actress.id.toString(),
-        locale,
-      }))
-    );
-  } catch {
-    return [];
-  }
-}
 
 const DEFAULT_PER_PAGE = 48;
 const VALID_PER_PAGE = [12, 24, 48, 96];

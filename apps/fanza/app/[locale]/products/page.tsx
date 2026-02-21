@@ -83,8 +83,8 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// ISR: 5分キャッシュ
-export const revalidate = 300;
+// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
