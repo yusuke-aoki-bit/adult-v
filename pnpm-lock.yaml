@@ -382,12 +382,6 @@ importers:
       react:
         specifier: 19.2.3
         version: 19.2.3
-      react-virtualized-auto-sizer:
-        specifier: ^2.0.1
-        version: 2.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      react-window:
-        specifier: ^2.2.3
-        version: 2.2.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       recharts:
         specifier: ^2.12.0
         version: 2.15.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -5165,18 +5159,6 @@ packages:
 
   react-transition-group@4.4.5:
     resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
-    peerDependencies:
-      react: 19.2.3
-      react-dom: 19.2.3
-
-  react-virtualized-auto-sizer@2.0.1:
-    resolution: {integrity: sha512-7xaqssJeCtXCETeRDxPUXKpUFjCrhK60o8X02BJF7zcTfjwKfdSQmb2fVDLIwaO8RmmzaGL1glJUQ+/b236Y1A==}
-    peerDependencies:
-      react: 19.2.3
-      react-dom: 19.2.3
-
-  react-window@2.2.3:
-    resolution: {integrity: sha512-gTRqQYC8ojbiXyd9duYFiSn2TJw0ROXCgYjenOvNKITWzK0m0eCvkUsEUM08xvydkMh7ncp+LE0uS3DeNGZxnQ==}
     peerDependencies:
       react: 19.2.3
       react-dom: 19.2.3
@@ -10927,16 +10909,6 @@ snapshots:
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-
-  react-virtualized-auto-sizer@2.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-
-  react-window@2.2.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
