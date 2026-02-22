@@ -39,8 +39,8 @@ describe('DBスキーマとAPIカラム名の一致', () => {
       expect(content).not.toContain('p.normalized_id =');
     });
 
-    it('also-viewed APIがnormalized_product_idを使用', () => {
-      const filePath = path.join(PROJECT_ROOT, 'apps/web/app/api/products/[id]/also-viewed/route.ts');
+    it('also-viewed ハンドラーがnormalized_product_idを使用', () => {
+      const filePath = path.join(PROJECT_ROOT, 'packages/shared/src/api-handlers/also-viewed.ts');
       const content = fs.readFileSync(filePath, 'utf-8');
 
       // normalized_product_idのエイリアスとして使用
@@ -58,8 +58,8 @@ describe('DBスキーマとAPIカラム名の一致', () => {
       'created_at',
     ];
 
-    it('also-viewed APIがsession_idカラムを使用', () => {
-      const filePath = path.join(PROJECT_ROOT, 'apps/web/app/api/products/[id]/also-viewed/route.ts');
+    it('also-viewed ハンドラーがsession_idカラムを使用', () => {
+      const filePath = path.join(PROJECT_ROOT, 'packages/shared/src/api-handlers/also-viewed.ts');
       const content = fs.readFileSync(filePath, 'utf-8');
 
       // session_idを使用した協調フィルタリングクエリ
