@@ -24,6 +24,8 @@ interface CleanupStats {
   orphanedProductVideos: number;
   orphanedProductPerformers: number;
   emptyProducts: number;
+  expiredSales: number;
+  saleFlagsUpdated: number;
   fixed: number;
   migratedSources: number;
   migratedPerformers: number;
@@ -50,6 +52,8 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
       orphanedProductVideos: 0,
       orphanedProductPerformers: 0,
       emptyProducts: 0,
+      expiredSales: 0,
+      saleFlagsUpdated: 0,
       fixed: 0,
       migratedSources: 0,
       migratedPerformers: 0,
@@ -548,6 +552,42 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
           }
         } catch (error) {
           const msg = `空商品チェック/修正エラー: ${error instanceof Error ? error.message : 'Unknown'}`;
+          console.error(`[cleanup] ${msg}`);
+          errors.push(msg);
+        }
+      }
+
+      // 4. 期限切れセールのクリーンアップ（常に実行）
+      if (Date.now() - startTime < TIME_LIMIT) {
+        try {
+          // product_sales.is_active を FALSE に（期限切れ分）
+          const expiredResult = await db.execute(sql`
+            UPDATE product_sales
+            SET is_active = FALSE, updated_at = NOW()
+            WHERE is_active = TRUE AND end_at IS NOT NULL AND end_at < NOW()
+          `);
+          stats.expiredSales = (expiredResult as { rowCount?: number }).rowCount ?? 0;
+
+          if (stats.expiredSales > 0) {
+            issues.push(`期限切れセール非アクティブ化: ${stats.expiredSales}件`);
+
+            // has_active_sale フラグを更新（現在trueの商品のみ再計算）
+            const flagResult = await db.execute(sql`
+              UPDATE products p
+              SET has_active_sale = EXISTS (
+                SELECT 1 FROM product_sources ps
+                JOIN product_sales psl ON psl.product_source_id = ps.id
+                WHERE ps.product_id = p.id AND psl.is_active = TRUE
+                  AND (psl.end_at IS NULL OR psl.end_at > NOW())
+              ), updated_at = NOW()
+              WHERE p.has_active_sale = TRUE
+            `);
+            stats.saleFlagsUpdated = (flagResult as { rowCount?: number }).rowCount ?? 0;
+
+            console.log(`[cleanup] セール期限切れ処理: expired=${stats.expiredSales}, flags_updated=${stats.saleFlagsUpdated}`);
+          }
+        } catch (error) {
+          const msg = `セール期限切れ処理エラー: ${error instanceof Error ? error.message : 'Unknown'}`;
           console.error(`[cleanup] ${msg}`);
           errors.push(msg);
         }

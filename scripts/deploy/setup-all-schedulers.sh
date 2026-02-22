@@ -311,6 +311,12 @@ setup_post_scheduler "indexnow-notify-scheduler" \
   "IndexNow 自動通知（4時間ごと）" \
   120
 
+# ニュース自動生成（毎日0:30）
+setup_get_scheduler "generate-news-scheduler" \
+  "30 0 * * *" \
+  "generate-news" \
+  "ニュース自動生成（毎日）"
+
 # データ品質レポート（週1回 月曜4:00）
 setup_get_scheduler "data-quality-report-weekly" \
   "0 4 * * 1" \

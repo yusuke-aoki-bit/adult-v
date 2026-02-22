@@ -57,6 +57,7 @@ const MAIN_SCHEDULERS = [
   'crawl-avwiki-scheduler',
   'generate-reviews-weekly',
   'seo-enhance-daily',
+  'generate-news-scheduler',
 ];
 
 export interface SchedulerStatus {
