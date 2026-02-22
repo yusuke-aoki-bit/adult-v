@@ -218,7 +218,7 @@ export default async function StatisticsPage({
                     </td>
                     <td className="px-4 py-3">
                       <Link
-                        href={localizedHref(`/actresses/${performer.id}`, locale)}
+                        href={localizedHref(`/actress/${performer.id}`, locale)}
                         className="text-pink-400 hover:text-pink-300 hover:underline"
                       >
                         {performer.name}

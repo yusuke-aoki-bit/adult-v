@@ -256,7 +256,7 @@ export default async function MakerDetailPage({ params }: PageProps) {
                       {t.recentProducts}
                     </h2>
                     <Link
-                      href={localizedHref(`/categories/${maker.id}`, locale)}
+                      href={localizedHref(`/products?maker=${maker.id}`, locale)}
                       className="text-blue-400 hover:text-blue-300 text-sm"
                     >
                       {t.viewAll} →
@@ -340,7 +340,7 @@ export default async function MakerDetailPage({ params }: PageProps) {
                     {maker.topGenres.map((genre) => (
                       <Link
                         key={genre.id}
-                        href={localizedHref(`/categories/${genre.id}`, locale)}
+                        href={localizedHref(`/products?include=${genre.id}`, locale)}
                         className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-full text-sm text-gray-300 hover:text-white transition-colors"
                       >
                         {genre.name}
@@ -353,7 +353,7 @@ export default async function MakerDetailPage({ params }: PageProps) {
 
               {/* View All Products Button */}
               <Link
-                href={localizedHref(`/categories/${maker.id}`, locale)}
+                href={localizedHref(`/products?maker=${maker.id}`, locale)}
                 className="block w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-center rounded-xl font-semibold transition-colors"
               >
                 {t.viewProducts} ({maker.productCount})

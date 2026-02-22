@@ -11,6 +11,7 @@ export default function Footer() {
       showActressList={false}
       showInternalLinks={true}
       columns={3}
+      isFanzaSite={true}
     />
   );
 }

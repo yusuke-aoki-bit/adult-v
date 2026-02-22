@@ -1,13 +1,36 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 
-// This page renders when a route is not found at the root level
-// Due to next-intl middleware, most routes should be locale-prefixed
-// FANZA theme: Light background with rose accent colors
-export default function RootNotFound() {
+const translations: Record<string, { notFound: string; goHome: string; orCheck: string; products: string; actresses: string; discover: string }> = {
+  ja: { notFound: 'ページが見つかりません', goHome: 'ホームに戻る', orCheck: 'または以下をチェック', products: '新着作品', actresses: '人気女優', discover: '今日の発見' },
+  en: { notFound: 'Page Not Found', goHome: 'Go Home', orCheck: 'Or check these out', products: 'Products', actresses: 'Actresses', discover: 'Discover' },
+  zh: { notFound: '页面未找到', goHome: '返回首页', orCheck: '或查看以下内容', products: '作品列表', actresses: '女优列表', discover: '今日发现' },
+  'zh-TW': { notFound: '頁面未找到', goHome: '返回首頁', orCheck: '或查看以下內容', products: '作品列表', actresses: '女優列表', discover: '今日發現' },
+  ko: { notFound: '페이지를 찾을 수 없습니다', goHome: '홈으로 돌아가기', orCheck: '또는 아래를 확인하세요', products: '작품 목록', actresses: '배우 목록', discover: '오늘의 발견' },
+};
+
+function detectLocale(acceptLanguage: string | null): string {
+  if (!acceptLanguage) return 'ja';
+  const supported = ['ja', 'en', 'zh-TW', 'zh', 'ko'];
+  for (const lang of acceptLanguage.split(',')) {
+    const code = lang.split(';')[0].trim().toLowerCase();
+    if (code.startsWith('zh-tw') || code.startsWith('zh-hant')) return 'zh-TW';
+    if (code.startsWith('zh')) return 'zh';
+    const match = supported.find(s => code.startsWith(s.toLowerCase()));
+    if (match) return match;
+  }
+  return 'ja';
+}
+
+export default async function RootNotFound() {
+  const headerStore = await headers();
+  const locale = detectLocale(headerStore.get('accept-language'));
+  const t = translations[locale] || translations['ja'];
+
   const quickLinks = [
-    { href: '/ja/products', label: '新着作品' },
-    { href: '/ja/actresses', label: '人気女優' },
-    { href: '/ja/discover', label: '今日の発見' },
+    { href: '/products', label: t.products },
+    { href: '/actresses', label: t.actresses },
+    { href: '/discover', label: t.discover },
   ];
 
   return (
@@ -33,10 +56,10 @@ export default function RootNotFound() {
           404
         </h1>
         <p style={{ color: '#4B4B4B', marginBottom: '1.5rem' }}>
-          ページが見つかりません
+          {t.notFound}
         </p>
         <Link
-          href="/ja"
+          href="/"
           style={{
             display: 'inline-block',
             backgroundColor: '#B42F5A',
@@ -48,11 +71,11 @@ export default function RootNotFound() {
             marginBottom: '1.5rem'
           }}
         >
-          ホームに戻る
+          {t.goHome}
         </Link>
         <div style={{ borderTop: '1px solid #E5E5E5', paddingTop: '1rem', marginTop: '1rem' }}>
           <p style={{ color: '#6B6B6B', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
-            または以下をチェック
+            {t.orCheck}
           </p>
           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             {quickLinks.map((link) => (

@@ -610,7 +610,7 @@ export function ProductCompare({
                           key={i}
                           href={source.affiliateUrl}
                           target="_blank"
-                          rel="noopener noreferrer"
+                          rel="noopener noreferrer sponsored"
                           className={`px-2.5 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-colors ${
                             isDark
                               ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'

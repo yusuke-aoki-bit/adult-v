@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, ExternalLink, Star, Users, Gem, Vote, List, Search, Cake, Trophy, Play, Newspaper } from 'lucide-react';
+import Link from 'next/link';
 import { TopPageMenuSection, ProductCardBase, ActressCardBase, HomeSectionManager } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { useRecentlyViewed, useHomeSections } from '@adult-v/shared/hooks';
@@ -500,13 +501,13 @@ function WeeklyHighlightsContent({ locale }: { locale: string }) {
 function MoreLink({ href, label, locale }: { href: string; label: string; locale?: string }) {
   const localizedUrl = locale ? localizedHref(href, locale) : href;
   return (
-    <a
+    <Link
       href={localizedUrl}
       className="mt-3 flex items-center justify-center gap-1 w-full py-2 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-700/50 rounded-lg transition-colors"
     >
       {label}
       <ExternalLink className="w-4 h-4" />
-    </a>
+    </Link>
   );
 }
 

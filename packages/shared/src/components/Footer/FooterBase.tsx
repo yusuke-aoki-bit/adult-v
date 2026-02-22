@@ -129,6 +129,8 @@ export interface FooterBaseProps {
   PartnerBanners?: React.ComponentType;
   /** カラム数（3 or 4） */
   columns?: 3 | 4;
+  /** FANZAサイトかどうか（web専用ルートの非表示に使用） */
+  isFanzaSite?: boolean;
 }
 
 const footerTexts = {
@@ -148,6 +150,7 @@ export function FooterBase({
   showInternalLinks = false,
   PartnerBanners,
   columns = 3,
+  isFanzaSite = false,
 }: FooterBaseProps) {
   const searchParams = useSearchParams();
 
@@ -222,36 +225,40 @@ export function FooterBase({
               {t.discoverContent || ft.discoverContent}
             </h3>
             <ul className="space-y-1.5 text-xs">
-              <li>
-                <Link href={localizedHref('/daily-pick', locale)} className="theme-footer-link transition-colors">
-                  {ft.todaysPick}
-                </Link>
-              </li>
-              <li>
-                <Link href={localizedHref('/birthdays', locale)} className="theme-footer-link transition-colors">
-                  {ft.birthdays}
-                </Link>
-              </li>
-              <li>
-                <Link href={localizedHref(`/best/${new Date().getFullYear() - 1}`, locale)} className="theme-footer-link transition-colors">
-                  {ft.annualBest}
-                </Link>
-              </li>
-              <li>
-                <Link href={localizedHref('/weekly-report', locale)} className="theme-footer-link transition-colors">
-                  {ft.weeklyTrends}
-                </Link>
-              </li>
-              <li>
-                <Link href={localizedHref('/rookies', locale)} className="theme-footer-link transition-colors">
-                  {ft.rookies}
-                </Link>
-              </li>
-              <li>
-                <Link href={localizedHref('/hidden-gems', locale)} className="theme-footer-link transition-colors">
-                  {ft.hiddenGems}
-                </Link>
-              </li>
+              {!isFanzaSite && (
+                <>
+                  <li>
+                    <Link href={localizedHref('/daily-pick', locale)} className="theme-footer-link transition-colors">
+                      {ft.todaysPick}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={localizedHref('/birthdays', locale)} className="theme-footer-link transition-colors">
+                      {ft.birthdays}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={localizedHref(`/best/${new Date().getFullYear() - 1}`, locale)} className="theme-footer-link transition-colors">
+                      {ft.annualBest}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={localizedHref('/weekly-report', locale)} className="theme-footer-link transition-colors">
+                      {ft.weeklyTrends}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={localizedHref('/rookies', locale)} className="theme-footer-link transition-colors">
+                      {ft.rookies}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={localizedHref('/hidden-gems', locale)} className="theme-footer-link transition-colors">
+                      {ft.hiddenGems}
+                    </Link>
+                  </li>
+                </>
+              )}
               <li>
                 <Link href={localizedHref('/search/semantic', locale)} className="theme-footer-link transition-colors">
                   {ft.aiSearch}
@@ -276,21 +283,25 @@ export function FooterBase({
                   {ft.publicLists}
                 </Link>
               </li>
-              <li>
-                <Link href={localizedHref('/lists/ranking', locale)} className="theme-footer-link transition-colors">
-                  {ft.listRankings}
-                </Link>
-              </li>
-              <li>
-                <Link href={localizedHref('/reviewers', locale)} className="theme-footer-link transition-colors">
-                  {ft.reviewers}
-                </Link>
-              </li>
-              <li>
-                <Link href={localizedHref('/vote', locale)} className="theme-footer-link transition-colors">
-                  {ft.voteRankings}
-                </Link>
-              </li>
+              {!isFanzaSite && (
+                <>
+                  <li>
+                    <Link href={localizedHref('/lists/ranking', locale)} className="theme-footer-link transition-colors">
+                      {ft.listRankings}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={localizedHref('/reviewers', locale)} className="theme-footer-link transition-colors">
+                      {ft.reviewers}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={localizedHref('/vote', locale)} className="theme-footer-link transition-colors">
+                      {ft.voteRankings}
+                    </Link>
+                  </li>
+                </>
+              )}
               <li>
                 <Link href={localizedHref('/statistics', locale)} className="theme-footer-link transition-colors">
                   {t.statistics || ft.statistics}

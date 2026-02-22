@@ -447,44 +447,48 @@ export const HeaderBase = memo(function HeaderBase({
                 <DiscoverIcon />
                 {t.discover}
               </Link>
-              <div className="border-t theme-border my-1" />
-              <Link
-                href={localizedHref('/daily-pick', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
-                onClick={handleDropdownClose}
-              >
-                {t.dailyPick}
-              </Link>
-              <Link
-                href={localizedHref('/weekly-report', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
-                onClick={handleDropdownClose}
-              >
-                {t.weeklyTrends}
-              </Link>
-              <Link
-                href={localizedHref('/hidden-gems', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
-                onClick={handleDropdownClose}
-              >
-                {t.hiddenGems}
-              </Link>
-              <Link
-                href={localizedHref('/rookies', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
-                onClick={handleDropdownClose}
-              >
-                {t.rookies}
-              </Link>
-              <div className="border-t theme-border my-1" />
-              <Link
-                href={localizedHref('/sales', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-orange-400 hover:bg-orange-500/20"
-                onClick={handleDropdownClose}
-              >
-                <span className="text-lg">🔥</span>
-                {t.sales}
-              </Link>
+              {!isFanzaSite && (
+                <>
+                  <div className="border-t theme-border my-1" />
+                  <Link
+                    href={localizedHref('/daily-pick', locale)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    onClick={handleDropdownClose}
+                  >
+                    {t.dailyPick}
+                  </Link>
+                  <Link
+                    href={localizedHref('/weekly-report', locale)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    onClick={handleDropdownClose}
+                  >
+                    {t.weeklyTrends}
+                  </Link>
+                  <Link
+                    href={localizedHref('/hidden-gems', locale)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    onClick={handleDropdownClose}
+                  >
+                    {t.hiddenGems}
+                  </Link>
+                  <Link
+                    href={localizedHref('/rookies', locale)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    onClick={handleDropdownClose}
+                  >
+                    {t.rookies}
+                  </Link>
+                  <div className="border-t theme-border my-1" />
+                  <Link
+                    href={localizedHref('/sales', locale)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-orange-400 hover:bg-orange-500/20"
+                    onClick={handleDropdownClose}
+                  >
+                    <span className="text-lg">🔥</span>
+                    {t.sales}
+                  </Link>
+                </>
+              )}
             </DropdownMenu>
 
             {/* ツールメニュー */}
@@ -534,27 +538,31 @@ export const HeaderBase = memo(function HeaderBase({
               >
                 {t.publicLists}
               </Link>
-              <Link
-                href={localizedHref('/lists/ranking', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
-                onClick={handleDropdownClose}
-              >
-                {t.listRanking}
-              </Link>
-              <Link
-                href={localizedHref('/reviewers', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
-                onClick={handleDropdownClose}
-              >
-                {t.reviewers}
-              </Link>
-              <Link
-                href={localizedHref('/vote', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
-                onClick={handleDropdownClose}
-              >
-                {t.voteRanking}
-              </Link>
+              {!isFanzaSite && (
+                <>
+                  <Link
+                    href={localizedHref('/lists/ranking', locale)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    onClick={handleDropdownClose}
+                  >
+                    {t.listRanking}
+                  </Link>
+                  <Link
+                    href={localizedHref('/reviewers', locale)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    onClick={handleDropdownClose}
+                  >
+                    {t.reviewers}
+                  </Link>
+                  <Link
+                    href={localizedHref('/vote', locale)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    onClick={handleDropdownClose}
+                  >
+                    {t.voteRanking}
+                  </Link>
+                </>
+              )}
             </DropdownMenu>
 
             {/* 通知・言語切り替え・ユーザーメニュー */}
@@ -641,47 +649,51 @@ export const HeaderBase = memo(function HeaderBase({
                   <DiscoverIcon />
                   <span className="ml-2">{t.discover}</span>
                 </Link>
-                <Link
-                  href={localizedHref('/daily-pick', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <span className="ml-6">{t.dailyPick}</span>
-                </Link>
-                <Link
-                  href={localizedHref('/weekly-report', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <span className="ml-6">{t.weeklyTrends}</span>
-                </Link>
-                <Link
-                  href={localizedHref('/hidden-gems', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <span className="ml-6">{t.hiddenGems}</span>
-                </Link>
-                <Link
-                  href={localizedHref('/rookies', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <span className="ml-6">{t.rookies}</span>
-                </Link>
-                <Link
-                  href={localizedHref('/sales', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center text-orange-400 font-bold transition-colors text-sm col-span-2"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <span className="text-lg mr-2">🔥</span>
-                  {t.onSaleProducts}
-                </Link>
+                {!isFanzaSite && (
+                  <>
+                    <Link
+                      href={localizedHref('/daily-pick', locale)}
+                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      onClick={handleMobileMenuClose}
+                      role="listitem"
+                    >
+                      <span className="ml-6">{t.dailyPick}</span>
+                    </Link>
+                    <Link
+                      href={localizedHref('/weekly-report', locale)}
+                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      onClick={handleMobileMenuClose}
+                      role="listitem"
+                    >
+                      <span className="ml-6">{t.weeklyTrends}</span>
+                    </Link>
+                    <Link
+                      href={localizedHref('/hidden-gems', locale)}
+                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      onClick={handleMobileMenuClose}
+                      role="listitem"
+                    >
+                      <span className="ml-6">{t.hiddenGems}</span>
+                    </Link>
+                    <Link
+                      href={localizedHref('/rookies', locale)}
+                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      onClick={handleMobileMenuClose}
+                      role="listitem"
+                    >
+                      <span className="ml-6">{t.rookies}</span>
+                    </Link>
+                    <Link
+                      href={localizedHref('/sales', locale)}
+                      className="py-2.5 min-h-[44px] flex items-center text-orange-400 font-bold transition-colors text-sm col-span-2"
+                      onClick={handleMobileMenuClose}
+                      role="listitem"
+                    >
+                      <span className="text-lg mr-2">🔥</span>
+                      {t.onSaleProducts}
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 
@@ -731,30 +743,34 @@ export const HeaderBase = memo(function HeaderBase({
                 >
                   <span className="ml-6">{t.publicLists}</span>
                 </Link>
-                <Link
-                  href={localizedHref('/lists/ranking', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <span className="ml-6">{t.listRanking}</span>
-                </Link>
-                <Link
-                  href={localizedHref('/reviewers', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <span className="ml-6">{t.reviewers}</span>
-                </Link>
-                <Link
-                  href={localizedHref('/vote', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
-                  onClick={handleMobileMenuClose}
-                  role="listitem"
-                >
-                  <span className="ml-6">{t.voteRanking}</span>
-                </Link>
+                {!isFanzaSite && (
+                  <>
+                    <Link
+                      href={localizedHref('/lists/ranking', locale)}
+                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      onClick={handleMobileMenuClose}
+                      role="listitem"
+                    >
+                      <span className="ml-6">{t.listRanking}</span>
+                    </Link>
+                    <Link
+                      href={localizedHref('/reviewers', locale)}
+                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      onClick={handleMobileMenuClose}
+                      role="listitem"
+                    >
+                      <span className="ml-6">{t.reviewers}</span>
+                    </Link>
+                    <Link
+                      href={localizedHref('/vote', locale)}
+                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      onClick={handleMobileMenuClose}
+                      role="listitem"
+                    >
+                      <span className="ml-6">{t.voteRanking}</span>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 
