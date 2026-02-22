@@ -21,43 +21,49 @@ export interface JobStatus {
   consoleUrl?: string;
 }
 
-// 主要なクローラージョブのリスト（実際のCloud Run Job名に合わせる）
-const MAIN_CRAWLER_JOBS = [
-  'mgs-daily',
-  'crawl-duga',
-  'crawl-sokmil',
-  'crawl-fc2',
-  'crawl-b10f',
-  'crawl-dti-all',
-  'crawl-japanska',
-  'crawl-tokyohot',
-  'crawl-sales',
-  'fanza-daily',
-  'enrich-performers',
-  'link-wiki-performers',
-  'crawl-avwiki-net',
-  'generate-reviews',
-  'run-migration',
-];
+// 主要なクローラージョブのリスト（廃止済み - Cloud Run Jobs → API Scheduler方式に移行済み）
+const MAIN_CRAWLER_JOBS: string[] = [];
 
-// 主要なスケジューラーのリスト（実際のCloud Scheduler名に合わせる）
+// 主要なスケジューラーのリスト（setup-all-schedulers.sh と同期）
 const MAIN_SCHEDULERS = [
-  'mgs-daily-scheduler',
+  // クローラー
+  'crawl-dti-caribbeancom',
+  'crawl-dti-caribbeancompr',
+  'crawl-dti-1pondo',
+  'crawl-dti-heyzo',
+  'crawl-dti-10musume',
+  'crawl-dti-pacopacomama',
+  'crawl-dti-x1x',
+  'crawl-dti-enkou55',
+  'crawl-dti-urekko',
+  'crawl-heydouga',
+  'crawl-heydouga-homepage',
+  'crawl-mgs-scheduler',
   'crawl-duga-scheduler',
   'crawl-sokmil-scheduler',
-  'crawl-fc2-scheduler',
-  'crawl-b10f-scheduler',
-  'crawl-dti-all-daily',
   'crawl-japanska-scheduler',
-  'crawl-tokyohot-scheduler',
-  'crawl-sales-scheduler',
-  'fanza-daily-scheduler',
-  'performer-pipeline-daily',
-  'content-enrichment-daily',
-  'crawl-avwiki-scheduler',
-  'generate-reviews-weekly',
-  'seo-enhance-daily',
+  'crawl-b10f-scheduler',
+  'crawl-fanza-scheduler',
+  'crawl-fc2-scheduler',
+  // エンリッチメント
+  'process-raw-data-scheduler',
+  'performer-pipeline-scheduler',
+  'content-enrichment-scheduler',
+  'normalize-performers-scheduler',
+  'enhance-content-scheduler',
+  'seo-enhance-scheduler',
+  // バックフィル
+  'backfill-videos-scheduler',
+  'backfill-images-scheduler',
+  'backfill-performer-profiles-weekly',
+  'backfill-reviews-weekly',
+  'crawl-performer-lookup-weekly',
+  // メンテナンス・通知
+  'cleanup-scheduler',
+  'revalidate-scheduler',
+  'indexnow-notify-scheduler',
   'generate-news-scheduler',
+  'data-quality-report-weekly',
 ];
 
 export interface SchedulerStatus {
