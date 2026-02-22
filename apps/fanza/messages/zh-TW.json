@@ -249,5 +249,21 @@
     "disclosure": "聯盟揭露",
     "disclaimerShort": "本站使用聯盟廣告。",
     "disclaimerFull": "本站是亞馬遜聯盟計劃的參與者，該計劃旨在透過廣告和連結到 Amazon.com 為網站提供賺取廣告費的方式。我們還參與 DUGA、SOKMIL 和 DTI 的聯盟計劃。"
+  },
+  "productVideoPlayer": {
+    "playSampleVideo": "播放樣片影片",
+    "browserNotSupported": "您的瀏覽器不支援影片標籤。",
+    "videoLoadError": "影片載入失敗",
+    "securityRestriction": "由於來源網站的安全限制，可能無法直接播放",
+    "playAtSource": "在來源網站播放",
+    "playInNewTab": "在新分頁播放",
+    "externalVideoTitle": "外部網站影片",
+    "externalVideoDescription": "此影片因安全限制無法嵌入播放。您可以在新分頁中直接播放。",
+    "close": "關閉",
+    "preview": "預覽",
+    "trailer": "預告",
+    "streaming": "串流",
+    "download": "下載",
+    "sampleVideoCount": "樣片影片：{count}部"
   }
 }

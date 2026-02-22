@@ -150,7 +150,7 @@ export {
 export type { NewsHandlerDeps } from './news';
 export { createNewsHandler, newsRevalidate } from './news';
 
-// AI Profile handler
+// AI Profile handler (placeholder — returns 404)
 export { createAiProfileHandler } from './ai-profile';
 
 // Maker by ID handler

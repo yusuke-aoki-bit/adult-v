@@ -7,7 +7,7 @@ import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
 
 // LCP最適化: ProductVideoPlayerを遅延読み込み（ファーストビュー外なので初期バンドルから除外）
 const ProductVideoPlayer = nextDynamic(() => import('@/components/ProductVideoPlayer'), {
-  loading: () => <div className="h-48 bg-gray-700 rounded-lg animate-pulse flex items-center justify-center text-gray-500">Loading video...</div>,
+  loading: () => <div className="h-48 theme-accordion-bg rounded-lg animate-pulse flex items-center justify-center theme-text-muted">Loading video...</div>,
 });
 import ProductDetailInfo from '@/components/ProductDetailInfo';
 import ProductActions from '@/components/ProductActions';
@@ -374,7 +374,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           <Breadcrumb items={breadcrumbItems} className="mb-4" />
 
           {/* PR表記（景品表示法・ステマ規制対応） */}
-          <p className="text-xs text-gray-400 mb-6">
+          <p className="text-xs theme-text-muted mb-6">
             <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
             当ページには広告・アフィリエイトリンクが含まれています
           </p>
@@ -452,7 +452,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     {sources
                       ?.filter((s: any) => s.originalProductId && s.originalProductId !== displayProductCode)
                       .map((s: any, i: number) => (
-                        <span key={i} className="inline-flex items-center px-2 py-1 bg-gray-700 rounded-md text-gray-300 text-xs font-mono">
+                        <span key={i} className="inline-flex items-center px-2 py-1 theme-accordion-bg rounded-md theme-text-secondary text-xs font-mono">
                           {s.aspName}: {s.originalProductId}
                         </span>
                       ))
@@ -469,10 +469,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       </div>
                       {product.reviewCount && product.reviewCount > 0 && (
                         <div className="flex flex-col">
-                          <span className="text-sm text-gray-300">{product.reviewCount.toLocaleString()}件のレビュー</span>
+                          <span className="text-sm theme-text-secondary">{product.reviewCount.toLocaleString()}件のレビュー</span>
                           <div className="flex gap-1 mt-1">
                             {[5, 4, 3, 2, 1].map((star) => (
-                              <div key={star} className={`w-2 h-2 rounded-full ${(product.rating ?? 0) >= star ? 'bg-yellow-400' : 'bg-gray-600'}`} />
+                              <div key={star} className={`w-2 h-2 rounded-full ${(product.rating ?? 0) >= star ? 'bg-yellow-400' : 'theme-accordion-bg'}`} />
                             ))}
                           </div>
                         </div>
@@ -571,13 +571,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
                           <p className="text-3xl font-bold text-red-400">
                             ¥{product.salePrice.toLocaleString()}
                           </p>
-                          <p className="text-lg text-gray-500 line-through">
+                          <p className="text-lg theme-text-muted line-through">
                             ¥{product.price.toLocaleString()}
                           </p>
                         </>
                       ) : (
                         <p className="text-3xl font-bold theme-text">
-                          {product.provider && isSubscriptionSite(product.provider) && <span className="text-base text-gray-400 mr-1">{t.monthly}</span>}
+                          {product.provider && isSubscriptionSite(product.provider) && <span className="text-base theme-text-muted mr-1">{t.monthly}</span>}
                           ¥{product.price.toLocaleString()}
                         </p>
                       )}
@@ -625,8 +625,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     )}
                     {/* 他のASPでも購入可能な場合のリンク */}
                     {sourcesWithSales.length > 1 && (
-                      <div className="mt-3 pt-3 border-t border-gray-600">
-                        <p className="text-xs text-gray-400 mb-2">
+                      <div className="mt-3 pt-3 border-t theme-border">
+                        <p className="text-xs theme-text-muted mb-2">
                           他{sourcesWithSales.length - 1}社でも購入可能
                         </p>
                         <div className="flex flex-wrap gap-1.5">
@@ -639,10 +639,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
                                 href={isValidUrl ? source.affiliateUrl : `/${locale}/products/${source.originalProductId || ''}`}
                                 target={isValidUrl ? "_blank" : "_self"}
                                 rel={isValidUrl ? "noopener noreferrer sponsored" : undefined}
-                                className="inline-flex items-center gap-1 px-2 py-1 bg-gray-600 hover:bg-gray-500 text-gray-200 text-xs rounded transition-colors"
+                                className="inline-flex items-center gap-1 px-2 py-1 theme-accordion-bg theme-accordion-hover theme-text-secondary text-xs rounded transition-colors"
                               >
                                 <span>{source.aspName}</span>
-                                <span className="text-gray-400">¥{(source.salePrice || source.regularPrice || 0).toLocaleString()}</span>
+                                <span className="theme-text-muted">¥{(source.salePrice || source.regularPrice || 0).toLocaleString()}</span>
                               </a>
                             );
                           })}
@@ -678,7 +678,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         <Link
                           key={tag.id}
                           href={localizedHref(`/tags/${tag.id}`, locale)}
-                          className="inline-flex items-center gap-1 px-3 py-1 bg-gray-700 hover:bg-rose-600/30 text-gray-200 hover:text-rose-300 rounded-full text-sm transition-colors border border-transparent hover:border-rose-500/40"
+                          className="inline-flex items-center gap-1 px-3 py-1 theme-accordion-bg hover:bg-rose-600/30 theme-text-secondary hover:text-rose-300 rounded-full text-sm transition-colors border border-transparent hover:border-rose-500/40"
                         >
                           {tag.name}
                           <svg className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 -mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -875,7 +875,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     href={localizedHref(`/products/${p.id}`, locale)}
                     className="group theme-content rounded-lg overflow-hidden border theme-border hover:ring-2 hover:ring-rose-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
                   >
-                    <div className="relative bg-gray-700" style={{ aspectRatio: '2/3' }}>
+                    <div className="relative theme-accordion-bg" style={{ aspectRatio: '2/3' }}>
                       {p.imageUrl ? (
                         <img
                           src={p.imageUrl}
@@ -885,7 +885,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         />
                       ) : (
                         <div className="flex items-center justify-center h-full">
-                          <span className="text-gray-500 text-xs">NO IMAGE</span>
+                          <span className="theme-text-muted text-xs">NO IMAGE</span>
                         </div>
                       )}
                       {p.bestRating && parseFloat(p.bestRating) > 0 && (
@@ -954,7 +954,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     href={localizedHref(`/products/${p.id}`, locale)}
                     className="group theme-content rounded-lg overflow-hidden border theme-border hover:ring-2 hover:ring-purple-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
                   >
-                    <div className="relative bg-gray-700" style={{ aspectRatio: '2/3' }}>
+                    <div className="relative theme-accordion-bg" style={{ aspectRatio: '2/3' }}>
                       {p.imageUrl ? (
                         <img
                           src={p.imageUrl}
@@ -964,7 +964,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         />
                       ) : (
                         <div className="flex items-center justify-center h-full">
-                          <span className="text-gray-500 text-xs">NO IMAGE</span>
+                          <span className="theme-text-muted text-xs">NO IMAGE</span>
                         </div>
                       )}
                       {p.bestRating && parseFloat(p.bestRating) > 0 && (
@@ -1033,7 +1033,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     href={localizedHref(`/products/${p.id}`, locale)}
                     className="group theme-content rounded-lg overflow-hidden border theme-border hover:ring-2 hover:ring-amber-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
                   >
-                    <div className="relative bg-gray-700" style={{ aspectRatio: '2/3' }}>
+                    <div className="relative theme-accordion-bg" style={{ aspectRatio: '2/3' }}>
                       {p.imageUrl ? (
                         <img
                           src={p.imageUrl}
@@ -1043,7 +1043,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         />
                       ) : (
                         <div className="flex items-center justify-center h-full">
-                          <span className="text-gray-500 text-xs">NO IMAGE</span>
+                          <span className="theme-text-muted text-xs">NO IMAGE</span>
                         </div>
                       )}
                       {p.bestRating && parseFloat(p.bestRating) > 0 && (

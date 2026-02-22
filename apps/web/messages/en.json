@@ -320,20 +320,6 @@
     "criticalErrorMessage": "A critical error occurred in the application. Please reload the page.",
     "reloadPage": "Reload Page"
   },
-  "common": {
-    "actress": "Actress",
-    "actresses": "Actresses",
-    "products": "Videos",
-    "search": "Search",
-    "filter": "Filter",
-    "sort": "Sort",
-    "clear": "Clear",
-    "apply": "Apply",
-    "page": "Page",
-    "releaseCount": "Videos",
-    "items": "items",
-    "loading": "Loading..."
-  },
   "affiliate": {
     "disclosure": "Affiliate Disclosure",
     "disclaimerShort": "This site uses affiliate advertising.",

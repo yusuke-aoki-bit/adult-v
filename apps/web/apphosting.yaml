@@ -15,6 +15,16 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: SITE_MODE
+    value: adult-v
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_SITE_MODE
+    value: adult-v
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: DATABASE_URL
     secret: database-url
   - variable: NEXT_PUBLIC_SITE_URL
@@ -81,7 +91,7 @@ env:
     availability:
       - BUILD
   - variable: SENTRY_PROJECT
-    value: mgs
+    value: web
     availability:
       - BUILD
   # Upstash Redis Cache

@@ -72,6 +72,7 @@
     "./db-queries": "./src/db-queries/index.ts",
     "./db-queries/mappers": "./src/db-queries/mappers.ts",
     "./db-queries/core-queries": "./src/db-queries/core-queries.ts",
+    "./constants/app": "./src/constants/app.ts",
     "./constants/filters": "./src/constants/filters.ts",
     "./components/stats": "./src/components/stats/index.ts",
     "./config/next-config-base": "./src/config/next-config-base.ts",

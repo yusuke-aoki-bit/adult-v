@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 export interface SectionItem {
   id: string;
@@ -18,18 +17,13 @@ interface SectionNavProps {
 
 export function SectionNav({
   sections,
-  theme: themeProp,
   position = 'right',
   offset = 80,
 }: SectionNavProps) {
-  const { theme: contextTheme } = useSiteTheme();
-  const theme = themeProp ?? contextTheme;
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const mobileNavRef = useRef<HTMLDivElement>(null);
-
-  const isDark = theme === 'dark';
 
   // スクロール位置に基づいてアクティブセクションを更新
   useEffect(() => {
@@ -86,9 +80,7 @@ export function SectionNav({
       {/* モバイル: 水平スクロールタブバー */}
       <div
         ref={mobileNavRef}
-        className={`md:hidden sticky top-[60px] z-30 backdrop-blur-sm border-b ${
-          isDark ? 'bg-gray-900/95 border-gray-700' : 'bg-white/95 border-gray-200'
-        }`}
+        className="md:hidden sticky top-[60px] z-30 backdrop-blur-sm border-b theme-border theme-section-nav-bg"
       >
         <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory">
           {sections.map((section) => {
@@ -100,12 +92,8 @@ export function SectionNav({
                 onClick={() => scrollToSection(section.id)}
                 className={`shrink-0 snap-start px-4 py-2.5 text-xs font-medium whitespace-nowrap transition-colors border-b-2 ${
                   isActive
-                    ? isDark
-                      ? 'border-blue-500 text-blue-400'
-                      : 'border-pink-500 text-pink-600'
-                    : isDark
-                      ? 'border-transparent text-gray-400 hover:text-gray-300'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'theme-section-nav-active'
+                    : 'border-transparent theme-text-muted hover:theme-text-secondary'
                 }`}
               >
                 {section.icon && <span className="inline-block w-3.5 h-3.5 mr-1 align-middle">{section.icon}</span>}
@@ -125,9 +113,7 @@ export function SectionNav({
           onClick={() => setIsExpanded(!isExpanded)}
           className={`
             w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all
-            ${isDark
-              ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
-              : 'bg-white hover:bg-gray-100 text-gray-600'}
+            theme-content theme-text-secondary theme-accordion-hover
             ${isExpanded ? 'rotate-45' : ''}
           `}
           aria-label="Toggle section navigation"
@@ -145,12 +131,7 @@ export function SectionNav({
             ${isExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}
           `}
         >
-          <div
-            className={`
-              rounded-lg shadow-xl overflow-hidden min-w-[180px]
-              ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}
-            `}
-          >
+          <div className="rounded-lg shadow-xl overflow-hidden min-w-[180px] theme-content border theme-border">
             {sections.map((section) => {
               const isActive = activeSection === section.id;
               return (
@@ -160,12 +141,8 @@ export function SectionNav({
                   className={`
                     w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors
                     ${isActive
-                      ? isDark
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-pink-600 text-white'
-                      : isDark
-                        ? 'text-gray-300 hover:bg-gray-700'
-                        : 'text-gray-700 hover:bg-gray-100'
+                      ? 'theme-section-nav-active-bg'
+                      : 'theme-text-secondary theme-accordion-hover'
                     }
                   `}
                 >
@@ -189,13 +166,11 @@ export function SectionNav({
                 <button
                   key={section.id}
                   onClick={() => scrollToSection(section.id)}
-                  className={`
-                    w-2 h-2 rounded-full transition-all
-                    ${isActive
-                      ? isDark ? 'bg-blue-500 w-2.5 h-2.5' : 'bg-pink-500 w-2.5 h-2.5'
-                      : isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
-                    }
-                  `}
+                  className="w-2 h-2 rounded-full transition-all"
+                  style={{
+                    backgroundColor: isActive ? 'var(--section-nav-active)' : 'var(--section-nav-dot-inactive)',
+                    ...(isActive ? { width: '10px', height: '10px' } : {}),
+                  }}
                   title={section.label}
                   aria-label={`Go to ${section.label}`}
                 />

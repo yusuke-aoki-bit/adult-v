@@ -156,6 +156,11 @@ html {
   --overlay-bg: rgba(0, 0, 0, 0.6);
   --input-bg: #1f2937; /* gray-800 */
   --section-icon-bg: rgba(244, 114, 182, 0.1); /* pink-400/10 */
+
+  /* SectionNav */
+  --section-nav-bg: rgba(12, 12, 20, 0.95);
+  --section-nav-active: #3b82f6; /* blue-500 */
+  --section-nav-dot-inactive: #4b5563; /* gray-600 */
 }
 
 /* FANZA Theme (Light: FANZA official brand colors) */
@@ -257,6 +262,11 @@ html {
   --overlay-bg: rgba(0, 0, 0, 0.6);
   --input-bg: #f3f4f6; /* gray-100 */
   --section-icon-bg: rgba(180, 47, 90, 0.1); /* FANZA rose/10 */
+
+  /* SectionNav */
+  --section-nav-bg: rgba(255, 255, 255, 0.95);
+  --section-nav-active: #B42F5A; /* FANZA rose */
+  --section-nav-dot-inactive: #d1d5db; /* gray-300 */
 }
 
 /* ===========================================
@@ -488,6 +498,20 @@ html {
 
   .theme-caution-bg {
     background-color: var(--caution-bg);
+  }
+
+  .theme-section-nav-bg {
+    background-color: var(--section-nav-bg);
+  }
+
+  .theme-section-nav-active {
+    color: var(--section-nav-active);
+    border-color: var(--section-nav-active);
+  }
+
+  .theme-section-nav-active-bg {
+    background-color: var(--section-nav-active);
+    color: #ffffff;
   }
 
   /* Body background */

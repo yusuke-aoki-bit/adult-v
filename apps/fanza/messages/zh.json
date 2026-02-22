@@ -370,5 +370,21 @@
     "fanScore": "支持率",
     "videos": "部",
     "viewWorks": "查看作品"
+  },
+  "productVideoPlayer": {
+    "playSampleVideo": "播放样片视频",
+    "browserNotSupported": "您的浏览器不支持视频标签。",
+    "videoLoadError": "视频加载失败",
+    "securityRestriction": "由于来源网站的安全限制，可能无法直接播放",
+    "playAtSource": "在来源网站播放",
+    "playInNewTab": "在新标签页播放",
+    "externalVideoTitle": "外部网站视频",
+    "externalVideoDescription": "此视频因安全限制无法嵌入播放。您可以在新标签页中直接播放。",
+    "close": "关闭",
+    "preview": "预览",
+    "trailer": "预告",
+    "streaming": "流媒体",
+    "download": "下载",
+    "sampleVideoCount": "样片视频：{count}部"
   }
 }
