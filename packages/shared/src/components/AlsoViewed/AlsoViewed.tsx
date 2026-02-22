@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 interface AlsoViewedProduct {
   id: number;
@@ -43,12 +44,14 @@ const translations = {
 export function AlsoViewed({
   productId,
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
   apiEndpoint = '/api/products',
   onProductClick,
   limit = 6,
   className = '',
 }: AlsoViewedProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const [products, setProducts] = useState<AlsoViewedProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,13 +59,21 @@ export function AlsoViewed({
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const isDark = theme === 'dark';
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
     async function fetchAlsoViewed() {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(`${apiEndpoint}/${productId}/also-viewed?limit=${limit}`);
+        const response = await fetch(
+          `${apiEndpoint}/${productId}/also-viewed?limit=${limit}`,
+          { signal: abortControllerRef.current.signal }
+        );
 
         if (!response.ok) {
           throw new Error('Failed to fetch');
@@ -76,6 +87,7 @@ export function AlsoViewed({
           setProducts([]);
         }
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
         console.error('[AlsoViewed] Error:', err);
         setError(t.error);
       } finally {
@@ -86,6 +98,8 @@ export function AlsoViewed({
     if (productId) {
       fetchAlsoViewed();
     }
+
+    return () => { abortControllerRef.current?.abort(); };
   }, [productId, apiEndpoint, limit, t.error]);
 
   const handleProductClick = (product: AlsoViewedProduct) => {

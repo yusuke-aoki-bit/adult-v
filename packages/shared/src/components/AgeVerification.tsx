@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 const AGE_REQUIREMENTS = {
   ja: 18, // 日本: 18歳以上
@@ -50,8 +51,10 @@ export default function AgeVerification({
   locale,
   children,
   initialVerified = false,
-  theme = 'dark',
+  theme: themeProp,
 }: AgeVerificationProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const t = useTranslations('ageVerification');
   const config = themeConfig[theme];
 

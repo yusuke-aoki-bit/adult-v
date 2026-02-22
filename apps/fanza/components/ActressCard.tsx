@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { ActressCardBase, type ActressCardSize } from '@adult-v/shared/components';
 import { Actress } from '@/types/product';
-import { normalizeImageUrl } from '@/lib/image-utils';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 import FavoriteButton from './FavoriteButton';
 import { useSite } from '@/lib/contexts/SiteContext';
 

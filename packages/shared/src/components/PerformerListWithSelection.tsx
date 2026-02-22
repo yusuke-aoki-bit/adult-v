@@ -4,6 +4,7 @@ import { useState, ReactNode, useMemo, useCallback, memo, useRef, useEffect } fr
 import { usePerformerCompareList } from '../hooks/usePerformerCompareList';
 import { SelectableCard } from './SelectableCard';
 import { PerformerCompareFloatingBar } from './PerformerCompareFloatingBar';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 const performerListTexts = {
   ja: { selectToCompare: '比較選択モード', exitSelection: '選択終了', selected: '選択中', maxReachedPrefix: '最大', maxReachedSuffix: '名まで選択可能', loading: '読み込み中...' },
@@ -123,12 +124,15 @@ function useIntersectionObserver(
 export function PerformerListWithSelection({
   performers,
   locale,
-  theme = 'dark',
+  theme: themeProp,
   children,
   className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4',
   initialItems = 24,
   loadMoreItems = 24,
 }: PerformerListWithSelectionProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
+
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const { toggleItem, compareSet, count, maxItems, isFull } = usePerformerCompareList();
   const isDark = theme === 'dark';

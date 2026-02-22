@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import { useParams } from 'next/navigation';
 import { ActressAiReview as ActressAiReviewType } from '../types/product';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 export type ActressAiReviewTheme = 'dark' | 'light';
 
@@ -81,7 +82,9 @@ interface ActressAiReviewProps {
   theme?: ActressAiReviewTheme;
 }
 
-const ActressAiReview = memo(function ActressAiReview({ review, updatedAt, actressName, theme = 'dark' }: ActressAiReviewProps) {
+const ActressAiReview = memo(function ActressAiReview({ review, updatedAt, actressName, theme: themeProp }: ActressAiReviewProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const params = useParams();
   const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;

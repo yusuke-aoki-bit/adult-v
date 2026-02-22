@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 export type OptimizedImageTheme = 'dark' | 'light';
 
@@ -16,7 +17,7 @@ export interface OptimizedImageBaseProps {
   sizes?: string;
   quality?: number;
   onLoad?: () => void;
-  theme: OptimizedImageTheme;
+  theme?: OptimizedImageTheme;
 }
 
 const themeStyles = {
@@ -54,8 +55,10 @@ export function OptimizedImageBase({
   sizes,
   quality = 75,
   onLoad,
-  theme,
+  theme: themeProp,
 }: OptimizedImageBaseProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const styles = themeStyles[theme];

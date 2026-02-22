@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 type ViewMode = 'list' | 'network';
 
@@ -84,9 +85,11 @@ function getMapText(locale: string) {
 export function SimilarPerformerMap({
   performerId,
   locale,
-  theme = 'dark',
+  theme: themeProp,
   onPerformerClick,
 }: SimilarPerformerMapProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const mt = getMapText(locale);
   const [data, setData] = useState<PerformerSimilarityData | null>(null);
   const [loading, setLoading] = useState(true);

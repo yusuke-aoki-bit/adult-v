@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Clock, ThumbsUp, ThumbsDown, Trash2, Star, Plus } from 'lucide-react';
 import { useSceneInfo, formatTimestamp, type SceneMarker } from '../../hooks/useSceneInfo';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 interface SceneTimelineProps {
   productId: number;
@@ -95,11 +96,13 @@ const translations = {
 export function SceneTimeline({
   productId,
   duration,
-  theme = 'dark',
+  theme: themeProp,
   locale = 'ja',
   onSeek,
   canEdit = true,
 }: SceneTimelineProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const { sceneInfo, isLoaded, addScene, voteScene, removeScene, getVoteStatus } = useSceneInfo(productId);
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({

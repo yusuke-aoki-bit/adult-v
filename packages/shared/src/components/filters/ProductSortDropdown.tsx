@@ -3,14 +3,17 @@
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { getFilterThemeConfig, type FilterTheme } from './theme';
 import { getSortTranslation } from './translations';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 interface ProductSortDropdownProps {
   sortBy: string;
   basePath: string;
-  theme: FilterTheme;
+  theme?: FilterTheme;
 }
 
-export default function ProductSortDropdown({ sortBy, basePath, theme }: ProductSortDropdownProps) {
+export default function ProductSortDropdown({ sortBy, basePath, theme: themeProp }: ProductSortDropdownProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = (themeProp ?? contextTheme) as FilterTheme;
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();

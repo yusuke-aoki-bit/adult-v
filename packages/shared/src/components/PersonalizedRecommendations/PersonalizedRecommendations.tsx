@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Target } from 'lucide-react';
 import { useRecentlyViewed } from '../../hooks/useRecentlyViewed';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { ProductCardBase } from '../ProductCard';
@@ -56,13 +57,15 @@ interface PersonalizedRecommendationsProps {
 
 export function PersonalizedRecommendations({
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
   apiEndpoint = '/api/recommendations/from-history',
   limit = 8,
   showAnalysis = false,
   className = '',
   defaultOpen = false,
 }: PersonalizedRecommendationsProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const { items: recentlyViewed, isLoading: historyLoading } = useRecentlyViewed();
   const [recommendations, setRecommendations] = useState<RecommendedProduct[]>([]);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -74,12 +77,21 @@ export function PersonalizedRecommendations({
 
   const isDark = theme === 'dark';
   const rt = getRecText(locale);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => { abortControllerRef.current?.abort(); };
+  }, []);
 
   const fetchRecommendations = useCallback(async () => {
     if (recentlyViewed.length < 3) {
       setMessage(rt.viewMore);
       return;
     }
+
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
 
     setIsLoading(true);
     setError(null);
@@ -95,6 +107,7 @@ export function PersonalizedRecommendations({
           })),
           limit,
         }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -111,7 +124,8 @@ export function PersonalizedRecommendations({
       } else {
         setError(data.error || 'Unknown error');
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
       setError(rt.fetchError);
     } finally {
       setIsLoading(false);

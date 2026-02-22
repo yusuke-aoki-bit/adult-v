@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { normalizeImageUrl } from '../lib/image-utils';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface OnSaleProduct {
   id: number;
@@ -55,9 +56,12 @@ export default function PerformerOnSaleProducts({
   products,
   performerName,
   locale,
-  theme = 'dark',
+  theme: themeProp,
   translations,
 }: PerformerOnSaleProductsProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
+
   if (products.length === 0) {
     return null;
   }

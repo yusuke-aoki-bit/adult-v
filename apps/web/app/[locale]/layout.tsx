@@ -7,7 +7,7 @@ import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { ToastProvider } from '@/components/Toast';
 import { SiteProvider } from '@/lib/contexts/SiteContext';
 import { getServerSiteMode } from '@/lib/server/site-mode';
-import AgeVerification from '@/components/AgeVerification';
+import { AgeVerification } from '@adult-v/shared/components';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import ScrollToTop from '@/components/ScrollToTop';
 import NavigationProgress from '@/components/NavigationProgress';

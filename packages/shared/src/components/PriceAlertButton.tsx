@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 const alertTexts = {
   ja: { removeAlert: 'アラート解除', setAlert: '価格アラート設定', description: '指定した価格以下になったらお知らせします。', currentPrice: '現在の価格: ', targetPrice: '目標価格 (円)', placeholder: '例: 1000', cancel: 'キャンセル', submit: '設定する' },
@@ -34,11 +35,13 @@ export default function PriceAlertButton({
   existingTargetPrice,
   isLoaded,
   size = 'md',
-  theme = 'dark',
+  theme: themeProp,
   locale = 'ja',
   onSetAlert,
   onRemoveAlert,
 }: PriceAlertButtonProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const at = getAlertText(locale);
   const [showModal, setShowModal] = useState(false);
   const [targetPrice, setTargetPrice] = useState(

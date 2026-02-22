@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useCallback, memo } from 'react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 export type SortDropdownTheme = 'dark' | 'light';
 
@@ -60,7 +61,9 @@ interface SortDropdownProps {
   theme?: SortDropdownTheme;
 }
 
-function SortDropdownComponent({ sortBy, theme = 'dark' }: SortDropdownProps) {
+function SortDropdownComponent({ sortBy, theme: themeProp }: SortDropdownProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = (themeProp ?? contextTheme) as SortDropdownTheme;
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();

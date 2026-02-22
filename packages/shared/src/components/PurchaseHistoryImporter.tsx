@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { Upload, ClipboardPaste, AlertTriangle, CheckCircle2, FileText, X } from 'lucide-react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 const translations = {
   ja: {
@@ -238,10 +239,12 @@ function parsePurchaseHistory(text: string): ParsedPurchase[] {
 
 export default function PurchaseHistoryImporter({
   locale,
-  theme = 'dark',
+  theme: themeProp,
   onImport,
   onClose,
 }: PurchaseHistoryImporterProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const t = translations[locale as keyof typeof translations] || translations.ja;
   const [inputText, setInputText] = useState('');
   const [parsedPurchases, setParsedPurchases] = useState<ParsedPurchase[]>([]);

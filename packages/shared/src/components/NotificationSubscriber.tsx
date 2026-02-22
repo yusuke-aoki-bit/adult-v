@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useSyncExternalStore } from 'react';
 import { useParams } from 'next/navigation';
 import { Bell, BellOff } from 'lucide-react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 export type NotificationSubscriberTheme = 'dark' | 'light';
 
@@ -74,7 +75,9 @@ interface NotificationSubscriberProps {
   theme?: NotificationSubscriberTheme;
 }
 
-export default function NotificationSubscriber({ theme = 'dark' }: NotificationSubscriberProps) {
+export default function NotificationSubscriber({ theme: themeProp }: NotificationSubscriberProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = (themeProp ?? contextTheme) as NotificationSubscriberTheme;
   const [isSubscribed, setIsSubscribed] = useState(false);
   const isSupported = useNotificationSupport();
   const params = useParams();

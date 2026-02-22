@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 interface SearchResult {
   id: number;
@@ -55,7 +56,9 @@ const searchTexts = {
 } as const;
 function getSearchText(locale: string) { return searchTexts[locale as keyof typeof searchTexts] || searchTexts.ja; }
 
-export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: ImageSearchProps) {
+export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }: ImageSearchProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const st = getSearchText(locale);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -65,6 +68,21 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => { abortControllerRef.current?.abort(); };
+  }, []);
+
+  // Cleanup blob URL when previewUrl changes or on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const themeClasses = {
     container: theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200',
@@ -90,7 +108,10 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
     }
 
     setSelectedImage(file);
-    setPreviewUrl(URL.createObjectURL(file));
+    setPreviewUrl(prev => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
     setError(null);
     setResults([]);
     setAnalysis(null);
@@ -151,6 +172,9 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
   const handleSearch = useCallback(async () => {
     if (!selectedImage) return;
 
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
     setIsSearching(true);
     setError(null);
 
@@ -161,6 +185,7 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
       const response = await fetch('/api/search/image', {
         method: 'POST',
         body: formData,
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -172,6 +197,7 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
       setResults(data.results || []);
       setAnalysis(data.analysis || null);
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : st.searchError);
     } finally {
       setIsSearching(false);
@@ -179,6 +205,7 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
   }, [selectedImage]);
 
   const handleClear = useCallback(() => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setSelectedImage(null);
     setPreviewUrl(null);
     setResults([]);
@@ -187,7 +214,7 @@ export function ImageSearch({ locale = 'ja', theme = 'dark', onProductClick }: I
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, []);
+  }, [previewUrl]);
 
   const handleProductClick = useCallback((result: SearchResult) => {
     if (onProductClick && result.normalizedProductId) {

@@ -53,9 +53,9 @@ function getDb() {
         connectionString: cleanConnectionString,
         // SSL設定: 無効化条件に該当しない本番環境のみSSL有効
         ssl: shouldDisableSsl ? false : (process.env['NODE_ENV'] === 'production' ? { rejectUnauthorized: false } : false),
-        max: isDev ? 10 : 50, // 開発環境では10、本番は50
-        min: isDev ? 2 : 10, // 開発環境では2、本番は10
-        idleTimeoutMillis: isDev ? 30000 : 60000, // 開発環境では30秒、本番は60秒
+        max: isDev ? 10 : 20, // 開発環境では10、本番は20（メモリ節約）
+        min: isDev ? 2 : 3, // 開発環境では2、本番は3
+        idleTimeoutMillis: isDev ? 30000 : 30000, // アイドル接続を30秒で解放
         connectionTimeoutMillis: 15000, // 接続タイムアウト（15秒）
         allowExitOnIdle: isDev, // 開発環境ではアイドル時に終了を許可
       });

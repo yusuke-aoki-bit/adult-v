@@ -388,7 +388,7 @@ export function createSeoEnhanceHandler(deps: SeoEnhanceHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
-    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
+    const TIME_LIMIT = 150_000; // 150秒（Cloud Scheduler 180秒タイムアウトの83%）
     const siteBaseUrl = deps.siteBaseUrl || process.env['NEXT_PUBLIC_SITE_URL'] || 'https://adult-v.com';
 
     try {

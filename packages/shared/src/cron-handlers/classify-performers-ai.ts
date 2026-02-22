@@ -35,7 +35,7 @@ export function createClassifyPerformersAiHandler(deps: ClassifyPerformersAiDeps
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
     const startTime = Date.now();
-    const TIME_LIMIT = 240_000; // 240秒
+    const TIME_LIMIT = 150_000; // 150秒（Cloud Scheduler 180秒タイムアウトの83%）
     let processed = 0;
     let totalTagsAssigned = 0;
     let skipped = 0;

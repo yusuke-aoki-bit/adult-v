@@ -3,11 +3,12 @@
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { getFilterThemeConfig, type FilterTheme } from './theme';
 import { getPerPageTranslation } from './translations';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 interface PerPageDropdownProps {
   perPage: number;
   basePath: string;
-  theme: FilterTheme;
+  theme?: FilterTheme;
   options?: number[];
 }
 
@@ -16,9 +17,11 @@ const DEFAULT_OPTIONS = [12, 24, 48, 96];
 export default function PerPageDropdown({
   perPage,
   basePath,
-  theme,
+  theme: themeProp,
   options = DEFAULT_OPTIONS,
 }: PerPageDropdownProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = (themeProp ?? contextTheme) as FilterTheme;
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();

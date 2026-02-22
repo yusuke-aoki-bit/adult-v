@@ -29,7 +29,7 @@ import SimilarProductMapWrapper from '@/components/SimilarProductMapWrapper';
 import ProductSectionNav from '@/components/ProductSectionNav';
 import { getCachedProductByIdOrCode, getProductSources, getActressAvgPricePerMin, getSampleImagesByMakerCode, getProductMakerCode, getAllProductSources } from '@/lib/db/queries';
 import { formatProductCodeForDisplay } from '@adult-v/shared';
-import { isSubscriptionSite } from '@/lib/image-utils';
+import { isSubscriptionSite } from '@adult-v/shared/lib/image-utils';
 import { getPerformerOtherProducts, getProductMaker, getSameMakerProducts, getProductGenreTags, getProductSeries, getSameSeriesProducts } from '@/lib/db/recommendations';
 import { generateBaseMetadata, generateProductSchema, generateBreadcrumbSchema, generateOptimizedDescription, generateVideoObjectSchema, generateFAQSchema, getProductPageFAQs, generateReviewSchema, generateHowToSchema, generateAggregateOfferSchema } from '@/lib/seo';
 import { Metadata } from 'next';
@@ -63,10 +63,10 @@ function seededRandom(seed: number): number {
 
 // Dynamic imports for heavy components (494 + 469 lines) to reduce initial bundle size
 const SceneTimeline = nextDynamic(() => import('@/components/SceneTimeline'), {
-  loading: () => <div className="h-32 bg-gray-800 rounded-lg animate-pulse" />,
+  loading: () => <div className="h-32 theme-content rounded-lg animate-pulse" />,
 });
 const EnhancedAiReview = nextDynamic(() => import('@/components/EnhancedAiReview'), {
-  loading: () => <div className="h-48 bg-gray-800 rounded-lg animate-pulse" />,
+  loading: () => <div className="h-48 theme-content rounded-lg animate-pulse" />,
 });
 
 interface PageProps {
@@ -83,13 +83,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
     // SEO最適化されたメタディスクリプション生成（セール・レーティング情報含む）
-    const productId = product.normalizedProductId || product.id;
+    // 表示用品番を優先（SSIS-865 > ssis865）→ Google検索で品番ヒット改善
+    const displayCode = product.makerProductCode || product.normalizedProductId || String(product.id);
     const optimizedDescription = generateOptimizedDescription(
       product.title,
       product.actressName,
       product.tags,
       product.releaseDate,
-      productId,
+      displayCode,
       {
         ...(product.salePrice != null && { salePrice: product.salePrice }),
         ...(product.regularPrice != null && { regularPrice: product.regularPrice }),
@@ -103,10 +104,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       },
     );
 
-    // SEO: Titleに品番を含める（Google検索で品番検索時にヒットさせる）
+    // SEO: Titleに表示用品番を含める（Google検索で品番検索時にヒットさせる）
     // セール時は割引率を含めてCTR向上
     const salePrefix = product.discount && product.discount > 0 ? `【${product.discount}%OFF】` : '';
-    const seoTitle = salePrefix + (productId ? `${productId} ${product.title}` : product.title);
+    const seoTitle = salePrefix + (displayCode ? `${displayCode} ${product.title}` : product.title);
 
     // canonical URLは全言語で統一（パラメータなし）
     const productPath = `/products/${product.id}`;
@@ -163,23 +164,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const basePath = localizedHref(`/products/${product.id}`, locale);
 
-  // Structured data（レーティング情報含む）
-  const productSchema = generateProductSchema(
-    product.title,
-    product.description || '',
-    product.imageUrl,
-    basePath,
-    product.regularPrice || product.price,
-    product.providerLabel,
-    product.rating && product.reviewCount ? {
-      ratingValue: product.rating,
-      reviewCount: product.reviewCount,
-    } : undefined,
-    product.salePrice,
-    product.currency || 'JPY',
-    product.normalizedProductId || undefined, // SKU（品番）
-  );
-
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: tNav('home'), url: localizedHref('/', locale) },
     { name: product.title, url: basePath },
@@ -197,20 +181,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
         product.releaseDate,
       )
     : null;
-
-  // FAQ Schema（商品ページ用）
-  const faqOptions: Parameters<typeof getProductPageFAQs>[1] = {
-    title: product.title,
-    isHD: true, // 基本的にHD対応と仮定
-  };
-  if (product.normalizedProductId) faqOptions.productId = product.normalizedProductId;
-  if (product.duration) faqOptions.duration = product.duration;
-  if (product.releaseDate) faqOptions.releaseDate = product.releaseDate;
-  if (product.providerLabel) faqOptions.provider = product.providerLabel;
-  const actressNameForFaq = product.actressName || product.performers?.[0]?.name;
-  if (actressNameForFaq) faqOptions.actressName = actressNameForFaq;
-  const productFaqs = getProductPageFAQs(locale, faqOptions);
-  const faqSchema = generateFAQSchema(productFaqs);
 
   // Review Schema（AIレビューがある場合）
   let reviewSchema = null;
@@ -291,6 +261,44 @@ export default async function ProductDetailPage({ params }: PageProps) {
     console.error(`[product-detail] Error loading product data phase 1 for ${id}:`, error);
     notFound();
   }
+
+  // Structured data（レーティング情報含む + 外部ID）
+  const productSchema = generateProductSchema(
+    product.title,
+    product.description || '',
+    product.imageUrl,
+    basePath,
+    product.regularPrice || product.price,
+    product.providerLabel,
+    product.rating && product.reviewCount ? {
+      ratingValue: product.rating,
+      reviewCount: product.reviewCount,
+    } : undefined,
+    product.salePrice,
+    product.currency || 'JPY',
+    product.normalizedProductId || undefined,
+    // SEO: 外部品番（FANZA ID等）を構造化データに追加
+    sources
+      ?.filter((s: any) => s.originalProductId && s.originalProductId !== product.normalizedProductId)
+      .map((s: any) => ({ aspName: s.aspName, originalProductId: s.originalProductId })),
+  );
+
+  // FAQ Schema（商品ページ用 + 外部品番FAQ）
+  const externalIdsForFaq = sources
+    ?.filter((s: any) => s.originalProductId && s.originalProductId !== product.normalizedProductId)
+    .map((s: any) => ({ aspName: s.aspName, originalProductId: s.originalProductId })) || [];
+  const productFaqs = getProductPageFAQs(locale, {
+    productId: product.normalizedProductId || undefined,
+    title: product.title,
+    duration: product.duration,
+    releaseDate: product.releaseDate,
+    provider: product.providerLabel,
+    actressName: product.actressName || product.performers?.[0]?.name,
+    isHD: true,
+    makerProductCode: displayProductCode || undefined,
+    ...(externalIdsForFaq.length > 0 && { externalIds: externalIdsForFaq }),
+  });
+  const faqSchema = generateFAQSchema(productFaqs);
 
   // Phase 2: Phase 1の結果に依存するデータの並列取得
   let performerOtherProducts, sameMakerProducts, sameSeriesProducts, sourcesWithSales, crossAspSampleImages, actressAvgPricePerMin;
@@ -373,14 +381,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* サンプル動画セクション */}
           {product.sampleVideos && product.sampleVideos.length > 0 && (
-            <details id="sample-video" className="bg-gray-800 rounded-lg shadow-md mb-6 group scroll-mt-20">
-              <summary className="p-4 cursor-pointer list-none flex items-center gap-2 hover:bg-gray-750 rounded-lg transition-colors">
-                <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <details id="sample-video" className="theme-content rounded-lg shadow-md border theme-border mb-6 group scroll-mt-20">
+              <summary className="p-4 cursor-pointer list-none flex items-center gap-2 theme-accordion-hover rounded-lg transition-colors">
+                <svg className="w-5 h-5 theme-text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-lg font-semibold text-white flex-1">サンプル動画 ({product.sampleVideos.length}本)</span>
-                <svg className="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="text-lg font-semibold theme-text flex-1">サンプル動画 ({product.sampleVideos.length}本)</span>
+                <svg className="w-5 h-5 theme-text-muted transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </summary>
@@ -393,7 +401,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </details>
           )}
 
-          <div id="product-info" className="bg-gray-800 rounded-lg shadow-md overflow-hidden scroll-mt-20">
+          <div id="product-info" className="theme-content rounded-lg shadow-md border theme-border overflow-hidden scroll-mt-20">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
               {/* Product Image Gallery */}
               <ProductImageGallery
@@ -409,7 +417,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <div className="flex items-start gap-3 mb-2">
                     {/* SEO強化: H1に品番を含める（Google検索で品番検索時にヒット率向上） */}
                     {/* 正規化された品番を使用 */}
-                    <h1 className="text-3xl font-bold text-white flex-1">
+                    <h1 className="text-3xl font-bold theme-text flex-1">
                       {displayProductCode && (
                         <span className="text-rose-400">{displayProductCode}</span>
                       )}
@@ -428,7 +436,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       locale={locale}
                     />
                   </div>
-                  <p className="text-gray-300">{product.providerLabel}</p>
+                  <p className="theme-text-secondary">{product.providerLabel}</p>
                   {/* SEO強化: 品番を目立つ形で表示 + コピーボタン */}
                   {/* 正規化された品番を使用 */}
                   <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -441,16 +449,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <div className="inline-flex items-center gap-1">
                       <CopyButton text={product.title} label="タイトル" size="xs" />
                     </div>
-                    {sources[0]?.originalProductId &&
-                     sources[0].originalProductId !== displayProductCode && (
-                      <span className="inline-flex items-center px-2 py-1 bg-gray-700 rounded-md text-gray-300 text-xs font-mono">
-                        {sources[0].originalProductId}
-                      </span>
-                    )}
+                    {sources
+                      ?.filter((s: any) => s.originalProductId && s.originalProductId !== displayProductCode)
+                      .map((s: any, i: number) => (
+                        <span key={i} className="inline-flex items-center px-2 py-1 bg-gray-700 rounded-md text-gray-300 text-xs font-mono">
+                          {s.aspName}: {s.originalProductId}
+                        </span>
+                      ))
+                    }
                   </div>
                   {/* レビュー統計サマリー */}
                   {product.rating && product.rating > 0 && (
-                    <div className="flex items-center gap-3 mt-3 p-3 bg-gray-700/50 rounded-lg">
+                    <div className="flex items-center gap-3 mt-3 p-3 theme-accordion-bg rounded-lg">
                       <div className="flex items-center gap-1">
                         <svg className="w-6 h-6 text-yellow-400 fill-current" viewBox="0 0 24 24">
                           <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
@@ -480,8 +490,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 </div>
 
                 {product.performers && product.performers.length > 0 ? (
-                  <div className="bg-gray-700/50 rounded-lg p-4">
-                    <h2 className="text-sm font-semibold text-gray-400 mb-3 flex items-center gap-2">
+                  <div className="theme-accordion-bg rounded-lg p-4">
+                    <h2 className="text-sm font-semibold theme-text-muted mb-3 flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
@@ -506,8 +516,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     </div>
                   </div>
                 ) : product.actressName ? (
-                  <div className="bg-gray-700/50 rounded-lg p-4">
-                    <h2 className="text-sm font-semibold text-gray-400 mb-3 flex items-center gap-2">
+                  <div className="theme-accordion-bg rounded-lg p-4">
+                    <h2 className="text-sm font-semibold theme-text-muted mb-3 flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
@@ -534,8 +544,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                 {product.description && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">{t.description}</h2>
-                    <p className="text-white whitespace-pre-wrap">{product.description}</p>
+                    <h2 className="text-sm font-semibold theme-text mb-2">{t.description}</h2>
+                    <p className="theme-text-secondary whitespace-pre-wrap">{product.description}</p>
                   </div>
                 )}
 
@@ -546,9 +556,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 />
 
                 {product.price && (
-                  <div className="bg-gray-700/50 rounded-lg p-4">
+                  <div className="theme-accordion-bg rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <h2 className="text-sm font-semibold text-gray-400">{t.price}</h2>
+                      <h2 className="text-sm font-semibold theme-text-muted">{t.price}</h2>
                       {product.salePrice && product.discount && (
                         <span className="inline-flex items-center px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded animate-pulse">
                           {product.discount}% OFF
@@ -566,18 +576,32 @@ export default async function ProductDetailPage({ params }: PageProps) {
                           </p>
                         </>
                       ) : (
-                        <p className="text-3xl font-bold text-white">
+                        <p className="text-3xl font-bold theme-text">
                           {product.provider && isSubscriptionSite(product.provider) && <span className="text-base text-gray-400 mr-1">{t.monthly}</span>}
                           ¥{product.price.toLocaleString()}
                         </p>
                       )}
                     </div>
                     {product.salePrice && product.price && product.price > product.salePrice && (
-                      <p className="text-sm text-green-400 mt-1 flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                        ¥{(product.price - product.salePrice).toLocaleString()} お得
-                      </p>
+                      <div className="flex items-center gap-2 mt-2 px-3 py-2 rounded-lg theme-highlight-bg">
+                        <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        <span className="font-bold text-emerald-500">¥{(product.price - product.salePrice).toLocaleString()} お得</span>
+                        <span className="theme-text-muted text-sm">({product.discount}% OFF)</span>
+                      </div>
                     )}
+                    {product.saleEndAt && product.salePrice && (() => {
+                      const remaining = new Date(product.saleEndAt).getTime() - Date.now();
+                      if (remaining <= 0) return null;
+                      const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+                      const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                      const urgencyClass = days < 3 ? 'text-red-400 font-bold' : days < 7 ? 'text-amber-400' : 'theme-text-muted';
+                      return (
+                        <p className={`text-sm mt-2 flex items-center gap-1.5 ${urgencyClass}`}>
+                          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          セール終了まで: {days > 0 ? `${days}日 ` : ''}{hours}時間
+                        </p>
+                      );
+                    })()}
                     {/* ファーストビューCTA - 目立つ購入ボタン（全ASP対応） */}
                     {product.affiliateUrl && (
                       <a
@@ -641,14 +665,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                 {product.releaseDate && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">{t.releaseDate}</h2>
-                    <p className="text-white">{product.releaseDate}</p>
+                    <h2 className="text-sm font-semibold theme-text mb-2">{t.releaseDate}</h2>
+                    <p className="theme-text">{product.releaseDate}</p>
                   </div>
                 )}
 
                 {genreTags.length > 0 && (
                   <div>
-                    <h2 className="text-sm font-semibold text-white mb-2">{t.tags}</h2>
+                    <h2 className="text-sm font-semibold theme-text mb-2">{t.tags}</h2>
                     <div className="flex flex-wrap gap-2">
                       {genreTags.map((tag) => (
                         <Link
@@ -668,10 +692,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
                 {/* シリーズ・メーカー情報 */}
                 {(series || maker) && (
-                  <div className="bg-gray-700/50 rounded-lg p-4 space-y-3">
+                  <div className="theme-accordion-bg rounded-lg p-4 space-y-3">
                     {series && (
                       <div>
-                        <h2 className="text-xs font-semibold text-gray-400 mb-1.5 flex items-center gap-1">
+                        <h2 className="text-xs font-semibold theme-text-muted mb-1.5 flex items-center gap-1">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                           </svg>
@@ -690,7 +714,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     )}
                     {maker && (
                       <div>
-                        <h2 className="text-xs font-semibold text-gray-400 mb-1.5 flex items-center gap-1">
+                        <h2 className="text-xs font-semibold theme-text-muted mb-1.5 flex items-center gap-1">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
@@ -750,7 +774,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <div className="mt-8 p-6 bg-gradient-to-r from-red-900/50 via-orange-900/30 to-red-900/50 rounded-xl border border-red-500/30">
               <div className="text-center mb-4">
                 <span className="text-3xl animate-pulse">🔥</span>
-                <h3 className="text-xl font-bold text-white mt-2">
+                <h3 className="text-xl font-bold theme-text mt-2">
                   今なら{product.discount}%OFF！
                 </h3>
                 <p className="text-red-300 text-sm mt-1">
@@ -825,16 +849,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {performerOtherProducts.length > 0 && primaryPerformerId && primaryPerformerName && (
             <SectionVisibility sectionId="performer-products" pageId="product" locale={locale}>
             <div id="performer-products" className="mt-8 scroll-mt-20">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center justify-center w-9 h-9 rounded-lg theme-section-icon-bg">
+                  <svg className="w-5 h-5 theme-text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
+                </div>
+                <h2 className="flex-1 min-w-0 text-lg font-bold theme-text truncate">
                   {tRelated('performerOtherWorks', { name: primaryPerformerName })}
                 </h2>
                 <Link
                   href={localizedHref(`/actress/${primaryPerformerId}`, locale)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-lg transition-colors shadow-sm"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium theme-text-accent hover:opacity-80 transition-opacity shrink-0"
                 >
                   {tRelated('viewAll')}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -847,7 +873,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <Link
                     key={p.id}
                     href={localizedHref(`/products/${p.id}`, locale)}
-                    className="group bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
+                    className="group theme-content rounded-lg overflow-hidden border theme-border hover:ring-2 hover:ring-rose-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
                   >
                     <div className="relative bg-gray-700" style={{ aspectRatio: '2/3' }}>
                       {p.imageUrl ? (
@@ -862,9 +888,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
                           <span className="text-gray-500 text-xs">NO IMAGE</span>
                         </div>
                       )}
+                      {p.bestRating && parseFloat(p.bestRating) > 0 && (
+                        <span className="absolute top-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                          <svg className="w-2.5 h-2.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                          {parseFloat(p.bestRating).toFixed(1)}
+                        </span>
+                      )}
+                      {p.minPrice != null && (
+                        <span className={`absolute bottom-1.5 left-1.5 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded font-medium ${p.hasActiveSale ? 'bg-red-600/90' : 'bg-black/60'}`}>
+                          {p.hasActiveSale && <span className="mr-0.5">SALE</span>}
+                          ¥{p.minPrice.toLocaleString()}
+                        </span>
+                      )}
                     </div>
                     <div className="p-2">
-                      <p className="text-xs text-gray-200 line-clamp-2 group-hover:text-rose-300 transition-colors">
+                      <p className="text-xs theme-text-secondary line-clamp-2 group-hover:text-rose-300 transition-colors">
                         {p.title}
                       </p>
                     </div>
@@ -890,16 +928,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {sameSeriesProducts.length > 0 && series && (
             <SectionVisibility sectionId="series-products" pageId="product" locale={locale}>
             <div id="series-products" className="mt-8 scroll-mt-20">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center justify-center w-9 h-9 rounded-lg theme-section-icon-bg">
+                  <svg className="w-5 h-5 theme-text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
+                </div>
+                <h2 className="flex-1 min-w-0 text-lg font-bold theme-text truncate">
                   {tRelated('seriesWorks', { name: series.name })}
                 </h2>
                 <Link
                   href={localizedHref(`/series/${series.id}`, locale)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors shadow-sm"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium theme-text-accent hover:opacity-80 transition-opacity shrink-0"
                 >
                   {tRelated('viewAll')}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -912,7 +952,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <Link
                     key={p.id}
                     href={localizedHref(`/products/${p.id}`, locale)}
-                    className="group bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-purple-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
+                    className="group theme-content rounded-lg overflow-hidden border theme-border hover:ring-2 hover:ring-purple-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
                   >
                     <div className="relative bg-gray-700" style={{ aspectRatio: '2/3' }}>
                       {p.imageUrl ? (
@@ -927,9 +967,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
                           <span className="text-gray-500 text-xs">NO IMAGE</span>
                         </div>
                       )}
+                      {p.bestRating && parseFloat(p.bestRating) > 0 && (
+                        <span className="absolute top-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                          <svg className="w-2.5 h-2.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                          {parseFloat(p.bestRating).toFixed(1)}
+                        </span>
+                      )}
+                      {p.minPrice != null && (
+                        <span className={`absolute bottom-1.5 left-1.5 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded font-medium ${p.hasActiveSale ? 'bg-red-600/90' : 'bg-black/60'}`}>
+                          {p.hasActiveSale && <span className="mr-0.5">SALE</span>}
+                          ¥{p.minPrice.toLocaleString()}
+                        </span>
+                      )}
                     </div>
                     <div className="p-2">
-                      <p className="text-xs text-gray-200 line-clamp-2 group-hover:text-purple-300 transition-colors">
+                      <p className="text-xs theme-text-secondary line-clamp-2 group-hover:text-purple-300 transition-colors">
                         {p.title}
                       </p>
                     </div>
@@ -955,16 +1007,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {sameMakerProducts.length > 0 && maker && (
             <SectionVisibility sectionId="maker-products" pageId="product" locale={locale}>
             <div id="maker-products" className="mt-8 scroll-mt-20">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center justify-center w-9 h-9 rounded-lg theme-section-icon-bg">
+                  <svg className="w-5 h-5 theme-text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
+                </div>
+                <h2 className="flex-1 min-w-0 text-lg font-bold theme-text truncate">
                   {tRelated('makerOtherWorks', { name: maker.name })}
                 </h2>
                 <Link
                   href={localizedHref(`/makers/${maker.id}`, locale)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-500 rounded-lg transition-colors shadow-sm"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium theme-text-accent hover:opacity-80 transition-opacity shrink-0"
                 >
                   {tRelated('viewAll')}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -977,7 +1031,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <Link
                     key={p.id}
                     href={localizedHref(`/products/${p.id}`, locale)}
-                    className="group bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-amber-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
+                    className="group theme-content rounded-lg overflow-hidden border theme-border hover:ring-2 hover:ring-amber-500/50 transition-all shrink-0 w-[140px] sm:w-[160px] snap-start"
                   >
                     <div className="relative bg-gray-700" style={{ aspectRatio: '2/3' }}>
                       {p.imageUrl ? (
@@ -992,9 +1046,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
                           <span className="text-gray-500 text-xs">NO IMAGE</span>
                         </div>
                       )}
+                      {p.bestRating && parseFloat(p.bestRating) > 0 && (
+                        <span className="absolute top-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                          <svg className="w-2.5 h-2.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                          {parseFloat(p.bestRating).toFixed(1)}
+                        </span>
+                      )}
+                      {p.minPrice != null && (
+                        <span className={`absolute bottom-1.5 left-1.5 backdrop-blur-sm text-white text-[10px] px-1.5 py-0.5 rounded font-medium ${p.hasActiveSale ? 'bg-red-600/90' : 'bg-black/60'}`}>
+                          {p.hasActiveSale && <span className="mr-0.5">SALE</span>}
+                          ¥{p.minPrice.toLocaleString()}
+                        </span>
+                      )}
                     </div>
                     <div className="p-2">
-                      <p className="text-xs text-gray-200 line-clamp-2 group-hover:text-amber-300 transition-colors">
+                      <p className="text-xs theme-text-secondary line-clamp-2 group-hover:text-amber-300 transition-colors">
                         {p.title}
                       </p>
                     </div>
@@ -1019,7 +1085,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* 類似作品ネットワーク */}
           <SectionVisibility sectionId="similar-network" pageId="product" locale={locale}>
             <div id="similar-network" className="mt-8 scroll-mt-20">
-              <Suspense fallback={<div className="h-64 bg-gray-800 rounded-lg animate-pulse" />}>
+              <Suspense fallback={<div className="h-64 theme-content rounded-lg animate-pulse" />}>
                 <SimilarProductMapWrapper productId={productId} locale={locale} />
               </Suspense>
             </div>
@@ -1028,7 +1094,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* この作品を見た人はこちらも見ています */}
           <SectionVisibility sectionId="also-viewed" pageId="product" locale={locale}>
             <div id="also-viewed" className="mt-8 scroll-mt-20">
-              <Suspense fallback={<div className="h-48 bg-gray-800 rounded-lg animate-pulse" />}>
+              <Suspense fallback={<div className="h-48 theme-content rounded-lg animate-pulse" />}>
                 <AlsoViewedWrapper productId={String(product.id)} locale={locale} />
               </Suspense>
             </div>
@@ -1037,7 +1103,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* ユーザー投稿セクション（レビュー、タグ提案、出演者提案） */}
           <SectionVisibility sectionId="user-contributions" pageId="product" locale={locale}>
             <div id="user-contributions" className="mt-8 scroll-mt-20">
-              <Suspense fallback={<div className="h-32 bg-gray-800 rounded-lg animate-pulse" />}>
+              <Suspense fallback={<div className="h-32 theme-content rounded-lg animate-pulse" />}>
                 <UserContributionsWrapper
                   productId={productId}
                   locale={locale}

@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertTriangle, Clock, TrendingDown, Calendar } from 'lucide-react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface CareerProduct {
   id: number;
@@ -137,8 +138,10 @@ export function RetirementAlert({
   career,
   actressName: _actressName,
   locale,
-  theme = 'dark',
+  theme: themeProp,
 }: RetirementAlertProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const t = translations[locale as TranslationKey] || translations.ja;
   const s = themes[theme];
 

@@ -96,6 +96,12 @@ export function ChatBot({
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => { abortControllerRef.current?.abort(); };
+  }, []);
 
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
@@ -135,6 +141,9 @@ export function ChatBot({
     setInput('');
     setIsLoading(true);
 
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
     try {
       const response = await fetch(apiEndpoint, {
         method: 'POST',
@@ -146,6 +155,7 @@ export function ChatBot({
             content: m.content,
           })),
         }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) throw new Error('API error');
@@ -160,7 +170,8 @@ export function ChatBot({
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
       setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
         role: 'assistant',

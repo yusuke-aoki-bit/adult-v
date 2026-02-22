@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp, RefreshCw, AlertCircle, TrendingUp } from 'lucide-react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 interface TrendItem {
   name: string;
@@ -55,10 +56,12 @@ function getTrendText(locale: string) { return trendTexts[locale as keyof typeof
 
 export function TrendAnalysis({
   locale,
-  theme = 'dark',
+  theme: themeProp,
   onTagClick,
   onPerformerClick,
 }: TrendAnalysisProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const tt = getTrendText(locale);
   const [data, setData] = useState<TrendsData | null>(null);
   const [loading, setLoading] = useState(false);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 // Translations
 const translations = {
@@ -65,9 +66,11 @@ interface AiActressProfileProps {
 export function AiActressProfile({
   actressId,
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
   apiEndpoint,
 }: AiActressProfileProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const [profile, setProfile] = useState<AiProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

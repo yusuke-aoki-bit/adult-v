@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useHomeSections, HomeSection } from '../../hooks/useHomeSections';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 export interface SectionSettingsProps {
   locale: string;
@@ -154,7 +155,9 @@ function SectionList({
   );
 }
 
-export function SectionSettings({ locale, theme = 'dark' }: SectionSettingsProps) {
+export function SectionSettings({ locale, theme: themeProp }: SectionSettingsProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const [activeTab, setActiveTab] = useState<PageId>('home');
   const isDark = theme === 'dark';
   const t = translations[locale as keyof typeof translations] || translations.ja;

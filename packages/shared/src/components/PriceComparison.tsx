@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { isSubscriptionProvider } from '../lib/providers';
 import { useTranslations } from 'next-intl';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface PriceOption {
   asp: string;
@@ -110,7 +111,9 @@ function normalizeAffiliateUrl(url: string): string {
  * 価格比較コンポーネント
  * 複数ASPの価格を比較表示
  */
-function PriceComparison({ productId, theme = 'light' }: PriceComparisonProps) {
+function PriceComparison({ productId, theme: themeProp }: PriceComparisonProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = (themeProp ?? contextTheme) as PriceComparisonTheme;
   const t = useTranslations('priceComparison');
   const colors = themeConfig[theme];
   const [prices, setPrices] = useState<PriceOption[]>([]);

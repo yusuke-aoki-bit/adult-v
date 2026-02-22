@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useEffect, useCallback } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 export type LanguageSwitcherTheme = 'dark' | 'light';
 
@@ -19,7 +20,7 @@ export const localeNames: Record<Locale, string> = {
 export const defaultLocale: Locale = 'ja';
 
 export interface LanguageSwitcherBaseProps {
-  theme: LanguageSwitcherTheme;
+  theme?: LanguageSwitcherTheme;
 }
 
 const themeStyles = {
@@ -35,7 +36,7 @@ const themeStyles = {
   },
 };
 
-function LanguageSwitcherContent({ theme }: LanguageSwitcherBaseProps) {
+function LanguageSwitcherContent({ theme }: { theme: LanguageSwitcherTheme }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -106,7 +107,9 @@ function LanguageSwitcherContent({ theme }: LanguageSwitcherBaseProps) {
   );
 }
 
-export function LanguageSwitcherBase({ theme }: LanguageSwitcherBaseProps) {
+export function LanguageSwitcherBase({ theme: themeProp }: LanguageSwitcherBaseProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const styles = themeStyles[theme];
 
   return (

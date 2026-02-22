@@ -3,6 +3,7 @@
 import { ReactNode, useState, useCallback, memo } from 'react';
 import { ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 export type MenuType = 'link' | 'accordion';
 
@@ -53,7 +54,9 @@ const MENU_BASE_STYLES = {
  * アコーディオン型: 紫系アイコン、上下矢印
  */
 function TopPageMenuSectionComponent(props: TopPageMenuSectionProps) {
-  const { icon, title, subtitle, theme = 'dark' } = props;
+  const { icon, title, subtitle, theme: themeProp } = props;
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const isDark = theme === 'dark';
 
   // アコーディオン状態

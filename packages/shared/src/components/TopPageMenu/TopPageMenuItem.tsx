@@ -3,6 +3,7 @@
 import { ReactNode, memo } from 'react';
 import { ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 export interface TopPageMenuItemProps {
   /** アイコン（lucide-react コンポーネント） */
@@ -46,9 +47,11 @@ function LinkMenuItemComponent({
   subtitle,
   href,
   badge,
-  theme = 'dark',
+  theme: themeProp,
   className = '',
 }: LinkMenuItemProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const isDark = theme === 'dark';
 
   return (
@@ -100,9 +103,11 @@ function AccordionMenuItemComponent({
   onToggle,
   onKeyDown,
   children,
-  theme = 'dark',
+  theme: themeProp2,
   className = '',
 }: AccordionMenuItemProps) {
+  const { theme: contextTheme2 } = useSiteTheme();
+  const theme = themeProp2 ?? contextTheme2;
   const isDark = theme === 'dark';
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

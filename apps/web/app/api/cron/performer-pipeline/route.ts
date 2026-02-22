@@ -1,21 +1,3 @@
-/**
- * 演者名寄せ統合パイプライン Cron API
- *
- * Cloud Schedulerから定期的に呼び出される
- * Wikiクロール + 演者紐付けを一括で実行
- *
- * GET /api/cron/performer-pipeline?asp=MGS&limit=500
- */
-
-import { verifyCronRequest, unauthorizedResponse } from '@/lib/cron-auth';
-import { getDb } from '@/lib/db';
-import { createPerformerPipelineHandler } from '@adult-v/shared/cron-handlers';
-
+export { cronPerformerPipeline as GET } from '@adult-v/shared/cron-routes';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 1800; // 30 minutes for large batch processing
-
-export const GET = createPerformerPipelineHandler({
-  verifyCronRequest,
-  unauthorizedResponse,
-  getDb,
-});
+export const maxDuration = 1800;

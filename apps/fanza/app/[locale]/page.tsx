@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import SortDropdown from '@/components/SortDropdown';
+import { SortDropdown } from '@adult-v/shared/components';
 import { Pagination } from '@adult-v/shared/components';
 import PerformerGridWithComparison from '@/components/PerformerGridWithComparison';
 import ActressListFilter from '@/components/ActressListFilter';
@@ -214,7 +214,10 @@ export default async function Home({ params, searchParams }: PageProps) {
   // 並列クエリ実行（パフォーマンス最適化）
   // タグ、ASP統計、女優リスト、女優数を同時に取得
   const [allTags, aspStatsResult, actresses, totalCount] = await Promise.all([
-    getTags(),
+    getTags().catch((error: unknown) => {
+      console.error('Failed to fetch tags:', error);
+      return [] as Awaited<ReturnType<typeof getTags>>;
+    }),
     !isFanzaSite ? getAspStats().catch((error: unknown) => {
       console.error('Failed to fetch ASP stats:', error);
       return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
@@ -224,8 +227,14 @@ export default async function Home({ params, searchParams }: PageProps) {
       limit: PER_PAGE,
       offset,
       locale,
+    }).catch((error: unknown) => {
+      console.error('Failed to fetch actresses:', error);
+      return [] as Awaited<ReturnType<typeof getActresses>>;
     }),
-    getActressesCount(actressQueryOptions),
+    getActressesCount(actressQueryOptions).catch((error: unknown) => {
+      console.error('Failed to fetch actresses count:', error);
+      return 0;
+    }),
   ]);
 
   const genreTags = allTags.filter(tag => tag.category !== 'site');

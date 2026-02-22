@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRecentlyViewed } from '../../hooks/useRecentlyViewed';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 interface UserProfile {
   profileType: 'casual' | 'explorer' | 'collector' | 'specialist';
@@ -104,11 +105,13 @@ function getLocaleKey(locale: string): 'ja' | 'en' {
 
 export function UserPreferenceProfile({
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
   apiEndpoint = '/api/user/profile',
   onTagClick,
   className = '',
 }: UserPreferenceProfileProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const pt = getProfileText(locale);
   const localeKey = getLocaleKey(locale);
   const { items: recentlyViewed, isLoading: historyLoading } = useRecentlyViewed();

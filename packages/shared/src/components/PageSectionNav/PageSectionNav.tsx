@@ -2,6 +2,7 @@
 
 import { SectionNav, type SectionItem } from '../SectionNav';
 import { HomeSectionManager } from '../HomeSectionManager';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 export interface PageSectionNavConfig {
   // 上部セクション
@@ -64,11 +65,13 @@ const translations = {
 export function PageSectionNav({
   locale,
   config,
-  theme = 'dark',
+  theme: themeProp,
   position = 'right',
   offset = 80,
   pageId,
 }: PageSectionNavProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
   const sections: SectionItem[] = [];

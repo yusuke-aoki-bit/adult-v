@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useLocalStorage } from './useLocalStorage';
 
 export interface HomeSection {
   id: string;
@@ -368,85 +369,50 @@ export function useHomeSections(localeOrOptions: string | UseHomeSectionsOptions
   const { locale = 'ja', pageId = 'home', customSections } = options;
   const storageKey = `${STORAGE_KEY_PREFIX}_${pageId}`;
 
-  // 初期値としてデフォルトセクションを設定（SSR時にも表示される）
-  const [sections, setSections] = useState<HomeSection[]>(() =>
-    getInitialSections(locale, pageId, customSections)
-  );
-  const [isLoaded, setIsLoaded] = useState(false);
-
   const getDefaultSections = useCallback(() => {
     return getInitialSections(locale, pageId, customSections);
   }, [locale, pageId, customSections]);
 
-  // LocalStorageから読み込み
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // 保存されたセクションと現在のデフォルトをマージ
-        const defaults = getDefaultSections();
-        const merged = defaults.map(defaultSection => {
-          const saved = parsed.find((s: HomeSection) => s.id === defaultSection.id);
-          return saved
-            ? { ...defaultSection, visible: saved.visible, order: saved.order }
-            : defaultSection;
-        });
-        setSections(merged.sort((a, b) => a.order - b.order));
-      } else {
-        setSections(getDefaultSections());
-      }
-    } catch (e) {
-      console.error('Failed to load home section preferences:', e);
-      setSections(getDefaultSections());
-    }
-    setIsLoaded(true);
-  }, [getDefaultSections, storageKey]);
+  const [stored, setStored] = useLocalStorage<HomeSection[] | null>(storageKey, null);
 
-  // LocalStorageに保存
-  const saveSections = useCallback((newSections: HomeSection[]) => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(newSections));
-    } catch (e) {
-      console.error('Failed to save home section preferences:', e);
-    }
-  }, [storageKey]);
+  // 保存されたセクションと現在のデフォルトをマージ（新セクション追加時の前方互換性）
+  const sections = useMemo(() => {
+    const defaults = getDefaultSections();
+    if (!stored) return defaults;
+    const merged = defaults.map(defaultSection => {
+      const saved = stored.find(s => s.id === defaultSection.id);
+      return saved
+        ? { ...defaultSection, visible: saved.visible, order: saved.order }
+        : defaultSection;
+    });
+    return merged.sort((a, b) => a.order - b.order);
+  }, [stored, getDefaultSections]);
 
   const toggleVisibility = useCallback((sectionId: string) => {
-    setSections(prev => {
-      const updated = prev.map(section =>
-        section.id === sectionId
-          ? { ...section, visible: !section.visible }
-          : section
-      );
-      saveSections(updated);
-      return updated;
-    });
-  }, [saveSections]);
+    const updated = sections.map(section =>
+      section.id === sectionId
+        ? { ...section, visible: !section.visible }
+        : section
+    );
+    setStored(updated);
+  }, [sections, setStored]);
 
   const reorderSections = useCallback((fromIndex: number, toIndex: number) => {
-    setSections(prev => {
-      const updated = [...prev];
-      const [removed] = updated.splice(fromIndex, 1);
-      if (removed === undefined) return prev;
-      updated.splice(toIndex, 0, removed);
+    const updated = [...sections];
+    const [removed] = updated.splice(fromIndex, 1);
+    if (removed === undefined) return;
+    updated.splice(toIndex, 0, removed);
 
-      // orderを再計算
-      const reordered = updated.map((section, index) => ({
-        ...section,
-        order: index,
-      }));
-
-      saveSections(reordered);
-      return reordered;
-    });
-  }, [saveSections]);
+    const reordered = updated.map((section, index) => ({
+      ...section,
+      order: index,
+    }));
+    setStored(reordered);
+  }, [sections, setStored]);
 
   const resetToDefault = useCallback(() => {
-    const defaults = getDefaultSections();
-    setSections(defaults);
-    saveSections(defaults);
-  }, [getDefaultSections, saveSections]);
+    setStored(null);
+  }, [setStored]);
 
   const isSectionVisible = useCallback((sectionId: string) => {
     const section = sections.find(s => s.id === sectionId);
@@ -460,7 +426,7 @@ export function useHomeSections(localeOrOptions: string | UseHomeSectionsOptions
 
   return {
     sections,
-    isLoaded,
+    isLoaded: true,
     toggleVisibility,
     reorderSections,
     resetToDefault,

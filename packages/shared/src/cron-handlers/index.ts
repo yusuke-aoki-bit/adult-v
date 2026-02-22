@@ -67,3 +67,6 @@ export { createRevalidateHandler } from './revalidate';
 
 // AI performer classification handler
 export { createClassifyPerformersAiHandler } from './classify-performers-ai';
+
+// IndexNow notification handler
+export { createIndexNowNotifyHandler } from './indexnow-notify';

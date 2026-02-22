@@ -2,6 +2,7 @@
 
 import { useMemo, useCallback, useRef, useEffect, memo } from 'react';
 import { useRouter, useSearchParams, usePathname, useParams } from 'next/navigation';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import { providerMeta, type ProviderId } from '../../lib/providers';
 import { ASP_DISPLAY_ORDER, ASP_TO_PROVIDER_ID } from '../../constants/filters';
 
@@ -81,8 +82,8 @@ export type SortOption =
 export type FilterSortBarTheme = 'dark' | 'light';
 
 export interface FilterSortBarBaseProps {
-  /** Theme: 'dark' for adult-v, 'light' for fanza */
-  theme: FilterSortBarTheme;
+  /** Theme: auto-detected from SiteThemeContext if not provided */
+  theme?: FilterSortBarTheme;
   defaultSort?: SortOption;
   showProviderFilter?: boolean;
   showPriceFilter?: boolean;
@@ -124,12 +125,14 @@ const themeConfigs: Record<FilterSortBarTheme, ThemeConfig> = {
 };
 
 function FilterSortBarBase({
-  theme,
+  theme: themeProp,
   defaultSort = 'releaseDateDesc',
   showProviderFilter = true,
   showPriceFilter = true,
   providerCounts = {},
 }: FilterSortBarBaseProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

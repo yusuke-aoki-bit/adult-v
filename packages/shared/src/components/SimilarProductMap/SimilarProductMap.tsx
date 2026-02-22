@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 type ViewMode = 'list' | 'network';
 
@@ -85,9 +86,11 @@ function getMapText(locale: string) { return mapTexts[locale as keyof typeof map
 export function SimilarProductMap({
   productId,
   locale,
-  theme = 'dark',
+  theme: themeProp,
   onProductClick,
 }: SimilarProductMapProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const mt = getMapText(locale);
   const [data, setData] = useState<ProductSimilarityData | null>(null);
   const [loading, setLoading] = useState(true);

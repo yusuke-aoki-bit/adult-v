@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 // Translations
 const translations = {
@@ -68,8 +69,10 @@ export function SearchSuggestions({
   onGenreClick,
   onPerformerClick,
   apiEndpoint = '/api/search/analyze',
-  theme = 'dark',
+  theme: themeProp,
 }: SearchSuggestionsProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const [analysis, setAnalysis] = useState<SearchAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);

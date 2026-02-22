@@ -103,6 +103,7 @@ export function generateCacheKey(
  */
 class InMemoryCache {
   private cache = new Map<string, { data: unknown; expires: number }>();
+  private static readonly MAX_ENTRIES = 500;
 
   get<T>(key: string): T | null {
     const item = this.cache.get(key);
@@ -113,10 +114,26 @@ class InMemoryCache {
       return null;
     }
 
+    // LRU: アクセスされたエントリを末尾に移動
+    this.cache['delete'](key);
+    this.cache.set(key, item);
+
     return item.data as T;
   }
 
   set<T>(key: string, data: T, ttl: number = DEFAULT_TTL): void {
+    // 既存キーの場合は削除してから再挿入（末尾に移動）
+    if (this.cache.has(key)) {
+      this.cache['delete'](key);
+    }
+
+    // 上限超過時は最も古いエントリ（先頭）を削除
+    while (this.cache.size >= InMemoryCache.MAX_ENTRIES) {
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey) this.cache['delete'](oldestKey);
+      else break;
+    }
+
     this.cache.set(key, {
       data,
       expires: Date.now() + ttl * 1000,
@@ -129,6 +146,10 @@ class InMemoryCache {
 
   clear(): void {
     this.cache.clear();
+  }
+
+  get size(): number {
+    return this.cache.size;
   }
 
   // 定期的に期限切れのキャッシュを削除

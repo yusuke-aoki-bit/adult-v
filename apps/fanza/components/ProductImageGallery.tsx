@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useState, useCallback, useMemo, useRef, TouchEvent } from 'react';
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
-import { isDtiUncensoredSite, getFullSizeImageUrl } from '@/lib/image-utils';
+import { isDtiUncensoredSite, getFullSizeImageUrl } from '@adult-v/shared/lib/image-utils';
 import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 import { useTranslations } from 'next-intl';
 import ImageLightbox from './ImageLightbox';

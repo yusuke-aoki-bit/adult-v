@@ -19,10 +19,12 @@ export default function FilterPersistence() {
 
   useEffect(() => {
     // トップページまたは女優詳細ページでのみ動作
+    // /products ページでは動作させない（ページネーション時にフィルターが追加されるバグを防ぐ）
     const isHomePage = pathname === '/';
     const isActressPage = pathname.startsWith('/actress/');
+    const isProductsPage = pathname === '/products' || pathname.startsWith('/products/');
 
-    if (!isHomePage && !isActressPage) {
+    if (isProductsPage || (!isHomePage && !isActressPage)) {
       return;
     }
 
@@ -38,7 +40,7 @@ export default function FilterPersistence() {
       const settings = {
         includeTags: include ? include.split(',').filter(Boolean) : [],
         excludeTags: exclude ? exclude.split(',').filter(Boolean) : [],
-        ...(sort && { sortBy: sort }),
+        sortBy: sort || undefined,
       };
       saveFilterSettings(pageType, settings);
       return;

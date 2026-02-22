@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { useParams } from 'next/navigation';
 import { isSubscriptionProvider } from '@/lib/providers';
-import { formatPrice } from '@/lib/utils/subscription';
+import { formatPrice } from '@adult-v/shared/providers';
 import { providerMeta } from '@adult-v/shared/lib/providers';
 import { ASP_TO_PROVIDER_ID } from '@adult-v/shared/constants/filters';
 import { localeMap } from '@adult-v/shared/lib/utils/formatDate';

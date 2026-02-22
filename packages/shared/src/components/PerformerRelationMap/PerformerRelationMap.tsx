@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 type ViewMode = 'list' | 'network';
 
@@ -87,9 +88,11 @@ function getMapText(locale: string) {
 export function PerformerRelationMap({
   performerId,
   locale,
-  theme = 'dark',
+  theme: themeProp,
   onPerformerClick,
 }: PerformerRelationMapProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const mt = getMapText(locale);
   const [data, setData] = useState<PerformerRelationsData | null>(null);
   const [loading, setLoading] = useState(true);

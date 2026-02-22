@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 // Translations
 const translations = {
@@ -61,9 +62,11 @@ interface AiProductDescriptionProps {
 export function AiProductDescription({
   productId,
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
   apiEndpoint,
 }: AiProductDescriptionProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const [description, setDescription] = useState<AiDescription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);

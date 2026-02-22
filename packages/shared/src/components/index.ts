@@ -19,9 +19,6 @@ export { default as ImageLightbox } from './ImageLightbox';
 // Notice and content components
 export { default as AdultContentNotice } from './AdultContentNotice';
 export { default as AgeVerification } from './AgeVerification';
-export { default as CampaignCard } from './CampaignCard';
-export type { CampaignCardTheme } from './CampaignCard';
-
 // Layout components
 export { ConditionalLayout } from './ConditionalLayout';
 
@@ -36,12 +33,7 @@ export { JsonLD } from './JsonLD';
 export { default as FilterPersistence } from './FilterPersistence';
 export { default as PerPagePersistence } from './PerPagePersistence';
 export { default as FilterPresetManager } from './FilterPresetManager';
-export { default as QuickFilterRestore } from './QuickFilterRestore';
 
-// Analytics and SEO components
-export { default as GoogleAnalytics } from './GoogleAnalytics';
-export { default as HreflangTags } from './HreflangTags';
-export { default as StructuredData } from './StructuredData';
 
 // UI components
 export { default as NavigationProgress } from './NavigationProgress';
@@ -53,12 +45,10 @@ export { default as SortDropdown } from './SortDropdown';
 export type { SortDropdownTheme, SortByValue } from './SortDropdown';
 export { default as NotificationSubscriber } from './NotificationSubscriber';
 export type { NotificationSubscriberTheme } from './NotificationSubscriber';
-export { default as NotificationPreferences } from './NotificationPreferences';
 
 // E-commerce components
 export { default as PriceComparison } from './PriceComparison';
 export type { PriceComparisonTheme } from './PriceComparison';
-export { default as ProductIdSearch } from './ProductIdSearch';
 
 // Toast notification
 export { ToastProvider, useToast } from './Toast';
@@ -89,7 +79,6 @@ export { default as ProductSkeleton } from './ProductSkeleton';
 // Section components (shared between apps)
 export {
   RecentlyViewedSection,
-  ForYouRecommendationsSection,
   SalesSectionBase,
   WeeklyHighlightsSection,
   getThemeConfig,
@@ -106,11 +95,6 @@ export {
   PerPageDropdown,
   ActiveFiltersChips,
   getFilterThemeConfig,
-  darkFilterTheme,
-  lightFilterTheme,
-  sortTranslations,
-  perPageTranslations,
-  activeFiltersTranslations,
   getSortTranslation,
   getPerPageTranslation,
   getActiveFiltersTranslation,
@@ -126,12 +110,7 @@ export { FirebaseProvider } from './FirebaseProvider';
 // ProductCard utilities (themes and helpers) and base component
 export {
   ProductCardBase,
-  getThemeConfig as getProductCardThemeConfig,
-  themes as productCardThemes,
   getAffiliateUrl,
-  normalizeMgsProductId,
-  extractMgsProductUrl,
-  convertFanzaToDirectUrl,
 } from './ProductCard';
 export type {
   ProductCardTheme,
@@ -149,7 +128,6 @@ export type { ActressAiReviewTheme } from './ActressAiReview';
 
 // ActressCard utilities (themes and helpers) and base component
 export {
-  actressCardThemes,
   getActressCardThemeConfig,
   filterServicesForSite,
   ActressCardBase,
@@ -170,7 +148,7 @@ export { FilterSortBarBase } from './FilterSortBar';
 export type { FilterSortBarBaseProps, FilterSortBarTheme, SortOption } from './FilterSortBar';
 
 // SearchBar (shared between apps)
-export { SearchBarBase, searchBarTranslations, UnifiedSearchBar, unifiedSearchTranslations } from './SearchBar';
+export { UnifiedSearchBar } from './SearchBar';
 export type { SearchBarTheme, SearchBarBaseProps, AiSearchResult, UnifiedSearchBarProps, SearchMode } from './SearchBar';
 
 // OptimizedImage (shared between apps)
@@ -202,15 +180,12 @@ export { FooterBase } from './Footer';
 export type { FooterBaseProps, FooterTranslation } from './Footer';
 
 // SearchFilters (shared between apps)
-export { SearchFiltersBase, searchFiltersTranslations, SORT_OPTIONS, PROVIDERS } from './SearchFilters';
+export { SearchFiltersBase, SORT_OPTIONS, PROVIDERS } from './SearchFilters';
 export type { SearchFiltersTheme, SearchFiltersBaseProps, SearchFilterOptions } from './SearchFilters';
 
 // BudgetManager (shared between apps)
 export {
   BudgetManagerBase,
-  budgetManagerTranslations,
-  statusColors as budgetStatusColors,
-  progressColors as budgetProgressColors,
 } from './BudgetManager';
 export type { BudgetManagerTheme, BudgetManagerBaseProps, BudgetStatus } from './BudgetManager';
 
@@ -232,23 +207,8 @@ export { default as ConnectedWatchLaterButton } from './ConnectedWatchLaterButto
 export { StickyCtaBase } from './StickyCta';
 export type { StickyCtaBaseProps } from './StickyCta';
 
-// Accessibility components
-export { SkipLink } from './SkipLink';
-
-// Virtual scroll components
-export { VirtualProductGridBase } from './VirtualProductGrid';
-
-// Mobile UX components
-export { default as SwipeableCarousel } from './SwipeableCarousel';
-export { default as PullToRefresh } from './PullToRefresh';
-
 // Price alert and tracking components
-export { default as SaleAlertButton } from './SaleAlertButton';
-export { default as PriceHistoryChart } from './PriceHistoryChart';
-export { default as ActressBundleCalculator } from './ActressBundleCalculator';
-export { default as ForYouSales } from './ForYouSales';
 export { default as SalePrediction } from './SalePrediction';
-export { default as PricePrediction } from './PricePrediction';
 
 // Copy button (clipboard)
 export { CopyButton } from './CopyButton';
@@ -275,8 +235,6 @@ export { AiSearchBar } from './AiSearchBar';
 
 // Personalized recommendations (based on viewing history)
 export { PersonalizedRecommendations } from './PersonalizedRecommendations';
-export { default as RecommendationReason } from './RecommendationReason';
-export { default as ConnectedForYouRecommendations } from './ConnectedForYouRecommendations';
 
 // Also viewed (collaborative filtering)
 export { AlsoViewed } from './AlsoViewed';
@@ -322,16 +280,12 @@ export type { SectionSettingsProps } from './SectionSettings';
 export { SectionVisibility } from './SectionVisibility';
 export type { SectionVisibilityProps } from './SectionVisibility';
 
-// Viewing habits dashboard
-export { ViewingHabitsDashboard } from './ViewingHabitsDashboard';
-export type { ViewingHabitsDashboardProps } from './ViewingHabitsDashboard';
-
 // Admin components
 export { default as AdminStatsContent } from './AdminStatsContent';
 export type { AdminStatsContentProps } from './AdminStatsContent';
 
 // TopPage menu components
-export { LinkMenuItem, AccordionMenuItem, TopPageMenuSection } from './TopPageMenu';
+export { TopPageMenuSection } from './TopPageMenu';
 export type { LinkMenuItemProps, AccordionMenuItemProps, TopPageMenuItemProps, TopPageMenuSectionProps, MenuType } from './TopPageMenu';
 
 // Section navigation
@@ -339,6 +293,10 @@ export { SectionNav } from './SectionNav';
 export type { SectionItem } from './SectionNav';
 export { PageSectionNav } from './PageSectionNav';
 export type { PageSectionNavConfig } from './PageSectionNav';
+export { default as ProductSectionNav } from './ProductSectionNav';
+export { default as ActressSectionNav } from './ActressSectionNav';
+export { default as ProductListSectionNav } from './ProductListSectionNav';
+export { default as ActressFavoriteButton } from './ActressFavoriteButton';
 
 // User contributions (reviews, tag suggestions, performer suggestions)
 export {
@@ -357,13 +315,11 @@ export {
   PublicListCard,
   CreateListModal,
   PublicListDetail,
-  AddToListButton,
 } from './PublicFavoriteLists';
 export type {
   PublicListCardProps,
   CreateListModalProps,
   PublicListDetailProps,
-  AddToListButtonProps,
 } from './PublicFavoriteLists';
 
 // Offline indicator
@@ -372,13 +328,9 @@ export { OfflineIndicator } from './OfflineIndicator';
 // Scene info (user-contributed scene markers)
 export { SceneTimeline } from './SceneInfo';
 
-// Rookie ranking (new performers)
-export { RookieRanking } from './RookieRanking';
-
 // Performer comparison
 export { PerformerCompare } from './PerformerCompare';
 export { default as PerformerCompareFloatingBar } from './PerformerCompareFloatingBar';
-export { default as PerformerCompareButton } from './PerformerCompareButton';
 
 // List with selection (for bulk comparison)
 export { ProductListWithSelection } from './ProductListWithSelection';
@@ -387,3 +339,30 @@ export { PerformerListWithSelection } from './PerformerListWithSelection';
 // User corrections (suggest edits to product/performer info)
 export { CorrectionForm, type CorrectionFormProps, type CorrectionFormTranslations } from './CorrectionForm';
 export { CorrectionList, type CorrectionListProps, type CorrectionListTranslations, type Correction } from './CorrectionList';
+
+// Theme-unified components (shared between apps, auto-detect dark/light)
+export { default as BudgetTrackerBase } from './BudgetTrackerBase';
+export { default as MakerAnalysisBase } from './MakerAnalysisBase';
+export { default as PWAInstallerBase } from './PWAInstallerBase';
+export { default as FavoriteButtonBase } from './FavoriteButtonBase';
+export { default as WatchLaterButtonBase } from './WatchLaterButtonBase';
+
+// Wrapper components (shared between apps, auto-detect theme)
+export { default as AiActressProfileWrapper } from './AiActressProfileWrapper';
+export { default as AiProductDescriptionWrapper } from './AiProductDescriptionWrapper';
+export { default as PersonalizedRecommendationsWrapper } from './PersonalizedRecommendationsWrapper';
+export { default as AlsoViewedWrapper } from './AlsoViewedWrapper';
+export { default as ImageSearchWrapper } from './ImageSearchWrapper';
+export { default as UserPreferenceProfileWrapper } from './UserPreferenceProfileWrapper';
+export { default as TrendingSection } from './TrendingSection';
+export { default as SimilarPerformerMapWrapper } from './SimilarPerformerMapWrapper';
+export { default as PerformerRelationMapWrapper } from './PerformerRelationMapWrapper';
+export { default as SearchSuggestionsWrapper } from './SearchSuggestionsWrapper';
+export { default as SimilarProductMapWrapper } from './SimilarProductMapWrapper';
+export { default as UserContributionsWrapper } from './UserContributionsWrapper';
+export { default as CorrectionSuggestButton } from './CorrectionSuggestButton';
+export { default as NaturalLanguageSearch } from './NaturalLanguageSearch';
+export { default as InitialSearchMenu } from './InitialSearchMenu';
+export { default as ChatBotWrapper } from './ChatBotWrapper';
+export { LazyPWAInstaller } from './LazyPWAInstaller';
+export { SemanticSearchClient } from './SemanticSearchClient';

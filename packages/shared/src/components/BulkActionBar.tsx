@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 export interface BulkAction {
   id: string;
@@ -29,8 +30,10 @@ export function BulkActionBar({
   onSelectAll,
   totalCount,
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
 }: BulkActionBarProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   const isDark = theme === 'dark';

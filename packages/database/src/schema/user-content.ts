@@ -13,6 +13,7 @@ import {
   boolean,
   decimal,
   timestamp,
+  jsonb,
   index,
   uniqueIndex,
   primaryKey,
@@ -291,6 +292,36 @@ export const productRankingVotes = pgTable(
   }),
 );
 
+/**
+ * ユーザー貢献度サマリーテーブル
+ * ユーザーの貢献度を集計
+ */
+export const userContributionStats = pgTable(
+  'user_contribution_stats',
+  {
+    id: serial('id').primaryKey(),
+    userId: varchar('user_id', { length: 255 }).unique().notNull(),
+    displayName: varchar('display_name', { length: 100 }),
+    reviewCount: integer('review_count').default(0),
+    tagSuggestionCount: integer('tag_suggestion_count').default(0),
+    tagApprovedCount: integer('tag_approved_count').default(0),
+    performerSuggestionCount: integer('performer_suggestion_count').default(0),
+    performerApprovedCount: integer('performer_approved_count').default(0),
+    correctionCount: integer('correction_count').default(0),
+    correctionApprovedCount: integer('correction_approved_count').default(0),
+    publicListCount: integer('public_list_count').default(0),
+    totalListLikes: integer('total_list_likes').default(0),
+    contributionScore: integer('contribution_score').default(0),
+    badges: jsonb('badges').default([]),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index('idx_contribution_stats_user').on(table.userId),
+    scoreIdx: index('idx_contribution_stats_score').on(table.contributionScore),
+  }),
+);
+
 // 型エクスポート
 export type UserReview = typeof userReviews.$inferSelect;
 export type NewUserReview = typeof userReviews.$inferInsert;
@@ -312,3 +343,5 @@ export type UserPerformerSuggestion = typeof userPerformerSuggestions.$inferSele
 export type NewUserPerformerSuggestion = typeof userPerformerSuggestions.$inferInsert;
 export type UserPerformerVote = typeof userPerformerVotes.$inferSelect;
 export type NewUserPerformerVote = typeof userPerformerVotes.$inferInsert;
+export type UserContributionStat = typeof userContributionStats.$inferSelect;
+export type NewUserContributionStat = typeof userContributionStats.$inferInsert;

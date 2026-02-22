@@ -1,5 +1,7 @@
 'use client';
 
+import { useSiteTheme } from '../contexts/SiteThemeContext';
+
 type StarRatingTheme = 'dark' | 'light';
 
 interface StarRatingProps {
@@ -22,8 +24,10 @@ export default function StarRating({
   size = 'sm',
   showCount = true,
   className = '',
-  theme = 'dark',
+  theme: themeProp,
 }: StarRatingProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const sizeClasses = {
     sm: 'w-3 h-3',
     md: 'w-4 h-4',

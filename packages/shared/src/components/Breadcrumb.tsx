@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 export interface BreadcrumbItem {
   label: string;
@@ -70,7 +73,9 @@ export function generateBreadcrumbSchema(items: BreadcrumbItem[], baseUrl?: stri
   };
 }
 
-export default function Breadcrumb({ items, className = '', theme = 'dark', baseUrl, includeSchema = false }: BreadcrumbProps) {
+export default function Breadcrumb({ items, className = '', theme: themeProp, baseUrl, includeSchema = false }: BreadcrumbProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const config = themeConfig[theme];
   const schemaData = includeSchema ? generateBreadcrumbSchema(items, baseUrl) : null;
 

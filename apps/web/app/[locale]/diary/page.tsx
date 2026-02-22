@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useViewingDiary } from '@/hooks';
 import type { DiaryEntry } from '@adult-v/shared/hooks';
-import { normalizeImageUrl } from '@/lib/image-utils';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 import { localizedHref } from '@adult-v/shared/i18n';
 import UserPreferenceProfileWrapper from '@/components/UserPreferenceProfileWrapper';
 

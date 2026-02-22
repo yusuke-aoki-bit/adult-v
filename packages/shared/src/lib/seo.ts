@@ -738,6 +738,7 @@ export function generateProductSchema(
   salePrice?: number,
   currency: string = 'JPY',
   sku?: string,
+  alternateIds?: Array<{ aspName: string; originalProductId: string }>,
 ) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -778,6 +779,15 @@ export function generateProductSchema(
     }
 
     schema['offers'] = offer;
+  }
+
+  // 外部 ID を additionalProperty として追加（SEO: 品番検索対応）
+  if (alternateIds && alternateIds.length > 0) {
+    schema['additionalProperty'] = alternateIds.map(({ aspName, originalProductId }) => ({
+      '@type': 'PropertyValue',
+      name: `${aspName} Product ID`,
+      value: originalProductId,
+    }));
   }
 
   // aggregateRatingが有効な場合のみ追加（ratingValue > 0 かつ reviewCount > 0）
@@ -1272,9 +1282,11 @@ export function getProductPageFAQs(
     hasSubtitles?: boolean;
     isHD?: boolean;
     actressName?: string;
+    makerProductCode?: string;
+    externalIds?: Array<{ aspName: string; originalProductId: string }>;
   }
 ): { question: string; answer: string }[] {
-  const { productId, title, duration, releaseDate, provider, hasSubtitles, isHD, actressName } = options;
+  const { productId, title, duration, releaseDate, provider, hasSubtitles, isHD, actressName, makerProductCode, externalIds } = options;
 
   const faqsByLocale: Record<string, { question: string; answer: string }[]> = {
     ja: [
@@ -1308,6 +1320,15 @@ export function getProductPageFAQs(
         question: `HD・4K画質に対応していますか？`,
         answer: `はい、高画質版でお楽しみいただけます。対応画質は配信サイトによって異なりますので、各サイトでご確認ください。`,
       }] : []),
+      // SEO強化: 外部ID（FANZA品番等）検索向けFAQ
+      ...(externalIds && externalIds.length > 0 ? externalIds.map(({ aspName, originalProductId }) => ({
+        question: `${originalProductId}とは何ですか？`,
+        answer: `${originalProductId}は${aspName}での品番で、${makerProductCode || productId || ''}${makerProductCode || productId ? '（' : ''}「${title.substring(0, 25)}${title.length > 25 ? '...' : ''}」${makerProductCode || productId ? '）' : ''}と同じ作品です。${provider ? `${provider}等で購入・視聴できます。` : '当サイトで複数サイトの価格を比較できます。'}`,
+      })) : []),
+      ...(makerProductCode && externalIds && externalIds.length > 0 ? [{
+        question: `${makerProductCode}の他サイトでの品番は？`,
+        answer: `${makerProductCode}は${externalIds.map(e => `${e.aspName}では${e.originalProductId}`).join('、')}として登録されています。当サイトでは複数サイトの価格を比較してお得に購入できます。`,
+      }] : []),
     ],
     en: [
       // SEO: Product code search FAQ
@@ -1331,6 +1352,11 @@ export function getProductPageFAQs(
         question: `Is there a sample video available?`,
         answer: `Yes, free sample videos are available. You can preview the content before purchasing.`,
       },
+      // SEO: External ID (FANZA product code etc.) search FAQ
+      ...(externalIds && externalIds.length > 0 ? externalIds.map(({ aspName, originalProductId }) => ({
+        question: `What is ${originalProductId}?`,
+        answer: `${originalProductId} is the ${aspName} product code for ${makerProductCode || productId ? `${makerProductCode || productId} ` : ''}"${title.substring(0, 30)}${title.length > 30 ? '...' : ''}". ${provider ? `Available on ${provider}.` : 'Compare prices across multiple sites here.'}`,
+      })) : []),
     ],
     zh: [
       ...(duration ? [{

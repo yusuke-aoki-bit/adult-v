@@ -10,6 +10,7 @@ import {
   type FilterPreset,
   type FilterValues,
 } from '../lib/filter-presets';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface FilterPresetManagerProps {
   /** 現在のフィルター値 */
@@ -47,9 +48,12 @@ const defaultTranslations = {
 export function FilterPresetManager({
   currentFilters,
   onApplyPreset,
-  theme = 'dark',
+  theme: themeProp,
   translations = defaultTranslations,
 }: FilterPresetManagerProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
+
   const t = { ...defaultTranslations, ...translations };
   const [presets, setPresets] = useState<FilterPreset[]>([]);
   const [isOpen, setIsOpen] = useState(false);

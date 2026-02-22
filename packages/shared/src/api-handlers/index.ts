@@ -149,3 +149,94 @@ export {
 // News handlers
 export type { NewsHandlerDeps } from './news';
 export { createNewsHandler, newsRevalidate } from './news';
+
+// AI Profile handler
+export { createAiProfileHandler } from './ai-profile';
+
+// Maker by ID handler
+export type { MakerByIdHandlerDeps } from './maker-by-id';
+export { createMakerByIdHandler } from './maker-by-id';
+
+// Product Search by ID handler
+export type { ProductSearchByIdHandlerDeps } from './product-search-by-id';
+export { createProductSearchByIdHandler } from './product-search-by-id';
+
+// Recommendations Actresses handler
+export type { RecommendationsActressesHandlerDeps } from './recommendations-actresses';
+export { createRecommendationsActressesHandler } from './recommendations-actresses';
+
+// Viewing Patterns handler
+export type { ViewingPatternsHandlerDeps } from './viewing-patterns';
+export { createViewingPatternsHandler } from './viewing-patterns';
+
+// Product Prices (single) handler
+export type { ProductPricesSingleHandlerDeps } from './product-prices-single';
+export { createProductPricesSingleHandler } from './product-prices-single';
+
+// Product Related handler
+export type { ProductRelatedHandlerDeps } from './product-related';
+export { createProductRelatedHandler } from './product-related';
+
+// Product AI Description handler
+export type { ProductAiDescriptionHandlerDeps } from './product-ai-description';
+export { createProductAiDescriptionHandler } from './product-ai-description';
+
+// Product Generate Description handler
+export type { ProductGenerateDescriptionHandlerDeps } from './product-generate-description';
+export { createProductGenerateDescriptionHandler } from './product-generate-description';
+
+// Embed Stats handler
+export type { EmbedStatsHandlerDeps, EmbedStatsHandlerOptions } from './embed-stats';
+export { createEmbedStatsHandler } from './embed-stats';
+
+// Also Viewed handler
+export type { AlsoViewedHandlerDeps } from './also-viewed';
+export { createAlsoViewedHandler } from './also-viewed';
+
+// Product Search handler
+export type { ProductSearchHandlerDeps } from './product-search';
+export { createProductSearchHandler } from './product-search';
+
+// Product Batch Prices handler
+export type { ProductBatchPricesHandlerDeps } from './product-batch-prices';
+export { createProductBatchPricesHandler } from './product-batch-prices';
+
+// Sale Calendar handler
+export type { SaleCalendarHandlerDeps } from './sale-calendar';
+export { createSaleCalendarHandler } from './sale-calendar';
+
+// Generate Profile handler
+export type { GenerateProfileHandlerDeps } from './generate-profile';
+export { createGenerateProfileHandler } from './generate-profile';
+
+// User Profile handler
+export type { UserProfileHandlerDeps } from './user-profile';
+export { createUserProfileHandler } from './user-profile';
+
+// Price Alerts Route handler
+export type { PriceAlertsRouteHandlerDeps } from './price-alerts-route';
+export { createPriceAlertsRouteHandler } from './price-alerts-route';
+
+// Search AI handler
+export type { SearchAiHandlerDeps } from './search-ai';
+export { createSearchAiHandler } from './search-ai';
+
+// Semantic Search handler
+export type { SemanticSearchHandlerDeps } from './semantic-search';
+export { createSemanticSearchHandler } from './semantic-search';
+
+// Trends handler
+export type { TrendsHandlerDeps, TrendsHandlerOptions } from './trends';
+export { createTrendsHandler } from './trends';
+
+// Search Image handler
+export type { SearchImageHandlerDeps } from './search-image';
+export { createSearchImageHandler } from './search-image';
+
+// Recommendations From History handler
+export type { RecommendationsFromHistoryHandlerDeps } from './recommendations-from-history';
+export { createRecommendationsFromHistoryHandler } from './recommendations-from-history';
+
+// Performer Relations handler
+export type { PerformerRelationsHandlerDeps, PerformerRelationsHandlerOptions } from './performer-relations';
+export { createPerformerRelationsHandler } from './performer-relations';

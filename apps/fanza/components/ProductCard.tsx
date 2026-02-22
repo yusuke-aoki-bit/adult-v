@@ -7,7 +7,7 @@ import FavoriteButton from './FavoriteButton';
 import ViewedButton from './ViewedButton';
 import ImageLightbox from './ImageLightbox';
 import StarRating from './StarRating';
-import { formatPrice } from '@/lib/utils/subscription';
+import { formatPrice } from '@adult-v/shared/providers';
 import { getVariant, trackCtaClick } from '@/lib/ab-testing';
 import { useSiteTheme } from '@/lib/contexts/SiteContext';
 

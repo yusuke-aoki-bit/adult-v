@@ -1,5 +1,7 @@
 'use client';
 
+import { useSiteTheme } from '../contexts/SiteThemeContext';
+
 type ThemeMode = 'dark' | 'light';
 
 interface WatchLaterButtonProps {
@@ -23,7 +25,7 @@ interface WatchLaterButtonProps {
 export default function WatchLaterButton({
   size = 'md',
   className = '',
-  theme = 'dark',
+  theme: themeProp,
   isAdded,
   isLoaded,
   onToggle,
@@ -33,6 +35,9 @@ export default function WatchLaterButton({
     loading: '読み込み中...',
   },
 }: WatchLaterButtonProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
+
   const sizeClasses = {
     sm: 'p-1.5',
     md: 'p-2',

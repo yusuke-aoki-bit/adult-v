@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useCallback, memo } from 'react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface PreferenceData {
   label: string;
@@ -57,8 +58,10 @@ function PreferenceChartComponent({
   data,
   size = 300,
   className = '',
-  theme = 'dark',
+  theme: themeProp,
 }: PreferenceChartProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = (themeProp ?? contextTheme) as PreferenceChartTheme;
   const center = size / 2;
   const maxRadius = (size / 2) * 0.8;
   const numPoints = data.length;
@@ -222,8 +225,10 @@ interface PreferenceBarChartProps {
 function PreferenceBarChartComponent({
   data,
   className = '',
-  theme = 'dark',
+  theme: themeProp2,
 }: PreferenceBarChartProps) {
+  const { theme: contextTheme2 } = useSiteTheme();
+  const theme = (themeProp2 ?? contextTheme2) as PreferenceChartTheme;
   const colors = themeConfig[theme];
 
   return (

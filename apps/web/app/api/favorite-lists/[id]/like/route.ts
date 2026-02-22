@@ -1,21 +1,2 @@
-import { getDb } from '@/lib/db';
-import { publicFavoriteLists, publicFavoriteListItems, publicListLikes, products } from '@adult-v/database';
-import { eq, and, desc, asc, sql } from 'drizzle-orm';
-import { createPublicFavoriteListLikeHandler } from '@adult-v/shared/api-handlers';
-
+export { apiFavoriteListLikePOST as POST } from '@adult-v/shared/api-routes';
 export const dynamic = 'force-dynamic';
-
-const deps = {
-  getDb,
-  publicFavoriteLists,
-  publicFavoriteListItems,
-  publicListLikes,
-  products,
-  eq,
-  and,
-  desc,
-  asc,
-  sql,
-};
-
-export const POST = createPublicFavoriteListLikeHandler(deps);

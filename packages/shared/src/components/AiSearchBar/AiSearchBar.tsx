@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 // Translations
 const translations = {
@@ -56,10 +57,12 @@ interface AiSearchBarProps {
 
 export function AiSearchBar({
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
   onSearch,
   apiEndpoint = '/api/search/ai',
 }: AiSearchBarProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -5,7 +5,6 @@ export {
   useDebounce,
   useDiscoveryBadge,
   useFavorites,
-  useInfiniteScroll,
   usePreferenceAnalysis,
   useRecentlyViewed,
   useSceneInfo,

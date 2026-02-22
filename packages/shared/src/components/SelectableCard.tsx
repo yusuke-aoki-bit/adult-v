@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, memo } from 'react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 export interface SelectableCardProps {
   children: ReactNode;
@@ -15,8 +16,10 @@ function SelectableCardInner({
   isSelected,
   isSelectionMode,
   onToggle,
-  theme = 'dark',
+  theme: themeProp,
 }: SelectableCardProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const isDark = theme === 'dark';
 
   if (!isSelectionMode) {

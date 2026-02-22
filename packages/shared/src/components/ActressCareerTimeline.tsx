@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Calendar, TrendingUp, Star, Clock, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface CareerProduct {
   id: number;
@@ -172,8 +173,10 @@ export function ActressCareerTimeline({
   career,
   actressName: _actressName,
   locale,
-  theme = 'dark',
+  theme: themeProp,
 }: ActressCareerTimelineProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const t = translations[locale as TranslationKey] || translations.ja;
   const s = themes[theme];
   const [showTimeline, setShowTimeline] = useState(false);

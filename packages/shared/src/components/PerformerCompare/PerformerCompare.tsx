@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 // レーダーチャート用ヘルパー関数
 function getRadarPoints(cx: number, cy: number, r: number, sides: number): string {
@@ -113,10 +114,12 @@ interface PerformerCompareProps {
 export function PerformerCompare({
   performerIds,
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
   onPerformerClick,
   onRemovePerformer,
 }: PerformerCompareProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const ct = getCompareText(locale);
   const [performers, setPerformers] = useState<PerformerDetail[]>([]);
   const [isLoading, setIsLoading] = useState(false);

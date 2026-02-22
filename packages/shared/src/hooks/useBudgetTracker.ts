@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useLocalStorage } from './useLocalStorage';
 
 const BUDGET_STORAGE_KEY = 'adult-v-budget-tracker';
 
@@ -27,11 +28,11 @@ export interface BudgetStats {
   currency: string;
 }
 
-const getDefaultBudget = (): BudgetData => ({
+const defaultBudget: BudgetData = {
   monthlyBudget: 10000,
   purchases: [],
   currency: 'JPY',
-});
+};
 
 const getCurrentMonth = () => {
   const now = new Date();
@@ -39,46 +40,23 @@ const getCurrentMonth = () => {
 };
 
 export function useBudgetTracker() {
-  const [budgetData, setBudgetData] = useState<BudgetData>(getDefaultBudget());
-  const [isLoading, setIsLoading] = useState(true);
+  const [budgetData, setBudgetData] = useLocalStorage<BudgetData>(BUDGET_STORAGE_KEY, defaultBudget);
 
-  // Load from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(BUDGET_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as BudgetData;
-        // Filter purchases to current month only
-        const currentMonth = getCurrentMonth();
-        const filteredPurchases = parsed.purchases.filter(p => p.date.startsWith(currentMonth));
-        setBudgetData({
-          ...parsed,
-          purchases: filteredPurchases,
-        });
-      }
-    } catch {
-      console.error('Error loading budget data');
-    }
-    setIsLoading(false);
-  }, []);
+  const currentMonth = useMemo(() => getCurrentMonth(), []);
 
-  // Save to localStorage
-  const saveBudgetData = useCallback((data: BudgetData) => {
-    try {
-      localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify(data));
-      setBudgetData(data);
-    } catch {
-      console.error('Error saving budget data');
-    }
-  }, []);
+  // Filter purchases to current month
+  const currentMonthPurchases = useMemo(
+    () => budgetData.purchases.filter(p => p.date.startsWith(currentMonth)),
+    [budgetData.purchases, currentMonth],
+  );
 
   // Set monthly budget
   const setMonthlyBudget = useCallback((amount: number) => {
-    saveBudgetData({
-      ...budgetData,
+    setBudgetData(prev => ({
+      ...prev,
       monthlyBudget: Math.max(0, amount),
-    });
-  }, [budgetData, saveBudgetData]);
+    }));
+  }, [setBudgetData]);
 
   // Add purchase
   const addPurchase = useCallback((productId: string, title: string, price: number, date?: string) => {
@@ -90,11 +68,11 @@ export function useBudgetTracker() {
       date: date || new Date().toISOString(),
     };
 
-    saveBudgetData({
-      ...budgetData,
-      purchases: [...budgetData.purchases, purchase],
-    });
-  }, [budgetData, saveBudgetData]);
+    setBudgetData(prev => ({
+      ...prev,
+      purchases: [...prev.purchases, purchase],
+    }));
+  }, [setBudgetData]);
 
   // Import multiple purchases (for bulk import from DMM/FANZA)
   const importPurchases = useCallback((purchasesToImport: Array<{
@@ -111,40 +89,44 @@ export function useBudgetTracker() {
       date: p.date,
     }));
 
-    // Merge with existing purchases and remove duplicates by productId+date
-    const existingKeys = new Set(
-      budgetData.purchases.map(p => `${p.productId}-${p.date.split('T')[0]}`)
-    );
-    const uniqueNewPurchases = newPurchases.filter(
-      p => !existingKeys.has(`${p.productId}-${p.date.split('T')[0]}`)
-    );
+    let addedCount = 0;
 
-    saveBudgetData({
-      ...budgetData,
-      purchases: [...budgetData.purchases, ...uniqueNewPurchases],
+    setBudgetData(prev => {
+      const existingKeys = new Set(
+        prev.purchases.map(p => `${p.productId}-${p.date.split('T')[0]}`)
+      );
+      const uniqueNewPurchases = newPurchases.filter(
+        p => !existingKeys.has(`${p.productId}-${p.date.split('T')[0]}`)
+      );
+      addedCount = uniqueNewPurchases.length;
+
+      return {
+        ...prev,
+        purchases: [...prev.purchases, ...uniqueNewPurchases],
+      };
     });
 
-    return uniqueNewPurchases.length;
-  }, [budgetData, saveBudgetData]);
+    return addedCount;
+  }, [setBudgetData]);
 
   // Remove purchase
   const removePurchase = useCallback((purchaseId: string) => {
-    saveBudgetData({
-      ...budgetData,
-      purchases: budgetData.purchases.filter(p => p.id !== purchaseId),
-    });
-  }, [budgetData, saveBudgetData]);
+    setBudgetData(prev => ({
+      ...prev,
+      purchases: prev.purchases.filter(p => p.id !== purchaseId),
+    }));
+  }, [setBudgetData]);
 
   // Clear all purchases for current month
   const clearPurchases = useCallback(() => {
-    saveBudgetData({
-      ...budgetData,
-      purchases: [],
-    });
-  }, [budgetData, saveBudgetData]);
+    setBudgetData(prev => ({
+      ...prev,
+      purchases: prev.purchases.filter(p => !p.date.startsWith(currentMonth)),
+    }));
+  }, [setBudgetData, currentMonth]);
 
-  // Calculate stats
-  const spent = budgetData.purchases.reduce((sum, p) => sum + p.price, 0);
+  // Calculate stats from current month purchases
+  const spent = currentMonthPurchases.reduce((sum, p) => sum + p.price, 0);
   const remaining = budgetData.monthlyBudget - spent;
   const percentUsed = budgetData.monthlyBudget > 0
     ? Math.round((spent / budgetData.monthlyBudget) * 100)
@@ -155,13 +137,13 @@ export function useBudgetTracker() {
     spent,
     remaining,
     percentUsed,
-    purchases: budgetData.purchases,
+    purchases: currentMonthPurchases,
     currency: budgetData.currency,
   };
 
   return {
     stats,
-    isLoading,
+    isLoading: false,
     setMonthlyBudget,
     addPurchase,
     importPurchases,

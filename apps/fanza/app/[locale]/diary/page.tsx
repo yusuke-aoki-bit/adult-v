@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useViewingDiary } from '@/hooks';
 import type { DiaryEntry } from '@adult-v/shared/hooks';
-import { normalizeImageUrl } from '@/lib/image-utils';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 import UserPreferenceProfileWrapper from '@/components/UserPreferenceProfileWrapper';
 import { PageSectionNav } from '@adult-v/shared/components';

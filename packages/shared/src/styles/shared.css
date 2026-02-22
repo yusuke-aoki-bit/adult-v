@@ -143,6 +143,19 @@ html {
   --social-copy-success-bg: #059669; /* emerald-600 */
   --social-copy-success-text: #ffffff;
   --social-copy-success-border: transparent;
+
+  /* Score Colors */
+  --score-excellent: #10b981; /* emerald-500 */
+  --score-good: #3b82f6; /* blue-500 */
+  --score-average: #f59e0b; /* amber-500 */
+  --score-poor: #ef4444; /* red-500 */
+
+  /* Semantic Backgrounds */
+  --highlight-bg: rgba(16, 185, 129, 0.1);
+  --caution-bg: rgba(245, 158, 11, 0.1);
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --input-bg: #1f2937; /* gray-800 */
+  --section-icon-bg: rgba(244, 114, 182, 0.1); /* pink-400/10 */
 }
 
 /* FANZA Theme (Light: FANZA official brand colors) */
@@ -231,6 +244,19 @@ html {
   --social-copy-success-bg: #dcfce7; /* emerald-100 */
   --social-copy-success-text: #047857; /* emerald-700 */
   --social-copy-success-border: #bbf7d0; /* emerald-200 */
+
+  /* Score Colors */
+  --score-excellent: #059669; /* emerald-600 */
+  --score-good: #2563eb; /* blue-600 */
+  --score-average: #d97706; /* amber-600 */
+  --score-poor: #dc2626; /* red-600 */
+
+  /* Semantic Backgrounds */
+  --highlight-bg: rgba(16, 185, 129, 0.05);
+  --caution-bg: rgba(245, 158, 11, 0.05);
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --input-bg: #f3f4f6; /* gray-100 */
+  --section-icon-bg: rgba(180, 47, 90, 0.1); /* FANZA rose/10 */
 }
 
 /* ===========================================
@@ -441,6 +467,27 @@ html {
 
   .theme-footer-email:hover {
     color: var(--footer-email-hover);
+  }
+
+  /* Semantic Backgrounds */
+  .theme-input-bg {
+    background-color: var(--input-bg);
+  }
+
+  .theme-overlay-bg {
+    background-color: var(--overlay-bg);
+  }
+
+  .theme-section-icon-bg {
+    background-color: var(--section-icon-bg);
+  }
+
+  .theme-highlight-bg {
+    background-color: var(--highlight-bg);
+  }
+
+  .theme-caution-bg {
+    background-color: var(--caution-bg);
   }
 
   /* Body background */

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface SalePredictionData {
   probability30Days: number;
@@ -93,9 +94,11 @@ const TRANSLATIONS = {
 export default function SalePrediction({
   productId,
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
   compact = false,
 }: SalePredictionProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const [data, setData] = useState<SalePredictionData | null>(null);
   const [loading, setLoading] = useState(true);
 

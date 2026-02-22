@@ -39,7 +39,7 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
-    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
+    const TIME_LIMIT = 150_000; // 150秒（Cloud Scheduler 180秒タイムアウトの83%）
 
     const stats: ProcessStats = {
       totalProcessed: 0,
@@ -193,9 +193,9 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
             ON CONFLICT (normalized_product_id)
             DO UPDATE SET
               title = EXCLUDED.title,
-              description = COALESCE(EXCLUDED.description, products['description']),
+              description = COALESCE(EXCLUDED.description, products.description),
               release_date = COALESCE(EXCLUDED.release_date, products.release_date),
-              duration = COALESCE(EXCLUDED.duration, products['duration']),
+              duration = COALESCE(EXCLUDED.duration, products.duration),
               default_thumbnail_url = COALESCE(EXCLUDED.default_thumbnail_url, products.default_thumbnail_url),
               updated_at = NOW()
             RETURNING id

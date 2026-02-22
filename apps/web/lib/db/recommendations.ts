@@ -61,6 +61,10 @@ export async function getPerformerOtherProducts(performerId: number, currentProd
       normalizedProductId: productsTable.normalizedProductId,
       releaseDate: productsTable.releaseDate,
       imageUrl: productsTable.defaultThumbnailUrl,
+      bestRating: sql<string | null>`${productsTable}.best_rating`,
+      totalReviews: sql<number>`COALESCE(${productsTable}.total_reviews, 0)`,
+      minPrice: sql<number | null>`${productsTable}.min_price`,
+      hasActiveSale: sql<boolean>`COALESCE(${productsTable}.has_active_sale, false)`,
     })
     .from(productsTable)
     .innerJoin(ppTable, eq(productsTable.id, ppTable.productId))
@@ -309,13 +313,7 @@ export async function getSameMakerProducts(
   makerId: number,
   currentProductId: number,
   limit: number = 6
-): Promise<Array<{
-  id: number;
-  title: string | null;
-  normalizedProductId: string | null;
-  releaseDate: string | null;
-  imageUrl: string | null;
-}>> {
+) {
   const db = getDb();
 
   const result = await db
@@ -325,6 +323,10 @@ export async function getSameMakerProducts(
       normalizedProductId: productsTable.normalizedProductId,
       releaseDate: productsTable.releaseDate,
       imageUrl: productsTable.defaultThumbnailUrl,
+      bestRating: sql<string | null>`${productsTable}.best_rating`,
+      totalReviews: sql<number>`COALESCE(${productsTable}.total_reviews, 0)`,
+      minPrice: sql<number | null>`${productsTable}.min_price`,
+      hasActiveSale: sql<boolean>`COALESCE(${productsTable}.has_active_sale, false)`,
     })
     .from(productsTable)
     .innerJoin(ptTable, eq(productsTable.id, ptTable.productId))
@@ -382,13 +384,7 @@ export async function getSameSeriesProducts(
   seriesId: number,
   currentProductId: number,
   limit: number = 6
-): Promise<Array<{
-  id: number;
-  title: string | null;
-  normalizedProductId: string | null;
-  releaseDate: string | null;
-  imageUrl: string | null;
-}>> {
+) {
   const db = getDb();
 
   const result = await db
@@ -398,6 +394,10 @@ export async function getSameSeriesProducts(
       normalizedProductId: productsTable.normalizedProductId,
       releaseDate: productsTable.releaseDate,
       imageUrl: productsTable.defaultThumbnailUrl,
+      bestRating: sql<string | null>`${productsTable}.best_rating`,
+      totalReviews: sql<number>`COALESCE(${productsTable}.total_reviews, 0)`,
+      minPrice: sql<number | null>`${productsTable}.min_price`,
+      hasActiveSale: sql<boolean>`COALESCE(${productsTable}.has_active_sale, false)`,
     })
     .from(productsTable)
     .innerJoin(ptTable, eq(productsTable.id, ptTable.productId))

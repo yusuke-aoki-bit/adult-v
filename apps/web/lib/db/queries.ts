@@ -6,9 +6,9 @@ import { getDb } from './index';
 import { products, performers, productPerformers, tags, productTags, productSources, performerAliases, productImages, productVideos, productSales, productRatingSummary } from './schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import type { Product as ProductType, Actress as ActressType } from '@/types/product';
-import { mapLegacyProvider } from '@/lib/provider-utils';
-import { getDtiServiceFromUrl } from '@/lib/image-utils';
-import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@/lib/localization';
+import { mapLegacyProvider } from '@adult-v/shared/lib/provider-utils';
+import { getDtiServiceFromUrl } from '@adult-v/shared/lib/image-utils';
+import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@adult-v/shared/lib/localization';
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import {

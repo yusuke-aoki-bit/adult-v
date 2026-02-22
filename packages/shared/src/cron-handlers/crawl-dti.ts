@@ -354,7 +354,7 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
 
     const db = deps.getDb();
     const startTime = Date.now();
-    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
+    const TIME_LIMIT = 150_000; // 150秒（Cloud Scheduler 180秒タイムアウトの83%）
 
     const stats: CrawlStats = {
       totalFetched: 0,

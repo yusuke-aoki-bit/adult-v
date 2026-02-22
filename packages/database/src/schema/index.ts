@@ -113,6 +113,7 @@ export {
   userPerformerSuggestions,
   userPerformerVotes,
   productRankingVotes,
+  userContributionStats,
 } from './user-content';
 export type {
   UserReview,
@@ -135,6 +136,8 @@ export type {
   NewUserPerformerSuggestion,
   UserPerformerVote,
   NewUserPerformerVote,
+  UserContributionStat,
+  NewUserContributionStat,
 } from './user-content';
 
 // Analytics
@@ -142,6 +145,7 @@ export {
   priceHistory,
   salePatterns,
   videoTimestamps,
+  footerFeaturedActresses,
 } from './analytics';
 export type {
   PriceHistory,
@@ -150,6 +154,8 @@ export type {
   NewSalePattern,
   VideoTimestamp,
   NewVideoTimestamp,
+  FooterFeaturedActress,
+  NewFooterFeaturedActress,
 } from './analytics';
 
 // News

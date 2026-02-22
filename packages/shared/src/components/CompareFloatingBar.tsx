@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCompareList } from '../hooks/useCompareList';
 import Link from 'next/link';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface CompareFloatingBarProps {
   locale: string;
@@ -17,10 +18,12 @@ const HINT_SHOWN_KEY = 'compare_hint_shown_session';
 
 export function CompareFloatingBar({
   locale,
-  theme = 'dark',
+  theme: themeProp,
   comparePagePath = '/compare',
   isSelectionMode,
 }: CompareFloatingBarProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const { items, removeItem, clearAll, count, maxItems } = useCompareList();
   const [isFirstShow, setIsFirstShow] = useState(false);
   const [showHint, setShowHint] = useState(false);

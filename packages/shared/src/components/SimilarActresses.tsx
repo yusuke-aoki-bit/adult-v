@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { normalizeImageUrl } from '../lib/image-utils';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface SimilarActress {
   id: number;
@@ -50,9 +51,11 @@ export default function SimilarActresses({
   actresses,
   currentActressName,
   locale,
-  theme = 'dark',
+  theme: themeProp,
   translations,
 }: SimilarActressesProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   if (actresses.length === 0) {
     return null;
   }

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { normalizeImageUrl } from '../lib/image-utils';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface TopRatedProduct {
   id: number;
@@ -70,9 +71,12 @@ export default function PerformerTopProducts({
   products,
   performerName,
   locale,
-  theme = 'dark',
+  theme: themeProp,
   translations,
 }: PerformerTopProductsProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
+
   if (products.length === 0) {
     return null;
   }

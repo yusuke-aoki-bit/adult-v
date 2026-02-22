@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyCronRequest, unauthorizedResponse } from '../lib/cron-auth';
 import type { SQL } from 'drizzle-orm';
 
-const TIME_LIMIT = 240_000; // 80% of maxDuration (300s)
+const TIME_LIMIT = 150_000; // 150秒（Cloud Scheduler 180秒タイムアウトの83%）
 
 export interface CleanupHandlerDeps {
   getDb: () => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { Heart } from 'lucide-react';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 type ThemeMode = 'dark' | 'light';
 type PrimaryColor = 'rose' | 'pink';
@@ -32,9 +33,12 @@ export default function FavoriteButton({
   isLoaded,
   onToggle,
   labels,
-  theme = 'dark',
+  theme: themeProp,
   primaryColor = 'rose',
 }: FavoriteButtonProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
+
   if (!isLoaded) {
     return null;
   }

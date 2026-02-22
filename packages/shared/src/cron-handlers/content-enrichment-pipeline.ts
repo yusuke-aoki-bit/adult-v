@@ -54,7 +54,7 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
     }
 
     const startTime = Date.now();
-    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
+    const TIME_LIMIT = 150_000; // 150秒（Cloud Scheduler 180秒タイムアウトの83%）
     const db = deps.getDb();
 
     const { searchParams } = new URL(request['url']);

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePerformerCompareList } from '../hooks/usePerformerCompareList';
 import Link from 'next/link';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface PerformerCompareFloatingBarProps {
   locale: string;
@@ -17,10 +18,12 @@ const PERFORMER_HINT_SHOWN_KEY = 'performer_compare_hint_shown_session';
 
 export function PerformerCompareFloatingBar({
   locale,
-  theme = 'dark',
+  theme: themeProp,
   comparePagePath = '/compare/performers',
   isSelectionMode,
 }: PerformerCompareFloatingBarProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const { items, removeItem, clearAll, count, maxItems } = usePerformerCompareList();
   const [isFirstShow, setIsFirstShow] = useState(false);
   const [showHint, setShowHint] = useState(false);

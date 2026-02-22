@@ -6,6 +6,3 @@ export type { CreateListModalProps } from './CreateListModal';
 
 export { PublicListDetail } from './PublicListDetail';
 export type { PublicListDetailProps } from './PublicListDetail';
-
-export { AddToListButton } from './AddToListButton';
-export type { AddToListButtonProps } from './AddToListButton';

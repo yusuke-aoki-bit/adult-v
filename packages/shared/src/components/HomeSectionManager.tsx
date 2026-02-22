@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useHomeSections, HomeSection } from '../hooks/useHomeSections';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface HomeSectionManagerProps {
   locale: string;
@@ -16,11 +17,13 @@ interface HomeSectionManagerProps {
 
 export function HomeSectionManager({
   locale,
-  theme = 'dark',
+  theme: themeProp,
   pageId = 'home',
   customSections,
   title,
 }: HomeSectionManagerProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const {
     sections,
     toggleVisibility,

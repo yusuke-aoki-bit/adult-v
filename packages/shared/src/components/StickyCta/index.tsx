@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useReducedMotion } from '../../lib/hooks/useReducedMotion';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 type ThemeMode = 'dark' | 'light';
 
@@ -97,11 +98,13 @@ export function StickyCtaBase({
   discount,
   currency = 'JPY',
   saleEndAt,
-  theme = 'dark',
+  theme: themeProp,
   labels,
   showTrustBadge = false,
   urgencyThresholds,
 }: StickyCtaBaseProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = (themeProp ?? contextTheme) as ThemeMode;
   // 閾値をマージ
   const thresholds = { ...DEFAULT_URGENCY_THRESHOLDS, ...urgencyThresholds };
   const prefersReducedMotion = useReducedMotion();

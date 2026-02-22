@@ -4,6 +4,7 @@ import { useState, ReactNode, useMemo, useCallback, memo } from 'react';
 import { useCompareList } from '../hooks/useCompareList';
 import { SelectableCard } from './SelectableCard';
 import { CompareFloatingBar } from './CompareFloatingBar';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 const productListTexts = {
   ja: { selectToCompare: '比較選択モード', exitSelection: '選択終了', selected: '選択中', maxReachedPrefix: '最大', maxReachedSuffix: '件まで選択可能' },
@@ -83,10 +84,13 @@ const ProductItem = memo(function ProductItem({
 export function ProductListWithSelection({
   products,
   locale,
-  theme = 'dark',
+  theme: themeProp,
   children,
   className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4',
 }: ProductListWithSelectionProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
+
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const { toggleItem, compareSet, count, maxItems, isFull } = useCompareList();
   const isDark = theme === 'dark';

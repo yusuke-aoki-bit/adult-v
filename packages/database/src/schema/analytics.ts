@@ -13,6 +13,7 @@ import {
   date,
   jsonb,
   index,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { productSources, productVideos } from './products';
 import { performers } from './performers';
@@ -89,6 +90,27 @@ export const videoTimestamps = pgTable(
   }),
 );
 
+/**
+ * フッター用おすすめ女優テーブル
+ * GSCデータに基づいて動的に更新される
+ */
+export const footerFeaturedActresses = pgTable(
+  'footer_featured_actresses',
+  {
+    id: serial('id').primaryKey(),
+    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerName: varchar('performer_name', { length: 200 }).notNull(),
+    impressions: integer('impressions').default(0),
+    position: decimal('position', { precision: 6, scale: 2 }),
+    priorityScore: integer('priority_score').default(0),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    performerUnique: uniqueIndex('idx_footer_featured_performer').on(table.performerId),
+    priorityIdx: index('idx_footer_featured_priority').on(table.priorityScore),
+  }),
+);
+
 // 型エクスポート
 export type PriceHistory = typeof priceHistory.$inferSelect;
 export type NewPriceHistory = typeof priceHistory.$inferInsert;
@@ -96,3 +118,5 @@ export type SalePattern = typeof salePatterns.$inferSelect;
 export type NewSalePattern = typeof salePatterns.$inferInsert;
 export type VideoTimestamp = typeof videoTimestamps.$inferSelect;
 export type NewVideoTimestamp = typeof videoTimestamps.$inferInsert;
+export type FooterFeaturedActress = typeof footerFeaturedActresses.$inferSelect;
+export type NewFooterFeaturedActress = typeof footerFeaturedActresses.$inferInsert;

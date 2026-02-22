@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { TrendingUp, Sparkles, Clock, ChevronDown, ChevronUp, RefreshCw, AlertCircle } from 'lucide-react';
 import { getThemeConfig, type SectionTheme } from './theme';
 import { weeklyHighlightsTranslations, getTranslation } from './translations';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import { ActressCardBase } from '../ActressCard';
 import { ProductCardBase } from '../ProductCard';
 
@@ -45,7 +46,7 @@ interface WeeklyHighlightsSectionProps {
   /** Locale for translations */
   locale: string;
   /** Theme for styling: 'dark' for apps/web, 'light' for apps/fanza */
-  theme: SectionTheme;
+  theme?: SectionTheme;
   /** Custom fetch function for highlights data */
   fetchHighlights?: () => Promise<WeeklyHighlightsData>;
 }
@@ -56,9 +57,11 @@ interface WeeklyHighlightsSectionProps {
  */
 export function WeeklyHighlightsSection({
   locale,
-  theme,
+  theme: themeProp,
   fetchHighlights,
 }: WeeklyHighlightsSectionProps): ReactNode {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = (themeProp ?? contextTheme) as SectionTheme;
   const [data, setData] = useState<WeeklyHighlightsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);

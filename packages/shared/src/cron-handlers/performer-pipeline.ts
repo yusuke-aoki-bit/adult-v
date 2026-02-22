@@ -93,7 +93,7 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
     }
 
     const startTime = Date.now();
-    const TIME_LIMIT = 240_000; // 240秒（maxDuration 300秒の80%）
+    const TIME_LIMIT = 150_000; // 150秒（Cloud Scheduler 180秒タイムアウトの83%）
     const db = deps.getDb();
 
     const { searchParams } = new URL(request['url']);
@@ -821,7 +821,7 @@ async function mergeFakePerformers(
 
   // Step 4c: マージ実行
   const mergeStartTime = Date.now();
-  const MERGE_TIME_LIMIT = 120_000;
+  const MERGE_TIME_LIMIT = 60_000; // 60秒（メインTIME_LIMIT 150秒に収める）
   for (const fakePerformer of fakePerformerRows) {
     if (Date.now() - mergeStartTime > MERGE_TIME_LIMIT) {
       console.log(`    [mergeFakePerformers] Time limit reached, processed ${performersMerged}/${fakePerformerRows.length}`);

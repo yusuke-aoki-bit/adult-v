@@ -5,7 +5,7 @@ import { ConditionalLayout } from "@/components/ConditionalLayout";
 import { JsonLD } from "@/components/JsonLD";
 import { generateBaseMetadata, generateWebSiteSchema } from "@/lib/seo";
 import { defaultLocale } from "@/i18n";
-import CookieConsent from "@/components/CookieConsent";
+import { CookieConsent } from "@adult-v/shared/components";
 import { SiteProvider } from "@/lib/contexts/SiteContext";
 import { getServerSiteMode } from "@/lib/server/site-mode";
 import { LazyPWAInstaller } from "@/components/LazyPWAInstaller";

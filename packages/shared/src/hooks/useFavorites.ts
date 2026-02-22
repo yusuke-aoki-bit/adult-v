@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useLocalStorage } from './useLocalStorage';
 
 export interface FavoriteItem {
   type: 'product' | 'actress';
@@ -15,38 +16,10 @@ export interface FavoriteItem {
 const STORAGE_KEY = 'adult-v-favorites';
 
 export function useFavorites() {
-  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [favorites, setFavorites] = useLocalStorage<FavoriteItem[]>(STORAGE_KEY, []);
 
-  // Load favorites from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as FavoriteItem[];
-        setFavorites(parsed);
-      }
-    } catch (error) {
-      console.error('Failed to load favorites:', error);
-    } finally {
-      setIsLoaded(true);
-    }
-  }, []);
-
-  // Save favorites to localStorage whenever they change
-  useEffect(() => {
-    if (isLoaded) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
-      } catch (error) {
-        console.error('Failed to save favorites:', error);
-      }
-    }
-  }, [favorites, isLoaded]);
-
-  const addFavorite = (item: Omit<FavoriteItem, 'addedAt'>) => {
+  const addFavorite = useCallback((item: Omit<FavoriteItem, 'addedAt'>) => {
     setFavorites((prev) => {
-      // Check if already exists
       const exists = prev.some(
         (f) => f.type === item.type && f.id === item['id']
       );
@@ -60,37 +33,37 @@ export function useFavorites() {
         ...prev,
       ];
     });
-  };
+  }, [setFavorites]);
 
-  const removeFavorite = (type: 'product' | 'actress', id: number | string) => {
+  const removeFavorite = useCallback((type: 'product' | 'actress', id: number | string) => {
     setFavorites((prev) =>
       prev.filter((f) => !(f.type === type && f.id === id))
     );
-  };
+  }, [setFavorites]);
 
-  const isFavorite = (type: 'product' | 'actress', id: number | string) => {
+  const isFavorite = useCallback((type: 'product' | 'actress', id: number | string) => {
     return favorites.some((f) => f.type === type && f.id === id);
-  };
+  }, [favorites]);
 
-  const toggleFavorite = (item: Omit<FavoriteItem, 'addedAt'>) => {
+  const toggleFavorite = useCallback((item: Omit<FavoriteItem, 'addedAt'>) => {
     if (isFavorite(item.type, item['id'])) {
       removeFavorite(item.type, item['id']);
     } else {
       addFavorite(item);
     }
-  };
+  }, [isFavorite, removeFavorite, addFavorite]);
 
   const getFavoritesByType = useCallback((type: 'product' | 'actress') => {
     return favorites.filter((f) => f.type === type);
   }, [favorites]);
 
-  const clearFavorites = () => {
+  const clearFavorites = useCallback(() => {
     setFavorites([]);
-  };
+  }, [setFavorites]);
 
   return {
     favorites,
-    isLoaded,
+    isLoaded: true,
     addFavorite,
     removeFavorite,
     isFavorite,

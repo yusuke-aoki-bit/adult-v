@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useCompareList, CompareItem } from '../hooks/useCompareList';
+import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 interface CompareButtonProps {
   product: Omit<CompareItem, 'addedAt'>;
@@ -16,12 +17,14 @@ interface CompareButtonProps {
 export function CompareButton({
   product,
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
   size = 'md',
   showLabel = false,
   showToast = true,
   className = '',
 }: CompareButtonProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const { toggleItem, isInCompareList, isFull, count, maxItems } = useCompareList();
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 

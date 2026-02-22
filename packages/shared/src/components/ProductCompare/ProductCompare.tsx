@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 // レーダーチャート用ヘルパー関数
 function getRadarPoints(cx: number, cy: number, r: number, sides: number): string {
@@ -138,10 +139,12 @@ interface ProductCompareProps {
 export function ProductCompare({
   productIds,
   locale = 'ja',
-  theme = 'dark',
+  theme: themeProp,
   onProductClick,
   onRemoveProduct,
 }: ProductCompareProps) {
+  const { theme: contextTheme } = useSiteTheme();
+  const theme = themeProp ?? contextTheme;
   const [products, setProducts] = useState<CompareProduct[]>([]);
   const [comparison, setComparison] = useState<ComparisonData | null>(null);
   const [isLoading, setIsLoading] = useState(false);

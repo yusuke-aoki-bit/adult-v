@@ -8,9 +8,9 @@ import { products, performers, productPerformers, tags, productTags, productSour
 import { eq, and, asc, sql, inArray } from 'drizzle-orm';
 import type { Product as ProductType, Actress as ActressType, Actress, ProductCategory, ProviderId } from '@/types/product';
 import type { InferSelectModel } from 'drizzle-orm';
-import { mapLegacyProvider } from '@/lib/provider-utils';
+import { mapLegacyProvider } from '@adult-v/shared/lib/provider-utils';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
-import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName } from '@/lib/localization';
+import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName } from '@adult-v/shared/lib/localization';
 
 // ============================================================
 // 型定義
@@ -40,6 +40,7 @@ export interface BatchRelatedDataResult {
 
 const memoryCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5分
+const MAX_CACHE_ENTRIES = 50;
 
 export function getFromMemoryCache<T>(key: string): T | null {
   const cached = memoryCache.get(key);
@@ -51,12 +52,27 @@ export function getFromMemoryCache<T>(key: string): T | null {
 }
 
 export function setToMemoryCache<T>(key: string, data: T): void {
-  // キャッシュサイズ制限（100エントリまで）
-  if (memoryCache.size > 100) {
+  if (memoryCache.has(key)) {
+    memoryCache.delete(key);
+  }
+  while (memoryCache.size >= MAX_CACHE_ENTRIES) {
     const oldestKey = memoryCache.keys().next().value;
     if (oldestKey) memoryCache.delete(oldestKey);
+    else break;
   }
   memoryCache.set(key, { data, timestamp: Date.now() });
+}
+
+// 定期的に期限切れエントリを削除（2分ごと）
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of memoryCache.entries()) {
+      if (now - entry.timestamp > CACHE_TTL_MS) {
+        memoryCache.delete(key);
+      }
+    }
+  }, 2 * 60 * 1000);
 }
 
 // ============================================================
