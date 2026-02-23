@@ -89,16 +89,8 @@ export {
 export type { SectionTheme, ThemeConfig, Locale } from './sections';
 
 // Filter components (shared between apps)
-export {
-  ProductSortDropdown,
-  PerPageDropdown,
-  ActiveFiltersChips,
-  getFilterThemeConfig,
-} from './filters';
-export type {
-  FilterTheme,
-  FilterThemeConfig,
-} from './filters';
+export { ProductSortDropdown, PerPageDropdown, ActiveFiltersChips, getFilterThemeConfig } from './filters';
+export type { FilterTheme, FilterThemeConfig } from './filters';
 
 // Client providers (Firebase auth, etc.)
 export { ClientProviders } from './ClientProviders';

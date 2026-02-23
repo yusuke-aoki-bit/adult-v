@@ -33,7 +33,6 @@ interface ImageSearchProps {
   onProductClick?: (productId: string) => void;
 }
 
-
 export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }: ImageSearchProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;

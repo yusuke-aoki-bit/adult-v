@@ -37,8 +37,7 @@ import {
 // Config
 // ---------------------------------------------------------------------------
 
-const DATABASE_URL =
-  process.env['DATABASE_URL'] || 'postgresql://postgres:postgres@localhost:5432/adult_v_dev';
+const DATABASE_URL = process.env['DATABASE_URL'] || 'postgresql://postgres:postgres@localhost:5432/adult_v_dev';
 const isClean = process.argv.includes('--clean');
 
 // ---------------------------------------------------------------------------
@@ -403,11 +402,7 @@ async function seed() {
           createdAt: now(),
         },
       ]);
-      const insertedAliases = await db
-        .insert(performerAliases)
-        .values(aliasData)
-        .onConflictDoNothing()
-        .returning();
+      const insertedAliases = await db.insert(performerAliases).values(aliasData).onConflictDoNothing().returning();
       console.log(`  Inserted ${insertedAliases.length} performer aliases.`);
 
       // Performer images (placeholder URLs)
@@ -519,11 +514,7 @@ async function seed() {
             updatedAt: now(),
           },
         ];
-        const insertedPrices = await db
-          .insert(productPrices)
-          .values(priceEntries)
-          .onConflictDoNothing()
-          .returning();
+        const insertedPrices = await db.insert(productPrices).values(priceEntries).onConflictDoNothing().returning();
         totalPrices += insertedPrices.length;
 
         // Sale for products flagged as on sale
@@ -542,11 +533,7 @@ async function seed() {
             createdAt: now(),
             updatedAt: now(),
           };
-          const insertedSales = await db
-            .insert(productSales)
-            .values(saleData)
-            .onConflictDoNothing()
-            .returning();
+          const insertedSales = await db.insert(productSales).values(saleData).onConflictDoNothing().returning();
           totalSales += insertedSales.length;
         }
 
@@ -582,15 +569,9 @@ async function seed() {
       }
     }
     // Deduplicate
-    const uniquePP = [
-      ...new Map(ppData.map((x) => [`${x.productId}-${x.performerId}`, x])).values(),
-    ];
+    const uniquePP = [...new Map(ppData.map((x) => [`${x.productId}-${x.performerId}`, x])).values()];
     if (uniquePP.length > 0) {
-      const insertedPP = await db
-        .insert(productPerformers)
-        .values(uniquePP)
-        .onConflictDoNothing()
-        .returning();
+      const insertedPP = await db.insert(productPerformers).values(uniquePP).onConflictDoNothing().returning();
       console.log(`  Inserted ${insertedPP.length} product-performer relations.`);
     }
 
@@ -621,15 +602,9 @@ async function seed() {
         ptData.push({ productId: product.id, tagId: seriesTagIds[0]! });
       }
     }
-    const uniquePT = [
-      ...new Map(ptData.map((x) => [`${x.productId}-${x.tagId}`, x])).values(),
-    ];
+    const uniquePT = [...new Map(ptData.map((x) => [`${x.productId}-${x.tagId}`, x])).values()];
     if (uniquePT.length > 0) {
-      const insertedPT = await db
-        .insert(productTags)
-        .values(uniquePT)
-        .onConflictDoNothing()
-        .returning();
+      const insertedPT = await db.insert(productTags).values(uniquePT).onConflictDoNothing().returning();
       console.log(`  Inserted ${insertedPT.length} product-tag relations.`);
     }
 
@@ -675,11 +650,7 @@ async function seed() {
           createdAt: now(),
         },
       ];
-      const insertedImages = await db
-        .insert(productImages)
-        .values(imageData)
-        .onConflictDoNothing()
-        .returning();
+      const insertedImages = await db.insert(productImages).values(imageData).onConflictDoNothing().returning();
       totalImages += insertedImages.length;
 
       // Reviews (1-3 per product)
@@ -702,11 +673,7 @@ async function seed() {
           updatedAt: now(),
         });
       }
-      const insertedReviews = await db
-        .insert(productReviews)
-        .values(reviewData)
-        .onConflictDoNothing()
-        .returning();
+      const insertedReviews = await db.insert(productReviews).values(reviewData).onConflictDoNothing().returning();
       totalReviews += insertedReviews.length;
 
       // Rating summary

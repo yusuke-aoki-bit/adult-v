@@ -134,7 +134,6 @@ export interface FooterBaseProps {
   isFanzaSite?: boolean;
 }
 
-
 /**
  * 共有Footerベースコンポーネント
  * 言語取得は?hl=パラメータから統一的に行う

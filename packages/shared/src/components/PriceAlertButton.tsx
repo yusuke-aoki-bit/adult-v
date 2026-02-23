@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
 import { getTranslation, priceAlertTranslations } from '../lib/translations';
 
-
 interface PriceAlertButtonProps {
   productId: string | number;
   title: string;

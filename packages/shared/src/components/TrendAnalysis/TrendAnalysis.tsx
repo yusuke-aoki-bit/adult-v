@@ -27,7 +27,6 @@ interface TrendAnalysisProps {
   onPerformerClick?: (performer: string) => void;
 }
 
-
 export function TrendAnalysis({ locale, theme: themeProp, onTagClick, onPerformerClick }: TrendAnalysisProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;

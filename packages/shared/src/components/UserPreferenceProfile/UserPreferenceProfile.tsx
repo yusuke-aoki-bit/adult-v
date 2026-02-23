@@ -3,7 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRecentlyViewed } from '../../hooks/useRecentlyViewed';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
-import { getTranslation, userPreferenceProfileTranslations, profileTypeLabels, preferenceLabels } from '../../lib/translations';
+import {
+  getTranslation,
+  userPreferenceProfileTranslations,
+  profileTypeLabels,
+  preferenceLabels,
+} from '../../lib/translations';
 
 interface UserProfile {
   profileType: 'casual' | 'explorer' | 'collector' | 'specialist';
@@ -37,7 +42,6 @@ interface UserPreferenceProfileProps {
   onTagClick?: (tag: string) => void;
   className?: string;
 }
-
 
 function getProfileText(locale: string) {
   return getTranslation(userPreferenceProfileTranslations, locale);

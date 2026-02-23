@@ -54,7 +54,6 @@ const HOP_COLORS = {
   2: { fill: '#8B5CF6', stroke: '#A78BFA', light: { fill: '#7C3AED', stroke: '#8B5CF6' } }, // violet (ジャンル)
 };
 
-
 export function SimilarProductMap({ productId, locale, theme: themeProp, onProductClick }: SimilarProductMapProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;

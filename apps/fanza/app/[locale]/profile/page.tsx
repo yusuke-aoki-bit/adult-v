@@ -263,9 +263,7 @@ export default function ProfilePage() {
             <MakerAnalysis locale={locale} />
 
             {/* クラウド同期設定 */}
-            <CloudSyncSettings
-              translations={getTranslation(cloudSyncTranslations, locale)}
-            />
+            <CloudSyncSettings translations={getTranslation(cloudSyncTranslations, locale)} />
 
             {/* おすすめキーワード */}
             {analysis.recommendedKeywords.length > 0 && (

@@ -30,7 +30,6 @@ function getRadarDataPoints(cx: number, cy: number, values: number[]): string {
 
 const localeMap: Record<string, string> = { ja: 'ja-JP', en: 'en-US', zh: 'zh-CN', ko: 'ko-KR', 'zh-TW': 'zh-TW' };
 
-
 interface CompareProduct {
   id: number;
   normalizedProductId: string;

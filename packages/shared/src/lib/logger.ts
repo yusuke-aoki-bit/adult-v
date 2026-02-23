@@ -137,7 +137,8 @@ function output(entry: LogEntry, level: LogLevel): void {
     output(JSON.stringify(entry));
   } else {
     // 開発: 可読性重視
-    const output = level === 'error' || level === 'fatal' ? console.error : level === 'warn' ? console.warn : console.log;
+    const output =
+      level === 'error' || level === 'fatal' ? console.error : level === 'warn' ? console.warn : console.log;
 
     output(formatForConsole(entry));
 

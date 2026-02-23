@@ -21,7 +21,6 @@ interface SalePredictionProps {
   compact?: boolean;
 }
 
-
 export default function SalePrediction({
   productId,
   locale = 'ja',

@@ -37,24 +37,24 @@
 
 ## 3. CI/CD パイプライン
 
-| #   | やるべきこと         | 状態    | 備考                                                            |
-| --- | -------------------- | ------- | --------------------------------------------------------------- |
-| 3.1 | CI (Lint)            | ✅ 完了 | GitHub Actions ci.yml                                           |
-| 3.2 | CI (型チェック)      | ✅ 完了 | `pnpm run typecheck`                                            |
-| 3.3 | CI (ユニットテスト)  | ✅ 完了 | Vitest `test:run`                                               |
-| 3.4 | CI (ビルド検証)      | ✅ 完了 | web + fanza 並列ビルド                                          |
-| 3.5 | CI (E2E テスト)      | ✅ 完了 | Playwright (chromium), PR時のみ実行, artifact upload on failure |
-| 3.6 | CI (カバレッジ閾値)  | ✅ 完了 | `test:coverage` で計測、CI で実行                               |
-| 3.7 | CD (自動デプロイ)    | ✅ 完了 | Firebase App Hosting, master push で自動デプロイ                |
-| 3.8 | セキュリティスキャン | ✅ 完了 | Dependabot (npm + github-actions, 週次, minor/patch グループ化) |
-| 3.9 | ソースマップ連携     | ✅ 完了 | Sentry source map upload (master push 時, SENTRY_AUTH_TOKEN)    |
-| 3.10 | バンドルサイズ監視  | ✅ 完了 | size-limit (.size-limit.json, 500kB閾値/アプリ)                 |
-| 3.11 | Core Web Vitals回帰 | ✅ 完了 | Lighthouse CI (.lighthouserc.json, lighthouse.yml workflow)      |
-| 3.12 | カバレッジ閾値      | ✅ 完了 | @vitest/coverage-v8, 30%閾値 (vitest.config.mts)                |
-| 3.13 | バージョン管理      | ✅ 完了 | Changesets (.changeset/config.json, @changesets/cli)             |
-| 3.14 | PRプレビューデプロイ | ✅ 完了 | Firebase Preview Channel (.github/workflows/preview.yml)        |
-| 3.15 | PR/Issue テンプレート | ✅ 完了 | .github/PULL_REQUEST_TEMPLATE.md, .github/ISSUE_TEMPLATE/      |
-| 3.16 | コードオーナーシップ | ✅ 完了 | .github/CODEOWNERS                                              |
+| #    | やるべきこと          | 状態    | 備考                                                            |
+| ---- | --------------------- | ------- | --------------------------------------------------------------- |
+| 3.1  | CI (Lint)             | ✅ 完了 | GitHub Actions ci.yml                                           |
+| 3.2  | CI (型チェック)       | ✅ 完了 | `pnpm run typecheck`                                            |
+| 3.3  | CI (ユニットテスト)   | ✅ 完了 | Vitest `test:run`                                               |
+| 3.4  | CI (ビルド検証)       | ✅ 完了 | web + fanza 並列ビルド                                          |
+| 3.5  | CI (E2E テスト)       | ✅ 完了 | Playwright (chromium), PR時のみ実行, artifact upload on failure |
+| 3.6  | CI (カバレッジ閾値)   | ✅ 完了 | `test:coverage` で計測、CI で実行                               |
+| 3.7  | CD (自動デプロイ)     | ✅ 完了 | Firebase App Hosting, master push で自動デプロイ                |
+| 3.8  | セキュリティスキャン  | ✅ 完了 | Dependabot (npm + github-actions, 週次, minor/patch グループ化) |
+| 3.9  | ソースマップ連携      | ✅ 完了 | Sentry source map upload (master push 時, SENTRY_AUTH_TOKEN)    |
+| 3.10 | バンドルサイズ監視    | ✅ 完了 | size-limit (.size-limit.json, 500kB閾値/アプリ)                 |
+| 3.11 | Core Web Vitals回帰   | ✅ 完了 | Lighthouse CI (.lighthouserc.json, lighthouse.yml workflow)     |
+| 3.12 | カバレッジ閾値        | ✅ 完了 | @vitest/coverage-v8, 30%閾値 (vitest.config.mts)                |
+| 3.13 | バージョン管理        | ✅ 完了 | Changesets (.changeset/config.json, @changesets/cli)            |
+| 3.14 | PRプレビューデプロイ  | ✅ 完了 | Firebase Preview Channel (.github/workflows/preview.yml)        |
+| 3.15 | PR/Issue テンプレート | ✅ 完了 | .github/PULL_REQUEST_TEMPLATE.md, .github/ISSUE_TEMPLATE/       |
+| 3.16 | コードオーナーシップ  | ✅ 完了 | .github/CODEOWNERS                                              |
 
 **CI パイプライン完備**: Lint, Format Check, TypeCheck, Unit Tests (coverage 30%閾値), E2E (PR), Build (web+fanza), Sentry, Dependabot, knip (未使用コード検出), syncpack (依存バージョン一貫性), size-limit (バンドルサイズ), Lighthouse CI (Core Web Vitals), Changesets (バージョン管理), Firebase Preview Channel (PRプレビュー)
 
@@ -62,16 +62,16 @@
 
 ## 4. テスト戦略
 
-| #   | やるべきこと             | 状態        | 備考                                                                          |
-| --- | ------------------------ | ----------- | ----------------------------------------------------------------------------- |
-| 4.1 | テストフレームワーク選定 | ✅ 完了     | Vitest (unit/integration) + Playwright (E2E)                                  |
-| 4.2 | ユニットテスト           | ✅ 充実     | 39ファイル（API, Components, Hooks, Lib）                                     |
-| 4.3 | インテグレーションテスト | ✅ 充実     | 8ファイル・129テスト（search, favorites, user-content, recommendations 追加） |
-| 4.4 | E2E テスト               | ✅ 充実     | 23ファイル（ナビ, パフォ, アクセシビリティ, API）                             |
-| 4.5 | テストモック/ヘルパー    | ✅ 完了     | Next.js/next-intl モック, localStorage, gtag                                  |
-| 4.6 | アクセシビリティテスト   | ✅ あり     | @axe-core/playwright                                                          |
+| #   | やるべきこと             | 状態          | 備考                                                                                |
+| --- | ------------------------ | ------------- | ----------------------------------------------------------------------------------- |
+| 4.1 | テストフレームワーク選定 | ✅ 完了       | Vitest (unit/integration) + Playwright (E2E)                                        |
+| 4.2 | ユニットテスト           | ✅ 充実       | 39ファイル（API, Components, Hooks, Lib）                                           |
+| 4.3 | インテグレーションテスト | ✅ 充実       | 8ファイル・129テスト（search, favorites, user-content, recommendations 追加）       |
+| 4.4 | E2E テスト               | ✅ 充実       | 23ファイル（ナビ, パフォ, アクセシビリティ, API）                                   |
+| 4.5 | テストモック/ヘルパー    | ✅ 完了       | Next.js/next-intl モック, localStorage, gtag                                        |
+| 4.6 | アクセシビリティテスト   | ✅ あり       | @axe-core/playwright                                                                |
 | 4.7 | ビジュアル回帰テスト     | ✅ CI組込済み | Playwright snapshots + visual-regression.yml (週次 + 手動, maxDiffPixelRatio: 0.02) |
-| 4.8 | パフォーマンステスト     | ✅ あり     | Playwright + Lighthouse ベース                                                |
+| 4.8 | パフォーマンステスト     | ✅ あり       | Playwright + Lighthouse ベース                                                      |
 
 **比率**: Unit 56% / Integration 11% / E2E 33%
 **改善**: 統合テスト倍増（4→8ファイル、129テスト）
@@ -95,56 +95,56 @@
 
 ## 6. エラー処理 & 監視
 
-| #   | やるべきこと             | 状態    | 備考                                                  |
-| --- | ------------------------ | ------- | ----------------------------------------------------- |
-| 6.1 | エラーバウンダリ         | ✅ 完了 | global-error.tsx + [locale]/error.tsx + not-found.tsx |
-| 6.2 | エラー監視 (Sentry)      | ✅ 完了 | Client + Server + Edge, Session Replay                |
+| #   | やるべきこと             | 状態    | 備考                                                              |
+| --- | ------------------------ | ------- | ----------------------------------------------------------------- |
+| 6.1 | エラーバウンダリ         | ✅ 完了 | global-error.tsx + [locale]/error.tsx + not-found.tsx             |
+| 6.2 | エラー監視 (Sentry)      | ✅ 完了 | Client + Server + Edge, Session Replay                            |
 | 6.3 | 構造化ログ               | ✅ 完了 | JSON形式, Cloud Logging互換, createModuleLogger, fatal レベル対応 |
-| 6.4 | カスタムエラークラス     | ✅ 完了 | DatabaseError, ValidationError, AuthError等           |
-| 6.5 | API エラーレスポンス統一 | ✅ 完了 | createApiErrorResponse()                              |
-| 6.6 | リリース追跡             | ✅ 完了 | Sentry source map upload (CI, master push 時)         |
-| 6.7 | ヘルスチェック EP        | ✅ 完了 | /api/health (DB接続・メモリ使用率・uptime, web+fanza) |
+| 6.4 | カスタムエラークラス     | ✅ 完了 | DatabaseError, ValidationError, AuthError等                       |
+| 6.5 | API エラーレスポンス統一 | ✅ 完了 | createApiErrorResponse()                                          |
+| 6.6 | リリース追跡             | ✅ 完了 | Sentry source map upload (CI, master push 時)                     |
+| 6.7 | ヘルスチェック EP        | ✅ 完了 | /api/health (DB接続・メモリ使用率・uptime, web+fanza)             |
 
 ---
 
 ## 7. データベース & キャッシュ
 
-| #   | やるべきこと         | 状態        | 備考                                                                                  |
-| --- | -------------------- | ----------- | ------------------------------------------------------------------------------------- |
-| 7.1 | ORM / クエリビルダー | ✅ 完了     | Drizzle ORM (PostgreSQL)                                                              |
-| 7.2 | スキーマ管理         | ✅ 完了     | モジュール化 (products, performers, tags, reviews, analytics, user-content, raw-data) |
-| 7.3 | マイグレーション     | ✅ 完了     | drizzle-kit generate/push/migrate + ロールバックスクリプト (scripts/db-rollback.ts + 5 SQL) |
-| 7.4 | キャッシュ戦略       | ✅ 優秀     | 3層: Redis (Upstash) + インメモリLRU + HTTP Cache-Control                             |
-| 7.5 | ISR 設定             | ✅ 完了     | 60s〜300s revalidate                                                                  |
-| 7.6 | バックアップ         | ✅ 完了     | Cloud SQL バックアップ有効, 運用Runbook に手順記載 (docs/RUNBOOK.md)                  |
-| 7.7 | ローカル開発環境     | ✅ 完了     | Docker Compose (docker-compose.yml, pgvector + Redis)                                 |
-| 7.8 | 開発データシーディング | ✅ 完了   | scripts/db-seed.ts (開発用データ投入)                                                 |
+| #   | やるべきこと           | 状態    | 備考                                                                                        |
+| --- | ---------------------- | ------- | ------------------------------------------------------------------------------------------- |
+| 7.1 | ORM / クエリビルダー   | ✅ 完了 | Drizzle ORM (PostgreSQL)                                                                    |
+| 7.2 | スキーマ管理           | ✅ 完了 | モジュール化 (products, performers, tags, reviews, analytics, user-content, raw-data)       |
+| 7.3 | マイグレーション       | ✅ 完了 | drizzle-kit generate/push/migrate + ロールバックスクリプト (scripts/db-rollback.ts + 5 SQL) |
+| 7.4 | キャッシュ戦略         | ✅ 優秀 | 3層: Redis (Upstash) + インメモリLRU + HTTP Cache-Control                                   |
+| 7.5 | ISR 設定               | ✅ 完了 | 60s〜300s revalidate                                                                        |
+| 7.6 | バックアップ           | ✅ 完了 | Cloud SQL バックアップ有効, 運用Runbook に手順記載 (docs/RUNBOOK.md)                        |
+| 7.7 | ローカル開発環境       | ✅ 完了 | Docker Compose (docker-compose.yml, pgvector + Redis)                                       |
+| 7.8 | 開発データシーディング | ✅ 完了 | scripts/db-seed.ts (開発用データ投入)                                                       |
 
 ---
 
 ## 8. パフォーマンス最適化
 
-| #   | やるべきこと           | 状態       | 備考                                        |
-| --- | ---------------------- | ---------- | ------------------------------------------- |
-| 8.1 | バンドル最適化         | ✅ 完了    | optimizePackageImports, optimizeCss         |
-| 8.2 | 画像最適化             | ✅ 完了    | カスタムローダー + wsrv.nl プロキシ (WebP変換+リサイズ) |
-| 8.3 | コード分割             | ✅ 完了    | next/dynamic で重いコンポーネントを遅延読込 |
-| 8.4 | 本番console除去        | ✅ 完了    | compiler.removeConsole (error/warn以外)     |
-| 8.5 | 静的アセットキャッシュ | ✅ 完了    | /\_next/static: immutable, 1年              |
-| 8.6 | バンドルサイズ監視     | ✅ 完了    | size-limit (.size-limit.json, 500kB閾値/アプリ, CI連携) |
-| 8.7 | Lighthouse CI          | ✅ 完了    | Core Web Vitals 回帰検出 (.lighthouserc.json, 自動計測) |
+| #   | やるべきこと           | 状態    | 備考                                                    |
+| --- | ---------------------- | ------- | ------------------------------------------------------- |
+| 8.1 | バンドル最適化         | ✅ 完了 | optimizePackageImports, optimizeCss                     |
+| 8.2 | 画像最適化             | ✅ 完了 | カスタムローダー + wsrv.nl プロキシ (WebP変換+リサイズ) |
+| 8.3 | コード分割             | ✅ 完了 | next/dynamic で重いコンポーネントを遅延読込             |
+| 8.4 | 本番console除去        | ✅ 完了 | compiler.removeConsole (error/warn以外)                 |
+| 8.5 | 静的アセットキャッシュ | ✅ 完了 | /\_next/static: immutable, 1年                          |
+| 8.6 | バンドルサイズ監視     | ✅ 完了 | size-limit (.size-limit.json, 500kB閾値/アプリ, CI連携) |
+| 8.7 | Lighthouse CI          | ✅ 完了 | Core Web Vitals 回帰検出 (.lighthouserc.json, 自動計測) |
 
 ---
 
 ## 9. 国際化 (i18n)
 
-| #   | やるべきこと         | 状態                | 備考                                                |
-| --- | -------------------- | ------------------- | --------------------------------------------------- |
-| 9.1 | 翻訳ファイル         | ✅ 完了             | 5言語 (ja, en, zh, zh-TW, ko)                       |
-| 9.2 | ルーティング         | ✅ 完了             | next-intl + ?hl= パラメータ方式                     |
-| 9.3 | AI生成コンテンツ翻訳 | ✅ 完了             | DB カラム: titleEn, titleZh, aiReviewEn 等          |
-| 9.4 | エラーページ多言語   | ✅ 完了             | Accept-Language 自動検出                            |
-| 9.5 | コンポーネント内翻訳 | ✅ 完了             | 73+ exports、7モジュール (ai/product/ui/user/performer/sections/filters) に集約完了 |
+| #   | やるべきこと         | 状態    | 備考                                                                                |
+| --- | -------------------- | ------- | ----------------------------------------------------------------------------------- |
+| 9.1 | 翻訳ファイル         | ✅ 完了 | 5言語 (ja, en, zh, zh-TW, ko)                                                       |
+| 9.2 | ルーティング         | ✅ 完了 | next-intl + ?hl= パラメータ方式                                                     |
+| 9.3 | AI生成コンテンツ翻訳 | ✅ 完了 | DB カラム: titleEn, titleZh, aiReviewEn 等                                          |
+| 9.4 | エラーページ多言語   | ✅ 完了 | Accept-Language 自動検出                                                            |
+| 9.5 | コンポーネント内翻訳 | ✅ 完了 | 73+ exports、7モジュール (ai/product/ui/user/performer/sections/filters) に集約完了 |
 
 ---
 

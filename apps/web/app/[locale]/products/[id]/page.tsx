@@ -306,15 +306,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
     product.normalizedProductId || undefined,
     // SEO: 外部品番（FANZA ID等）を構造化データに追加
     sources
-      ?.filter((s: any) => s.originalProductId && s.originalProductId !== product.normalizedProductId)
-      .map((s: any) => ({ aspName: s.aspName, originalProductId: s.originalProductId })),
+      ?.filter((s: { originalProductId: string | null }) => s.originalProductId && s.originalProductId !== product.normalizedProductId)
+      .map((s: { aspName: string; originalProductId: string | null }) => ({ aspName: s.aspName, originalProductId: s.originalProductId })),
   );
 
   // FAQ Schema（商品ページ用 + 外部品番FAQ）
   const externalIdsForFaq =
     sources
-      ?.filter((s: any) => s.originalProductId && s.originalProductId !== product.normalizedProductId)
-      .map((s: any) => ({ aspName: s.aspName, originalProductId: s.originalProductId })) || [];
+      ?.filter((s: { originalProductId: string | null }) => s.originalProductId && s.originalProductId !== product.normalizedProductId)
+      .map((s: { aspName: string; originalProductId: string | null }) => ({ aspName: s.aspName, originalProductId: s.originalProductId })) || [];
   const productFaqs = getProductPageFAQs(locale, {
     productId: product.normalizedProductId || undefined,
     title: product.title,
@@ -507,8 +507,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       <CopyButton text={product.title} label="タイトル" size="xs" />
                     </div>
                     {sources
-                      ?.filter((s: any) => s.originalProductId && s.originalProductId !== displayProductCode)
-                      .map((s: any, i: number) => (
+                      ?.filter((s: { originalProductId: string | null }) => s.originalProductId && s.originalProductId !== displayProductCode)
+                      .map((s: { aspName: string; originalProductId: string | null }, i: number) => (
                         <span
                           key={i}
                           className="theme-accordion-bg theme-text-secondary inline-flex items-center rounded-md px-2 py-1 font-mono text-xs"
