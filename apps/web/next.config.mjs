@@ -1,12 +1,13 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 import { withSentryConfig } from '@sentry/nextjs';
-import bundleAnalyzer from '@next/bundle-analyzer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-});
+// @next/bundle-analyzer is a devDependency — skip in production builds (Firebase App Hosting)
+const withBundleAnalyzer =
+  process.env.ANALYZE === 'true'
+    ? (await import('@next/bundle-analyzer')).default({ enabled: true })
+    : (config) => config;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
