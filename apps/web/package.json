@@ -35,7 +35,7 @@
     "openai": "^4.0.0",
     "pg": "^8.16.3",
     "postcss": "^8.4.49",
-    "puppeteer": "^23.0.0",
+    "puppeteer": "^24.37.5",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "react": "19.2.3",
