@@ -126,12 +126,6 @@ const getCachedAspStats = unstable_cache(async () => getAspStats(), ['homepage-a
   tags: ['asp-stats'],
 });
 
-const getCachedFanzaProducts = unstable_cache(
-  async (limit: number) => getProducts({ limit, sortBy: 'releaseDateDesc', providers: ['FANZA'] }),
-  ['homepage-fanza-products'],
-  { revalidate: 300, tags: ['fanza-products'] },
-);
-
 // トップページ全データを一括キャッシュ（8クエリ→1キャッシュルックアップ）
 const getCachedTopPageData = unstable_cache(
   async (locale: string, perPage: number, isFanzaSite: boolean, includeAsps: string[]) => {

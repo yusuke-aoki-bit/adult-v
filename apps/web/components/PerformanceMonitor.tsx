@@ -22,7 +22,7 @@ export default function PerformanceMonitor() {
       // Largest Contentful Paint (LCP) - Target: < 2.5s
       onLCP((metric) => {
         if (DEBUG_WEB_VITALS) {
-          console.log('[Core Web Vitals] LCP:', metric.value, 'ms');
+          console.warn('[Core Web Vitals] LCP:', metric.value, 'ms');
         }
         // Send to analytics
         if (window.gtag) {
@@ -38,7 +38,7 @@ export default function PerformanceMonitor() {
       // Interaction to Next Paint (INP) - Target: < 200ms
       onINP((metric) => {
         if (DEBUG_WEB_VITALS) {
-          console.log('[Core Web Vitals] INP:', metric.value, 'ms');
+          console.warn('[Core Web Vitals] INP:', metric.value, 'ms');
         }
         if (window.gtag) {
           window.gtag('event', 'web_vitals', {
@@ -53,7 +53,7 @@ export default function PerformanceMonitor() {
       // Cumulative Layout Shift (CLS) - Target: < 0.1
       onCLS((metric) => {
         if (DEBUG_WEB_VITALS) {
-          console.log('[Core Web Vitals] CLS:', metric.value);
+          console.warn('[Core Web Vitals] CLS:', metric.value);
         }
         if (window.gtag) {
           window.gtag('event', 'web_vitals', {
@@ -68,7 +68,7 @@ export default function PerformanceMonitor() {
       // First Contentful Paint (FCP) - Target: < 1.8s
       onFCP((metric) => {
         if (DEBUG_WEB_VITALS) {
-          console.log('[Core Web Vitals] FCP:', metric.value, 'ms');
+          console.warn('[Core Web Vitals] FCP:', metric.value, 'ms');
         }
         if (window.gtag) {
           window.gtag('event', 'web_vitals', {
@@ -83,7 +83,7 @@ export default function PerformanceMonitor() {
       // Time to First Byte (TTFB) - Target: < 800ms
       onTTFB((metric) => {
         if (DEBUG_WEB_VITALS) {
-          console.log('[Core Web Vitals] TTFB:', metric.value, 'ms');
+          console.warn('[Core Web Vitals] TTFB:', metric.value, 'ms');
         }
         if (window.gtag) {
           window.gtag('event', 'web_vitals', {

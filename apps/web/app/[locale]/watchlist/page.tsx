@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, use } from 'react';
+import { useState, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWatchLater } from '@adult-v/shared/hooks';
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Vote, Trophy, TrendingUp, Clock, Star, ThumbsUp, Loader2, Crown, Medal, Flame } from 'lucide-react';
+import { Vote, Trophy, Star, ThumbsUp, Loader2, Crown, Medal, Flame } from 'lucide-react';
 import { useFirebaseAuth } from '@adult-v/shared/contexts';
 
 interface VotableProduct {

@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function TagsRankingPage({ params }: PageProps) {
   const { locale } = await params;
-  const t = await getTranslations('categories');
+  const _t = await getTranslations('categories');
   const tCommon = await getTranslations('common');
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 

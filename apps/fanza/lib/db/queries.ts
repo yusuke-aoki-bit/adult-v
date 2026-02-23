@@ -93,7 +93,7 @@ const appQueries = createAppQueries<ProductType, ActressType>({
   getLocalizedPerformerBio,
   getLocalizedTagName,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getLocalizedAiReview: getLocalizedAiReview as (...args: any[]) => string,
+  getLocalizedAiReview: getLocalizedAiReview as unknown as (...args: any[]) => string,
   generateProductIdVariations,
   buildAspNormalizationSql,
   normalizeAspName,
