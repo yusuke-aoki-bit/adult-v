@@ -50,7 +50,6 @@ import type {
   CategoryWithCount,
   UncategorizedStats,
   SeriesProduct,
-  MakerPreference,
   MakerInfo as SharedMakerInfo,
   SeriesBasicInfo,
 } from '@adult-v/shared';
@@ -96,7 +95,8 @@ const appQueries = createAppQueries<ProductType, ActressType>({
   getLocalizedPerformerName,
   getLocalizedPerformerBio,
   getLocalizedTagName,
-  getLocalizedAiReview: getLocalizedAiReview as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getLocalizedAiReview: getLocalizedAiReview as (...args: any[]) => string,
   generateProductIdVariations,
   buildAspNormalizationSql,
   normalizeAspName,

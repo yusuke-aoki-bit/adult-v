@@ -307,14 +307,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
     // SEO: 外部品番（FANZA ID等）を構造化データに追加
     sources
       ?.filter((s: { originalProductId: string | null }) => s.originalProductId && s.originalProductId !== product.normalizedProductId)
-      .map((s: { aspName: string; originalProductId: string | null }) => ({ aspName: s.aspName, originalProductId: s.originalProductId })),
+      .map((s: { aspName: string; originalProductId: string | null }) => ({ aspName: s.aspName, originalProductId: s.originalProductId! })),
   );
 
   // FAQ Schema（商品ページ用 + 外部品番FAQ）
   const externalIdsForFaq =
     sources
       ?.filter((s: { originalProductId: string | null }) => s.originalProductId && s.originalProductId !== product.normalizedProductId)
-      .map((s: { aspName: string; originalProductId: string | null }) => ({ aspName: s.aspName, originalProductId: s.originalProductId })) || [];
+      .map((s: { aspName: string; originalProductId: string | null }) => ({ aspName: s.aspName, originalProductId: s.originalProductId! })) || [];
   const productFaqs = getProductPageFAQs(locale, {
     productId: product.normalizedProductId || undefined,
     title: product.title,

@@ -126,29 +126,6 @@ const getCachedAspStats = unstable_cache(async () => getAspStats(), ['homepage-a
   tags: ['asp-stats'],
 });
 
-const getCachedSaleProducts = unstable_cache(
-  async (limit: number) => getSaleProducts({ limit }),
-  ['homepage-sale-products'],
-  { revalidate: 300, tags: ['sale-products'] },
-);
-
-const getCachedUncategorizedCount = unstable_cache(
-  async () => getUncategorizedProductsCount(),
-  ['homepage-uncategorized-count'],
-  { revalidate: 300, tags: ['uncategorized'] },
-);
-
-const getCachedTrendingActresses = unstable_cache(
-  async (limit: number) => {
-    if (typeof getTrendingActresses === 'function') {
-      return getTrendingActresses({ limit });
-    }
-    return [];
-  },
-  ['homepage-trending-actresses'],
-  { revalidate: 300, tags: ['trending-actresses'] },
-);
-
 const getCachedFanzaProducts = unstable_cache(
   async (limit: number) => getProducts({ limit, sortBy: 'releaseDateDesc', providers: ['FANZA'] }),
   ['homepage-fanza-products'],

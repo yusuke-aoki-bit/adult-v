@@ -137,7 +137,7 @@ export default async function DailyPickPage({ params }: Props) {
   // 今日のピック：高評価・人気作品から日付ベースで選択
   // 季節要素: 月によってジャンル傾向を変える
   const month = today.getMonth() + 1;
-  const seasonalBoost =
+  const _seasonalBoost =
     month >= 6 && month <= 8
       ? 'ビキニ,水着,プール'
       : month === 12 || month <= 2

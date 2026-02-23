@@ -9,7 +9,7 @@ const dsn = process.env['SENTRY_DSN'] || process.env['NEXT_PUBLIC_SENTRY_DSN'];
 if (!dsn) {
   console.warn('[Sentry] DSN not configured, Sentry is disabled');
 } else {
-  console.log('[Sentry] Initializing with DSN:', dsn.substring(0, 30) + '...');
+  console.warn('[Sentry] Initializing with DSN:', dsn.substring(0, 30) + '...');
   Sentry.init({
     dsn,
 

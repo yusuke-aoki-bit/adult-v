@@ -282,7 +282,7 @@ export async function batchFetchProductRelatedData(
   }
 
   if (preferredProvidersUpper.length > 0 || skippedFanzaOnly > 0) {
-    console.log(
+    console.warn(
       `[batchFetch] Provider filter: ${preferredProvidersUpper.join(',') || 'none'} - matched: ${matchedCount}, fallback: ${fallbackCount}, skipped FANZA-only: ${skippedFanzaOnly}`,
     );
   }
