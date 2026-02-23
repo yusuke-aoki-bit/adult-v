@@ -209,6 +209,12 @@ setup_get_scheduler "crawl-fc2-scheduler" \
   "crawl-fc2?limit=200" \
   "FC2 クローラー（auto-resume・4h間隔）"
 
+# セール情報クローラー: 12時間間隔
+setup_get_scheduler "crawl-sales-scheduler" \
+  "0 0,12 * * *" \
+  "crawl-sales" \
+  "セール情報クローラー（12h間隔）"
+
 # ========================================
 # 2. エンリッチメント（クローラー後に実行）
 # ========================================

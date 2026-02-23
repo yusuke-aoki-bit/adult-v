@@ -8,6 +8,7 @@ export interface ProductBatchPricesHandlerDeps {
   inArray: any;
   eq: any;
   and: any;
+  sql: any;
 }
 
 export function createProductBatchPricesHandler(deps: ProductBatchPricesHandlerDeps) {
@@ -65,6 +66,7 @@ export function createProductBatchPricesHandler(deps: ProductBatchPricesHandlerD
                 deps.and(
                   deps.inArray(deps.productSales.productSourceId, sourceIds),
                   deps.eq(deps.productSales.isActive, true),
+                  deps.sql`${deps.productSales.fetchedAt} > NOW() - INTERVAL '14 days'`,
                 ),
               )
           : [];

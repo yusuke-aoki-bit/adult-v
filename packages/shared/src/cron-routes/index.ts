@@ -53,6 +53,7 @@ import {
   createClassifyPerformersAiHandler,
   createDataQualityReportHandler,
   createIndexNowNotifyHandler,
+  createCrawlSalesHandler,
 } from '../cron-handlers';
 
 // Common dependency groups
@@ -85,6 +86,7 @@ export const cronBackfillPerformerProfiles = createBackfillPerformerProfilesHand
 // --- Pattern C: + provider client ---
 export const cronCrawlDuga = createCrawlDugaHandler({ ...auth, getDb, getDugaClient });
 export const cronCrawlSokmil = createCrawlSokmilHandler({ ...auth, getDb, getSokmilClient });
+export const cronCrawlSales = createCrawlSalesHandler({ ...auth, getDb, getSokmilClient });
 
 // --- Pattern D: + Google APIs ---
 export const cronEnhanceContent = createEnhanceContentHandler({

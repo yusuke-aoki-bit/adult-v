@@ -559,10 +559,10 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
         }
       }
 
-      // 4. 期限切れセールのクリーンアップ（常に実行）
+      // 4. 期限切れ＋古いセールのクリーンアップ（常に実行）
       if (Date.now() - startTime < TIME_LIMIT) {
         try {
-          // product_sales.is_active を FALSE に（期限切れ分）
+          // 4a. product_sales.is_active を FALSE に（期限切れ分）
           const expiredResult = await db.execute(sql`
             UPDATE product_sales
             SET is_active = FALSE, updated_at = NOW()
@@ -570,8 +570,18 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
           `);
           stats.expiredSales = (expiredResult as { rowCount?: number }).rowCount ?? 0;
 
+          // 4b. 古いセール（14日以上fetched_atが更新されていない）を非アクティブに
+          const staleResult = await db.execute(sql`
+            UPDATE product_sales
+            SET is_active = FALSE, updated_at = NOW()
+            WHERE is_active = TRUE
+            AND fetched_at < NOW() - INTERVAL '14 days'
+          `);
+          const staleSales = (staleResult as { rowCount?: number }).rowCount ?? 0;
+          stats.expiredSales += staleSales;
+
           if (stats.expiredSales > 0) {
-            issues.push(`期限切れセール非アクティブ化: ${stats.expiredSales}件`);
+            issues.push(`期限切れセール非アクティブ化: ${stats.expiredSales}件（うち古いデータ: ${staleSales}件）`);
 
             // has_active_sale フラグを更新（現在trueの商品のみ再計算）
             const flagResult = await db.execute(sql`
@@ -581,13 +591,14 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
                 JOIN product_sales psl ON psl.product_source_id = ps.id
                 WHERE ps.product_id = p.id AND psl.is_active = TRUE
                   AND (psl.end_at IS NULL OR psl.end_at > NOW())
+                  AND psl.fetched_at > NOW() - INTERVAL '14 days'
               ), updated_at = NOW()
               WHERE p.has_active_sale = TRUE
             `);
             stats.saleFlagsUpdated = (flagResult as { rowCount?: number }).rowCount ?? 0;
 
             console.log(
-              `[cleanup] セール期限切れ処理: expired=${stats.expiredSales}, flags_updated=${stats.saleFlagsUpdated}`,
+              `[cleanup] セール期限切れ処理: expired=${stats.expiredSales}, stale=${staleSales}, flags_updated=${stats.saleFlagsUpdated}`,
             );
           }
         } catch (error) {

@@ -13,6 +13,7 @@ import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
 import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
+import { createSaleHelperQueries, type SaleInfo } from '../db-queries/sale-helper';
 
 interface CrawlStats {
   totalFetched: number;
@@ -21,6 +22,7 @@ interface CrawlStats {
   errors: number;
   rawDataSaved: number;
   videosAdded: number;
+  salesDetected: number;
   skipped: number;
   listPagesScanned: number;
   cidsFound: number;
@@ -40,6 +42,7 @@ interface FanzaProduct {
   label?: string;
   series?: string;
   sampleVideos?: string[];
+  saleInfo?: SaleInfo;
 }
 
 const AFFILIATE_ID = 'minpri-001';
@@ -262,6 +265,50 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     price = typicalPrices.length > 0 ? Math.max(...typicalPrices) : Math.max(...validPrices);
   }
 
+  // セール検出
+  let saleInfo: SaleInfo | undefined;
+  if (price) {
+    // パターン1: 取り消し線価格 (<del>, <s>, <strike>)
+    const strikeMatch = html.match(
+      /<(?:del|s|strike)[^>]*>\s*[¥￥]?\s*(\d{1,3}(?:,\d{3})*)\s*(?:円|pt)\s*<\/(?:del|s|strike)>/i,
+    );
+    if (strikeMatch?.[1]) {
+      const regularPrice = parseInt(strikeMatch[1].replace(/,/g, ''), 10);
+      if (regularPrice > price && regularPrice >= 500 && regularPrice <= 15000) {
+        const discountPercent = Math.round((1 - price / regularPrice) * 100);
+        if (discountPercent >= 5) {
+          saleInfo = { regularPrice, salePrice: price, discountPercent, saleType: 'timesale' };
+        }
+      }
+    }
+    // パターン2: %OFF表記から元値を逆算
+    if (!saleInfo) {
+      const offMatch = html.match(/(\d+)\s*%\s*(?:OFF|オフ|off)/i);
+      if (offMatch?.[1]) {
+        const discountPercent = parseInt(offMatch[1], 10);
+        if (discountPercent >= 10 && discountPercent <= 80) {
+          const regularPrice = Math.round(price / (1 - discountPercent / 100));
+          if (regularPrice >= 500 && regularPrice <= 15000) {
+            saleInfo = { regularPrice, salePrice: price, discountPercent, saleType: 'timesale' };
+          }
+        }
+      }
+    }
+    // パターン3: 定価/通常価格ラベル
+    if (!saleInfo) {
+      const regularPriceMatch = html.match(/(?:定価|通常価格|希望小売価格)[：:\s]*[¥￥]?\s*(\d{1,3}(?:,\d{3})*)\s*円/i);
+      if (regularPriceMatch?.[1]) {
+        const regularPrice = parseInt(regularPriceMatch[1].replace(/,/g, ''), 10);
+        if (regularPrice > price && regularPrice >= 500 && regularPrice <= 15000) {
+          const discountPercent = Math.round((1 - price / regularPrice) * 100);
+          if (discountPercent >= 5) {
+            saleInfo = { regularPrice, salePrice: price, discountPercent, saleType: 'sale' };
+          }
+        }
+      }
+    }
+  }
+
   // メーカー・レーベル・シリーズ
   const makerMatch = html.match(/href="[^"]*(?:\/av\/list\/\?maker=|maker\/)\d+"?[^>]*>([^<]+)</i);
   const maker = makerMatch?.[1]?.trim();
@@ -298,6 +345,7 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
   if (label) result.label = label;
   if (series) result.series = series;
   if (sampleVideos.length > 0) result.sampleVideos = sampleVideos;
+  if (saleInfo) result.saleInfo = saleInfo;
 
   return result;
 }
@@ -325,10 +373,13 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
       errors: 0,
       rawDataSaved: 0,
       videosAdded: 0,
+      salesDetected: 0,
       skipped: 0,
       listPagesScanned: 0,
       cidsFound: 0,
     };
+
+    const saleHelper = createSaleHelperQueries({ getDb: deps.getDb });
 
     try {
       const url = new URL(request['url']);
@@ -474,6 +525,16 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
                 affiliate_url = EXCLUDED.affiliate_url, price = EXCLUDED.price,
                 product_type = EXCLUDED.product_type, last_updated = NOW()
             `);
+
+            // セール情報を保存
+            if (product.saleInfo) {
+              try {
+                const saved = await saleHelper.saveSaleInfo('FANZA', cid, product.saleInfo);
+                if (saved) stats.salesDetected++;
+              } catch {
+                // セール保存失敗は商品保存に影響させない
+              }
+            }
 
             // 出演者をバッチ用に収集
             if (product.performers.length > 0) {

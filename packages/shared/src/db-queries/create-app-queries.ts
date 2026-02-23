@@ -1119,7 +1119,13 @@ export function createAppQueries<TProduct, TActress>(deps: CreateAppQueriesDeps)
           isActive: productSales.isActive,
         })
         .from(productSales)
-        .where(and(inArray(productSales.productSourceId, sourceIds), eq(productSales.isActive, true)));
+        .where(
+          and(
+            inArray(productSales.productSourceId, sourceIds),
+            eq(productSales.isActive, true),
+            sql`${productSales.fetchedAt} > NOW() - INTERVAL '14 days'`,
+          ),
+        );
 
       const saleMap = new Map(sales.map((s: any) => [s.productSourceId, s]));
 
@@ -1540,7 +1546,7 @@ export function createAppQueries<TProduct, TActress>(deps: CreateAppQueriesDeps)
           psa.is_active
         FROM product_sources ps
         JOIN products p ON p.id = ps.product_id
-        LEFT JOIN product_sales psa ON psa.product_source_id = ps.id AND psa.is_active = true
+        LEFT JOIN product_sales psa ON psa.product_source_id = ps.id AND psa.is_active = true AND psa.fetched_at > NOW() - INTERVAL '14 days'
         WHERE LOWER(REPLACE(REPLACE(p.maker_product_code, '-', ''), '_', '')) = ${normalizedCode}
           AND LOWER(ps.asp_name) != 'fanza'
         ORDER BY ps.asp_name, COALESCE(psa.sale_price, ps.price) ASC NULLS LAST
@@ -1596,7 +1602,7 @@ export function createAppQueries<TProduct, TActress>(deps: CreateAppQueriesDeps)
           psa.is_active
         FROM product_sources ps
         JOIN products p ON p.id = ps.product_id
-        LEFT JOIN product_sales psa ON psa.product_source_id = ps.id AND psa.is_active = true
+        LEFT JOIN product_sales psa ON psa.product_source_id = ps.id AND psa.is_active = true AND psa.fetched_at > NOW() - INTERVAL '14 days'
         WHERE LOWER(REGEXP_REPLACE(REGEXP_REPLACE(p.title, '[[:space:]\u3000]+', '', 'g'), '[\uff01!\uff1f?\u300c\u300d\u300e\u300f\u3010\u3011\uff08\uff09()\uff06&\uff5e~\u30fb:\uff1a,\uff0c\u3002.\u3001]', '', 'g')) = LOWER(${normalizedTitle})
           AND LOWER(ps.asp_name) != 'fanza'
         ORDER BY ps.asp_name, COALESCE(psa.sale_price, ps.price) ASC NULLS LAST

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, eq, and, inArray, desc, gt } from '@adult-v/database';
+import { getDb, eq, and, inArray, desc, gt, sql } from '@adult-v/database';
 import * as schema from '@adult-v/database/schema';
 
 export const revalidate = 300;
@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
             eq(schema.productSales.isActive, true),
             inArray(schema.performers.id, favoritePerformerIds),
             gt(schema.productSales.endAt, new Date()),
+            sql`${schema.productSales.fetchedAt} > NOW() - INTERVAL '14 days'`,
           ),
         )
         .orderBy(desc(schema.productSales.discountPercent))
@@ -123,6 +124,7 @@ export async function GET(request: NextRequest) {
               eq(schema.productSales.isActive, true),
               inArray(schema.performers.id, recentPerformerIds),
               gt(schema.productSales.endAt, new Date()),
+              sql`${schema.productSales.fetchedAt} > NOW() - INTERVAL '14 days'`,
             ),
           )
           .orderBy(desc(schema.productSales.discountPercent))
@@ -170,6 +172,7 @@ export async function GET(request: NextRequest) {
             eq(schema.productSales.isActive, true),
             gt(schema.productSales.discountPercent, 30),
             gt(schema.productSales.endAt, new Date()),
+            sql`${schema.productSales.fetchedAt} > NOW() - INTERVAL '14 days'`,
           ),
         )
         .orderBy(desc(schema.productSales.discountPercent))

@@ -10,6 +10,7 @@ import { createHash } from 'crypto';
 import * as cheerio from 'cheerio';
 import type { DbExecutor } from '../db-queries/types';
 import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
+import { createSaleHelperQueries, type SaleInfo } from '../db-queries/sale-helper';
 
 interface CrawlStats {
   totalFetched: number;
@@ -18,6 +19,7 @@ interface CrawlStats {
   errors: number;
   rawDataSaved: number;
   videosAdded: number;
+  salesDetected: number;
 }
 
 interface MgsProduct {
@@ -30,6 +32,7 @@ interface MgsProduct {
   releaseDate?: string;
   price?: number;
   affiliateWidget: string;
+  saleInfo?: SaleInfo;
 }
 
 const AFFILIATE_CODE = '6CS5PGEBQDUYPZLHYEM33TBZFJ';
@@ -158,6 +161,35 @@ async function parseMgsDetailPage(productUrl: string): Promise<(MgsProduct & { r
       price = parseInt(priceMatch[1].replace(/,/g, ''));
     }
 
+    // セール検出
+    let saleInfo: SaleInfo | undefined;
+    if (price) {
+      // パターン1: 取り消し線価格（del, s, strike）
+      const delText = $('del, s, strike, .price_del').first().text().trim();
+      const delPriceMatch = delText.match(/(\d+(?:,\d+)*)/);
+      if (delPriceMatch?.[1]) {
+        const regularPrice = parseInt(delPriceMatch[1].replace(/,/g, ''), 10);
+        if (regularPrice > price) {
+          const discountPercent = Math.round((1 - price / regularPrice) * 100);
+          if (discountPercent >= 5) {
+            saleInfo = { regularPrice, salePrice: price, discountPercent, saleType: 'timesale' };
+          }
+        }
+      }
+      // パターン2: %OFFバッジ
+      if (!saleInfo) {
+        const saleText = $('[class*="timesale"], [class*="sale"], .campaign_icon').text();
+        const offMatch = saleText.match(/(\d+)\s*%\s*(?:OFF|オフ|off)/i);
+        if (offMatch?.[1]) {
+          const discountPercent = parseInt(offMatch[1], 10);
+          if (discountPercent >= 5 && discountPercent <= 90) {
+            const regularPrice = Math.round(price / (1 - discountPercent / 100));
+            saleInfo = { regularPrice, salePrice: price, discountPercent, saleType: 'timesale' };
+          }
+        }
+      }
+    }
+
     // サンプル動画
     let sampleVideoUrl: string | undefined;
     const videoSrc = $('video source').attr('src');
@@ -180,6 +212,7 @@ async function parseMgsDetailPage(productUrl: string): Promise<(MgsProduct & { r
       ...(sampleVideoUrl !== undefined && { sampleVideoUrl }),
       ...(releaseDate !== undefined && { releaseDate }),
       ...(price !== undefined && { price }),
+      ...(saleInfo !== undefined && { saleInfo }),
       affiliateWidget: generateAffiliateWidget(productId),
       rawHtml: html,
     };
@@ -211,7 +244,10 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
       errors: 0,
       rawDataSaved: 0,
       videosAdded: 0,
+      salesDetected: 0,
     };
+
+    const saleHelper = createSaleHelperQueries({ getDb: deps.getDb });
 
     try {
       const url = new URL(request['url']);
@@ -310,6 +346,16 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
               product_type = EXCLUDED.product_type,
               last_updated = NOW()
           `);
+
+          // セール情報を保存
+          if (product.saleInfo) {
+            try {
+              const saved = await saleHelper.saveSaleInfo('MGS', product['productId'], product.saleInfo);
+              if (saved) stats.salesDetected++;
+            } catch {
+              // セール保存失敗は商品保存に影響させない
+            }
+          }
 
           // 出演者をバッチ用に収集
           if (product.performers.length > 0) {

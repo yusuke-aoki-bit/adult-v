@@ -815,6 +815,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
             eq(productSources['productId'], productId),
             eq(productSales['isActive'], true),
             sql`(${productSales['endAt']} IS NULL OR ${productSales['endAt']} > NOW())`,
+            sql`${productSales['fetchedAt']} > NOW() - INTERVAL '14 days'`,
           ),
         )
         .limit(1),
@@ -1021,6 +1022,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
                 inArray(productSources['productId'], productIds),
                 eq(productSales['isActive'], true),
                 sql`(${productSales['endAt']} IS NULL OR ${productSales['endAt']} > NOW())`,
+                sql`${productSales['fetchedAt']} > NOW() - INTERVAL '14 days'`,
               ),
             ),
         ];

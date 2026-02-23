@@ -252,6 +252,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
               eq(productSources.productId, productData.id),
               eq(productSales.isActive, true),
               sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
+              sql`${productSales.fetchedAt} > NOW() - INTERVAL '14 days'`,
             ),
           )
           .limit(1),
@@ -323,7 +324,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         psl.end_at as "saleEndAt",
         psl.sale_name as "saleName"
       FROM product_sources ps
-      LEFT JOIN product_sales psl ON ps.id = psl.product_source_id AND psl.is_active = TRUE
+      LEFT JOIN product_sales psl ON ps.id = psl.product_source_id AND psl.is_active = TRUE AND psl.fetched_at > NOW() - INTERVAL '14 days'
       WHERE ${whereClause}
       ORDER BY
         CASE WHEN psl.sale_price IS NOT NULL THEN 0 ELSE 1 END,
@@ -360,7 +361,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         psl.end_at as "saleEndAt",
         psl.sale_name as "saleName"
       FROM product_sources ps
-      LEFT JOIN product_sales psl ON ps.id = psl.product_source_id AND psl.is_active = TRUE
+      LEFT JOIN product_sales psl ON ps.id = psl.product_source_id AND psl.is_active = TRUE AND psl.fetched_at > NOW() - INTERVAL '14 days'
       WHERE LOWER(REPLACE(REPLACE(ps.original_product_id, '-', ''), '_', '')) = ${normalizedCode}
          OR LOWER(REPLACE(REPLACE(ps.original_product_id, '-', ''), '_', '')) LIKE ${normalizedCode + '%'}
       ORDER BY

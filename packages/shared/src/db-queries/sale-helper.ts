@@ -6,6 +6,12 @@
 import { sql as drizzleSql, eq, and, desc, inArray, gte } from 'drizzle-orm';
 import { logDbErrorAndReturn } from '../lib/db-logger';
 
+/**
+ * セール情報の鮮度しきい値（日数）
+ * この日数以内に fetched_at が更新されていないセールは古いデータとみなす
+ */
+const SALE_STALENESS_DAYS = 14;
+
 export interface SaleInfo {
   regularPrice: number;
   salePrice: number;
@@ -287,6 +293,8 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
       const conditions = [
         eq(productSales.isActive, true),
         drizzleSql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
+        // 鮮度チェック: fetched_atが一定期間以内のもののみ表示
+        drizzleSql`${productSales.fetchedAt} > NOW() - INTERVAL '${drizzleSql.raw(String(SALE_STALENESS_DAYS))} days'`,
       ];
 
       if (options?.aspName) {
@@ -410,10 +418,11 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
     try {
       const db = getDb();
 
-      // ベース条件
+      // ベース条件（鮮度チェック含む）
       const baseConditions = [
         eq(productSales.isActive, true),
         drizzleSql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
+        drizzleSql`${productSales.fetchedAt} > NOW() - INTERVAL '${drizzleSql.raw(String(SALE_STALENESS_DAYS))} days'`,
       ];
 
       if (aspName) {

@@ -663,6 +663,7 @@ export const apiProductBatchPricesPOST = createProductBatchPricesHandler({
   inArray,
   eq,
   and,
+  sql,
 });
 
 // --- Sale Calendar ---
