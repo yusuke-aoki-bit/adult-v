@@ -90,10 +90,7 @@ const fanzaSecurityHeaders = [
 const nextConfig = {
   images: {
     remotePatterns,
-    // 外部CDN画像は wsrv.nl プロキシ経由で WebP 変換 + リサイズ
-    // Firebase Cloud Run の画像最適化レイテンシを回避しつつ最適化を実現
-    loader: 'custom',
-    loaderFile: '../../packages/shared/src/lib/image-loader.ts',
+    unoptimized: true,
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
