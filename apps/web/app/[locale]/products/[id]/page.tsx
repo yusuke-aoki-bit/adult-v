@@ -168,6 +168,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+function formatProductPrice(amount: number, currency?: string | null): string {
+  if (currency === 'USD') {
+    return `$${amount.toFixed(2)}`;
+  }
+  return `¥${amount.toLocaleString()}`;
+}
+
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id, locale } = await params;
 
@@ -654,15 +661,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <div className="flex items-baseline gap-3">
                       {product.salePrice ? (
                         <>
-                          <p className="text-3xl font-bold text-red-400">¥{product.salePrice.toLocaleString()}</p>
-                          <p className="theme-text-muted text-lg line-through">¥{product.price.toLocaleString()}</p>
+                          <p className="text-3xl font-bold text-red-400">
+                            {formatProductPrice(product.salePrice, product.currency)}
+                          </p>
+                          <p className="theme-text-muted text-lg line-through">
+                            {formatProductPrice(product.price, product.currency)}
+                          </p>
                         </>
                       ) : (
                         <p className="theme-text text-3xl font-bold">
                           {product.provider && isSubscriptionSite(product.provider) && (
                             <span className="theme-text-muted mr-1 text-base">{t.monthly}</span>
                           )}
-                          ¥{product.price.toLocaleString()}
+                          {formatProductPrice(product.price, product.currency)}
                         </p>
                       )}
                     </div>
@@ -677,7 +688,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         <span className="font-bold text-emerald-500">
-                          ¥{(product.price - product.salePrice).toLocaleString()} お得
+                          {formatProductPrice(product.price - product.salePrice, product.currency)} お得
                         </span>
                         <span className="theme-text-muted text-sm">({product.discount}% OFF)</span>
                       </div>
@@ -761,7 +772,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                               >
                                 <span>{source.aspName}</span>
                                 <span className="theme-text-muted">
-                                  ¥{(source.salePrice || source.regularPrice || 0).toLocaleString()}
+                                  {formatProductPrice(source.salePrice || source.regularPrice || 0, source.currency)}
                                 </span>
                               </a>
                             );
@@ -911,14 +922,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <span className="animate-pulse text-3xl">🔥</span>
                 <h3 className="theme-text mt-2 text-xl font-bold">今なら{product.discount}%OFF！</h3>
                 <p className="mt-1 text-sm text-red-300">
-                  セール価格: ¥{product.salePrice.toLocaleString()}（通常¥{product.price?.toLocaleString()}）
+                  セール価格: {formatProductPrice(product.salePrice, product.currency)}（通常
+                  {formatProductPrice(product.price || 0, product.currency)}）
                 </p>
                 {product.price && product.price > product.salePrice && (
                   <p className="mt-1 flex items-center justify-center gap-1 text-sm font-bold text-green-400">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    ¥{(product.price - product.salePrice).toLocaleString()}もお得に！
+                    {formatProductPrice(product.price - product.salePrice, product.currency)}もお得に！
                   </p>
                 )}
               </div>

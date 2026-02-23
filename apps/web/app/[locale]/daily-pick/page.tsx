@@ -42,6 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${mt.title} - ${dateStr}`,
     description: mt.description,
     keywords: mt.keywords as unknown as string[],
+    robots: { index: false, follow: true },
     openGraph: {
       title: `${mt.title} - ${dateStr}`,
       description: mt.ogDescription,

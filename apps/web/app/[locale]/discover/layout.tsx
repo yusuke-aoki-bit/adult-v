@@ -3,8 +3,8 @@ import { generateAlternates } from '@adult-v/shared/i18n';
 
 const metadataTexts = {
   ja: {
-    title: '発見モード',
-    description: 'ランダムな作品を発見して、お気に入りを見つけよう',
+    title: '発掘モード',
+    description: 'ランダムな作品を発掘して、お気に入りを見つけよう',
   },
   en: {
     title: 'Discover Mode',

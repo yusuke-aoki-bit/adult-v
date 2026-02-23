@@ -7,6 +7,16 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { Newspaper, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
 
+/** Strip stale/hallucinated dates from AI-generated titles */
+function sanitizeNewsTitle(title: string): string {
+  const now = new Date();
+  const todayStr = `${now.getMonth() + 1}月${now.getDate()}日`;
+  let s = title.replace(/〇月〇日/g, todayStr);
+  s = s.replace(/\(20\d{2}\/\d{1,2}\/\d{1,2}\)/g, '');
+  s = s.replace(/【20\d{2}\/\d{1,2}\/\d{1,2}】/g, `【${todayStr}】`);
+  return s.trim();
+}
+
 function getDateLocale(locale: string): string {
   switch (locale) {
     case 'ko':
@@ -173,7 +183,7 @@ export default async function NewsPage({
                         <span className="text-xs text-gray-400">{publishedDate}</span>
                         {article.featured && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />}
                       </div>
-                      <h2 className="mb-1 text-lg font-semibold text-white">{article.title}</h2>
+                      <h2 className="mb-1 text-lg font-semibold text-white">{sanitizeNewsTitle(article.title)}</h2>
                       {article.excerpt && <p className="line-clamp-2 text-sm text-gray-400">{article.excerpt}</p>}
                     </div>
                   </div>

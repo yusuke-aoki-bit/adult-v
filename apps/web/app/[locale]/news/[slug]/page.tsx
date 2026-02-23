@@ -23,8 +23,8 @@ export async function generateMetadata({
     const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
     const metadata = generateBaseMetadata(
-      article.title,
-      article.excerpt || article.title,
+      sanitizeNewsTitle(article.title),
+      article.excerpt || sanitizeNewsTitle(article.title),
       undefined,
       localizedHref(`/news/${slug}`, locale),
       undefined,
@@ -64,6 +64,16 @@ function renderMarkdownContent(content: string): string {
     .replace(/^- (.+)$/gm, '<li class="ml-4 text-gray-300">$1</li>')
     .replace(/\n\n/g, '</p><p class="text-gray-300 leading-relaxed mb-4">')
     .replace(/\n/g, '<br />');
+}
+
+/** Strip stale/hallucinated dates from AI-generated titles */
+function sanitizeNewsTitle(title: string): string {
+  const now = new Date();
+  const todayStr = `${now.getMonth() + 1}月${now.getDate()}日`;
+  let s = title.replace(/〇月〇日/g, todayStr);
+  s = s.replace(/\(20\d{2}\/\d{1,2}\/\d{1,2}\)/g, '');
+  s = s.replace(/【20\d{2}\/\d{1,2}\/\d{1,2}】/g, `【${todayStr}】`);
+  return s.trim();
 }
 
 function getDateLocale(locale: string): string {
@@ -126,7 +136,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ loc
           items={[
             { label: tNav('home'), href: localizedHref('/', locale) },
             { label: t('title'), href: localizedHref('/news', locale) },
-            { label: article.title },
+            { label: sanitizeNewsTitle(article.title) },
           ]}
           className="mb-4"
         />
@@ -156,7 +166,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ loc
             )}
           </div>
 
-          <h1 className="mb-4 text-2xl font-bold text-white md:text-3xl">{article.title}</h1>
+          <h1 className="mb-4 text-2xl font-bold text-white md:text-3xl">{sanitizeNewsTitle(article.title)}</h1>
 
           {article.excerpt && (
             <p className="mb-6 border-l-4 border-blue-500 pl-4 text-lg text-gray-400">{article.excerpt}</p>

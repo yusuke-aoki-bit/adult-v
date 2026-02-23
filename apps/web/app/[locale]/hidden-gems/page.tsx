@@ -463,7 +463,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
-  return generateBaseMetadata(t.title, t.subtitle, undefined, '/hidden-gems', undefined, locale);
+  const meta = generateBaseMetadata(t.title, t.subtitle, undefined, '/hidden-gems', undefined, locale);
+  return {
+    ...meta,
+    robots: { index: false, follow: true },
+  };
 }
 
 export default async function HiddenGemsPage({ params }: { params: Promise<{ locale: string }> }) {

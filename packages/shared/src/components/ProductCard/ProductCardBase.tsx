@@ -525,11 +525,11 @@ function ProductCardBase({
               )}
             </div>
             <div className="p-2">
-              <h3
+              <p
                 className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-snug transition-colors group-hover:text-pink-300`}
               >
                 {product['title']}
-              </h3>
+              </p>
               {/* 品番 + コピーボタン */}
               <div className="mt-1 flex items-center gap-1">
                 <span className={`text-[10px] ${themeConfig.textMuted} truncate`}>
@@ -1016,11 +1016,11 @@ function ProductCardBase({
             />
           </div>
           <Link href={`/${locale}/products/${product['id']}`}>
-            <h3
+            <p
               className={`mt-0.5 line-clamp-2 text-sm leading-tight font-semibold sm:text-base ${themeConfig.textPrimary} hover:opacity-80`}
             >
               {product['title']}
-            </h3>
+            </p>
           </Link>
         </div>
 

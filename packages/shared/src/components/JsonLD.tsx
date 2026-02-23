@@ -7,5 +7,7 @@ interface JsonLDProps {
 }
 
 export function JsonLD({ data }: JsonLDProps) {
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
+  const cleaned = Array.isArray(data) ? data.filter(Boolean) : data;
+  if (Array.isArray(cleaned) && cleaned.length === 0) return null;
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(cleaned) }} />;
 }
