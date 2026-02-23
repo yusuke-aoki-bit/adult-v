@@ -20,15 +20,15 @@
     "@adult-v/database": "workspace:*",
     "@adult-v/shared": "workspace:*",
     "@google-cloud/secret-manager": "^5.0.0",
-    "@google-cloud/storage": "^7.0.0",
+    "@google-cloud/storage": "^7.19.0",
     "googleapis": "^144.0.0",
-    "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "^0.24.1",
     "adm-zip": "^0.5.10",
-    "cheerio": "^1.0.0",
+    "cheerio": "^1.2.0",
     "drizzle-orm": "^0.45.1",
-    "iconv-lite": "^0.6.3",
+    "iconv-lite": "^0.7.2",
     "openai": "^4.0.0",
-    "pg": "^8.16.3",
+    "pg": "^8.18.0",
     "puppeteer": "^23.0.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2"
@@ -36,7 +36,7 @@
   "devDependencies": {
     "@types/adm-zip": "^0.5.5",
     "@types/node": "^22",
-    "@types/pg": "^8.15.6",
+    "@types/pg": "^8.16.0",
     "tsx": "^4.19.0",
     "typescript": "^5"
   }
