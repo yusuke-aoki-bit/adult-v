@@ -48,7 +48,7 @@
     "analyze:fanza": "cross-env ANALYZE=true turbo run build --filter=@adult-v/fanza",
     "openapi:generate": "pnpm exec tsx scripts/generate-openapi.ts",
     "db:rollback": "tsx scripts/db-rollback.ts",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "size": "size-limit",
     "size:check": "size-limit --limit",
     "lighthouse": "lhci autorun",
