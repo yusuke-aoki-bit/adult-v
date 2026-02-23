@@ -388,7 +388,10 @@ export default function HeroSection({
             <div className="mb-4 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-green-400" />
               <h3 className="text-lg font-bold text-white">{ht.trendingActresses}</h3>
-              <Link href={localizedHref('/', locale)} className="ml-auto text-sm text-pink-400 hover:text-pink-300">
+              <Link
+                href={`${localizedHref('/', locale)}?sort=productCountDesc`}
+                className="ml-auto text-sm text-pink-400 hover:text-pink-300"
+              >
                 {ht.seeMore}
               </Link>
             </div>

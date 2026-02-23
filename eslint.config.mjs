@@ -7,6 +7,7 @@ export default [
   {
     ignores: [
       'apps/**',
+      'packages/**',
       'node_modules/**',
       '.next/**',
       'drizzle/**',

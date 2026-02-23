@@ -34,6 +34,19 @@ function generateSlug(prefix: string): string {
   return `${prefix}-${dateStr}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
+/** Strip stale/hallucinated dates from AI-generated titles and replace with today's date */
+function sanitizeNewsTitle(title: string): string {
+  const now = new Date();
+  const todayStr = `${now.getMonth() + 1}月${now.getDate()}日`;
+  // Replace placeholder dates like 〇月〇日
+  let sanitized = title.replace(/〇月〇日/g, todayStr);
+  // Strip old parenthesized dates like (2024/05/15) or (2025/01/01)
+  sanitized = sanitized.replace(/\(20\d{2}\/\d{1,2}\/\d{1,2}\)/g, '');
+  // Strip old bracketed dates like 【2024/05/15】
+  sanitized = sanitized.replace(/【20\d{2}\/\d{1,2}\/\d{1,2}】/g, `【${todayStr}】`);
+  return sanitized.trim();
+}
+
 export function createGenerateNewsHandler(deps: GenerateNewsDeps) {
   return async function GET(request: NextRequest) {
     if (!deps.verifyCronRequest(request)) {
@@ -105,7 +118,7 @@ export function createGenerateNewsHandler(deps: GenerateNewsDeps) {
             const slug = generateSlug('new-releases');
             await db.execute(sql`
               INSERT INTO news_articles (slug, category, title, excerpt, content, source, status, published_at)
-              VALUES (${slug}, 'new_releases', ${newsContent.title}, ${newsContent.excerpt}, ${newsContent.content}, 'auto', 'published', NOW())
+              VALUES (${slug}, 'new_releases', ${sanitizeNewsTitle(newsContent.title)}, ${newsContent.excerpt}, ${newsContent.content}, 'auto', 'published', NOW())
             `);
             stats.newReleasesGenerated = true;
           }
@@ -156,7 +169,7 @@ export function createGenerateNewsHandler(deps: GenerateNewsDeps) {
             const expiresAt = saleData['earliest_end'] || null;
             await db.execute(sql`
               INSERT INTO news_articles (slug, category, title, excerpt, content, source, status, published_at, expires_at)
-              VALUES (${slug}, 'sales', ${newsContent.title}, ${newsContent.excerpt}, ${newsContent.content}, 'auto', 'published', NOW(), ${expiresAt as string | null})
+              VALUES (${slug}, 'sales', ${sanitizeNewsTitle(newsContent.title)}, ${newsContent.excerpt}, ${newsContent.content}, 'auto', 'published', NOW(), ${expiresAt as string | null})
             `);
             stats.salesGenerated = true;
           }
@@ -216,7 +229,7 @@ export function createGenerateNewsHandler(deps: GenerateNewsDeps) {
             const slug = generateSlug('weekly-analysis');
             await db.execute(sql`
               INSERT INTO news_articles (slug, category, title, excerpt, content, source, ai_model, status, featured, published_at)
-              VALUES (${slug}, 'ai_analysis', ${newsContent.title}, ${newsContent.excerpt}, ${newsContent.content}, 'gemini', 'gemini-2.0-flash', 'published', true, NOW())
+              VALUES (${slug}, 'ai_analysis', ${sanitizeNewsTitle(newsContent.title)}, ${newsContent.excerpt}, ${newsContent.content}, 'gemini', 'gemini-2.0-flash', 'published', true, NOW())
             `);
             stats.aiAnalysisGenerated = true;
           }

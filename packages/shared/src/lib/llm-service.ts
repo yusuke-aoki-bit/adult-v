@@ -1440,14 +1440,18 @@ export async function generateNewsContent(params: {
 }): Promise<GeneratedNewsContent | null> {
   const { type, data } = params;
 
+  const now = new Date();
+  const todayStr = `${now.getMonth() + 1}月${now.getDate()}日`;
+
   const systemInstruction = `あなたはアダルトビデオ情報サイトのニュースライターです。
 与えられたデータを元に、ユーザーが興味を持つニュース記事を日本語で作成してください。
-客観的かつ情報量の多い記事を心がけてください。`;
+客観的かつ情報量の多い記事を心がけてください。
+重要: 今日の日付は「${todayStr}」です。タイトルや本文に日付を含める場合は必ずこの日付を使ってください。過去の日付や架空の日付を使わないでください。`;
 
   let prompt: string;
 
   if (type === 'new_releases') {
-    prompt = `【本日の新着データ】
+    prompt = `【${todayStr}の新着データ】
 - 新着作品数: ${data['totalCount']}件
   - FANZA: ${data['fanzaCount']}件
   - MGS: ${data['mgsCount']}件
@@ -1461,9 +1465,9 @@ export async function generateNewsContent(params: {
 
 【出力形式】JSON:
 {
-  "title": "記事タイトル（40文字以内、日付を含む）",
+  "title": "記事タイトル（40文字以内、【${todayStr}】を含む）",
   "excerpt": "要約（150文字程度）",
-  "content": "本文（Markdown形式、300-500文字。ASP別の内訳、注目作品の紹介を含む）"
+  "content": "本文（Markdown形式、300-500文字。ASP別の内訳、注目作品の紹介を含む。日付は${todayStr}を使用）"
 }`;
   } else if (type === 'sales') {
     prompt = `【本日のセールデータ】
