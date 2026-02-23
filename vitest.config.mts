@@ -16,7 +16,20 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', '.next/', '**/.next/**', 'apps/**', 'coverage/', '**/*.config.*', 'vitest.setup.ts', 'e2e/', 'drizzle/', 'scripts/', 'cloud-build/', 'docs/'],
+      exclude: [
+        'node_modules/',
+        '.next/',
+        '**/.next/**',
+        'apps/**',
+        'coverage/',
+        '**/*.config.*',
+        'vitest.setup.ts',
+        'e2e/',
+        'drizzle/',
+        'scripts/',
+        'cloud-build/',
+        'docs/',
+      ],
       thresholds: {
         statements: 10,
         branches: 10,
