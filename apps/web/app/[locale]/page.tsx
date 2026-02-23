@@ -468,7 +468,11 @@ export default async function Home({ params, searchParams }: PageProps) {
       <section id="list" className="scroll-mt-4 py-3 sm:py-4 md:py-6">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="mb-2 sm:mb-3">
-            <h1 className="theme-text mb-0.5 text-xl font-bold sm:text-2xl md:text-3xl">{tCommon('actresses')}</h1>
+            {isTopPage ? (
+              <h2 className="theme-text mb-0.5 text-xl font-bold sm:text-2xl md:text-3xl">{tCommon('actresses')}</h2>
+            ) : (
+              <h1 className="theme-text mb-0.5 text-xl font-bold sm:text-2xl md:text-3xl">{tCommon('actresses')}</h1>
+            )}
             <p className="theme-text-secondary text-sm sm:text-base">{t('actressCount', { count: totalCount })}</p>
           </div>
 

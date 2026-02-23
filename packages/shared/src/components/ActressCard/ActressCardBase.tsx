@@ -242,7 +242,7 @@ function ActressCardBaseComponent({
   if (resolvedSize === 'compact') {
     return (
       <>
-        <div className="theme-card theme-text overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:ring-2 hover:shadow-pink-500/20 hover:ring-pink-500/40">
+        <article className="theme-card theme-text overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:ring-2 hover:shadow-pink-500/20 hover:ring-pink-500/40">
           {/* Image section - click for modal */}
           <div
             role="button"
@@ -342,7 +342,7 @@ function ActressCardBaseComponent({
               </div>
             )}
           </div>
-        </div>
+        </article>
 
         {/* Product images lightbox */}
         <ImageLightbox
@@ -358,7 +358,7 @@ function ActressCardBaseComponent({
   // Full display mode - same interaction as compact (image click = lightbox, name click = detail)
   return (
     <>
-      <div className="theme-card theme-text overflow-hidden rounded-2xl transition-all duration-200 hover:shadow-xl">
+      <article className="theme-card theme-text overflow-hidden rounded-2xl transition-all duration-200 hover:shadow-xl">
         {/* Image section - click for lightbox */}
         <div
           role="button"
@@ -451,10 +451,14 @@ function ActressCardBaseComponent({
           )}
 
           {actress.metrics && (
-            <div className="grid grid-cols-3 gap-3 text-center sm:gap-4">
+            <div className="flex flex-wrap justify-center gap-3 text-center sm:gap-4">
               <Stat label={t.releaseCount} value={`${actress.metrics.releaseCount || 0}${t.videos}`} />
-              <Stat label={t.trend} value={actress.metrics.trendingScore || 0} />
-              <Stat label={t.fanScore} value={`${actress.metrics.fanScore || 0}%`} />
+              {(actress.metrics.trendingScore ?? 0) > 0 && (
+                <Stat label={t.trend} value={actress.metrics.trendingScore!} />
+              )}
+              {(actress.metrics.fanScore ?? 0) > 0 && (
+                <Stat label={t.fanScore} value={`${actress.metrics.fanScore}%`} />
+              )}
             </div>
           )}
 
@@ -479,7 +483,7 @@ function ActressCardBaseComponent({
             </div>
           )}
         </div>
-      </div>
+      </article>
 
       {/* Product images lightbox */}
       <ImageLightbox images={productImages} isOpen={showLightbox} onClose={handleCloseLightbox} alt={actress['name']} />

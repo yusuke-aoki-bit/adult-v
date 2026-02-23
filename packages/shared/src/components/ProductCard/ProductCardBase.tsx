@@ -684,7 +684,7 @@ function ProductCardBase({
 
   // Full mode
   return (
-    <div
+    <article
       className={`${themeConfig.cardBg} flex flex-col overflow-hidden rounded-2xl border shadow-lg transition-shadow duration-300 hover:shadow-2xl ${themeConfig.cardBorder}`}
     >
       <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ height: '18rem' }}>
@@ -1259,7 +1259,7 @@ function ProductCardBase({
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }
 

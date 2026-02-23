@@ -393,12 +393,8 @@ export function FooterBase({
           </div>
         )}
 
-        {/* 管理ページ・コピーライト */}
-        <div className="theme-text-muted mt-6 flex flex-col items-center justify-center gap-4 text-sm md:flex-row">
-          <Link href="/admin/stats" className="theme-footer-link transition-colors">
-            {t.admin}
-          </Link>
-          <span className="hidden md:inline">|</span>
+        {/* コピーライト */}
+        <div className="theme-text-muted mt-6 flex items-center justify-center text-sm">
           <p>{t.copyright.replace('{year}', String(new Date().getFullYear()))}</p>
         </div>
       </div>
