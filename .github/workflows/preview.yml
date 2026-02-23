@@ -50,7 +50,7 @@ jobs:
           expires: 7d
 
       - name: Comment PR with preview URL
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const body = `### Firebase Preview Deploy\n\n| App | URL |\n|-----|-----|\n| Web | ${{ steps.deploy-web.outputs.details_url }} |\n\n*Preview expires in 7 days*`;
