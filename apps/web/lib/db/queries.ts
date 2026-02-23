@@ -16,7 +16,7 @@ import {
   productSales,
   productRatingSummary,
 } from './schema';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { and, desc, sql } from 'drizzle-orm';
 import type { Product as ProductType, Actress as ActressType } from '@/types/product';
 import { mapLegacyProvider } from '@adult-v/shared/lib/provider-utils';
 import { getDtiServiceFromUrl } from '@adult-v/shared/lib/image-utils';

@@ -30,7 +30,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
   );
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [videoLoadAttempted, setVideoLoadAttempted] = useState(false);
+  const [_videoLoadAttempted, setVideoLoadAttempted] = useState(false);
 
   // 選択動画が変わったらリセット
   useEffect(() => {
